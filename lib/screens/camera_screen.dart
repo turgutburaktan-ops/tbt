@@ -161,7 +161,7 @@ class _CameraScreenState extends State<CameraScreen> {
                           vertical: 8,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: .65),
+                          color: Colors.black.withOpacity(.65),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text('📍 ${widget.spot!.name}'),
@@ -189,7 +189,7 @@ class _CameraScreenState extends State<CameraScreen> {
                     margin: const EdgeInsets.all(18),
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: .70),
+                      color: Colors.black.withOpacity(.70),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Row(
