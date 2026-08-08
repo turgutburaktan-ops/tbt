@@ -21,6 +21,33 @@ jobs:
           channel: stable
           cache: true
 
+      - name: Recreate Android project
+        run: |
+          rm -rf android
+          flutter create --platforms=android .
+
+      - name: Add camera and location permissions
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          p = Path("android/app/src/main/AndroidManifest.xml")
+          text = p.read_text()
+
+          permissions = """    <uses-permission android:name="android.permission.CAMERA"/>
+              <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+              <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+          """
+
+          text = text.replace(
+              '<application',
+              permissions + '\n    <application',
+              1
+          )
+
+          p.write_text(text)
+          PY
+
       - name: Install dependencies
         run: flutter pub get
 
