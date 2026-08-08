@@ -1,0 +1,8 @@
+SONRA YAPILACAKLAR
+1. Flutter projesini `flutter create .` ile Android/iOS platform dosyalarıyla tamamla.
+2. `flutter pub get`
+3. AndroidManifest'e Google Maps API key ekle.
+4. Gerçek AI backend endpoint'ini lib/services/ai_service.dart içine bağla.
+5. Firebase Authentication + Firestore + Storage ekle.
+6. Fotoğraf noktalarını Firestore'a taşı.
+7. Topluluk ve kullanıcı profillerini ekle.

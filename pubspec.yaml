@@ -1,0 +1,25 @@
+name: best_photo_spot
+description: Smart photography assistant MVP.
+publish_to: "none"
+version: 0.1.0+1
+
+environment:
+  sdk: ">=3.3.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  camera: ^0.11.0+2
+  geolocator: ^13.0.2
+  google_maps_flutter: ^2.10.0
+  image_picker: ^1.1.2
+  http: ^1.2.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
