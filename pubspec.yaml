@@ -22,4 +22,6 @@ dev_dependencies:
   flutter_lints: ^5.0.0
 
 flutter:
-  uses-material-design: true
+ uses-material-design: true
+dependency_overrides:
+  geolocator_android: 4.6.1
