@@ -79,7 +79,7 @@ class SpotDetailScreen extends StatelessWidget {
                   Image.network(
                     spot.imageUrl,
                     fit: BoxFit.cover,
-                    errorBuilder: (, _, _) {
+                    errorBuilder: (_, __, ___) {
                       return Container(
                         color: const Color(0xFF222831),
                         child: const Center(
