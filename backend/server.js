@@ -40,8 +40,27 @@ app.post(
 
       const imageBuffer = fs.readFileSync(imagePath);
       const base64Image = imageBuffer.toString("base64");
-      const mimeType = req.file.mimetype || "image/jpeg";
+      let mimeType = req.file.mimetype;
 
+if (
+  !mimeType ||
+  mimeType === "application/octet-stream"
+) {
+  const fileName = req.file.originalname.toLowerCase();
+
+  if (
+    fileName.endsWith(".jpg") ||
+    fileName.endsWith(".jpeg")
+  ) {
+    mimeType = "image/jpeg";
+  } else if (fileName.endsWith(".png")) {
+    mimeType = "image/png";
+  } else if (fileName.endsWith(".webp")) {
+    mimeType = "image/webp";
+  } else {
+    mimeType = "image/jpeg";
+  }
+}
       const response = await openai.responses.create({
         model: "gpt-5-mini",
         input: [
