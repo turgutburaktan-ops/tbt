@@ -203,7 +203,7 @@ class _SpotCard extends StatelessWidget {
                 width: 90,
                 height: 90,
                 fit: BoxFit.cover,
-                errorBuilder: (, _, _) {
+                errorBuilder: (_, __, ___) {
                   return Container(
                     width: 90,
                     height: 90,
