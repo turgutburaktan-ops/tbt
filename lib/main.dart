@@ -1,6 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
-import 'services/favorites_service.dart';
 import 'package:flutter/material.dart';
+
+import 'services/favorites_service.dart';
 import 'screens/home_screen.dart';
 
 Future<void> main() async {
@@ -8,8 +9,11 @@ Future<void> main() async {
 
   await Firebase.initializeApp();
 
-  runApp(const MyApp());
+  await FavoritesService.init();
+
+  runApp(const BestPhotoSpotApp());
 }
+
 class BestPhotoSpotApp extends StatelessWidget {
   const BestPhotoSpotApp({super.key});
 
