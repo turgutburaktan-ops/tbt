@@ -1,1 +1,82 @@
+name: Build Android APK
 
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.5'
+          channel: stable
+          cache: true
+
+      - name: Recreate Android project
+        run: |
+          rm -rf android
+          flutter create --platforms=android .
+
+      - name: Configure Android permissions and Google Maps
+        env:
+          MAPS_API_KEY: ${{ secrets.MAPS_API_KEY }}
+        run: |
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+
+          p = Path("android/app/src/main/AndroidManifest.xml")
+          text = p.read_text()
+
+          permissions = """    <uses-permission android:name="android.permission.CAMERA"/>
+              <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+              <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+              <uses-permission android:name="android.permission.INTERNET"/>
+          """
+
+          text = text.replace(
+              '<application',
+              permissions + '\n    <application',
+              1
+          )
+
+          maps_key = os.environ.get("MAPS_API_KEY", "")
+
+          maps_config = f"""
+              <meta-data
+                  android:name="com.google.android.geo.API_KEY"
+                  android:value="{maps_key}" />
+          """
+
+          activity_position = text.find("<activity")
+
+          text = (
+              text[:activity_position]
+              + maps_config
+              + "\n        "
+              + text[activity_position:]
+          )
+
+          p.write_text(text)
+          PY
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build APK
+        run: flutter build apk --release
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: en-iyi-cekim-noktasi-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
