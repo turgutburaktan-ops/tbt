@@ -77,10 +77,12 @@ app.post(
 
       const raw = response.output_text;
 
-      const cleaned = raw
-        .replace(/json/g, "")
-        .replace(//g, "")
-        .trim();
+const cleaned = String(raw)
+  .replaceAll("json", "")
+  .replaceAll("", "")
+  .trim();
+
+const result = JSON.parse(cleaned)
 
       const result = JSON.parse(cleaned);
 
