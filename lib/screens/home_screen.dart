@@ -430,8 +430,246 @@ class _ProfilePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
-      child: Text('Profil'),
+    return SafeArea(
+      child: CustomScrollView(
+        slivers: [
+          const SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(20, 24, 20, 8),
+              child: Text(
+                'Profil',
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+          ),
+
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                children: [
+                  // PROFİL FOTOĞRAFI
+                  CircleAvatar(
+                    radius: 52,
+                    backgroundColor:
+                        const Color(0xFFFFC107),
+                    child: CircleAvatar(
+                      radius: 48,
+                      backgroundColor:
+                          const Color(0xFF171C24),
+                      child: const Icon(
+                        Icons.person,
+                        size: 52,
+                        color: Colors.white54,
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 14),
+
+                  const Text(
+                    'Fotoğrafçı',
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+
+                  const SizedBox(height: 5),
+
+                  const Text(
+                    'Daha iyi fotoğraflar için doğru noktayı keşfet.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.white54,
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // İSTATİSTİKLER
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 18,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF151A22),
+                      borderRadius:
+                          BorderRadius.circular(18),
+                    ),
+                    child: const Row(
+                      mainAxisAlignment:
+                          MainAxisAlignment.spaceEvenly,
+                      children: [
+                        _ProfileStat(
+                          value: '0',
+                          label: 'Çekim',
+                        ),
+                        _ProfileStat(
+                          value: '0',
+                          label: 'Kaydedilen',
+                        ),
+                        _ProfileStat(
+                          value: '0',
+                          label: 'Favori',
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // PROFİL MENÜLERİ
+                  _ProfileMenuItem(
+                    icon: Icons.favorite_border,
+                    title: 'Kaydedilen Noktalar',
+                    subtitle:
+                        'Favori çekim noktalarını görüntüle',
+                    onTap: () {},
+                  ),
+
+                  _ProfileMenuItem(
+                    icon: Icons.photo_library_outlined,
+                    title: 'Çekimlerim',
+                    subtitle:
+                        'Çektiğin fotoğrafları görüntüle',
+                    onTap: () {},
+                  ),
+
+                  _ProfileMenuItem(
+                    icon: Icons.location_on_outlined,
+                    title: 'Konum Tercihleri',
+                    subtitle:
+                        'Yakındaki çekim noktalarını ayarla',
+                    onTap: () {},
+                  ),
+
+                  _ProfileMenuItem(
+                    icon: Icons.settings_outlined,
+                    title: 'Ayarlar',
+                    subtitle:
+                        'Uygulama ve bildirim ayarları',
+                    onTap: () {},
+                  ),
+
+                  _ProfileMenuItem(
+                    icon: Icons.info_outline,
+                    title: 'Uygulama Hakkında',
+                    subtitle:
+                        'En İyi Çekim Noktası',
+                    onTap: () {
+                      showAboutDialog(
+                        context: context,
+                        applicationName:
+                            'En İyi Çekim Noktası',
+                        applicationVersion:
+                            '1.0.0',
+                        applicationLegalese:
+                            '© 2026',
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProfileStat extends StatelessWidget {
+  final String value;
+  final String label;
+
+  const _ProfileStat({
+    required this.value,
+    required this.label,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: const TextStyle(
+            color: Colors.white54,
+            fontSize: 12,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ProfileMenuItem extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  const _ProfileMenuItem({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 10),
+      color: const Color(0xFF151A22),
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 6,
+        ),
+        leading: Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            color: const Color(0xFFFFC107)
+                .withOpacity(.12),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(
+            icon,
+            color: const Color(0xFFFFC107),
+          ),
+        ),
+        title: Text(
+          title,
+          style: const TextStyle(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        subtitle: Text(
+          subtitle,
+          style: const TextStyle(
+            color: Colors.white54,
+            fontSize: 12,
+          ),
+        ),
+        trailing: const Icon(
+          Icons.chevron_right,
+          color: Colors.white38,
+        ),
+        onTap: onTap,
+      ),
     );
   }
 }
