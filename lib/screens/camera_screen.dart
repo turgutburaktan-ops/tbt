@@ -26,24 +26,24 @@ class _CameraScreenState extends State<CameraScreen> {
   StreamSubscription<GyroscopeEvent>? _gyroscopeSubscription;
 
   Timer? _liveAiTimer;
+  Timer? _autoCaptureTimer;
 
   int _cameraIndex = 0;
 
+  bool _initializing = true;
   bool _flashEnabled = false;
   bool _showGrid = true;
-  bool _initializing = true;
-
-  bool _showLiveAssistant = true;
+  bool _showAssistant = true;
 
   bool _liveAiEnabled = false;
   bool _liveAiBusy = false;
 
+  bool _autoCaptureEnabled = false;
+  bool _autoCaptureCountdown = false;
+
   bool _takingUserPhoto = false;
 
   String _selectedFilter = 'Normal';
-
-  String _movementTip = 'Telefon sabit.';
-  String _levelTip = 'Kadraj dengeli.';
 
   String _aiStatus = 'idle';
 
@@ -54,10 +54,14 @@ class _CameraScreenState extends State<CameraScreen> {
   String _aiLightTip = '';
   String _aiSubjectTip = '';
 
-  double _movementLevel = 0;
+  String _movementTip = '✓ Telefon yeterince sabit.';
+  String _levelTip = '✓ Kadraj dengeli.';
 
+  double _movementLevel = 0;
   double _gyroX = 0;
   double _gyroY = 0;
+
+  int _countdown = 2;
 
   final List<String> _filters = const [
     'Normal',
@@ -97,9 +101,7 @@ class _CameraScreenState extends State<CameraScreen> {
 
       await _startCamera(0);
     } catch (e) {
-      debugPrint(
-        'Kamera başlatma hatası: $e',
-      );
+      debugPrint('Kamera başlatma hatası: $e');
 
       if (mounted) {
         setState(() {
@@ -109,30 +111,26 @@ class _CameraScreenState extends State<CameraScreen> {
     }
   }
 
-  Future<void> _startCamera(
-    int index,
-  ) async {
+  Future<void> _startCamera(int index) async {
     if (_cameras.isEmpty) {
       return;
     }
 
     _liveAiTimer?.cancel();
+    _cancelAutoCapture();
 
     await _controller?.dispose();
 
-    final newController = CameraController(
+    final controller = CameraController(
       _cameras[index],
-
-      // Canlı AI için orta çözünürlük daha hızlıdır.
       ResolutionPreset.medium,
-
       enableAudio: false,
     );
 
     try {
-      await newController.initialize();
+      await controller.initialize();
 
-      _controller = newController;
+      _controller = controller;
       _cameraIndex = index;
 
       if (mounted) {
@@ -145,11 +143,9 @@ class _CameraScreenState extends State<CameraScreen> {
         _startLiveAiTimer();
       }
     } catch (e) {
-      debugPrint(
-        'Kamera controller hatası: $e',
-      );
+      debugPrint('Kamera başlatılamadı: $e');
 
-      await newController.dispose();
+      await controller.dispose();
 
       if (mounted) {
         setState(() {
@@ -160,35 +156,32 @@ class _CameraScreenState extends State<CameraScreen> {
   }
 
   Future<void> _toggleCamera() async {
-    if (_cameras.length < 2) {
-      return;
-    }
-
-    if (_liveAiBusy) {
+    if (_cameras.length < 2 ||
+        _liveAiBusy ||
+        _takingUserPhoto ||
+        _autoCaptureCountdown) {
       return;
     }
 
     final nextIndex =
-        (_cameraIndex + 1) %
-            _cameras.length;
+        (_cameraIndex + 1) % _cameras.length;
 
-    await _startCamera(
-      nextIndex,
-    );
+    await _startCamera(nextIndex);
   }
 
   Future<void> _toggleFlash() async {
-    if (_controller == null ||
-        !_controller!.value.isInitialized ||
+    final controller = _controller;
+
+    if (controller == null ||
+        !controller.value.isInitialized ||
         _liveAiBusy) {
       return;
     }
 
     try {
-      _flashEnabled =
-          !_flashEnabled;
+      _flashEnabled = !_flashEnabled;
 
-      await _controller!.setFlashMode(
+      await controller.setFlashMode(
         _flashEnabled
             ? FlashMode.torch
             : FlashMode.off,
@@ -198,20 +191,20 @@ class _CameraScreenState extends State<CameraScreen> {
         setState(() {});
       }
     } catch (e) {
-      debugPrint(
-        'Flaş hatası: $e',
-      );
+      debugPrint('Flaş hatası: $e');
     }
   }
 
   // =====================================================
-  // FOTOĞRAF ÇEK
+  // MANUEL FOTOĞRAF
   // =====================================================
 
   Future<void> _takePhoto() async {
-    if (_controller == null ||
-        !_controller!.value.isInitialized ||
-        _controller!.value.isTakingPicture ||
+    final controller = _controller;
+
+    if (controller == null ||
+        !controller.value.isInitialized ||
+        controller.value.isTakingPicture ||
         _liveAiBusy ||
         _takingUserPhoto) {
       return;
@@ -219,10 +212,11 @@ class _CameraScreenState extends State<CameraScreen> {
 
     _takingUserPhoto = true;
 
+    _cancelAutoCapture();
+
     try {
       final image =
-          await _controller!
-              .takePicture();
+          await controller.takePicture();
 
       if (!mounted) {
         return;
@@ -231,13 +225,10 @@ class _CameraScreenState extends State<CameraScreen> {
       await Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (
-            context,
-          ) {
-            return PhotoPreviewScreen(
-              imagePath: image.path,
-            );
-          },
+          builder: (context) =>
+              PhotoPreviewScreen(
+            imagePath: image.path,
+          ),
         ),
       );
     } catch (e) {
@@ -253,37 +244,34 @@ class _CameraScreenState extends State<CameraScreen> {
   // GALERİ
   // =====================================================
 
-  Future<void>
-      _pickFromGallery() async {
+  Future<void> _pickFromGallery() async {
+    if (_liveAiBusy ||
+        _takingUserPhoto) {
+      return;
+    }
+
     try {
       final image =
           await _picker.pickImage(
-        source:
-            ImageSource.gallery,
+        source: ImageSource.gallery,
         imageQuality: 92,
       );
 
-      if (image == null ||
-          !mounted) {
+      if (image == null || !mounted) {
         return;
       }
 
       await Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (
-            context,
-          ) {
-            return PhotoPreviewScreen(
-              imagePath: image.path,
-            );
-          },
+          builder: (context) =>
+              PhotoPreviewScreen(
+            imagePath: image.path,
+          ),
         ),
       );
     } catch (e) {
-      debugPrint(
-        'Galeri hatası: $e',
-      );
+      debugPrint('Galeri hatası: $e');
     }
   }
 
@@ -292,6 +280,8 @@ class _CameraScreenState extends State<CameraScreen> {
   // =====================================================
 
   void _toggleLiveAi() {
+    _cancelAutoCapture();
+
     setState(() {
       _liveAiEnabled =
           !_liveAiEnabled;
@@ -300,7 +290,7 @@ class _CameraScreenState extends State<CameraScreen> {
         _aiStatus = 'adjust';
 
         _aiMainTip =
-            'AI kadrajı inceliyor...';
+            'Kadraj inceleniyor...';
       } else {
         _aiStatus = 'idle';
 
@@ -326,12 +316,8 @@ class _CameraScreenState extends State<CameraScreen> {
     _liveAiTimer?.cancel();
 
     _liveAiTimer = Timer.periodic(
-      const Duration(
-        seconds: 7,
-      ),
-      (
-        timer,
-      ) {
+      const Duration(seconds: 7),
+      (timer) {
         _captureAndAnalyzeLiveFrame();
       },
     );
@@ -339,16 +325,15 @@ class _CameraScreenState extends State<CameraScreen> {
 
   Future<void>
       _captureAndAnalyzeLiveFrame() async {
-    final controller =
-        _controller;
+    final controller = _controller;
 
     if (!_liveAiEnabled ||
         _liveAiBusy ||
         _takingUserPhoto ||
+        _autoCaptureCountdown ||
         controller == null ||
         !controller.value.isInitialized ||
-        controller
-            .value.isTakingPicture) {
+        controller.value.isTakingPicture) {
       return;
     }
 
@@ -358,14 +343,13 @@ class _CameraScreenState extends State<CameraScreen> {
       });
     }
 
-    String? tempPath;
+    String? temporaryPath;
 
     try {
       final frame =
-          await controller
-              .takePicture();
+          await controller.takePicture();
 
-      tempPath = frame.path;
+      temporaryPath = frame.path;
 
       final analysis =
           await AiService
@@ -386,8 +370,7 @@ class _CameraScreenState extends State<CameraScreen> {
             analysis.mainTip;
 
         _aiCompositionTip =
-            analysis
-                .compositionTip;
+            analysis.compositionTip;
 
         _aiLightTip =
             analysis.lightTip;
@@ -402,21 +385,19 @@ class _CameraScreenState extends State<CameraScreen> {
 
       if (mounted) {
         setState(() {
-          _aiStatus =
-              'warning';
+          _aiStatus = 'warning';
 
           _aiMainTip =
-              'Canlı AI şu anda yanıt vermiyor.';
+              'AI bağlantısı bekleniyor...';
         });
       }
     } finally {
-      if (tempPath != null) {
+      if (temporaryPath != null) {
         try {
           final file =
-              File(tempPath);
+              File(temporaryPath);
 
-          if (await file
-              .exists()) {
+          if (await file.exists()) {
             await file.delete();
           }
         } catch (_) {}
@@ -426,6 +407,11 @@ class _CameraScreenState extends State<CameraScreen> {
         setState(() {
           _liveAiBusy = false;
         });
+
+        // ÖNEMLİ:
+        // AI isteği tamamlandıktan sonra
+        // otomatik çekim kontrol edilir.
+        _checkAutoCapture();
       } else {
         _liveAiBusy = false;
       }
@@ -433,16 +419,132 @@ class _CameraScreenState extends State<CameraScreen> {
   }
 
   // =====================================================
-  // TELEFON HAREKET / EĞİM
+  // AUTO CAPTURE
+  // =====================================================
+
+  bool get _phoneStable =>
+      _movementLevel < 0.8;
+
+  bool get _levelStable =>
+      _levelTip.contains('dengeli');
+
+  bool get _aiReady =>
+      _aiStatus == 'good';
+
+  void _toggleAutoCapture() {
+    setState(() {
+      _autoCaptureEnabled =
+          !_autoCaptureEnabled;
+    });
+
+    if (!_autoCaptureEnabled) {
+      _cancelAutoCapture();
+    } else {
+      _checkAutoCapture();
+    }
+  }
+
+  void _checkAutoCapture() {
+    if (!_autoCaptureEnabled ||
+        !_liveAiEnabled) {
+      _cancelAutoCapture();
+
+      return;
+    }
+
+    if (_aiReady &&
+        _phoneStable &&
+        _levelStable &&
+        !_liveAiBusy &&
+        !_takingUserPhoto &&
+        !_autoCaptureCountdown) {
+      _startAutoCaptureCountdown();
+    } else if (!_aiReady ||
+        !_phoneStable ||
+        !_levelStable) {
+      _cancelAutoCapture();
+    }
+  }
+
+  void _startAutoCaptureCountdown() {
+    _autoCaptureTimer?.cancel();
+
+    setState(() {
+      _autoCaptureCountdown = true;
+      _countdown = 2;
+    });
+
+    _runCountdown();
+  }
+
+  void _runCountdown() {
+    _autoCaptureTimer =
+        Timer.periodic(
+      const Duration(seconds: 1),
+      (timer) async {
+        if (!mounted) {
+          timer.cancel();
+          return;
+        }
+
+        final stillReady =
+            _aiReady &&
+                _phoneStable &&
+                _levelStable;
+
+        if (!stillReady ||
+            !_autoCaptureEnabled) {
+          timer.cancel();
+
+          _cancelAutoCapture();
+
+          return;
+        }
+
+        if (_countdown > 1) {
+          setState(() {
+            _countdown--;
+          });
+
+          return;
+        }
+
+        timer.cancel();
+
+        setState(() {
+          _autoCaptureCountdown =
+              false;
+        });
+
+        await _takePhoto();
+      },
+    );
+  }
+
+  void _cancelAutoCapture() {
+    _autoCaptureTimer?.cancel();
+    _autoCaptureTimer = null;
+
+    if (_autoCaptureCountdown &&
+        mounted) {
+      setState(() {
+        _autoCaptureCountdown =
+            false;
+
+        _countdown = 2;
+      });
+    }
+  }
+
+  // =====================================================
+  // SENSOR
   // =====================================================
 
   void _startMotionAssistant() {
     _accelerometerSubscription =
         accelerometerEventStream()
             .listen(
-      (
-        event,
-      ) {
+      (event) {
         final magnitude = sqrt(
           event.x * event.x +
               event.y * event.y +
@@ -450,47 +552,51 @@ class _CameraScreenState extends State<CameraScreen> {
         );
 
         final movement =
-            (magnitude - 9.81)
-                .abs();
+            (magnitude - 9.81).abs();
 
         if (!mounted) {
           return;
         }
 
-        String newTip;
+        String movementText;
 
         if (movement > 2.8) {
-          newTip =
-              '⚠️ Telefon çok hareket ediyor.';
-        } else if (movement >
-            1.2) {
-          newTip =
-              'Telefonu biraz daha sabit tut.';
+          movementText =
+              '⚠ Telefon hareket ediyor';
+        } else if (movement > 1.2) {
+          movementText =
+              'Telefonu sabit tut';
         } else {
-          newTip =
-              '✓ Telefon yeterince sabit.';
+          movementText =
+              '✓ Telefon sabit';
         }
 
-        if (newTip !=
-                _movementTip ||
-            (movement -
-                        _movementLevel)
-                    .abs() >
-                0.2) {
+        final changed =
+            movementText !=
+                    _movementTip ||
+                (movement -
+                            _movementLevel)
+                        .abs() >
+                    0.2;
+
+        if (changed) {
           setState(() {
             _movementLevel =
                 movement;
 
             _movementTip =
-                newTip;
+                movementText;
           });
+
+          if (_autoCaptureCountdown &&
+              movement > 0.8) {
+            _cancelAutoCapture();
+          }
         }
       },
-      onError: (
-        error,
-      ) {
+      onError: (error) {
         debugPrint(
-          'İvmeölçer hatası: $error',
+          'Accelerometer error: $error',
         );
       },
     );
@@ -498,67 +604,66 @@ class _CameraScreenState extends State<CameraScreen> {
     _gyroscopeSubscription =
         gyroscopeEventStream()
             .listen(
-      (
-        event,
-      ) {
+      (event) {
         if (!mounted) {
           return;
         }
 
-        String newTip;
+        String levelText;
 
-        if (event.x.abs() >
-            0.65) {
-          newTip =
-              'Telefonu sağa veya sola daha az eğ.';
+        if (event.x.abs() > 0.65) {
+          levelText =
+              'Telefonu daha düz tut';
         } else if (event.y.abs() >
             0.65) {
-          newTip =
-              'Telefonu biraz düzleştir.';
+          levelText =
+              'Telefonu biraz düzleştir';
         } else {
-          newTip =
-              '✓ Kadraj dengeli.';
+          levelText =
+              '✓ Kadraj dengeli';
         }
 
-        if (newTip != _levelTip ||
-            (event.x - _gyroX)
-                    .abs() >
-                0.1 ||
-            (event.y - _gyroY)
-                    .abs() >
-                0.1) {
-          setState(() {
-            _gyroX =
-                event.x;
+        final changed =
+            levelText != _levelTip ||
+                (event.x - _gyroX)
+                        .abs() >
+                    0.1 ||
+                (event.y - _gyroY)
+                        .abs() >
+                    0.1;
 
-            _gyroY =
-                event.y;
+        if (changed) {
+          setState(() {
+            _gyroX = event.x;
+            _gyroY = event.y;
 
             _levelTip =
-                newTip;
+                levelText;
           });
         }
       },
-      onError: (
-        error,
-      ) {
+      onError: (error) {
         debugPrint(
-          'Jiroskop hatası: $error',
+          'Gyroscope error: $error',
         );
       },
     );
   }
 
   // =====================================================
-  // MOD
+  // MODE
   // =====================================================
 
-  void _selectFilter(
-    String filter,
-  ) {
+  void _selectFilter(String filter) {
+    _cancelAutoCapture();
+
     setState(() {
-      _selectedFilter =
-          filter;
+      _selectedFilter = filter;
+
+      if (_liveAiEnabled) {
+        _aiMainTip =
+            'Yeni moda göre kadraj inceleniyor...';
+      }
     });
 
     if (_liveAiEnabled &&
@@ -605,23 +710,32 @@ class _CameraScreenState extends State<CameraScreen> {
   }
 
   Color _statusColor() {
-    switch (_aiStatus) {
-      case 'good':
-        return Colors.greenAccent;
-
-      case 'warning':
-        return Colors.orangeAccent;
-
-      default:
-        return const Color(
-          0xFFFFC107,
-        );
+    if (_aiStatus == 'good') {
+      return const Color(
+        0xFF4ADE80,
+      );
     }
+
+    if (_aiStatus == 'warning') {
+      return const Color(
+        0xFFFF7043,
+      );
+    }
+
+    return const Color(
+      0xFFFFC107,
+    );
   }
+
+  // =====================================================
+  // DISPOSE
+  // =====================================================
 
   @override
   void dispose() {
     _liveAiTimer?.cancel();
+
+    _autoCaptureTimer?.cancel();
 
     _accelerometerSubscription
         ?.cancel();
@@ -635,13 +749,11 @@ class _CameraScreenState extends State<CameraScreen> {
   }
 
   // =====================================================
-  // UI
+  // SCREEN
   // =====================================================
 
   @override
-  Widget build(
-    BuildContext context,
-  ) {
+  Widget build(BuildContext context) {
     if (_initializing) {
       return const Scaffold(
         backgroundColor:
@@ -689,8 +801,6 @@ class _CameraScreenState extends State<CameraScreen> {
                         TextStyle(
                       color:
                           Colors.white,
-                      fontSize:
-                          16,
                     ),
                   ),
                 ),
@@ -714,7 +824,6 @@ class _CameraScreenState extends State<CameraScreen> {
               ),
             ),
 
-            // FILTER OVERLAY
             Positioned.fill(
               child:
                   IgnorePointer(
@@ -725,7 +834,6 @@ class _CameraScreenState extends State<CameraScreen> {
               ),
             ),
 
-            // GRID
             if (_showGrid)
               const Positioned.fill(
                 child:
@@ -735,7 +843,7 @@ class _CameraScreenState extends State<CameraScreen> {
                 ),
               ),
 
-            // ÜST BUTONLAR
+            // TOP BUTTONS
             Positioned(
               top: 12,
               left: 12,
@@ -790,15 +898,15 @@ class _CameraScreenState extends State<CameraScreen> {
 
                   CameraCircleButton(
                     icon:
-                        _showLiveAssistant
+                        _showAssistant
                             ? Icons
                                 .auto_awesome
                             : Icons
                                 .auto_awesome_outlined,
                     onTap: () {
                       setState(() {
-                        _showLiveAssistant =
-                            !_showLiveAssistant;
+                        _showAssistant =
+                            !_showAssistant;
                       });
                     },
                   ),
@@ -806,12 +914,12 @@ class _CameraScreenState extends State<CameraScreen> {
               ),
             ),
 
-            // AI KART
-            if (_showLiveAssistant)
+            // AI CARD
+            if (_showAssistant)
               Positioned(
                 top: 70,
-                left: 12,
-                right: 12,
+                left: 14,
+                right: 14,
                 child:
                     LiveAssistantCard(
                   liveAiEnabled:
@@ -819,6 +927,18 @@ class _CameraScreenState extends State<CameraScreen> {
 
                   liveAiBusy:
                       _liveAiBusy,
+
+                  autoCaptureEnabled:
+                      _autoCaptureEnabled,
+
+                  autoCaptureCountdown:
+                      _autoCaptureCountdown,
+
+                  countdown:
+                      _countdown,
+
+                  status:
+                      _aiStatus,
 
                   statusColor:
                       _statusColor(),
@@ -832,9 +952,6 @@ class _CameraScreenState extends State<CameraScreen> {
                   lightTip:
                       _aiLightTip,
 
-                  subjectTip:
-                      _aiSubjectTip,
-
                   movementTip:
                       _movementTip,
 
@@ -843,10 +960,13 @@ class _CameraScreenState extends State<CameraScreen> {
 
                   onToggleLiveAi:
                       _toggleLiveAi,
+
+                  onToggleAutoCapture:
+                      _toggleAutoCapture,
                 ),
               ),
 
-            // FİLTRELER
+            // MODES
             Positioned(
               left: 0,
               right: 0,
@@ -855,15 +975,15 @@ class _CameraScreenState extends State<CameraScreen> {
                 height: 52,
                 child:
                     ListView.separated(
+                  scrollDirection:
+                      Axis.horizontal,
+
                   padding:
                       const EdgeInsets
                           .symmetric(
                     horizontal:
                         14,
                   ),
-
-                  scrollDirection:
-                      Axis.horizontal,
 
                   itemCount:
                       _filters.length,
@@ -888,8 +1008,8 @@ class _CameraScreenState extends State<CameraScreen> {
                             index];
 
                     final selected =
-                        _selectedFilter ==
-                            filter;
+                        filter ==
+                            _selectedFilter;
 
                     return GestureDetector(
                       onTap: () {
@@ -910,7 +1030,7 @@ class _CameraScreenState extends State<CameraScreen> {
                             const EdgeInsets
                                 .symmetric(
                           horizontal:
-                              16,
+                              18,
                           vertical:
                               10,
                         ),
@@ -924,13 +1044,13 @@ class _CameraScreenState extends State<CameraScreen> {
                               : Colors
                                   .black
                                   .withOpacity(
-                                    .58,
+                                    .62,
                                   ),
 
                           borderRadius:
                               BorderRadius
                                   .circular(
-                            22,
+                            24,
                           ),
                         ),
 
@@ -961,11 +1081,11 @@ class _CameraScreenState extends State<CameraScreen> {
               ),
             ),
 
-            // ALT BUTONLAR
+            // BOTTOM CAMERA CONTROLS
             Positioned(
-              left: 20,
-              right: 20,
-              bottom: 32,
+              left: 25,
+              right: 25,
+              bottom: 28,
               child: Row(
                 mainAxisAlignment:
                     MainAxisAlignment
@@ -975,7 +1095,7 @@ class _CameraScreenState extends State<CameraScreen> {
                     icon: Icons
                         .photo_library_outlined,
 
-                    size: 54,
+                    size: 56,
 
                     onTap:
                         _pickFromGallery,
@@ -985,9 +1105,16 @@ class _CameraScreenState extends State<CameraScreen> {
                     onTap:
                         _takePhoto,
 
-                    child: Container(
-                      width: 82,
-                      height: 82,
+                    child:
+                        AnimatedContainer(
+                      duration:
+                          const Duration(
+                        milliseconds:
+                            200,
+                      ),
+
+                      width: 86,
+                      height: 86,
 
                       padding:
                           const EdgeInsets
@@ -1003,25 +1130,35 @@ class _CameraScreenState extends State<CameraScreen> {
 
                         border:
                             Border.all(
-                          color:
-                              Colors.white,
+                          color: _aiReady
+                              ? const Color(
+                                  0xFF4ADE80,
+                                )
+                              : Colors
+                                  .white,
 
-                          width: 4,
+                          width:
+                              _aiReady
+                                  ? 6
+                                  : 4,
                         ),
                       ),
 
                       child:
                           Container(
                         decoration:
-                            const BoxDecoration(
+                            BoxDecoration(
                           shape:
                               BoxShape
                                   .circle,
 
-                          color:
-                              Color(
-                            0xFFFFC107,
-                          ),
+                          color: _aiReady
+                              ? const Color(
+                                  0xFF4ADE80,
+                                )
+                              : const Color(
+                                  0xFFFFC107,
+                                ),
                         ),
                       ),
                     ),
@@ -1031,7 +1168,7 @@ class _CameraScreenState extends State<CameraScreen> {
                     icon: Icons
                         .cameraswitch_outlined,
 
-                    size: 54,
+                    size: 56,
 
                     onTap:
                         _toggleCamera,
@@ -1047,7 +1184,7 @@ class _CameraScreenState extends State<CameraScreen> {
 }
 
 // =====================================================
-// LIVE AI KART
+// LIVE AI CARD
 // =====================================================
 
 class LiveAssistantCard
@@ -1055,38 +1192,55 @@ class LiveAssistantCard
   final bool liveAiEnabled;
   final bool liveAiBusy;
 
+  final bool autoCaptureEnabled;
+  final bool autoCaptureCountdown;
+
+  final int countdown;
+
+  final String status;
+
   final Color statusColor;
 
   final String mainTip;
   final String compositionTip;
   final String lightTip;
-  final String subjectTip;
 
   final String movementTip;
   final String levelTip;
 
+  final VoidCallback onToggleLiveAi;
   final VoidCallback
-      onToggleLiveAi;
+      onToggleAutoCapture;
 
   const LiveAssistantCard({
     super.key,
     required this.liveAiEnabled,
     required this.liveAiBusy,
+    required this.autoCaptureEnabled,
+    required this.autoCaptureCountdown,
+    required this.countdown,
+    required this.status,
     required this.statusColor,
     required this.mainTip,
     required this.compositionTip,
     required this.lightTip,
-    required this.subjectTip,
     required this.movementTip,
     required this.levelTip,
     required this.onToggleLiveAi,
+    required this.onToggleAutoCapture,
   });
 
+  bool get ready =>
+      status == 'good';
+
   @override
-  Widget build(
-    BuildContext context,
-  ) {
-    return Container(
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      duration:
+          const Duration(
+        milliseconds: 250,
+      ),
+
       padding:
           const EdgeInsets.all(
         13,
@@ -1097,13 +1251,13 @@ class LiveAssistantCard
         color:
             Colors.black
                 .withOpacity(
-          .78,
+          .80,
         ),
 
         borderRadius:
             BorderRadius
                 .circular(
-          18,
+          20,
         ),
 
         border:
@@ -1111,8 +1265,11 @@ class LiveAssistantCard
           color:
               statusColor
                   .withOpacity(
-            .60,
+            .80,
           ),
+
+          width:
+              ready ? 2 : 1,
         ),
       ),
 
@@ -1120,29 +1277,37 @@ class LiveAssistantCard
         crossAxisAlignment:
             CrossAxisAlignment
                 .start,
-
         children: [
           Row(
             children: [
               Icon(
-                Icons.auto_awesome,
+                ready
+                    ? Icons
+                        .check_circle
+                    : Icons
+                        .auto_awesome,
 
                 color:
                     statusColor,
 
-                size: 20,
+                size:
+                    ready
+                        ? 25
+                        : 21,
               ),
 
               const SizedBox(
                 width: 8,
               ),
 
-              const Expanded(
+              Expanded(
                 child: Text(
-                  'AI Çekim Asistanı',
+                  ready
+                      ? 'Çekime Hazır'
+                      : 'AI Çekim Asistanı',
 
                   style:
-                      TextStyle(
+                      const TextStyle(
                     color:
                         Colors.white,
 
@@ -1151,15 +1316,15 @@ class LiveAssistantCard
                             .w800,
 
                     fontSize:
-                        16,
+                        17,
                   ),
                 ),
               ),
 
               if (liveAiBusy)
                 const SizedBox(
-                  width: 17,
-                  height: 17,
+                  width: 18,
+                  height: 18,
 
                   child:
                       CircularProgressIndicator(
@@ -1185,70 +1350,180 @@ class LiveAssistantCard
             ],
           ),
 
+          if (ready) ...[
+            const SizedBox(
+              height: 5,
+            ),
+
+            Text(
+              autoCaptureCountdown
+                  ? '📸 $countdown saniye sabit kal...'
+                  : '✓ Kadraj hazır — çekebilirsin.',
+
+              style:
+                  const TextStyle(
+                color:
+                    Colors.white,
+
+                fontSize:
+                    16,
+
+                fontWeight:
+                    FontWeight
+                        .w700,
+              ),
+            ),
+          ] else ...[
+            const SizedBox(
+              height: 6,
+            ),
+
+            AssistantTipRow(
+              icon: Icons
+                  .center_focus_strong,
+
+              text:
+                  mainTip,
+
+              highlight:
+                  true,
+            ),
+
+            if (compositionTip
+                .isNotEmpty)
+              AssistantTipRow(
+                icon:
+                    Icons.crop_free,
+
+                text:
+                    compositionTip,
+              ),
+
+            if (lightTip
+                .isNotEmpty)
+              AssistantTipRow(
+                icon: Icons
+                    .light_mode_outlined,
+
+                text:
+                    lightTip,
+              ),
+          ],
+
           const SizedBox(
-            height: 8,
+            height: 4,
           ),
-
-          AssistantTipRow(
-            icon: Icons
-                .center_focus_strong,
-
-            text:
-                mainTip,
-
-            highlight:
-                true,
-          ),
-
-          if (compositionTip
-              .isNotEmpty)
-            AssistantTipRow(
-              icon:
-                  Icons.crop_free,
-
-              text:
-                  compositionTip,
-            ),
-
-          if (lightTip
-              .isNotEmpty)
-            AssistantTipRow(
-              icon: Icons
-                  .light_mode_outlined,
-
-              text:
-                  lightTip,
-            ),
-
-          if (subjectTip
-              .isNotEmpty)
-            AssistantTipRow(
-              icon: Icons
-                  .person_search_outlined,
-
-              text:
-                  subjectTip,
-            ),
 
           const Divider(
             color:
-                Colors.white24,
+                Colors.white12,
           ),
 
-          AssistantTipRow(
-            icon:
-                Icons.vibration,
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  movementTip,
 
-            text:
-                movementTip,
+                  maxLines: 1,
+
+                  overflow:
+                      TextOverflow
+                          .ellipsis,
+
+                  style:
+                      const TextStyle(
+                    color:
+                        Colors.white60,
+
+                    fontSize:
+                        11,
+                  ),
+                ),
+              ),
+
+              const SizedBox(
+                width: 8,
+              ),
+
+              Expanded(
+                child: Text(
+                  levelTip,
+
+                  maxLines: 1,
+
+                  textAlign:
+                      TextAlign.right,
+
+                  overflow:
+                      TextOverflow
+                          .ellipsis,
+
+                  style:
+                      const TextStyle(
+                    color:
+                        Colors.white60,
+
+                    fontSize:
+                        11,
+                  ),
+                ),
+              ),
+            ],
           ),
 
-          AssistantTipRow(
-            icon: Icons
-                .screen_rotation_outlined,
+          const SizedBox(
+            height: 3,
+          ),
 
-            text:
-                levelTip,
+          Row(
+            children: [
+              const Icon(
+                Icons
+                    .camera_alt_outlined,
+
+                color:
+                    Color(
+                  0xFFFFC107,
+                ),
+
+                size: 17,
+              ),
+
+              const SizedBox(
+                width: 7,
+              ),
+
+              const Expanded(
+                child: Text(
+                  'Otomatik çekim',
+
+                  style:
+                      TextStyle(
+                    color:
+                        Colors.white,
+
+                    fontSize:
+                        12.5,
+
+                    fontWeight:
+                        FontWeight
+                            .w600,
+                  ),
+                ),
+              ),
+
+              Switch(
+                value:
+                    autoCaptureEnabled,
+
+                onChanged: (
+                  value,
+                ) {
+                  onToggleAutoCapture();
+                },
+              ),
+            ],
           ),
         ],
       ),
@@ -1264,7 +1539,6 @@ class AssistantTipRow
     extends StatelessWidget {
   final IconData icon;
   final String text;
-
   final bool highlight;
 
   const AssistantTipRow({
@@ -1275,9 +1549,7 @@ class AssistantTipRow
   });
 
   @override
-  Widget build(
-    BuildContext context,
-  ) {
+  Widget build(BuildContext context) {
     return Padding(
       padding:
           const EdgeInsets.only(
@@ -1288,17 +1560,16 @@ class AssistantTipRow
         crossAxisAlignment:
             CrossAxisAlignment
                 .start,
-
         children: [
           Icon(
             icon,
-
-            size: 17,
 
             color:
                 const Color(
               0xFFFFC107,
             ),
+
+            size: 17,
           ),
 
           const SizedBox(
@@ -1308,6 +1579,15 @@ class AssistantTipRow
           Expanded(
             child: Text(
               text,
+
+              maxLines:
+                  highlight
+                      ? 2
+                      : 1,
+
+              overflow:
+                  TextOverflow
+                      .ellipsis,
 
               style:
                   TextStyle(
@@ -1325,8 +1605,6 @@ class AssistantTipRow
                             .w700
                         : FontWeight
                             .w400,
-
-                height: 1.25,
               ),
             ),
           ),
@@ -1347,9 +1625,7 @@ class CameraGrid
   });
 
   @override
-  Widget build(
-    BuildContext context,
-  ) {
+  Widget build(BuildContext context) {
     return CustomPaint(
       painter:
           GridPainter(),
@@ -1368,7 +1644,7 @@ class GridPainter
       ..color =
           Colors.white
               .withOpacity(
-        .38,
+        .32,
       )
       ..strokeWidth = 1;
 
@@ -1437,7 +1713,7 @@ class GridPainter
 }
 
 // =====================================================
-// CAMERA BUTTON
+// CIRCLE BUTTON
 // =====================================================
 
 class CameraCircleButton
@@ -1452,18 +1728,16 @@ class CameraCircleButton
     super.key,
     required this.icon,
     required this.onTap,
-    this.size = 44,
+    this.size = 46,
   });
 
   @override
-  Widget build(
-    BuildContext context,
-  ) {
+  Widget build(BuildContext context) {
     return Material(
       color:
           Colors.black
               .withOpacity(
-        .55,
+        .58,
       ),
 
       shape:
@@ -1492,7 +1766,7 @@ class CameraCircleButton
 }
 
 // =====================================================
-// FOTOĞRAF ANALİZ EKRANI
+// PHOTO ANALYSIS SCREEN
 // =====================================================
 
 class PhotoPreviewScreen
@@ -1506,9 +1780,8 @@ class PhotoPreviewScreen
 
   @override
   State<PhotoPreviewScreen>
-      createState() {
-    return _PhotoPreviewScreenState();
-  }
+      createState() =>
+          _PhotoPreviewScreenState();
 }
 
 class _PhotoPreviewScreenState
@@ -1522,9 +1795,7 @@ class _PhotoPreviewScreenState
   Future<void> _analyze() async {
     setState(() {
       _analyzing = true;
-
       _analysis = null;
-
       _error = null;
     });
 
@@ -1566,31 +1837,23 @@ class _PhotoPreviewScreenState
   String _friendlyError(
     String error,
   ) {
-    if (error.contains(
-      '502',
-    )) {
-      return 'AI servisine şu anda ulaşılamıyor. Birkaç saniye sonra tekrar deneyin.';
+    if (error.contains('502')) {
+      return 'AI servisine ulaşılamıyor. Birkaç saniye sonra tekrar deneyin.';
     }
 
-    if (error.contains(
-      '429',
-    )) {
-      return 'AI kullanım limiti dolmuş olabilir. Lütfen daha sonra tekrar deneyin.';
+    if (error.contains('429')) {
+      return 'AI kullanım limiti dolmuş olabilir.';
     }
 
-    if (error.contains(
-      '500',
-    )) {
-      return 'Fotoğraf analizi sırasında sunucu hatası oluştu. Tekrar deneyin.';
+    if (error.contains('500')) {
+      return 'Fotoğraf analizi sırasında sunucu hatası oluştu.';
     }
 
-    return 'Fotoğraf analizi sırasında bir hata oluştu. Lütfen tekrar deneyin.';
+    return 'Fotoğraf analizi sırasında bir hata oluştu.';
   }
 
   @override
-  Widget build(
-    BuildContext context,
-  ) {
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor:
           const Color(
@@ -1661,10 +1924,8 @@ class _PhotoPreviewScreenState
                         ? const SizedBox(
                             width:
                                 20,
-
                             height:
                                 20,
-
                             child:
                                 CircularProgressIndicator(
                               strokeWidth:
@@ -1679,7 +1940,7 @@ class _PhotoPreviewScreenState
                 label:
                     Text(
                   _analyzing
-                      ? 'Fotoğraf analiz ediliyor...'
+                      ? 'Analiz ediliyor...'
                       : 'Fotoğrafı Analiz Et',
                 ),
               ),
@@ -1719,8 +1980,8 @@ class _PhotoPreviewScreenState
 
                 style:
                     const TextStyle(
-                  color: Colors
-                      .redAccent,
+                  color:
+                      Colors.redAccent,
                 ),
               ),
             ),
@@ -1734,7 +1995,7 @@ class _PhotoPreviewScreenState
             ),
 
             const SizedBox(
-              height: 16,
+              height: 18,
             ),
 
             const Text(
@@ -1742,7 +2003,7 @@ class _PhotoPreviewScreenState
 
               style:
                   TextStyle(
-                fontSize: 20,
+                fontSize: 21,
 
                 fontWeight:
                     FontWeight
@@ -1763,8 +2024,10 @@ class _PhotoPreviewScreenState
                 color:
                     Colors.white70,
 
-                height:
-                    1.5,
+                height: 1.5,
+
+                fontSize:
+                    15,
               ),
             ),
 
@@ -1834,13 +2097,13 @@ class _PhotoPreviewScreenState
                         Icons
                             .auto_awesome,
 
-                        size:
-                            20,
-
                         color:
                             Color(
                           0xFFFFC107,
                         ),
+
+                        size:
+                            20,
                       ),
 
                       const SizedBox(
@@ -1860,12 +2123,7 @@ class _PhotoPreviewScreenState
               },
             ),
 
-            const SizedBox(
-              height: 10,
-            ),
-
-            OutlinedButton
-                .icon(
+            OutlinedButton.icon(
               onPressed:
                   _analyze,
 
@@ -1900,9 +2158,7 @@ class ScoreCard
   });
 
   @override
-  Widget build(
-    BuildContext context,
-  ) {
+  Widget build(BuildContext context) {
     return Container(
       margin:
           const EdgeInsets.only(
@@ -1935,7 +2191,8 @@ class ScoreCard
 
             style:
                 const TextStyle(
-              fontSize: 38,
+              fontSize:
+                  40,
 
               fontWeight:
                   FontWeight
@@ -2003,10 +2260,6 @@ class ScoreCard
   }
 }
 
-// =====================================================
-// SCORE ROW
-// =====================================================
-
 class ScoreRow
     extends StatelessWidget {
   final String title;
@@ -2019,14 +2272,12 @@ class ScoreRow
   });
 
   @override
-  Widget build(
-    BuildContext context,
-  ) {
+  Widget build(BuildContext context) {
     return Padding(
       padding:
           const EdgeInsets
               .symmetric(
-        vertical: 5,
+        vertical: 6,
       ),
 
       child: Row(
