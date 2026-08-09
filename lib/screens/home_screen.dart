@@ -1,10 +1,10 @@
-import '../services/favorites_service.dart';
 import 'package:flutter/material.dart';
+
+import '../models/photo_spot.dart';
+import '../services/favorites_service.dart';
 
 import 'camera_screen.dart';
 import 'map_screen.dart';
-
-import '../models/photo_spot.dart';
 import 'spot_detail_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -15,7 +15,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int index = 0;
+  int _selectedIndex = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -27,8 +27,11 @@ class _HomeScreenState extends State<HomeScreen> {
     ];
 
     return Scaffold(
-      body: pages[index],
-
+      backgroundColor: const Color(0xFF0D1117),
+      body: IndexedStack(
+        index: _selectedIndex,
+        children: pages,
+      ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: const Color(0xFFFFC107),
         foregroundColor: Colors.black,
@@ -45,33 +48,36 @@ class _HomeScreenState extends State<HomeScreen> {
           size: 28,
         ),
       ),
-
       floatingActionButtonLocation:
           FloatingActionButtonLocation.centerDocked,
-
       bottomNavigationBar: NavigationBar(
+        height: 72,
         backgroundColor: const Color(0xFF11151C),
-        selectedIndex: index,
+        selectedIndex: _selectedIndex,
         onDestinationSelected: (value) {
           setState(() {
-            index = value;
+            _selectedIndex = value;
           });
         },
         destinations: const [
           NavigationDestination(
-            icon: Icon(Icons.explore),
+            icon: Icon(Icons.explore_outlined),
+            selectedIcon: Icon(Icons.explore),
             label: 'Keşfet',
           ),
           NavigationDestination(
-            icon: Icon(Icons.map),
+            icon: Icon(Icons.map_outlined),
+            selectedIcon: Icon(Icons.map),
             label: 'Harita',
           ),
           NavigationDestination(
             icon: Icon(Icons.favorite_border),
+            selectedIcon: Icon(Icons.favorite),
             label: 'Kaydedilenler',
           ),
           NavigationDestination(
             icon: Icon(Icons.person_outline),
+            selectedIcon: Icon(Icons.person),
             label: 'Profil',
           ),
         ],
@@ -94,13 +100,16 @@ class _ExplorePageState extends State<_ExplorePage> {
   String _searchQuery = '';
   String _selectedFilter = 'Tümü';
 
-  final List<String> _filters = [
+  final List<String> _filters = const [
     'Tümü',
     'Gün Batımı',
     'Gün Doğumu',
     'Şehir',
     'Doğa',
     'Mimari',
+    'Manzara',
+    'Sokak',
+    'Tarih',
   ];
 
   @override
@@ -109,21 +118,30 @@ class _ExplorePageState extends State<_ExplorePage> {
     super.dispose();
   }
 
+  bool _containsTag(PhotoSpot spot, String value) {
+    final query = value.toLowerCase();
+
+    return spot.tags.any(
+      (tag) => tag.toLowerCase().contains(query),
+    );
+  }
+
   List<PhotoSpot> get _filteredSpots {
     final query = _searchQuery.trim().toLowerCase();
 
     return demoSpots.where((spot) {
       final matchesSearch = query.isEmpty ||
-    spot.name.toLowerCase().contains(query) ||
-    spot.city.toLowerCase().contains(query) ||
-    spot.category.toLowerCase().contains(query) ||
-    spot.description.toLowerCase().contains(query) ||
-    spot.bestTime.toLowerCase().contains(query) ||
-    spot.angle.toLowerCase().contains(query) ||
-    spot.recommendedLens.toLowerCase().contains(query) ||
-    spot.tags.any(
-      (tag) => tag.toLowerCase().contains(query),
-    );
+          spot.name.toLowerCase().contains(query) ||
+          spot.city.toLowerCase().contains(query) ||
+          spot.category.toLowerCase().contains(query) ||
+          spot.description.toLowerCase().contains(query) ||
+          spot.bestTime.toLowerCase().contains(query) ||
+          spot.angle.toLowerCase().contains(query) ||
+          spot.recommendedLens.toLowerCase().contains(query) ||
+          spot.difficulty.toLowerCase().contains(query) ||
+          spot.tags.any(
+            (tag) => tag.toLowerCase().contains(query),
+          );
 
       if (!matchesSearch) {
         return false;
@@ -131,28 +149,42 @@ class _ExplorePageState extends State<_ExplorePage> {
 
       switch (_selectedFilter) {
         case 'Gün Batımı':
-          return spot.bestTime.contains('17') ||
-              spot.bestTime.contains('18') ||
-              spot.bestTime.contains('19');
+          return _containsTag(spot, 'gün batımı') ||
+              spot.category.toLowerCase() ==
+                  'gün batımı';
 
         case 'Gün Doğumu':
-          return spot.bestTime.contains('05') ||
-              spot.bestTime.contains('06') ||
-              spot.bestTime.contains('07');
+          return _containsTag(spot, 'gün doğumu');
 
         case 'Şehir':
-          return spot.city == 'İstanbul' ||
-              spot.city == 'Ankara' ||
-              spot.city == 'İzmir';
+          return spot.category.toLowerCase() ==
+                  'şehir' ||
+              _containsTag(spot, 'şehir');
 
         case 'Doğa':
-          return spot.name.toLowerCase().contains('kapadokya') ||
-              spot.name.toLowerCase().contains('doğa');
+          return spot.category.toLowerCase() ==
+                  'doğa' ||
+              _containsTag(spot, 'doğa');
 
         case 'Mimari':
-          return spot.name.toLowerCase().contains('kule') ||
-              spot.name.toLowerCase().contains('camii') ||
-              spot.name.toLowerCase().contains('saray');
+          return spot.category.toLowerCase() ==
+                  'mimari' ||
+              _containsTag(spot, 'mimari');
+
+        case 'Manzara':
+          return spot.category.toLowerCase() ==
+                  'manzara' ||
+              _containsTag(spot, 'manzara');
+
+        case 'Sokak':
+          return spot.category.toLowerCase() ==
+                  'sokak' ||
+              _containsTag(spot, 'sokak');
+
+        case 'Tarih':
+          return spot.category.toLowerCase() ==
+                  'tarih' ||
+              _containsTag(spot, 'tarih');
 
         default:
           return true;
@@ -177,7 +209,12 @@ class _ExplorePageState extends State<_ExplorePage> {
         slivers: [
           const SliverToBoxAdapter(
             child: Padding(
-              padding: EdgeInsets.fromLTRB(20, 20, 20, 4),
+              padding: EdgeInsets.fromLTRB(
+                20,
+                22,
+                20,
+                4,
+              ),
               child: Text(
                 'En İyi Çekim Noktası',
                 style: TextStyle(
@@ -190,9 +227,14 @@ class _ExplorePageState extends State<_ExplorePage> {
 
           const SliverToBoxAdapter(
             child: Padding(
-              padding: EdgeInsets.fromLTRB(20, 0, 20, 18),
+              padding: EdgeInsets.fromLTRB(
+                20,
+                0,
+                20,
+                18,
+              ),
               child: Text(
-                'Fotoğrafını daha iyi çekmek için doğru noktayı bul.',
+                'Fotoğrafın için doğru yeri, ışığı ve açıyı keşfet.',
                 style: TextStyle(
                   color: Colors.white60,
                   fontSize: 14,
@@ -204,7 +246,9 @@ class _ExplorePageState extends State<_ExplorePage> {
           // ARAMA
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 20,
+              ),
               child: TextField(
                 controller: _searchController,
                 onChanged: (value) {
@@ -214,21 +258,24 @@ class _ExplorePageState extends State<_ExplorePage> {
                 },
                 textInputAction: TextInputAction.search,
                 decoration: InputDecoration(
-                  hintText: 'Şehir, konum veya çekim noktası ara...',
-                  prefixIcon: const Icon(Icons.search),
-
+                  hintText:
+                      'Şehir, nokta, gün batımı, mimari...',
+                  prefixIcon: const Icon(
+                    Icons.search,
+                  ),
                   suffixIcon: _searchQuery.isNotEmpty
                       ? IconButton(
-                          icon: const Icon(Icons.clear),
+                          icon: const Icon(
+                            Icons.clear,
+                          ),
                           onPressed: _clearSearch,
                         )
                       : null,
-
                   filled: true,
                   fillColor: const Color(0xFF171C24),
-
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius:
+                        BorderRadius.circular(16),
                     borderSide: BorderSide.none,
                   ),
                 ),
@@ -239,11 +286,11 @@ class _ExplorePageState extends State<_ExplorePage> {
           // FİLTRELER
           SliverToBoxAdapter(
             child: SizedBox(
-              height: 58,
+              height: 62,
               child: ListView.separated(
                 padding: const EdgeInsets.fromLTRB(
                   20,
-                  16,
+                  14,
                   20,
                   8,
                 ),
@@ -251,8 +298,8 @@ class _ExplorePageState extends State<_ExplorePage> {
                 itemCount: _filters.length,
                 separatorBuilder: (, _) =>
                     const SizedBox(width: 8),
-                itemBuilder: (context, i) {
-                  final filter = _filters[i];
+                itemBuilder: (context, index) {
+                  final filter = _filters[index];
                   final selected =
                       filter == _selectedFilter;
 
@@ -268,6 +315,7 @@ class _ExplorePageState extends State<_ExplorePage> {
                         const Color(0xFFFFC107),
                     backgroundColor:
                         const Color(0xFF171C24),
+                    side: BorderSide.none,
                     labelStyle: TextStyle(
                       color: selected
                           ? Colors.black
@@ -284,23 +332,40 @@ class _ExplorePageState extends State<_ExplorePage> {
             child: Padding(
               padding: const EdgeInsets.fromLTRB(
                 20,
-                20,
+                18,
                 20,
                 12,
               ),
-              child: Text(
-                _searchQuery.isEmpty
-                    ? 'Popüler çekim noktaları'
-                    : '${spots.length} sonuç bulundu',
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      _searchQuery.isEmpty &&
+                              _selectedFilter == 'Tümü'
+                          ? 'Popüler çekim noktaları'
+                          : '${spots.length} sonuç bulundu',
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  if (_selectedFilter != 'Tümü')
+                    TextButton(
+                      onPressed: () {
+                        setState(() {
+                          _selectedFilter = 'Tümü';
+                        });
+                      },
+                      child: const Text(
+                        'Filtreyi temizle',
+                      ),
+                    ),
+                ],
               ),
             ),
           ),
 
-          // SONUÇLAR
           if (spots.isEmpty)
             const SliverToBoxAdapter(
               child: Padding(
@@ -309,20 +374,20 @@ class _ExplorePageState extends State<_ExplorePage> {
                   children: [
                     Icon(
                       Icons.search_off,
-                      size: 56,
+                      size: 58,
                       color: Colors.white38,
                     ),
                     SizedBox(height: 16),
                     Text(
                       'Sonuç bulunamadı',
                       style: TextStyle(
-                        fontSize: 18,
+                        fontSize: 19,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     SizedBox(height: 8),
                     Text(
-                      'Farklı bir şehir veya çekim noktası deneyin.',
+                      'Farklı bir şehir, kategori veya çekim türü deneyin.',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         color: Colors.white54,
@@ -335,102 +400,351 @@ class _ExplorePageState extends State<_ExplorePage> {
           else
             SliverList(
               delegate: SliverChildBuilderDelegate(
-                (context, i) {
-                  final spot = spots[i];
+                (context, index) {
+                  final spot = spots[index];
 
-                  return Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      20,
-                      0,
-                      20,
-                      12,
-                    ),
-                    child: Card(
-                      color: const Color(0xFF151A22),
-                      clipBehavior: Clip.antiAlias,
-                      child: ListTile(
-                        contentPadding:
-                            const EdgeInsets.all(10),
-
-                        leading: ClipRRect(
-                          borderRadius:
-                              BorderRadius.circular(10),
-                          child: Image.network(
-                            spot.imageUrl,
-                            width: 78,
-                            height: 78,
-                            fit: BoxFit.cover,
-                            errorBuilder:
-                                (, _, _) {
-                              return Container(
-                                width: 78,
-                                height: 78,
-                                color:
-                                    const Color(0xFF222831),
-                                child: const Icon(
-                                  Icons.photo,
-                                  color: Colors.white38,
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-
-                        title: Text(
-                          spot.name,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-
-                        subtitle: Text(
-                          '⭐ ${spot.rating} • ${spot.city}\n'
-                          '📸 ${spot.bestTime}',
-                        ),
-
-                        isThreeLine: true,
-
-                        trailing: const Icon(
-                          Icons.chevron_right,
-                          color: Colors.white54,
-                        ),
-
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) =>
-                                  SpotDetailScreen(
-                                spot: spot,
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
+                  return _ExploreSpotCard(
+                    spot: spot,
                   );
                 },
                 childCount: spots.length,
               ),
             ),
+
+          const SliverToBoxAdapter(
+            child: SizedBox(height: 100),
+          ),
         ],
       ),
     );
   }
 }
 
+class _ExploreSpotCard extends StatelessWidget {
+  final PhotoSpot spot;
+
+  const _ExploreSpotCard({
+    required this.spot,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        20,
+        0,
+        20,
+        12,
+      ),
+      child: Card(
+        color: const Color(0xFF151A22),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => SpotDetailScreen(
+                  spot: spot,
+                ),
+              ),
+            );
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(10),
+            child: Row(
+              children: [
+                ClipRRect(
+                  borderRadius:
+                      BorderRadius.circular(12),
+                  child: Image.network(
+                    spot.imageUrl,
+                    width: 88,
+                    height: 88,
+                    fit: BoxFit.cover,
+                    errorBuilder: (, _, _) {
+                      return Container(
+                        width: 88,
+                        height: 88,
+                        color:
+                            const Color(0xFF222831),
+                        child: const Icon(
+                          Icons.photo,
+                          color: Colors.white38,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+
+                const SizedBox(width: 12),
+
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment:
+                        CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        spot.name,
+                        maxLines: 1,
+                        overflow:
+                            TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 17,
+                          fontWeight:
+                              FontWeight.bold,
+                        ),
+                      ),
+
+                      const SizedBox(height: 4),
+
+                      Text(
+                        '${spot.city} • ${spot.category}',
+                        style: const TextStyle(
+                          color: Colors.white54,
+                          fontSize: 13,
+                        ),
+                      ),
+
+                      const SizedBox(height: 6),
+
+                      Text(
+                        '⭐ ${spot.rating}   📸 ${spot.bestTime}',
+                        maxLines: 1,
+                        overflow:
+                            TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 12,
+                        ),
+                      ),
+
+                      const SizedBox(height: 6),
+
+                      Text(
+                        '📐 ${spot.angle}',
+                        maxLines: 1,
+                        overflow:
+                            TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color:
+                              Color(0xFFFFC107),
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                ValueListenableBuilder<
+                    List<PhotoSpot>>(
+                  valueListenable:
+                      FavoritesService.savedSpots,
+                  builder: (
+                    context,
+                    savedSpots,
+                    _,
+                  ) {
+                    final isSaved =
+                        savedSpots.any(
+                      (item) =>
+                          item.id == spot.id,
+                    );
+
+                    return IconButton(
+                      onPressed: () {
+                        FavoritesService.toggle(
+                          spot,
+                        );
+                      },
+                      icon: Icon(
+                        isSaved
+                            ? Icons.favorite
+                            : Icons
+                                .favorite_border,
+                        color: isSaved
+                            ? const Color(
+                                0xFFFFC107,
+                              )
+                            : Colors.white54,
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ======================================================
+// KAYDEDİLENLER
+// ======================================================
+
 class _SavedPage extends StatelessWidget {
   const _SavedPage();
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
-      child: Text(
-        'Kaydedilen çekim noktaların burada görünecek.',
+    return SafeArea(
+      child: ValueListenableBuilder<List<PhotoSpot>>(
+        valueListenable:
+            FavoritesService.savedSpots,
+        builder: (
+          context,
+          spots,
+          _,
+        ) {
+          if (spots.isEmpty) {
+            return const Center(
+              child: Padding(
+                padding: EdgeInsets.all(32),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.favorite_border,
+                      size: 66,
+                      color: Colors.white38,
+                    ),
+                    SizedBox(height: 16),
+                    Text(
+                      'Henüz kaydedilen nokta yok',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight:
+                            FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      'Keşfet ekranındaki kalp simgesine basarak çekim noktalarını kaydedebilirsin.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.white54,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+
+          return ListView(
+            padding: const EdgeInsets.fromLTRB(
+              20,
+              22,
+              20,
+              110,
+            ),
+            children: [
+              const Text(
+                'Kaydedilenler',
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+
+              const SizedBox(height: 4),
+
+              Text(
+                '${spots.length} çekim noktası',
+                style: const TextStyle(
+                  color: Colors.white54,
+                ),
+              ),
+
+              const SizedBox(height: 18),
+
+              ...spots.map(
+                (spot) => Card(
+                  color: const Color(0xFF151A22),
+                  margin: const EdgeInsets.only(
+                    bottom: 12,
+                  ),
+                  child: ListTile(
+                    contentPadding:
+                        const EdgeInsets.all(10),
+                    leading: ClipRRect(
+                      borderRadius:
+                          BorderRadius.circular(10),
+                      child: Image.network(
+                        spot.imageUrl,
+                        width: 70,
+                        height: 70,
+                        fit: BoxFit.cover,
+                        errorBuilder:
+                            (, _, _) {
+                          return Container(
+                            width: 70,
+                            height: 70,
+                            color: const Color(
+                              0xFF222831,
+                            ),
+                            child: const Icon(
+                              Icons.photo,
+                              color:
+                                  Colors.white38,
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    title: Text(
+                      spot.name,
+                      maxLines: 1,
+                      overflow:
+                          TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontWeight:
+                            FontWeight.bold,
+                      ),
+                    ),
+                    subtitle: Text(
+                      '${spot.city} • ⭐ ${spot.rating}\n${spot.category}',
+                    ),
+                    isThreeLine: true,
+                    trailing: IconButton(
+                      tooltip: 'Kaydı kaldır',
+                      icon: const Icon(
+                        Icons.favorite,
+                        color:
+                            Color(0xFFFFC107),
+                      ),
+                      onPressed: () {
+                        FavoritesService.remove(
+                          spot,
+                        );
+                      },
+                    ),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              SpotDetailScreen(
+                            spot: spot,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
 }
+
+// ======================================================
+// PROFİL
+// ======================================================
 
 class _ProfilePage extends StatelessWidget {
   const _ProfilePage();
@@ -438,150 +752,194 @@ class _ProfilePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: CustomScrollView(
-        slivers: [
-          const SliverToBoxAdapter(
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(20, 24, 20, 8),
-              child: Text(
-                'Profil',
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.w800,
+      child: ListView(
+        padding: const EdgeInsets.fromLTRB(
+          20,
+          22,
+          20,
+          110,
+        ),
+        children: [
+          const Text(
+            'Profil',
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
+          const Center(
+            child: CircleAvatar(
+              radius: 54,
+              backgroundColor:
+                  Color(0xFFFFC107),
+              child: CircleAvatar(
+                radius: 49,
+                backgroundColor:
+                    Color(0xFF171C24),
+                child: Icon(
+                  Icons.person,
+                  size: 56,
+                  color: Colors.white54,
                 ),
               ),
             ),
           ),
 
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  // PROFİL FOTOĞRAFI
-                  CircleAvatar(
-                    radius: 52,
-                    backgroundColor:
-                        const Color(0xFFFFC107),
-                    child: CircleAvatar(
-                      radius: 48,
-                      backgroundColor:
-                          const Color(0xFF171C24),
-                      child: const Icon(
-                        Icons.person,
-                        size: 52,
-                        color: Colors.white54,
-                      ),
-                    ),
-                  ),
+          const SizedBox(height: 14),
 
-                  const SizedBox(height: 14),
-
-                  const Text(
-                    'Fotoğrafçı',
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-
-                  const SizedBox(height: 5),
-
-                  const Text(
-                    'Daha iyi fotoğraflar için doğru noktayı keşfet.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.white54,
-                    ),
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // İSTATİSTİKLER
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 18,
-                    ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF151A22),
-                      borderRadius:
-                          BorderRadius.circular(18),
-                    ),
-                    child: const Row(
-                      mainAxisAlignment:
-                          MainAxisAlignment.spaceEvenly,
-                      children: [
-                        _ProfileStat(
-                          value: '0',
-                          label: 'Çekim',
-                        ),
-                        _ProfileStat(
-                          value: '0',
-                          label: 'Kaydedilen',
-                        ),
-                        _ProfileStat(
-                          value: '0',
-                          label: 'Favori',
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // PROFİL MENÜLERİ
-                  _ProfileMenuItem(
-                    icon: Icons.favorite_border,
-                    title: 'Kaydedilen Noktalar',
-                    subtitle:
-                        'Favori çekim noktalarını görüntüle',
-                    onTap: () {},
-                  ),
-
-                  _ProfileMenuItem(
-                    icon: Icons.photo_library_outlined,
-                    title: 'Çekimlerim',
-                    subtitle:
-                        'Çektiğin fotoğrafları görüntüle',
-                    onTap: () {},
-                  ),
-
-                  _ProfileMenuItem(
-                    icon: Icons.location_on_outlined,
-                    title: 'Konum Tercihleri',
-                    subtitle:
-                        'Yakındaki çekim noktalarını ayarla',
-                    onTap: () {},
-                  ),
-
-                  _ProfileMenuItem(
-                    icon: Icons.settings_outlined,
-                    title: 'Ayarlar',
-                    subtitle:
-                        'Uygulama ve bildirim ayarları',
-                    onTap: () {},
-                  ),
-
-                  _ProfileMenuItem(
-                    icon: Icons.info_outline,
-                    title: 'Uygulama Hakkında',
-                    subtitle:
-                        'En İyi Çekim Noktası',
-                    onTap: () {
-                      showAboutDialog(
-                        context: context,
-                        applicationName:
-                            'En İyi Çekim Noktası',
-                        applicationVersion:
-                            '1.0.0',
-                        applicationLegalese:
-                            '© 2026',
-                      );
-                    },
-                  ),
-                ],
+          const Center(
+            child: Text(
+              'Fotoğrafçı',
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
               ),
             ),
+          ),
+
+          const SizedBox(height: 6),
+
+          const Center(
+            child: Text(
+              'Doğru noktayı keşfet, daha iyi fotoğraf çek.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.white54,
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 26),
+
+          ValueListenableBuilder<List<PhotoSpot>>(
+            valueListenable:
+                FavoritesService.savedSpots,
+            builder: (
+              context,
+              saved,
+              _,
+            ) {
+              return Container(
+                padding: const EdgeInsets.symmetric(
+                  vertical: 20,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF151A22),
+                  borderRadius:
+                      BorderRadius.circular(18),
+                ),
+                child: Row(
+                  mainAxisAlignment:
+                      MainAxisAlignment.spaceEvenly,
+                  children: [
+                    const _ProfileStat(
+                      value: '0',
+                      label: 'Çekim',
+                    ),
+                    _ProfileStat(
+                      value:
+                          saved.length.toString(),
+                      label: 'Kaydedilen',
+                    ),
+                    _ProfileStat(
+                      value:
+                          saved.length.toString(),
+                      label: 'Favori',
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+
+          const SizedBox(height: 24),
+
+          _ProfileMenuItem(
+            icon: Icons.favorite_border,
+            title: 'Kaydedilen Noktalar',
+            subtitle:
+                'Favori çekim noktalarını görüntüle',
+            onTap: () {
+              ScaffoldMessenger.of(context)
+                  .showSnackBar(
+                const SnackBar(
+                  content: Text(
+                    'Kaydedilenler sekmesine alt menüden ulaşabilirsin.',
+                  ),
+                ),
+              );
+            },
+          ),
+
+          _ProfileMenuItem(
+            icon: Icons.photo_library_outlined,
+            title: 'Çekimlerim',
+            subtitle:
+                'Çektiğin fotoğrafları görüntüle',
+            onTap: () {
+              ScaffoldMessenger.of(context)
+                  .showSnackBar(
+                const SnackBar(
+                  content: Text(
+                    'Çekimlerim özelliği sonraki sürümde eklenecek.',
+                  ),
+                ),
+              );
+            },
+          ),
+
+          _ProfileMenuItem(
+            icon: Icons.location_on_outlined,
+            title: 'Konum Tercihleri',
+            subtitle:
+                'Yakındaki çekim noktalarını yönet',
+            onTap: () {
+              ScaffoldMessenger.of(context)
+                  .showSnackBar(
+                const SnackBar(
+                  content: Text(
+                    'Konum tercihleri yakında eklenecek.',
+                  ),
+                ),
+              );
+            },
+          ),
+
+          _ProfileMenuItem(
+            icon: Icons.settings_outlined,
+            title: 'Ayarlar',
+            subtitle:
+                'Uygulama ve bildirim ayarları',
+            onTap: () {
+              ScaffoldMessenger.of(context)
+                  .showSnackBar(
+                const SnackBar(
+                  content: Text(
+                    'Ayarlar ekranı sonraki sürümde eklenecek.',
+                  ),
+                ),
+              );
+            },
+          ),
+
+          _ProfileMenuItem(
+            icon: Icons.info_outline,
+            title: 'Uygulama Hakkında',
+            subtitle:
+                'En İyi Çekim Noktası',
+            onTap: () {
+              showAboutDialog(
+                context: context,
+                applicationName:
+                    'En İyi Çekim Noktası',
+                applicationVersion: '1.0.0',
+                applicationLegalese:
+                    '© 2026',
+              );
+            },
           ),
         ],
       ),
@@ -605,8 +963,9 @@ class _ProfileStat extends StatelessWidget {
         Text(
           value,
           style: const TextStyle(
-            fontSize: 22,
+            fontSize: 23,
             fontWeight: FontWeight.bold,
+            color: Color(0xFFFFC107),
           ),
         ),
         const SizedBox(height: 4),
@@ -638,10 +997,13 @@ class _ProfileMenuItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: const EdgeInsets.only(bottom: 10),
+      margin: const EdgeInsets.only(
+        bottom: 10,
+      ),
       color: const Color(0xFF151A22),
       child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(
+        contentPadding:
+            const EdgeInsets.symmetric(
           horizontal: 16,
           vertical: 6,
         ),
@@ -651,7 +1013,8 @@ class _ProfileMenuItem extends StatelessWidget {
           decoration: BoxDecoration(
             color: const Color(0xFFFFC107)
                 .withOpacity(.12),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius:
+                BorderRadius.circular(12),
           ),
           child: Icon(
             icon,
