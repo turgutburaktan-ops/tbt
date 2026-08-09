@@ -197,26 +197,13 @@ app.post(
     try {
       if (!req.file) {
         return res.status(400).json({
-          error:
-            "Kamera karesi gönderilmedi.",
+          error: "Kamera karesi gönderilmedi.",
         });
       }
 
-      if (!process.env.OPENAI_API_KEY) {
-        return res.status(500).json({
-          error:
-            "OPENAI_API_KEY tanımlı değil.",
-        });
-      }
-
-      const mimeType = detectMimeType(
-        req.file
-      );
-
+      const mimeType = detectMimeType(req.file);
       const base64Image =
-        req.file.buffer.toString(
-          "base64"
-        );
+        req.file.buffer.toString("base64");
 
       const mode = String(
         req.body?.mode || "Normal"
@@ -235,75 +222,62 @@ app.post(
                   type: "input_text",
 
                   text: `
-Sen gerçek zamanlı çalışan profesyonel bir fotoğraf çekim asistanısın.
-
-Kullanıcının kamera görüntüsünü incele.
+Sen gerçek zamanlı fotoğraf çekim asistanısın.
 
 Seçili çekim modu:
 ${mode}
 
-Amacın kullanıcı deklanşöre basmadan önce daha iyi fotoğraf çekmesini sağlamak.
+Kullanıcı deklanşöre basmadan hemen önce kısa yönlendirme ver.
 
 SADECE geçerli JSON döndür.
-Markdown kullanma.
-
-Şu formatı kullan:
 
 {
   "status": "adjust",
   "main_tip": "",
   "composition_tip": "",
-  "light_tip": "",
-  "subject_tip": ""
+  "light_tip": ""
 }
-
-status yalnızca şu değerlerden biri olabilir:
-
-"good"
-"adjust"
-"warning"
 
 Kurallar:
 
-- Tüm cevaplar Türkçe olsun.
-- Kısa ve anlaşılır yaz.
-- Görmediğin bir şeyi uydurma.
-- Fotoğrafta insan yoksa yüz önerisi verme.
-- Ana konu belli değilse bunu söyle.
-- Gereksiz öneri verme.
+- status sadece:
+  "good"
+  "adjust"
+  "warning"
 
-main_tip:
-Kullanıcının şu anda yapması gereken en önemli şeyi söyle.
+- Tüm öneriler Türkçe olsun.
 
-composition_tip:
-Kadraj ve kompozisyon tavsiyesi ver.
+- Her öneri EN FAZLA 6-8 kelime olsun.
 
-light_tip:
-Işık durumuna göre tavsiye ver.
+- Uzun açıklama yazma.
 
-subject_tip:
-Ana konu hakkında tavsiye ver.
+- Aynı şeyi iki kez söyleme.
 
-Mümkün olduğunda şu tarz uygulanabilir yönlendirmeler ver:
+- Görmediğin şeyi uydurma.
 
-"Biraz sağa geç."
-"Telefonu biraz aşağı indir."
-"Konuyu sağ üçte birlik çizgiye taşı."
-"Arka plan çok parlak."
-"Bir adım geri git."
-"Ana konu çok ortada."
-"Kamerayı biraz sola çevir."
-"Bu kadraj iyi, çekebilirsin."
+- En önemli öneriyi main_tip alanına yaz.
 
-Eğer görüntü zaten iyiyse:
+- İkinci önemli öneriyi composition_tip alanına yaz.
+
+- Gerekirse üçüncü öneriyi light_tip alanına yaz.
+
+- Görüntü zaten iyiyse:
 
 status = "good"
+main_tip = "Kadraj hazır — çekebilirsin."
+composition_tip = ""
+light_tip = ""
 
-ve main_tip:
+Örnek:
 
-"Kadraj iyi. Fotoğrafı çekebilirsin."
+{
+  "status": "adjust",
+  "main_tip": "Telefonu biraz yukarı kaldır.",
+  "composition_tip": "Konuyu sağ üçte bire taşı.",
+  "light_tip": "Ekran parlaklığını biraz azalt."
+}
 
-şeklinde cevap verebilirsin.
+Gereksiz ayrıntı verme.
                   `.trim(),
                 },
 
@@ -344,9 +318,7 @@ ve main_tip:
           parsedResult.light_tip || ""
         ),
 
-        subject_tip: String(
-          parsedResult.subject_tip || ""
-        ),
+        subject_tip: "",
       });
     } catch (error) {
       console.error(
@@ -359,19 +331,5 @@ ve main_tip:
           "Canlı kadraj analizi başarısız.",
       });
     }
-  }
-);
-
-// =====================================================
-// SERVER
-// =====================================================
-
-app.listen(
-  port,
-  "0.0.0.0",
-  () => {
-    console.log(
-      `AI backend ${port} portunda çalışıyor.`
-    );
   }
 );
