@@ -116,12 +116,16 @@ jobs:
       - name: Build APK
         run: flutter build apk --release
 
-      - name: Show APK Information
+      - name: Verify Release APK Certificate
         run: |
           echo "========================================"
-          echo "APK CREATED"
+          echo "REAL APK CERTIFICATE"
           echo "========================================"
-          ls -lh build/app/outputs/flutter-apk/
+
+          $ANDROID_HOME/build-tools/35.0.0/apksigner verify \
+            --print-certs \
+            build/app/outputs/flutter-apk/app-release.apk
+
           echo "========================================"
 
       - name: Upload APK
