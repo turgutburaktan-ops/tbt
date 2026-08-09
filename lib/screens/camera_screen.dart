@@ -1,8 +1,11 @@
+import 'dart:async';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:sensors_plus/sensors_plus.dart';
 
 import '../services/ai_service.dart';
 
@@ -19,7 +22,11 @@ class _CameraScreenState extends State<CameraScreen> {
 
   final ImagePicker _picker = ImagePicker();
 
+  StreamSubscription<AccelerometerEvent>? _accelerometerSubscription;
+  StreamSubscription<GyroscopeEvent>? _gyroscopeSubscription;
+
   int _cameraIndex = 0;
+
   bool _flashEnabled = false;
   bool _showGrid = true;
   bool _initializing = true;
@@ -39,6 +46,16 @@ class _CameraScreenState extends State<CameraScreen> {
   String _stabilityTip =
       'Telefonu sabit tut.';
 
+  String _movementTip =
+      'Telefon sabit.';
+
+  String _levelTip =
+      'Kadraj dengeli.';
+
+  double _movementLevel = 0;
+  double _gyroX = 0;
+  double _gyroY = 0;
+
   final List<String> _filters = const [
     'Normal',
     'Golden',
@@ -52,8 +69,10 @@ class _CameraScreenState extends State<CameraScreen> {
   @override
   void initState() {
     super.initState();
+
     _initializeCamera();
     _updateLiveAssistant();
+    _startMotionAssistant();
   }
 
   Future<void> _initializeCamera() async {
@@ -71,7 +90,9 @@ class _CameraScreenState extends State<CameraScreen> {
 
       await _startCamera(0);
     } catch (e) {
-      debugPrint('Kamera başlatma hatası: $e');
+      debugPrint(
+        'Kamera başlatma hatası: $e',
+      );
 
       if (mounted) {
         setState(() {
@@ -81,12 +102,17 @@ class _CameraScreenState extends State<CameraScreen> {
     }
   }
 
-  Future<void> _startCamera(int index) async {
-    if (_cameras.isEmpty) return;
+  Future<void> _startCamera(
+    int index,
+  ) async {
+    if (_cameras.isEmpty) {
+      return;
+    }
 
     await _controller?.dispose();
 
-    final newController = CameraController(
+    final newController =
+        CameraController(
       _cameras[index],
       ResolutionPreset.high,
       enableAudio: false,
@@ -104,7 +130,9 @@ class _CameraScreenState extends State<CameraScreen> {
         });
       }
     } catch (e) {
-      debugPrint('Kamera controller hatası: $e');
+      debugPrint(
+        'Kamera controller hatası: $e',
+      );
 
       await newController.dispose();
 
@@ -117,24 +145,32 @@ class _CameraScreenState extends State<CameraScreen> {
   }
 
   Future<void> _toggleCamera() async {
-    if (_cameras.length < 2) return;
+    if (_cameras.length < 2) {
+      return;
+    }
 
     final nextIndex =
-        (_cameraIndex + 1) % _cameras.length;
+        (_cameraIndex + 1) %
+            _cameras.length;
 
-    await _startCamera(nextIndex);
+    await _startCamera(
+      nextIndex,
+    );
   }
 
   Future<void> _toggleFlash() async {
     if (_controller == null ||
-        !_controller!.value.isInitialized) {
+        !_controller!
+            .value.isInitialized) {
       return;
     }
 
     try {
-      _flashEnabled = !_flashEnabled;
+      _flashEnabled =
+          !_flashEnabled;
 
-      await _controller!.setFlashMode(
+      await _controller!
+          .setFlashMode(
         _flashEnabled
             ? FlashMode.torch
             : FlashMode.off,
@@ -144,62 +180,195 @@ class _CameraScreenState extends State<CameraScreen> {
         setState(() {});
       }
     } catch (e) {
-      debugPrint('Flaş hatası: $e');
+      debugPrint(
+        'Flaş hatası: $e',
+      );
     }
   }
 
   Future<void> _takePhoto() async {
     if (_controller == null ||
-        !_controller!.value.isInitialized ||
-        _controller!.value.isTakingPicture) {
+        !_controller!
+            .value.isInitialized ||
+        _controller!
+            .value.isTakingPicture) {
       return;
     }
 
     try {
       final image =
-          await _controller!.takePicture();
+          await _controller!
+              .takePicture();
 
       if (!mounted) return;
 
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => PhotoPreviewScreen(
-            imagePath: image.path,
+          builder: (
+            context,
+          ) =>
+              PhotoPreviewScreen(
+            imagePath:
+                image.path,
           ),
         ),
       );
     } catch (e) {
-      debugPrint('Fotoğraf çekme hatası: $e');
+      debugPrint(
+        'Fotoğraf çekme hatası: $e',
+      );
     }
   }
 
-  Future<void> _pickFromGallery() async {
+  Future<void>
+      _pickFromGallery() async {
     try {
       final image =
           await _picker.pickImage(
-        source: ImageSource.gallery,
+        source:
+            ImageSource.gallery,
         imageQuality: 92,
       );
 
-      if (image == null || !mounted) return;
+      if (image == null ||
+          !mounted) {
+        return;
+      }
 
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => PhotoPreviewScreen(
-            imagePath: image.path,
+          builder: (
+            context,
+          ) =>
+              PhotoPreviewScreen(
+            imagePath:
+                image.path,
           ),
         ),
       );
     } catch (e) {
-      debugPrint('Galeri hatası: $e');
+      debugPrint(
+        'Galeri hatası: $e',
+      );
     }
   }
 
-  void _selectFilter(String filter) {
+  void _startMotionAssistant() {
+    _accelerometerSubscription =
+        accelerometerEventStream()
+            .listen(
+      (event) {
+        final magnitude = sqrt(
+          event.x * event.x +
+              event.y * event.y +
+              event.z * event.z,
+        );
+
+        final movement =
+            (magnitude - 9.81)
+                .abs();
+
+        if (!mounted) {
+          return;
+        }
+
+        String newTip;
+
+        if (movement > 2.8) {
+          newTip =
+              '⚠️ Telefon çok hareket ediyor.';
+        } else if (movement >
+            1.2) {
+          newTip =
+              'Telefonu biraz daha sabit tut.';
+        } else {
+          newTip =
+              '✓ Telefon yeterince sabit.';
+        }
+
+        if (newTip !=
+                _movementTip ||
+            (movement -
+                        _movementLevel)
+                    .abs() >
+                0.2) {
+          setState(() {
+            _movementLevel =
+                movement;
+            _movementTip =
+                newTip;
+          });
+        }
+      },
+      onError: (error) {
+        debugPrint(
+          'İvmeölçer hatası: $error',
+        );
+      },
+    );
+
+    _gyroscopeSubscription =
+        gyroscopeEventStream()
+            .listen(
+      (event) {
+        if (!mounted) {
+          return;
+        }
+
+        final x =
+            event.x.abs();
+        final y =
+            event.y.abs();
+
+        String newTip;
+
+        if (x > 0.65) {
+          newTip =
+              'Telefonu sağa veya sola daha az eğ.';
+        } else if (y > 0.65) {
+          newTip =
+              'Telefonu biraz düzleştir.';
+        } else {
+          newTip =
+              '✓ Kadraj dengeli.';
+        }
+
+        if (newTip !=
+                _levelTip ||
+            (event.x -
+                        _gyroX)
+                    .abs() >
+                0.1 ||
+            (event.y -
+                        _gyroY)
+                    .abs() >
+                0.1) {
+          setState(() {
+            _gyroX =
+                event.x;
+            _gyroY =
+                event.y;
+            _levelTip =
+                newTip;
+          });
+        }
+      },
+      onError: (error) {
+        debugPrint(
+          'Jiroskop hatası: $error',
+        );
+      },
+    );
+  }
+
+  void _selectFilter(
+    String filter,
+  ) {
     setState(() {
-      _selectedFilter = filter;
+      _selectedFilter =
+          filter;
 
       switch (filter) {
         case 'Golden':
@@ -242,8 +411,6 @@ class _CameraScreenState extends State<CameraScreen> {
   }
 
   void _updateLiveAssistant() {
-    if (!_showLiveAssistant) return;
-
     String positionTip;
     String lightTip;
     String stabilityTip;
@@ -252,8 +419,10 @@ class _CameraScreenState extends State<CameraScreen> {
       case 'Portrait':
         positionTip =
             'Yüzü üst üçte birlik çizgiye yaklaştır ve biraz boşluk bırak.';
+
         lightTip =
             'Yüzün önünden veya hafif yandan gelen yumuşak ışığı kullan.';
+
         stabilityTip =
             'Telefonu göz hizasında ve mümkün olduğunca sabit tut.';
         break;
@@ -261,8 +430,10 @@ class _CameraScreenState extends State<CameraScreen> {
       case 'Golden':
         positionTip =
             'Ana konuyu güneşin ters tarafındaki üçte birlik çizgiye yerleştir.';
+
         lightTip =
-            'Altın saat ışığını yandan al; doğrudan kameraya çevirmemeye çalış.';
+            'Altın saat ışığını yandan al.';
+
         stabilityTip =
             'Pozlamayı korumak için telefonu sabit tut.';
         break;
@@ -270,8 +441,10 @@ class _CameraScreenState extends State<CameraScreen> {
       case 'Nature':
         positionTip =
             'Ufku tam ortaya koyma; üst veya alt üçte birlik çizgiye taşı.';
+
         lightTip =
             'Gökyüzü çok parlaksa kamerayı biraz aşağı yönlendir.';
+
         stabilityTip =
             'Manzara çekiminde telefonu iki elle tut.';
         break;
@@ -279,17 +452,21 @@ class _CameraScreenState extends State<CameraScreen> {
       case 'Night':
         positionTip =
             'Parlak ışık kaynaklarını tam merkeze koyma.';
+
         lightTip =
             'Işık düşük. Telefonu mümkün olduğunca sabit tut.';
+
         stabilityTip =
-            'Gece çekiminde hareket etme ve telefonu bir yere yaslamayı dene.';
+            'Gece çekiminde hareket etme.';
         break;
 
       case 'Architecture':
         positionTip =
             'Binanın dikey çizgilerini ekran kenarlarına paralel tut.';
+
         lightTip =
             'Cephedeki gölge ve parlak alanların dengesini kontrol et.';
+
         stabilityTip =
             'Telefonu sağa veya sola eğmeden tut.';
         break;
@@ -297,8 +474,10 @@ class _CameraScreenState extends State<CameraScreen> {
       case 'B&W':
         positionTip =
             'Güçlü çizgileri ve geometrik şekilleri kadrajda öne çıkar.';
+
         lightTip =
             'Kontrastı artıran gölge ve ışık bölgelerini kullan.';
+
         stabilityTip =
             'Keskin çizgiler için telefonu sabit tut.';
         break;
@@ -306,8 +485,10 @@ class _CameraScreenState extends State<CameraScreen> {
       default:
         positionTip =
             'Ana konuyu sağ veya sol üçte birlik çizgiye yerleştir.';
+
         lightTip =
             'Ana konu çok karanlık veya aşırı parlak görünmemeli.';
+
         stabilityTip =
             'Çekim sırasında telefonu iki elle sabit tut.';
     }
@@ -315,31 +496,46 @@ class _CameraScreenState extends State<CameraScreen> {
     if (!mounted) return;
 
     setState(() {
-      _positionTip = positionTip;
-      _lightTip = lightTip;
-      _stabilityTip = stabilityTip;
+      _positionTip =
+          positionTip;
+      _lightTip =
+          lightTip;
+      _stabilityTip =
+          stabilityTip;
     });
   }
 
   Color _filterOverlayColor() {
     switch (_selectedFilter) {
       case 'Golden':
-        return const Color(0x33FFC15A);
+        return const Color(
+          0x33FFC15A,
+        );
 
       case 'Portrait':
-        return const Color(0x1AFFA0B5);
+        return const Color(
+          0x1AFFA0B5,
+        );
 
       case 'Nature':
-        return const Color(0x1A5CB85C);
+        return const Color(
+          0x1A5CB85C,
+        );
 
       case 'Night':
-        return const Color(0x33002040);
+        return const Color(
+          0x33002040,
+        );
 
       case 'Architecture':
-        return const Color(0x1A9E9E9E);
+        return const Color(
+          0x1A9E9E9E,
+        );
 
       case 'B&W':
-        return const Color(0x33000000);
+        return const Color(
+          0x33000000,
+        );
 
       default:
         return Colors.transparent;
@@ -348,37 +544,58 @@ class _CameraScreenState extends State<CameraScreen> {
 
   @override
   void dispose() {
+    _accelerometerSubscription
+        ?.cancel();
+
+    _gyroscopeSubscription
+        ?.cancel();
+
     _controller?.dispose();
+
     super.dispose();
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     if (_initializing) {
       return const Scaffold(
-        backgroundColor: Colors.black,
+        backgroundColor:
+            Colors.black,
         body: Center(
-          child: CircularProgressIndicator(),
+          child:
+              CircularProgressIndicator(),
         ),
       );
     }
 
     if (_controller == null ||
-        !_controller!.value.isInitialized) {
+        !_controller!
+            .value.isInitialized) {
       return Scaffold(
-        backgroundColor: Colors.black,
+        backgroundColor:
+            Colors.black,
         body: SafeArea(
           child: Column(
             children: [
               Align(
-                alignment: Alignment.centerLeft,
-                child: IconButton(
-                  icon: const Icon(
+                alignment:
+                    Alignment
+                        .centerLeft,
+                child:
+                    IconButton(
+                  icon:
+                      const Icon(
                     Icons.close,
-                    color: Colors.white,
+                    color:
+                        Colors
+                            .white,
                   ),
                   onPressed: () {
-                    Navigator.pop(context);
+                    Navigator.pop(
+                      context,
+                    );
                   },
                 ),
               ),
@@ -386,9 +603,13 @@ class _CameraScreenState extends State<CameraScreen> {
                 child: Center(
                   child: Text(
                     'Kamera başlatılamadı.',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
+                    style:
+                        TextStyle(
+                      color:
+                          Colors
+                              .white,
+                      fontSize:
+                          16,
                     ),
                   ),
                 ),
@@ -400,28 +621,34 @@ class _CameraScreenState extends State<CameraScreen> {
     }
 
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor:
+          Colors.black,
       body: SafeArea(
         child: Stack(
           children: [
             Positioned.fill(
-              child: CameraPreview(
+              child:
+                  CameraPreview(
                 _controller!,
               ),
             ),
 
             Positioned.fill(
-              child: IgnorePointer(
+              child:
+                  IgnorePointer(
                 child: Container(
-                  color: _filterOverlayColor(),
+                  color:
+                      _filterOverlayColor(),
                 ),
               ),
             ),
 
             if (_showGrid)
               const Positioned.fill(
-                child: IgnorePointer(
-                  child: CameraGrid(),
+                child:
+                    IgnorePointer(
+                  child:
+                      CameraGrid(),
                 ),
               ),
 
@@ -432,23 +659,39 @@ class _CameraScreenState extends State<CameraScreen> {
               child: Row(
                 children: [
                   CameraCircleButton(
-                    icon: Icons.close,
+                    icon:
+                        Icons.close,
                     onTap: () {
-                      Navigator.pop(context);
+                      Navigator.pop(
+                        context,
+                      );
                     },
                   ),
+
                   const Spacer(),
+
                   CameraCircleButton(
-                    icon: _flashEnabled
-                        ? Icons.flash_on
-                        : Icons.flash_off,
-                    onTap: _toggleFlash,
+                    icon:
+                        _flashEnabled
+                            ? Icons
+                                .flash_on
+                            : Icons
+                                .flash_off,
+                    onTap:
+                        _toggleFlash,
                   ),
-                  const SizedBox(width: 8),
+
+                  const SizedBox(
+                    width: 8,
+                  ),
+
                   CameraCircleButton(
-                    icon: _showGrid
-                        ? Icons.grid_on
-                        : Icons.grid_off,
+                    icon:
+                        _showGrid
+                            ? Icons
+                                .grid_on
+                            : Icons
+                                .grid_off,
                     onTap: () {
                       setState(() {
                         _showGrid =
@@ -456,11 +699,18 @@ class _CameraScreenState extends State<CameraScreen> {
                       });
                     },
                   ),
-                  const SizedBox(width: 8),
+
+                  const SizedBox(
+                    width: 8,
+                  ),
+
                   CameraCircleButton(
-                    icon: _showLiveAssistant
-                        ? Icons.auto_awesome
-                        : Icons.auto_awesome_outlined,
+                    icon:
+                        _showLiveAssistant
+                            ? Icons
+                                .auto_awesome
+                            : Icons
+                                .auto_awesome_outlined,
                     onTap: () {
                       setState(() {
                         _showLiveAssistant =
@@ -477,12 +727,20 @@ class _CameraScreenState extends State<CameraScreen> {
                 top: 78,
                 left: 14,
                 right: 14,
-                child: LiveAssistantCard(
-                  mainTip: _liveTip,
-                  positionTip: _positionTip,
-                  lightTip: _lightTip,
+                child:
+                    LiveAssistantCard(
+                  mainTip:
+                      _liveTip,
+                  positionTip:
+                      _positionTip,
+                  lightTip:
+                      _lightTip,
                   stabilityTip:
                       _stabilityTip,
+                  movementTip:
+                      _movementTip,
+                  levelTip:
+                      _levelTip,
                 ),
               ),
 
@@ -492,22 +750,36 @@ class _CameraScreenState extends State<CameraScreen> {
               bottom: 155,
               child: SizedBox(
                 height: 52,
-                child: ListView.separated(
+                child:
+                    ListView.separated(
                   padding:
-                      const EdgeInsets.symmetric(
-                    horizontal: 14,
+                      const EdgeInsets
+                          .symmetric(
+                    horizontal:
+                        14,
                   ),
                   scrollDirection:
                       Axis.horizontal,
                   itemCount:
-                      _filters.length,
-                 separatorBuilder: (context, index) {
-                    return const SizedBox(width: 8);
-                 },
+                      _filters
+                          .length,
+                  separatorBuilder:
+                      (
+                    context,
+                    index,
+                  ) {
+                    return const SizedBox(
+                      width: 8,
+                    );
+                  },
                   itemBuilder:
-                      (context, index) {
+                      (
+                    context,
+                    index,
+                  ) {
                     final filter =
-                        _filters[index];
+                        _filters[
+                            index];
 
                     final selected =
                         _selectedFilter ==
@@ -519,15 +791,20 @@ class _CameraScreenState extends State<CameraScreen> {
                           filter,
                         );
                       },
-                      child: AnimatedContainer(
+                      child:
+                          AnimatedContainer(
                         duration:
                             const Duration(
-                          milliseconds: 180,
+                          milliseconds:
+                              180,
                         ),
                         padding:
-                            const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 10,
+                            const EdgeInsets
+                                .symmetric(
+                          horizontal:
+                              16,
+                          vertical:
+                              10,
                         ),
                         decoration:
                             BoxDecoration(
@@ -535,7 +812,8 @@ class _CameraScreenState extends State<CameraScreen> {
                               ? const Color(
                                   0xFFFFC107,
                                 )
-                              : Colors.black
+                              : Colors
+                                  .black
                                   .withOpacity(
                                     .58,
                                   ),
@@ -545,17 +823,18 @@ class _CameraScreenState extends State<CameraScreen> {
                             22,
                           ),
                         ),
-                        child: Center(
-                          child: Text(
+                        child:
+                            Center(
+                          child:
+                              Text(
                             filter,
                             style:
                                 TextStyle(
-                              color:
-                                  selected
-                                      ? Colors
-                                          .black
-                                      : Colors
-                                          .white,
+                              color: selected
+                                  ? Colors
+                                      .black
+                                  : Colors
+                                      .white,
                               fontWeight:
                                   FontWeight
                                       .w700,
@@ -579,37 +858,44 @@ class _CameraScreenState extends State<CameraScreen> {
                         .spaceBetween,
                 children: [
                   CameraCircleButton(
-                    icon:
-                        Icons.photo_library_outlined,
+                    icon: Icons
+                        .photo_library_outlined,
                     size: 54,
                     onTap:
                         _pickFromGallery,
                   ),
 
                   GestureDetector(
-                    onTap: _takePhoto,
+                    onTap:
+                        _takePhoto,
                     child: Container(
                       width: 82,
                       height: 82,
                       padding:
-                          const EdgeInsets.all(
+                          const EdgeInsets
+                              .all(
                         6,
                       ),
                       decoration:
                           BoxDecoration(
                         shape:
-                            BoxShape.circle,
-                        border: Border.all(
+                            BoxShape
+                                .circle,
+                        border:
+                            Border.all(
                           color:
-                              Colors.white,
+                              Colors
+                                  .white,
                           width: 4,
                         ),
                       ),
-                      child: Container(
+                      child:
+                          Container(
                         decoration:
                             const BoxDecoration(
                           shape:
-                              BoxShape.circle,
+                              BoxShape
+                                  .circle,
                           color:
                               Color(
                             0xFFFFC107,
@@ -642,6 +928,8 @@ class LiveAssistantCard
   final String positionTip;
   final String lightTip;
   final String stabilityTip;
+  final String movementTip;
+  final String levelTip;
 
   const LiveAssistantCard({
     super.key,
@@ -649,68 +937,116 @@ class LiveAssistantCard
     required this.positionTip,
     required this.lightTip,
     required this.stabilityTip,
+    required this.movementTip,
+    required this.levelTip,
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return Container(
       padding:
-          const EdgeInsets.all(14),
-      decoration: BoxDecoration(
+          const EdgeInsets.all(
+        14,
+      ),
+      decoration:
+          BoxDecoration(
         color:
-            Colors.black.withOpacity(.72),
+            Colors.black
+                .withOpacity(
+          .72,
+        ),
         borderRadius:
-            BorderRadius.circular(18),
-        border: Border.all(
-          color: const Color(
+            BorderRadius
+                .circular(
+          18,
+        ),
+        border:
+            Border.all(
+          color:
+              const Color(
             0x44FFC107,
           ),
         ),
       ),
       child: Column(
         crossAxisAlignment:
-            CrossAxisAlignment.start,
+            CrossAxisAlignment
+                .start,
         children: [
           const Row(
             children: [
               Icon(
-                Icons.auto_awesome,
+                Icons
+                    .auto_awesome,
                 color:
-                    Color(0xFFFFC107),
+                    Color(
+                  0xFFFFC107,
+                ),
                 size: 20,
               ),
-              SizedBox(width: 8),
+              SizedBox(
+                width: 8,
+              ),
               Text(
                 'AI Çekim Asistanı',
-                style: TextStyle(
-                  color: Colors.white,
+                style:
+                    TextStyle(
+                  color:
+                      Colors
+                          .white,
                   fontWeight:
-                      FontWeight.w800,
-                  fontSize: 16,
+                      FontWeight
+                          .w800,
+                  fontSize:
+                      16,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 10),
+
+          const SizedBox(
+            height: 10,
+          ),
+
           AssistantTipRow(
-            icon:
-                Icons.center_focus_strong,
+            icon: Icons
+                .center_focus_strong,
             text: mainTip,
           ),
+
           AssistantTipRow(
             icon:
                 Icons.crop_free,
-            text: positionTip,
+            text:
+                positionTip,
           ),
+
           AssistantTipRow(
-            icon:
-                Icons.light_mode_outlined,
+            icon: Icons
+                .light_mode_outlined,
             text: lightTip,
           ),
+
+          AssistantTipRow(
+            icon: Icons
+                .pan_tool_alt_outlined,
+            text:
+                stabilityTip,
+          ),
+
           AssistantTipRow(
             icon:
-                Icons.pan_tool_alt_outlined,
-            text: stabilityTip,
+                Icons.vibration,
+            text:
+                movementTip,
+          ),
+
+          AssistantTipRow(
+            icon: Icons
+                .screen_rotation_outlined,
+            text: levelTip,
           ),
         ],
       ),
@@ -730,7 +1066,9 @@ class AssistantTipRow
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return Padding(
       padding:
           const EdgeInsets.only(
@@ -738,7 +1076,8 @@ class AssistantTipRow
       ),
       child: Row(
         crossAxisAlignment:
-            CrossAxisAlignment.start,
+            CrossAxisAlignment
+                .start,
         children: [
           Icon(
             icon,
@@ -748,7 +1087,11 @@ class AssistantTipRow
               0xFFFFC107,
             ),
           ),
-          const SizedBox(width: 8),
+
+          const SizedBox(
+            width: 8,
+          ),
+
           Expanded(
             child: Text(
               text,
@@ -769,12 +1112,17 @@ class AssistantTipRow
 
 class CameraGrid
     extends StatelessWidget {
-  const CameraGrid({super.key});
+  const CameraGrid({
+    super.key,
+  });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return CustomPaint(
-      painter: GridPainter(),
+      painter:
+          GridPainter(),
     );
   }
 }
@@ -787,17 +1135,23 @@ class GridPainter
     Size size,
   ) {
     final paint = Paint()
-      ..color =
-          Colors.white.withOpacity(.38)
+      ..color = Colors.white
+          .withOpacity(
+        .38,
+      )
       ..strokeWidth = 1;
 
     final thirdWidth =
         size.width / 3;
+
     final thirdHeight =
         size.height / 3;
 
     canvas.drawLine(
-      Offset(thirdWidth, 0),
+      Offset(
+        thirdWidth,
+        0,
+      ),
       Offset(
         thirdWidth,
         size.height,
@@ -818,7 +1172,10 @@ class GridPainter
     );
 
     canvas.drawLine(
-      Offset(0, thirdHeight),
+      Offset(
+        0,
+        thirdHeight,
+      ),
       Offset(
         size.width,
         thirdHeight,
@@ -862,10 +1219,15 @@ class CameraCircleButton
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return Material(
       color:
-          Colors.black.withOpacity(.55),
+          Colors.black
+              .withOpacity(
+        .55,
+      ),
       shape:
           const CircleBorder(),
       child: InkWell(
@@ -908,7 +1270,9 @@ class PhotoPreviewScreen
 class _PhotoPreviewScreenState
     extends State<PhotoPreviewScreen> {
   bool _analyzing = false;
+
   PhotoAnalysis? _analysis;
+
   String? _error;
 
   Future<void> _analyze() async {
@@ -920,25 +1284,34 @@ class _PhotoPreviewScreenState
 
     try {
       final result =
-          await AiService.analyzePhoto(
+          await AiService
+              .analyzePhoto(
         widget.imagePath,
       );
 
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
 
       setState(() {
-        _analysis = result;
-        _analyzing = false;
+        _analysis =
+            result;
+        _analyzing =
+            false;
       });
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
 
       setState(() {
         _error =
             _friendlyError(
           e.toString(),
         );
-        _analyzing = false;
+
+        _analyzing =
+            false;
       });
     }
   }
@@ -946,79 +1319,106 @@ class _PhotoPreviewScreenState
   String _friendlyError(
     String error,
   ) {
-    if (error.contains('502')) {
+    if (error.contains(
+      '502',
+    )) {
       return 'AI servisine şu anda ulaşılamıyor. Birkaç saniye sonra tekrar deneyin.';
     }
 
-    if (error.contains('429')) {
+    if (error.contains(
+      '429',
+    )) {
       return 'AI kullanım limiti dolmuş olabilir. Lütfen daha sonra tekrar deneyin.';
     }
 
-    if (error.contains('500')) {
+    if (error.contains(
+      '500',
+    )) {
       return 'Fotoğraf analizi sırasında bir sunucu hatası oluştu. Tekrar deneyin.';
     }
 
-    return error;
+    return 'Fotoğraf analizi sırasında bir hata oluştu. Lütfen tekrar deneyin.';
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return Scaffold(
       backgroundColor:
-          const Color(0xFF0D1117),
+          const Color(
+        0xFF0D1117,
+      ),
       appBar: AppBar(
         backgroundColor:
-            const Color(0xFF0D1117),
+            const Color(
+          0xFF0D1117,
+        ),
         foregroundColor:
             Colors.white,
-        title: const Text(
+        title:
+            const Text(
           'Fotoğraf Analizi',
         ),
       ),
       body: ListView(
         padding:
-            const EdgeInsets.all(16),
+            const EdgeInsets.all(
+          16,
+        ),
         children: [
           ClipRRect(
             borderRadius:
-                BorderRadius.circular(
+                BorderRadius
+                    .circular(
               18,
             ),
-            child: Image.file(
+            child:
+                Image.file(
               File(
-                widget.imagePath,
+                widget
+                    .imagePath,
               ),
               height: 340,
-              fit: BoxFit.cover,
+              fit:
+                  BoxFit.cover,
             ),
           ),
 
-          const SizedBox(height: 20),
+          const SizedBox(
+            height: 20,
+          ),
 
-          if (_analysis == null)
+          if (_analysis ==
+              null)
             SizedBox(
               height: 54,
               child:
-                  ElevatedButton.icon(
+                  ElevatedButton
+                      .icon(
                 onPressed:
                     _analyzing
                         ? null
                         : _analyze,
-                icon: _analyzing
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child:
-                            CircularProgressIndicator(
-                          strokeWidth:
-                              2,
-                        ),
-                      )
-                    : const Icon(
-                        Icons
-                            .auto_awesome,
-                      ),
-                label: Text(
+                icon:
+                    _analyzing
+                        ? const SizedBox(
+                            width:
+                                20,
+                            height:
+                                20,
+                            child:
+                                CircularProgressIndicator(
+                              strokeWidth:
+                                  2,
+                            ),
+                          )
+                        : const Icon(
+                            Icons
+                                .auto_awesome,
+                          ),
+                label:
+                    Text(
                   _analyzing
                       ? 'Fotoğraf analiz ediliyor...'
                       : 'Fotoğrafı Analiz Et',
@@ -1026,17 +1426,23 @@ class _PhotoPreviewScreenState
               ),
             ),
 
-          if (_error != null) ...[
-            const SizedBox(height: 16),
+          if (_error !=
+              null) ...[
+            const SizedBox(
+              height: 16,
+            ),
+
             Container(
               padding:
-                  const EdgeInsets.all(
+                  const EdgeInsets
+                      .all(
                 14,
               ),
               decoration:
                   BoxDecoration(
-                color: Colors.red
-                    .withOpacity(
+                color:
+                    Colors.red
+                        .withOpacity(
                   .12,
                 ),
                 borderRadius:
@@ -1045,58 +1451,73 @@ class _PhotoPreviewScreenState
                   14,
                 ),
               ),
-              child: Text(
+              child:
+                  Text(
                 _error!,
                 style:
                     const TextStyle(
-                  color:
-                      Colors.redAccent,
+                  color: Colors
+                      .redAccent,
                 ),
               ),
             ),
           ],
 
-          if (_analysis != null) ...[
+          if (_analysis !=
+              null) ...[
             ScoreCard(
               analysis:
                   _analysis!,
             ),
 
-            const SizedBox(height: 16),
+            const SizedBox(
+              height: 16,
+            ),
 
             const Text(
               'AI Değerlendirmesi',
-              style: TextStyle(
+              style:
+                  TextStyle(
                 fontSize: 20,
                 fontWeight:
-                    FontWeight.bold,
+                    FontWeight
+                        .bold,
               ),
             ),
 
-            const SizedBox(height: 8),
+            const SizedBox(
+              height: 8,
+            ),
 
             Text(
-              _analysis!.summary,
+              _analysis!
+                  .summary,
               style:
                   const TextStyle(
-                color:
-                    Colors.white70,
+                color: Colors
+                    .white70,
                 height: 1.5,
               ),
             ),
 
-            const SizedBox(height: 20),
+            const SizedBox(
+              height: 20,
+            ),
 
             const Text(
               'Fotoğrafı iyileştirmek için',
-              style: TextStyle(
+              style:
+                  TextStyle(
                 fontSize: 20,
                 fontWeight:
-                    FontWeight.bold,
+                    FontWeight
+                        .bold,
               ),
             ),
 
-            const SizedBox(height: 10),
+            const SizedBox(
+              height: 10,
+            ),
 
             ..._analysis!
                 .suggestions
@@ -1125,7 +1546,8 @@ class _PhotoPreviewScreenState
                     14,
                   ),
                 ),
-                child: Row(
+                child:
+                    Row(
                   crossAxisAlignment:
                       CrossAxisAlignment
                           .start,
@@ -1139,11 +1561,15 @@ class _PhotoPreviewScreenState
                         0xFFFFC107,
                       ),
                     ),
+
                     const SizedBox(
-                      width: 10,
+                      width:
+                          10,
                     ),
+
                     Expanded(
-                      child: Text(
+                      child:
+                          Text(
                         suggestion,
                       ),
                     ),
@@ -1152,10 +1578,14 @@ class _PhotoPreviewScreenState
               ),
             ),
 
-            const SizedBox(height: 10),
+            const SizedBox(
+              height: 10,
+            ),
 
-            OutlinedButton.icon(
-              onPressed: _analyze,
+            OutlinedButton
+                .icon(
+              onPressed:
+                  _analyze,
               icon:
                   const Icon(
                 Icons.refresh,
@@ -1182,7 +1612,9 @@ class ScoreCard
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return Container(
       margin:
           const EdgeInsets.only(
@@ -1199,7 +1631,8 @@ class ScoreCard
           0xFF151A22,
         ),
         borderRadius:
-            BorderRadius.circular(
+            BorderRadius
+                .circular(
           18,
         ),
       ),
@@ -1211,7 +1644,8 @@ class ScoreCard
                 const TextStyle(
               fontSize: 38,
               fontWeight:
-                  FontWeight.w900,
+                  FontWeight
+                      .w900,
               color:
                   Color(
                 0xFFFFC107,
@@ -1221,7 +1655,8 @@ class ScoreCard
 
           const Text(
             'Fotoğraf Skoru',
-            style: TextStyle(
+            style:
+                TextStyle(
               color:
                   Colors.white54,
             ),
@@ -1235,26 +1670,30 @@ class ScoreCard
             title:
                 'Kompozisyon',
             value:
-                analysis.composition,
+                analysis
+                    .composition,
           ),
 
           ScoreRow(
             title: 'Işık',
             value:
-                analysis.lighting,
+                analysis
+                    .lighting,
           ),
 
           ScoreRow(
             title:
                 'Perspektif',
             value:
-                analysis.perspective,
+                analysis
+                    .perspective,
           ),
 
           ScoreRow(
             title: 'Netlik',
             value:
-                analysis.sharpness,
+                analysis
+                    .sharpness,
           ),
         ],
       ),
@@ -1274,25 +1713,31 @@ class ScoreRow
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return Padding(
       padding:
-          const EdgeInsets.symmetric(
+          const EdgeInsets
+              .symmetric(
         vertical: 5,
       ),
       child: Row(
         children: [
           Expanded(
-            child: Text(
+            child:
+                Text(
               title,
             ),
           ),
+
           Text(
             '$value/10',
             style:
                 const TextStyle(
               fontWeight:
-                  FontWeight.bold,
+                  FontWeight
+                      .bold,
             ),
           ),
         ],
