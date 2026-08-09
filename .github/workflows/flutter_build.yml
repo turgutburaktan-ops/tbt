@@ -27,7 +27,32 @@ jobs:
           flutter create --platforms=android .
       - name: Add Firebase config
         run: |
-          cp firebase/google-services.json android/app/google-services.json
+          echo "===== CURRENT DIRECTORY ====="
+          pwd
+
+          echo "===== REPOSITORY FILES ====="
+          ls -la
+
+          echo "===== FIREBASE FOLDER ====="
+          ls -la firebase || true
+
+          echo "===== SEARCH GOOGLE SERVICES ====="
+          FIREBASE_FILE=$(find . -maxdepth 4 -type f -iname "*google*services*.json" | head -n 1)
+
+          echo "Found file: $FIREBASE_FILE"
+
+          if [ -z "$FIREBASE_FILE" ]; then
+            echo "ERROR: google-services.json bulunamadi"
+            find . -maxdepth 4 -type f | sort
+            exit 1
+          fi
+
+          mkdir -p android/app
+
+          cp "$FIREBASE_FILE" android/app/google-services.json
+
+          echo "===== COPIED SUCCESSFULLY ====="
+          ls -la android/app/google-services.json
       - name: Configure Android permissions and Google Maps
         env:
           MAPS_API_KEY: ${{ secrets.MAPS_API_KEY }}
