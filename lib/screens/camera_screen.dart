@@ -414,7 +414,7 @@ class _CameraScreenState extends State<CameraScreen> {
                   ),
                   scrollDirection: Axis.horizontal,
                   itemCount: _filters.length,
-                  separatorBuilder: (, _) =>
+                  separatorBuilder: (_, __) =>
                       const SizedBox(width: 8),
                   itemBuilder: (context, index) {
                     final filter = _filters[index];
