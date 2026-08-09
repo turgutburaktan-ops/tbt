@@ -7,7 +7,7 @@ Future<void> main() async {
 
   await FavoritesService.initialize();
 
-  runApp(const MyApp());
+  runApp(const BestPhotoSpotApp());
 }
 class BestPhotoSpotApp extends StatelessWidget {
   const BestPhotoSpotApp({super.key});
