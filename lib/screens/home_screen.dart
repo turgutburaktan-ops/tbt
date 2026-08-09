@@ -113,10 +113,16 @@ class _ExplorePageState extends State<_ExplorePage> {
 
     return demoSpots.where((spot) {
       final matchesSearch = query.isEmpty ||
-          spot.name.toLowerCase().contains(query) ||
-          spot.city.toLowerCase().contains(query) ||
-          spot.bestTime.toLowerCase().contains(query) ||
-          spot.angle.toLowerCase().contains(query);
+    spot.name.toLowerCase().contains(query) ||
+    spot.city.toLowerCase().contains(query) ||
+    spot.category.toLowerCase().contains(query) ||
+    spot.description.toLowerCase().contains(query) ||
+    spot.bestTime.toLowerCase().contains(query) ||
+    spot.angle.toLowerCase().contains(query) ||
+    spot.recommendedLens.toLowerCase().contains(query) ||
+    spot.tags.any(
+      (tag) => tag.toLowerCase().contains(query),
+    );
 
       if (!matchesSearch) {
         return false;
