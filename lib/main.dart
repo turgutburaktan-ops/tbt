@@ -1,11 +1,14 @@
+import 'services/favorites_service.dart';
 import 'package:flutter/material.dart';
 import 'screens/home_screen.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const BestPhotoSpotApp());
-}
 
+  await FavoritesService.initialize();
+
+  runApp(const MyApp());
+}
 class BestPhotoSpotApp extends StatelessWidget {
   const BestPhotoSpotApp({super.key});
 
