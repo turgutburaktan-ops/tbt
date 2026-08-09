@@ -1,3 +1,7 @@
+import 'package:firebase_auth/firebase_auth.dart';
+
+import '../services/auth_service.dart';
+import 'login_screen.dart';
 import 'package:flutter/material.dart';
 
 import '../models/photo_spot.dart';
@@ -22,8 +26,298 @@ class _HomeScreenState extends State<HomeScreen> {
     final pages = [
       const _ExplorePage(),
       const MapScreen(),
-      const _SavedPage(),
-      const _ProfilePage(),
+      const _SavedPage(),class _ProfilePage extends StatelessWidget {
+  const _ProfilePage();
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<User?>(
+      stream: AuthService.instance.authStateChanges,
+      builder: (context, snapshot) {
+        final user = snapshot.data;
+
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const SafeArea(
+            child: Center(
+              child: CircularProgressIndicator(
+                color: Color(0xFFFFC107),
+              ),
+            ),
+          );
+        }
+
+        if (user == null) {
+          return SafeArea(
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(
+                20,
+                22,
+                20,
+                110,
+              ),
+              children: [
+                const Text(
+                  'Profil',
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+
+                const SizedBox(height: 60),
+
+                const Center(
+                  child: CircleAvatar(
+                    radius: 58,
+                    backgroundColor: Color(0xFFFFC107),
+                    child: CircleAvatar(
+                      radius: 52,
+                      backgroundColor: Color(0xFF171C24),
+                      child: Icon(
+                        Icons.person_outline,
+                        size: 62,
+                        color: Colors.white54,
+                      ),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 24),
+
+                const Text(
+                  'Hesabına giriş yap',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+
+                const SizedBox(height: 10),
+
+                const Text(
+                  'Fotoğraf paylaşmak, çekimlerini kaydetmek ve topluluğa katılmak için giriş yap veya yeni hesap oluştur.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.white54,
+                    height: 1.5,
+                  ),
+                ),
+
+                const SizedBox(height: 32),
+
+                SizedBox(
+                  height: 58,
+                  child: FilledButton.icon(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: const Color(0xFFFFC107),
+                      foregroundColor: Colors.black,
+                    ),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const LoginScreen(),
+                        ),
+                      );
+                    },
+                    icon: const Icon(
+                      Icons.login_rounded,
+                    ),
+                    label: const Text(
+                      'Giriş Yap / Kayıt Ol',
+                      style: TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
+        final name =
+            user.displayName?.trim().isNotEmpty == true
+                ? user.displayName!
+                : 'Fotoğrafçı';
+
+        final email = user.email ?? '';
+
+        return SafeArea(
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(
+              20,
+              22,
+              20,
+              110,
+            ),
+            children: [
+              const Text(
+                'Profil',
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              const Center(
+                child: CircleAvatar(
+                  radius: 54,
+                  backgroundColor: Color(0xFFFFC107),
+                  child: CircleAvatar(
+                    radius: 49,
+                    backgroundColor: Color(0xFF171C24),
+                    child: Icon(
+                      Icons.person,
+                      size: 56,
+                      color: Colors.white54,
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 14),
+
+              Center(
+                child: Text(
+                  name,
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 6),
+
+              Center(
+                child: Text(
+                  email,
+                  style: const TextStyle(
+                    color: Colors.white54,
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 26),
+
+              ValueListenableBuilder<List<PhotoSpot>>(
+                valueListenable: FavoritesService.savedSpots,
+                builder: (
+                  context,
+                  saved,
+                  _,
+                ) {
+                  return Container(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 20,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF151A22),
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    child: Row(
+                      mainAxisAlignment:
+                          MainAxisAlignment.spaceEvenly,
+                      children: [
+                        const _ProfileStat(
+                          value: '0',
+                          label: 'Çekim',
+                        ),
+                        _ProfileStat(
+                          value: saved.length.toString(),
+                          label: 'Kaydedilen',
+                        ),
+                        _ProfileStat(
+                          value: saved.length.toString(),
+                          label: 'Favori',
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+
+              const SizedBox(height: 24),
+
+              _ProfileMenuItem(
+                icon: Icons.photo_library_outlined,
+                title: 'Çekimlerim',
+                subtitle: 'Paylaştığın fotoğrafları görüntüle',
+                onTap: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'Çekimlerim özelliğini paylaşım sistemiyle bağlayacağız.',
+                      ),
+                    ),
+                  );
+                },
+              ),
+
+              _ProfileMenuItem(
+                icon: Icons.favorite_border,
+                title: 'Kaydedilen Noktalar',
+                subtitle: 'Favori çekim noktalarını görüntüle',
+                onTap: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'Kaydedilenler sekmesine alt menüden ulaşabilirsin.',
+                      ),
+                    ),
+                  );
+                },
+              ),
+
+              _ProfileMenuItem(
+                icon: Icons.location_on_outlined,
+                title: 'Konum Tercihleri',
+                subtitle: 'Yakındaki çekim noktalarını yönet',
+                onTap: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'Sıradaki adımda GPS sistemini bağlayacağız.',
+                      ),
+                    ),
+                  );
+                },
+              ),
+
+              _ProfileMenuItem(
+                icon: Icons.logout_rounded,
+                title: 'Çıkış Yap',
+                subtitle: 'Hesabından çık',
+                onTap: () async {
+                  await AuthService.instance.logout();
+                },
+              ),
+
+              _ProfileMenuItem(
+                icon: Icons.info_outline,
+                title: 'Uygulama Hakkında',
+                subtitle: 'En İyi Çekim Noktası',
+                onTap: () {
+                  showAboutDialog(
+                    context: context,
+                    applicationName: 'En İyi Çekim Noktası',
+                    applicationVersion: '1.0.0',
+                    applicationLegalese: '© 2026',
+                  );
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
     ];
 
     return Scaffold(
