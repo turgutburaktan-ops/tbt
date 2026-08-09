@@ -11,9 +11,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # =====================================================
+      # 1. REPOSITORY
+      # =====================================================
       - name: Checkout
         uses: actions/checkout@v4
 
+      # =====================================================
+      # 2. FLUTTER
+      # =====================================================
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
@@ -21,52 +27,87 @@ jobs:
           channel: stable
           cache: true
 
+      # =====================================================
+      # 3. ANDROID PROJECT
+      # =====================================================
       - name: Recreate Android project
         run: |
           rm -rf android
           flutter create --platforms=android .
-          - name: Set Android min SDK
+
+      # =====================================================
+      # 4. ANDROID SDK VERSIONS
+      # Firebase / Firestore için minSdk 23
+      # =====================================================
+      - name: Configure Android SDK versions
         run: |
           python3 - <<'PY'
           from pathlib import Path
 
-          p = Path("android/app/build.gradle")
+          gradle = Path("android/app/build.gradle")
+          gradle_kts = Path("android/app/build.gradle.kts")
 
-          text = p.read_text()
+          if gradle.exists():
+              p = gradle
+              text = p.read_text()
 
-          text = text.replace(
-              "minSdkVersion flutter.minSdkVersion",
-              "minSdkVersion 23"
-          )
+              text = text.replace(
+                  "compileSdkVersion flutter.compileSdkVersion",
+                  "compileSdkVersion 35"
+              )
+              text = text.replace(
+                  "compileSdk = flutter.compileSdkVersion",
+                  "compileSdk = 35"
+              )
 
-          text = text.replace(
-              "minSdk = flutter.minSdkVersion",
-              "minSdk = 23"
-          )
+              text = text.replace(
+                  "minSdkVersion flutter.minSdkVersion",
+                  "minSdkVersion 23"
+              )
+              text = text.replace(
+                  "minSdk = flutter.minSdkVersion",
+                  "minSdk = 23"
+              )
 
-          p.write_text(text)
+              p.write_text(text)
 
-          print("Android minSdk set to 23")
+          elif gradle_kts.exists():
+              p = gradle_kts
+              text = p.read_text()
+
+              text = text.replace(
+                  "compileSdk = flutter.compileSdkVersion",
+                  "compileSdk = 35"
+              )
+
+              text = text.replace(
+                  "minSdk = flutter.minSdkVersion",
+                  "minSdk = 23"
+              )
+
+              p.write_text(text)
+
+          else:
+              raise Exception("Android app Gradle file bulunamadi")
+
+          print("Android SDK ayarlari tamamlandi.")
           PY
+
+      # =====================================================
+      # 5. FIREBASE JSON
+      # Repo içindeki dosyayı otomatik bulur
+      # =====================================================
       - name: Add Firebase config
         run: |
-          echo "===== CURRENT DIRECTORY ====="
-          pwd
+          echo "===== FIREBASE CONFIG SEARCH ====="
 
-          echo "===== REPOSITORY FILES ====="
-          ls -la
+          FIREBASE_FILE=$(find . -maxdepth 5 -type f -iname "*google*services*.json" | head -n 1)
 
-          echo "===== FIREBASE FOLDER ====="
-          ls -la firebase || true
-
-          echo "===== SEARCH GOOGLE SERVICES ====="
-          FIREBASE_FILE=$(find . -maxdepth 4 -type f -iname "*google*services*.json" | head -n 1)
-
-          echo "Found file: $FIREBASE_FILE"
+          echo "Found Firebase file: $FIREBASE_FILE"
 
           if [ -z "$FIREBASE_FILE" ]; then
-            echo "ERROR: google-services.json bulunamadi"
-            find . -maxdepth 4 -type f | sort
+            echo "ERROR: google-services.json bulunamadi."
+            find . -maxdepth 5 -type f | sort
             exit 1
           fi
 
@@ -74,8 +115,103 @@ jobs:
 
           cp "$FIREBASE_FILE" android/app/google-services.json
 
-          echo "===== COPIED SUCCESSFULLY ====="
+          echo "Firebase config copied:"
           ls -la android/app/google-services.json
+
+      # =====================================================
+      # 6. GOOGLE SERVICES GRADLE PLUGIN
+      # =====================================================
+      - name: Configure Firebase Gradle plugin
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          settings = Path("android/settings.gradle")
+          settings_kts = Path("android/settings.gradle.kts")
+
+          app_gradle = Path("android/app/build.gradle")
+          app_gradle_kts = Path("android/app/build.gradle.kts")
+
+          # -------------------------
+          # settings.gradle
+          # -------------------------
+          if settings.exists():
+              text = settings.read_text()
+
+              if 'com.google.gms.google-services' not in text:
+                  marker = 'plugins {'
+
+                  if marker in text:
+                      text = text.replace(
+                          marker,
+                          marker + '\n    id "com.google.gms.google-services" version "4.4.2" apply false',
+                          1
+                      )
+                  else:
+                      raise Exception("settings.gradle plugins blogu bulunamadi")
+
+                  settings.write_text(text)
+
+          elif settings_kts.exists():
+              text = settings_kts.read_text()
+
+              if 'com.google.gms.google-services' not in text:
+                  marker = 'plugins {'
+
+                  if marker in text:
+                      text = text.replace(
+                          marker,
+                          marker + '\n    id("com.google.gms.google-services") version "4.4.2" apply false',
+                          1
+                      )
+                  else:
+                      raise Exception("settings.gradle.kts plugins blogu bulunamadi")
+
+                  settings_kts.write_text(text)
+
+          else:
+              raise Exception("Android settings Gradle dosyasi bulunamadi")
+
+          # -------------------------
+          # app/build.gradle
+          # -------------------------
+          if app_gradle.exists():
+              text = app_gradle.read_text()
+
+              if 'id "com.google.gms.google-services"' not in text:
+                  marker = 'plugins {'
+
+                  text = text.replace(
+                      marker,
+                      marker + '\n    id "com.google.gms.google-services"',
+                      1
+                  )
+
+                  app_gradle.write_text(text)
+
+          elif app_gradle_kts.exists():
+              text = app_gradle_kts.read_text()
+
+              if 'id("com.google.gms.google-services")' not in text:
+                  marker = 'plugins {'
+
+                  text = text.replace(
+                      marker,
+                      marker + '\n    id("com.google.gms.google-services")',
+                      1
+                  )
+
+                  app_gradle_kts.write_text(text)
+
+          else:
+              raise Exception("Android app Gradle dosyasi bulunamadi")
+
+          print("Firebase Google Services Gradle plugin eklendi.")
+          PY
+
+      # =====================================================
+      # 7. CAMERA + LOCATION + GOOGLE MAPS
+      # =====================================================
       - name: Configure Android permissions and Google Maps
         env:
           MAPS_API_KEY: ${{ secrets.MAPS_API_KEY }}
@@ -85,102 +221,195 @@ jobs:
           from pathlib import Path
 
           p = Path("android/app/src/main/AndroidManifest.xml")
+
           text = p.read_text()
 
-          permissions = """    <uses-permission android:name="android.permission.CAMERA"/>
-              <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
-              <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
-              <uses-permission android:name="android.permission.INTERNET"/>
-          """
+          # -------------------------------------------------
+          # Permissions
+          # -------------------------------------------------
+          permissions = []
 
-          text = text.replace(
-              '<application',
-              permissions + '\n    <application',
-              1
-          )
+          wanted = [
+              '<uses-permission android:name="android.permission.INTERNET"/>',
+              '<uses-permission android:name="android.permission.CAMERA"/>',
+              '<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>',
+              '<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>',
+          ]
 
-          maps_key = os.environ["MAPS_API_KEY"]
+          for permission in wanted:
+              if permission not in text:
+                  permissions.append(permission)
 
-          maps_config = f"""
+          if permissions:
+              permission_text = "\n".join(permissions)
+
+              text = text.replace(
+                  "<application",
+                  permission_text + "\n\n    <application",
+                  1
+              )
+
+          # -------------------------------------------------
+          # Google Maps API key
+          # -------------------------------------------------
+          maps_key = os.environ.get("MAPS_API_KEY", "").strip()
+
+          if not maps_key:
+              raise Exception(
+                  "GitHub Secret MAPS_API_KEY bulunamadi."
+              )
+
+          if "com.google.android.geo.API_KEY" not in text:
+              maps_config = f'''
               <meta-data
                   android:name="com.google.android.geo.API_KEY"
                   android:value="{maps_key}" />
-          """
+              '''
 
-          activity_position = text.find("<activity")
+              application_start = text.find("<application")
 
-          text = (
-              text[:activity_position]
-              + maps_config
-              + "\n        "
-              + text[activity_position:]
-          )
+              if application_start == -1:
+                  raise Exception(
+                      "AndroidManifest application etiketi bulunamadi."
+                  )
+
+              application_end = text.find(">", application_start)
+
+              text = (
+                  text[:application_end + 1]
+                  + maps_config
+                  + text[application_end + 1:]
+              )
 
           p.write_text(text)
+
+          print("Android permissions ve Google Maps ayarlari tamamlandi.")
           PY
 
+      # =====================================================
+      # 8. INSTALL FLUTTER PACKAGES
+      # =====================================================
       - name: Install dependencies
-        run: flutter pub get
+        run: |
+          flutter pub get
 
-      # PACKAGE NAME'I GOSTER
+      # =====================================================
+      # 9. CHECK PACKAGE NAME
+      # =====================================================
       - name: Show Android Package Name
         run: |
-          echo "========================================"
+          echo "===================================="
           echo "ANDROID PACKAGE NAME"
-          echo "========================================"
-          grep -R "applicationId" android/app/build.gradle* || true
-          grep -R "namespace" android/app/build.gradle* || true
-          echo "========================================"
+          echo "===================================="
 
-      # DEBUG KEYSTORE OLUSTUR
+          if [ -f android/app/build.gradle ]; then
+            grep -E "applicationId|namespace" android/app/build.gradle || true
+          fi
+
+          if [ -f android/app/build.gradle.kts ]; then
+            grep -E "applicationId|namespace" android/app/build.gradle.kts || true
+          fi
+
+          echo "===================================="
+
+      # =====================================================
+      # 10. CREATE DEBUG KEYSTORE
+      # SHA1 Google Maps/Firebase için kullanılabilir
+      # =====================================================
       - name: Create Debug Keystore
         run: |
           mkdir -p ~/.android
 
-          keytool -genkeypair \
-            -v \
-            -keystore ~/.android/debug.keystore \
-            -storepass android \
-            -alias androiddebugkey \
-            -keypass android \
-            -keyalg RSA \
-            -keysize 2048 \
-            -validity 10000 \
-            -dname "CN=Android Debug,O=Android,C=US"
+          if [ ! -f ~/.android/debug.keystore ]; then
+            keytool \
+              -genkeypair \
+              -v \
+              -keystore ~/.android/debug.keystore \
+              -storepass android \
+              -alias androiddebugkey \
+              -keypass android \
+              -keyalg RSA \
+              -keysize 2048 \
+              -validity 10000 \
+              -dname "CN=Android Debug,O=Android,C=US"
+          fi
 
-      # SHA-1 BILGISINI GOSTER
+      # =====================================================
+      # 11. SHOW SHA-1
+      # =====================================================
       - name: Show SHA1 Fingerprint
         run: |
-          echo "========================================"
+          echo "===================================="
           echo "SHA-1 CERTIFICATE FINGERPRINT"
-          echo "========================================"
+          echo "===================================="
 
-          keytool -list -v \
+          keytool \
+            -list \
+            -v \
             -keystore ~/.android/debug.keystore \
             -alias androiddebugkey \
             -storepass android \
             -keypass android
 
-          echo "========================================"
+          echo "===================================="
 
+      # =====================================================
+      # 12. FLUTTER ANALYZE
+      # Hataları APK build öncesi daha net gösterir
+      # =====================================================
+      - name: Flutter Analyze
+        run: |
+          flutter analyze --no-fatal-infos --no-fatal-warnings
+
+      # =====================================================
+      # 13. BUILD APK
+      # =====================================================
       - name: Build APK
-        run: flutter build apk --release
+        run: |
+          flutter build apk --release
 
+      # =====================================================
+      # 14. VERIFY APK EXISTS
+      # =====================================================
+      - name: Verify APK
+        run: |
+          echo "===================================="
+          echo "APK OUTPUT"
+          echo "===================================="
+
+          ls -lh build/app/outputs/flutter-apk/
+
+          test -f build/app/outputs/flutter-apk/app-release.apk
+
+          echo "APK successfully created."
+          echo "===================================="
+
+      # =====================================================
+      # 15. VERIFY APK CERTIFICATE
+      # =====================================================
       - name: Verify Release APK Certificate
         run: |
-          echo "========================================"
+          echo "===================================="
           echo "REAL APK CERTIFICATE"
-          echo "========================================"
+          echo "===================================="
 
-          $ANDROID_HOME/build-tools/35.0.0/apksigner verify \
+          APKSIGNER=$(find "$ANDROID_HOME/build-tools" -type f -name apksigner | sort -V | tail -n 1)
+
+          echo "Using apksigner: $APKSIGNER"
+
+          "$APKSIGNER" verify \
             --print-certs \
             build/app/outputs/flutter-apk/app-release.apk
 
-          echo "========================================"
+          echo "===================================="
 
+      # =====================================================
+      # 16. APK DOWNLOAD
+      # =====================================================
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: en-iyi-cekim-noktasi-apk
           path: build/app/outputs/flutter-apk/app-release.apk
           if-no-files-found: error
+          retention-days: 7
