@@ -1,27 +1,39 @@
 import 'dart:io';
+
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import '../models/photo_spot.dart';
-import '../services/ai_service.dart';
-import '../services/location_service.dart';
-import 'analysis_screen.dart';
 
 class CameraScreen extends StatefulWidget {
-  final PhotoSpot? spot;
-
-  const CameraScreen({super.key, this.spot});
+  const CameraScreen({super.key});
 
   @override
   State<CameraScreen> createState() => _CameraScreenState();
 }
 
 class _CameraScreenState extends State<CameraScreen> {
-  CameraController? controller;
-  List<CameraDescription> cameras = [];
-  bool loading = true;
-  bool flash = false;
-  int cameraIndex = 0;
+  CameraController? _controller;
+  List<CameraDescription> _cameras = [];
+
+  int _cameraIndex = 0;
+  bool _flashEnabled = false;
+  bool _showGrid = true;
+  bool _initializing = true;
+
+  String _selectedFilter = 'Normal';
+  String _liveTip = 'Ana konuyu üçte birlik çizgilere yerleştir.';
+
+  final ImagePicker _picker = ImagePicker();
+
+  final List<String> _filters = const [
+    'Normal',
+    'Golden',
+    'Portrait',
+    'Nature',
+    'Night',
+    'Architecture',
+    'B&W',
+  ];
 
   @override
   void initState() {
@@ -31,213 +43,566 @@ class _CameraScreenState extends State<CameraScreen> {
 
   Future<void> _initializeCamera() async {
     try {
-      cameras = await availableCameras();
-      if (cameras.isEmpty) {
-        throw Exception('No camera available');
+      _cameras = await availableCameras();
+
+      if (_cameras.isEmpty) {
+        setState(() {
+          _initializing = false;
+        });
+        return;
       }
 
-      controller = CameraController(
-        cameras[cameraIndex],
-        ResolutionPreset.high,
-        enableAudio: false,
-      );
-
-      await controller!.initialize();
-      if (mounted) setState(() => loading = false);
-    } catch (e) {
+      await _startCamera(0);
+    } catch (_) {
       if (mounted) {
-        setState(() => loading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Kamera başlatılamadı: $e')),
-        );
+        setState(() {
+          _initializing = false;
+        });
       }
     }
   }
 
-  Future<void> _switchCamera() async {
-    if (cameras.length < 2) return;
-    cameraIndex = cameraIndex == 0 ? 1 : 0;
-    await controller?.dispose();
+  Future<void> _startCamera(int index) async {
+    if (_cameras.isEmpty) return;
 
-    controller = CameraController(
-      cameras[cameraIndex],
+    await _controller?.dispose();
+
+    final controller = CameraController(
+      _cameras[index],
       ResolutionPreset.high,
       enableAudio: false,
     );
 
-    await controller!.initialize();
-    if (mounted) setState(() {});
+    await controller.initialize();
+
+    _controller = controller;
+    _cameraIndex = index;
+
+    if (mounted) {
+      setState(() {
+        _initializing = false;
+      });
+    }
+  }
+
+  Future<void> _toggleCamera() async {
+    if (_cameras.length < 2) return;
+
+    final nextIndex = (_cameraIndex + 1) % _cameras.length;
+    await _startCamera(nextIndex);
+  }
+
+  Future<void> _toggleFlash() async {
+    if (_controller == null) return;
+
+    _flashEnabled = !_flashEnabled;
+
+    await _controller!.setFlashMode(
+      _flashEnabled ? FlashMode.torch : FlashMode.off,
+    );
+
+    setState(() {});
   }
 
   Future<void> _takePhoto() async {
-    if (controller == null || !controller!.value.isInitialized) return;
+    if (_controller == null ||
+        !_controller!.value.isInitialized ||
+        _controller!.value.isTakingPicture) {
+      return;
+    }
 
     try {
-      final position = await LocationService.getCurrentPosition();
-      final file = await controller!.takePicture();
+      final image = await _controller!.takePicture();
 
       if (!mounted) return;
 
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => AnalysisScreen(
-            image: File(file.path),
-            latitude: position?.latitude,
-            longitude: position?.longitude,
-            spot: widget.spot,
+          builder: (_) => _PhotoPreviewScreen(
+            imagePath: image.path,
           ),
         ),
       );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Fotoğraf çekilemedi: $e')),
-      );
-    }
+    } catch (_) {}
   }
 
   Future<void> _pickFromGallery() async {
-    final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
-    if (picked == null || !mounted) return;
+    final image = await _picker.pickImage(
+      source: ImageSource.gallery,
+    );
 
-    final position = await LocationService.getCurrentPosition();
+    if (image == null || !mounted) return;
 
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => AnalysisScreen(
-          image: File(picked.path),
-          latitude: position?.latitude,
-          longitude: position?.longitude,
-          spot: widget.spot,
+        builder: (_) => _PhotoPreviewScreen(
+          imagePath: image.path,
         ),
       ),
     );
   }
 
+  void _selectFilter(String filter) {
+    setState(() {
+      _selectedFilter = filter;
+
+      switch (filter) {
+        case 'Golden':
+          _liveTip = 'Işığı yan taraftan al; gölgeleri yumuşat.';
+          break;
+
+        case 'Portrait':
+          _liveTip = 'Yüzü üst üçte birlik çizgiye yaklaştır.';
+          break;
+
+        case 'Nature':
+          _liveTip = 'Ufku alt veya üst üçte birlik çizgiye taşı.';
+          break;
+
+        case 'Night':
+          _liveTip = 'Telefonu sabit tut ve parlak ışıkları merkeze alma.';
+          break;
+
+        case 'Architecture':
+          _liveTip = 'Dikey çizgileri mümkün olduğunca paralel tut.';
+          break;
+
+        case 'B&W':
+          _liveTip = 'Kontrastı yüksek alanları kullan.';
+          break;
+
+        default:
+          _liveTip = 'Ana konuyu üçte birlik çizgilere yerleştir.';
+      }
+    });
+  }
+
+  Color _filterOverlayColor() {
+    switch (_selectedFilter) {
+      case 'Golden':
+        return const Color(0x33FFC15A);
+
+      case 'Portrait':
+        return const Color(0x1AFFA0B5);
+
+      case 'Nature':
+        return const Color(0x1A5CB85C);
+
+      case 'Night':
+        return const Color(0x33002040);
+
+      case 'Architecture':
+        return const Color(0x1A9E9E9E);
+
+      case 'B&W':
+        return const Color(0x33000000);
+
+      default:
+        return Colors.transparent;
+    }
+  }
+
   @override
   void dispose() {
-    controller?.dispose();
+    _controller?.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    if (loading) {
+    if (_initializing) {
       return const Scaffold(
         backgroundColor: Colors.black,
-        body: Center(child: CircularProgressIndicator()),
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
       );
     }
 
-    if (controller == null || !controller!.value.isInitialized) {
-      return const Scaffold(
+    if (_controller == null ||
+        !_controller!.value.isInitialized) {
+      return Scaffold(
         backgroundColor: Colors.black,
-        body: Center(child: Text('Kamera kullanılamıyor.')),
+        body: SafeArea(
+          child: Column(
+            children: [
+              Align(
+                alignment: Alignment.centerLeft,
+                child: IconButton(
+                  icon: const Icon(
+                    Icons.close,
+                    color: Colors.white,
+                  ),
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                ),
+              ),
+              const Expanded(
+                child: Center(
+                  child: Text(
+                    'Kamera başlatılamadı.',
+                    style: TextStyle(
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       );
     }
 
     return Scaffold(
       backgroundColor: Colors.black,
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          CameraPreview(controller!),
+      body: SafeArea(
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: CameraPreview(
+                _controller!,
+              ),
+            ),
 
-          SafeArea(
-            child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    IconButton(
-                      onPressed: () => Navigator.pop(context),
-                      icon: const Icon(Icons.close, size: 30),
-                    ),
-                    if (widget.spot != null)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(.65),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text('📍 ${widget.spot!.name}'),
+            Positioned.fill(
+              child: IgnorePointer(
+                child: Container(
+                  color: _filterOverlayColor(),
+                ),
+              ),
+            ),
+
+            if (_showGrid)
+              const Positioned.fill(
+                child: IgnorePointer(
+                  child: _CameraGrid(),
+                ),
+              ),
+
+            // ÜST BAR
+            Positioned(
+              left: 12,
+              right: 12,
+              top: 8,
+              child: Row(
+                mainAxisAlignment:
+                    MainAxisAlignment.spaceBetween,
+                children: [
+                  _CircleButton(
+                    icon: Icons.close,
+                    onTap: () {
+                      Navigator.pop(context);
+                    },
+                  ),
+
+                  Row(
+                    children: [
+                      _CircleButton(
+                        icon: _flashEnabled
+                            ? Icons.flash_on
+                            : Icons.flash_off,
+                        onTap: _toggleFlash,
                       ),
-                    IconButton(
-                      onPressed: () async {
-                        flash = !flash;
-                        await controller!.setFlashMode(
-                          flash ? FlashMode.torch : FlashMode.off,
-                        );
-                        setState(() {});
-                      },
-                      icon: Icon(
-                        flash ? Icons.flash_on : Icons.flash_off,
-                        size: 28,
+
+                      const SizedBox(width: 8),
+
+                      _CircleButton(
+                        icon: _showGrid
+                            ? Icons.grid_on
+                            : Icons.grid_off,
+                        onTap: () {
+                          setState(() {
+                            _showGrid = !_showGrid;
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
+            // CANLI ÖNERİ
+            Positioned(
+              top: 74,
+              left: 16,
+              right: 16,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 12,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(.62),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: const Color(0xFFFFC107)
+                        .withOpacity(.35),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.auto_awesome,
+                      color: Color(0xFFFFC107),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        _liveTip,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ],
                 ),
+              ),
+            ),
 
-                const Spacer(),
-
-                if (widget.spot != null)
-                  Container(
-                    margin: const EdgeInsets.all(18),
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(.70),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.auto_awesome, color: Color(0xFFFFC107)),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Text(
-                            'Önerilen açı: ${widget.spot!.angle}',
-                            style: const TextStyle(fontWeight: FontWeight.w600),
-                          ),
-                        ),
-                      ],
-                    ),
+            // FİLTRELER
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 118,
+              child: SizedBox(
+                height: 54,
+                child: ListView.separated(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
                   ),
+                  scrollDirection: Axis.horizontal,
+                  itemCount: _filters.length,
+                  separatorBuilder: (, _) =>
+                      const SizedBox(width: 8),
+                  itemBuilder: (context, index) {
+                    final filter = _filters[index];
+                    final selected =
+                        filter == _selectedFilter;
 
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(28, 0, 28, 28),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      IconButton(
-                        onPressed: _pickFromGallery,
-                        icon: const Icon(Icons.photo_library, size: 32),
+                    return ChoiceChip(
+                      label: Text(filter),
+                      selected: selected,
+                      onSelected: (_) {
+                        _selectFilter(filter);
+                      },
+                      selectedColor:
+                          const Color(0xFFFFC107),
+                      backgroundColor:
+                          Colors.black.withOpacity(.55),
+                      labelStyle: TextStyle(
+                        color: selected
+                            ? Colors.black
+                            : Colors.white,
+                        fontWeight: FontWeight.w600,
                       ),
-                      GestureDetector(
-                        onTap: _takePhoto,
-                        child: Container(
-                          width: 78,
-                          height: 78,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Colors.white,
-                            border: Border.all(
-                              color: const Color(0xFFFFC107),
-                              width: 5,
-                            ),
-                          ),
-                        ),
-                      ),
-                      IconButton(
-                        onPressed: _switchCamera,
-                        icon: const Icon(Icons.flip_camera_ios, size: 32),
-                      ),
-                    ],
-                  ),
+                    );
+                  },
                 ),
-              ],
+              ),
+            ),
+
+            // ALT KAMERA KONTROLLERİ
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 20,
+              child: Row(
+                mainAxisAlignment:
+                    MainAxisAlignment.spaceEvenly,
+                children: [
+                  _CircleButton(
+                    icon: Icons.photo_library_outlined,
+                    size: 54,
+                    onTap: _pickFromGallery,
+                  ),
+
+                  GestureDetector(
+                    onTap: _takePhoto,
+                    child: Container(
+                      width: 78,
+                      height: 78,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Colors.white,
+                          width: 4,
+                        ),
+                      ),
+                      child: Center(
+                        child: Container(
+                          width: 62,
+                          height: 62,
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Color(0xFFFFC107),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  _CircleButton(
+                    icon: Icons.cameraswitch_outlined,
+                    size: 54,
+                    onTap: _toggleCamera,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CameraGrid extends StatelessWidget {
+  const _CameraGrid();
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(
+      painter: _GridPainter(),
+    );
+  }
+}
+
+class _GridPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.white.withOpacity(.38)
+      ..strokeWidth = 1;
+
+    final thirdWidth = size.width / 3;
+    final thirdHeight = size.height / 3;
+
+    canvas.drawLine(
+      Offset(thirdWidth, 0),
+      Offset(thirdWidth, size.height),
+      paint,
+    );
+
+    canvas.drawLine(
+      Offset(thirdWidth * 2, 0),
+      Offset(thirdWidth * 2, size.height),
+      paint,
+    );
+
+    canvas.drawLine(
+      Offset(0, thirdHeight),
+      Offset(size.width, thirdHeight),
+      paint,
+    );
+
+    canvas.drawLine(
+      Offset(0, thirdHeight * 2),
+      Offset(size.width, thirdHeight * 2),
+      paint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(
+    covariant CustomPainter oldDelegate,
+  ) {
+    return false;
+  }
+}
+
+class _CircleButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+  final double size;
+
+  const _CircleButton({
+    required this.icon,
+    required this.onTap,
+    this.size = 44,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.black.withOpacity(.55),
+      shape: const CircleBorder(),
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: onTap,
+        child: SizedBox(
+          width: size,
+          height: size,
+          child: Icon(
+            icon,
+            color: Colors.white,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _PhotoPreviewScreen extends StatelessWidget {
+  final String imagePath;
+
+  const _PhotoPreviewScreen({
+    required this.imagePath,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
+        title: const Text('Fotoğraf'),
+      ),
+      body: Column(
+        children: [
+          Expanded(
+            child: Center(
+              child: Image.file(
+                File(imagePath),
+                fit: BoxFit.contain,
+              ),
+            ),
+          ),
+
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              20,
+              12,
+              20,
+              24,
+            ),
+            child: SizedBox(
+              width: double.infinity,
+              height: 54,
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  ScaffoldMessenger.of(context)
+                      .showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'Gerçek AI analizi 5. aşamada bağlanacak.',
+                      ),
+                    ),
+                  );
+                },
+                icon: const Icon(
+                  Icons.auto_awesome,
+                ),
+                label: const Text(
+                  'Fotoğrafı Analiz Et',
+                ),
+              ),
             ),
           ),
         ],
