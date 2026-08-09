@@ -82,11 +82,9 @@ const cleaned = String(raw)
   .replaceAll("", "")
   .trim();
 
-const result = JSON.parse(cleaned)
-
-      const result = JSON.parse(cleaned);
-
-      return res.json(result);
+      const parsedResult = JSON.parse(cleaned);
+      
+      return res.json(parsedresult);
     } catch (error) {
       console.error("Analyze error:", error);
 
