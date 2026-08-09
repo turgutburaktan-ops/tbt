@@ -99,9 +99,10 @@ Yanıt dili Türkçe olmalı.
 `,
               },
               {
-                type: "input_image",
-                image_url:
-                  'data:${mimeType};base64,${base64Image}',
+               {
+  type: "input_image",
+  image_url: data:${mimeType};base64,${base64Image},
+},
               },
             ],
           },
