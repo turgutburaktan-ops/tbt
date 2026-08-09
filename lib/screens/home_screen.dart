@@ -1,3 +1,4 @@
+import 'profile_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import '../services/auth_service.dart';
@@ -27,7 +28,7 @@ class _HomeScreenState extends State<HomeScreen> {
   const _ExplorePage(),
   const MapScreen(),
   const _SavedPage(),
-  const _ProfilePage(),
+  const ProfilePage(),
 ];
 
   @override
