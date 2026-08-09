@@ -40,6 +40,7 @@ jobs:
           permissions = """    <uses-permission android:name="android.permission.CAMERA"/>
               <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
               <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+              <uses-permission android:name="android.permission.INTERNET"/>
           """
 
           text = text.replace(
@@ -67,3 +68,16 @@ jobs:
 
           p.write_text(text)
           PY
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build APK
+        run: flutter build apk --release
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: en-iyi-cekim-noktasi-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
