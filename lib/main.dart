@@ -1,3 +1,4 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'services/favorites_service.dart';
 import 'package:flutter/material.dart';
 import 'screens/home_screen.dart';
