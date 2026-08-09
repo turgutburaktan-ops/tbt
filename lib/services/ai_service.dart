@@ -23,24 +23,31 @@ class PhotoAnalysis {
     required this.suggestions,
   });
 
-  factory PhotoAnalysis.fromJson(Map<String, dynamic> json) {
+  factory PhotoAnalysis.fromJson(
+    Map<String, dynamic> json,
+  ) {
     return PhotoAnalysis(
-      score: (json['score'] ?? 0) as int,
-      composition: (json['composition'] ?? 0) as int,
-      lighting: (json['lighting'] ?? 0) as int,
-      perspective: (json['perspective'] ?? 0) as int,
-      sharpness: (json['sharpness'] ?? 0) as int,
+      score: (json['score'] as num? ?? 0).toInt(),
+      composition:
+          (json['composition'] as num? ?? 0).toInt(),
+      lighting:
+          (json['lighting'] as num? ?? 0).toInt(),
+      perspective:
+          (json['perspective'] as num? ?? 0).toInt(),
+      sharpness:
+          (json['sharpness'] as num? ?? 0).toInt(),
       summary: json['summary']?.toString() ?? '',
-      suggestions: (json['suggestions'] as List<dynamic>? ?? [])
-          .map((e) => e.toString())
-          .toList(),
+      suggestions:
+          (json['suggestions'] as List<dynamic>? ?? [])
+              .map((e) => e.toString())
+              .toList(),
     );
   }
 }
 
 class AiService {
   static const String baseUrl =
-      'https://YOUR-BACKEND-URL.com';
+      'https://tbt-tx25.onrender.com';
 
   static Future<PhotoAnalysis> analyzePhoto(
     String imagePath,
@@ -71,15 +78,20 @@ class AiService {
 
     if (response.statusCode != 200) {
       throw Exception(
-        'AI analizi başarısız: ${response.statusCode}\n'
+        'AI analizi başarısız: '
+        '${response.statusCode}\n'
         '${response.body}',
       );
     }
 
-    final data = jsonDecode(response.body);
+    final decoded = jsonDecode(response.body);
 
-    return PhotoAnalysis.fromJson(
-      Map<String, dynamic>.from(data),
-    );
+    if (decoded is! Map<String, dynamic>) {
+      throw Exception(
+        'AI sunucusundan geçersiz yanıt alındı.',
+      );
+    }
+
+    return PhotoAnalysis.fromJson(decoded);
   }
 }
