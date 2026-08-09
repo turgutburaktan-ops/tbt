@@ -25,7 +25,9 @@ jobs:
         run: |
           rm -rf android
           flutter create --platforms=android .
-
+      - name: Add Firebase config
+        run: |
+          cp firebase/google-services.json android/app/google-services.json
       - name: Configure Android permissions and Google Maps
         env:
           MAPS_API_KEY: ${{ secrets.MAPS_API_KEY }}
