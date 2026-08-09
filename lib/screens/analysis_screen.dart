@@ -1,5 +1,7 @@
 import 'dart:io';
+
 import 'package:flutter/material.dart';
+
 import '../models/photo_spot.dart';
 import '../services/ai_service.dart';
 
@@ -23,17 +25,8 @@ class AnalysisScreen extends StatefulWidget {
 
 class _AnalysisScreenState extends State<AnalysisScreen> {
   bool analyzing = false;
-  AiAnalysis? result;
-
-  Future<void> _analyze() async {
-    setState(() => analyzing = true);
-    final data = await AiService.analyze(widget.image);
-    if (!mounted) return;
-    setState(() {
-      result = data;
-      analyzing = false;
-    });
-  }
+  PhotoAnalysis? result;
+  String? errorMessage;
 
   @override
   void initState() {
@@ -41,10 +34,76 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
     _analyze();
   }
 
+  Future<void> _analyze() async {
+    if (analyzing) return;
+
+    setState(() {
+      analyzing = true;
+      errorMessage = null;
+    });
+
+    try {
+      final data = await AiService.analyzePhoto(
+        widget.image.path,
+      );
+
+      if (!mounted) return;
+
+      setState(() {
+        result = data;
+        analyzing = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        analyzing = false;
+        errorMessage = e.toString();
+      });
+    }
+  }
+
+  Widget _scoreRow(
+    String title,
+    int value,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 7),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              title,
+              style: const TextStyle(
+                fontSize: 16,
+              ),
+            ),
+          ),
+          Text(
+            '$value/10',
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final analysis = result;
+
     return Scaffold(
-      appBar: AppBar(title: const Text('AI Fotoğraf Analizi')),
+      backgroundColor: const Color(0xFF090D13),
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF090D13),
+        foregroundColor: Colors.white,
+        title: const Text(
+          'Fotoğraf Analizi',
+        ),
+      ),
       body: ListView(
         padding: const EdgeInsets.all(18),
         children: [
@@ -52,76 +111,220 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
             borderRadius: BorderRadius.circular(18),
             child: Image.file(
               widget.image,
-              height: 360,
+              height: 320,
+              width: double.infinity,
               fit: BoxFit.cover,
             ),
           ),
-          const SizedBox(height: 18),
+
+          const SizedBox(height: 22),
+
           if (analyzing)
             const Card(
+              color: Color(0xFF151A22),
               child: Padding(
-                padding: EdgeInsets.all(22),
-                child: Row(
+                padding: EdgeInsets.all(24),
+                child: Column(
                   children: [
-                    CircularProgressIndicator(),
-                    SizedBox(width: 16),
-                    Text('Fotoğraf analiz ediliyor...'),
+                    CircularProgressIndicator(
+                      color: Color(0xFFFFC107),
+                    ),
+                    SizedBox(height: 18),
+                    Text(
+                      'Fotoğraf AI tarafından analiz ediliyor...',
+                      textAlign: TextAlign.center,
+                    ),
                   ],
                 ),
               ),
-            )
-          else if (result != null) ...[
+            ),
+
+          if (errorMessage != null && !analyzing)
             Card(
               color: const Color(0xFF151A22),
               child: Padding(
-                padding: const EdgeInsets.all(18),
+                padding: const EdgeInsets.all(20),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    const Icon(
+                      Icons.error_outline,
+                      color: Colors.redAccent,
+                      size: 42,
+                    ),
+                    const SizedBox(height: 12),
                     const Text(
-                      'AI Değerlendirmesi',
+                      'Analiz yapılamadı',
                       style: TextStyle(
                         fontSize: 19,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     const SizedBox(height: 10),
-                    Text(result!.summary),
+                    Text(
+                      errorMessage!,
+                      textAlign: TextAlign.center,
+                    ),
                   ],
                 ),
               ),
             ),
+
+          if (analysis != null && !analyzing) ...[
+            Card(
+              color: const Color(0xFF151A22),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(22),
+                child: Column(
+                  children: [
+                    Text(
+                      '${analysis.score}/100',
+                      style: const TextStyle(
+                        color: Color(0xFFFFC107),
+                        fontSize: 48,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+
+                    const SizedBox(height: 4),
+
+                    const Text(
+                      'Fotoğraf Skoru',
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: Colors.white70,
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    _scoreRow(
+                      'Kompozisyon',
+                      analysis.composition,
+                    ),
+
+                    _scoreRow(
+                      'Işık',
+                      analysis.lighting,
+                    ),
+
+                    _scoreRow(
+                      'Perspektif',
+                      analysis.perspective,
+                    ),
+
+                    _scoreRow(
+                      'Netlik',
+                      analysis.sharpness,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            const Text(
+              'AI Değerlendirmesi',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+
             const SizedBox(height: 12),
-            ...result!.suggestions.map(
+
+            Card(
+              color: const Color(0xFF151A22),
+              child: Padding(
+                padding: const EdgeInsets.all(18),
+                child: Text(
+                  analysis.summary,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    height: 1.5,
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            const Text(
+              'Fotoğrafı İyileştirmek İçin',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            ...analysis.suggestions.map(
               (suggestion) => Card(
                 color: const Color(0xFF151A22),
                 child: ListTile(
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 18,
+                    vertical: 8,
+                  ),
                   leading: const Icon(
                     Icons.auto_awesome,
                     color: Color(0xFFFFC107),
                   ),
-                  title: Text(suggestion),
+                  title: Text(
+                    suggestion,
+                    style: const TextStyle(
+                      height: 1.4,
+                    ),
+                  ),
                 ),
               ),
             ),
           ],
-          const SizedBox(height: 18),
+
+          const SizedBox(height: 24),
+
           FilledButton.icon(
             style: FilledButton.styleFrom(
               backgroundColor: const Color(0xFFFFC107),
               foregroundColor: Colors.black,
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(17),
             ),
-            onPressed: _analyze,
-            icon: const Icon(Icons.auto_awesome),
-            label: const Text('Tekrar Analiz Et'),
+            onPressed: analyzing ? null : _analyze,
+            icon: const Icon(
+              Icons.auto_awesome,
+            ),
+            label: Text(
+              analyzing
+                  ? 'Analiz Ediliyor...'
+                  : 'Tekrar Analiz Et',
+            ),
           ),
-          const SizedBox(height: 10),
+
+          const SizedBox(height: 12),
+
           OutlinedButton.icon(
-            onPressed: () {},
-            icon: const Icon(Icons.favorite_border),
-            label: const Text('Kaydet'),
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text(
+                    'Kaydetme özelliği yakında aktif olacak.',
+                  ),
+                ),
+              );
+            },
+            icon: const Icon(
+              Icons.favorite_border,
+            ),
+            label: const Text(
+              'Kaydet',
+            ),
           ),
+
+          const SizedBox(height: 30),
         ],
       ),
     );
