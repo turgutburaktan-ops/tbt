@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "330568532415",
+    "project_id": "en-iyi-cekim-noktasi",
+    "storage_bucket": "en-iyi-cekim-noktasi.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:330568532415:android:425699d143ec3eb041a10a",
+        "android_client_info": {
+          "package_name": "com.example.tbt"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBDoKy5YMP5-6UJqotfuUA7a74H-x-5miQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
