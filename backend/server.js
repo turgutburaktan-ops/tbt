@@ -333,3 +333,8 @@ Gereksiz ayrıntı verme.
     }
   }
 );
+const PORT = Number(process.env.PORT) || 10000;
+
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`AI backend ${PORT} portunda çalışıyor.`);
+});
