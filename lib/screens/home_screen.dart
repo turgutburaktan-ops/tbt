@@ -677,7 +677,7 @@ class _SavedPage extends StatelessWidget {
                         height: 70,
                         fit: BoxFit.cover,
                         errorBuilder:
-                            (, _, _) {
+                            (_, __, ___) {
                           return Container(
                             width: 70,
                             height: 70,
