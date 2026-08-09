@@ -24,10 +24,11 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final pages = [
-      const _ExplorePage(),
-      const MapScreen(),
-      const _SavedPage(),class _ProfilePage extends StatelessWidget {
-  const _ProfilePage();
+  const _ExplorePage(),
+  const MapScreen(),
+  const _SavedPage(),
+  const _ProfilePage(),
+];
 
   @override
   Widget build(BuildContext context) {
