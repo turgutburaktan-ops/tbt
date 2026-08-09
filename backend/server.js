@@ -103,7 +103,7 @@ const cleaned = String(raw)
 
       const parsedResult = JSON.parse(cleaned);
       
-      return res.json(parsedresult);
+      return res.json(parsedResult);
     } catch (error) {
       console.error("Analyze error:", error);
 
