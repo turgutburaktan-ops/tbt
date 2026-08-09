@@ -501,11 +501,9 @@ class _CameraScreenState extends State<CameraScreen> {
                       Axis.horizontal,
                   itemCount:
                       _filters.length,
-                  separatorBuilder:
-                      (, _) =>
-                          const SizedBox(
-                    width: 8,
-                  ),
+                 separatorBuilder: (context, index) {
+                    return const SizedBox(width: 8);
+                 },
                   itemBuilder:
                       (context, index) {
                     final filter =
