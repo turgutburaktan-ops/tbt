@@ -6,9 +6,9 @@ import 'screens/home_screen.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await FavoritesService.initialize();
+  await Firebase.initializeApp();
 
-  runApp(const BestPhotoSpotApp());
+  runApp(const MyApp());
 }
 class BestPhotoSpotApp extends StatelessWidget {
   const BestPhotoSpotApp({super.key});
