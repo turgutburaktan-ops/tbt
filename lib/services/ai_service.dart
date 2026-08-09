@@ -9,7 +9,6 @@ class PhotoAnalysis {
   final int lighting;
   final int perspective;
   final int sharpness;
-
   final String summary;
   final List<String> suggestions;
 
@@ -23,40 +22,53 @@ class PhotoAnalysis {
     required this.suggestions,
   });
 
-  factory PhotoAnalysis.fromJson(
-    Map<String, dynamic> json,
-  ) {
+  factory PhotoAnalysis.fromJson(Map<String, dynamic> json) {
     return PhotoAnalysis(
       score: (json['score'] as num? ?? 0).toInt(),
-      composition:
-          (json['composition'] as num? ?? 0).toInt(),
-      lighting:
-          (json['lighting'] as num? ?? 0).toInt(),
-      perspective:
-          (json['perspective'] as num? ?? 0).toInt(),
-      sharpness:
-          (json['sharpness'] as num? ?? 0).toInt(),
+      composition: (json['composition'] as num? ?? 0).toInt(),
+      lighting: (json['lighting'] as num? ?? 0).toInt(),
+      perspective: (json['perspective'] as num? ?? 0).toInt(),
+      sharpness: (json['sharpness'] as num? ?? 0).toInt(),
       summary: json['summary']?.toString() ?? '',
-      suggestions:
-          (json['suggestions'] as List<dynamic>? ?? [])
-              .map((e) => e.toString())
-              .toList(),
+      suggestions: (json['suggestions'] as List<dynamic>? ?? [])
+          .map((e) => e.toString())
+          .toList(),
+    );
+  }
+}
+
+class LiveFrameAnalysis {
+  final String status;
+  final String mainTip;
+  final String compositionTip;
+  final String lightTip;
+  final String subjectTip;
+
+  const LiveFrameAnalysis({
+    required this.status,
+    required this.mainTip,
+    required this.compositionTip,
+    required this.lightTip,
+    required this.subjectTip,
+  });
+
+  factory LiveFrameAnalysis.fromJson(Map<String, dynamic> json) {
+    return LiveFrameAnalysis(
+      status: json['status']?.toString() ?? 'adjust',
+      mainTip: json['main_tip']?.toString() ?? '',
+      compositionTip: json['composition_tip']?.toString() ?? '',
+      lightTip: json['light_tip']?.toString() ?? '',
+      subjectTip: json['subject_tip']?.toString() ?? '',
     );
   }
 }
 
 class AiService {
-  static const String baseUrl =
-      'https://tbt-tx25.onrender.com';
+  static const String baseUrl = 'https://tbt-tx25.onrender.com';
 
-  static Future<PhotoAnalysis> analyzePhoto(
-    String imagePath,
-  ) async {
+  static Future<PhotoAnalysis> analyzePhoto(String imagePath) async {
     final file = File(imagePath);
-
-    if (!await file.exists()) {
-      throw Exception('Fotoğraf bulunamadı.');
-    }
+    if (!await file.exists()) throw Exception('Fotoğraf bulunamadı.');
 
     final request = http.MultipartRequest(
       'POST',
@@ -64,34 +76,59 @@ class AiService {
     );
 
     request.files.add(
-      await http.MultipartFile.fromPath(
-        'image',
-        imagePath,
-      ),
+      await http.MultipartFile.fromPath('image', imagePath),
     );
 
-    final streamedResponse = await request.send();
-
-    final response = await http.Response.fromStream(
-      streamedResponse,
-    );
+    final streamed = await request.send().timeout(
+          const Duration(seconds: 75),
+        );
+    final response = await http.Response.fromStream(streamed);
 
     if (response.statusCode != 200) {
       throw Exception(
-        'AI analizi başarısız: '
-        '${response.statusCode}\n'
-        '${response.body}',
+        'AI analizi başarısız: ${response.statusCode}\n${response.body}',
       );
     }
 
     final decoded = jsonDecode(response.body);
-
     if (decoded is! Map<String, dynamic>) {
-      throw Exception(
-        'AI sunucusundan geçersiz yanıt alındı.',
-      );
+      throw Exception('AI sunucusundan geçersiz yanıt alındı.');
     }
 
     return PhotoAnalysis.fromJson(decoded);
+  }
+
+  static Future<LiveFrameAnalysis> analyzeLiveFrame({
+    required String imagePath,
+    required String mode,
+  }) async {
+    final file = File(imagePath);
+    if (!await file.exists()) throw Exception('Kamera karesi bulunamadı.');
+
+    final request = http.MultipartRequest(
+      'POST',
+      Uri.parse('$baseUrl/live-analyze'),
+    );
+
+    request.fields['mode'] = mode;
+    request.files.add(
+      await http.MultipartFile.fromPath('image', imagePath),
+    );
+
+    final streamed = await request.send().timeout(
+          const Duration(seconds: 30),
+        );
+    final response = await http.Response.fromStream(streamed);
+
+    if (response.statusCode != 200) {
+      throw Exception('Canlı AI başarısız: ${response.statusCode}');
+    }
+
+    final decoded = jsonDecode(response.body);
+    if (decoded is! Map<String, dynamic>) {
+      throw Exception('Canlı AI geçersiz yanıt verdi.');
+    }
+
+    return LiveFrameAnalysis.fromJson(decoded);
   }
 }
