@@ -296,7 +296,7 @@ class _ExplorePageState extends State<_ExplorePage> {
                 ),
                 scrollDirection: Axis.horizontal,
                 itemCount: _filters.length,
-                separatorBuilder: (, _) =>
+                separatorBuilder: (_, __) =>
                     const SizedBox(width: 8),
                 itemBuilder: (context, index) {
                   final filter = _filters[index];
@@ -462,7 +462,7 @@ class _ExploreSpotCard extends StatelessWidget {
                     width: 88,
                     height: 88,
                     fit: BoxFit.cover,
-                    errorBuilder: (, _, _) {
+                    errorBuilder: (_, __, ___) {
                       return Container(
                         width: 88,
                         height: 88,
