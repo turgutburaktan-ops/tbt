@@ -261,22 +261,32 @@ class _LoggedInProfile extends StatelessWidget {
           const SizedBox(height: 24),
 
           _MenuItem(
-            icon: Icons.photo_library_outlined,
-            title: 'Çekimlerim',
-            subtitle:
-                'Paylaştığın fotoğrafları görüntüle',
-            onTap: () {
-              ScaffoldMessenger.of(context)
-                  .showSnackBar(
-                const SnackBar(
-                  content: Text(
-                    'Fotoğraf paylaşım sistemi birazdan eklenecek.',
-                  ),
-                ),
-              );
-            },
-          ),
+  icon: Icons.add_a_photo_outlined,
+  title: 'Fotoğraf Paylaş',
+  subtitle: 'Yeni bir çekim noktası paylaş',
+  onTap: () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const CreatePostScreen(),
+      ),
+    );
+  },
+),
 
+_MenuItem(
+  icon: Icons.photo_library_outlined,
+  title: 'Çekimlerim',
+  subtitle: 'Paylaştığın fotoğrafları görüntüle',
+  onTap: () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const MyPostsScreen(),
+      ),
+    );
+  },
+),
           _MenuItem(
             icon: Icons.favorite_border,
             title: 'Kaydedilen Noktalar',
