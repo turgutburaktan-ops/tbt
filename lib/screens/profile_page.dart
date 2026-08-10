@@ -260,7 +260,7 @@ class _LoggedInProfile extends StatelessWidget {
 
           const SizedBox(height: 24),
 
-          _MenuItem(
+       _MenuItem(
   icon: Icons.add_a_photo_outlined,
   title: 'Fotoğraf Paylaş',
   subtitle: 'Yeni bir çekim noktası paylaş',
@@ -269,6 +269,20 @@ class _LoggedInProfile extends StatelessWidget {
       context,
       MaterialPageRoute(
         builder: (_) => const CreatePostScreen(),
+      ),
+    );
+  },
+),
+
+_MenuItem(
+  icon: Icons.photo_library_outlined,
+  title: 'Çekimlerim',
+  subtitle: 'Paylaştığın fotoğrafları görüntüle',
+  onTap: () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const MyPostsScreen(),
       ),
     );
   },
