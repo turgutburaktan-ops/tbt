@@ -304,7 +304,7 @@ class _CameraScreenState extends State<CameraScreen> {
     _liveAiTimer?.cancel();
 
     _liveAiTimer = Timer.periodic(
-      const Duration(seconds: 7),
+      const Duration(seconds: 2),
       (timer) {
         _captureAndAnalyzeLiveFrame();
       },
