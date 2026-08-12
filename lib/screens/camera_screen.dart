@@ -1292,7 +1292,7 @@ class _CameraScreenState extends State<CameraScreen> {
                       ),
                     if (_stabilityGuide.isNotEmpty)
                       _CameraStatusChip(
-                        icon: Icons.stabilization,
+                        icon: Icons.screen_rotation_outlined,
                         text: _stabilityGuide,
                       ),
                   ],
