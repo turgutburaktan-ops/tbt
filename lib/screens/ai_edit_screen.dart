@@ -1,0 +1,448 @@
+import 'dart:io';
+
+import 'package:flutter/material.dart';
+
+import '../services/ai_service.dart';
+import 'create_post_screen.dart';
+
+enum AiEditAction {
+  autoEnhance,
+  fixLight,
+  removePeople,
+  removeObject,
+}
+
+class AiEditScreen extends StatefulWidget {
+  final String originalImagePath;
+
+  const AiEditScreen({
+    super.key,
+    required this.originalImagePath,
+  });
+
+  @override
+  State<AiEditScreen> createState() => _AiEditScreenState();
+}
+
+class _AiEditScreenState extends State<AiEditScreen> {
+  late String _currentImagePath;
+  bool _processing = false;
+  AiEditAction? _activeAction;
+  Offset? _removePoint;
+  bool _selectingObject = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentImagePath = widget.originalImagePath;
+  }
+
+  Future<void> _runEdit(
+    AiEditAction action, {
+    Offset? normalizedPoint,
+  }) async {
+    if (_processing) return;
+
+    setState(() {
+      _processing = true;
+      _activeAction = action;
+    });
+
+    try {
+      final result = await AiService.editPhoto(
+        imagePath: _currentImagePath,
+        action: _actionName(action),
+        pointX: normalizedPoint?.dx,
+        pointY: normalizedPoint?.dy,
+      );
+
+      if (!mounted) return;
+
+      setState(() {
+        _currentImagePath = result.outputPath;
+        _processing = false;
+        _activeAction = null;
+        _selectingObject = false;
+        _removePoint = null;
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        _processing = false;
+        _activeAction = null;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'AI düzenleme başarısız: ${_friendlyError(e)}',
+          ),
+        ),
+      );
+    }
+  }
+
+  String _actionName(AiEditAction action) {
+    switch (action) {
+      case AiEditAction.autoEnhance:
+        return 'auto_enhance';
+      case AiEditAction.fixLight:
+        return 'fix_light';
+      case AiEditAction.removePeople:
+        return 'remove_people';
+      case AiEditAction.removeObject:
+        return 'remove_object';
+    }
+  }
+
+  String _friendlyError(Object e) {
+    final text = e.toString();
+
+    if (text.contains('404')) {
+      return 'AI düzenleme servisi sunucuda henüz aktif değil.';
+    }
+
+    if (text.toLowerCase().contains('timeout')) {
+      return 'Sunucu yanıtı çok uzun sürdü.';
+    }
+
+    return text.replaceFirst('Exception: ', '');
+  }
+
+  void _beginRemoveObject() {
+    if (_processing) return;
+
+    setState(() {
+      _selectingObject = true;
+      _removePoint = null;
+    });
+  }
+
+  void _resetOriginal() {
+    if (_processing) return;
+
+    setState(() {
+      _currentImagePath = widget.originalImagePath;
+      _removePoint = null;
+      _selectingObject = false;
+    });
+  }
+
+  Future<void> _continueToShare() async {
+    if (_processing) return;
+
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CreatePostScreen(
+          initialImagePath: _currentImagePath,
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final imageFile = File(_currentImagePath);
+
+    return Scaffold(
+      backgroundColor: const Color(0xFF07090D),
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF07090D),
+        elevation: 0,
+        title: const Text(
+          'AI Düzenle',
+          style: TextStyle(fontWeight: FontWeight.w800),
+        ),
+        actions: [
+          TextButton(
+            onPressed: _processing ? null : _resetOriginal,
+            child: const Text(
+              'Orijinal',
+              style: TextStyle(color: Color(0xFFFFC107)),
+            ),
+          ),
+        ],
+      ),
+      body: SafeArea(
+        child: Column(
+          children: [
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(12, 6, 12, 10),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(24),
+                  child: Container(
+                    color: Colors.black,
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        return GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTapDown: !_selectingObject || _processing
+                              ? null
+                              : (details) {
+                                  final normalized = Offset(
+                                    (details.localPosition.dx /
+                                            constraints.maxWidth)
+                                        .clamp(0.0, 1.0),
+                                    (details.localPosition.dy /
+                                            constraints.maxHeight)
+                                        .clamp(0.0, 1.0),
+                                  );
+
+                                  setState(() {
+                                    _removePoint = normalized;
+                                  });
+                                },
+                          child: Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              Image.file(
+                                imageFile,
+                                fit: BoxFit.contain,
+                              ),
+                              if (_selectingObject)
+                                Container(
+                                  color: Colors.black.withOpacity(.10),
+                                ),
+                              if (_selectingObject && _removePoint != null)
+                                Positioned(
+                                  left: _removePoint!.dx *
+                                          constraints.maxWidth -
+                                      26,
+                                  top: _removePoint!.dy *
+                                          constraints.maxHeight -
+                                      26,
+                                  child: const IgnorePointer(
+                                    child: _TargetMarker(),
+                                  ),
+                                ),
+                              if (_processing)
+                                Container(
+                                  color: Colors.black.withOpacity(.50),
+                                  child: Center(
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const CircularProgressIndicator(
+                                          color: Color(0xFFFFC107),
+                                        ),
+                                        const SizedBox(height: 14),
+                                        Text(
+                                          _processingText(),
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            if (_selectingObject)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF151A22),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.touch_app_outlined,
+                        color: Color(0xFFFFC107),
+                      ),
+                      const SizedBox(width: 10),
+                      const Expanded(
+                        child: Text(
+                          'Kaldırmak istediğin nesnenin üzerine dokun.',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.white70,
+                          ),
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: _removePoint == null
+                            ? null
+                            : () {
+                                _runEdit(
+                                  AiEditAction.removeObject,
+                                  normalizedPoint: _removePoint,
+                                );
+                              },
+                        child: const Text('Kaldır'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            SizedBox(
+              height: 104,
+              child: ListView(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                scrollDirection: Axis.horizontal,
+                children: [
+                  _EditTool(
+                    icon: Icons.auto_awesome,
+                    label: 'Otomatik',
+                    onTap: () => _runEdit(AiEditAction.autoEnhance),
+                  ),
+                  _EditTool(
+                    icon: Icons.light_mode_outlined,
+                    label: 'Işık',
+                    onTap: () => _runEdit(AiEditAction.fixLight),
+                  ),
+                  _EditTool(
+                    icon: Icons.groups_2_outlined,
+                    label: 'İnsanları\nKaldır',
+                    onTap: () => _runEdit(AiEditAction.removePeople),
+                  ),
+                  _EditTool(
+                    icon: Icons.auto_fix_high,
+                    label: 'Nesne\nKaldır',
+                    onTap: _beginRemoveObject,
+                  ),
+                  _EditTool(
+                    icon: Icons.undo_rounded,
+                    label: 'Orijinale\nDön',
+                    onTap: _resetOriginal,
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+              child: SizedBox(
+                height: 54,
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: _processing ? null : _continueToShare,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: const Color(0xFFFFC107),
+                    foregroundColor: Colors.black,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  icon: const Icon(Icons.arrow_forward_rounded),
+                  label: const Text(
+                    'Paylaşmaya Devam Et',
+                    style: TextStyle(fontWeight: FontWeight.w800),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _processingText() {
+    switch (_activeAction) {
+      case AiEditAction.autoEnhance:
+        return 'Fotoğraf iyileştiriliyor...';
+      case AiEditAction.fixLight:
+        return 'Işık düzeltiliyor...';
+      case AiEditAction.removePeople:
+        return 'Arka plandaki insanlar kaldırılıyor...';
+      case AiEditAction.removeObject:
+        return 'Nesne kaldırılıyor...';
+      case null:
+        return 'AI çalışıyor...';
+    }
+  }
+}
+
+class _EditTool extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  const _EditTool({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 9),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(18),
+        child: Container(
+          width: 92,
+          padding: const EdgeInsets.symmetric(
+            horizontal: 8,
+            vertical: 10,
+          ),
+          decoration: BoxDecoration(
+            color: const Color(0xFF151A22),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: Colors.white10),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                color: const Color(0xFFFFC107),
+                size: 26,
+              ),
+              const SizedBox(height: 7),
+              Text(
+                label,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 11,
+                  height: 1.1,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _TargetMarker extends StatelessWidget {
+  const _TargetMarker();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 52,
+      height: 52,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: const Color(0xFFFFC107),
+          width: 3,
+        ),
+        color: Colors.black.withOpacity(.25),
+      ),
+      child: const Icon(
+        Icons.close_rounded,
+        color: Color(0xFFFFC107),
+      ),
+    );
+  }
+}
