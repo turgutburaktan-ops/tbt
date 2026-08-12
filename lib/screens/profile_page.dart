@@ -288,19 +288,6 @@ _MenuItem(
   },
 ),
 
-_MenuItem(
-  icon: Icons.photo_library_outlined,
-  title: 'Çekimlerim',
-  subtitle: 'Paylaştığın fotoğrafları görüntüle',
-  onTap: () {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const MyPostsScreen(),
-      ),
-    );
-  },
-),
           _MenuItem(
             icon: Icons.favorite_border,
             title: 'Kaydedilen Noktalar',
