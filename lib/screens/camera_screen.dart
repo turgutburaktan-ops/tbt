@@ -796,476 +796,553 @@ class _CameraScreenState extends State<CameraScreen> {
     return Scaffold(
       backgroundColor: Colors.black,
       body: SafeArea(
-        child: Stack(
-          children: [
-            Positioned(
-              top: 70,
-              left: 8,
-              right: 8,
-              bottom: 218,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(24),
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    return GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      onTapDown: (details) {
-                        _handlePreviewTap(
-                          details,
-                          constraints,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final screenW = constraints.maxWidth;
+            final screenH = constraints.maxHeight;
+
+            // Responsive zones:
+            // top bar = ~8%
+            // bottom controls = ~30%
+            // preview takes all remaining space.
+            final topBarH = (screenH * 0.085).clamp(58.0, 82.0);
+            final bottomPanelH = (screenH * 0.29).clamp(210.0, 285.0);
+            final previewTop = topBarH + 4;
+            final previewBottom = bottomPanelH + 6;
+
+            final modeBarBottom = (bottomPanelH * 0.58).clamp(125.0, 170.0);
+            final shutterBottom = (bottomPanelH * 0.10).clamp(20.0, 34.0);
+
+            return Stack(
+              children: [
+                // =====================================================
+                // CAMERA PREVIEW - RESPONSIVE, NO STRETCH
+                // =====================================================
+                Positioned(
+                  top: previewTop,
+                  left: 8,
+                  right: 8,
+                  bottom: previewBottom,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(24),
+                    child: LayoutBuilder(
+                      builder: (context, previewConstraints) {
+                        return GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTapDown: (details) {
+                            _handlePreviewTap(
+                              details,
+                              previewConstraints,
+                            );
+                          },
+                          child: SizedBox.expand(
+                            child: FittedBox(
+                              fit: BoxFit.cover,
+                              clipBehavior: Clip.hardEdge,
+                              child: SizedBox(
+                                width: 1080,
+                                height: 1440,
+                                child: const iris.IrisCameraPreview(
+                                  aspectRatio: 3 / 4,
+                                  enableTapToFocus: false,
+                                  showFocusIndicator: false,
+                                ),
+                              ),
+                            ),
+                          ),
                         );
                       },
-                      child: const iris.IrisCameraPreview(
-                        aspectRatio: 3 / 4,
-                        enableTapToFocus: false,
-                        showFocusIndicator: false,
+                    ),
+                  ),
+                ),
+
+                // =====================================================
+                // GRID
+                // =====================================================
+                if (_showGrid)
+                  Positioned(
+                    top: previewTop,
+                    left: 8,
+                    right: 8,
+                    bottom: previewBottom,
+                    child: const ClipRRect(
+                      borderRadius: BorderRadius.all(
+                        Radius.circular(24),
                       ),
-                    );
-                  },
-                ),
-              ),
-            ),
-
-            if (_showGrid)
-              const Positioned(
-                top: 70,
-                left: 8,
-                right: 8,
-                bottom: 218,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.all(
-                    Radius.circular(24),
+                      child: IgnorePointer(
+                        child: _CameraGrid(),
+                      ),
+                    ),
                   ),
-                  child: IgnorePointer(
-                    child: _CameraGrid(),
-                  ),
-                ),
-              ),
 
-            if (_subjectLocked && _subjectPoint != null)
-              Positioned(
-                top: 70,
-                left: 8,
-                right: 8,
-                bottom: 218,
-                child: IgnorePointer(
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      final point = Offset(
-                        _subjectPoint!.dx * constraints.maxWidth,
-                        _subjectPoint!.dy * constraints.maxHeight,
-                      );
+                // =====================================================
+                // SUBJECT LOCK
+                // =====================================================
+                if (_subjectLocked && _subjectPoint != null)
+                  Positioned(
+                    top: previewTop,
+                    left: 8,
+                    right: 8,
+                    bottom: previewBottom,
+                    child: IgnorePointer(
+                      child: LayoutBuilder(
+                        builder: (context, previewConstraints) {
+                          final point = Offset(
+                            _subjectPoint!.dx *
+                                previewConstraints.maxWidth,
+                            _subjectPoint!.dy *
+                                previewConstraints.maxHeight,
+                          );
 
-                      return Stack(
-                        children: [
-                          Positioned(
-                            left: point.dx - 32,
-                            top: point.dy - 32,
-                            child: Container(
-                              width: 64,
-                              height: 64,
-                              decoration: BoxDecoration(
-                                border: Border.all(
-                                  color: const Color(0xFFFFC107),
-                                  width: 2,
-                                ),
-                                borderRadius: BorderRadius.circular(14),
-                              ),
-                              child: const Align(
-                                alignment: Alignment.topRight,
-                                child: Padding(
-                                  padding: EdgeInsets.all(4),
-                                  child: Icon(
-                                    Icons.lock,
-                                    size: 15,
-                                    color: Color(0xFFFFC107),
+                          return Stack(
+                            children: [
+                              Positioned(
+                                left: point.dx - 32,
+                                top: point.dy - 32,
+                                child: Container(
+                                  width: 64,
+                                  height: 64,
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
+                                      color: const Color(0xFFFFC107),
+                                      width: 2,
+                                    ),
+                                    borderRadius: BorderRadius.circular(14),
+                                  ),
+                                  child: const Align(
+                                    alignment: Alignment.topRight,
+                                    child: Padding(
+                                      padding: EdgeInsets.all(4),
+                                      child: Icon(
+                                        Icons.lock,
+                                        size: 15,
+                                        color: Color(0xFFFFC107),
+                                      ),
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                          ),
-                        ],
-                      );
-                    },
+                            ],
+                          );
+                        },
+                      ),
+                    ),
                   ),
-                ),
-              ),
 
-            Positioned(
-              top: 12,
-              left: 12,
-              right: 12,
-              child: Row(
-                children: [
-                  _CircleButton(
-                    icon: Icons.close,
-                    onTap: () => Navigator.pop(context),
-                  ),
-                  const Spacer(),
-                  GestureDetector(
-                    onTap: _toggleAiAutoPro,
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 180),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 15,
-                        vertical: 10,
-                      ),
-                      decoration: BoxDecoration(
-                        color: _aiAutoProEnabled
-                            ? const Color(0xFFFFC107)
-                            : Colors.black.withOpacity(.68),
-                        borderRadius: BorderRadius.circular(18),
-                        border: Border.all(
-                          color: _aiAutoProEnabled
-                              ? const Color(0xFFFFC107)
-                              : Colors.white24,
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.auto_awesome,
-                            size: 18,
-                            color: _aiAutoProEnabled
-                                ? Colors.black
-                                : Colors.white,
-                          ),
-                          const SizedBox(width: 7),
-                          Text(
-                            _aiAutoProEnabled
-                                ? 'AI AUTO PRO  AÇIK'
-                                : 'AI AUTO PRO',
-                            style: TextStyle(
-                              color: _aiAutoProEnabled
-                                  ? Colors.black
-                                  : Colors.white,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const Spacer(),
-                  _CircleButton(
-                    icon: _showGrid ? Icons.grid_on : Icons.grid_off,
-                    onTap: () {
-                      setState(() => _showGrid = !_showGrid);
-                    },
-                  ),
-                  const SizedBox(width: 8),
-                  _CircleButton(
-                    icon: _spotModeEnabled
-                        ? Icons.location_on
-                        : Icons.location_on_outlined,
-                    onTap: _toggleSpotMode,
-                  ),
-                ],
-              ),
-            ),
-
-            if (_aiAutoProEnabled)
-              Positioned(
-                top: 88,
-                left: 0,
-                right: 0,
-                child: Center(
-                  child: Container(
-                    constraints: const BoxConstraints(maxWidth: 330),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 13,
-                      vertical: 7,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(.62),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (_aiBusy)
-                          const SizedBox(
-                            width: 15,
-                            height: 15,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Color(0xFFFFC107),
-                            ),
-                          )
-                        else
-                          const Icon(
-                            Icons.auto_awesome,
-                            size: 16,
-                            color: Color(0xFFFFC107),
-                          ),
-                        const SizedBox(width: 8),
-                        Flexible(
-                          child: Text(
-                            _aiBusy
-                                ? 'Sahne analiz ediliyor...'
-                                : _aiMainTip,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-
-            if (_aiAutoProEnabled)
-              Positioned(
-                top: 170,
-                right: 18,
-                child: Container(
-                  width: 74,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 12,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(.66),
-                    borderRadius: BorderRadius.circular(22),
-                    border: Border.all(
-                      color: Colors.white12,
-                    ),
-                  ),
-                  child: Column(
-                    children: [
-                      const Icon(
-                        Icons.center_focus_strong,
-                        color: Colors.white,
-                        size: 21,
-                      ),
-                      const SizedBox(height: 5),
-                      Text(
-                        _currentFocus,
-                        style: const TextStyle(
-                          color: Color(0xFFFFC107),
-                          fontSize: 14,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                      const SizedBox(height: 3),
-                      Text(
-                        '${_currentZoom.toStringAsFixed(1)}x',
-                        style: const TextStyle(
-                          color: Colors.white60,
-                          fontSize: 9,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 9),
-                        child: Divider(
-                          height: 1,
-                          color: Colors.white12,
-                        ),
-                      ),
-                      const Icon(
-                        Icons.landscape_outlined,
-                        color: Colors.white,
-                        size: 21,
-                      ),
-                      const SizedBox(height: 5),
-                      Text(
-                        _compositionHudText,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 9.5,
-                          height: 1.15,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 9),
-                        child: Divider(
-                          height: 1,
-                          color: Colors.white12,
-                        ),
-                      ),
-                      const Icon(
-                        Icons.light_mode_outlined,
-                        color: Color(0xFFFFC107),
-                        size: 21,
-                      ),
-                      const SizedBox(height: 5),
-                      Text(
-                        _lightHudText,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 9.5,
-                          height: 1.15,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              height: 218,
-              child: IgnorePointer(
-                child: Container(
-                  decoration: const BoxDecoration(
-                    color: Color(0xFF050608),
-                    borderRadius: BorderRadius.vertical(
-                      top: Radius.circular(26),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-
-            if (_aiAutoProEnabled)
-              Positioned(
-                left: 18,
-                right: 18,
-                bottom: 220,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(.72),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.white12),
-                  ),
+                // =====================================================
+                // TOP BAR
+                // =====================================================
+                Positioned(
+                  top: 8,
+                  left: 12,
+                  right: 12,
+                  height: topBarH - 8,
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      _Param(
-                        label: 'ISO',
-                        value: _isoHud,
+                      _CircleButton(
+                        icon: Icons.close,
+                        onTap: () => Navigator.pop(context),
                       ),
-                      _Param(
-                        label: 'S',
-                        value: _shutterHud,
+                      const Spacer(),
+                      GestureDetector(
+                        onTap: _toggleAiAutoPro,
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 180),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 15,
+                            vertical: 10,
+                          ),
+                          decoration: BoxDecoration(
+                            color: _aiAutoProEnabled
+                                ? const Color(0xFFFFC107)
+                                : Colors.black.withOpacity(.68),
+                            borderRadius: BorderRadius.circular(18),
+                            border: Border.all(
+                              color: _aiAutoProEnabled
+                                  ? const Color(0xFFFFC107)
+                                  : Colors.white24,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.auto_awesome,
+                                size: 18,
+                                color: _aiAutoProEnabled
+                                    ? Colors.black
+                                    : Colors.white,
+                              ),
+                              const SizedBox(width: 7),
+                              Text(
+                                _aiAutoProEnabled
+                                    ? 'AI AUTO PRO  AÇIK'
+                                    : 'AI AUTO PRO',
+                                style: TextStyle(
+                                  color: _aiAutoProEnabled
+                                      ? Colors.black
+                                      : Colors.white,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
-                      _Param(
-                        label: 'ODAK',
-                        value: _currentFocus,
+                      const Spacer(),
+                      _CircleButton(
+                        icon: _showGrid ? Icons.grid_on : Icons.grid_off,
+                        onTap: () {
+                          setState(() => _showGrid = !_showGrid);
+                        },
                       ),
-                      _Param(
-                        label: 'WB',
-                        value: _wbHud,
-                      ),
-                      _Param(
-                        label: 'EV',
-                        value:
-                            '${_currentEv >= 0 ? '+' : ''}${_currentEv.toStringAsFixed(1)}',
-                        accent: true,
+                      const SizedBox(width: 8),
+                      _CircleButton(
+                        icon: _spotModeEnabled
+                            ? Icons.location_on
+                            : Icons.location_on_outlined,
+                        onTap: _toggleSpotMode,
                       ),
                     ],
                   ),
                 ),
-              ),
 
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 155,
-              child: SizedBox(
-                height: 52,
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 14),
-                  itemCount: _modes.length,
-                  separatorBuilder: (_, __) =>
-                      const SizedBox(width: 8),
-                  itemBuilder: (context, index) {
-                    final mode = _modes[index];
-                    final selected = mode == _selectedMode;
-
-                    return GestureDetector(
-                      onTap: () => _selectMode(mode),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 180),
+                // =====================================================
+                // AI MAIN TIP
+                // =====================================================
+                if (_aiAutoProEnabled)
+                  Positioned(
+                    top: previewTop + 16,
+                    left: 20,
+                    right: 20,
+                    child: Center(
+                      child: Container(
+                        constraints: BoxConstraints(
+                          maxWidth: min(screenW - 40, 340),
+                        ),
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 18,
-                          vertical: 10,
+                          horizontal: 13,
+                          vertical: 7,
                         ),
                         decoration: BoxDecoration(
-                          color: selected
-                              ? const Color(0xFFFFC107)
-                              : Colors.black.withOpacity(.62),
-                          borderRadius: BorderRadius.circular(24),
+                          color: Colors.black.withOpacity(.62),
+                          borderRadius: BorderRadius.circular(16),
                         ),
-                        child: Center(
-                          child: Text(
-                            mode,
-                            style: TextStyle(
-                              color:
-                                  selected ? Colors.black : Colors.white,
-                              fontWeight: FontWeight.w700,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (_aiBusy)
+                              const SizedBox(
+                                width: 15,
+                                height: 15,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Color(0xFFFFC107),
+                                ),
+                              )
+                            else
+                              const Icon(
+                                Icons.auto_awesome,
+                                size: 16,
+                                color: Color(0xFFFFC107),
+                              ),
+                            const SizedBox(width: 8),
+                            Flexible(
+                              child: Text(
+                                _aiBusy
+                                    ? 'Sahne analiz ediliyor...'
+                                    : _aiMainTip,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
                             ),
-                          ),
+                          ],
                         ),
                       ),
-                    );
-                  },
-                ),
-              ),
-            ),
-
-            Positioned(
-              left: 25,
-              right: 25,
-              bottom: 28,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  _CircleButton(
-                    icon: Icons.photo_library_outlined,
-                    size: 56,
-                    onTap: _pickFromGallery,
+                    ),
                   ),
-                  GestureDetector(
-                    onTap: _takePhoto,
-                    child: Container(
-                      width: 86,
-                      height: 86,
-                      padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: Colors.white,
-                          width: 4,
+
+                // =====================================================
+                // RIGHT HUD - stays inside preview
+                // =====================================================
+                if (_aiAutoProEnabled)
+                  Positioned(
+                    top: previewTop + 96,
+                    right: 18,
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxHeight: max(
+                          170,
+                          screenH - previewTop - previewBottom - 115,
                         ),
                       ),
                       child: Container(
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Color(0xFFFFC107),
+                        width: 74,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 10,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(.66),
+                          borderRadius: BorderRadius.circular(22),
+                          border: Border.all(
+                            color: Colors.white12,
+                          ),
+                        ),
+                        child: SingleChildScrollView(
+                          physics: const NeverScrollableScrollPhysics(),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.center_focus_strong,
+                                color: Colors.white,
+                                size: 21,
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                _currentFocus,
+                                style: const TextStyle(
+                                  color: Color(0xFFFFC107),
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                '${_currentZoom.toStringAsFixed(1)}x',
+                                style: const TextStyle(
+                                  color: Colors.white60,
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              const Padding(
+                                padding: EdgeInsets.symmetric(vertical: 7),
+                                child: Divider(
+                                  height: 1,
+                                  color: Colors.white12,
+                                ),
+                              ),
+                              const Icon(
+                                Icons.landscape_outlined,
+                                color: Colors.white,
+                                size: 20,
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                _compositionHudText,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 9.2,
+                                  height: 1.12,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              const Padding(
+                                padding: EdgeInsets.symmetric(vertical: 7),
+                                child: Divider(
+                                  height: 1,
+                                  color: Colors.white12,
+                                ),
+                              ),
+                              const Icon(
+                                Icons.light_mode_outlined,
+                                color: Color(0xFFFFC107),
+                                size: 20,
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                _lightHudText,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 9.2,
+                                  height: 1.12,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
                   ),
-                  _CircleButton(
-                    icon: Icons.cameraswitch_outlined,
-                    size: 56,
-                    onTap: _toggleCamera,
+
+                // =====================================================
+                // BOTTOM PANEL
+                // =====================================================
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  height: bottomPanelH,
+                  child: IgnorePointer(
+                    child: Container(
+                      decoration: const BoxDecoration(
+                        color: Color(0xFF050608),
+                        borderRadius: BorderRadius.vertical(
+                          top: Radius.circular(26),
+                        ),
+                      ),
+                    ),
                   ),
-                ],
-              ),
-            ),
-          ],
+                ),
+
+                // =====================================================
+                // CAMERA PARAMS
+                // =====================================================
+                if (_aiAutoProEnabled)
+                  Positioned(
+                    left: 18,
+                    right: 18,
+                    bottom: bottomPanelH + 10,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(.72),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.white12),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          _Param(
+                            label: 'ISO',
+                            value: _isoHud,
+                          ),
+                          _Param(
+                            label: 'S',
+                            value: _shutterHud,
+                          ),
+                          _Param(
+                            label: 'ODAK',
+                            value: _currentFocus,
+                          ),
+                          _Param(
+                            label: 'WB',
+                            value: _wbHud,
+                          ),
+                          _Param(
+                            label: 'EV',
+                            value:
+                                '${_currentEv >= 0 ? '+' : ''}${_currentEv.toStringAsFixed(1)}',
+                            accent: true,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                // =====================================================
+                // MODES
+                // =====================================================
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: modeBarBottom,
+                  child: SizedBox(
+                    height: 52,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(horizontal: 14),
+                      itemCount: _modes.length,
+                      separatorBuilder: (_, __) =>
+                          const SizedBox(width: 8),
+                      itemBuilder: (context, index) {
+                        final mode = _modes[index];
+                        final selected = mode == _selectedMode;
+
+                        return GestureDetector(
+                          onTap: () => _selectMode(mode),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 180),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 18,
+                              vertical: 10,
+                            ),
+                            decoration: BoxDecoration(
+                              color: selected
+                                  ? const Color(0xFFFFC107)
+                                  : Colors.black.withOpacity(.62),
+                              borderRadius: BorderRadius.circular(24),
+                            ),
+                            child: Center(
+                              child: Text(
+                                mode,
+                                style: TextStyle(
+                                  color: selected
+                                      ? Colors.black
+                                      : Colors.white,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+
+                // =====================================================
+                // BOTTOM CAMERA CONTROLS
+                // =====================================================
+                Positioned(
+                  left: 25,
+                  right: 25,
+                  bottom: shutterBottom,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _CircleButton(
+                        icon: Icons.photo_library_outlined,
+                        size: 56,
+                        onTap: _pickFromGallery,
+                      ),
+                      GestureDetector(
+                        onTap: _takePhoto,
+                        child: Container(
+                          width: 86,
+                          height: 86,
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: Colors.white,
+                              width: 4,
+                            ),
+                          ),
+                          child: Container(
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Color(0xFFFFC107),
+                            ),
+                          ),
+                        ),
+                      ),
+                      _CircleButton(
+                        icon: Icons.cameraswitch_outlined,
+                        size: 56,
+                        onTap: _toggleCamera,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            );
+          },
         ),
       ),
     );
