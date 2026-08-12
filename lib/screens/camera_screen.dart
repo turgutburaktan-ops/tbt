@@ -40,6 +40,13 @@ class _CameraScreenState extends State<CameraScreen> {
   bool _liveAiBusy = false;
   bool _aiAutoProEnabled = false;
 
+  bool _subjectLocked = false;
+  Offset? _subjectPoint;
+  bool _spotModeEnabled = false;
+
+  String _cinematicGuide = '';
+  String _stabilityGuide = '';
+
   bool _autoCaptureEnabled = false;
   bool _autoCaptureCountdown = false;
 
@@ -343,7 +350,7 @@ class _CameraScreenState extends State<CameraScreen> {
           await AiService
               .analyzeLiveFrame(
         imagePath: frame.path,
-        mode: _selectedFilter,
+        mode: _subjectModeLabel,
       );
 
       if (!mounted) {
@@ -366,6 +373,10 @@ class _CameraScreenState extends State<CameraScreen> {
         _aiSubjectTip =
             analysis.subjectTip;
       });
+
+      if (_aiAutoProEnabled) {
+        await _applyAutoProCameraSettings();
+      }
     } catch (e) {
       debugPrint(
         'Canlı AI hatası: $e',
@@ -639,6 +650,76 @@ class _CameraScreenState extends State<CameraScreen> {
   }
 
   // =====================================================
+  // ANA ÖZNE / DOKUNARAK ODAK
+  // =====================================================
+
+  Future<void> _handlePreviewTap(
+    TapDownDetails details,
+    BoxConstraints constraints,
+  ) async {
+    final controller = _controller;
+
+    if (controller == null ||
+        !controller.value.isInitialized) {
+      return;
+    }
+
+    final width = constraints.maxWidth;
+    final height = constraints.maxHeight;
+
+    if (width <= 0 || height <= 0) return;
+
+    final normalized = Offset(
+      (details.localPosition.dx / width).clamp(0.0, 1.0),
+      (details.localPosition.dy / height).clamp(0.0, 1.0),
+    );
+
+    setState(() {
+      _subjectLocked = true;
+      _subjectPoint = normalized;
+    });
+
+    try {
+      await controller.setFocusPoint(normalized);
+    } catch (_) {}
+
+    try {
+      await controller.setExposurePoint(normalized);
+    } catch (_) {}
+
+    try {
+      await controller.setFocusMode(FocusMode.auto);
+    } catch (_) {}
+
+    try {
+      await controller.setExposureMode(ExposureMode.auto);
+    } catch (_) {}
+
+    if (_aiAutoProEnabled && !_liveAiBusy) {
+      _captureAndAnalyzeLiveFrame();
+    }
+  }
+
+  void _clearSubjectLock() {
+    setState(() {
+      _subjectLocked = false;
+      _subjectPoint = null;
+    });
+  }
+
+  String get _subjectModeLabel {
+    if (!_subjectLocked || _subjectPoint == null) {
+      return _selectedFilter;
+    }
+
+    final x = (_subjectPoint!.dx * 100).round();
+    final y = (_subjectPoint!.dy * 100).round();
+
+    return '$_selectedFilter | ANA ÖZNE kilitli: x=$x%, y=$y%. '
+        'Kalabalıktaki diğer kişileri ana özne kabul etme.';
+  }
+
+  // =====================================================
   // AI AUTO PRO
   // =====================================================
 
@@ -687,32 +768,94 @@ class _CameraScreenState extends State<CameraScreen> {
       _flashEnabled = false;
     } catch (_) {}
 
-    // Modlara göre cihazın desteklediği güvenli kamera ayarları.
+    double exposure = 0.0;
+    double preferredZoom = 1.0;
+    String cinematicGuide = '';
+    String stabilityGuide = '';
+
+    switch (_selectedFilter) {
+      case 'Portre':
+        exposure = 0.20;
+        preferredZoom = 1.35;
+        break;
+
+      case 'Gece':
+        exposure = 0.35;
+        preferredZoom = 1.0;
+        stabilityGuide = _phoneStable
+            ? '✓ Sabitlik iyi'
+            : 'Telefonu sabitle';
+        break;
+
+      case 'Sinematik':
+        exposure = -0.15;
+        preferredZoom = 1.0;
+        cinematicGuide = _movementLevel < 0.8
+            ? 'Yavaş ve sabit hareket'
+            : 'Hareketi yavaşlat';
+        break;
+
+      case 'Astro':
+        exposure = 0.45;
+        preferredZoom = 1.0;
+        stabilityGuide = _phoneStable
+            ? '✓ Astro için yeterince sabit'
+            : 'Astro için telefonu sabitle';
+        break;
+
+      case 'Fotoğraf':
+        exposure = 0.0;
+        preferredZoom = 1.0;
+        break;
+
+      case 'Pro':
+        exposure = 0.0;
+        preferredZoom = 1.0;
+        break;
+    }
+
     try {
-      switch (_selectedFilter) {
-        case 'Portre':
-          await controller.setExposureOffset(0.25);
-          break;
-        case 'Gece':
-          await controller.setExposureOffset(0.45);
-          break;
-        case 'Sinematik':
-          await controller.setExposureOffset(-0.15);
-          break;
-        case 'Astro':
-          await controller.setExposureOffset(0.60);
-          break;
-        case 'Fotoğraf':
-          await controller.setExposureOffset(0.0);
-          break;
-        case 'Pro':
-          // Pro modunda kullanıcıya mümkün olduğunca nötr başlangıç ver.
-          await controller.setExposureOffset(0.0);
-          break;
-      }
+      final minExposure = await controller.getMinExposureOffset();
+      final maxExposure = await controller.getMaxExposureOffset();
+      final safeExposure =
+          exposure.clamp(minExposure, maxExposure).toDouble();
+      await controller.setExposureOffset(safeExposure);
     } catch (_) {}
 
-    if (mounted) setState(() {});
+    try {
+      final minZoom = await controller.getMinZoomLevel();
+      final maxZoom = await controller.getMaxZoomLevel();
+      final safeZoom =
+          preferredZoom.clamp(minZoom, maxZoom).toDouble();
+      await controller.setZoomLevel(safeZoom);
+    } catch (_) {}
+
+    if (_subjectLocked && _subjectPoint != null) {
+      try {
+        await controller.setFocusPoint(_subjectPoint);
+      } catch (_) {}
+
+      try {
+        await controller.setExposurePoint(_subjectPoint);
+      } catch (_) {}
+    }
+
+    if (mounted) {
+      setState(() {
+        _cinematicGuide = cinematicGuide;
+        _stabilityGuide = stabilityGuide;
+      });
+    }
+  }
+
+  void _toggleSpotMode() {
+    setState(() {
+      _spotModeEnabled = !_spotModeEnabled;
+    });
+
+    if (_aiAutoProEnabled && !_liveAiBusy) {
+      _captureAndAnalyzeLiveFrame();
+    }
   }
 
   // =====================================================
@@ -865,9 +1008,22 @@ class _CameraScreenState extends State<CameraScreen> {
         child: Stack(
           children: [
             Positioned.fill(
-              child:
-                  CameraPreview(
-                _controller!,
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  return GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTapDown: (details) {
+                      _handlePreviewTap(
+                        details,
+                        constraints,
+                      );
+                    },
+                    onLongPress: _clearSubjectLock,
+                    child: CameraPreview(
+                      _controller!,
+                    ),
+                  );
+                },
               ),
             ),
 
@@ -887,6 +1043,63 @@ class _CameraScreenState extends State<CameraScreen> {
                     IgnorePointer(
                   child:
                       CameraGrid(),
+                ),
+              ),
+
+            if (_subjectLocked &&
+                _subjectPoint != null)
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final point = Offset(
+                        _subjectPoint!.dx *
+                            constraints.maxWidth,
+                        _subjectPoint!.dy *
+                            constraints.maxHeight,
+                      );
+
+                      return Stack(
+                        children: [
+                          Positioned(
+                            left: point.dx - 34,
+                            top: point.dy - 34,
+                            child: Container(
+                              width: 68,
+                              height: 68,
+                              decoration: BoxDecoration(
+                                border: Border.all(
+                                  color: const Color(
+                                    0xFFFFC107,
+                                  ),
+                                  width: 2,
+                                ),
+                                borderRadius:
+                                    BorderRadius.circular(
+                                  14,
+                                ),
+                              ),
+                              child: const Align(
+                                alignment:
+                                    Alignment.topRight,
+                                child: Padding(
+                                  padding:
+                                      EdgeInsets.all(4),
+                                  child: Icon(
+                                    Icons.lock,
+                                    size: 16,
+                                    color: Color(
+                                      0xFFFFC107,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
                 ),
               ),
 
@@ -956,6 +1169,13 @@ class _CameraScreenState extends State<CameraScreen> {
                         _showGrid = !_showGrid;
                       });
                     },
+                  ),
+                  const SizedBox(width: 8),
+                  CameraCircleButton(
+                    icon: _spotModeEnabled
+                        ? Icons.location_on
+                        : Icons.location_on_outlined,
+                    onTap: _toggleSpotMode,
                   ),
                 ],
               ),
@@ -1039,6 +1259,43 @@ class _CameraScreenState extends State<CameraScreen> {
                       ),
                     ),
                   ),
+                ),
+              ),
+
+            if (_spotModeEnabled ||
+                _cinematicGuide.isNotEmpty ||
+                _stabilityGuide.isNotEmpty ||
+                _subjectLocked)
+              Positioned(
+                left: 14,
+                right: 14,
+                bottom: 215,
+                child: Wrap(
+                  alignment: WrapAlignment.center,
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    if (_subjectLocked)
+                      const _CameraStatusChip(
+                        icon: Icons.lock,
+                        text: 'ANA ÖZNE',
+                      ),
+                    if (_spotModeEnabled)
+                      const _CameraStatusChip(
+                        icon: Icons.location_on,
+                        text: 'SPOT MODU',
+                      ),
+                    if (_cinematicGuide.isNotEmpty)
+                      _CameraStatusChip(
+                        icon: Icons.movie_outlined,
+                        text: _cinematicGuide,
+                      ),
+                    if (_stabilityGuide.isNotEmpty)
+                      _CameraStatusChip(
+                        icon: Icons.stabilization,
+                        text: _stabilityGuide,
+                      ),
+                  ],
                 ),
               ),
 
@@ -1254,6 +1511,52 @@ class _CameraScreenState extends State<CameraScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _CameraStatusChip extends StatelessWidget {
+  final IconData icon;
+  final String text;
+
+  const _CameraStatusChip({
+    required this.icon,
+    required this.text,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: 10,
+        vertical: 7,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.black.withOpacity(.68),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Colors.white24,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            size: 15,
+            color: const Color(0xFFFFC107),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            text,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
       ),
     );
   }
