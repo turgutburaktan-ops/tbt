@@ -28,6 +28,9 @@ class _CameraScreenState extends State<CameraScreen> {
 
   Timer? _liveAiTimer;
   Timer? _autoCaptureTimer;
+  Timer? _sceneChangeTimer;
+
+  DateTime? _lastAiAnalysisAt;
 
   int _cameraIndex = 0;
 
@@ -150,8 +153,8 @@ class _CameraScreenState extends State<CameraScreen> {
         });
       }
 
-      if (_liveAiEnabled) {
-        _startLiveAiTimer();
+      if (_liveAiEnabled && !_liveAiBusy) {
+        _captureAndAnalyzeLiveFrame();
       }
     } catch (e) {
       debugPrint('Kamera başlatılamadı: $e');
@@ -301,24 +304,17 @@ class _CameraScreenState extends State<CameraScreen> {
       }
     });
 
-    if (_liveAiEnabled) {
-      _startLiveAiTimer();
+    _liveAiTimer?.cancel();
 
+    if (_liveAiEnabled) {
       _captureAndAnalyzeLiveFrame();
-    } else {
-      _liveAiTimer?.cancel();
     }
   }
 
+  // AI artık sürekli analiz yapmaz.
+  // Bu metod eski çağrılar bozulmasın diye tutuluyor.
   void _startLiveAiTimer() {
     _liveAiTimer?.cancel();
-
-    _liveAiTimer = Timer.periodic(
-      const Duration(seconds: 2),
-      (timer) {
-        _captureAndAnalyzeLiveFrame();
-      },
-    );
   }
 
   Future<void>
@@ -381,6 +377,8 @@ class _CameraScreenState extends State<CameraScreen> {
         await _applyAutoProCameraSettings();
         await _applyAiDrivenAdjustments();
       }
+
+      _lastAiAnalysisAt = DateTime.now();
     } catch (e) {
       debugPrint(
         'Canlı AI hatası: $e',
@@ -644,6 +642,13 @@ class _CameraScreenState extends State<CameraScreen> {
                 levelText;
           });
         }
+
+        if (_aiAutoProEnabled &&
+            (event.x.abs() > 0.9 ||
+             event.y.abs() > 0.9 ||
+             event.z.abs() > 0.9)) {
+          _scheduleSceneReanalysis();
+        }
       },
       onError: (error) {
         debugPrint(
@@ -705,9 +710,6 @@ class _CameraScreenState extends State<CameraScreen> {
       await controller.setExposureMode(ExposureMode.auto);
     } catch (_) {}
 
-    if (_aiAutoProEnabled && !_liveAiBusy) {
-      _captureAndAnalyzeLiveFrame();
-    }
   }
 
   Future<void> _clearSubjectLock() async {
@@ -753,6 +755,37 @@ class _CameraScreenState extends State<CameraScreen> {
         'Kalabalıktaki diğer kişileri ana özne kabul etme.';
   }
 
+  void _scheduleSceneReanalysis() {
+    if (!_aiAutoProEnabled ||
+        _liveAiBusy ||
+        _takingUserPhoto ||
+        _autoCaptureCountdown) {
+      return;
+    }
+
+    final last = _lastAiAnalysisAt;
+    if (last != null &&
+        DateTime.now().difference(last) <
+            const Duration(seconds: 4)) {
+      return;
+    }
+
+    _sceneChangeTimer?.cancel();
+
+    // Kamera belirgin biçimde hareket ettikten sonra durulunca
+    // yeni sahne için yalnızca bir kez AI analizi yapılır.
+    _sceneChangeTimer = Timer(
+      const Duration(milliseconds: 900),
+      () {
+        if (mounted &&
+            _aiAutoProEnabled &&
+            !_liveAiBusy) {
+          _captureAndAnalyzeLiveFrame();
+        }
+      },
+    );
+  }
+
   // =====================================================
   // AI AUTO PRO
   // =====================================================
@@ -776,12 +809,12 @@ class _CameraScreenState extends State<CameraScreen> {
       }
     });
 
+    _liveAiTimer?.cancel();
+    _sceneChangeTimer?.cancel();
+
     if (next) {
       await _applyAutoProCameraSettings();
-      _startLiveAiTimer();
-      _captureAndAnalyzeLiveFrame();
-    } else {
-      _liveAiTimer?.cancel();
+      await _captureAndAnalyzeLiveFrame();
     }
   }
 
@@ -1013,34 +1046,60 @@ class _CameraScreenState extends State<CameraScreen> {
   String get _lightHudText {
     final text = _aiLightTip.toLowerCase();
 
-    if (_liveAiBusy) return 'IŞIK\\nANALİZ';
+    if (_liveAiBusy) return 'IŞIK\nANALİZ';
 
     if (text.contains('karanlık') ||
         text.contains('az ışık') ||
         text.contains('düşük')) {
-      return 'IŞIK\\nARTIYOR';
+      return 'IŞIK\nARTIYOR';
     }
 
     if (text.contains('parlak') ||
         text.contains('fazla')) {
-      return 'IŞIK\\nAZALIYOR';
+      return 'IŞIK\nAZALIYOR';
     }
 
-    if (_aiStatus == 'good') return 'IŞIK\\nİYİ';
+    if (_aiStatus == 'good') return 'IŞIK\nİYİ';
 
-    return 'IŞIK\\nDENGELİ';
+    return 'IŞIK\nDENGELİ';
   }
 
   String get _compositionHudText {
-    if (_subjectLocked) return 'ÖZNE\\nKİLİTLİ';
-
-    if (_aiStatus == 'good') return 'MEKAN\\nDENGELİ';
+    if (_subjectLocked) return 'ÖZNE\nKİLİTLİ';
 
     final tip = _aiCompositionTip.toLowerCase();
-    if (tip.contains('sol')) return 'KADRAJ\\nSOLA';
-    if (tip.contains('sağ')) return 'KADRAJ\\nSAĞA';
+    if (tip.contains('sol')) return 'KADRAJ\nSOLA';
+    if (tip.contains('sağ')) return 'KADRAJ\nSAĞA';
 
-    return 'MEKAN\\nDENGELİ';
+    if (_spotModeEnabled) {
+      return _aiStatus == 'good'
+          ? 'MEKAN\nDENGELİ'
+          : 'MEKAN\nKONTROL';
+    }
+
+    return _aiStatus == 'good'
+        ? 'SAHNE\nDENGELİ'
+        : 'SAHNE\nKONTROL';
+  }
+
+  String get _isoHud {
+    // Flutter camera motoru ISO'yu manuel sayı olarak dışarı açmıyor.
+    // Native AE, AI'nin EV ve odak kararına göre ISO'yu otomatik seçer.
+    return 'AUTO';
+  }
+
+  String get _shutterHud {
+    // Enstantane native otomatik pozlama tarafından yönetiliyor.
+    return 'AUTO';
+  }
+
+  String get _focusHud {
+    return _subjectLocked ? 'AF-L' : 'AF';
+  }
+
+  String get _wbHud {
+    // Mevcut camera paketi manuel Kelvin/WB API'si sunmuyor.
+    return 'AUTO';
   }
 
   void _toggleSpotMode() {
@@ -1059,6 +1118,7 @@ class _CameraScreenState extends State<CameraScreen> {
 
   void _selectFilter(String filter) {
     _cancelAutoCapture();
+    _sceneChangeTimer?.cancel();
 
     setState(() {
       _selectedFilter = filter;
@@ -1121,6 +1181,7 @@ class _CameraScreenState extends State<CameraScreen> {
     _liveAiTimer?.cancel();
 
     _autoCaptureTimer?.cancel();
+    _sceneChangeTimer?.cancel();
 
     _accelerometerSubscription
         ?.cancel();
@@ -1693,29 +1754,50 @@ class _CameraScreenState extends State<CameraScreen> {
                 ),
               ),
 
-            if (!_subjectLocked)
+            if (_aiAutoProEnabled)
               Positioned(
-                left: 0,
-                right: 0,
-                bottom: 224,
-                child: Center(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 6,
+                left: 18,
+                right: 18,
+                bottom: 220,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(.70),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: Colors.white12,
                     ),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(.52),
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: const Text(
-                      'Ana özne: dokunarak kilitle • tekrar dokunarak kaldır',
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.w600,
+                  ),
+                  child: Row(
+                    mainAxisAlignment:
+                        MainAxisAlignment.spaceBetween,
+                    children: [
+                      _CameraParam(
+                        label: 'ISO',
+                        value: _isoHud,
                       ),
-                    ),
+                      _CameraParam(
+                        label: 'S',
+                        value: _shutterHud,
+                      ),
+                      _CameraParam(
+                        label: 'ODAK',
+                        value: _focusHud,
+                      ),
+                      _CameraParam(
+                        label: 'WB',
+                        value: _wbHud,
+                      ),
+                      _CameraParam(
+                        label: 'EV',
+                        value:
+                            '${_currentExposure >= 0 ? '+' : ''}${_currentExposure.toStringAsFixed(1)}',
+                        accent: true,
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -1933,6 +2015,46 @@ class _CameraScreenState extends State<CameraScreen> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _CameraParam extends StatelessWidget {
+  final String label;
+  final String value;
+  final bool accent;
+
+  const _CameraParam({
+    required this.label,
+    required this.value,
+    this.accent = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            color: Colors.white54,
+            fontSize: 8.5,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          value,
+          style: TextStyle(
+            color: accent
+                ? const Color(0xFFFFC107)
+                : Colors.white,
+            fontSize: 11,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      ],
     );
   }
 }
