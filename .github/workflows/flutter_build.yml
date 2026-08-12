@@ -76,7 +76,7 @@ jobs:
 
       # =====================================================
       # 6. ANDROID SDK VERSIONS
-      # Firebase / Firestore için minSdk 23
+      # iris_camera için minSdk 26
       # =====================================================
       - name: Configure Android SDK versions
         run: |
@@ -101,11 +101,11 @@ jobs:
 
               text = text.replace(
                   "minSdkVersion flutter.minSdkVersion",
-                  "minSdkVersion 23"
+                  "minSdkVersion 26"
               )
               text = text.replace(
                   "minSdk = flutter.minSdkVersion",
-                  "minSdk = 23"
+                  "minSdk = 26"
               )
 
               p.write_text(text)
@@ -121,7 +121,7 @@ jobs:
 
               text = text.replace(
                   "minSdk = flutter.minSdkVersion",
-                  "minSdk = 23"
+                  "minSdk = 26"
               )
 
               p.write_text(text)
@@ -130,6 +130,96 @@ jobs:
               raise Exception("Android app Gradle file bulunamadi")
 
           print("Android SDK ayarlari tamamlandi.")
+          PY
+
+      # =====================================================
+      # 7. KOTLIN 1.9+
+      # iris_camera enum entries API'si Kotlin 1.9 gerektirir
+      # =====================================================
+      - name: Configure Kotlin 1.9
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          candidates = [
+              Path("android/settings.gradle"),
+              Path("android/settings.gradle.kts"),
+              Path("android/build.gradle"),
+              Path("android/build.gradle.kts"),
+          ]
+
+          changed = False
+
+          for p in candidates:
+              if not p.exists():
+                  continue
+
+              text = p.read_text()
+
+              original = text
+
+              # Modern Flutter settings.gradle(.kts):
+              # id "org.jetbrains.kotlin.android" version "x.y.z" apply false
+              text = re.sub(
+                  r'(org\.jetbrains\.kotlin\.android["\')\s]+version\s+["\'])[0-9.]+',
+                  r'\g<1>1.9.24',
+                  text,
+              )
+
+              # Groovy classpath fallback:
+              text = re.sub(
+                  r'org\.jetbrains\.kotlin:kotlin-gradle-plugin:[0-9.]+',
+                  'org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.24',
+                  text,
+              )
+
+              # ext.kotlin_version = 'x.y.z'
+              text = re.sub(
+                  r"(kotlin_version\s*=\s*['\"])[0-9.]+(['\"])",
+                  r"\g<1>1.9.24\2",
+                  text,
+              )
+
+              if text != original:
+                  p.write_text(text)
+                  changed = True
+                  print(f"Kotlin version updated in {p}")
+
+          # If no version declaration was found, patch settings.gradle(.kts)
+          # by inserting the Kotlin plugin in the plugins block.
+          if not changed:
+              settings_kts = Path("android/settings.gradle.kts")
+              settings = Path("android/settings.gradle")
+
+              if settings_kts.exists():
+                  text = settings_kts.read_text()
+                  if 'org.jetbrains.kotlin.android' not in text:
+                      text = text.replace(
+                          'plugins {',
+                          'plugins {\n    id("org.jetbrains.kotlin.android") version "1.9.24" apply false',
+                          1
+                      )
+                      settings_kts.write_text(text)
+                      changed = True
+                      print("Kotlin plugin inserted into settings.gradle.kts")
+
+              elif settings.exists():
+                  text = settings.read_text()
+                  if 'org.jetbrains.kotlin.android' not in text:
+                      text = text.replace(
+                          'plugins {',
+                          'plugins {\n    id "org.jetbrains.kotlin.android" version "1.9.24" apply false',
+                          1
+                      )
+                      settings.write_text(text)
+                      changed = True
+                      print("Kotlin plugin inserted into settings.gradle")
+
+          if not changed:
+              print("Kotlin declaration not changed; current project may already use Kotlin 1.9+.")
+
+          print("Kotlin configuration complete.")
           PY
 
       # =====================================================
