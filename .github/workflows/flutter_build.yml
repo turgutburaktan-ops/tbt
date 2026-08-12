@@ -58,12 +58,21 @@ jobs:
       # =====================================================
       - name: Ensure Android project exists
         run: |
-          if [ ! -d "android" ]; then
-            echo "android klasoru bulunamadi, olusturuluyor..."
+          echo "Android proje yapisi kontrol ediliyor..."
+
+          if [ ! -f "android/app/build.gradle" ] && [ ! -f "android/app/build.gradle.kts" ]; then
+            echo "Android klasoru eksik veya bozuk."
+            echo "Android proje dosyalari yeniden olusturuluyor..."
+
+            rm -rf android
             flutter create --platforms=android .
           else
-            echo "android klasoru mevcut. Yeniden olusturulmayacak."
+            echo "Android app Gradle dosyasi mevcut."
+            echo "Android proje yeniden olusturulmayacak."
           fi
+
+          echo "Android app dosyalari:"
+          find android/app -maxdepth 2 -type f | sort | head -n 50
 
       # =====================================================
       # 6. ANDROID SDK VERSIONS
