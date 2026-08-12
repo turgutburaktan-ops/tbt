@@ -1,4 +1,5 @@
 import 'create_post_screen.dart';
+import 'ai_edit_screen.dart';
 import 'dart:async';
 import 'dart:io';
 import 'dart:math';
@@ -142,8 +143,8 @@ class _CameraScreenState extends State<CameraScreen> {
       await Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => CreatePostScreen(
-            initialImagePath: image.path,
+          builder: (_) => AiEditScreen(
+            originalImagePath: image.path,
           ),
         ),
       );
@@ -458,8 +459,8 @@ class _CameraScreenState extends State<CameraScreen> {
       await Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => CreatePostScreen(
-            initialImagePath: file.path,
+          builder: (_) => AiEditScreen(
+            originalImagePath: file.path,
           ),
         ),
       );
