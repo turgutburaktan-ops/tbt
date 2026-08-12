@@ -1007,48 +1007,90 @@ class _CameraScreenState extends State<CameraScreen> {
       body: SafeArea(
         child: Stack(
           children: [
-            Positioned.fill(
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  return GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTapDown: (details) {
-                      _handlePreviewTap(
-                        details,
-                        constraints,
-                      );
-                    },
-                    onLongPress: _clearSubjectLock,
-                    child: CameraPreview(
+            Positioned(
+              top: 70,
+              left: 8,
+              right: 8,
+              bottom: 218,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(24),
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final previewSize =
+                        _controller!.value.previewSize;
+
+                    Widget preview = CameraPreview(
                       _controller!,
-                    ),
-                  );
-                },
+                    );
+
+                    if (previewSize != null) {
+                      preview = FittedBox(
+                        fit: BoxFit.cover,
+                        clipBehavior: Clip.hardEdge,
+                        child: SizedBox(
+                          width: previewSize.height,
+                          height: previewSize.width,
+                          child: CameraPreview(
+                            _controller!,
+                          ),
+                        ),
+                      );
+                    }
+
+                    return GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTapDown: (details) {
+                        _handlePreviewTap(
+                          details,
+                          constraints,
+                        );
+                      },
+                      onLongPress: _clearSubjectLock,
+                      child: preview,
+                    );
+                  },
+                ),
               ),
             ),
 
-            Positioned.fill(
-              child:
-                  IgnorePointer(
-                child: Container(
-                  color:
-                      _filterOverlayColor(),
+            Positioned(
+              top: 70,
+              left: 8,
+              right: 8,
+              bottom: 218,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(24),
+                child: IgnorePointer(
+                  child: Container(
+                    color: _filterOverlayColor(),
+                  ),
                 ),
               ),
             ),
 
             if (_showGrid)
-              const Positioned.fill(
-                child:
-                    IgnorePointer(
-                  child:
-                      CameraGrid(),
+              const Positioned(
+                top: 70,
+                left: 8,
+                right: 8,
+                bottom: 218,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.all(
+                    Radius.circular(24),
+                  ),
+                  child: IgnorePointer(
+                    child: CameraGrid(),
+                  ),
                 ),
               ),
 
             if (_subjectLocked &&
                 _subjectPoint != null)
-              Positioned.fill(
+              Positioned(
+                top: 70,
+                left: 8,
+                right: 8,
+                bottom: 218,
                 child: IgnorePointer(
                   child: LayoutBuilder(
                     builder: (context, constraints) {
@@ -1235,7 +1277,7 @@ class _CameraScreenState extends State<CameraScreen> {
 
             if (_aiAutoProEnabled)
               Positioned(
-                top: 72,
+                top: 88,
                 left: 0,
                 right: 0,
                 child: Center(
@@ -1248,19 +1290,71 @@ class _CameraScreenState extends State<CameraScreen> {
                       color: Colors.black.withOpacity(.62),
                       borderRadius: BorderRadius.circular(16),
                     ),
-                    child: Text(
-                      _liveAiBusy
-                          ? '✨ Sahne optimize ediliyor...'
-                          : '✨ AI AUTO PRO aktif',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                      ),
+                    constraints: const BoxConstraints(
+                      maxWidth: 330,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (_liveAiBusy)
+                          const SizedBox(
+                            width: 15,
+                            height: 15,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Color(0xFFFFC107),
+                            ),
+                          )
+                        else
+                          Icon(
+                            _aiStatus == 'warning'
+                                ? Icons.warning_amber_rounded
+                                : Icons.auto_awesome,
+                            size: 16,
+                            color: _aiStatus == 'warning'
+                                ? Colors.orangeAccent
+                                : const Color(0xFFFFC107),
+                          ),
+                        const SizedBox(width: 8),
+                        Flexible(
+                          child: Text(
+                            _liveAiBusy
+                                ? 'Sahne analiz ediliyor...'
+                                : (_aiMainTip.trim().isNotEmpty
+                                    ? _aiMainTip
+                                    : 'AI AUTO PRO aktif'),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
               ),
+
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              height: 218,
+              child: IgnorePointer(
+                child: Container(
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF050608),
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(26),
+                    ),
+                  ),
+                ),
+              ),
+            ),
 
             if (_spotModeEnabled ||
                 _cinematicGuide.isNotEmpty ||
@@ -1296,6 +1390,33 @@ class _CameraScreenState extends State<CameraScreen> {
                         text: _stabilityGuide,
                       ),
                   ],
+                ),
+              ),
+
+            if (!_subjectLocked)
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 224,
+                child: Center(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(.52),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: const Text(
+                      'Ana özneyi kilitlemek için ekrana dokun',
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
                 ),
               ),
 
