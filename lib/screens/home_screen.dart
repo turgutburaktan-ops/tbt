@@ -4,6 +4,7 @@ import '../models/photo_spot.dart';
 import '../services/favorites_service.dart';
 
 import 'camera_screen.dart';
+import 'feed_screen.dart';
 import 'map_screen.dart';
 import 'profile_page.dart';
 import 'spot_detail_screen.dart';
@@ -21,7 +22,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final pages = [
-      const _ExplorePage(),
+      const _DiscoverHubPage(),
       const MapScreen(),
       const _SavedPage(),
       const ProfilePage(),
@@ -64,7 +65,7 @@ class _HomeScreenState extends State<HomeScreen> {
           NavigationDestination(
             icon: Icon(Icons.explore_outlined),
             selectedIcon: Icon(Icons.explore),
-            label: 'Keşfet',
+            label: 'Ana Sayfa',
           ),
           NavigationDestination(
             icon: Icon(Icons.map_outlined),
@@ -82,6 +83,149 @@ class _HomeScreenState extends State<HomeScreen> {
             label: 'Profil',
           ),
         ],
+      ),
+    );
+  }
+}
+
+
+class _DiscoverHubPage extends StatefulWidget {
+  const _DiscoverHubPage();
+
+  @override
+  State<_DiscoverHubPage> createState() => _DiscoverHubPageState();
+}
+
+class _DiscoverHubPageState extends State<_DiscoverHubPage> {
+  int _selectedSection = 0;
+
+  void _selectSection(int index) {
+    if (_selectedSection == index) return;
+
+    setState(() {
+      _selectedSection = index;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              16,
+              14,
+              16,
+              10,
+            ),
+            child: Container(
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: const Color(0xFF151A22),
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: _HomeSectionButton(
+                      icon: Icons.people_alt_outlined,
+                      selectedIcon: Icons.people_alt,
+                      label: 'Takip Ettiklerim',
+                      selected: _selectedSection == 0,
+                      onTap: () => _selectSection(0),
+                    ),
+                  ),
+                  Expanded(
+                    child: _HomeSectionButton(
+                      icon: Icons.explore_outlined,
+                      selectedIcon: Icons.explore,
+                      label: 'Keşfet',
+                      selected: _selectedSection == 1,
+                      onTap: () => _selectSection(1),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Expanded(
+            child: IndexedStack(
+              index: _selectedSection,
+              children: const [
+                FeedScreen(),
+                _ExplorePage(),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HomeSectionButton extends StatelessWidget {
+  final IconData icon;
+  final IconData selectedIcon;
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _HomeSectionButton({
+    required this.icon,
+    required this.selectedIcon,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: selected
+          ? const Color(0xFFFFC107)
+          : Colors.transparent,
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeOut,
+          padding: const EdgeInsets.symmetric(
+            vertical: 12,
+            horizontal: 8,
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                selected ? selectedIcon : icon,
+                size: 20,
+                color: selected
+                    ? Colors.black
+                    : Colors.white60,
+              ),
+              const SizedBox(width: 7),
+              Flexible(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: selected
+                        ? Colors.black
+                        : Colors.white70,
+                    fontSize: 13,
+                    fontWeight: selected
+                        ? FontWeight.w800
+                        : FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
