@@ -20,9 +20,6 @@ class CameraScreen extends StatefulWidget {
 class _CameraScreenState extends State<CameraScreen> {
   final iris.IrisCamera _camera = iris.IrisCamera();
   final ImagePicker _picker = ImagePicker();
-  final iris.FocusIndicatorController _focusIndicatorController =
-      iris.FocusIndicatorController();
-
   List<iris.CameraLensDescriptor> _lenses = [];
   int _lensIndex = 0;
 
@@ -48,8 +45,6 @@ class _CameraScreenState extends State<CameraScreen> {
   String _aiSubjectTip = '';
 
   double _movementLevel = 0;
-  double _gyroX = 0;
-  double _gyroY = 0;
 
   DateTime? _lastAiAnalysisAt;
 
@@ -270,11 +265,11 @@ class _CameraScreenState extends State<CameraScreen> {
 
     if (_subjectLocked && _subjectPoint != null) {
       try {
-        await _camera.setFocus(point: _subjectPoint);
+        await _camera.setFocus(point: _subjectPoint!);
       } catch (_) {}
 
       try {
-        await _camera.setExposurePoint(_subjectPoint);
+        await _camera.setExposurePoint(_subjectPoint!);
       } catch (_) {}
     }
 
@@ -401,8 +396,8 @@ class _CameraScreenState extends State<CameraScreen> {
     // Canlı önizlemede AF/AE gerçek olarak uygulanır.
     try {
       if (_subjectLocked && _subjectPoint != null) {
-        await _camera.setFocus(point: _subjectPoint);
-        await _camera.setExposurePoint(_subjectPoint);
+        await _camera.setFocus(point: _subjectPoint!);
+        await _camera.setExposurePoint(_subjectPoint!);
         await _camera.setFocusMode(iris.FocusMode.locked);
       } else {
         await _camera.setFocusMode(iris.FocusMode.auto);
@@ -424,7 +419,7 @@ class _CameraScreenState extends State<CameraScreen> {
   iris.PhotoCaptureOptions _captureOptions() {
     return iris.PhotoCaptureOptions(
       flashMode: iris.PhotoFlashMode.auto,
-      iso: _currentIso,
+      iso: _currentIso.toDouble(),
       exposureDuration: _currentShutter,
     );
   }
@@ -666,9 +661,6 @@ class _CameraScreenState extends State<CameraScreen> {
     _gyroscopeSubscription =
         gyroscopeEventStream().listen((event) {
       if (!mounted) return;
-
-      _gyroX = event.x;
-      _gyroY = event.y;
 
       if (_aiAutoProEnabled &&
           (event.x.abs() > 0.9 ||
@@ -1061,6 +1053,15 @@ class _CameraScreenState extends State<CameraScreen> {
                           color: Color(0xFFFFC107),
                           fontSize: 14,
                           fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        '${_currentZoom.toStringAsFixed(1)}x',
+                        style: const TextStyle(
+                          color: Colors.white60,
+                          fontSize: 9,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
                       const Padding(
