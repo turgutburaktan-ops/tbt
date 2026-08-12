@@ -2,11 +2,15 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
 import 'screens/home_screen.dart';
+import 'services/favorites_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await Firebase.initializeApp();
+
+  // Kaydedilen çekim noktalarını telefondan yükle
+  await FavoritesService.initialize();
 
   runApp(const BestPhotoSpotApp());
 }
