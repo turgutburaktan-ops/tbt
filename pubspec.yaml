@@ -15,7 +15,6 @@ dependencies:
   cloud_firestore: ^6.0.0
   firebase_storage: ^13.0.0
   cupertino_icons: ^1.0.8
-  camera: ^0.11.0+2
   iris_camera: ^1.0.6
   geolocator: ^13.0.2
   google_maps_flutter: ^2.10.0
@@ -29,6 +28,7 @@ dev_dependencies:
   flutter_lints: ^5.0.0
 
 flutter:
- uses-material-design: true
+  uses-material-design: true
+
 dependency_overrides:
   geolocator_android: 4.6.1
