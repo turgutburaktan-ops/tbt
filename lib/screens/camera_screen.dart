@@ -38,13 +38,14 @@ class _CameraScreenState extends State<CameraScreen> {
 
   bool _liveAiEnabled = false;
   bool _liveAiBusy = false;
+  bool _aiAutoProEnabled = false;
 
   bool _autoCaptureEnabled = false;
   bool _autoCaptureCountdown = false;
 
   bool _takingUserPhoto = false;
 
-  String _selectedFilter = 'Normal';
+  String _selectedFilter = 'Fotoğraf';
 
   String _aiStatus = 'idle';
 
@@ -65,13 +66,12 @@ class _CameraScreenState extends State<CameraScreen> {
   int _countdown = 2;
 
   final List<String> _filters = const [
-    'Normal',
-    'Golden',
-    'Portrait',
-    'Nature',
-    'Night',
-    'Architecture',
-    'B&W',
+    'Fotoğraf',
+    'Portre',
+    'Gece',
+    'Sinematik',
+    'Astro',
+    'Pro',
   ];
 
   @override
@@ -639,6 +639,83 @@ class _CameraScreenState extends State<CameraScreen> {
   }
 
   // =====================================================
+  // AI AUTO PRO
+  // =====================================================
+
+  Future<void> _toggleAiAutoPro() async {
+    final next = !_aiAutoProEnabled;
+
+    setState(() {
+      _aiAutoProEnabled = next;
+      _liveAiEnabled = next;
+
+      if (next) {
+        _aiStatus = 'adjust';
+        _aiMainTip = 'AI AUTO PRO sahneyi optimize ediyor...';
+      } else {
+        _aiStatus = 'idle';
+        _aiMainTip = 'AI AUTO PRO kapalı.';
+        _aiCompositionTip = '';
+        _aiLightTip = '';
+        _aiSubjectTip = '';
+      }
+    });
+
+    if (next) {
+      await _applyAutoProCameraSettings();
+      _startLiveAiTimer();
+      _captureAndAnalyzeLiveFrame();
+    } else {
+      _liveAiTimer?.cancel();
+    }
+  }
+
+  Future<void> _applyAutoProCameraSettings() async {
+    final controller = _controller;
+    if (controller == null || !controller.value.isInitialized) return;
+
+    try {
+      await controller.setFocusMode(FocusMode.auto);
+    } catch (_) {}
+
+    try {
+      await controller.setExposureMode(ExposureMode.auto);
+    } catch (_) {}
+
+    try {
+      await controller.setFlashMode(FlashMode.off);
+      _flashEnabled = false;
+    } catch (_) {}
+
+    // Modlara göre cihazın desteklediği güvenli kamera ayarları.
+    try {
+      switch (_selectedFilter) {
+        case 'Portre':
+          await controller.setExposureOffset(0.25);
+          break;
+        case 'Gece':
+          await controller.setExposureOffset(0.45);
+          break;
+        case 'Sinematik':
+          await controller.setExposureOffset(-0.15);
+          break;
+        case 'Astro':
+          await controller.setExposureOffset(0.60);
+          break;
+        case 'Fotoğraf':
+          await controller.setExposureOffset(0.0);
+          break;
+        case 'Pro':
+          // Pro modunda kullanıcıya mümkün olduğunca nötr başlangıç ver.
+          await controller.setExposureOffset(0.0);
+          break;
+      }
+    } catch (_) {}
+
+    if (mounted) setState(() {});
+  }
+
+  // =====================================================
   // MODE
   // =====================================================
 
@@ -654,6 +731,10 @@ class _CameraScreenState extends State<CameraScreen> {
       }
     });
 
+    if (_aiAutoProEnabled) {
+      _applyAutoProCameraSettings();
+    }
+
     if (_liveAiEnabled &&
         !_liveAiBusy) {
       _captureAndAnalyzeLiveFrame();
@@ -662,36 +743,14 @@ class _CameraScreenState extends State<CameraScreen> {
 
   Color _filterOverlayColor() {
     switch (_selectedFilter) {
-      case 'Golden':
-        return const Color(
-          0x33FFC15A,
-        );
-
-      case 'Portrait':
-        return const Color(
-          0x1AFFA0B5,
-        );
-
-      case 'Nature':
-        return const Color(
-          0x1A5CB85C,
-        );
-
-      case 'Night':
-        return const Color(
-          0x33002040,
-        );
-
-      case 'Architecture':
-        return const Color(
-          0x1A9E9E9E,
-        );
-
-      case 'B&W':
-        return const Color(
-          0x33000000,
-        );
-
+      case 'Portre':
+        return const Color(0x0DFFC15A);
+      case 'Gece':
+        return const Color(0x22002040);
+      case 'Sinematik':
+        return const Color(0x12000000);
+      case 'Astro':
+        return const Color(0x2600102A);
       default:
         return Colors.transparent;
     }
@@ -831,7 +890,7 @@ class _CameraScreenState extends State<CameraScreen> {
                 ),
               ),
 
-            // TOP BUTTONS
+            // TOP CONTROLS
             Positioned(
               top: 12,
               left: 12,
@@ -839,62 +898,62 @@ class _CameraScreenState extends State<CameraScreen> {
               child: Row(
                 children: [
                   CameraCircleButton(
-                    icon:
-                        Icons.close,
-                    onTap: () {
-                      Navigator.pop(
-                        context,
-                      );
-                    },
+                    icon: Icons.close,
+                    onTap: () => Navigator.pop(context),
                   ),
-
                   const Spacer(),
-
-                  CameraCircleButton(
-                    icon:
-                        _flashEnabled
-                            ? Icons
-                                .flash_on
-                            : Icons
-                                .flash_off,
-                    onTap:
-                        _toggleFlash,
+                  GestureDetector(
+                    onTap: _toggleAiAutoPro,
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 180),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 15,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: _aiAutoProEnabled
+                            ? const Color(0xFFFFC107)
+                            : Colors.black.withOpacity(.68),
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(
+                          color: _aiAutoProEnabled
+                              ? const Color(0xFFFFC107)
+                              : Colors.white24,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.auto_awesome,
+                            size: 18,
+                            color: _aiAutoProEnabled
+                                ? Colors.black
+                                : Colors.white,
+                          ),
+                          const SizedBox(width: 7),
+                          Text(
+                            _aiAutoProEnabled
+                                ? 'AI AUTO PRO  AÇIK'
+                                : 'AI AUTO PRO',
+                            style: TextStyle(
+                              color: _aiAutoProEnabled
+                                  ? Colors.black
+                                  : Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-
-                  const SizedBox(
-                    width: 8,
-                  ),
-
+                  const Spacer(),
                   CameraCircleButton(
-                    icon:
-                        _showGrid
-                            ? Icons
-                                .grid_on
-                            : Icons
-                                .grid_off,
+                    icon: _showGrid ? Icons.grid_on : Icons.grid_off,
                     onTap: () {
                       setState(() {
-                        _showGrid =
-                            !_showGrid;
-                      });
-                    },
-                  ),
-
-                  const SizedBox(
-                    width: 8,
-                  ),
-
-                  CameraCircleButton(
-                    icon:
-                        _showAssistant
-                            ? Icons
-                                .auto_awesome
-                            : Icons
-                                .auto_awesome_outlined,
-                    onTap: () {
-                      setState(() {
-                        _showAssistant =
-                            !_showAssistant;
+                        _showGrid = !_showGrid;
                       });
                     },
                   ),
@@ -903,7 +962,7 @@ class _CameraScreenState extends State<CameraScreen> {
             ),
 
             // AI CARD
-            if (_showAssistant)
+            if (_showAssistant && !_aiAutoProEnabled)
               Positioned(
                 top: 70,
                 left: 14,
@@ -951,6 +1010,35 @@ class _CameraScreenState extends State<CameraScreen> {
 
                   onToggleAutoCapture:
                       _toggleAutoCapture,
+                ),
+              ),
+
+            if (_aiAutoProEnabled)
+              Positioned(
+                top: 72,
+                left: 0,
+                right: 0,
+                child: Center(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 13,
+                      vertical: 7,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(.62),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Text(
+                      _liveAiBusy
+                          ? '✨ Sahne optimize ediliyor...'
+                          : '✨ AI AUTO PRO aktif',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
                 ),
               ),
 
