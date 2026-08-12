@@ -428,19 +428,67 @@ class _CameraScreenState extends State<CameraScreen> {
   Future<File> _captureToTempFile({
     bool useProOverrides = true,
   }) async {
-    final bytes = await _camera.capturePhoto(
-      options: useProOverrides
-          ? _captureOptions()
-          : const iris.PhotoCaptureOptions(
-              flashMode: iris.PhotoFlashMode.auto,
-            ),
-    );
+    late List<int> bytes;
+
+    // Bazı Android telefonlar belirli ISO + shutter kombinasyonlarını
+    // reddedebiliyor. Önce AI/Pro ayarlarıyla deniyoruz; olmazsa kamera
+    // oturumunu tazeleyip güvenli native capture'a otomatik düşüyoruz.
+    try {
+      if (useProOverrides) {
+        bytes = await _camera.capturePhoto(
+          options: _captureOptions(),
+        );
+      } else {
+        bytes = await _camera.capturePhoto();
+      }
+    } catch (firstError) {
+      debugPrint(
+        'İlk Iris capture denemesi başarısız: $firstError',
+      );
+
+      try {
+        await _camera.resumeSession();
+      } catch (_) {}
+
+      await Future<void>.delayed(
+        const Duration(milliseconds: 300),
+      );
+
+      try {
+        // En güvenli fallback: cihaz kendi AE/AF/ISO/shutter kararını verir.
+        bytes = await _camera.capturePhoto();
+      } catch (secondError) {
+        debugPrint(
+          'İkinci Iris capture denemesi başarısız: $secondError',
+        );
+
+        // Son bir kez açıkça flash kapalı standart capture dene.
+        bytes = await _camera.capturePhoto(
+          options: const iris.PhotoCaptureOptions(
+            flashMode: iris.PhotoFlashMode.off,
+          ),
+        );
+      }
+    }
+
+    if (bytes.isEmpty) {
+      throw Exception('Kamera boş fotoğraf verisi döndürdü.');
+    }
 
     final path =
         '${Directory.systemTemp.path}/tbt_${DateTime.now().microsecondsSinceEpoch}.jpg';
 
     final file = File(path);
-    await file.writeAsBytes(bytes, flush: true);
+    await file.writeAsBytes(
+      bytes,
+      flush: true,
+    );
+
+    if (!await file.exists() ||
+        await file.length() == 0) {
+      throw Exception('Fotoğraf dosyası oluşturulamadı.');
+    }
+
     return file;
   }
 
@@ -468,9 +516,17 @@ class _CameraScreenState extends State<CameraScreen> {
       debugPrint('Iris fotoğraf çekme hatası: $e');
 
       if (mounted) {
+        final message = e
+            .toString()
+            .replaceFirst('Exception: ', '');
+
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Fotoğraf çekilemedi.'),
+          SnackBar(
+            content: Text(
+              message.length > 110
+                  ? 'Fotoğraf çekilemedi. Kamera oturumunu tekrar dene.'
+                  : 'Fotoğraf çekilemedi: $message',
+            ),
           ),
         );
       }
@@ -830,28 +886,18 @@ class _CameraScreenState extends State<CameraScreen> {
                       color: Colors.black,
                       child: LayoutBuilder(
                         builder: (context, previewConstraints) {
-                          return Center(
-                            child: AspectRatio(
-                              aspectRatio: 3 / 4,
-                              child: GestureDetector(
-                                behavior: HitTestBehavior.opaque,
-                                onTapDown: (details) {
-                                  _handlePreviewTap(
-                                    details,
-                                    BoxConstraints.tight(
-                                      Size(
-                                        previewConstraints.maxHeight *
-                                            (3 / 4),
-                                        previewConstraints.maxHeight,
-                                      ),
-                                    ),
-                                  );
-                                },
-                                child: const iris.IrisCameraPreview(
-                                  aspectRatio: 3 / 4,
-                                  enableTapToFocus: false,
-                                  showFocusIndicator: false,
-                                ),
+                          return GestureDetector(
+                            behavior: HitTestBehavior.opaque,
+                            onTapDown: (details) {
+                              _handlePreviewTap(
+                                details,
+                                previewConstraints,
+                              );
+                            },
+                            child: const SizedBox.expand(
+                              child: iris.IrisCameraPreview(
+                                enableTapToFocus: false,
+                                showFocusIndicator: false,
                               ),
                             ),
                           );
@@ -892,19 +938,11 @@ class _CameraScreenState extends State<CameraScreen> {
                     child: IgnorePointer(
                       child: LayoutBuilder(
                         builder: (context, previewConstraints) {
-                          final cameraHeight =
-                              previewConstraints.maxHeight;
-                          final cameraWidth =
-                              cameraHeight * (3 / 4);
-                          final leftInset =
-                              (previewConstraints.maxWidth -
-                                      cameraWidth) /
-                                  2;
-
                           final point = Offset(
-                            leftInset +
-                                _subjectPoint!.dx * cameraWidth,
-                            _subjectPoint!.dy * cameraHeight,
+                            _subjectPoint!.dx *
+                                previewConstraints.maxWidth,
+                            _subjectPoint!.dy *
+                                previewConstraints.maxHeight,
                           );
 
                           return Stack(
