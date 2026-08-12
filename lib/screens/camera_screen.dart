@@ -47,6 +47,9 @@ class _CameraScreenState extends State<CameraScreen> {
   String _cinematicGuide = '';
   String _stabilityGuide = '';
 
+  double _currentZoom = 1.0;
+  double _currentExposure = 0.0;
+
   bool _autoCaptureEnabled = false;
   bool _autoCaptureCountdown = false;
 
@@ -376,6 +379,7 @@ class _CameraScreenState extends State<CameraScreen> {
 
       if (_aiAutoProEnabled) {
         await _applyAutoProCameraSettings();
+        await _applyAiDrivenAdjustments();
       }
     } catch (e) {
       debugPrint(
@@ -664,6 +668,12 @@ class _CameraScreenState extends State<CameraScreen> {
       return;
     }
 
+    // Ana özne zaten kilitliyse ekrana tekrar dokunmak kilidi kaldırır.
+    if (_subjectLocked) {
+      await _clearSubjectLock();
+      return;
+    }
+
     final width = constraints.maxWidth;
     final height = constraints.maxHeight;
 
@@ -700,11 +710,35 @@ class _CameraScreenState extends State<CameraScreen> {
     }
   }
 
-  void _clearSubjectLock() {
+  Future<void> _clearSubjectLock() async {
+    final controller = _controller;
+
     setState(() {
       _subjectLocked = false;
       _subjectPoint = null;
     });
+
+    if (controller != null && controller.value.isInitialized) {
+      try {
+        await controller.setFocusPoint(null);
+      } catch (_) {}
+
+      try {
+        await controller.setExposurePoint(null);
+      } catch (_) {}
+
+      try {
+        await controller.setFocusMode(FocusMode.auto);
+      } catch (_) {}
+
+      try {
+        await controller.setExposureMode(ExposureMode.auto);
+      } catch (_) {}
+
+      if (_aiAutoProEnabled) {
+        await _applyAutoProCameraSettings();
+      }
+    }
   }
 
   String get _subjectModeLabel {
@@ -820,6 +854,7 @@ class _CameraScreenState extends State<CameraScreen> {
       final safeExposure =
           exposure.clamp(minExposure, maxExposure).toDouble();
       await controller.setExposureOffset(safeExposure);
+      _currentExposure = safeExposure;
     } catch (_) {}
 
     try {
@@ -828,6 +863,7 @@ class _CameraScreenState extends State<CameraScreen> {
       final safeZoom =
           preferredZoom.clamp(minZoom, maxZoom).toDouble();
       await controller.setZoomLevel(safeZoom);
+      _currentZoom = safeZoom;
     } catch (_) {}
 
     if (_subjectLocked && _subjectPoint != null) {
@@ -846,6 +882,165 @@ class _CameraScreenState extends State<CameraScreen> {
         _stabilityGuide = stabilityGuide;
       });
     }
+  }
+
+  Future<void> _applyAiDrivenAdjustments() async {
+    final controller = _controller;
+    if (controller == null || !controller.value.isInitialized) return;
+
+    final combined = [
+      _aiMainTip,
+      _aiLightTip,
+      _aiCompositionTip,
+      _aiSubjectTip,
+    ].join(' ').toLowerCase();
+
+    double exposureDelta = 0.0;
+
+    // AI'nin ışık yorumunu gerçek pozlama telafisine çevir.
+    if (combined.contains('karanlık') ||
+        combined.contains('az ışık') ||
+        combined.contains('ışık düşük') ||
+        combined.contains('daha aydınlık') ||
+        combined.contains('aydınlat')) {
+      exposureDelta += 0.35;
+    }
+
+    if (combined.contains('çok karanlık')) {
+      exposureDelta += 0.20;
+    }
+
+    if (combined.contains('fazla parlak') ||
+        combined.contains('çok parlak') ||
+        combined.contains('aşırı ışık') ||
+        combined.contains('pozlamayı düşür') ||
+        combined.contains('ışığı azalt')) {
+      exposureDelta -= 0.35;
+    }
+
+    // Mod tabanı + AI düzeltmesi.
+    double modeBaseExposure = 0.0;
+    switch (_selectedFilter) {
+      case 'Portre':
+        modeBaseExposure = 0.15;
+        break;
+      case 'Gece':
+        modeBaseExposure = 0.40;
+        break;
+      case 'Sinematik':
+        modeBaseExposure = -0.20;
+        break;
+      case 'Astro':
+        modeBaseExposure = 0.55;
+        break;
+      case 'Fotoğraf':
+      case 'Pro':
+        modeBaseExposure = 0.0;
+        break;
+    }
+
+    final requestedExposure = modeBaseExposure + exposureDelta;
+
+    try {
+      final minExposure = await controller.getMinExposureOffset();
+      final maxExposure = await controller.getMaxExposureOffset();
+      final safeExposure =
+          requestedExposure.clamp(minExposure, maxExposure).toDouble();
+      await controller.setExposureOffset(safeExposure);
+      _currentExposure = safeExposure;
+    } catch (_) {}
+
+    // Ana özne varsa AF/AE her AI döngüsünde o noktada tutulur.
+    final targetPoint =
+        _subjectLocked && _subjectPoint != null
+            ? _subjectPoint!
+            : const Offset(0.5, 0.5);
+
+    try {
+      await controller.setFocusMode(FocusMode.auto);
+      await controller.setFocusPoint(targetPoint);
+    } catch (_) {}
+
+    try {
+      await controller.setExposureMode(ExposureMode.auto);
+      await controller.setExposurePoint(targetPoint);
+    } catch (_) {}
+
+    // Modların gerçekten farklı davranması için lens/zoom karakteri.
+    double requestedZoom = 1.0;
+    switch (_selectedFilter) {
+      case 'Portre':
+        requestedZoom = 1.45;
+        break;
+      case 'Sinematik':
+        requestedZoom = 1.10;
+        break;
+      case 'Gece':
+      case 'Astro':
+      case 'Fotoğraf':
+      case 'Pro':
+        requestedZoom = 1.0;
+        break;
+    }
+
+    try {
+      final minZoom = await controller.getMinZoomLevel();
+      final maxZoom = await controller.getMaxZoomLevel();
+      final safeZoom =
+          requestedZoom.clamp(minZoom, maxZoom).toDouble();
+      await controller.setZoomLevel(safeZoom);
+      _currentZoom = safeZoom;
+    } catch (_) {}
+
+    // Flaş davranışı modlara göre değişir.
+    try {
+      if (_selectedFilter == 'Fotoğraf' ||
+          _selectedFilter == 'Portre') {
+        final lowLight = combined.contains('karanlık') ||
+            combined.contains('az ışık') ||
+            combined.contains('ışık düşük');
+        await controller.setFlashMode(
+          lowLight ? FlashMode.auto : FlashMode.off,
+        );
+      } else {
+        await controller.setFlashMode(FlashMode.off);
+      }
+    } catch (_) {}
+
+    if (mounted) setState(() {});
+  }
+
+  String get _lightHudText {
+    final text = _aiLightTip.toLowerCase();
+
+    if (_liveAiBusy) return 'IŞIK\\nANALİZ';
+
+    if (text.contains('karanlık') ||
+        text.contains('az ışık') ||
+        text.contains('düşük')) {
+      return 'IŞIK\\nARTIYOR';
+    }
+
+    if (text.contains('parlak') ||
+        text.contains('fazla')) {
+      return 'IŞIK\\nAZALIYOR';
+    }
+
+    if (_aiStatus == 'good') return 'IŞIK\\nİYİ';
+
+    return 'IŞIK\\nDENGELİ';
+  }
+
+  String get _compositionHudText {
+    if (_subjectLocked) return 'ÖZNE\\nKİLİTLİ';
+
+    if (_aiStatus == 'good') return 'MEKAN\\nDENGELİ';
+
+    final tip = _aiCompositionTip.toLowerCase();
+    if (tip.contains('sol')) return 'KADRAJ\\nSOLA';
+    if (tip.contains('sağ')) return 'KADRAJ\\nSAĞA';
+
+    return 'MEKAN\\nDENGELİ';
   }
 
   void _toggleSpotMode() {
@@ -1339,6 +1534,111 @@ class _CameraScreenState extends State<CameraScreen> {
                 ),
               ),
 
+            if (_aiAutoProEnabled)
+              Positioned(
+                top: 170,
+                right: 18,
+                child: Container(
+                  width: 74,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 12,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(.66),
+                    borderRadius: BorderRadius.circular(22),
+                    border: Border.all(
+                      color: Colors.white12,
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      const Icon(
+                        Icons.person_pin_circle_outlined,
+                        color: Colors.white,
+                        size: 22,
+                      ),
+                      const SizedBox(height: 5),
+                      Text(
+                        '${_currentZoom.toStringAsFixed(1)}x',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Color(0xFFFFC107),
+                          fontSize: 16,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      const Text(
+                        'ZOOM',
+                        style: TextStyle(
+                          color: Colors.white60,
+                          fontSize: 9,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(
+                          vertical: 10,
+                        ),
+                        child: Divider(
+                          height: 1,
+                          color: Colors.white12,
+                        ),
+                      ),
+                      const Icon(
+                        Icons.landscape_outlined,
+                        color: Colors.white,
+                        size: 21,
+                      ),
+                      const SizedBox(height: 5),
+                      Text(
+                        _compositionHudText,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 9.5,
+                          height: 1.15,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(
+                          vertical: 10,
+                        ),
+                        child: Divider(
+                          height: 1,
+                          color: Colors.white12,
+                        ),
+                      ),
+                      const Icon(
+                        Icons.light_mode_outlined,
+                        color: Color(0xFFFFC107),
+                        size: 21,
+                      ),
+                      const SizedBox(height: 5),
+                      Text(
+                        _lightHudText,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 9.5,
+                          height: 1.15,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 7),
+                      Text(
+                        'EV ${_currentExposure >= 0 ? '+' : ''}${_currentExposure.toStringAsFixed(1)}',
+                        style: const TextStyle(
+                          color: Colors.white54,
+                          fontSize: 8.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
             Positioned(
               left: 0,
               right: 0,
@@ -1409,7 +1709,7 @@ class _CameraScreenState extends State<CameraScreen> {
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: const Text(
-                      'Ana özneyi kilitlemek için ekrana dokun',
+                      'Ana özne: dokunarak kilitle • tekrar dokunarak kaldır',
                       style: TextStyle(
                         color: Colors.white70,
                         fontSize: 10.5,
