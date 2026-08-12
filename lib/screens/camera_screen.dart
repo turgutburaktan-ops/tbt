@@ -825,23 +825,27 @@ class _CameraScreenState extends State<CameraScreen> {
                   bottom: previewBottom,
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(24),
-                    child: LayoutBuilder(
-                      builder: (context, previewConstraints) {
-                        return GestureDetector(
-                          behavior: HitTestBehavior.opaque,
-                          onTapDown: (details) {
-                            _handlePreviewTap(
-                              details,
-                              previewConstraints,
-                            );
-                          },
-                          child: SizedBox.expand(
-                            child: FittedBox(
-                              fit: BoxFit.cover,
-                              clipBehavior: Clip.hardEdge,
-                              child: SizedBox(
-                                width: 1080,
-                                height: 1440,
+                    child: Container(
+                      color: Colors.black,
+                      child: LayoutBuilder(
+                        builder: (context, previewConstraints) {
+                          return Center(
+                            child: AspectRatio(
+                              aspectRatio: 3 / 4,
+                              child: GestureDetector(
+                                behavior: HitTestBehavior.opaque,
+                                onTapDown: (details) {
+                                  _handlePreviewTap(
+                                    details,
+                                    BoxConstraints.tight(
+                                      Size(
+                                        previewConstraints.maxHeight *
+                                            (3 / 4),
+                                        previewConstraints.maxHeight,
+                                      ),
+                                    ),
+                                  );
+                                },
                                 child: const iris.IrisCameraPreview(
                                   aspectRatio: 3 / 4,
                                   enableTapToFocus: false,
@@ -849,9 +853,9 @@ class _CameraScreenState extends State<CameraScreen> {
                                 ),
                               ),
                             ),
-                          ),
-                        );
-                      },
+                          );
+                        },
+                      ),
                     ),
                   ),
                 ),
@@ -887,11 +891,19 @@ class _CameraScreenState extends State<CameraScreen> {
                     child: IgnorePointer(
                       child: LayoutBuilder(
                         builder: (context, previewConstraints) {
+                          final cameraHeight =
+                              previewConstraints.maxHeight;
+                          final cameraWidth =
+                              cameraHeight * (3 / 4);
+                          final leftInset =
+                              (previewConstraints.maxWidth -
+                                      cameraWidth) /
+                                  2;
+
                           final point = Offset(
-                            _subjectPoint!.dx *
-                                previewConstraints.maxWidth,
-                            _subjectPoint!.dy *
-                                previewConstraints.maxHeight,
+                            leftInset +
+                                _subjectPoint!.dx * cameraWidth,
+                            _subjectPoint!.dy * cameraHeight,
                           );
 
                           return Stack(
