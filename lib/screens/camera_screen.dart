@@ -428,22 +428,44 @@ class _CameraScreenState extends State<CameraScreen> {
   Future<File> _captureToTempFile({
     bool useProOverrides = true,
   }) async {
-    late List<int> bytes;
+    // IRIS-ONLY:
+    // Android + iOS'ta aynı IrisCamera oturumunu kullanır.
+    // Flutter camera fallback YOK.
+    final options = _captureOptions();
 
-    // Bazı Android telefonlar belirli ISO + shutter kombinasyonlarını
-    // reddedebiliyor. Önce AI/Pro ayarlarıyla deniyoruz; olmazsa kamera
-    // oturumunu tazeleyip güvenli native capture'a otomatik düşüyoruz.
-    try {
+    Future<List<int>> doCapture() async {
       if (useProOverrides) {
-        bytes = await _camera.capturePhoto(
-          options: _captureOptions(),
+        return _camera.capturePhoto(
+          options: options,
         );
-      } else {
-        bytes = await _camera.capturePhoto();
       }
-    } catch (firstError) {
-      debugPrint(
-        'İlk Iris capture denemesi başarısız: $firstError',
+
+      return _camera.capturePhoto(
+        options: const iris.PhotoCaptureOptions(
+          flashMode: iris.PhotoFlashMode.auto,
+        ),
+      );
+    }
+
+    List<int>? bytes;
+    Object? lastError;
+
+    // 1) Normal Iris capture.
+    try {
+      bytes = await doCapture();
+    } catch (e) {
+      lastError = e;
+      debugPrint('Iris capture #1: $e');
+    }
+
+    // 2) Aynı Iris session'ı pause/resume ederek tekrar dene.
+    if (bytes == null || bytes.isEmpty) {
+      try {
+        await _camera.pauseSession();
+      } catch (_) {}
+
+      await Future<void>.delayed(
+        const Duration(milliseconds: 180),
       );
 
       try {
@@ -451,34 +473,86 @@ class _CameraScreenState extends State<CameraScreen> {
       } catch (_) {}
 
       await Future<void>.delayed(
-        const Duration(milliseconds: 300),
+        const Duration(milliseconds: 420),
       );
 
-      try {
-        // En güvenli fallback: cihaz kendi AE/AF/ISO/shutter kararını verir.
-        bytes = await _camera.capturePhoto();
-      } catch (secondError) {
-        debugPrint(
-          'İkinci Iris capture denemesi başarısız: $secondError',
-        );
+      if (useProOverrides) {
+        try {
+          await _applyModeBaseSettings();
+          await _applyAiDecision();
+        } catch (_) {}
+      }
 
-        // Son bir kez açıkça flash kapalı standart capture dene.
-        bytes = await _camera.capturePhoto(
-          options: const iris.PhotoCaptureOptions(
-            flashMode: iris.PhotoFlashMode.off,
-          ),
-        );
+      try {
+        bytes = await doCapture();
+      } catch (e) {
+        lastError = e;
+        debugPrint('Iris capture #2: $e');
       }
     }
 
-    if (bytes.isEmpty) {
-      throw Exception('Kamera boş fotoğraf verisi döndürdü.');
+    // 3) Son çare: Iris session'ını tamamen yeniden oluştur.
+    // Manuel ISO + shutter seçeneklerini KORUYARAK tekrar çek.
+    if (bytes == null || bytes.isEmpty) {
+      try {
+        await _camera.disposeSession();
+      } catch (_) {}
+
+      await Future<void>.delayed(
+        const Duration(milliseconds: 250),
+      );
+
+      if (_lenses.isNotEmpty) {
+        final safeIndex =
+            _lensIndex.clamp(0, _lenses.length - 1);
+
+        await _camera.switchLens(
+          _lenses[safeIndex].category,
+        );
+      }
+
+      await _camera.initialize();
+
+      await Future<void>.delayed(
+        const Duration(milliseconds: 500),
+      );
+
+      if (useProOverrides) {
+        await _applyModeBaseSettings();
+        await _applyAiDecision();
+      } else {
+        try {
+          await _camera.setExposureMode(
+            iris.ExposureMode.auto,
+          );
+        } catch (_) {}
+
+        try {
+          await _camera.setFocusMode(
+            iris.FocusMode.auto,
+          );
+        } catch (_) {}
+      }
+
+      try {
+        bytes = await doCapture();
+      } catch (e) {
+        lastError = e;
+        debugPrint('Iris capture #3: $e');
+      }
+    }
+
+    if (bytes == null || bytes.isEmpty) {
+      throw Exception(
+        'IrisCamera fotoğraf çekemedi: $lastError',
+      );
     }
 
     final path =
-        '${Directory.systemTemp.path}/tbt_${DateTime.now().microsecondsSinceEpoch}.jpg';
+        '${Directory.systemTemp.path}/tbt_iris_${DateTime.now().microsecondsSinceEpoch}.jpg';
 
     final file = File(path);
+
     await file.writeAsBytes(
       bytes,
       flush: true,
@@ -486,7 +560,9 @@ class _CameraScreenState extends State<CameraScreen> {
 
     if (!await file.exists() ||
         await file.length() == 0) {
-      throw Exception('Fotoğraf dosyası oluşturulamadı.');
+      throw Exception(
+        'IrisCamera fotoğraf dosyasını oluşturamadı.',
+      );
     }
 
     return file;
