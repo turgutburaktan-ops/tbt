@@ -200,81 +200,68 @@ class _CameraScreenState extends State<CameraScreen> {
   // MANUEL FOTOĞRAF
   // =====================================================
 
-  Future<void> _takePhoto() async {
-    final controller = _controller;
+ Future<void> _takePhoto() async {
+  final controller = _controller;
 
-    if (controller == null ||
-        !controller.value.isInitialized ||
-        controller.value.isTakingPicture ||
-        _liveAiBusy ||
-        _takingUserPhoto) {
+  if (controller == null ||
+      !controller.value.isInitialized ||
+      controller.value.isTakingPicture ||
+      _liveAiBusy ||
+      _takingUserPhoto) {
+    return;
+  }
+
+  _takingUserPhoto = true;
+
+  _cancelAutoCapture();
+
+  try {
+    final image = await controller.takePicture();
+
+    if (!mounted) {
       return;
     }
 
-    _takingUserPhoto = true;
-
-    _cancelAutoCapture();
-
-    try {
-      final image =
-          await controller.takePicture();
-
-      if (!mounted) {
-        return;
-      }
-
-      await Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) =>
-              PhotoPreviewScreen(
-            imagePath: image.path,
-          ),
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CreatePostScreen(
+          initialImagePath: image.path,
         ),
-      );
-    } catch (e) {
-      debugPrint(
-        'Fotoğraf çekme hatası: $e',
-      );
-    } finally {
-      _takingUserPhoto = false;
-    }
+      ),
+    );
+  } catch (e) {
+    debugPrint('Fotoğraf çekme hatası: $e');
+  } finally {
+    _takingUserPhoto = false;
   }
+}
 
   // =====================================================
   // GALERİ
   // =====================================================
 
   Future<void> _pickFromGallery() async {
-    if (_liveAiBusy ||
-        _takingUserPhoto) {
-      return;
-    }
+  try {
+    final image = await _picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 92,
+    );
 
-    try {
-      final image =
-          await _picker.pickImage(
-        source: ImageSource.gallery,
-        imageQuality: 92,
-      );
+    if (image == null || !mounted) return;
 
-      if (image == null || !mounted) {
-        return;
-      }
-
-      await Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) =>
-              PhotoPreviewScreen(
-            imagePath: image.path,
-          ),
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CreatePostScreen(
+          initialImagePath: image.path,
         ),
-      );
-    } catch (e) {
-      debugPrint('Galeri hatası: $e');
-    }
+      ),
+    );
+  } catch (e) {
+    debugPrint('Galeri hatası: $e');
   }
+}
 
   // =====================================================
   // CANLI AI
