@@ -63,6 +63,14 @@ class LiveFrameAnalysis {
   }
 }
 
+class AiEditResult {
+  final String outputPath;
+
+  const AiEditResult({
+    required this.outputPath,
+  });
+}
+
 class AiService {
   static const String baseUrl = 'https://tbt-tx25.onrender.com';
 
@@ -130,5 +138,77 @@ class AiService {
     }
 
     return LiveFrameAnalysis.fromJson(decoded);
+  }
+
+  static Future<AiEditResult> editPhoto({
+    required String imagePath,
+    required String action,
+    double? pointX,
+    double? pointY,
+  }) async {
+    final file = File(imagePath);
+    if (!await file.exists()) {
+      throw Exception('Düzenlenecek fotoğraf bulunamadı.');
+    }
+
+    final request = http.MultipartRequest(
+      'POST',
+      Uri.parse('$baseUrl/edit-photo'),
+    );
+
+    request.fields['action'] = action;
+
+    if (pointX != null) {
+      request.fields['point_x'] = pointX.toStringAsFixed(5);
+    }
+
+    if (pointY != null) {
+      request.fields['point_y'] = pointY.toStringAsFixed(5);
+    }
+
+    request.files.add(
+      await http.MultipartFile.fromPath('image', imagePath),
+    );
+
+    final streamed = await request.send().timeout(
+          const Duration(seconds: 120),
+        );
+
+    final response = await http.Response.fromStream(streamed);
+
+    if (response.statusCode != 200) {
+      throw Exception(
+        'AI düzenleme başarısız: ${response.statusCode}\n${response.body}',
+      );
+    }
+
+    List<int> outputBytes;
+    final contentType = response.headers['content-type'] ?? '';
+
+    if (contentType.toLowerCase().startsWith('image/')) {
+      outputBytes = response.bodyBytes;
+    } else {
+      final decoded = jsonDecode(response.body);
+
+      if (decoded is! Map<String, dynamic>) {
+        throw Exception('AI düzenleme geçersiz yanıt verdi.');
+      }
+
+      final imageBase64 = decoded['image_base64']?.toString();
+
+      if (imageBase64 == null || imageBase64.isEmpty) {
+        throw Exception('AI düzenleme sonucunda görsel dönmedi.');
+      }
+
+      outputBytes = base64Decode(imageBase64);
+    }
+
+    final outputPath =
+        '${Directory.systemTemp.path}/ai_edit_${DateTime.now().microsecondsSinceEpoch}.jpg';
+
+    final output = File(outputPath);
+    await output.writeAsBytes(outputBytes, flush: true);
+
+    return AiEditResult(outputPath: output.path);
   }
 }
