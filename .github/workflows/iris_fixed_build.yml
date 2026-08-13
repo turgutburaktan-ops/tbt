@@ -69,6 +69,9 @@ jobs:
       - name: Patch camera runtime V3
         run: python3 tool/patch_camera_runtime_v3.py
 
+      - name: Patch profile photo upload
+        run: python3 tool/patch_profile_photo.py
+
       - name: Analyze
         run: |
           rm -rf test
