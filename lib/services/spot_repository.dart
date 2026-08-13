@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import '../data/curated_photo_spots.dart';
+import '../data/curated_photo_spots_extra.dart';
 import '../models/photo_spot.dart';
 
 /// Camera bağımsız çekim noktası veri katmanı.
@@ -87,12 +88,13 @@ class SpotRepository {
   }
 
   List<PhotoSpot> _mergeWithCurated(List<PhotoSpot> remote) {
-    // Demo + editoryal katalog aynı veri katmanından geçer. Böylece harita ve
-    // repository kullanan keşfet yüzeyleri her zaman zengin bir katalog görür.
-    // Aynı id varsa sıralama: demo < curated < Firestore published.
+    // Demo + iki editoryal katalog aynı veri katmanından geçer. Böylece harita
+    // ve repository kullanan keşfet yüzeyleri her zaman zengin katalog görür.
+    // Aynı id varsa sıralama: demo < curated < extra < Firestore published.
     final byId = <String, PhotoSpot>{
       for (final spot in demoSpots) spot.id: spot,
       for (final spot in curatedPhotoSpots) spot.id: spot,
+      for (final spot in curatedPhotoSpotsExtra) spot.id: spot,
     };
 
     // Firestore aynı id'yi yayınladıysa güncel remote kayıt üstün gelir.
