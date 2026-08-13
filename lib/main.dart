@@ -1,6 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
+import 'screens/chat_inbox_screen.dart';
 import 'screens/home_screen.dart';
 import 'services/favorites_service.dart';
 
@@ -9,7 +10,6 @@ Future<void> main() async {
 
   await Firebase.initializeApp();
 
-  // Kaydedilen çekim noktalarını telefondan yükle
   await FavoritesService.initialize();
 
   runApp(const BestPhotoSpotApp());
@@ -32,6 +32,41 @@ class BestPhotoSpotApp extends StatelessWidget {
         ),
         useMaterial3: true,
       ),
+      routes: {
+        '/messages': (_) => const ChatInboxScreen(),
+      },
+      builder: (context, child) {
+        if (child == null) return const SizedBox.shrink();
+
+        final routeName = ModalRoute.of(context)?.settings.name;
+        final showMessagesShortcut = routeName != '/messages';
+
+        return Stack(
+          children: [
+            child,
+            if (showMessagesShortcut)
+              Positioned(
+                top: MediaQuery.paddingOf(context).top + 8,
+                right: 14,
+                child: Material(
+                  color: const Color(0xFF151A22),
+                  shape: const CircleBorder(),
+                  elevation: 6,
+                  child: IconButton(
+                    tooltip: 'Mesajlar',
+                    icon: const Icon(
+                      Icons.chat_bubble_outline_rounded,
+                      color: Color(0xFFFFC107),
+                    ),
+                    onPressed: () {
+                      Navigator.of(context).pushNamed('/messages');
+                    },
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
       home: const HomeScreen(),
     );
   }
