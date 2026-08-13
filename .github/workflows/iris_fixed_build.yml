@@ -36,6 +36,9 @@ jobs:
           MAPS_API_KEY: ${{ secrets.MAPS_API_KEY }}
         run: python3 tool/prepare_android_build.py
 
+      - name: Guard exposure during tap focus
+        run: python3 tool/patch_focus_exposure_guard.py
+
       - name: Install dependencies
         run: flutter pub get
 
