@@ -90,6 +90,9 @@ jobs:
       - name: Patch custom AI edit prompt
         run: python3 tool/patch_custom_ai_edit.py
 
+      - name: Patch professional modes and 3:4 preview V6
+        run: python3 tool/patch_professional_modes_v6.py
+
       - name: Analyze
         run: |
           rm -rf test
