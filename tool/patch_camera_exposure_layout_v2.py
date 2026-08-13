@@ -5,8 +5,6 @@ def main() -> None:
     path = Path('lib/screens/camera_screen.dart')
     text = path.read_text()
 
-    # AI sometimes says "Pozlamayı düşür" but the old parser did not classify that
-    # sentence as a bright/highlight warning. Recognize direct exposure language too.
     old_bright = """    final tooBright = combined.contains('fazla parlak') ||
         combined.contains('çok parlak') ||
         combined.contains('aşırı ışık') ||
@@ -28,8 +26,6 @@ def main() -> None:
     if old_bright in text:
         text = text.replace(old_bright, new_bright, 1)
 
-    # Give Cinematic a darker, highlight-protecting baseline. This is still natural,
-    # but it no longer leaves bright indoor windows/signage looking washed out.
     old_base = """      case 'Sinematik':
         iso = 125;
         shutter = _durationForDenominator(60);
@@ -47,9 +43,6 @@ def main() -> None:
     if old_base in text:
         text = text.replace(old_base, new_base, 1)
 
-    # The previous Cinematic branch overwrote the generic bright-scene correction
-    # and returned to 1/60, which is exactly why the preview stayed blown out even
-    # when the AI tip said to lower exposure. Keep the strong correction here.
     old_cinematic = """      shutter = _durationForDenominator(
         (subjectPriority || _movementLevel > 0.8) ? 100 : 60,
       );
@@ -58,7 +51,6 @@ def main() -> None:
       _currentWb = 'AUTO';
 """
     new_cinematic = """      if (tooBright) {
-        // Protect windows, screens, neon and white ceilings aggressively.
         shutter = _durationForDenominator(
           (subjectPriority || _movementLevel > 0.8) ? 200 : 160,
         );
@@ -86,7 +78,6 @@ def main() -> None:
     if old_cinematic in text:
         text = text.replace(old_cinematic, new_cinematic, 1)
 
-    # Make the AI status text match what is actually happening in a bright scene.
     old_summary = """        _lastAiAppliedSummary = changes.isEmpty
             ? 'Sahne dengede • ayar korunuyor'
             : changes.join('  •  ');
@@ -100,9 +91,6 @@ def main() -> None:
     if old_summary in text:
         text = text.replace(old_summary, new_summary, 1)
 
-    # Final responsive layout. The AI HUD was enlarged from 48 to 68 px after the
-    # older layout patch ran, causing a ~20 px overflow/shift on real phones.
-    # Avoid height arithmetic entirely: preview takes exactly the remaining space.
     start = text.find("    return Scaffold(\n      backgroundColor: Colors.black,\n      body: SafeArea(\n        child: LayoutBuilder(")
     end_marker = "    );\n  }\n\n  Widget _buildTopBar()"
     end = text.find(end_marker, start) if start >= 0 else -1
@@ -133,6 +121,7 @@ def main() -> None:
         ),
       ),
     );
+  }
 '''
         text = text[:start] + responsive_build + text[end + len("    );\n  }\n"):]
 
