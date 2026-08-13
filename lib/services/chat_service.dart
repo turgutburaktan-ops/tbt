@@ -1,0 +1,183 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+import '../models/chat_message.dart';
+import 'social_service.dart';
+
+class ChatService {
+  ChatService._();
+
+  static final ChatService instance = ChatService._();
+
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  User get _requiredUser {
+    final user = _auth.currentUser;
+    if (user == null) {
+      throw Exception('Mesajlaşmak için giriş yapmalısın.');
+    }
+    return user;
+  }
+
+  String directThreadId(String a, String b) {
+    final ids = [a, b]..sort();
+    return 'dm_${ids[0]}_${ids[1]}';
+  }
+
+  Future<bool> isBlockedBetween(String otherUserId) async {
+    final me = _requiredUser.uid;
+    final refs = await Future.wait([
+      _firestore.collection('users').doc(me).collection('blocked').doc(otherUserId).get(),
+      _firestore.collection('users').doc(otherUserId).collection('blocked').doc(me).get(),
+    ]);
+    return refs.any((doc) => doc.exists);
+  }
+
+  Future<String> ensureDirectThread(
+    String otherUserId, {
+    String? sourceType,
+    String? sourceId,
+  }) async {
+    final user = _requiredUser;
+    if (otherUserId == user.uid) {
+      throw Exception('Kendine mesaj gönderemezsin.');
+    }
+    if (await isBlockedBetween(otherUserId)) {
+      throw Exception('Bu kullanıcıyla mesajlaşma kullanılamıyor.');
+    }
+
+    await SocialService.instance.ensureUserProfile();
+    final id = directThreadId(user.uid, otherUserId);
+    final ref = _firestore.collection('chat_threads').doc(id);
+
+    await ref.set({
+      'type': 'direct',
+      'memberIds': [user.uid, otherUserId],
+      'sourceType': sourceType,
+      'sourceId': sourceId,
+      'updatedAt': FieldValue.serverTimestamp(),
+      'createdAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+
+    return id;
+  }
+
+  Stream<List<ChatThread>> myThreads() {
+    final user = _auth.currentUser;
+    if (user == null) return Stream.value(const <ChatThread>[]);
+
+    return _firestore
+        .collection('chat_threads')
+        .where('memberIds', arrayContains: user.uid)
+        .snapshots()
+        .map((snapshot) {
+      final items = snapshot.docs.map(ChatThread.fromDocument).toList();
+      items.sort((a, b) {
+        final ad = a.lastMessageAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+        final bd = b.lastMessageAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+        return bd.compareTo(ad);
+      });
+      return items;
+    });
+  }
+
+  Stream<List<ChatMessage>> messages(String threadId) {
+    final user = _auth.currentUser;
+    if (user == null) return Stream.value(const <ChatMessage>[]);
+
+    return _firestore
+        .collection('chat_threads')
+        .doc(threadId)
+        .collection('messages')
+        .orderBy('createdAt', descending: true)
+        .limit(100)
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map(ChatMessage.fromDocument)
+            .where((message) => !message.deleted)
+            .toList(growable: false));
+  }
+
+  Future<void> sendMessage({
+    required String threadId,
+    required String otherUserId,
+    required String text,
+  }) async {
+    final user = _requiredUser;
+    final clean = text.trim();
+    if (clean.isEmpty) return;
+    if (clean.length > 1500) {
+      throw Exception('Mesaj en fazla 1500 karakter olabilir.');
+    }
+    if (await isBlockedBetween(otherUserId)) {
+      throw Exception('Bu kullanıcıyla mesajlaşma kullanılamıyor.');
+    }
+
+    final threadRef = _firestore.collection('chat_threads').doc(threadId);
+    final thread = await threadRef.get();
+    final members = (thread.data()?['memberIds'] as List?)
+            ?.map((e) => e.toString())
+            .toList() ??
+        const <String>[];
+    if (!members.contains(user.uid) || !members.contains(otherUserId)) {
+      throw Exception('Bu sohbete erişimin yok.');
+    }
+
+    final messageRef = threadRef.collection('messages').doc();
+    final batch = _firestore.batch();
+    batch.set(messageRef, {
+      'senderId': user.uid,
+      'text': clean,
+      'createdAt': FieldValue.serverTimestamp(),
+      'deleted': false,
+    });
+    batch.set(threadRef, {
+      'lastMessage': clean,
+      'lastSenderId': user.uid,
+      'lastMessageAt': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+    await batch.commit();
+  }
+
+  Future<void> blockUser(String otherUserId) async {
+    final user = _requiredUser;
+    if (otherUserId == user.uid) return;
+    await _firestore
+        .collection('users')
+        .doc(user.uid)
+        .collection('blocked')
+        .doc(otherUserId)
+        .set({
+      'userId': otherUserId,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  Future<void> unblockUser(String otherUserId) async {
+    final user = _requiredUser;
+    await _firestore
+        .collection('users')
+        .doc(user.uid)
+        .collection('blocked')
+        .doc(otherUserId)
+        .delete();
+  }
+
+  Future<void> reportUser({
+    required String otherUserId,
+    required String reason,
+    String? threadId,
+  }) async {
+    final user = _requiredUser;
+    await _firestore.collection('user_reports').add({
+      'reporterId': user.uid,
+      'reportedUserId': otherUserId,
+      'threadId': threadId,
+      'reason': reason.trim().isEmpty ? 'unspecified' : reason.trim(),
+      'status': 'pending',
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+  }
+}
