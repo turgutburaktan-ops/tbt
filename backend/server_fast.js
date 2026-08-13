@@ -66,8 +66,15 @@ async function imageMetrics(buffer) {
 }
 
 function liveDecision(metrics, mode) {
-  const m = String(mode || "Fotoğraf").toLowerCase();
-  const blown = metrics.highlightRatio > 0.08 || metrics.mean > 188;
+  const m = String(mode || "Normal").toLowerCase();
+
+  // V5: small ceiling lamps/windows must not make a mostly dark frame look
+  // globally overexposed. Protect highlights aggressively only when the whole
+  // frame is already bright, or when clipped whites occupy a very large area.
+  const blown =
+    metrics.mean > 190 ||
+    (metrics.mean > 145 && metrics.highlightRatio > 0.10) ||
+    metrics.highlightRatio > 0.24;
   const veryDark = metrics.mean < 52;
   const dark = metrics.mean < 82;
   const flat = metrics.contrast < 28;
@@ -77,11 +84,7 @@ function liveDecision(metrics, mode) {
   let light = "Işık dengeli.";
   let subject = "";
 
-  if (blown) {
-    status = "adjust";
-    main = "Pozlamayı azalt, parlaklığı düşür.";
-    light = "Parlak alanları koru.";
-  } else if (veryDark) {
+  if (veryDark) {
     status = "adjust";
     main = m.includes("hareket") ? "Işık az — shutter hızını koru." : "Düşük ışık — pozlamayı artır.";
     light = "Gölgelerde detay koru.";
@@ -89,6 +92,10 @@ function liveDecision(metrics, mode) {
     status = "adjust";
     main = "Işık düşük — modu dengeliyorum.";
     light = "Gürültüyü sınırlı tut.";
+  } else if (blown) {
+    status = "adjust";
+    main = "Pozlamayı hafif azalt, parlak alanı koru.";
+    light = "Parlak alanları koru.";
   } else if (flat) {
     status = "adjust";
     main = "Kontrast düşük — tonu güçlendir.";
@@ -118,42 +125,44 @@ function baseDevelop(mode) {
   if (m.includes("portre")) return { exposure:0.02, highlights:-22, shadows:10, contrast:3, saturation:1, warmth:2, sharpness:3 };
   if (m.includes("hareket")) return { exposure:-0.02, highlights:-24, shadows:7, contrast:10, saturation:0, warmth:0, sharpness:10 };
   if (m.includes("pro")) return { exposure:0.00, highlights:-26, shadows:8, contrast:5, saturation:0, warmth:0, sharpness:5 };
-  return { exposure:0.00, highlights:-28, shadows:10, contrast:6, saturation:0, warmth:0, sharpness:6 };
+  // Normal is deliberately neutral. It should look like a polished phone camera,
+  // not like a creative preset.
+  return { exposure:0.03, highlights:-20, shadows:9, contrast:4, saturation:1, warmth:0, sharpness:5 };
 }
 
 async function fastDevelopSettings(buffer, mode, action) {
   const metrics = await imageMetrics(buffer);
   const s = { ...baseDevelop(mode) };
 
-  if (metrics.highlightRatio > 0.10 || metrics.mean > 195) {
-    s.exposure -= 0.22;
-    s.highlights -= 12;
+  if (metrics.mean > 195 || (metrics.mean > 150 && metrics.highlightRatio > 0.12)) {
+    s.exposure -= 0.14;
+    s.highlights -= 10;
   } else if (metrics.mean < 62) {
-    s.exposure += 0.20;
-    s.shadows += 10;
+    s.exposure += 0.24;
+    s.shadows += 11;
   } else if (metrics.mean < 92) {
-    s.exposure += 0.10;
-    s.shadows += 5;
+    s.exposure += 0.12;
+    s.shadows += 6;
   }
 
-  if (metrics.contrast < 28) s.contrast += 4;
+  if (metrics.contrast < 28) s.contrast += 3;
   if (metrics.contrast > 72) s.contrast -= 3;
 
   if (action === "fix_light") {
-    s.saturation = clamp(s.saturation, -3, 4);
-    s.sharpness = clamp(s.sharpness, 0, 5);
-    s.highlights = Math.min(s.highlights, -18);
-    s.shadows = Math.max(s.shadows, 8);
+    s.saturation = clamp(s.saturation, -2, 4);
+    s.sharpness = clamp(s.sharpness, 0, 4);
+    s.highlights = Math.min(s.highlights, -14);
+    s.shadows = Math.max(s.shadows, 9);
   }
 
   return {
-    exposure: clamp(s.exposure, -0.55, 0.45),
-    highlights: clamp(s.highlights, -58, 5),
+    exposure: clamp(s.exposure, -0.40, 0.48),
+    highlights: clamp(s.highlights, -52, 5),
     shadows: clamp(s.shadows, -5, 38),
-    contrast: clamp(s.contrast, -8, 18),
-    saturation: clamp(s.saturation, -8, 10),
+    contrast: clamp(s.contrast, -8, 16),
+    saturation: clamp(s.saturation, -6, 10),
     warmth: clamp(s.warmth, -6, 6),
-    sharpness: clamp(s.sharpness, 0, 12),
+    sharpness: clamp(s.sharpness, 0, 10),
   };
 }
 
@@ -161,10 +170,10 @@ async function developPhoto(buffer, settings, action) {
   const exposureGain = Math.pow(2, settings.exposure);
   const saturation = 1 + settings.saturation / 100;
   const contrast = settings.contrast / 100;
-  const highlightCompression = clamp((-settings.highlights) / 100 * 0.11, 0, 0.075);
-  const shadowOffset = clamp(settings.shadows / 100 * 10, -2, 7);
-  const gain = clamp((1 + contrast) * (1 - highlightCompression), 0.86, 1.15);
-  const offset = clamp(shadowOffset - contrast * 18, -7, 9);
+  const highlightCompression = clamp((-settings.highlights) / 100 * 0.09, 0, 0.06);
+  const shadowOffset = clamp(settings.shadows / 100 * 10, -2, 8);
+  const gain = clamp((1 + contrast) * (1 - highlightCompression), 0.89, 1.13);
+  const offset = clamp(shadowOffset - contrast * 15, -6, 10);
 
   let pipeline = sharp(buffer)
     .rotate()
@@ -179,8 +188,8 @@ async function developPhoto(buffer, settings, action) {
     pipeline = pipeline.linear([r, 1, b], [0, 0, 0]);
   }
 
-  const sharpen = action === "fix_light" ? Math.min(4, settings.sharpness) : settings.sharpness;
-  if (sharpen > 0.5) pipeline = pipeline.sharpen({ sigma: 0.5 + sharpen / 36 });
+  const sharpen = action === "fix_light" ? Math.min(3.5, settings.sharpness) : settings.sharpness;
+  if (sharpen > 0.5) pipeline = pipeline.sharpen({ sigma: 0.5 + sharpen / 38 });
 
   return pipeline.jpeg({ quality: 94, chromaSubsampling: "4:4:4" }).toBuffer();
 }
@@ -213,7 +222,7 @@ async function generativeRemove(buffer, mimeType, action, pointX, pointY) {
 }
 
 app.get("/", (_req, res) => {
-  res.json({ status: "ok", service: "En Iyi Cekim Noktasi AI Backend", liveEngine: "fast-meter-v1", developEngine: "fast-mode-develop-v3" });
+  res.json({ status: "ok", service: "En Iyi Cekim Noktasi AI Backend", liveEngine: "fast-meter-v2", developEngine: "fast-mode-develop-v4" });
 });
 
 app.post("/live-analyze", upload.single("image"), async (req, res) => {
@@ -221,8 +230,8 @@ app.post("/live-analyze", upload.single("image"), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: "Kamera karesi gönderilmedi." });
     const metrics = await imageMetrics(req.file.buffer);
-    const result = liveDecision(metrics, req.body?.mode || "Fotoğraf");
-    res.setHeader("X-Live-Engine", "fast-meter-v1");
+    const result = liveDecision(metrics, req.body?.mode || "Normal");
+    res.setHeader("X-Live-Engine", "fast-meter-v2");
     res.setHeader("X-Processing-Ms", String(Date.now() - started));
     return res.json(result);
   } catch (e) {
@@ -256,7 +265,7 @@ app.post("/edit-photo", upload.single("image"), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: "Düzenlenecek fotoğraf gönderilmedi." });
     const action = String(req.body?.action || "auto_enhance");
-    const mode = String(req.body?.mode || "Fotoğraf");
+    const mode = String(req.body?.mode || "Normal");
 
     if (action === "remove_people" || action === "remove_object") {
       const x = req.body?.point_x != null ? clamp(req.body.point_x, 0, 1) : null;
@@ -273,7 +282,7 @@ app.post("/edit-photo", upload.single("image"), async (req, res) => {
     const settings = await fastDevelopSettings(req.file.buffer, mode, action);
     const output = await developPhoto(req.file.buffer, settings, action);
     res.setHeader("Content-Type", "image/jpeg");
-    res.setHeader("X-Develop-Engine", "fast-mode-develop-v3");
+    res.setHeader("X-Develop-Engine", "fast-mode-develop-v4");
     res.setHeader("X-Processing-Ms", String(Date.now() - started));
     res.setHeader("Cache-Control", "no-store");
     return res.status(200).send(output);
