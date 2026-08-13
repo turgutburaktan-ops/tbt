@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "start": "node patch_custom_prompt.js && node server_fast.js"
+    "start": "node server_fast.js"
   },
   "dependencies": {
     "cors": "^2.8.5",
