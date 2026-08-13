@@ -75,6 +75,9 @@ jobs:
       - name: Patch long-press focus lock
         run: python3 tool/patch_long_press_focus_lock.py
 
+      - name: Patch front camera output orientation
+        run: python3 tool/patch_front_camera_output.py
+
       - name: Analyze
         run: |
           rm -rf test
