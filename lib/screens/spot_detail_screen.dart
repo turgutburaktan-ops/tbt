@@ -114,7 +114,14 @@ class SpotDetailScreen extends StatelessWidget {
                       _InfoChip(icon: Icons.route_outlined, label: spot.difficulty),
                     ],
                   ),
-                  const SizedBox(height: 26),
+
+                  const SizedBox(height: 20),
+                  _SocialActionButtons(spot: spot),
+
+                  const SizedBox(height: 16),
+                  _CompactShootingGuide(spot: spot),
+
+                  const SizedBox(height: 24),
                   const _SectionTitle(icon: Icons.schedule, title: 'En İyi Çekim Zamanı'),
                   const SizedBox(height: 8),
                   _InfoCard(text: spot.bestTime),
@@ -122,15 +129,6 @@ class SpotDetailScreen extends StatelessWidget {
                   const _SectionTitle(icon: Icons.architecture, title: 'Önerilen Çekim Açısı'),
                   const SizedBox(height: 8),
                   _InfoCard(text: spot.angle),
-
-                  const SizedBox(height: 24),
-                  ShootingGuideSection(spot: spot),
-
-                  const SizedBox(height: 18),
-                  TogetherGoSection(spot: spot),
-
-                  const SizedBox(height: 18),
-                  SpotPresenceSection(spot: spot),
 
                   if (spot.description.isNotEmpty) ...[
                     const SizedBox(height: 24),
@@ -190,6 +188,191 @@ class SpotDetailScreen extends StatelessWidget {
       ),
     );
   }
+}
+
+class _SocialActionButtons extends StatelessWidget {
+  final PhotoSpot spot;
+
+  const _SocialActionButtons({required this.spot});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: _PrimaryActionButton(
+            icon: Icons.location_on_outlined,
+            label: 'Buradayım',
+            onPressed: () => _openActionSheet(
+              context,
+              title: 'Buradayım',
+              child: SpotPresenceSection(spot: spot),
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: _PrimaryActionButton(
+            icon: Icons.groups_2_outlined,
+            label: 'Buluşalım',
+            onPressed: () => _openActionSheet(
+              context,
+              title: 'Buluşalım',
+              child: TogetherGoSection(spot: spot),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _PrimaryActionButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onPressed;
+
+  const _PrimaryActionButton({
+    required this.icon,
+    required this.label,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 54,
+      child: FilledButton.icon(
+        onPressed: onPressed,
+        style: FilledButton.styleFrom(
+          backgroundColor: const Color(0xFFFFC107),
+          foregroundColor: Colors.black,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+        ),
+        icon: Icon(icon, size: 21),
+        label: Text(
+          label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(fontWeight: FontWeight.w900),
+        ),
+      ),
+    );
+  }
+}
+
+class _CompactShootingGuide extends StatelessWidget {
+  final PhotoSpot spot;
+
+  const _CompactShootingGuide({required this.spot});
+
+  @override
+  Widget build(BuildContext context) {
+    final angleSummary = spot.angle.trim().isEmpty ? 'Çekim rehberini aç' : spot.angle.trim();
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(
+        color: const Color(0xFF151A22),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.auto_awesome, size: 20, color: Color(0xFFFFC107)),
+              SizedBox(width: 8),
+              Text(
+                'Nasıl Çekilir?',
+                style: TextStyle(fontSize: 17, fontWeight: FontWeight.w900),
+              ),
+            ],
+          ),
+          const SizedBox(height: 9),
+          Text(
+            '${spot.bestTime} • ${spot.recommendedLens}',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 5),
+          Text(
+            angleSummary,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(color: Colors.white60, height: 1.35, fontSize: 13),
+          ),
+          const SizedBox(height: 8),
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton.icon(
+              onPressed: () => _openActionSheet(
+                context,
+                title: 'Nasıl Çekilir?',
+                child: ShootingGuideSection(spot: spot),
+              ),
+              icon: const Icon(Icons.open_in_new, size: 17),
+              label: const Text('Rehberi Aç'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+Future<void> _openActionSheet(
+  BuildContext context, {
+  required String title,
+  required Widget child,
+}) {
+  return showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    useSafeArea: true,
+    backgroundColor: const Color(0xFF0D1117),
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+    ),
+    builder: (sheetContext) {
+      return FractionallySizedBox(
+        heightFactor: 0.86,
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 12, 8, 8),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: 'Kapat',
+                    onPressed: () => Navigator.pop(sheetContext),
+                    icon: const Icon(Icons.close),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(height: 1, color: Colors.white10),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 28),
+                child: child,
+              ),
+            ),
+          ],
+        ),
+      );
+    },
+  );
 }
 
 class _InfoChip extends StatelessWidget {
