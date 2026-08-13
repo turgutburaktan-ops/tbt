@@ -1,5 +1,3 @@
-import 'create_post_screen.dart';
-import 'ai_edit_screen.dart';
 import 'dart:async';
 import 'dart:io';
 import 'dart:math';
@@ -10,6 +8,7 @@ import 'package:iris_camera/iris_camera.dart' as iris;
 import 'package:sensors_plus/sensors_plus.dart';
 
 import '../services/ai_service.dart';
+import 'ai_edit_screen.dart';
 
 class CameraScreen extends StatefulWidget {
   const CameraScreen({super.key});
@@ -21,6 +20,7 @@ class CameraScreen extends StatefulWidget {
 class _CameraScreenState extends State<CameraScreen> {
   final iris.IrisCamera _camera = iris.IrisCamera();
   final ImagePicker _picker = ImagePicker();
+
   List<iris.CameraLensDescriptor> _lenses = [];
   int _lensIndex = 0;
 
@@ -38,7 +38,6 @@ class _CameraScreenState extends State<CameraScreen> {
   Offset? _subjectPoint;
 
   String _selectedMode = 'Fotoğraf';
-
   String _aiStatus = 'idle';
   String _aiMainTip = 'AI AUTO PRO kapalı.';
   String _aiCompositionTip = '';
@@ -46,15 +45,16 @@ class _CameraScreenState extends State<CameraScreen> {
   String _aiSubjectTip = '';
 
   double _movementLevel = 0;
-
   DateTime? _lastAiAnalysisAt;
 
   int _currentIso = 100;
-  Duration _currentShutter = const Duration(microseconds: 8000); // ~1/125
+  Duration _currentShutter = const Duration(microseconds: 8000);
   double _currentEv = 0.0;
   double _currentZoom = 1.0;
   String _currentFocus = 'AF';
   String _currentWb = 'AUTO';
+
+  iris.PhotoFlashMode _flashMode = iris.PhotoFlashMode.off;
 
   final List<String> _modes = const [
     'Fotoğraf',
@@ -74,19 +74,21 @@ class _CameraScreenState extends State<CameraScreen> {
 
   Future<void> _initializeCamera() async {
     try {
-      _lenses = await _camera.listAvailableLenses();
-
-      if (_lenses.isEmpty) {
+      final lenses = await _camera.listAvailableLenses();
+      if (lenses.isEmpty) {
         if (mounted) {
-          setState(() => _initializing = false);
+          setState(() {
+            _lenses = [];
+            _initializing = false;
+          });
         }
         return;
       }
 
-      await _camera.switchLens(_lenses.first.category);
+      _lenses = lenses;
+      await _camera.switchLens(lenses.first.category);
       await _camera.initialize();
 
-      // Dengeli başlangıç.
       try {
         await _camera.setExposureMode(iris.ExposureMode.auto);
       } catch (_) {}
@@ -100,14 +102,10 @@ class _CameraScreenState extends State<CameraScreen> {
         await _camera.setZoom(1.0);
       } catch (_) {}
 
-      if (mounted) {
-        setState(() => _initializing = false);
-      }
+      if (mounted) setState(() => _initializing = false);
     } catch (e) {
       debugPrint('Iris kamera başlatma hatası: $e');
-      if (mounted) {
-        setState(() => _initializing = false);
-      }
+      if (mounted) setState(() => _initializing = false);
     }
   }
 
@@ -115,16 +113,11 @@ class _CameraScreenState extends State<CameraScreen> {
     if (_lenses.length < 2 || _takingPhoto || _aiBusy) return;
 
     final next = (_lensIndex + 1) % _lenses.length;
-
     try {
       await _camera.switchLens(_lenses[next].category);
       _lensIndex = next;
-
-      if (_aiAutoProEnabled) {
-        await _applyModeBaseSettings();
-        await _analyzeSceneOnce();
-      }
-
+      await _applyModeBaseSettings();
+      if (_aiAutoProEnabled) await _analyzeSceneOnce();
       if (mounted) setState(() {});
     } catch (e) {
       debugPrint('Lens değiştirme hatası: $e');
@@ -137,15 +130,12 @@ class _CameraScreenState extends State<CameraScreen> {
         source: ImageSource.gallery,
         imageQuality: 94,
       );
-
       if (image == null || !mounted) return;
 
       await Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => AiEditScreen(
-            originalImagePath: image.path,
-          ),
+          builder: (_) => AiEditScreen(originalImagePath: image.path),
         ),
       );
     } catch (e) {
@@ -162,13 +152,48 @@ class _CameraScreenState extends State<CameraScreen> {
 
   String get _shutterHud {
     final us = _currentShutter.inMicroseconds;
-
     if (us >= 1000000) {
       return '${(us / 1000000).toStringAsFixed(1)}s';
     }
+    return '1/${max(1, (1000000 / us).round())}';
+  }
 
-    final denominator = max(1, (1000000 / us).round());
-    return '1/$denominator';
+  String get _flashLabel {
+    switch (_flashMode) {
+      case iris.PhotoFlashMode.on:
+        return 'AÇIK';
+      case iris.PhotoFlashMode.auto:
+        return 'AUTO';
+      case iris.PhotoFlashMode.off:
+        return 'KAPALI';
+    }
+  }
+
+  IconData get _flashIcon {
+    switch (_flashMode) {
+      case iris.PhotoFlashMode.on:
+        return Icons.flash_on_rounded;
+      case iris.PhotoFlashMode.auto:
+        return Icons.flash_auto_rounded;
+      case iris.PhotoFlashMode.off:
+        return Icons.flash_off_rounded;
+    }
+  }
+
+  void _cycleFlash() {
+    setState(() {
+      switch (_flashMode) {
+        case iris.PhotoFlashMode.off:
+          _flashMode = iris.PhotoFlashMode.auto;
+          break;
+        case iris.PhotoFlashMode.auto:
+          _flashMode = iris.PhotoFlashMode.on;
+          break;
+        case iris.PhotoFlashMode.on:
+          _flashMode = iris.PhotoFlashMode.off;
+          break;
+      }
+    });
   }
 
   Future<Duration> _clampExposureDuration(Duration requested) async {
@@ -184,8 +209,6 @@ class _CameraScreenState extends State<CameraScreen> {
     Duration shutter;
     double ev;
     double zoom;
-    String focus;
-    String wb;
 
     switch (_selectedMode) {
       case 'Portre':
@@ -193,54 +216,32 @@ class _CameraScreenState extends State<CameraScreen> {
         shutter = _durationForDenominator(160);
         ev = 0.15;
         zoom = 1.4;
-        focus = _subjectLocked ? 'AF-L' : 'AF';
-        wb = 'AUTO';
         break;
-
       case 'Gece':
         iso = 800;
         shutter = _durationForDenominator(30);
         ev = 0.35;
         zoom = 1.0;
-        focus = _subjectLocked ? 'AF-L' : 'AF';
-        wb = 'AUTO';
         break;
-
       case 'Sinematik':
         iso = 100;
         shutter = _durationForDenominator(50);
         ev = -0.10;
         zoom = 1.1;
-        focus = _subjectLocked ? 'AF-L' : 'AF';
-        wb = 'AUTO';
         break;
-
       case 'Astro':
         iso = 800;
         shutter = const Duration(milliseconds: 500);
         ev = 0.30;
         zoom = 1.0;
-        focus = _subjectLocked ? 'AF-L' : 'AF';
-        wb = 'AUTO';
         break;
-
       case 'Pro':
-        iso = 100;
-        shutter = _durationForDenominator(125);
-        ev = 0.0;
-        zoom = 1.0;
-        focus = _subjectLocked ? 'AF-L' : 'AF';
-        wb = 'AUTO';
-        break;
-
       case 'Fotoğraf':
       default:
         iso = 100;
         shutter = _durationForDenominator(125);
         ev = 0.0;
         zoom = 1.0;
-        focus = _subjectLocked ? 'AF-L' : 'AF';
-        wb = 'AUTO';
         break;
     }
 
@@ -249,17 +250,14 @@ class _CameraScreenState extends State<CameraScreen> {
     try {
       await _camera.setExposureMode(iris.ExposureMode.auto);
     } catch (_) {}
-
     try {
       await _camera.setFocusMode(
         _subjectLocked ? iris.FocusMode.locked : iris.FocusMode.auto,
       );
     } catch (_) {}
-
     try {
       await _camera.setExposureOffset(ev);
     } catch (_) {}
-
     try {
       await _camera.setZoom(zoom);
     } catch (_) {}
@@ -267,9 +265,6 @@ class _CameraScreenState extends State<CameraScreen> {
     if (_subjectLocked && _subjectPoint != null) {
       try {
         await _camera.setFocus(point: _subjectPoint!);
-      } catch (_) {}
-
-      try {
         await _camera.setExposurePoint(_subjectPoint!);
       } catch (_) {}
     }
@@ -280,8 +275,8 @@ class _CameraScreenState extends State<CameraScreen> {
         _currentShutter = shutter;
         _currentEv = ev;
         _currentZoom = zoom;
-        _currentFocus = focus;
-        _currentWb = wb;
+        _currentFocus = _subjectLocked ? 'AF-L' : 'AF';
+        _currentWb = 'AUTO';
       });
     }
   }
@@ -298,24 +293,17 @@ class _CameraScreenState extends State<CameraScreen> {
     var shutter = _currentShutter;
     var ev = _currentEv;
 
-    final lowLight =
-        combined.contains('karanlık') ||
+    final lowLight = combined.contains('karanlık') ||
         combined.contains('az ışık') ||
         combined.contains('ışık düşük') ||
         combined.contains('düşük ışık');
-
-    final veryLowLight =
-        combined.contains('çok karanlık') ||
+    final veryLowLight = combined.contains('çok karanlık') ||
         combined.contains('çok düşük ışık');
-
-    final tooBright =
-        combined.contains('fazla parlak') ||
+    final tooBright = combined.contains('fazla parlak') ||
         combined.contains('çok parlak') ||
         combined.contains('aşırı ışık') ||
         combined.contains('ışığı azalt');
-
-    final subjectPriority =
-        _subjectLocked ||
+    final subjectPriority = _subjectLocked ||
         combined.contains('kişi') ||
         combined.contains('insan') ||
         combined.contains('yüz') ||
@@ -324,9 +312,7 @@ class _CameraScreenState extends State<CameraScreen> {
     if (lowLight) {
       iso = min(1600, max(iso, 400));
       ev += 0.20;
-
       if (subjectPriority || _movementLevel > 0.8) {
-        // Kişiyi/elde çekimi dondur: daha hızlı shutter, ISO daha yüksek.
         iso = min(1600, max(iso, 800));
         shutter = _durationForDenominator(60);
       } else {
@@ -351,15 +337,12 @@ class _CameraScreenState extends State<CameraScreen> {
       ev -= 0.30;
     }
 
-    if (_selectedMode == 'Portre') {
-      if (subjectPriority) {
-        shutter = _durationForDenominator(160);
-        iso = lowLight ? max(iso, 400) : 100;
-      }
+    if (_selectedMode == 'Portre' && subjectPriority) {
+      shutter = _durationForDenominator(160);
+      iso = lowLight ? max(iso, 400) : 100;
     }
 
     if (_selectedMode == 'Sinematik') {
-      // Fotoğraf yakalamada da 180° shutter karakterine yakın 1/50.
       shutter = _durationForDenominator(50);
       iso = lowLight ? max(iso, 400) : 100;
     }
@@ -382,19 +365,16 @@ class _CameraScreenState extends State<CameraScreen> {
 
     double minEv = -2.0;
     double maxEv = 2.0;
-
     try {
       minEv = await _camera.getMinExposureOffset();
       maxEv = await _camera.getMaxExposureOffset();
     } catch (_) {}
-
     ev = ev.clamp(minEv, maxEv).toDouble();
 
     try {
       await _camera.setExposureOffset(ev);
     } catch (_) {}
 
-    // Canlı önizlemede AF/AE gerçek olarak uygulanır.
     try {
       if (_subjectLocked && _subjectPoint != null) {
         await _camera.setFocus(point: _subjectPoint!);
@@ -417,208 +397,74 @@ class _CameraScreenState extends State<CameraScreen> {
     }
   }
 
-  iris.PhotoCaptureOptions _captureOptions() {
-    return iris.PhotoCaptureOptions(
-      flashMode: iris.PhotoFlashMode.auto,
-      iso: _currentIso.toDouble(),
-      exposureDuration: _currentShutter,
-    );
-  }
-
-  Future<File> _captureToTempFile({
-    bool useProOverrides = true,
-  }) async {
-    // IRIS-ONLY:
-    // Android + iOS'ta aynı IrisCamera oturumunu kullanır.
-    // Flutter camera fallback YOK.
-    final options = _captureOptions();
-
-    Future<List<int>> doCapture() async {
-      if (useProOverrides) {
-        return _camera.capturePhoto(
-          options: options,
-        );
-      }
-
-      return _camera.capturePhoto(
-        options: const iris.PhotoCaptureOptions(
-          flashMode: iris.PhotoFlashMode.auto,
-        ),
-      );
-    }
-
-    List<int>? bytes;
-    Object? lastError;
-
-    // 1) Normal Iris capture.
-    try {
-      bytes = await doCapture();
-    } catch (e) {
-      lastError = e;
-      debugPrint('Iris capture #1: $e');
-    }
-
-    // 2) Aynı Iris session'ı pause/resume ederek tekrar dene.
-    if (bytes == null || bytes.isEmpty) {
-      try {
-        await _camera.pauseSession();
-      } catch (_) {}
-
-      await Future<void>.delayed(
-        const Duration(milliseconds: 180),
-      );
-
-      try {
-        await _camera.resumeSession();
-      } catch (_) {}
-
-      await Future<void>.delayed(
-        const Duration(milliseconds: 420),
-      );
-
-      if (useProOverrides) {
-        try {
-          await _applyModeBaseSettings();
-          await _applyAiDecision();
-        } catch (_) {}
-      }
-
-      try {
-        bytes = await doCapture();
-      } catch (e) {
-        lastError = e;
-        debugPrint('Iris capture #2: $e');
-      }
-    }
-
-    // 3) Son çare: Iris session'ını tamamen yeniden oluştur.
-    // Manuel ISO + shutter seçeneklerini KORUYARAK tekrar çek.
-    if (bytes == null || bytes.isEmpty) {
-      try {
-        await _camera.disposeSession();
-      } catch (_) {}
-
-      await Future<void>.delayed(
-        const Duration(milliseconds: 250),
-      );
-
-      if (_lenses.isNotEmpty) {
-        final safeIndex =
-            _lensIndex.clamp(0, _lenses.length - 1);
-
-        await _camera.switchLens(
-          _lenses[safeIndex].category,
-        );
-      }
-
-      await _camera.initialize();
-
-      await Future<void>.delayed(
-        const Duration(milliseconds: 500),
-      );
-
-      if (useProOverrides) {
-        await _applyModeBaseSettings();
-        await _applyAiDecision();
-      } else {
-        try {
-          await _camera.setExposureMode(
-            iris.ExposureMode.auto,
+  Future<File> _captureToTempFile({required bool useProOverrides}) async {
+    final options = useProOverrides
+        ? iris.PhotoCaptureOptions(
+            flashMode: _flashMode,
+            iso: _currentIso.toDouble(),
+            exposureDuration: _currentShutter,
+          )
+        : const iris.PhotoCaptureOptions(
+            flashMode: iris.PhotoFlashMode.off,
           );
-        } catch (_) {}
 
-        try {
-          await _camera.setFocusMode(
-            iris.FocusMode.auto,
-          );
-        } catch (_) {}
-      }
-
-      try {
-        bytes = await doCapture();
-      } catch (e) {
-        lastError = e;
-        debugPrint('Iris capture #3: $e');
-      }
+    final bytes = await _camera.capturePhoto(options: options);
+    if (bytes.isEmpty) {
+      throw Exception('IrisCamera boş fotoğraf verisi döndürdü.');
     }
 
-    if (bytes == null || bytes.isEmpty) {
-      throw Exception(
-        'IrisCamera fotoğraf çekemedi: $lastError',
-      );
-    }
-
-    final path =
-        '${Directory.systemTemp.path}/tbt_iris_${DateTime.now().microsecondsSinceEpoch}.jpg';
-
-    final file = File(path);
-
-    await file.writeAsBytes(
-      bytes,
-      flush: true,
+    final file = File(
+      '${Directory.systemTemp.path}/tbt_iris_${DateTime.now().microsecondsSinceEpoch}.jpg',
     );
-
-    if (!await file.exists() ||
-        await file.length() == 0) {
-      throw Exception(
-        'IrisCamera fotoğraf dosyasını oluşturamadı.',
-      );
+    await file.writeAsBytes(bytes, flush: true);
+    if (!await file.exists() || await file.length() == 0) {
+      throw Exception('Fotoğraf dosyası oluşturulamadı.');
     }
-
     return file;
   }
 
   Future<void> _takePhoto() async {
-    if (_takingPhoto || _aiBusy) return;
-
-    _takingPhoto = true;
+    if (_takingPhoto || _aiBusy || _initializing) return;
+    setState(() => _takingPhoto = true);
 
     try {
+      if (_aiAutoProEnabled) {
+        await _applyAiDecision();
+      }
+
       final file = await _captureToTempFile(
         useProOverrides: _aiAutoProEnabled,
       );
 
       if (!mounted) return;
-
       await Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => AiEditScreen(
-            originalImagePath: file.path,
-          ),
+          builder: (_) => AiEditScreen(originalImagePath: file.path),
         ),
       );
     } catch (e) {
       debugPrint('Iris fotoğraf çekme hatası: $e');
-
       if (mounted) {
-        final message = e
-            .toString()
-            .replaceFirst('Exception: ', '');
-
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          const SnackBar(
             content: Text(
-              message.length > 110
-                  ? 'Fotoğraf çekilemedi. Kamera oturumunu tekrar dene.'
-                  : 'Fotoğraf çekilemedi: $message',
+              'Fotoğraf çekilemedi. Kamera oturumunu kapatıp yeniden açmayı dene.',
             ),
           ),
         );
       }
     } finally {
-      _takingPhoto = false;
+      if (mounted) setState(() => _takingPhoto = false);
     }
   }
 
   Future<void> _toggleAiAutoPro() async {
     final next = !_aiAutoProEnabled;
-
     _sceneChangeTimer?.cancel();
 
     setState(() {
       _aiAutoProEnabled = next;
-
       if (next) {
         _aiStatus = 'adjust';
         _aiMainTip = 'Sahne analiz ediliyor...';
@@ -631,34 +477,26 @@ class _CameraScreenState extends State<CameraScreen> {
       }
     });
 
-    if (next) {
-      await _applyModeBaseSettings();
-      await _analyzeSceneOnce();
-    }
+    await _applyModeBaseSettings();
+    if (next) await _analyzeSceneOnce();
   }
 
   Future<void> _analyzeSceneOnce() async {
     if (!_aiAutoProEnabled || _aiBusy || _takingPhoto) return;
 
-    if (mounted) {
-      setState(() {
-        _aiBusy = true;
-        _aiStatus = 'adjust';
-        _aiMainTip = 'Sahne analiz ediliyor...';
-      });
-    }
+    setState(() {
+      _aiBusy = true;
+      _aiStatus = 'adjust';
+      _aiMainTip = 'Sahne analiz ediliyor...';
+    });
 
     File? temp;
-
     try {
-      // Analiz karesi için override zorlamıyoruz; sahnenin doğal halini AI görsün.
       temp = await _captureToTempFile(useProOverrides: false);
-
       final analysis = await AiService.analyzeLiveFrame(
         imagePath: temp.path,
         mode: _subjectModeLabel,
       );
-
       if (!mounted) return;
 
       setState(() {
@@ -670,11 +508,9 @@ class _CameraScreenState extends State<CameraScreen> {
       });
 
       await _applyAiDecision();
-
       _lastAiAnalysisAt = DateTime.now();
     } catch (e) {
       debugPrint('AI analiz hatası: $e');
-
       if (mounted) {
         setState(() {
           _aiStatus = 'warning';
@@ -687,23 +523,14 @@ class _CameraScreenState extends State<CameraScreen> {
           if (await temp.exists()) await temp.delete();
         } catch (_) {}
       }
-
-      if (mounted) {
-        setState(() => _aiBusy = false);
-      } else {
-        _aiBusy = false;
-      }
+      if (mounted) setState(() => _aiBusy = false);
     }
   }
 
   String get _subjectModeLabel {
-    if (!_subjectLocked || _subjectPoint == null) {
-      return _selectedMode;
-    }
-
+    if (!_subjectLocked || _subjectPoint == null) return _selectedMode;
     final x = (_subjectPoint!.dx * 100).round();
     final y = (_subjectPoint!.dy * 100).round();
-
     return '$_selectedMode | ANA ÖZNE kilitli: x=$x%, y=$y%. '
         'Kalabalıktaki diğer kişileri ana özne kabul etme.';
   }
@@ -712,12 +539,12 @@ class _CameraScreenState extends State<CameraScreen> {
     TapDownDetails details,
     BoxConstraints constraints,
   ) async {
+    if (constraints.maxWidth <= 0 || constraints.maxHeight <= 0) return;
+
     if (_subjectLocked) {
       await _clearSubjectLock();
       return;
     }
-
-    if (constraints.maxWidth <= 0 || constraints.maxHeight <= 0) return;
 
     final normalized = Offset(
       (details.localPosition.dx / constraints.maxWidth).clamp(0.0, 1.0),
@@ -753,65 +580,12 @@ class _CameraScreenState extends State<CameraScreen> {
     } catch (_) {}
   }
 
-  void _scheduleSceneReanalysis() {
-    if (!_aiAutoProEnabled || _aiBusy || _takingPhoto) return;
-
-    final last = _lastAiAnalysisAt;
-    if (last != null &&
-        DateTime.now().difference(last) < const Duration(seconds: 4)) {
-      return;
-    }
-
-    _sceneChangeTimer?.cancel();
-    _sceneChangeTimer = Timer(
-      const Duration(milliseconds: 900),
-      () {
-        if (mounted && _aiAutoProEnabled && !_aiBusy) {
-          _analyzeSceneOnce();
-        }
-      },
-    );
-  }
-
-  void _startMotionAssistant() {
-    _accelerometerSubscription =
-        accelerometerEventStream().listen((event) {
-      final magnitude = sqrt(
-        event.x * event.x +
-            event.y * event.y +
-            event.z * event.z,
-      );
-
-      final movement = (magnitude - 9.81).abs();
-
-      if (!mounted) return;
-
-      if ((_movementLevel - movement).abs() > 0.15) {
-        setState(() => _movementLevel = movement);
-      }
-    });
-
-    _gyroscopeSubscription =
-        gyroscopeEventStream().listen((event) {
-      if (!mounted) return;
-
-      if (_aiAutoProEnabled &&
-          (event.x.abs() > 0.9 ||
-              event.y.abs() > 0.9 ||
-              event.z.abs() > 0.9)) {
-        _scheduleSceneReanalysis();
-      }
-    });
-  }
-
   Future<void> _selectMode(String mode) async {
-    if (mode == _selectedMode) return;
+    if (mode == _selectedMode || _takingPhoto || _aiBusy) return;
 
     _sceneChangeTimer?.cancel();
-
     setState(() {
       _selectedMode = mode;
-
       if (_aiAutoProEnabled) {
         _aiStatus = 'adjust';
         _aiMainTip = 'Yeni moda göre analiz ediliyor...';
@@ -819,59 +593,71 @@ class _CameraScreenState extends State<CameraScreen> {
     });
 
     await _applyModeBaseSettings();
-
-    if (_aiAutoProEnabled) {
-      await _analyzeSceneOnce();
-    }
+    if (_aiAutoProEnabled) await _analyzeSceneOnce();
   }
 
   void _toggleSpotMode() {
     setState(() => _spotModeEnabled = !_spotModeEnabled);
+    if (_aiAutoProEnabled) _analyzeSceneOnce();
+  }
 
-    if (_aiAutoProEnabled) {
-      _analyzeSceneOnce();
+  void _scheduleSceneReanalysis() {
+    if (!_aiAutoProEnabled || _aiBusy || _takingPhoto) return;
+    final last = _lastAiAnalysisAt;
+    if (last != null &&
+        DateTime.now().difference(last) < const Duration(seconds: 4)) {
+      return;
     }
+
+    _sceneChangeTimer?.cancel();
+    _sceneChangeTimer = Timer(const Duration(milliseconds: 900), () {
+      if (mounted && _aiAutoProEnabled && !_aiBusy && !_takingPhoto) {
+        _analyzeSceneOnce();
+      }
+    });
+  }
+
+  void _startMotionAssistant() {
+    _accelerometerSubscription = accelerometerEventStream().listen((event) {
+      final magnitude = sqrt(
+        event.x * event.x + event.y * event.y + event.z * event.z,
+      );
+      final movement = (magnitude - 9.81).abs();
+      if (mounted && (_movementLevel - movement).abs() > 0.15) {
+        setState(() => _movementLevel = movement);
+      }
+    });
+
+    _gyroscopeSubscription = gyroscopeEventStream().listen((event) {
+      if (!mounted || !_aiAutoProEnabled) return;
+      if (event.x.abs() > 0.9 ||
+          event.y.abs() > 0.9 ||
+          event.z.abs() > 0.9) {
+        _scheduleSceneReanalysis();
+      }
+    });
   }
 
   String get _lightHudText {
     if (_aiBusy) return 'IŞIK\nANALİZ';
-
     final text = _aiLightTip.toLowerCase();
-
     if (text.contains('karanlık') ||
         text.contains('az ışık') ||
-        text.contains('düşük')) {
-      return 'IŞIK\nDÜZELTİLDİ';
-    }
-
-    if (text.contains('parlak') ||
+        text.contains('düşük') ||
+        text.contains('parlak') ||
         text.contains('fazla')) {
       return 'IŞIK\nDÜZELTİLDİ';
     }
-
     if (_aiStatus == 'good') return 'IŞIK\nİYİ';
     return 'IŞIK\nDENGELİ';
   }
 
   String get _compositionHudText {
     if (_subjectLocked) return 'ÖZNE\nKİLİTLİ';
-
     final text = _aiCompositionTip.toLowerCase();
-
     if (text.contains('sol')) return 'KADRAJ\nSOLA';
     if (text.contains('sağ')) return 'KADRAJ\nSAĞA';
-
-    return _spotModeEnabled
-        ? 'MEKAN\nDENGELİ'
-        : 'SAHNE\nDENGELİ';
-  }
-
-  String get _isoHud => _currentIso.toString();
-
-  String get _wbHud {
-    // iris_camera Android tarafında WB'yi auto/lock düzeyinde destekler.
-    // Kelvin override Android'de sunulmuyor.
-    return _currentWb;
+    return _spotModeEnabled ? 'MEKAN\nDENGELİ' : 'SAHNE\nDENGELİ';
   }
 
   @override
@@ -888,8 +674,8 @@ class _CameraScreenState extends State<CameraScreen> {
     if (_initializing) {
       return const Scaffold(
         backgroundColor: Colors.black,
-        body: Center(
-          child: CircularProgressIndicator(),
+        body: SafeArea(
+          child: Center(child: CircularProgressIndicator()),
         ),
       );
     }
@@ -903,20 +689,15 @@ class _CameraScreenState extends State<CameraScreen> {
               Align(
                 alignment: Alignment.centerLeft,
                 child: IconButton(
-                  icon: const Icon(
-                    Icons.close,
-                    color: Colors.white,
-                  ),
                   onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Icons.close, color: Colors.white),
                 ),
               ),
               const Expanded(
                 child: Center(
                   child: Text(
                     'Kamera başlatılamadı.',
-                    style: TextStyle(
-                      color: Colors.white,
-                    ),
+                    style: TextStyle(color: Colors.white),
                   ),
                 ),
               ),
@@ -929,548 +710,408 @@ class _CameraScreenState extends State<CameraScreen> {
     return Scaffold(
       backgroundColor: Colors.black,
       body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final screenW = constraints.maxWidth;
-            final screenH = constraints.maxHeight;
+        child: Column(
+          children: [
+            _buildTopBar(),
+            Expanded(child: _buildPreview()),
+            if (_aiAutoProEnabled) _buildCameraParams(),
+            _buildModes(),
+            _buildBottomControls(),
+          ],
+        ),
+      ),
+    );
+  }
 
-            // Responsive zones:
-            // top bar = ~8%
-            // bottom controls = ~30%
-            // preview takes all remaining space.
-            final topBarH = (screenH * 0.085).clamp(58.0, 82.0);
-            final bottomPanelH = (screenH * 0.29).clamp(210.0, 285.0);
-            final previewTop = topBarH + 4;
-            final previewBottom = bottomPanelH + 6;
-
-            final modeBarBottom = (bottomPanelH * 0.58).clamp(125.0, 170.0);
-            final shutterBottom = (bottomPanelH * 0.10).clamp(20.0, 34.0);
-
-            return Stack(
-              children: [
-                // =====================================================
-                // CAMERA PREVIEW - RESPONSIVE, NO STRETCH
-                // =====================================================
-                Positioned(
-                  top: previewTop,
-                  left: 8,
-                  right: 8,
-                  bottom: previewBottom,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(24),
-                    child: Container(
-                      color: Colors.black,
-                      child: LayoutBuilder(
-                        builder: (context, previewConstraints) {
-                          return GestureDetector(
-                            behavior: HitTestBehavior.opaque,
-                            onTapDown: (details) {
-                              _handlePreviewTap(
-                                details,
-                                previewConstraints,
-                              );
-                            },
-                            child: const SizedBox.expand(
-                              child: iris.IrisCameraPreview(
-                                enableTapToFocus: false,
-                                showFocusIndicator: false,
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
+  Widget _buildTopBar() {
+    return SizedBox(
+      height: 62,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 7),
+        child: Row(
+          children: [
+            _CircleButton(
+              icon: Icons.close,
+              size: 42,
+              onTap: () => Navigator.pop(context),
+            ),
+            const SizedBox(width: 7),
+            Expanded(
+              child: GestureDetector(
+                onTap: _aiBusy || _takingPhoto ? null : _toggleAiAutoPro,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  height: 42,
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  decoration: BoxDecoration(
+                    color: _aiAutoProEnabled
+                        ? const Color(0xFFFFC107)
+                        : const Color(0xFF151A22),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.white12),
                   ),
-                ),
-
-                // =====================================================
-                // GRID
-                // =====================================================
-                if (_showGrid)
-                  Positioned(
-                    top: previewTop,
-                    left: 8,
-                    right: 8,
-                    bottom: previewBottom,
-                    child: const ClipRRect(
-                      borderRadius: BorderRadius.all(
-                        Radius.circular(24),
-                      ),
-                      child: IgnorePointer(
-                        child: _CameraGrid(),
-                      ),
-                    ),
-                  ),
-
-                // =====================================================
-                // SUBJECT LOCK
-                // =====================================================
-                if (_subjectLocked && _subjectPoint != null)
-                  Positioned(
-                    top: previewTop,
-                    left: 8,
-                    right: 8,
-                    bottom: previewBottom,
-                    child: IgnorePointer(
-                      child: LayoutBuilder(
-                        builder: (context, previewConstraints) {
-                          final point = Offset(
-                            _subjectPoint!.dx *
-                                previewConstraints.maxWidth,
-                            _subjectPoint!.dy *
-                                previewConstraints.maxHeight,
-                          );
-
-                          return Stack(
-                            children: [
-                              Positioned(
-                                left: point.dx - 32,
-                                top: point.dy - 32,
-                                child: Container(
-                                  width: 64,
-                                  height: 64,
-                                  decoration: BoxDecoration(
-                                    border: Border.all(
-                                      color: const Color(0xFFFFC107),
-                                      width: 2,
-                                    ),
-                                    borderRadius: BorderRadius.circular(14),
-                                  ),
-                                  child: const Align(
-                                    alignment: Alignment.topRight,
-                                    child: Padding(
-                                      padding: EdgeInsets.all(4),
-                                      child: Icon(
-                                        Icons.lock,
-                                        size: 15,
-                                        color: Color(0xFFFFC107),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-
-                // =====================================================
-                // TOP BAR
-                // =====================================================
-                Positioned(
-                  top: 8,
-                  left: 12,
-                  right: 12,
-                  height: topBarH - 8,
                   child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      _CircleButton(
-                        icon: Icons.close,
-                        onTap: () => Navigator.pop(context),
+                      Icon(
+                        Icons.auto_awesome,
+                        size: 17,
+                        color: _aiAutoProEnabled ? Colors.black : Colors.white,
                       ),
-                      const Spacer(),
-                      GestureDetector(
-                        onTap: _toggleAiAutoPro,
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 180),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 15,
-                            vertical: 10,
-                          ),
-                          decoration: BoxDecoration(
-                            color: _aiAutoProEnabled
-                                ? const Color(0xFFFFC107)
-                                : Colors.black.withOpacity(.68),
-                            borderRadius: BorderRadius.circular(18),
-                            border: Border.all(
-                              color: _aiAutoProEnabled
-                                  ? const Color(0xFFFFC107)
-                                  : Colors.white24,
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.auto_awesome,
-                                size: 18,
-                                color: _aiAutoProEnabled
-                                    ? Colors.black
-                                    : Colors.white,
-                              ),
-                              const SizedBox(width: 7),
-                              Text(
-                                _aiAutoProEnabled
-                                    ? 'AI AUTO PRO  AÇIK'
-                                    : 'AI AUTO PRO',
-                                style: TextStyle(
-                                  color: _aiAutoProEnabled
-                                      ? Colors.black
-                                      : Colors.white,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
-                            ],
+                      const SizedBox(width: 6),
+                      Flexible(
+                        child: Text(
+                          _aiAutoProEnabled ? 'AI AUTO PRO' : 'AI AUTO PRO',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color:
+                                _aiAutoProEnabled ? Colors.black : Colors.white,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w900,
                           ),
                         ),
-                      ),
-                      const Spacer(),
-                      _CircleButton(
-                        icon: _showGrid ? Icons.grid_on : Icons.grid_off,
-                        onTap: () {
-                          setState(() => _showGrid = !_showGrid);
-                        },
-                      ),
-                      const SizedBox(width: 8),
-                      _CircleButton(
-                        icon: _spotModeEnabled
-                            ? Icons.location_on
-                            : Icons.location_on_outlined,
-                        onTap: _toggleSpotMode,
                       ),
                     ],
                   ),
                 ),
+              ),
+            ),
+            const SizedBox(width: 7),
+            _CircleButton(
+              icon: _flashIcon,
+              size: 42,
+              onTap: _cycleFlash,
+            ),
+            const SizedBox(width: 6),
+            _CircleButton(
+              icon: _showGrid ? Icons.grid_on : Icons.grid_off,
+              size: 42,
+              onTap: () => setState(() => _showGrid = !_showGrid),
+            ),
+            const SizedBox(width: 6),
+            _CircleButton(
+              icon: _spotModeEnabled
+                  ? Icons.location_on
+                  : Icons.location_on_outlined,
+              size: 42,
+              onTap: _toggleSpotMode,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
-                // =====================================================
-                // AI MAIN TIP
-                // =====================================================
-                if (_aiAutoProEnabled)
-                  Positioned(
-                    top: previewTop + 16,
-                    left: 20,
-                    right: 20,
-                    child: Center(
-                      child: Container(
-                        constraints: BoxConstraints(
-                          maxWidth: min(screenW - 40, 340),
-                        ),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 13,
-                          vertical: 7,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(.62),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            if (_aiBusy)
-                              const SizedBox(
-                                width: 15,
-                                height: 15,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Color(0xFFFFC107),
-                                ),
-                              )
-                            else
-                              const Icon(
-                                Icons.auto_awesome,
-                                size: 16,
-                                color: Color(0xFFFFC107),
-                              ),
-                            const SizedBox(width: 8),
-                            Flexible(
-                              child: Text(
-                                _aiBusy
-                                    ? 'Sahne analiz ediliyor...'
-                                    : _aiMainTip,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
+  Widget _buildPreview() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(8, 2, 8, 6),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(22),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            LayoutBuilder(
+              builder: (context, constraints) {
+                return GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTapDown: (details) =>
+                      _handlePreviewTap(details, constraints),
+                  child: const iris.IrisCameraPreview(
+                    enableTapToFocus: false,
+                    showFocusIndicator: false,
                   ),
-
-                // =====================================================
-                // RIGHT HUD - stays inside preview
-                // =====================================================
-                if (_aiAutoProEnabled)
-                  Positioned(
-                    top: previewTop + 96,
-                    right: 18,
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(
-                        maxHeight: max(
-                          170,
-                          screenH - previewTop - previewBottom - 115,
-                        ),
-                      ),
-                      child: Container(
-                        width: 74,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 10,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(.66),
-                          borderRadius: BorderRadius.circular(22),
-                          border: Border.all(
-                            color: Colors.white12,
-                          ),
-                        ),
-                        child: SingleChildScrollView(
-                          physics: const NeverScrollableScrollPhysics(),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(
-                                Icons.center_focus_strong,
-                                color: Colors.white,
-                                size: 21,
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                _currentFocus,
-                                style: const TextStyle(
-                                  color: Color(0xFFFFC107),
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w900,
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                '${_currentZoom.toStringAsFixed(1)}x',
-                                style: const TextStyle(
-                                  color: Colors.white60,
-                                  fontSize: 9,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                              const Padding(
-                                padding: EdgeInsets.symmetric(vertical: 7),
-                                child: Divider(
-                                  height: 1,
-                                  color: Colors.white12,
-                                ),
-                              ),
-                              const Icon(
-                                Icons.landscape_outlined,
-                                color: Colors.white,
-                                size: 20,
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                _compositionHudText,
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 9.2,
-                                  height: 1.12,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                              const Padding(
-                                padding: EdgeInsets.symmetric(vertical: 7),
-                                child: Divider(
-                                  height: 1,
-                                  color: Colors.white12,
-                                ),
-                              ),
-                              const Icon(
-                                Icons.light_mode_outlined,
-                                color: Color(0xFFFFC107),
-                                size: 20,
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                _lightHudText,
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 9.2,
-                                  height: 1.12,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-
-                // =====================================================
-                // BOTTOM PANEL
-                // =====================================================
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  height: bottomPanelH,
-                  child: IgnorePointer(
-                    child: Container(
-                      decoration: const BoxDecoration(
-                        color: Color(0xFF050608),
-                        borderRadius: BorderRadius.vertical(
-                          top: Radius.circular(26),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-
-                // =====================================================
-                // CAMERA PARAMS
-                // =====================================================
-                if (_aiAutoProEnabled)
-                  Positioned(
-                    left: 18,
-                    right: 18,
-                    bottom: bottomPanelH + 10,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(.72),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.white12),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          _Param(
-                            label: 'ISO',
-                            value: _isoHud,
-                          ),
-                          _Param(
-                            label: 'S',
-                            value: _shutterHud,
-                          ),
-                          _Param(
-                            label: 'ODAK',
-                            value: _currentFocus,
-                          ),
-                          _Param(
-                            label: 'WB',
-                            value: _wbHud,
-                          ),
-                          _Param(
-                            label: 'EV',
-                            value:
-                                '${_currentEv >= 0 ? '+' : ''}${_currentEv.toStringAsFixed(1)}',
-                            accent: true,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                // =====================================================
-                // MODES
-                // =====================================================
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: modeBarBottom,
-                  child: SizedBox(
-                    height: 52,
-                    child: ListView.separated(
-                      scrollDirection: Axis.horizontal,
-                      padding: const EdgeInsets.symmetric(horizontal: 14),
-                      itemCount: _modes.length,
-                      separatorBuilder: (_, __) =>
-                          const SizedBox(width: 8),
-                      itemBuilder: (context, index) {
-                        final mode = _modes[index];
-                        final selected = mode == _selectedMode;
-
-                        return GestureDetector(
-                          onTap: () => _selectMode(mode),
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 180),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 18,
-                              vertical: 10,
-                            ),
-                            decoration: BoxDecoration(
-                              color: selected
-                                  ? const Color(0xFFFFC107)
-                                  : Colors.black.withOpacity(.62),
-                              borderRadius: BorderRadius.circular(24),
-                            ),
-                            child: Center(
-                              child: Text(
-                                mode,
-                                style: TextStyle(
-                                  color: selected
-                                      ? Colors.black
-                                      : Colors.white,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ),
-
-                // =====================================================
-                // BOTTOM CAMERA CONTROLS
-                // =====================================================
-                Positioned(
-                  left: 25,
-                  right: 25,
-                  bottom: shutterBottom,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      _CircleButton(
-                        icon: Icons.photo_library_outlined,
-                        size: 56,
-                        onTap: _pickFromGallery,
-                      ),
-                      GestureDetector(
-                        onTap: _takePhoto,
-                        child: Container(
-                          width: 86,
-                          height: 86,
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: Colors.white,
-                              width: 4,
-                            ),
-                          ),
+                );
+              },
+            ),
+            if (_showGrid)
+              const IgnorePointer(child: _CameraGrid()),
+            if (_subjectLocked && _subjectPoint != null)
+              IgnorePointer(
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final point = Offset(
+                      _subjectPoint!.dx * constraints.maxWidth,
+                      _subjectPoint!.dy * constraints.maxHeight,
+                    );
+                    return Stack(
+                      children: [
+                        Positioned(
+                          left: point.dx - 30,
+                          top: point.dy - 30,
                           child: Container(
-                            decoration: const BoxDecoration(
-                              shape: BoxShape.circle,
+                            width: 60,
+                            height: 60,
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color: const Color(0xFFFFC107),
+                                width: 2,
+                              ),
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            child: const Align(
+                              alignment: Alignment.topRight,
+                              child: Padding(
+                                padding: EdgeInsets.all(4),
+                                child: Icon(
+                                  Icons.lock,
+                                  size: 14,
+                                  color: Color(0xFFFFC107),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ),
+            if (_aiAutoProEnabled)
+              Positioned(
+                top: 12,
+                left: 12,
+                right: 12,
+                child: Center(
+                  child: Container(
+                    constraints: const BoxConstraints(maxWidth: 340),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(.68),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (_aiBusy)
+                          const SizedBox(
+                            width: 15,
+                            height: 15,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
                               color: Color(0xFFFFC107),
                             ),
+                          )
+                        else
+                          const Icon(
+                            Icons.auto_awesome,
+                            size: 16,
+                            color: Color(0xFFFFC107),
+                          ),
+                        const SizedBox(width: 7),
+                        Flexible(
+                          child: Text(
+                            _aiBusy ? 'Sahne analiz ediliyor...' : _aiMainTip,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                         ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            if (_aiAutoProEnabled)
+              Positioned(
+                right: 10,
+                top: 70,
+                child: Container(
+                  width: 70,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 7, vertical: 9),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(.66),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: Colors.white12),
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.center_focus_strong,
+                          color: Colors.white, size: 19),
+                      const SizedBox(height: 3),
+                      Text(
+                        _currentFocus,
+                        style: const TextStyle(
+                          color: Color(0xFFFFC107),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w900,
+                        ),
                       ),
-                      _CircleButton(
-                        icon: Icons.cameraswitch_outlined,
-                        size: 56,
-                        onTap: _toggleCamera,
+                      Text(
+                        '${_currentZoom.toStringAsFixed(1)}x',
+                        style: const TextStyle(
+                          color: Colors.white60,
+                          fontSize: 8.5,
+                        ),
+                      ),
+                      const Divider(color: Colors.white12),
+                      Text(
+                        _compositionHudText,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 8.5,
+                          height: 1.1,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const Divider(color: Colors.white12),
+                      Text(
+                        _lightHudText,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 8.5,
+                          height: 1.1,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ],
                   ),
                 ),
-              ],
-            );
-          },
+              ),
+          ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildCameraParams() {
+    return Container(
+      height: 48,
+      margin: const EdgeInsets.fromLTRB(10, 0, 10, 5),
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(
+        color: const Color(0xFF11151C),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.white10),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          _Param(label: 'ISO', value: '$_currentIso'),
+          _Param(label: 'S', value: _shutterHud),
+          _Param(label: 'ODAK', value: _currentFocus),
+          _Param(label: 'WB', value: _currentWb),
+          _Param(
+            label: 'EV',
+            value:
+                '${_currentEv >= 0 ? '+' : ''}${_currentEv.toStringAsFixed(1)}',
+            accent: true,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildModes() {
+    return Container(
+      color: const Color(0xFF050608),
+      height: 54,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        itemCount: _modes.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 7),
+        itemBuilder: (context, index) {
+          final mode = _modes[index];
+          final selected = mode == _selectedMode;
+          return GestureDetector(
+            onTap: () => _selectMode(mode),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 160),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              decoration: BoxDecoration(
+                color: selected
+                    ? const Color(0xFFFFC107)
+                    : const Color(0xFF151A22),
+                borderRadius: BorderRadius.circular(22),
+                border: Border.all(color: Colors.white10),
+              ),
+              alignment: Alignment.center,
+              child: Text(
+                mode,
+                style: TextStyle(
+                  color: selected ? Colors.black : Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildBottomControls() {
+    return Container(
+      height: 112,
+      color: const Color(0xFF050608),
+      padding: const EdgeInsets.fromLTRB(24, 8, 24, 12),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          _CircleButton(
+            icon: Icons.photo_library_outlined,
+            size: 54,
+            onTap: _pickFromGallery,
+          ),
+          GestureDetector(
+            onTap: _takePhoto,
+            child: Container(
+              width: 82,
+              height: 82,
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 4),
+              ),
+              child: Container(
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Color(0xFFFFC107),
+                ),
+                child: _takingPhoto
+                    ? const Padding(
+                        padding: EdgeInsets.all(19),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 3,
+                          color: Colors.black,
+                        ),
+                      )
+                    : null,
+              ),
+            ),
+          ),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _CircleButton(
+                icon: Icons.cameraswitch_outlined,
+                size: 54,
+                onTap: _toggleCamera,
+              ),
+              const SizedBox(height: 3),
+              Text(
+                'Flaş $_flashLabel',
+                style: const TextStyle(
+                  color: Colors.white38,
+                  fontSize: 8,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -1491,6 +1132,7 @@ class _Param extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Text(
           label,
@@ -1504,9 +1146,7 @@ class _Param extends StatelessWidget {
         Text(
           value,
           style: TextStyle(
-            color: accent
-                ? const Color(0xFFFFC107)
-                : Colors.white,
+            color: accent ? const Color(0xFFFFC107) : Colors.white,
             fontSize: 11,
             fontWeight: FontWeight.w800,
           ),
@@ -1518,7 +1158,7 @@ class _Param extends StatelessWidget {
 
 class _CircleButton extends StatelessWidget {
   final IconData icon;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
   final double size;
 
   const _CircleButton({
@@ -1536,14 +1176,10 @@ class _CircleButton extends StatelessWidget {
         height: size,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: Colors.black.withOpacity(.68),
+          color: const Color(0xFF151A22),
           border: Border.all(color: Colors.white12),
         ),
-        child: Icon(
-          icon,
-          color: Colors.white,
-          size: size * .48,
-        ),
+        child: Icon(icon, color: Colors.white, size: size * .46),
       ),
     );
   }
@@ -1565,7 +1201,7 @@ class _CameraGridPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.white.withOpacity(.30)
+      ..color = Colors.white.withOpacity(.28)
       ..strokeWidth = 1;
 
     final x1 = size.width / 3;
@@ -1573,26 +1209,10 @@ class _CameraGridPainter extends CustomPainter {
     final y1 = size.height / 3;
     final y2 = size.height * 2 / 3;
 
-    canvas.drawLine(
-      Offset(x1, 0),
-      Offset(x1, size.height),
-      paint,
-    );
-    canvas.drawLine(
-      Offset(x2, 0),
-      Offset(x2, size.height),
-      paint,
-    );
-    canvas.drawLine(
-      Offset(0, y1),
-      Offset(size.width, y1),
-      paint,
-    );
-    canvas.drawLine(
-      Offset(0, y2),
-      Offset(size.width, y2),
-      paint,
-    );
+    canvas.drawLine(Offset(x1, 0), Offset(x1, size.height), paint);
+    canvas.drawLine(Offset(x2, 0), Offset(x2, size.height), paint);
+    canvas.drawLine(Offset(0, y1), Offset(size.width, y1), paint);
+    canvas.drawLine(Offset(0, y2), Offset(size.width, y2), paint);
   }
 
   @override
