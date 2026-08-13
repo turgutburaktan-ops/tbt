@@ -1,5 +1,6 @@
 from pathlib import Path
 import glob
+import re
 
 
 def replace_method(text: str, start_sig: str, next_sig: str, replacement: str) -> str:
@@ -16,11 +17,27 @@ def patch_flutter_camera() -> None:
     path = Path('lib/screens/camera_screen.dart')
     text = path.read_text()
 
-    # Keep the viewfinder in the same 4:3 family as still capture (3:4 in portrait).
-    # This prevents the tall arbitrary container from cropping a different part of
-    # the sensor than the saved JPEG.
+    # Five clear photographic intents, no overlapping legacy modes.
+    text = re.sub(r"String _selectedMode = '[^']+';", "String _selectedMode = 'Manzara';", text, count=1)
+    text = re.sub(
+        r"final List<String> _modes = const \[[\s\S]*?\];",
+        "final List<String> _modes = const [\n    'Portre',\n    'Manzara',\n    'Spor',\n    'Gece',\n    'Makro',\n  ];",
+        text,
+        count=1,
+    )
+
+    # Keep the photo viewfinder in 4:3 sensor family (3:4 in portrait). The full
+    # composition is then letterboxed by native PreviewView instead of stretched or
+    # silently cropped by an arbitrary tall Flutter container.
     old = '            Expanded(child: _buildPreview()),'
-    new = '''            Expanded(\n              child: Center(\n                child: AspectRatio(\n                  aspectRatio: 3 / 4,\n                  child: _buildPreview(),\n                ),\n              ),\n            ),'''
+    new = '''            Expanded(
+              child: Center(
+                child: AspectRatio(
+                  aspectRatio: 3 / 4,
+                  child: _buildPreview(),
+                ),
+              ),
+            ),'''
     if old in text:
         text = text.replace(old, new, 1)
 
@@ -34,54 +51,39 @@ def patch_flutter_camera() -> None:
     switch (_selectedMode) {
       case 'Portre':
         iso = 100;
-        shutter = _durationForDenominator(200);
+        shutter = _durationForDenominator(250);
         ev = -0.10;
         zoom = 1.5;
-        label = 'PORTRE • yüz/netlik';
+        label = 'PORTRE • YÜZ VE TEN';
+        break;
+      case 'Spor':
+        iso = 250;
+        shutter = _durationForDenominator(1000);
+        ev = -0.10;
+        zoom = 1.0;
+        label = 'SPOR • HIZ ÖNCELİĞİ';
         break;
       case 'Gece':
-        iso = 500;
-        shutter = _durationForDenominator(30);
-        ev = -0.10;
-        zoom = 1.0;
-        label = 'GECE • düşük ışık';
-        break;
-      case 'Sinematik':
-        iso = 100;
-        shutter = _durationForDenominator(60);
-        ev = -0.45;
-        zoom = 1.15;
-        label = 'SİNEMATİK • highlight/atmosfer';
-        break;
-      case 'Hareket':
-        iso = 200;
-        shutter = _durationForDenominator(500);
-        ev = -0.10;
-        zoom = 1.0;
-        label = 'HAREKET • hızlı shutter';
-        break;
-      case 'Astro':
-        iso = 1000;
-        shutter = const Duration(milliseconds: 1000);
+        iso = 640;
+        shutter = _durationForDenominator(40);
         ev = -0.20;
         zoom = 1.0;
-        label = 'ASTRO • uzun pozlama';
+        label = 'GECE • IŞIK KORUMA';
         break;
-      case 'Pro':
-        iso = 100;
-        shutter = _durationForDenominator(125);
-        ev = 0.0;
-        zoom = 1.0;
-        label = 'PRO • nötr';
-        break;
-      case 'Normal':
-      case 'Fotoğraf':
-      default:
-        iso = 100;
-        shutter = _durationForDenominator(125);
+      case 'Makro':
+        iso = 125;
+        shutter = _durationForDenominator(200);
         ev = -0.05;
         zoom = 1.0;
-        label = 'NORMAL • dengeli';
+        label = 'MAKRO • YAKIN NETLİK';
+        break;
+      case 'Manzara':
+      default:
+        iso = 100;
+        shutter = _durationForDenominator(160);
+        ev = -0.10;
+        zoom = 1.0;
+        label = 'MANZARA • DETAY VE DİNAMİK ARALIK';
         break;
     }
 
@@ -90,7 +92,14 @@ def patch_flutter_camera() -> None:
       await _camera.setFocusMode(_subjectLocked ? iris.FocusMode.locked : iris.FocusMode.auto);
     } catch (_) {}
     try { await _camera.setZoom(zoom); } catch (_) {}
-    if (_subjectLocked && _subjectPoint != null) {
+
+    if (_selectedMode == 'Makro' && !_subjectLocked) {
+      try {
+        await _camera.setFocusMode(iris.FocusMode.auto);
+        await _camera.setFocus(point: const Offset(0.5, 0.5));
+        await _camera.setExposurePoint(const Offset(0.5, 0.5));
+      } catch (_) {}
+    } else if (_subjectLocked && _subjectPoint != null) {
       try {
         await _camera.setFocus(point: _subjectPoint!);
         await _camera.setExposurePoint(_subjectPoint!);
@@ -106,7 +115,7 @@ def patch_flutter_camera() -> None:
         _currentEv = ev;
         _currentZoom = zoom;
         _currentFocus = _subjectLocked ? 'AF-L' : 'AF';
-        _currentWb = _selectedMode == 'Sinematik' ? 'LOCK' : 'AUTO';
+        _currentWb = 'AUTO';
         if (_aiAutoProEnabled) _lastAiAppliedSummary = '$label • sensörde aktif';
       });
     }
@@ -115,123 +124,108 @@ def patch_flutter_camera() -> None:
 '''
     text = replace_method(text, '  Future<void> _applyModeBaseSettings() async {', '  Future<void> _applyAiDecision() async {', base)
 
-    # Replace only the final mode-policy block inserted by the mode-aware patch.
-    ai_start = text.find('  Future<void> _applyAiDecision() async {')
-    policy_start = text.find("    String modeReason = 'Dengeli sahne';", ai_start)
-    policy_end = text.find('    shutter = await _clampExposureDuration(shutter);', policy_start)
-    if policy_start < 0 or policy_end < 0:
-        raise SystemExit('mode-aware AI policy block not found')
+    ai = r'''  Future<void> _applyAiDecision() async {
+    final combined = [
+      _aiMainTip,
+      _aiLightTip,
+      _aiCompositionTip,
+      _aiSubjectTip,
+    ].join(' ').toLowerCase();
 
-    policy = r'''    String modeReason = 'Dengeli sahne';
-    final moving = subjectPriority || _movementLevel > 0.8;
+    final lowLight = combined.contains('karanlık') ||
+        combined.contains('az ışık') ||
+        combined.contains('ışık düşük') ||
+        combined.contains('düşük ışık');
+    final veryLowLight = combined.contains('çok karanlık') ||
+        combined.contains('çok düşük ışık');
+    final tooBright = combined.contains('fazla parlak') ||
+        combined.contains('çok parlak') ||
+        combined.contains('aşırı ışık') ||
+        combined.contains('ışığı azalt') ||
+        combined.contains('pozlamayı azalt') ||
+        combined.contains('parlaklığı düşür') ||
+        combined.contains('parlak alan') ||
+        combined.contains('highlight');
+    final subjectPriority = _subjectLocked ||
+        combined.contains('kişi') ||
+        combined.contains('insan') ||
+        combined.contains('yüz') ||
+        _selectedMode == 'Portre';
+    final moving = _movementLevel > 0.8 || _selectedMode == 'Spor';
+
+    int iso;
+    Duration shutter;
+    double ev;
+    String reason;
 
     switch (_selectedMode) {
       case 'Portre':
-        _currentWb = 'AUTO';
-        iso = tooBright ? 100 : (veryLowLight ? 800 : (lowLight ? 400 : 100));
-        shutter = _durationForDenominator(tooBright ? 320 : (moving ? 250 : (lowLight || veryLowLight ? 125 : 200)));
-        ev = tooBright ? -0.40 : (veryLowLight ? 0.00 : -0.08);
-        modeReason = 'Portre • yüz ve ten önceliği';
+        iso = veryLowLight ? 800 : (lowLight ? 400 : 100);
+        shutter = _durationForDenominator(veryLowLight ? 125 : (lowLight ? 160 : 250));
+        ev = tooBright ? -0.45 : (lowLight ? 0.05 : -0.10);
+        reason = 'Portre • yüz netliği ve ten korunuyor';
         break;
-
+      case 'Spor':
+        iso = veryLowLight ? 2000 : (lowLight ? 1250 : 250);
+        shutter = _durationForDenominator(veryLowLight ? 640 : (lowLight ? 800 : 1000));
+        ev = tooBright ? -0.35 : -0.10;
+        reason = 'Spor • hareket donduruluyor';
+        break;
       case 'Gece':
-        _currentWb = 'AUTO';
-        iso = tooBright ? 100 : (veryLowLight ? (moving ? 1250 : 1000) : (lowLight ? 640 : 320));
-        shutter = tooBright
-            ? _durationForDenominator(100)
-            : (moving ? _durationForDenominator(80) : (veryLowLight ? _durationForDenominator(20) : _durationForDenominator(30)));
-        ev = tooBright ? -0.45 : -0.08;
-        modeReason = moving ? 'Gece • hareket netliği' : 'Gece • gölge detayı';
-        break;
-
-      case 'Sinematik':
-        // Still-photo cinematic profile: preserve practical lights/highlights,
-        // avoid crushed blacks, use a modest crop, and keep exposure stable.
-        _currentWb = 'LOCK';
-        if (tooBright) {
-          iso = 100;
-          shutter = _durationForDenominator(250);
-          ev = -0.70;
-          modeReason = 'Sinematik • highlight koruması';
-        } else if (veryLowLight) {
-          iso = moving ? 800 : 640;
-          shutter = _durationForDenominator(moving ? 100 : 50);
-          ev = -0.28;
-          modeReason = 'Sinematik • düşük ışık atmosferi';
-        } else if (lowLight) {
-          iso = moving ? 500 : 320;
-          shutter = _durationForDenominator(moving ? 100 : 60);
-          ev = -0.35;
-          modeReason = 'Sinematik • kontrollü gölgeler';
+        if (moving || subjectPriority) {
+          iso = veryLowLight ? 2000 : 1250;
+          shutter = _durationForDenominator(80);
+          reason = 'Gece • hareket netliği';
         } else {
-          iso = 100;
-          shutter = _durationForDenominator(moving ? 100 : 60);
-          ev = -0.45;
-          modeReason = 'Sinematik • filmik ton';
+          iso = veryLowLight ? 1250 : (lowLight ? 800 : 640);
+          shutter = _durationForDenominator(veryLowLight ? 25 : 40);
+          reason = 'Gece • gölge ve ışık dengesi';
         }
+        ev = tooBright ? -0.55 : -0.15;
         break;
-
-      case 'Hareket':
-        _currentWb = 'AUTO';
-        iso = tooBright ? 100 : (veryLowLight ? 1600 : (lowLight ? 800 : 200));
-        shutter = _durationForDenominator(tooBright ? 1000 : (veryLowLight ? 250 : (lowLight ? 320 : 500)));
-        ev = tooBright ? -0.35 : -0.05;
-        modeReason = 'Hareket • shutter önceliği';
+      case 'Makro':
+        iso = veryLowLight ? 1000 : (lowLight ? 500 : 125);
+        shutter = _durationForDenominator(veryLowLight ? 100 : (lowLight ? 125 : 200));
+        ev = tooBright ? -0.35 : (lowLight ? 0.05 : -0.05);
+        reason = 'Makro • yakın netlik ve mikro titreşim kontrolü';
         break;
-
-      case 'Astro':
-        _currentWb = 'LOCK';
-        if (moving) {
-          iso = 800;
-          shutter = _durationForDenominator(30);
-          ev = -0.10;
-          modeReason = 'Astro • telefonu sabitle';
-        } else {
-          iso = veryLowLight ? 1600 : (lowLight ? 1200 : 600);
-          shutter = veryLowLight ? const Duration(milliseconds: 1500) : const Duration(milliseconds: 1000);
-          ev = -0.18;
-          modeReason = 'Astro • uzun pozlama';
-        }
-        break;
-
-      case 'Pro':
-        _currentWb = 'AUTO';
-        iso = tooBright ? 100 : (veryLowLight ? 800 : (lowLight ? 400 : 100));
-        shutter = _durationForDenominator(tooBright ? 320 : (moving ? 160 : (lowLight ? 80 : 125)));
-        ev = tooBright ? -0.45 : -0.05;
-        modeReason = 'Pro • nötr ölçüm';
-        break;
-
-      case 'Normal':
-      case 'Fotoğraf':
+      case 'Manzara':
       default:
-        _currentWb = 'AUTO';
-        if (tooBright) {
-          iso = 100;
-          shutter = _durationForDenominator(320);
-          ev = -0.35;
-          modeReason = 'Normal • parlak alan koruması';
-        } else if (veryLowLight) {
-          iso = moving ? 800 : 640;
-          shutter = _durationForDenominator(moving ? 100 : 50);
-          ev = 0.00;
-          modeReason = 'Normal • düşük ışık';
-        } else if (lowLight) {
-          iso = moving ? 400 : 320;
-          shutter = _durationForDenominator(moving ? 125 : 80);
-          ev = -0.02;
-          modeReason = 'Normal • ışık dengesi';
-        } else {
-          iso = 100;
-          shutter = _durationForDenominator(moving ? 160 : 125);
-          ev = -0.05;
-          modeReason = 'Normal • doğal denge';
-        }
+        iso = veryLowLight ? 800 : (lowLight ? 400 : 100);
+        shutter = _durationForDenominator(veryLowLight ? 50 : (lowLight ? 80 : 160));
+        ev = tooBright ? -0.45 : (lowLight ? 0.00 : -0.10);
+        reason = 'Manzara • detay ve parlak alan koruması';
         break;
     }
 
+    shutter = await _clampExposureDuration(shutter);
+    await _applyLiveManualExposure(iso: iso, shutter: shutter, ev: ev);
+
+    try {
+      if (_subjectLocked && _subjectPoint != null) {
+        await _camera.setFocus(point: _subjectPoint!);
+        await _camera.setExposurePoint(_subjectPoint!);
+        await _camera.setFocusMode(iris.FocusMode.locked);
+      } else {
+        await _camera.setFocusMode(iris.FocusMode.auto);
+        await _camera.setFocus(point: const Offset(0.5, 0.5));
+        await _camera.setExposurePoint(const Offset(0.5, 0.5));
+      }
+    } catch (_) {}
+
+    if (mounted) {
+      setState(() {
+        _currentIso = iso;
+        _currentShutter = shutter;
+        _currentEv = ev;
+        _currentFocus = _subjectLocked ? 'AF-L' : 'AF';
+        _lastAiAppliedSummary = reason;
+      });
+    }
+  }
+
 '''
-    text = text[:policy_start] + policy + text[policy_end:]
+    text = replace_method(text, '  Future<void> _applyAiDecision() async {', '  Future<File> _captureToTempFile({required bool useProOverrides}) async {', ai)
     path.write_text(text)
 
 
@@ -242,19 +236,25 @@ def patch_native_preview() -> None:
     root = Path(matches[-1])
     path = root / 'android/src/main/kotlin/com/anies1212/iris_camera/IrisCameraPlugin.kt'
     text = path.read_text()
-    marker = '                val previewView = PreviewView(context)\n'
-    addition = marker + '                previewView.scaleType = PreviewView.ScaleType.FILL_CENTER\n'
-    if 'previewView.scaleType = PreviewView.ScaleType.FILL_CENTER' not in text:
+
+    # Official CameraX behavior: FIT_CENTER preserves the full source aspect ratio
+    # and letterboxes when the PreviewView does not match the sensor stream.
+    old_fill = '                previewView.scaleType = PreviewView.ScaleType.FILL_CENTER\n'
+    fit = '                previewView.scaleType = PreviewView.ScaleType.FIT_CENTER\n'
+    if old_fill in text:
+        text = text.replace(old_fill, fit, 1)
+    elif fit not in text:
+        marker = '                previewView.implementationMode = PreviewView.ImplementationMode.COMPATIBLE\n'
         if marker not in text:
-            raise SystemExit('PreviewView creation marker not found')
-        text = text.replace(marker, addition, 1)
+            raise SystemExit('PreviewView implementation marker not found')
+        text = text.replace(marker, marker + fit, 1)
     path.write_text(text)
 
 
 def main() -> None:
     patch_flutter_camera()
     patch_native_preview()
-    print('Professional camera V6 applied: 3:4 portrait viewport, explicit FILL_CENTER, distinct mode policies')
+    print('Professional V6 camera applied: Portre, Manzara, Spor, Gece, Makro + true 3:4/FIT_CENTER preview')
 
 
 if __name__ == '__main__':
