@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 import '../models/photo_spot.dart';
 import '../models/spot_meetup.dart';
+import 'chat_service.dart';
 
 class MeetupService {
   MeetupService._();
@@ -88,7 +89,7 @@ class MeetupService {
 
     final ref = _firestore.collection(collection).doc(meetupId);
 
-    await _firestore.runTransaction((transaction) async {
+    final hostId = await _firestore.runTransaction<String>((transaction) async {
       final snapshot = await transaction.get(ref);
       if (!snapshot.exists) throw Exception('Buluşma artık mevcut değil.');
 
@@ -101,18 +102,37 @@ class MeetupService {
       final participants = (data['participantIds'] as List? ?? const [])
           .map((item) => item.toString())
           .toList();
+      final hostId = (data['hostId'] ?? '').toString();
 
-      if (participants.contains(user.uid)) return;
-      if (participants.length >= capacity) {
-        throw Exception('Bu buluşmada boş yer kalmadı.');
+      if (hostId.isEmpty) {
+        throw Exception('Buluşmanın sahibi bulunamadı.');
       }
 
-      participants.add(user.uid);
-      transaction.update(ref, {
-        'participantIds': participants,
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
+      if (!participants.contains(user.uid)) {
+        if (participants.length >= capacity) {
+          throw Exception('Bu buluşmada boş yer kalmadı.');
+        }
+
+        participants.add(user.uid);
+        transaction.update(ref, {
+          'participantIds': participants,
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+      }
+
+      return hostId;
     });
+
+    // Katılan kişi ile buluşma sahibini otomatik olarak mesajlaşmaya bağla.
+    // Böylece Birlikte Git yalnızca katılım kaydı değil, gerçek koordinasyon
+    // akışı oluşturur ve konuşma Mesajlar kutusunda görünür.
+    if (hostId != user.uid) {
+      await ChatService.instance.ensureDirectThread(
+        hostId,
+        sourceType: 'meetup',
+        sourceId: meetupId,
+      );
+    }
   }
 
   Future<void> leave(String meetupId) async {
