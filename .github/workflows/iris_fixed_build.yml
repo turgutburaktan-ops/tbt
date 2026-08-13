@@ -6,6 +6,10 @@ on:
     branches:
       - main
 
+concurrency:
+  group: iris-fixed-android-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -33,41 +37,40 @@ jobs:
           rm -rf android
           flutter create --platforms=android .
 
-      - name: Configure Android + Firebase + Maps
+      - name: Configure Android Firebase and Maps
         env:
           MAPS_API_KEY: ${{ secrets.MAPS_API_KEY }}
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          import os, re
+          import os
+          import re
 
           gradle = Path('android/app/build.gradle')
           gradle_kts = Path('android/app/build.gradle.kts')
-          p = gradle if gradle.exists() else gradle_kts
-          if not p.exists():
-              raise Exception('Android app Gradle dosyasi bulunamadi')
+          app_gradle = gradle if gradle.exists() else gradle_kts
+          if not app_gradle.exists():
+              raise SystemExit('Android app Gradle file not found')
 
-          text = p.read_text()
+          text = app_gradle.read_text()
           text = text.replace('compileSdkVersion flutter.compileSdkVersion', 'compileSdkVersion 35')
           text = text.replace('compileSdk = flutter.compileSdkVersion', 'compileSdk = 35')
           text = text.replace('minSdkVersion flutter.minSdkVersion', 'minSdkVersion 26')
           text = text.replace('minSdk = flutter.minSdkVersion', 'minSdk = 26')
-          p.write_text(text)
+          app_gradle.write_text(text)
 
           settings = Path('android/settings.gradle')
           settings_kts = Path('android/settings.gradle.kts')
-          s = settings if settings.exists() else settings_kts
-          st = s.read_text()
-
-          if 'org.jetbrains.kotlin.android' in st:
-              st = re.sub(
-                  r'(org\.jetbrains\.kotlin\.android["\')\s]+version\s+["\'])[0-9.]+',
-                  r'\g<1>1.9.24',
-                  st,
-              )
+          settings_file = settings if settings.exists() else settings_kts
+          st = settings_file.read_text()
+          st = re.sub(
+              r'(org\.jetbrains\.kotlin\.android[^\n]*version\s+[\"\'])[0-9.]+',
+              r'\g<1>1.9.24',
+              st,
+          )
 
           if 'com.google.gms.google-services' not in st:
-              if s.suffix == '.kts':
+              if settings_file.suffix == '.kts':
                   st = st.replace(
                       'plugins {',
                       'plugins {\n    id("com.google.gms.google-services") version "4.4.2" apply false',
@@ -79,85 +82,76 @@ jobs:
                       'plugins {\n    id "com.google.gms.google-services" version "4.4.2" apply false',
                       1,
                   )
-          s.write_text(st)
+          settings_file.write_text(st)
 
-          text = p.read_text()
+          text = app_gradle.read_text()
           if 'com.google.gms.google-services' not in text:
-              if p.suffix == '.kts':
+              if app_gradle.suffix == '.kts':
                   text = text.replace('plugins {', 'plugins {\n    id("com.google.gms.google-services")', 1)
               else:
                   text = text.replace('plugins {', 'plugins {\n    id "com.google.gms.google-services"', 1)
-              p.write_text(text)
+              app_gradle.write_text(text)
 
           manifest = Path('android/app/src/main/AndroidManifest.xml')
           mt = manifest.read_text()
-
-          perms = [
+          permissions = [
               '<uses-permission android:name="android.permission.INTERNET" />',
               '<uses-permission android:name="android.permission.CAMERA" />',
               '<uses-permission android:name="android.permission.RECORD_AUDIO" />',
               '<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />',
               '<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />',
           ]
-          missing = [x for x in perms if x not in mt]
+          missing = [p for p in permissions if p not in mt]
           if missing:
               mt = mt.replace('<application', '\n'.join(missing) + '\n\n    <application', 1)
 
-          key = os.environ.get('MAPS_API_KEY', '').strip()
-          if not key:
-              raise Exception('MAPS_API_KEY secret bulunamadi')
+          maps_key = os.environ.get('MAPS_API_KEY', '').strip()
+          if not maps_key:
+              raise SystemExit('MAPS_API_KEY secret is missing')
 
           if 'com.google.android.geo.API_KEY' not in mt:
               app_start = mt.find('<application')
               app_end = mt.find('>', app_start)
-              meta = f'''\n        <meta-data\n            android:name="com.google.android.geo.API_KEY"\n            android:value="{key}" />\n'''
-              mt = mt[:app_end+1] + meta + mt[app_end+1:]
-
+              meta = (
+                  '\n        <meta-data\n'
+                  '            android:name="com.google.android.geo.API_KEY"\n'
+                  f'            android:value="{maps_key}" />\n'
+              )
+              mt = mt[:app_end + 1] + meta + mt[app_end + 1:]
           manifest.write_text(mt)
 
-          firebase = next(
-              (x for x in Path('.').rglob('*google*services*.json') if 'android/app/google-services.json' not in str(x)),
-              None,
-          )
-          if firebase is None:
-              raise Exception('google-services.json bulunamadi')
+          firebase_candidates = [
+              p for p in Path('.').rglob('*google*services*.json')
+              if str(p) != 'android/app/google-services.json'
+          ]
+          if not firebase_candidates:
+              raise SystemExit('google-services.json not found')
 
           target = Path('android/app/google-services.json')
-          target.write_bytes(firebase.read_bytes())
-          print('Android/Firebase/Maps config tamamlandi')
+          target.write_bytes(firebase_candidates[0].read_bytes())
           PY
 
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Patch iris_camera Android still capture
+      - name: Patch Iris Android still capture
         run: |
           python3 - <<'PY'
           from pathlib import Path
           import glob
 
-          roots = glob.glob(str(Path.home() / '.pub-cache/hosted/pub.dev/iris_camera-1.0.6'))
-          if not roots:
-              raise Exception('iris_camera-1.0.6 cache bulunamadi')
+          matches = glob.glob(str(Path.home() / '.pub-cache/hosted/pub.dev/iris_camera-*'))
+          if not matches:
+              raise SystemExit('iris_camera package cache not found')
 
-          root = Path(roots[0])
+          root = Path(sorted(matches)[-1])
           image_util = root / 'android/src/main/kotlin/com/anies1212/iris_camera/ImageUtil.kt'
           controller = root / 'android/src/main/kotlin/com/anies1212/iris_camera/CameraController.kt'
 
           image_text = image_util.read_text()
-          old_image = '''    fun imageProxyToJpeg(image: ImageProxy): ByteArray {
-        val nv21 = yuv420888ToNv21(image)
-        val yuvImage = YuvImage(nv21, ImageFormat.NV21, image.width, image.height, null)
-        val stream = ByteArrayOutputStream()
-        yuvImage.compressToJpeg(Rect(0, 0, image.width, image.height), 95, stream)
-        return stream.toByteArray()
-    }
-'''
-          new_image = '''    fun imageProxyToJpeg(image: ImageProxy): ByteArray {
-        // CameraX still capture can return JPEG as a ONE-plane ImageProxy.
-        // iris_camera 1.0.6 assumed YUV (3 planes), causing:
-        // RangeError / length=1; index=1 on affected Android devices.
-        if (image.format == ImageFormat.JPEG && image.planes.isNotEmpty()) {
+          if 'image.format == ImageFormat.JPEG' not in image_text:
+              marker = '    fun imageProxyToJpeg(image: ImageProxy): ByteArray {\n'
+              replacement = marker + '''        if (image.format == ImageFormat.JPEG && image.planes.isNotEmpty()) {
             val buffer = image.planes[0].buffer.apply { rewind() }
             val bytes = ByteArray(buffer.remaining())
             buffer.get(bytes)
@@ -169,38 +163,31 @@ jobs:
                 "Unsupported ImageProxy format=${image.format}, planes=${image.planes.size}"
             )
         }
-
-        val nv21 = yuv420888ToNv21(image)
-        val yuvImage = YuvImage(nv21, ImageFormat.NV21, image.width, image.height, null)
-        val stream = ByteArrayOutputStream()
-        yuvImage.compressToJpeg(Rect(0, 0, image.width, image.height), 95, stream)
-        return stream.toByteArray()
-    }
 '''
-          if old_image not in image_text:
-              raise Exception('ImageUtil patch hedefi bulunamadi')
-          image_util.write_text(image_text.replace(old_image, new_image, 1))
+              if marker not in image_text:
+                  raise SystemExit('ImageUtil capture method not found')
+              image_text = image_text.replace(marker, replacement, 1)
+              image_util.write_text(image_text)
 
           controller_text = controller.read_text()
-          old_controller = '''            val options = CaptureRequestOptions.Builder()
-
-            exposureDurationMicros?.let {
-'''
-          new_controller = '''            val options = CaptureRequestOptions.Builder()
-
-            // ISO + shutter are real manual sensor requests only when AE is off.
-            options.setCaptureRequestOption(
+          manual_marker = '            val options = CaptureRequestOptions.Builder()\n'
+          if 'CaptureRequest.CONTROL_AE_MODE_OFF' not in controller_text:
+              manual_replacement = manual_marker + '''            options.setCaptureRequestOption(
                 CaptureRequest.CONTROL_AE_MODE,
                 CaptureRequest.CONTROL_AE_MODE_OFF
             )
-
-            exposureDurationMicros?.let {
 '''
-          if old_controller not in controller_text:
-              raise Exception('CameraController patch hedefi bulunamadi')
-          controller.write_text(controller_text.replace(old_controller, new_controller, 1))
+              if manual_marker not in controller_text:
+                  raise SystemExit('CameraController manual capture block not found')
+              controller_text = controller_text.replace(manual_marker, manual_replacement, 1)
 
-          print('iris_camera PATCH OK: JPEG 1-plane + AE OFF for manual ISO/shutter')
+          old_apply = '            camera2?.setCaptureRequestOptions(options.build())\n'
+          new_apply = '            camera2?.setCaptureRequestOptions(options.build())?.await()\n'
+          if old_apply in controller_text:
+              controller_text = controller_text.replace(old_apply, new_apply, 1)
+
+          controller.write_text(controller_text)
+          print(f'Patched Iris package: {root.name}')
           PY
 
       - name: Flutter analyze
@@ -208,13 +195,13 @@ jobs:
           rm -rf test
           flutter analyze --no-fatal-infos --no-fatal-warnings
 
-      - name: Build APK
+      - name: Build release APK
         run: flutter build apk --release
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: en-iyi-cekim-noktasi-iris-fixed-apk
+          name: en-iyi-cekim-noktasi-ai-camera-apk
           path: build/app/outputs/flutter-apk/app-release.apk
           if-no-files-found: error
           retention-days: 7
