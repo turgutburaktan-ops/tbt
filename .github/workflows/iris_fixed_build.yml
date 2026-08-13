@@ -81,6 +81,9 @@ jobs:
       - name: Patch camera performance V4
         run: python3 tool/patch_camera_performance_v4.py
 
+      - name: Patch balanced Normal camera V5
+        run: python3 tool/patch_normal_camera_v5.py
+
       - name: Analyze
         run: |
           rm -rf test
