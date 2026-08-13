@@ -7,11 +7,12 @@ def patch_flutter_behavior() -> None:
     text = path.read_text()
 
     # Allow mode changes while an AI request is still in flight.
-    text = text.replace(
-        "  bool _aiBusy = false;\n",
-        "  bool _aiBusy = false;\n  bool _pendingAiReanalysis = false;\n",
-        1,
-    )
+    if '  bool _pendingAiReanalysis = false;\n' not in text:
+        text = text.replace(
+            "  bool _aiBusy = false;\n",
+            "  bool _aiBusy = false;\n  bool _pendingAiReanalysis = false;\n",
+            1,
+        )
 
     text = text.replace(
         "    if (mode == _selectedMode || _takingPhoto || _aiBusy) return;\n",
@@ -84,6 +85,222 @@ def patch_flutter_behavior() -> None:
         1,
     )
 
+    # Add a dedicated action/sports profile if it is not present yet.
+    old_modes = """    'Portre',
+    'Gece',
+    'Sinematik',
+    'Astro',
+"""
+    new_modes = """    'Portre',
+    'Gece',
+    'Sinematik',
+    'Hareket',
+    'Astro',
+"""
+    if old_modes in text and "    'Hareket',\n" not in text:
+        text = text.replace(old_modes, new_modes, 1)
+
+    # Professional base profiles. Cinematic protects highlights and keeps a filmic
+    # shutter cadence; Night avoids the previous over-bright +EV look; Action gives
+    # shutter priority. ISO/shutter/EV are applied to the real Android sensor by the
+    # live manual exposure patch that runs before this one in CI.
+    text = text.replace(
+        """      case 'Portre':
+        iso = 100;
+        shutter = _durationForDenominator(160);
+        ev = 0.15;
+        zoom = 1.4;
+        break;
+      case 'Gece':
+        iso = 800;
+        shutter = _durationForDenominator(30);
+        ev = 0.35;
+        zoom = 1.0;
+        break;
+      case 'Sinematik':
+        iso = 100;
+        shutter = _durationForDenominator(50);
+        ev = -0.10;
+        zoom = 1.1;
+        break;
+      case 'Astro':
+        iso = 800;
+        shutter = const Duration(milliseconds: 500);
+        ev = 0.30;
+        zoom = 1.0;
+        break;
+""",
+        """      case 'Portre':
+        iso = 100;
+        shutter = _durationForDenominator(160);
+        ev = -0.05;
+        zoom = 1.35;
+        break;
+      case 'Gece':
+        iso = 640;
+        shutter = _durationForDenominator(30);
+        ev = -0.15;
+        zoom = 1.0;
+        break;
+      case 'Sinematik':
+        iso = 160;
+        shutter = _durationForDenominator(50);
+        ev = -0.45;
+        zoom = 1.0;
+        break;
+      case 'Hareket':
+        iso = 200;
+        shutter = _durationForDenominator(500);
+        ev = -0.10;
+        zoom = 1.0;
+        break;
+      case 'Astro':
+        iso = 800;
+        shutter = const Duration(milliseconds: 750);
+        ev = -0.10;
+        zoom = 1.0;
+        break;
+""",
+        1,
+    )
+
+    # Replace the old mode-specific AI tail with scene-aware professional behavior.
+    old_ai_modes = """    if (_selectedMode == 'Portre' && subjectPriority) {
+      shutter = _durationForDenominator(160);
+      iso = lowLight ? max(iso, 400) : 100;
+    }
+
+    if (_selectedMode == 'Sinematik') {
+      shutter = _durationForDenominator(50);
+      iso = lowLight ? max(iso, 400) : 100;
+    }
+
+    if (_selectedMode == 'Gece') {
+      iso = max(iso, 800);
+      if (!subjectPriority && _movementLevel < 0.8) {
+        shutter = _durationForDenominator(25);
+      }
+    }
+
+    if (_selectedMode == 'Astro') {
+      iso = max(iso, 800);
+      if (_movementLevel < 0.8) {
+        shutter = const Duration(milliseconds: 750);
+      }
+    }
+"""
+    new_ai_modes = """    if (_selectedMode == 'Portre' && subjectPriority) {
+      shutter = _durationForDenominator(lowLight ? 125 : 200);
+      iso = lowLight ? max(iso, 400) : 100;
+      ev = min(ev, 0.0);
+    }
+
+    if (_selectedMode == 'Sinematik') {
+      // Filmic target: protect neon/windows, keep motion natural, only raise ISO
+      // when the scene actually needs it. Faster shutter is used if the phone or
+      // subject is moving so a walking person stays usable instead of smearing.
+      shutter = _durationForDenominator(
+        (subjectPriority || _movementLevel > 0.8) ? 80 : 50,
+      );
+      iso = veryLowLight ? 800 : (lowLight ? 400 : 160);
+      ev = tooBright ? -0.80 : (lowLight ? -0.25 : -0.45);
+      _currentWb = lowLight ? 'WARM' : 'DAYLIGHT';
+    }
+
+    if (_selectedMode == 'Gece') {
+      iso = veryLowLight ? 1250 : max(iso, 640);
+      if (subjectPriority || _movementLevel > 0.8) {
+        shutter = _durationForDenominator(60);
+      } else {
+        shutter = _durationForDenominator(25);
+      }
+      ev = tooBright ? -0.65 : -0.15;
+      _currentWb = 'NIGHT';
+    }
+
+    if (_selectedMode == 'Hareket') {
+      shutter = _durationForDenominator(lowLight ? 250 : 500);
+      iso = veryLowLight ? 1600 : (lowLight ? 800 : max(200, iso));
+      ev = tooBright ? -0.45 : -0.10;
+      _currentWb = 'AUTO';
+    }
+
+    if (_selectedMode == 'Astro') {
+      iso = max(iso, 800);
+      if (_movementLevel < 0.8) {
+        shutter = const Duration(milliseconds: 750);
+      } else {
+        shutter = _durationForDenominator(30);
+      }
+      ev = -0.10;
+      _currentWb = 'COOL';
+    }
+"""
+    if old_ai_modes in text:
+        text = text.replace(old_ai_modes, new_ai_modes, 1)
+
+    # Make the camera-switch action explicitly choose the opposite facing camera
+    # instead of walking through every physical rear lens. This gives users a
+    # predictable front <-> rear button even on phones with 3-4 back lenses.
+    old_toggle = """  Future<void> _toggleCamera() async {
+    if (_lenses.length < 2 || _takingPhoto || _aiBusy) return;
+
+    final next = (_lensIndex + 1) % _lenses.length;
+    try {
+      await _camera.switchLens(_lenses[next].category);
+      _lensIndex = next;
+      await _applyModeBaseSettings();
+      if (_aiAutoProEnabled) await _analyzeSceneOnce();
+      if (mounted) setState(() {});
+    } catch (e) {
+      debugPrint('Lens değiştirme hatası: $e');
+    }
+  }
+"""
+    new_toggle = """  Future<void> _toggleCamera() async {
+    if (_lenses.length < 2 || _takingPhoto) return;
+
+    final currentCategory = _lenses[_lensIndex].category.toString().toLowerCase();
+    final currentlyFront = currentCategory.contains('front');
+
+    var next = -1;
+    for (var i = 0; i < _lenses.length; i++) {
+      final category = _lenses[i].category.toString().toLowerCase();
+      final isFront = category.contains('front');
+      if (isFront != currentlyFront) {
+        next = i;
+        break;
+      }
+    }
+    if (next < 0) next = (_lensIndex + 1) % _lenses.length;
+
+    try {
+      await _camera.switchLens(_lenses[next].category);
+      _lensIndex = next;
+
+      // Front cameras commonly have no flash and narrower manual ranges.
+      // Reset flash and then re-apply the selected professional profile so the
+      // native exposure layer can clamp safely to that sensor's capabilities.
+      final newCategory = _lenses[next].category.toString().toLowerCase();
+      if (newCategory.contains('front')) _flashMode = iris.PhotoFlashMode.off;
+      await _applyModeBaseSettings();
+
+      if (_aiAutoProEnabled) {
+        if (_aiBusy) {
+          _pendingAiReanalysis = true;
+        } else {
+          await _analyzeSceneOnce();
+        }
+      }
+      if (mounted) setState(() {});
+    } catch (e) {
+      debugPrint('Ön/arka kamera değiştirme hatası: $e');
+    }
+  }
+"""
+    if old_toggle in text:
+        text = text.replace(old_toggle, new_toggle, 1)
+
     # Live manual exposure must be applied LAST, after AF/AE metering calls.
     live_block = """    // AI live exposure: ISO + shutter + EV are applied to the preview sensor now.
     await _applyLiveManualExposure(
@@ -115,11 +332,10 @@ def patch_flutter_behavior() -> None:
       setState(() {
         _currentIso = iso;
 """
-    # Replace the first matching tail after _applyAiDecision only.
     ai_pos = text.find('  Future<void> _applyAiDecision() async {')
     if ai_pos >= 0:
         tail_pos = text.find(focus_tail, ai_pos)
-        if tail_pos >= 0:
+        if tail_pos >= 0 and 'Apply manual sensor exposure after focus/metering' not in text[ai_pos:tail_pos + 500]:
             text = text[:tail_pos] + live_after_focus + text[tail_pos + len(focus_tail):]
 
     path.write_text(text)
@@ -185,7 +401,7 @@ def patch_native_focus(root: Path) -> None:
 def main() -> None:
     patch_flutter_behavior()
     patch_native_focus(find_iris_root())
-    print('AI camera behavior patch applied: mode switching + persistent manual exposure + tip placement')
+    print('AI camera patch applied: pro profiles + scene exposure + front/rear switch + persistent manual sensor control')
 
 
 if __name__ == '__main__':
