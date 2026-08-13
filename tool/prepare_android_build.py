@@ -117,6 +117,10 @@ def patch_app_features() -> None:
         ["python3", "tool/patch_explore_spot_repository.py"],
         check=True,
     )
+    subprocess.run(
+        ["python3", "tool/patch_messages_navigation.py"],
+        check=True,
+    )
 
 
 def main() -> None:
