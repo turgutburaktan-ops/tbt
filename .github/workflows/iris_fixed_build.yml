@@ -63,6 +63,9 @@ jobs:
       - name: Patch camera exposure and responsive layout V2
         run: python3 tool/patch_camera_exposure_layout_v2.py
 
+      - name: Patch mode-aware AI camera profiles
+        run: python3 tool/patch_mode_aware_ai_camera.py
+
       - name: Analyze
         run: |
           rm -rf test
