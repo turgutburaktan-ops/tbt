@@ -51,6 +51,12 @@ jobs:
       - name: Patch AI camera behavior
         run: python3 tool/patch_ai_camera_behavior.py
 
+      - name: Patch cinematic realism
+        run: python3 tool/patch_cinematic_realism.py
+
+      - name: Patch messages navigation
+        run: python3 tool/patch_messages_navigation.py
+
       - name: Analyze
         run: |
           rm -rf test
