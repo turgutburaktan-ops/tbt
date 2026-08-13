@@ -39,6 +39,9 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Patch fixed camera layout
+        run: python3 tool/patch_camera_layout.py
+
       - name: Patch Iris Android capture
         run: python3 tool/patch_iris_camera.py
 
