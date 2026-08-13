@@ -13,7 +13,7 @@ class ChatScreen extends StatefulWidget {
   const ChatScreen({
     super.key,
     required this.otherUserId,
-    required this.otherDisplayName,
+    this.otherDisplayName = 'Kullanıcı',
     this.sourceType,
     this.sourceId,
   });
