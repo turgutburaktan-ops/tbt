@@ -72,6 +72,9 @@ jobs:
       - name: Patch profile photo upload
         run: python3 tool/patch_profile_photo.py
 
+      - name: Patch long-press focus lock
+        run: python3 tool/patch_long_press_focus_lock.py
+
       - name: Analyze
         run: |
           rm -rf test
