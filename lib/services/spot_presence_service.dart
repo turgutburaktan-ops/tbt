@@ -19,7 +19,7 @@ class SpotPresenceService {
     return _firestore
         .collection(collection)
         .where('spotId', isEqualTo: spotId)
-        .where('visible', isEqualTo: true)
+        .limit(60)
         .snapshots()
         .map((snapshot) {
       final now = DateTime.now();
@@ -27,7 +27,8 @@ class SpotPresenceService {
           .map(SpotPresence.fromDocument)
           .where((item) {
             final expiry = item.expiresAt;
-            return item.approximateLocationOnly &&
+            return item.visible &&
+                item.approximateLocationOnly &&
                 (expiry == null || expiry.isAfter(now));
           })
           .toList();
