@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import '../models/chat_message.dart';
 import '../services/chat_service.dart';
 import 'chat_screen.dart';
-import 'people_discovery_screen.dart';
 
 class ChatInboxScreen extends StatelessWidget {
   const ChatInboxScreen({super.key});
@@ -20,16 +19,6 @@ class ChatInboxScreen extends StatelessWidget {
         backgroundColor: const Color(0xFF0D1117),
         foregroundColor: Colors.white,
         title: const Text('Mesajlar'),
-        actions: [
-          IconButton(
-            tooltip: 'Fotoğrafçı & Model keşfet',
-            icon: const Icon(Icons.people_alt_outlined, color: Color(0xFFFFC107)),
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const PeopleDiscoveryScreen()),
-            ),
-          ),
-        ],
       ),
       body: myId == null
           ? const Center(
