@@ -66,6 +66,9 @@ jobs:
       - name: Patch mode-aware AI camera profiles V2
         run: python3 tool/patch_mode_aware_ai_camera_v2.py
 
+      - name: Patch camera runtime V3
+        run: python3 tool/patch_camera_runtime_v3.py
+
       - name: Analyze
         run: |
           rm -rf test
