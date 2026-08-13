@@ -75,9 +75,6 @@ jobs:
       - name: Patch long-press focus lock
         run: python3 tool/patch_long_press_focus_lock.py
 
-      - name: Patch mode-aware photo development
-        run: python3 tool/patch_mode_aware_develop_client.py
-
       - name: Analyze
         run: |
           rm -rf test
