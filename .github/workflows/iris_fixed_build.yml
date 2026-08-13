@@ -45,6 +45,9 @@ jobs:
       - name: Patch Iris Android capture
         run: python3 tool/patch_iris_camera.py
 
+      - name: Patch live manual exposure
+        run: python3 tool/patch_live_manual_exposure.py
+
       - name: Analyze
         run: |
           rm -rf test
