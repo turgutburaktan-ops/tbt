@@ -54,6 +54,9 @@ jobs:
       - name: Patch cinematic realism
         run: python3 tool/patch_cinematic_realism.py
 
+      - name: Patch live AI parameter HUD
+        run: python3 tool/patch_live_ai_hud.py
+
       - name: Patch messages navigation
         run: python3 tool/patch_messages_navigation.py
 
