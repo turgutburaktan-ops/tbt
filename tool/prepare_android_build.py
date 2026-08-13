@@ -1,6 +1,7 @@
 from pathlib import Path
 import os
 import re
+import subprocess
 
 
 def configure_gradle() -> None:
@@ -111,10 +112,18 @@ def copy_firebase() -> None:
     target.write_bytes(candidates[0].read_bytes())
 
 
+def patch_app_features() -> None:
+    subprocess.run(
+        ["python3", "tool/patch_explore_spot_repository.py"],
+        check=True,
+    )
+
+
 def main() -> None:
     configure_gradle()
     configure_manifest()
     copy_firebase()
+    patch_app_features()
     print("Android build preparation complete")
 
 
