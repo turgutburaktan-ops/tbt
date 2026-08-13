@@ -34,44 +34,7 @@ class BestPhotoSpotApp extends StatelessWidget {
       routes: {
         '/messages': (_) => const ChatInboxScreen(),
       },
-      home: const _HomeWithMessagesShortcut(),
-    );
-  }
-}
-
-class _HomeWithMessagesShortcut extends StatelessWidget {
-  const _HomeWithMessagesShortcut();
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        const HomeScreen(),
-        Positioned(
-          right: 16,
-          bottom: 88,
-          child: SafeArea(
-            top: false,
-            child: Material(
-              color: Colors.transparent,
-              child: FloatingActionButton.extended(
-                heroTag: 'messages_fab',
-                backgroundColor: const Color(0xFF171C24),
-                foregroundColor: const Color(0xFFFFC107),
-                elevation: 8,
-                onPressed: () {
-                  Navigator.of(context).pushNamed('/messages');
-                },
-                icon: const Icon(Icons.chat_bubble_outline_rounded, size: 22),
-                label: const Text(
-                  'Mesajlar',
-                  style: TextStyle(fontWeight: FontWeight.w800),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ],
+      home: const HomeScreen(),
     );
   }
 }
