@@ -81,7 +81,7 @@ class MeetupService {
     return ref.id;
   }
 
-  Future<void> join(String meetupId) async {
+  Future<bool> join(String meetupId) async {
     final user = _auth.currentUser;
     if (user == null) {
       throw Exception('Buluşmaya katılmak için giriş yapmalısın.');
@@ -112,7 +112,6 @@ class MeetupService {
         if (participants.length >= capacity) {
           throw Exception('Bu buluşmada boş yer kalmadı.');
         }
-
         participants.add(user.uid);
         transaction.update(ref, {
           'participantIds': participants,
@@ -123,15 +122,19 @@ class MeetupService {
       return hostId;
     });
 
-    // Katılan kişi ile buluşma sahibini otomatik olarak mesajlaşmaya bağla.
-    // Böylece Birlikte Git yalnızca katılım kaydı değil, gerçek koordinasyon
-    // akışı oluşturur ve konuşma Mesajlar kutusunda görünür.
-    if (hostId != user.uid) {
+    if (hostId == user.uid) return true;
+
+    try {
       await ChatService.instance.ensureDirectThread(
         hostId,
         sourceType: 'meetup',
         sourceId: meetupId,
       );
+      return true;
+    } catch (_) {
+      // Katılım Firestore'da başarılıdır. Chat kurulumu ayrı bir yan etkidir;
+      // geçici mesajlaşma hatası katılımı başarısız gibi göstermemelidir.
+      return false;
     }
   }
 
