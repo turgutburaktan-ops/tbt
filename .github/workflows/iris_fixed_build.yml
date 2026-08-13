@@ -60,6 +60,9 @@ jobs:
       - name: Patch messages navigation
         run: python3 tool/patch_messages_navigation.py
 
+      - name: Patch camera exposure and responsive layout V2
+        run: python3 tool/patch_camera_exposure_layout_v2.py
+
       - name: Analyze
         run: |
           rm -rf test
