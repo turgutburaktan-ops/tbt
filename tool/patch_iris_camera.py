@@ -65,11 +65,31 @@ def patch_camera_controller(root: Path) -> None:
     path.write_text(text)
 
 
+def patch_preview_composition(root: Path) -> None:
+    path = root / "android/src/main/kotlin/com/anies1212/iris_camera/IrisCameraPlugin.kt"
+    text = path.read_text()
+
+    marker = "                val previewView = PreviewView(context)\n"
+    compatible = (
+        marker
+        + "                // TextureView-backed mode respects Flutter bounds/clipping and overlay z-order.\n"
+        + "                previewView.implementationMode = PreviewView.ImplementationMode.COMPATIBLE\n"
+    )
+
+    if "PreviewView.ImplementationMode.COMPATIBLE" not in text:
+        if marker not in text:
+            raise SystemExit("Iris PreviewView creation marker not found")
+        text = text.replace(marker, compatible, 1)
+
+    path.write_text(text)
+
+
 def main() -> None:
     root = find_iris_root()
     patch_image_util(root)
     patch_camera_controller(root)
-    print(f"Iris Android capture patch applied to {root.name}")
+    patch_preview_composition(root)
+    print(f"Iris Android capture + bounded preview patch applied to {root.name}")
 
 
 if __name__ == "__main__":
