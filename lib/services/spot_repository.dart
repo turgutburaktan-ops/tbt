@@ -5,6 +5,28 @@ import '../data/curated_photo_spots.dart';
 import '../data/curated_photo_spots_extra.dart';
 import '../models/photo_spot.dart';
 
+enum SpotSort { rating, name }
+
+class SpotDiscoveryQuery {
+  final String text;
+  final String? city;
+  final String? category;
+  final String? tag;
+  final double minRating;
+  final SpotSort sort;
+  final int limit;
+
+  const SpotDiscoveryQuery({
+    this.text = '',
+    this.city,
+    this.category,
+    this.tag,
+    this.minRating = 0,
+    this.sort = SpotSort.rating,
+    this.limit = 200,
+  });
+}
+
 /// Camera bağımsız çekim noktası veri katmanı.
 ///
 /// Firestore kayıtlarını yerel kürasyon kataloğuyla birleştirir. Böylece
@@ -44,11 +66,67 @@ class SpotRepository {
     }
 
     final merged = _mergeWithCurated(remote);
-    return _filterLocal(
-      merged,
-      city: city,
-      category: category,
-    );
+    return _filterLocal(merged, city: city, category: category);
+  }
+
+  Future<List<PhotoSpot>> discover({
+    SpotDiscoveryQuery query = const SpotDiscoveryQuery(),
+  }) async {
+    final all = await loadSpots(limit: query.limit);
+    final textKey = _key(query.text);
+    final cityKey = _key(query.city ?? '');
+    final categoryKey = _key(query.category ?? '');
+    final tagKey = _key(query.tag ?? '');
+
+    final filtered = all.where((spot) {
+      if (query.minRating > 0 && spot.rating < query.minRating) return false;
+      if (cityKey.isNotEmpty && _key(spot.city) != cityKey) return false;
+      if (categoryKey.isNotEmpty && _key(spot.category) != categoryKey) {
+        return false;
+      }
+      if (tagKey.isNotEmpty &&
+          !spot.tags.any((tag) => _key(tag).contains(tagKey))) {
+        return false;
+      }
+      if (textKey.isEmpty) return true;
+      return _searchableText(spot).contains(textKey);
+    }).toList();
+
+    switch (query.sort) {
+      case SpotSort.name:
+        filtered.sort((a, b) => a.name.compareTo(b.name));
+        break;
+      case SpotSort.rating:
+        filtered.sort((a, b) {
+          final byRating = b.rating.compareTo(a.rating);
+          if (byRating != 0) return byRating;
+          return a.name.compareTo(b.name);
+        });
+        break;
+    }
+    return filtered;
+  }
+
+  Future<List<String>> availableCities({int limit = 200}) async {
+    final spots = await loadSpots(limit: limit);
+    final byKey = <String, String>{};
+    for (final spot in spots) {
+      byKey.putIfAbsent(_key(spot.city), () => spot.city.trim());
+    }
+    final result = byKey.values.where((value) => value.isNotEmpty).toList();
+    result.sort();
+    return result;
+  }
+
+  Future<List<String>> availableCategories({int limit = 200}) async {
+    final spots = await loadSpots(limit: limit);
+    final byKey = <String, String>{};
+    for (final spot in spots) {
+      byKey.putIfAbsent(_key(spot.category), () => spot.category.trim());
+    }
+    final result = byKey.values.where((value) => value.isNotEmpty).toList();
+    result.sort();
+    return result;
   }
 
   Stream<List<PhotoSpot>> watchPublishedSpots({int limit = 200}) {
@@ -67,37 +145,30 @@ class SpotRepository {
   }
 
   Future<List<PhotoSpot>> search(String input, {int limit = 200}) async {
-    final query = _key(input);
-    final all = await loadSpots(limit: limit);
-    if (query.isEmpty) return all;
+    return discover(query: SpotDiscoveryQuery(text: input, limit: limit));
+  }
 
-    return all.where((spot) {
-      final haystack = [
-        spot.name,
-        spot.city,
-        spot.category,
-        spot.description,
-        spot.bestTime,
-        spot.angle,
-        spot.recommendedLens,
-        spot.difficulty,
-        ...spot.tags,
-      ].map(_key).join(' ');
-      return haystack.contains(query);
-    }).toList();
+  static String _searchableText(PhotoSpot spot) {
+    return [
+      spot.name,
+      spot.city,
+      spot.category,
+      spot.description,
+      spot.bestTime,
+      spot.angle,
+      spot.recommendedLens,
+      spot.difficulty,
+      ...spot.tags,
+    ].map(_key).join(' ');
   }
 
   List<PhotoSpot> _mergeWithCurated(List<PhotoSpot> remote) {
-    // Demo + iki editoryal katalog aynı veri katmanından geçer. Böylece harita
-    // ve repository kullanan keşfet yüzeyleri her zaman zengin katalog görür.
-    // Aynı id varsa sıralama: demo < curated < extra < Firestore published.
     final byId = <String, PhotoSpot>{
       for (final spot in demoSpots) spot.id: spot,
       for (final spot in curatedPhotoSpots) spot.id: spot,
       for (final spot in curatedPhotoSpotsExtra) spot.id: spot,
     };
 
-    // Firestore aynı id'yi yayınladıysa güncel remote kayıt üstün gelir.
     for (final spot in remote) {
       byId[spot.id] = spot;
     }
