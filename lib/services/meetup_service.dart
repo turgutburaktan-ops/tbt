@@ -16,20 +16,23 @@ class MeetupService {
 
   Stream<List<SpotMeetup>> watchUpcomingForSpot(
     String spotId, {
-    int limit = 20,
+    int limit = 40,
   }) {
-    final now = Timestamp.fromDate(DateTime.now().subtract(const Duration(minutes: 30)));
-
     return _firestore
         .collection(collection)
         .where('spotId', isEqualTo: spotId)
-        .where('startsAt', isGreaterThanOrEqualTo: now)
         .limit(limit)
         .snapshots()
         .map((snapshot) {
-          final items = snapshot.docs.map(SpotMeetup.fromDocument).toList();
+          final threshold = DateTime.now().subtract(const Duration(minutes: 30));
+          final items = snapshot.docs
+              .map(SpotMeetup.fromDocument)
+              .where((item) =>
+                  item.status == 'open' &&
+                  item.startsAt.isAfter(threshold))
+              .toList();
           items.sort((a, b) => a.startsAt.compareTo(b.startsAt));
-          return items.where((item) => item.status == 'open').toList();
+          return items;
         });
   }
 
