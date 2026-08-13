@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -12,12 +14,21 @@ class ChatService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  User get _requiredUser {
-    final user = _auth.currentUser;
-    if (user == null) {
-      throw Exception('Mesajlaşmak için giriş yapmalısın.');
+  Future<User> _requiredUser() async {
+    final current = _auth.currentUser;
+    if (current != null) return current;
+
+    try {
+      final restored = await _auth
+          .authStateChanges()
+          .firstWhere((user) => user != null)
+          .timeout(const Duration(seconds: 3));
+      if (restored != null) return restored;
+    } on TimeoutException {
+      // Fall through to the normal logged-out error below.
     }
-    return user;
+
+    throw Exception('Mesajlaşmak için giriş yapmalısın.');
   }
 
   String directThreadId(String a, String b) {
@@ -26,7 +37,7 @@ class ChatService {
   }
 
   Future<bool> isBlockedBetween(String otherUserId) async {
-    final me = _requiredUser.uid;
+    final me = (await _requiredUser()).uid;
     final refs = await Future.wait([
       _firestore.collection('users').doc(me).collection('blocked').doc(otherUserId).get(),
       _firestore.collection('users').doc(otherUserId).collection('blocked').doc(me).get(),
@@ -39,7 +50,7 @@ class ChatService {
     String? sourceType,
     String? sourceId,
   }) async {
-    final user = _requiredUser;
+    final user = await _requiredUser();
     if (otherUserId == user.uid) {
       throw Exception('Kendine mesaj gönderemezsin.');
     }
@@ -64,39 +75,45 @@ class ChatService {
   }
 
   Stream<List<ChatThread>> myThreads() {
-    final user = _auth.currentUser;
-    if (user == null) return Stream.value(const <ChatThread>[]);
+    return _auth.authStateChanges().asyncExpand((user) {
+      if (user == null) {
+        return Stream.value(const <ChatThread>[]);
+      }
 
-    return _firestore
-        .collection('chat_threads')
-        .where('memberIds', arrayContains: user.uid)
-        .snapshots()
-        .map((snapshot) {
-      final items = snapshot.docs.map(ChatThread.fromDocument).toList();
-      items.sort((a, b) {
-        final ad = a.lastMessageAt ?? DateTime.fromMillisecondsSinceEpoch(0);
-        final bd = b.lastMessageAt ?? DateTime.fromMillisecondsSinceEpoch(0);
-        return bd.compareTo(ad);
+      return _firestore
+          .collection('chat_threads')
+          .where('memberIds', arrayContains: user.uid)
+          .snapshots()
+          .map((snapshot) {
+        final items = snapshot.docs.map(ChatThread.fromDocument).toList();
+        items.sort((a, b) {
+          final ad = a.lastMessageAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+          final bd = b.lastMessageAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+          return bd.compareTo(ad);
+        });
+        return items;
       });
-      return items;
     });
   }
 
   Stream<List<ChatMessage>> messages(String threadId) {
-    final user = _auth.currentUser;
-    if (user == null) return Stream.value(const <ChatMessage>[]);
+    return _auth.authStateChanges().asyncExpand((user) {
+      if (user == null) {
+        return Stream.value(const <ChatMessage>[]);
+      }
 
-    return _firestore
-        .collection('chat_threads')
-        .doc(threadId)
-        .collection('messages')
-        .orderBy('createdAt', descending: true)
-        .limit(100)
-        .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map(ChatMessage.fromDocument)
-            .where((message) => !message.deleted)
-            .toList(growable: false));
+      return _firestore
+          .collection('chat_threads')
+          .doc(threadId)
+          .collection('messages')
+          .orderBy('createdAt', descending: true)
+          .limit(100)
+          .snapshots()
+          .map((snapshot) => snapshot.docs
+              .map(ChatMessage.fromDocument)
+              .where((message) => !message.deleted)
+              .toList(growable: false));
+    });
   }
 
   Future<void> sendMessage({
@@ -104,7 +121,7 @@ class ChatService {
     required String otherUserId,
     required String text,
   }) async {
-    final user = _requiredUser;
+    final user = await _requiredUser();
     final clean = text.trim();
     if (clean.isEmpty) return;
     if (clean.length > 1500) {
@@ -142,7 +159,7 @@ class ChatService {
   }
 
   Future<void> blockUser(String otherUserId) async {
-    final user = _requiredUser;
+    final user = await _requiredUser();
     if (otherUserId == user.uid) return;
     await _firestore
         .collection('users')
@@ -156,7 +173,7 @@ class ChatService {
   }
 
   Future<void> unblockUser(String otherUserId) async {
-    final user = _requiredUser;
+    final user = await _requiredUser();
     await _firestore
         .collection('users')
         .doc(user.uid)
@@ -170,7 +187,7 @@ class ChatService {
     required String reason,
     String? threadId,
   }) async {
-    final user = _requiredUser;
+    final user = await _requiredUser();
     await _firestore.collection('user_reports').add({
       'reporterId': user.uid,
       'reportedUserId': otherUserId,
