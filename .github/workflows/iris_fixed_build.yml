@@ -87,6 +87,9 @@ jobs:
       - name: Patch fast reference framing coach
         run: python3 tool/patch_fast_reference_coach.py
 
+      - name: Patch custom AI edit prompt
+        run: python3 tool/patch_custom_ai_edit.py
+
       - name: Analyze
         run: |
           rm -rf test
