@@ -13,7 +13,6 @@ const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 12 * 1024 * 1024 },
 });
-
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 function clamp(v, lo, hi) {
@@ -77,51 +76,75 @@ async function imageMetrics(buffer) {
 
 function liveDecision(metrics, mode) {
   const m = String(mode || "Normal").toLowerCase();
-  const blown =
-    metrics.mean > 190 ||
-    (metrics.mean > 145 && metrics.highlightRatio > 0.1) ||
-    metrics.highlightRatio > 0.24;
-  const veryDark = metrics.mean < 52;
+  const blown = metrics.mean > 188 || metrics.highlightRatio > 0.18;
   const dark = metrics.mean < 82;
-  const flat = metrics.contrast < 28;
+  const veryDark = metrics.mean < 48;
 
-  let status = "good";
-  let main = "Kadraj hazır — çekebilirsin.";
-  let light = "Işık dengeli.";
-  let subject = "";
+  let ev = 0;
+  if (blown) ev = -0.35;
+  else if (metrics.mean > 155) ev = -0.18;
+  else if (veryDark) ev = 0.30;
+  else if (dark) ev = 0.15;
 
-  if (veryDark) {
-    status = "adjust";
-    main = m.includes("spor")
-      ? "Işık az — hareketi donduracak hızı koru."
-      : "Düşük ışık — pozlamayı dengeliyorum.";
-    light = "Gölgelerde detay koru.";
-  } else if (dark) {
-    status = "adjust";
-    main = "Işık düşük — modu dengeliyorum.";
-    light = "Gürültüyü sınırlı tut.";
-  } else if (blown) {
-    status = "adjust";
-    main = "Parlak alanları koru.";
-    light = "Pozlamayı hafif azalt.";
-  } else if (flat) {
-    status = "adjust";
-    main = "Kontrast düşük — tonu güçlendir.";
-    light = "Orta tonları ayır.";
+  let iso = 100;
+  let shutter = 125;
+  let subject = "Dengeli otomatik çekim.";
+
+  if (m.includes("portre")) {
+    shutter = dark ? 125 : 250;
+    iso = veryDark ? 800 : dark ? 400 : 100;
+    ev = clamp(ev, -0.35, 0.18);
+    subject = "Yüz ve göz netliği öncelikli; ten tonlarını ve parlak alanları koru.";
+  } else if (m.includes("manzara")) {
+    shutter = dark ? 80 : 160;
+    iso = dark ? 200 : 100;
+    ev = Math.min(ev, -0.08);
+    subject = "Geniş dinamik aralık ve uzak detay öncelikli; gökyüzünü patlatma.";
+  } else if (m.includes("spor")) {
+    shutter = veryDark ? 500 : dark ? 640 : 1000;
+    iso = veryDark ? 1600 : dark ? 800 : 320;
+    ev = clamp(ev, -0.25, 0.12);
+    subject = "Hareketi dondur; hızlı shutter öncelikli, ışığı ISO ile telafi et.";
+  } else if (m.includes("gece")) {
+    shutter = veryDark ? 15 : 30;
+    iso = veryDark ? 1250 : dark ? 800 : 400;
+    ev = clamp(Math.max(ev, 0.05), -0.10, 0.35);
+    subject = "Telefon sabitse daha fazla ışık topla; ışık kaynaklarını patlatma.";
+  } else if (m.includes("makro")) {
+    shutter = dark ? 160 : 250;
+    iso = veryDark ? 800 : dark ? 400 : 125;
+    ev = clamp(ev, -0.25, 0.12);
+    subject = "Yakın nesne netliği ve mikro titreşim kontrolü öncelikli.";
+  } else {
+    iso = veryDark ? 640 : dark ? 320 : 100;
+    shutter = veryDark ? 60 : dark ? 100 : 125;
+    ev = clamp(ev, -0.30, 0.22);
   }
 
-  if (m.includes("portre")) subject = "Yüz ve göz netliği öncelikli.";
-  if (m.includes("manzara")) subject = "Ufuk ve geniş alan detayı öncelikli.";
-  if (m.includes("spor")) subject = "Hareket takibi ve hızlı çekim öncelikli.";
-  if (m.includes("gece")) subject = "Işıkları patlatmadan koru.";
-  if (m.includes("makro")) subject = "Yakın konu netliği öncelikli.";
+  let main = "Kadraj hazır — çekebilirsin.";
+  let light = "Işık dengeli.";
+  if (blown) {
+    main = "Parlak alanları koruyorum.";
+    light = "Pozlamayı kontrollü azalt.";
+  } else if (veryDark) {
+    main = m.includes("spor")
+      ? "Işık az; hareketi donduracak hızı koruyorum."
+      : "Düşük ışığı moda göre dengeliyorum.";
+    light = "Gölgelerde detay koru, gürültüyü sınırlı tut.";
+  } else if (dark) {
+    main = "Işık düşük; modu güvenli sınırlar içinde dengeliyorum.";
+    light = "Orta tonları koru.";
+  }
 
   return {
-    status,
+    status: blown || dark ? "adjust" : "good",
     main_tip: main,
     composition_tip: "",
     light_tip: light,
     subject_tip: subject,
+    recommended_ev: Number(ev.toFixed(2)),
+    recommended_iso: iso,
+    recommended_shutter_denominator: shutter,
   };
 }
 
@@ -143,9 +166,7 @@ function editPrompt(action, userPrompt, pointX, pointY) {
 }
 
 async function aiImageEdit(buffer, mimeType, action, { pointX, pointY, userPrompt } = {}) {
-  if (!process.env.OPENAI_API_KEY) {
-    throw new Error("OPENAI_API_KEY tanımlı değil.");
-  }
+  if (!process.env.OPENAI_API_KEY) throw new Error("OPENAI_API_KEY tanımlı değil.");
 
   const form = new FormData();
   form.append("model", "gpt-image-2");
@@ -160,11 +181,7 @@ async function aiImageEdit(buffer, mimeType, action, { pointX, pointY, userPromp
     headers: { Authorization: `Bearer ${process.env.OPENAI_API_KEY}` },
     body: form,
   });
-
-  if (!response.ok) {
-    throw new Error(`Image edit ${response.status}: ${await response.text()}`);
-  }
-
+  if (!response.ok) throw new Error(`Image edit ${response.status}: ${await response.text()}`);
   const json = await response.json();
   const b64 = json?.data?.[0]?.b64_json;
   if (!b64) throw new Error("AI düzenleme görsel döndürmedi.");
@@ -175,7 +192,7 @@ app.get("/", (_req, res) =>
   res.json({
     status: "ok",
     service: "En Iyi Cekim Noktasi AI Backend",
-    liveEngine: "fast-meter-v3",
+    liveEngine: "mode-aware-meter-v4",
     developEngine: "gpt-image-2-all-edits",
   }),
 );
@@ -183,53 +200,33 @@ app.get("/", (_req, res) =>
 app.post("/live-analyze", upload.single("image"), async (req, res) => {
   const started = Date.now();
   try {
-    if (!req.file) {
-      return res.status(400).json({ error: "Kamera karesi gönderilmedi." });
-    }
-    const result = liveDecision(
-      await imageMetrics(req.file.buffer),
-      req.body?.mode || "Normal",
-    );
-    res.setHeader("X-Live-Engine", "fast-meter-v3");
+    if (!req.file) return res.status(400).json({ error: "Kamera karesi gönderilmedi." });
+    const result = liveDecision(await imageMetrics(req.file.buffer), req.body?.mode || "Normal");
+    res.setHeader("X-Live-Engine", "mode-aware-meter-v4");
     res.setHeader("X-Processing-Ms", String(Date.now() - started));
     return res.json(result);
   } catch (e) {
-    console.error("Fast live analyze error", e);
+    console.error("Live analyze error", e);
     return res.status(500).json({ error: "Canlı sahne analizi başarısız." });
   }
 });
 
 app.post("/analyze", upload.single("image"), async (req, res) => {
   try {
-    if (!req.file) {
-      return res.status(400).json({ error: "Fotoğraf gönderilmedi." });
-    }
-    if (!process.env.OPENAI_API_KEY) {
-      return res.status(503).json({ error: "AI anahtarı tanımlı değil." });
-    }
-
+    if (!req.file) return res.status(400).json({ error: "Fotoğraf gönderilmedi." });
+    if (!process.env.OPENAI_API_KEY) return res.status(503).json({ error: "AI anahtarı tanımlı değil." });
     const mime = detectMimeType(req.file);
     const image = req.file.buffer.toString("base64");
     const response = await openai.responses.create({
       model: "gpt-5-mini",
-      input: [
-        {
-          role: "user",
-          content: [
-            {
-              type: "input_text",
-              text: "Bu fotoğrafı profesyonel fotoğrafçı gibi analiz et. SADECE JSON: {\"score\":0,\"composition\":0,\"lighting\":0,\"perspective\":0,\"sharpness\":0,\"summary\":\"\",\"suggestions\":[]}. Türkçe, kısa ve fotoğrafa özel.",
-            },
-            {
-              type: "input_image",
-              image_url: `data:${mime};base64,${image}`,
-              detail: "low",
-            },
-          ],
-        },
-      ],
+      input: [{
+        role: "user",
+        content: [
+          { type: "input_text", text: "Bu fotoğrafı profesyonel fotoğrafçı gibi analiz et. SADECE JSON: {\"score\":0,\"composition\":0,\"lighting\":0,\"perspective\":0,\"sharpness\":0,\"summary\":\"\",\"suggestions\":[]}. Türkçe, kısa ve fotoğrafa özel." },
+          { type: "input_image", image_url: `data:${mime};base64,${image}`, detail: "low" },
+        ],
+      }],
     });
-
     return res.json(parseModelJson(response.output_text));
   } catch (e) {
     console.error("Analyze error", e);
@@ -240,27 +237,14 @@ app.post("/analyze", upload.single("image"), async (req, res) => {
 app.post("/edit-photo", upload.single("image"), async (req, res) => {
   const started = Date.now();
   try {
-    if (!req.file) {
-      return res.status(400).json({ error: "Düzenlenecek fotoğraf gönderilmedi." });
-    }
-
+    if (!req.file) return res.status(400).json({ error: "Düzenlenecek fotoğraf gönderilmedi." });
     const action = String(req.body?.action || "auto_enhance");
-    const allowed = new Set([
-      "auto_enhance",
-      "fix_light",
-      "remove_people",
-      "remove_object",
-      "custom_prompt",
-    ]);
-
-    if (!allowed.has(action)) {
-      return res.status(400).json({ error: "Geçersiz düzenleme işlemi." });
-    }
+    const allowed = new Set(["auto_enhance", "fix_light", "remove_people", "remove_object", "custom_prompt"]);
+    if (!allowed.has(action)) return res.status(400).json({ error: "Geçersiz düzenleme işlemi." });
 
     const x = req.body?.point_x != null ? clamp(req.body.point_x, 0, 1) : null;
     const y = req.body?.point_y != null ? clamp(req.body.point_y, 0, 1) : null;
     const prompt = String(req.body?.prompt || "").trim();
-
     if (action === "remove_object" && (x == null || y == null)) {
       return res.status(400).json({ error: "Nesne konumu seçilmedi." });
     }
@@ -268,13 +252,11 @@ app.post("/edit-photo", upload.single("image"), async (req, res) => {
       return res.status(400).json({ error: "Düzenleme tarifini yazmalısın." });
     }
 
-    const output = await aiImageEdit(
-      req.file.buffer,
-      detectMimeType(req.file),
-      action,
-      { pointX: x, pointY: y, userPrompt: prompt },
-    );
-
+    const output = await aiImageEdit(req.file.buffer, detectMimeType(req.file), action, {
+      pointX: x,
+      pointY: y,
+      userPrompt: prompt,
+    });
     res.setHeader("Content-Type", "image/jpeg");
     res.setHeader("X-Develop-Engine", `gpt-image-2-${action}`);
     res.setHeader("X-Processing-Ms", String(Date.now() - started));
