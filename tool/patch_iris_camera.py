@@ -12,24 +12,18 @@ def find_iris_root() -> Path:
 def patch_image_util(root: Path) -> None:
     path = root / "android/src/main/kotlin/com/anies1212/iris_camera/ImageUtil.kt"
     text = path.read_text()
-
     if "image.format == ImageFormat.JPEG" in text:
         return
-
     marker = "    fun imageProxyToJpeg(image: ImageProxy): ByteArray {\n"
     if marker not in text:
         raise SystemExit("ImageUtil.imageProxyToJpeg not found")
-
     replacement = marker + """        // CameraX still capture may return JPEG as a one-plane ImageProxy.
-        // iris_camera 1.0.6 assumes YUV and tries to read planes[1]/planes[2],
-        // which breaks still capture on affected Android devices.
         if (image.format == ImageFormat.JPEG && image.planes.isNotEmpty()) {
             val buffer = image.planes[0].buffer.apply { rewind() }
             val bytes = ByteArray(buffer.remaining())
             buffer.get(bytes)
             return bytes
         }
-
         if (image.planes.size < 3) {
             throw IllegalStateException(
                 \"Unsupported ImageProxy format=${image.format}, planes=${image.planes.size}\"
@@ -37,7 +31,6 @@ def patch_image_util(root: Path) -> None:
         }
 
 """
-
     path.write_text(text.replace(marker, replacement, 1))
 
 
@@ -45,43 +38,60 @@ def patch_camera_controller(root: Path) -> None:
     path = root / "android/src/main/kotlin/com/anies1212/iris_camera/CameraController.kt"
     text = path.read_text()
 
-    builder_marker = "            val options = CaptureRequestOptions.Builder()\n"
-    if "CaptureRequest.CONTROL_AE_MODE_OFF" not in text:
-        if builder_marker not in text:
-            raise SystemExit("CameraController capture options builder not found")
-        replacement = builder_marker + """            // Manual ISO and shutter only become real sensor requests when AE is off.
+    # Do not force CONTROL_AE_MODE_OFF. On phones with fixed aperture this can
+    # produce completely white frames when a preset ISO/shutter combination is
+    # unsuitable for the actual scene. CameraX AE remains the safety authority;
+    # AI/modes may bias EV but never disable metering.
+    forced_ae = """            // Manual ISO and shutter only become real sensor requests when AE is off.
             options.setCaptureRequestOption(
                 CaptureRequest.CONTROL_AE_MODE,
                 CaptureRequest.CONTROL_AE_MODE_OFF
             )
 """
-        text = text.replace(builder_marker, replacement, 1)
+    text = text.replace(forced_ae, "")
 
     old_apply = "            camera2?.setCaptureRequestOptions(options.build())\n"
     new_apply = "            camera2?.setCaptureRequestOptions(options.build())?.await()\n"
     if old_apply in text:
         text = text.replace(old_apply, new_apply, 1)
-
     path.write_text(text)
 
 
 def patch_preview_composition(root: Path) -> None:
     path = root / "android/src/main/kotlin/com/anies1212/iris_camera/IrisCameraPlugin.kt"
     text = path.read_text()
-
     marker = "                val previewView = PreviewView(context)\n"
-    compatible = (
-        marker
-        + "                // TextureView-backed mode respects Flutter bounds/clipping and overlay z-order.\n"
-        + "                previewView.implementationMode = PreviewView.ImplementationMode.COMPATIBLE\n"
-    )
-
+    compatible = marker + "                previewView.implementationMode = PreviewView.ImplementationMode.COMPATIBLE\n"
     if "PreviewView.ImplementationMode.COMPATIBLE" not in text:
         if marker not in text:
             raise SystemExit("Iris PreviewView creation marker not found")
         text = text.replace(marker, compatible, 1)
-
     path.write_text(text)
+
+
+def patch_flutter_focus_lock() -> None:
+    path = Path("lib/screens/camera_screen.dart")
+    text = path.read_text(encoding="utf-8")
+
+    # Tap-to-focus and long-press lock must never re-meter exposure from one
+    # tiny point. Exposure stays whole-scene auto; only focus follows/locks.
+    text = text.replace(
+        "await _camera.setFocus(point: _focusPoint!); await _camera.setExposurePoint(_focusPoint!);",
+        "await _camera.setFocus(point: _focusPoint!);",
+    )
+    text = text.replace(
+        "await _camera.setFocus(point: p);\n      await _camera.setExposurePoint(p);",
+        "await _camera.setFocus(point: p);",
+    )
+    text = text.replace(
+        "await _camera.setFocus(point: p); await _camera.setExposurePoint(p); await _camera.setFocusMode(iris.FocusMode.locked);",
+        "await _camera.setExposureMode(iris.ExposureMode.auto); await _camera.setExposureOffset(_ev); await _camera.setFocus(point: p); await _camera.setFocusMode(iris.FocusMode.locked);",
+    )
+    text = text.replace(
+        "try { await _camera.setFocusMode(iris.FocusMode.auto); } catch (_) {}\n    await _applyMode();",
+        "try { await _camera.setExposureMode(iris.ExposureMode.auto); } catch (_) {}\n    try { await _camera.setFocusMode(iris.FocusMode.auto); } catch (_) {}\n    try { await _camera.setExposureOffset(_profile.ev); } catch (_) {}\n    await _applyMode();",
+    )
+    path.write_text(text, encoding="utf-8")
 
 
 def main() -> None:
@@ -89,7 +99,8 @@ def main() -> None:
     patch_image_util(root)
     patch_camera_controller(root)
     patch_preview_composition(root)
-    print(f"Iris Android capture + bounded preview patch applied to {root.name}")
+    patch_flutter_focus_lock()
+    print(f"Iris Android capture + safe focus-only lock patch applied to {root.name}")
 
 
 if __name__ == "__main__":
