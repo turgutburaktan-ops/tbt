@@ -5,9 +5,10 @@ import '../models/photo_spot.dart';
 
 /// Camera bağımsız çekim noktası veri katmanı.
 ///
-/// Şu an Firestore + yerel demo fallback kullanır. İleride Google Places,
-/// OpenStreetMap veya editoryal kaynaklar bu sınıfın arkasına yeni adapter
-/// olarak eklenebilir; UI doğrudan sağlayıcıya bağımlı kalmaz.
+/// Firestore kayıtlarını yerel kürasyon kataloğuyla birleştirir. Böylece
+/// Firestore'da birkaç kayıt bulunması uygulamadaki hazır noktaları gizlemez.
+/// İleride Google Places/OpenStreetMap gibi sağlayıcılar bu katmanın arkasına
+/// adapter olarak eklenebilir.
 class SpotRepository {
   SpotRepository._();
 
@@ -19,42 +20,30 @@ class SpotRepository {
   static const String spotsCollection = 'photo_spots';
   static const String submissionsCollection = 'spot_submissions';
 
-  /// Firestore hazır değilse uygulamayı bozmadan demo verisini döndürür.
   Future<List<PhotoSpot>> loadSpots({
     String? city,
     String? category,
     int limit = 200,
   }) async {
+    var remote = <PhotoSpot>[];
+
     try {
       Query<Map<String, dynamic>> query = _firestore
           .collection(spotsCollection)
           .where('status', isEqualTo: 'published');
 
-      if (city != null && city.trim().isNotEmpty) {
-        query = query.where('cityKey', isEqualTo: _key(city));
-      }
-
-      if (category != null && category.trim().isNotEmpty) {
-        query = query.where('categoryKey', isEqualTo: _key(category));
-      }
-
       final snapshot = await query.limit(limit).get();
-      final remote = snapshot.docs
+      remote = snapshot.docs
           .map(_fromDocument)
           .whereType<PhotoSpot>()
           .toList();
-
-      if (remote.isNotEmpty) {
-        remote.sort((a, b) => b.rating.compareTo(a.rating));
-        return remote;
-      }
     } catch (_) {
-      // Offline, eksik index veya henüz boş Firestore koleksiyonu mevcut
-      // uygulama deneyimini bozmasın.
+      // Offline/izin/index problemi yerel kataloğu engellemesin.
     }
 
+    final merged = _mergeWithCurated(remote);
     return _filterLocal(
-      demoSpots,
+      merged,
       city: city,
       category: category,
     );
@@ -71,19 +60,15 @@ class SpotRepository {
               .map(_fromDocument)
               .whereType<PhotoSpot>()
               .toList();
-
-          if (remote.isEmpty) return List<PhotoSpot>.from(demoSpots);
-
-          remote.sort((a, b) => b.rating.compareTo(a.rating));
-          return remote;
+          return _mergeWithCurated(remote);
         });
   }
 
-  Future<List<PhotoSpot>> search(String input, {int limit = 80}) async {
+  Future<List<PhotoSpot>> search(String input, {int limit = 200}) async {
     final query = _key(input);
-    if (query.isEmpty) return loadSpots(limit: limit);
-
     final all = await loadSpots(limit: limit);
+    if (query.isEmpty) return all;
+
     return all.where((spot) {
       final haystack = [
         spot.name,
@@ -96,14 +81,29 @@ class SpotRepository {
         spot.difficulty,
         ...spot.tags,
       ].map(_key).join(' ');
-
       return haystack.contains(query);
     }).toList();
   }
 
-  /// Kullanıcı tarafından önerilen noktayı doğrudan yayınlamaz.
-  /// Moderasyon kuyruğuna yazar; böylece spam ve yanlış koordinatlar canlı
-  /// haritaya otomatik düşmez.
+  List<PhotoSpot> _mergeWithCurated(List<PhotoSpot> remote) {
+    final byId = <String, PhotoSpot>{
+      for (final spot in demoSpots) spot.id: spot,
+    };
+
+    // Firestore aynı id'yi yayınladıysa güncel remote kayıt üstün gelir.
+    for (final spot in remote) {
+      byId[spot.id] = spot;
+    }
+
+    final result = byId.values.toList();
+    result.sort((a, b) {
+      final ratingOrder = b.rating.compareTo(a.rating);
+      if (ratingOrder != 0) return ratingOrder;
+      return a.name.compareTo(b.name);
+    });
+    return result;
+  }
+
   Future<String> submitCandidate({
     required String name,
     required String city,
@@ -160,8 +160,6 @@ class SpotRepository {
     return ref.id;
   }
 
-  /// Harici sağlayıcılardan gelecek kayıtların Firestore'a aktarılacağı ortak
-  /// normalize şeması. API anahtarı veya sağlayıcı SDK'sı burada tutulmaz.
   Map<String, dynamic> normalizeExternalSpot({
     required String externalId,
     required String source,
