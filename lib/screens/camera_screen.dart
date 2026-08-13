@@ -85,7 +85,6 @@ class _CameraScreenState extends State<CameraScreen> {
   Future<void> _applyMode() async {
     final p = _profile;
     _iso = p.iso; _shutter = p.shutterDenominator; _ev = p.ev; _zoom = p.zoom;
-    // Safety: never force dangerous manual exposure into the live preview.
     try { await _camera.setExposureMode(iris.ExposureMode.auto); } catch (_) {}
     try { await _camera.setFocusMode(_locked ? iris.FocusMode.locked : iris.FocusMode.auto); } catch (_) {}
     double minEv = -2, maxEv = 2;
@@ -94,7 +93,7 @@ class _CameraScreenState extends State<CameraScreen> {
     try { await _camera.setExposureOffset(safeEv); } catch (_) {}
     try { await _camera.setZoom(p.zoom); } catch (_) {}
     if (_focusPoint != null) {
-      try { await _camera.setFocus(point: _focusPoint!); await _camera.setExposurePoint(_focusPoint!); } catch (_) {}
+      try { await _camera.setFocus(point: _focusPoint!); } catch (_) {}
     }
     if (mounted) setState(() { _ev = safeEv; _tip = p.hint; });
   }
@@ -104,9 +103,9 @@ class _CameraScreenState extends State<CameraScreen> {
     final p = Offset((d.localPosition.dx / c.maxWidth).clamp(0,1), (d.localPosition.dy / c.maxHeight).clamp(0,1));
     _focusPoint = p;
     try {
+      await _camera.setExposureMode(iris.ExposureMode.auto);
       await _camera.setFocusMode(iris.FocusMode.auto);
       await _camera.setFocus(point: p);
-      await _camera.setExposurePoint(p);
     } catch (_) {}
     if (mounted) setState(() {});
   }
@@ -114,13 +113,21 @@ class _CameraScreenState extends State<CameraScreen> {
   Future<void> _longPressLock(LongPressStartDetails d, BoxConstraints c) async {
     final p = Offset((d.localPosition.dx / c.maxWidth).clamp(0,1), (d.localPosition.dy / c.maxHeight).clamp(0,1));
     _focusPoint = p; _locked = true;
-    try { await _camera.setFocus(point: p); await _camera.setExposurePoint(p); await _camera.setFocusMode(iris.FocusMode.locked); } catch (_) {}
-    if (mounted) setState(() => _tip = 'AF/AE KİLİTLİ • açmak için uzun bas');
+    try {
+      await _camera.setExposureMode(iris.ExposureMode.auto);
+      await _camera.setExposureOffset(_ev);
+      await _camera.setFocus(point: p);
+      await _camera.setFocusMode(iris.FocusMode.locked);
+    } catch (_) {}
+    if (mounted) setState(() => _tip = 'ODAK KİLİTLİ • pozlama otomatik • açmak için uzun bas');
   }
 
   Future<void> _unlock() async {
     _locked = false; _focusPoint = null;
-    try { await _camera.setFocusMode(iris.FocusMode.auto); } catch (_) {}
+    try {
+      await _camera.setExposureMode(iris.ExposureMode.auto);
+      await _camera.setFocusMode(iris.FocusMode.auto);
+    } catch (_) {}
     await _applyMode();
   }
 
@@ -132,8 +139,6 @@ class _CameraScreenState extends State<CameraScreen> {
   }
 
   Future<File> _capture() async {
-    // Normal/portrait/landscape/macro let the phone's AE choose exposure.
-    // Sport/night use bounded capture hints only; this prevents blown white frames.
     iris.PhotoCaptureOptions options;
     if (_mode == 'Spor') {
       options = iris.PhotoCaptureOptions(flashMode: _flash, iso: _iso.toDouble(), exposureDuration: Duration(microseconds: max(1000, (1000000 / _shutter).round())));
@@ -152,7 +157,6 @@ class _CameraScreenState extends State<CameraScreen> {
   }
 
   Future<void> _takePhoto() async {
-    // AI analysis must never block the shutter.
     if (_takingPhoto || _initializing) return;
     setState(() => _takingPhoto = true);
     try {
@@ -175,13 +179,12 @@ class _CameraScreenState extends State<CameraScreen> {
       await f.writeAsBytes(bytes);
       final a = await AiService.analyzeLiveFrame(imagePath: f.path, mode: _mode);
       if (mounted) setState(() => _tip = a.mainTip.isEmpty ? _profile.hint : a.mainTip);
-      // AI is advisory. It may make a small bounded EV correction, never ISO/shutter explosions.
       final t = '${a.mainTip} ${a.lightTip}'.toLowerCase();
       var target = _profile.ev;
       if (t.contains('çok parlak') || t.contains('aşırı poz')) target -= .25;
       if (t.contains('karanlık') || t.contains('az ışık')) target += .15;
       target = target.clamp(-0.7, 0.7).toDouble();
-      try { await _camera.setExposureOffset(target); _ev = target; } catch (_) {}
+      try { await _camera.setExposureMode(iris.ExposureMode.auto); await _camera.setExposureOffset(target); _ev = target; } catch (_) {}
     } catch (e) { if (mounted) setState(() => _tip = _profile.hint); }
     finally { if (f != null) { try { await f.delete(); } catch (_) {} } if (mounted) setState(() => _aiBusy = false); }
   }
