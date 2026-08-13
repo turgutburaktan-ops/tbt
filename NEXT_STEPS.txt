@@ -1,8 +1,10 @@
 SONRA YAPILACAKLAR
-1. Fotoğrafçı / Model profil düzenleme (şehir, bio, portföy) tamamlanacak.
-2. Çekim noktası odaklı sosyal akış geliştirilecek.
+1. Çekim noktası odaklı sosyal akış geliştirilecek.
+2. Birlikte Git fotoğraf dışı etkinliklere genişletilecek (koşu, bisiklet, yürüyüş ve topluluk buluşmaları).
 3. Görev / rozet sistemi eklenecek.
 4. Keşfet haritası katmanları eklenecek.
-5. Bildirimler ve güvenlik / gizlilik ayarları tamamlanacak.
+5. Genel kullanıcı profil / portföy deneyimi geliştirilecek.
+6. Bildirimler ve güvenlik / gizlilik ayarları tamamlanacak.
 
-NOT: Kamera dosyalarına ve kamera workflow'una dokunulmayacak.
+KAPSAM DIŞI: Fotoğrafçı / Model modu eklenmeyecek.
+NOT: Kamera dosyalarına, iris_camera entegrasyonuna ve kamera workflow'una dokunulmayacak.
