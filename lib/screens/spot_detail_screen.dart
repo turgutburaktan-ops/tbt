@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/photo_spot.dart';
 import '../services/favorites_service.dart';
 import '../widgets/spot_experience_sections.dart';
+import '../widgets/spot_presence_section.dart';
 import 'camera_screen.dart';
 
 class SpotDetailScreen extends StatelessWidget {
@@ -127,6 +128,9 @@ class SpotDetailScreen extends StatelessWidget {
 
                   const SizedBox(height: 18),
                   TogetherGoSection(spot: spot),
+
+                  const SizedBox(height: 18),
+                  SpotPresenceSection(spot: spot),
 
                   if (spot.description.isNotEmpty) ...[
                     const SizedBox(height: 24),
