@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/photo_spot.dart';
 
@@ -14,21 +15,39 @@ class SpotImageSearchService {
   Future<String?> findImage(PhotoSpot spot) {
     final key = '${spot.id}|${spot.city}|${spot.name}';
     if (_cache.containsKey(key)) return Future.value(_cache[key]);
-    return _pending.putIfAbsent(key, () => _search(key, spot));
+    return _pending.putIfAbsent(key, () => _loadOrSearch(key, spot));
   }
 
-  Future<String?> _search(String key, PhotoSpot spot) async {
+  Future<String?> _loadOrSearch(String key, PhotoSpot spot) async {
     try {
-      final query = '${spot.name} ${spot.city} Türkiye Turkey filetype:bitmap';
+      final prefs = await SharedPreferences.getInstance();
+      final saved = prefs.getString(_prefsKey(key))?.trim() ?? '';
+      if (saved.startsWith('https://')) {
+        _cache[key] = saved;
+        return saved;
+      }
+      return await _search(key, spot, prefs);
+    } finally {
+      _pending.remove(key);
+    }
+  }
+
+  Future<String?> _search(
+    String key,
+    PhotoSpot spot,
+    SharedPreferences prefs,
+  ) async {
+    try {
+      final query = '${spot.name} ${spot.city} Türkiye Turkey';
       final uri = Uri.https('commons.wikimedia.org', '/w/api.php', {
         'action': 'query',
         'generator': 'search',
         'gsrsearch': query,
         'gsrnamespace': '6',
-        'gsrlimit': '6',
+        'gsrlimit': '5',
         'prop': 'imageinfo',
         'iiprop': 'url',
-        'iiurlwidth': '1280',
+        'iiurlwidth': '900',
         'format': 'json',
         'formatversion': '2',
         'origin': '*',
@@ -39,7 +58,7 @@ class SpotImageSearchService {
         headers: const {
           'User-Agent': 'BestPhotoSpot/0.1 (photo spot image resolver)',
         },
-      ).timeout(const Duration(seconds: 8));
+      ).timeout(const Duration(seconds: 4));
 
       if (response.statusCode != 200) {
         _cache[key] = null;
@@ -76,6 +95,7 @@ class SpotImageSearchService {
         final thumbUrl = (info['thumburl'] ?? info['url'] ?? '').toString().trim();
         if (thumbUrl.startsWith('https://')) {
           _cache[key] = thumbUrl;
+          await prefs.setString(_prefsKey(key), thumbUrl);
           return thumbUrl;
         }
       }
@@ -85,9 +105,12 @@ class SpotImageSearchService {
     } catch (_) {
       _cache[key] = null;
       return null;
-    } finally {
-      _pending.remove(key);
     }
+  }
+
+  String _prefsKey(String key) {
+    final compact = base64Url.encode(utf8.encode(key)).replaceAll('=', '');
+    return 'spot_image_v1_$compact';
   }
 
   int _score(Map<String, dynamic> page, PhotoSpot spot) {
