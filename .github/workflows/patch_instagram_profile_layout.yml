@@ -1,0 +1,36 @@
+name: Patch Compact Social Profile
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'tool/patch_instagram_profile_layout.py'
+      - '.github/workflows/patch_instagram_profile_layout.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Patch profile layout
+        run: python tool/patch_instagram_profile_layout.py
+      - name: Commit profile redesign
+        run: |
+          if git diff --quiet; then
+            echo 'No profile changes.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add lib/screens/profile_page_v2.dart
+          git commit -m 'Redesign profile with compact photo grid'
+          git push
