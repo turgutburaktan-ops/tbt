@@ -3,6 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../services/post_service.dart';
+import '../services/spot_repository.dart';
+import 'spot_detail_screen.dart';
 
 class PostDetailScreen extends StatefulWidget {
   final Map<String, dynamic> post;
@@ -15,6 +17,7 @@ class PostDetailScreen extends StatefulWidget {
 
 class _PostDetailScreenState extends State<PostDetailScreen> {
   late Map<String, dynamic> _post;
+  bool _openingSpot = false;
 
   @override
   void initState() {
@@ -33,9 +36,37 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     return uid != null && uid == _post['userId']?.toString();
   }
 
+  Future<void> _openSpot(String spotName) async {
+    if (_openingSpot || spotName.trim().isEmpty) return;
+    setState(() => _openingSpot = true);
+    try {
+      final results = await SpotRepository.instance.search(spotName, limit: 2000);
+      if (!mounted) return;
+      if (results.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Bu çekim noktası kartı henüz bulunamadı.')),
+        );
+        return;
+      }
+
+      final exact = results.where((spot) =>
+          spot.name.trim().toLowerCase() == spotName.trim().toLowerCase());
+      final spot = exact.isNotEmpty ? exact.first : results.first;
+
+      await Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => SpotDetailScreen(spot: spot)),
+      );
+    } finally {
+      if (mounted) setState(() => _openingSpot = false);
+    }
+  }
+
   Future<void> _edit() async {
-    final captionController = TextEditingController(text: (_post['caption'] ?? '').toString());
-    final spotController = TextEditingController(text: (_post['spotName'] ?? '').toString());
+    final captionController =
+        TextEditingController(text: (_post['caption'] ?? '').toString());
+    final spotController =
+        TextEditingController(text: (_post['spotName'] ?? '').toString());
 
     final save = await showModalBottomSheet<bool>(
       context: context,
@@ -43,25 +74,48 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
       useSafeArea: true,
       backgroundColor: const Color(0xFF0D1117),
       builder: (sheetContext) => Padding(
-        padding: EdgeInsets.fromLTRB(20, 18, 20, MediaQuery.of(sheetContext).viewInsets.bottom + 24),
+        padding: EdgeInsets.fromLTRB(
+          20,
+          18,
+          20,
+          MediaQuery.of(sheetContext).viewInsets.bottom + 24,
+        ),
         child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Gönderiyi Düzenle', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900)),
+              const Text(
+                'Gönderiyi Düzenle',
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900),
+              ),
               const SizedBox(height: 16),
-              TextField(controller: captionController, minLines: 3, maxLines: 6, decoration: const InputDecoration(labelText: 'Açıklama')),
+              TextField(
+                controller: captionController,
+                minLines: 3,
+                maxLines: 6,
+                decoration: const InputDecoration(labelText: 'Açıklama'),
+              ),
               const SizedBox(height: 12),
-              TextField(controller: spotController, decoration: const InputDecoration(labelText: 'Konum / çekim noktası')),
+              TextField(
+                controller: spotController,
+                decoration:
+                    const InputDecoration(labelText: 'Konum / çekim noktası'),
+              ),
               const SizedBox(height: 18),
               SizedBox(
                 width: double.infinity,
                 height: 50,
                 child: FilledButton(
-                  style: FilledButton.styleFrom(backgroundColor: const Color(0xFFFFC107), foregroundColor: Colors.black),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: const Color(0xFFFFC107),
+                    foregroundColor: Colors.black,
+                  ),
                   onPressed: () => Navigator.pop(sheetContext, true),
-                  child: const Text('Kaydet', style: TextStyle(fontWeight: FontWeight.w800)),
+                  child: const Text(
+                    'Kaydet',
+                    style: TextStyle(fontWeight: FontWeight.w800),
+                  ),
                 ),
               ),
             ],
@@ -85,7 +139,9 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
+            SnackBar(
+              content: Text(e.toString().replaceFirst('Exception: ', '')),
+            ),
           );
         }
       }
@@ -103,8 +159,17 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
         title: const Text('Gönderiyi sil'),
         content: const Text('Bu paylaşım kalıcı olarak silinecek.'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Vazgeç')),
-          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Sil', style: TextStyle(color: Colors.redAccent))),
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Vazgeç'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text(
+              'Sil',
+              style: TextStyle(color: Colors.redAccent),
+            ),
+          ),
         ],
       ),
     );
@@ -134,7 +199,10 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: const Icon(Icons.edit_outlined, color: Color(0xFFFFC107)),
+              leading: const Icon(
+                Icons.edit_outlined,
+                color: Color(0xFFFFC107),
+              ),
               title: const Text('Düzenle'),
               onTap: () {
                 Navigator.pop(sheetContext);
@@ -142,8 +210,12 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.delete_outline, color: Colors.redAccent),
-              title: const Text('Sil', style: TextStyle(color: Colors.redAccent)),
+              leading:
+                  const Icon(Icons.delete_outline, color: Colors.redAccent),
+              title: const Text(
+                'Sil',
+                style: TextStyle(color: Colors.redAccent),
+              ),
               onTap: () {
                 Navigator.pop(sheetContext);
                 _delete();
@@ -159,7 +231,12 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   Widget build(BuildContext context) {
     final imageUrl = (_post['imageUrl'] ?? '').toString();
     final caption = (_post['caption'] ?? '').toString().trim();
-    final spot = (_post['spotName'] ?? _post['locationName'] ?? _post['location'] ?? '').toString().trim();
+    final spot = (_post['spotName'] ??
+            _post['locationName'] ??
+            _post['location'] ??
+            '')
+        .toString()
+        .trim();
     final userName = (_post['userName'] ?? 'Fotoğrafçı').toString();
     final date = _dateLabel(_post['createdAt']);
 
@@ -181,57 +258,124 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
       body: ListView(
         padding: const EdgeInsets.only(bottom: 32),
         children: [
-          Container(
-            color: Colors.black,
-            constraints: const BoxConstraints(minHeight: 360, maxHeight: 620),
-            child: imageUrl.isEmpty
-                ? const Center(child: Icon(Icons.image_outlined, size: 70, color: Colors.white30))
-                : InteractiveViewer(
-                    minScale: 1,
-                    maxScale: 5,
-                    panEnabled: true,
-                    child: Center(
-                      child: Image.network(
-                        imageUrl,
-                        fit: BoxFit.contain,
-                        width: double.infinity,
-                        errorBuilder: (_, __, ___) => const Center(
-                          child: Icon(Icons.broken_image_outlined, size: 70, color: Colors.white30),
+          Stack(
+            children: [
+              AspectRatio(
+                aspectRatio: 1,
+                child: Container(
+                  color: Colors.black,
+                  child: imageUrl.isEmpty
+                      ? const Center(
+                          child: Icon(
+                            Icons.image_outlined,
+                            size: 70,
+                            color: Colors.white30,
+                          ),
+                        )
+                      : InteractiveViewer(
+                          minScale: 1,
+                          maxScale: 5,
+                          panEnabled: true,
+                          child: SizedBox.expand(
+                            child: Image.network(
+                              imageUrl,
+                              fit: BoxFit.contain,
+                              errorBuilder: (_, __, ___) => const Center(
+                                child: Icon(
+                                  Icons.broken_image_outlined,
+                                  size: 70,
+                                  color: Colors.white30,
+                                ),
+                              ),
+                            ),
+                          ),
                         ),
-                      ),
+                ),
+              ),
+              Positioned(
+                left: 12,
+                top: 12,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(.68),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 11,
+                      vertical: 8,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          userName,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        if (spot.isNotEmpty) ...[
+                          const SizedBox(height: 2),
+                          InkWell(
+                            onTap: _openingSpot ? null : () => _openSpot(spot),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.location_on_outlined,
+                                  size: 13,
+                                  color: Color(0xFFFFC107),
+                                ),
+                                const SizedBox(width: 3),
+                                ConstrainedBox(
+                                  constraints:
+                                      const BoxConstraints(maxWidth: 220),
+                                  child: Text(
+                                    spot,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      color: Colors.white70,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                   ),
+                ),
+              ),
+            ],
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(18, 18, 18, 0),
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    const CircleAvatar(
-                      radius: 17,
-                      backgroundColor: Color(0xFF202833),
-                      child: Icon(Icons.person, size: 18, color: Colors.white54),
+                if (caption.isNotEmpty)
+                  Text(
+                    caption,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      height: 1.45,
+                      fontSize: 14,
                     ),
-                    const SizedBox(width: 10),
-                    Expanded(child: Text(userName, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15))),
-                    if (date.isNotEmpty) Text(date, style: const TextStyle(color: Colors.white38, fontSize: 12)),
-                  ],
-                ),
-                if (caption.isNotEmpty) ...[
-                  const SizedBox(height: 18),
-                  Text(caption, style: const TextStyle(color: Colors.white, height: 1.45, fontSize: 15)),
-                ],
-                if (spot.isNotEmpty) ...[
-                  const SizedBox(height: 16),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Icon(Icons.location_on_outlined, size: 19, color: Color(0xFFFFC107)),
-                      const SizedBox(width: 6),
-                      Expanded(child: Text(spot, style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.w700))),
-                    ],
+                  ),
+                if (date.isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  Text(
+                    date,
+                    style: const TextStyle(
+                      color: Colors.white38,
+                      fontSize: 11,
+                    ),
                   ),
                 ],
               ],
