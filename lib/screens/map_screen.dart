@@ -176,7 +176,7 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   void _showAll() {
-    _mapController?.animateCamera(const CameraUpdate.newLatLngZoom(_defaultLocation, 5));
+    _mapController?.animateCamera(CameraUpdate.newLatLngZoom(_defaultLocation, 5));
     setState(() {
       _selectedSpot = null;
       _selectedEvent = null;
