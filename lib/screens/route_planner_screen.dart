@@ -131,7 +131,8 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
         Marker(
           markerId: const MarkerId('route_origin'),
           position: LatLng(current.latitude, current.longitude),
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
+          icon:
+              BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
           infoWindow: const InfoWindow(title: 'Başlangıç • Konumum'),
         ),
       );
@@ -244,14 +245,17 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
         builder: (context, setSheetState) {
           final key = _normalize(query);
           final excluded = _stops.map((s) => s.id).toSet();
-          final matches = _allSpots.where((spot) {
-            if (excluded.contains(spot.id)) return false;
-            if (key.isEmpty) return true;
-            final haystack = _normalize(
-              '${spot.name} ${spot.city} ${spot.category} ${spot.tags.join(' ')}',
-            );
-            return haystack.contains(key);
-          }).take(80).toList();
+          final matches = _allSpots
+              .where((spot) {
+                if (excluded.contains(spot.id)) return false;
+                if (key.isEmpty) return true;
+                final haystack = _normalize(
+                  '${spot.name} ${spot.city} ${spot.category} ${spot.tags.join(' ')}',
+                );
+                return haystack.contains(key);
+              })
+              .take(80)
+              .toList();
 
           return FractionallySizedBox(
             heightFactor: .88,
@@ -428,9 +432,8 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
     }
 
     if (waypointSpots.isNotEmpty) {
-      params['waypoints'] = waypointSpots
-          .map((s) => '${s.latitude},${s.longitude}')
-          .join('|');
+      params['waypoints'] =
+          waypointSpots.map((s) => '${s.latitude},${s.longitude}').join('|');
     }
 
     final uri = Uri.https('www.google.com', '/maps/dir/', params);
@@ -572,7 +575,8 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
                             ? const SizedBox(
                                 width: 16,
                                 height: 16,
-                                child: CircularProgressIndicator(strokeWidth: 2),
+                                child:
+                                    CircularProgressIndicator(strokeWidth: 2),
                               )
                             : const Icon(Icons.my_location_rounded, size: 18),
                         label: Text(
@@ -752,8 +756,7 @@ class _EmptyRoute extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.route_outlined,
-                  size: 56, color: Colors.white24),
+              const Icon(Icons.route_outlined, size: 56, color: Colors.white24),
               const SizedBox(height: 12),
               const Text(
                 'Rotan henüz boş',

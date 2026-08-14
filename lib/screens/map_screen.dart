@@ -7,6 +7,7 @@ import '../models/social_event.dart';
 import '../services/social_event_service.dart';
 import '../services/spot_repository.dart';
 import '../widgets/spot_image.dart';
+import 'route_planner_screen.dart';
 import 'social_events_screen.dart';
 import 'spot_detail_screen.dart';
 
@@ -201,6 +202,13 @@ class _MapScreenState extends State<MapScreen> {
         MaterialPageRoute(builder: (_) => SpotDetailScreen(spot: spot)));
   }
 
+  void _openRoutePlanner() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const RoutePlannerScreen()),
+    );
+  }
+
   void _openEvents() {
     Navigator.push(
         context,
@@ -271,6 +279,12 @@ class _MapScreenState extends State<MapScreen> {
                               style: const TextStyle(
                                   color: Colors.white54,
                                   fontWeight: FontWeight.w700)),
+                        IconButton(
+                          tooltip: 'Rota oluştur',
+                          onPressed: _openRoutePlanner,
+                          icon: const Icon(Icons.route_rounded,
+                              color: Colors.white70),
+                        ),
                         IconButton(
                             onPressed: () {
                               setState(() => _loadingSpots = true);
