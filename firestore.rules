@@ -5,10 +5,110 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    // Public content can be browsed without signing in.
-    match /{document=**} {
+    function isAdmin() {
+      return signedIn() && request.auth.token.admin == true;
+    }
+
+    function isPaid(data) {
+      return data.accessType == 'paid';
+    }
+
+    function protectedEventFieldsUnchanged() {
+      return request.resource.data.hostId == resource.data.hostId
+        && request.resource.data.accessType == resource.data.accessType
+        && request.resource.data.ticketPriceMinor == resource.data.ticketPriceMinor
+        && request.resource.data.currency == resource.data.currency
+        && request.resource.data.trustStatus == resource.data.trustStatus
+        && request.resource.data.salesStatus == resource.data.salesStatus
+        && request.resource.data.riskLevel == resource.data.riskLevel
+        && request.resource.data.reportCount == resource.data.reportCount
+        && request.resource.data.paymentStatus == resource.data.paymentStatus
+        && request.resource.data.paymentReleaseStatus == resource.data.paymentReleaseStatus
+        && request.resource.data.paymentProvider == resource.data.paymentProvider
+        && request.resource.data.externalProductId == resource.data.externalProductId;
+    }
+
+    function validPaidCreate() {
+      return request.resource.data.accessType != 'paid'
+        || (
+          request.resource.data.paymentStatus == 'comingSoon'
+          && request.resource.data.trustStatus == 'pending_review'
+          && request.resource.data.salesStatus == 'blocked'
+          && request.resource.data.paymentReleaseStatus == 'held'
+          && request.resource.data.reportCount == 0
+          && request.resource.data.riskLevel in ['low', 'medium']
+          && request.resource.data.ticketPriceMinor > 0
+        );
+    }
+
+    function participantJoinOrLeaveOnly() {
+      let oldList = resource.data.participantIds;
+      let newList = request.resource.data.participantIds;
+      let changed = request.resource.data.diff(resource.data).affectedKeys();
+      return changed.hasOnly(['participantIds', 'updatedAt'])
+        && (
+          (
+            newList.size() == oldList.size() + 1
+            && newList.hasAll(oldList)
+            && newList.hasAny([request.auth.uid])
+          )
+          || (
+            oldList.size() == newList.size() + 1
+            && oldList.hasAll(newList)
+            && oldList.hasAny([request.auth.uid])
+            && !newList.hasAny([request.auth.uid])
+          )
+        );
+    }
+
+    match /social_events/{eventId} {
       allow read: if true;
-      allow write: if signedIn();
+
+      allow create: if signedIn()
+        && request.resource.data.hostId == request.auth.uid
+        && request.resource.data.status == 'open'
+        && request.resource.data.reportCount == 0
+        && validPaidCreate();
+
+      allow update: if isAdmin()
+        || (
+          signedIn()
+          && protectedEventFieldsUnchanged()
+          && (
+            participantJoinOrLeaveOnly()
+            || (
+              resource.data.hostId == request.auth.uid
+              && request.resource.data.diff(resource.data).affectedKeys()
+                  .hasOnly(['status', 'updatedAt'])
+              && request.resource.data.status in ['open', 'cancelled']
+            )
+          )
+        );
+
+      allow delete: if isAdmin();
+
+      match /reports/{reporterId} {
+        allow read: if isAdmin();
+        allow create: if signedIn()
+          && reporterId == request.auth.uid
+          && request.resource.data.reporterId == request.auth.uid
+          && request.resource.data.reason is string
+          && request.resource.data.reason.size() >= 3;
+        allow update, delete: if false;
+      }
+    }
+
+    // Existing application areas stay authenticated for writes. The event
+    // collection is intentionally excluded above so paid-event trust fields
+    // cannot be forged by a modified client.
+    match /{collection}/{document} {
+      allow read: if true;
+      allow write: if signedIn() && collection != 'social_events';
+    }
+
+    match /{collection}/{document}/{rest=**} {
+      allow read: if true;
+      allow write: if signedIn() && collection != 'social_events';
     }
   }
 }
