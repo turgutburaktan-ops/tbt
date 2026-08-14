@@ -1,0 +1,40 @@
+name: Deploy Firestore Rules
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'firestore.rules'
+      - 'firebase.json'
+      - '.github/workflows/deploy_firestore_rules.yml'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Check Firebase token
+        id: auth
+        run: |
+          if [ -n "$FIREBASE_TOKEN" ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "FIREBASE_TOKEN secret is not configured; skipping deployment."
+          fi
+
+      - name: Install Firebase CLI
+        if: steps.auth.outputs.ready == 'true'
+        run: npm install -g firebase-tools
+
+      - name: Deploy Firestore rules
+        if: steps.auth.outputs.ready == 'true'
+        run: firebase deploy --only firestore:rules --project en-iyi-cekim-noktasi --token "$FIREBASE_TOKEN" --non-interactive
