@@ -7,12 +7,16 @@ class OfficialSpotCandidateAudit {
   final int totalCandidates;
   final int alreadyPublishedLike;
   final int coveredCities;
+  final int sourceVerifiedCount;
+  final List<OfficialSpotCandidate> sourceVerifiedCandidates;
   final List<OfficialSpotCandidate> pendingVerification;
 
   const OfficialSpotCandidateAudit({
     required this.totalCandidates,
     required this.alreadyPublishedLike,
     required this.coveredCities,
+    required this.sourceVerifiedCount,
+    required this.sourceVerifiedCandidates,
     required this.pendingVerification,
   });
 }
@@ -33,12 +37,24 @@ class OfficialSpotCandidateService {
     return List.unmodifiable(byKey.values);
   }
 
+  /// GoTürkiye, Kültür ve Turizm Bakanlığı'nın resmî destinasyon platformudur.
+  /// Bu kaynaktan gelen adaylarda mekânın varlığı / editoryal kaynak doğrulaması
+  /// yeniden yapılmaz. Yayına geçmeden önce yalnızca harita koordinatı,
+  /// fotoğrafçılık metadatası ve gerçek görsel eşleşmesi tamamlanır.
+  bool isSourceVerified(OfficialSpotCandidate candidate) {
+    return _key(candidate.sourceName) == _key('GoTürkiye');
+  }
+
+  List<OfficialSpotCandidate> get sourceVerifiedCandidates =>
+      List.unmodifiable(allCandidates.where(isSourceVerified));
+
   Future<OfficialSpotCandidateAudit> audit() async {
     final existing = await SpotRepository.instance.loadSpots(limit: 1000);
     final existingKeys = <String>{
       for (final spot in existing) _key('${spot.city}|${spot.name}'),
     };
     final pending = <OfficialSpotCandidate>[];
+    final verified = <OfficialSpotCandidate>[];
     final cities = <String>{};
     var matched = 0;
 
@@ -47,15 +63,18 @@ class OfficialSpotCandidateService {
       final key = _key('${candidate.city}|${candidate.name}');
       if (existingKeys.contains(key)) {
         matched++;
-      } else {
-        pending.add(candidate);
+        continue;
       }
+      pending.add(candidate);
+      if (isSourceVerified(candidate)) verified.add(candidate);
     }
 
     return OfficialSpotCandidateAudit(
       totalCandidates: allCandidates.length,
       alreadyPublishedLike: matched,
       coveredCities: cities.length,
+      sourceVerifiedCount: verified.length,
+      sourceVerifiedCandidates: List.unmodifiable(verified),
       pendingVerification: pending,
     );
   }
