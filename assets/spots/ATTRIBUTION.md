@@ -94,3 +94,31 @@ kept here so bundling the files does not lose attribution metadata.
 - Author: Raicem
 - License: CC0 1.0
 - Source page: https://commons.wikimedia.org/wiki/File:Polente_lighthouse_in_Bozcaada,_under_a_wind_turbine.jpg
+
+### `elazig-alacali-camii`
+- Local asset: `assets/spots/elazig-alacali-camii.webp`
+- Source: Wikimedia Commons
+- Author: Dkask
+- License: CC BY-SA 4.0
+- Source page: https://commons.wikimedia.org/wiki/File:Harput_Alacalı_Camii.webp
+
+### `elz-alacali-cami`
+- Local asset: `assets/spots/elz-alacali-cami.webp`
+- Source: Wikimedia Commons
+- Author: Dkask
+- License: CC BY-SA 4.0
+- Source page: https://commons.wikimedia.org/wiki/File:Harput_Alacalı_Camii.webp
+
+### `elazig-harput-ulu-camii`
+- Local asset: `assets/spots/elazig-harput-ulu-camii.jpg`
+- Source: Wikimedia Commons
+- Author: Dkask
+- License: CC BY-SA 4.0
+- Source page: https://commons.wikimedia.org/wiki/File:Harput_Ulu_Camii_21.jpg
+
+### `elz-harput-ulu`
+- Local asset: `assets/spots/elz-harput-ulu.jpg`
+- Source: Wikimedia Commons
+- Author: Dkask
+- License: CC BY-SA 4.0
+- Source page: https://commons.wikimedia.org/wiki/File:Harput_Ulu_Camii_21.jpg

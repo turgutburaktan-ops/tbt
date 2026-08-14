@@ -149,6 +149,7 @@ const spotImageRegistry = <String, SpotImageInfo>{
         'https://commons.wikimedia.org/wiki/File:Polente_lighthouse_in_Bozcaada,_under_a_wind_turbine.jpg',
   ),
   'elazig-alacali-camii': SpotImageInfo(
+    assetPath: 'assets/spots/elazig-alacali-camii.webp',
     networkUrl:
         'https://commons.wikimedia.org/wiki/Special:Redirect/file/Harput_Alacal%C4%B1_Camii.webp?width=1280',
     sourceName: 'Wikimedia Commons',
@@ -158,6 +159,7 @@ const spotImageRegistry = <String, SpotImageInfo>{
         'https://commons.wikimedia.org/wiki/File:Harput_Alacalı_Camii.webp',
   ),
   'elz-alacali-cami': SpotImageInfo(
+    assetPath: 'assets/spots/elz-alacali-cami.webp',
     networkUrl:
         'https://commons.wikimedia.org/wiki/Special:Redirect/file/Harput_Alacal%C4%B1_Camii.webp?width=1280',
     sourceName: 'Wikimedia Commons',
@@ -167,6 +169,7 @@ const spotImageRegistry = <String, SpotImageInfo>{
         'https://commons.wikimedia.org/wiki/File:Harput_Alacalı_Camii.webp',
   ),
   'elazig-harput-ulu-camii': SpotImageInfo(
+    assetPath: 'assets/spots/elazig-harput-ulu-camii.jpg',
     networkUrl:
         'https://commons.wikimedia.org/wiki/Special:Redirect/file/Harput_Ulu_Camii_21.jpg?width=1280',
     sourceName: 'Wikimedia Commons',
@@ -176,6 +179,7 @@ const spotImageRegistry = <String, SpotImageInfo>{
         'https://commons.wikimedia.org/wiki/File:Harput_Ulu_Camii_21.jpg',
   ),
   'elz-harput-ulu': SpotImageInfo(
+    assetPath: 'assets/spots/elz-harput-ulu.jpg',
     networkUrl:
         'https://commons.wikimedia.org/wiki/Special:Redirect/file/Harput_Ulu_Camii_21.jpg?width=1280',
     sourceName: 'Wikimedia Commons',
