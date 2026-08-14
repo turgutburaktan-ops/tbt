@@ -148,4 +148,40 @@ const spotImageRegistry = <String, SpotImageInfo>{
     sourcePage:
         'https://commons.wikimedia.org/wiki/File:Polente_lighthouse_in_Bozcaada,_under_a_wind_turbine.jpg',
   ),
+  'elazig-alacali-camii': SpotImageInfo(
+    networkUrl:
+        'https://commons.wikimedia.org/wiki/Special:Redirect/file/Harput_Alacal%C4%B1_Camii.webp?width=1280',
+    sourceName: 'Wikimedia Commons',
+    author: 'Dkask',
+    license: 'CC BY-SA 4.0',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Harput_Alacalı_Camii.webp',
+  ),
+  'elz-alacali-cami': SpotImageInfo(
+    networkUrl:
+        'https://commons.wikimedia.org/wiki/Special:Redirect/file/Harput_Alacal%C4%B1_Camii.webp?width=1280',
+    sourceName: 'Wikimedia Commons',
+    author: 'Dkask',
+    license: 'CC BY-SA 4.0',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Harput_Alacalı_Camii.webp',
+  ),
+  'elazig-harput-ulu-camii': SpotImageInfo(
+    networkUrl:
+        'https://commons.wikimedia.org/wiki/Special:Redirect/file/Harput_Ulu_Camii_21.jpg?width=1280',
+    sourceName: 'Wikimedia Commons',
+    author: 'Dkask',
+    license: 'CC BY-SA 4.0',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Harput_Ulu_Camii_21.jpg',
+  ),
+  'elz-harput-ulu': SpotImageInfo(
+    networkUrl:
+        'https://commons.wikimedia.org/wiki/Special:Redirect/file/Harput_Ulu_Camii_21.jpg?width=1280',
+    sourceName: 'Wikimedia Commons',
+    author: 'Dkask',
+    license: 'CC BY-SA 4.0',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Harput_Ulu_Camii_21.jpg',
+  ),
 };
