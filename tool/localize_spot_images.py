@@ -11,6 +11,7 @@ from __future__ import annotations
 import re
 import sys
 import time
+import urllib.error
 import urllib.request
 from pathlib import Path
 
@@ -27,6 +28,11 @@ ENTRY_RE = re.compile(
 )
 FIELD_RE = re.compile(r"^\s*(?P<name>\w+):\s*'(?P<value>.*?)',\s*$", re.MULTILINE)
 
+USER_AGENT = (
+    "BestPhotoSpot/1.0 "
+    "(https://github.com/turgutburaktan-ops/tbt; contact: turgutburaktan@gmail.com)"
+)
+
 
 def fields(body: str) -> dict[str, str]:
     return {m.group("name"): m.group("value") for m in FIELD_RE.finditer(body)}
@@ -41,19 +47,42 @@ def extension_for(url: str) -> str:
 
 
 def download(url: str, destination: Path) -> None:
-    request = urllib.request.Request(
-        url,
-        headers={
-            "User-Agent": "BestPhotoSpot/0.1 verified-asset-localizer (GitHub Actions)",
-            "Accept": "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
-        },
-    )
-    with urllib.request.urlopen(request, timeout=45) as response:
-        content_type = response.headers.get("Content-Type", "")
-        data = response.read()
-    if not data or not content_type.startswith("image/"):
-        raise RuntimeError(f"Expected image from {url}, got {content_type!r} ({len(data)} bytes)")
-    destination.write_bytes(data)
+    last_error: Exception | None = None
+    for attempt in range(6):
+        request = urllib.request.Request(
+            url,
+            headers={
+                "User-Agent": USER_AGENT,
+                "Accept": "image/avif,image/webp,image/apng,image/*,*/*;q=0.8",
+                "Accept-Language": "tr-TR,tr;q=0.9,en;q=0.7",
+                "Referer": "https://commons.wikimedia.org/",
+            },
+        )
+        try:
+            with urllib.request.urlopen(request, timeout=60) as response:
+                content_type = response.headers.get("Content-Type", "")
+                data = response.read()
+            if not data or not content_type.startswith("image/"):
+                raise RuntimeError(
+                    f"Expected image from {url}, got {content_type!r} ({len(data)} bytes)"
+                )
+            destination.write_bytes(data)
+            return
+        except urllib.error.HTTPError as exc:
+            last_error = exc
+            if exc.code != 429:
+                raise
+            retry_after = exc.headers.get("Retry-After") if exc.headers else None
+            wait = int(retry_after) if retry_after and retry_after.isdigit() else (4 * (attempt + 1))
+            print(f"Wikimedia rate limit: waiting {wait}s before retry {attempt + 2}/6")
+            time.sleep(wait)
+        except Exception as exc:
+            last_error = exc
+            if attempt == 5:
+                raise
+            time.sleep(2 * (attempt + 1))
+    if last_error is not None:
+        raise last_error
 
 
 def main() -> int:
@@ -81,8 +110,8 @@ def main() -> int:
                 print(f"Downloading {spot_id} -> {relative_path}")
                 download(url, destination)
                 downloaded += 1
-                time.sleep(0.2)
-        except Exception as exc:  # keep other verified assets progressing
+                time.sleep(2.0)
+        except Exception as exc:
             failures.append(f"{spot_id}: {exc}")
             print(f"ERROR {spot_id}: {exc}", file=sys.stderr)
             return match.group(0)
@@ -120,10 +149,9 @@ def main() -> int:
 
     print(f"Localized registry entries: {len(attribution_rows)}; downloaded now: {downloaded}")
     if failures:
-        print("Some assets could not be localized:", file=sys.stderr)
+        print("Some assets could not be localized; successful downloads will still be committed:", file=sys.stderr)
         for failure in failures:
             print(f"- {failure}", file=sys.stderr)
-        return 2
     return 0
 
 
