@@ -6,6 +6,7 @@ import '../services/post_service.dart';
 import '../services/spot_repository.dart';
 import '../widgets/content_engagement_bar.dart';
 import '../widgets/mention_text.dart';
+import '../widgets/mention_text.dart';
 import 'spot_detail_screen.dart';
 
 class PostDetailScreen extends StatefulWidget {
