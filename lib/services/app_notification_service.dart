@@ -67,6 +67,12 @@ class AppNotificationService {
         (items) => items.where((item) => !item.read).length,
       );
 
+  Stream<int> unreadMessageCount() => watchMine().map(
+        (items) => items
+            .where((item) => !item.read && item.type.toLowerCase() == 'message')
+            .length,
+      );
+
   Future<void> notifyUser({
     required String userId,
     required String type,
