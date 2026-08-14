@@ -5,6 +5,7 @@ on:
     paths:
       - 'lib/services/content_engagement_service.dart'
       - 'lib/widgets/content_engagement_bar.dart'
+      - '.github/workflows/add_post_event_engagement.yml'
 
 permissions:
   contents: write
