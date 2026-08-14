@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../models/photo_spot.dart';
@@ -5,6 +6,7 @@ import '../services/favorites_service.dart';
 import '../widgets/spot_image.dart';
 import 'camera_screen.dart';
 import 'feed_screen.dart';
+import 'login_screen.dart';
 import 'map_screen.dart';
 import 'profile_page_v2.dart';
 import 'social_events_screen.dart';
@@ -27,7 +29,7 @@ class _HomeScreenState extends State<HomeScreen> {
       const _CommunityHub(),
       const MapScreen(),
       const _SavedSpotsPage(),
-      const ProfilePage(),
+      const _ProfileGate(),
     ];
 
     return Scaffold(
@@ -73,6 +75,30 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _ProfileGate extends StatelessWidget {
+  const _ProfileGate();
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const SafeArea(
+            child: Center(
+              child: CircularProgressIndicator(color: Color(0xFFFFC107)),
+            ),
+          );
+        }
+        if (snapshot.data == null) {
+          return const LoginScreen(embedded: true);
+        }
+        return const ProfilePage();
+      },
     );
   }
 }
