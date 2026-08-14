@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 import '../models/photo_spot.dart';
 import '../models/social_event.dart';
+import 'chat_service.dart';
 
 class SocialEventService {
   SocialEventService._();
@@ -31,7 +32,8 @@ class SocialEventService {
                 if (event.status != 'open' || !event.startsAt.isAfter(threshold)) {
                   return false;
                 }
-                if (city != null && city.trim().isNotEmpty &&
+                if (city != null &&
+                    city.trim().isNotEmpty &&
                     event.city.toLowerCase() != city.trim().toLowerCase()) {
                   return false;
                 }
@@ -54,7 +56,10 @@ class SocialEventService {
           final threshold = DateTime.now().subtract(const Duration(minutes: 30));
           final items = snapshot.docs
               .map(SocialEvent.fromDocument)
-              .where((event) => event.status == 'open' && event.startsAt.isAfter(threshold))
+              .where(
+                (event) =>
+                    event.status == 'open' && event.startsAt.isAfter(threshold),
+              )
               .toList();
           items.sort((a, b) => a.startsAt.compareTo(b.startsAt));
           return items;
@@ -129,7 +134,7 @@ class SocialEventService {
     }
 
     final ref = _firestore.collection(collection).doc(eventId);
-    await _firestore.runTransaction((transaction) async {
+    final hostId = await _firestore.runTransaction<String>((transaction) async {
       final snapshot = await transaction.get(ref);
       if (!snapshot.exists) throw Exception('Etkinlik artık mevcut değil.');
 
@@ -142,18 +147,37 @@ class SocialEventService {
       final participants = (data['participantIds'] as List? ?? const [])
           .map((item) => item.toString())
           .toList();
+      final hostId = (data['hostId'] ?? '').toString();
 
-      if (participants.contains(user.uid)) return;
-      if (participants.length >= capacity) {
-        throw Exception('Bu etkinlikte boş yer kalmadı.');
+      if (hostId.isEmpty) {
+        throw Exception('Etkinliği düzenleyen kullanıcı bulunamadı.');
       }
 
-      participants.add(user.uid);
-      transaction.update(ref, {
-        'participantIds': participants,
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
+      if (!participants.contains(user.uid)) {
+        if (participants.length >= capacity) {
+          throw Exception('Bu etkinlikte boş yer kalmadı.');
+        }
+        participants.add(user.uid);
+        transaction.update(ref, {
+          'participantIds': participants,
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+      }
+
+      return hostId;
     });
+
+    if (hostId == user.uid) return;
+
+    try {
+      await ChatService.instance.ensureDirectThread(
+        hostId,
+        sourceType: 'social_event',
+        sourceId: eventId,
+      );
+    } catch (_) {
+      // Katılım tamamlandıysa geçici sohbet hatası etkinlik katılımını bozmaz.
+    }
   }
 
   Future<void> leave(String eventId) async {
