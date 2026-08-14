@@ -8,6 +8,7 @@ import '../data/curated_photo_spots_regions.dart';
 import '../data/curated_photo_spots_official_routes.dart';
 import '../data/curated_photo_spots_official_bulk.dart';
 import '../data/curated_photo_spots_verified_expansion.dart';
+import '../data/curated_photo_spots_official_complete.dart';
 import '../models/photo_spot.dart';
 
 enum SpotSort { rating, name }
@@ -78,6 +79,7 @@ class SpotRepository {
       for (final spot in curatedPhotoSpotsOfficialRoutes) spot.id: spot,
       for (final spot in curatedPhotoSpotsOfficialBulk) spot.id: spot,
       for (final spot in curatedPhotoSpotsVerifiedExpansion) spot.id: spot,
+      for (final spot in curatedPhotoSpotsOfficialComplete) spot.id: spot,
     };
     for (final spot in remote) { byId[spot.id] = spot; }
     final result = byId.values.toList();
