@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import '../models/chat_message.dart';
+import 'app_notification_service.dart';
 import 'social_service.dart';
 
 class ChatService {
@@ -156,6 +157,23 @@ class ChatService {
       'updatedAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
     await batch.commit();
+
+    final senderName = (user.displayName ?? '').trim().isNotEmpty
+        ? user.displayName!.trim()
+        : 'Bir kullanıcı';
+    final preview = clean.length > 90 ? '${clean.substring(0, 90)}…' : clean;
+    try {
+      await AppNotificationService.instance.notifyUser(
+        userId: otherUserId,
+        type: 'message',
+        title: '$senderName sana mesaj gönderdi',
+        body: preview,
+        sourceId: threadId,
+        actorId: user.uid,
+      );
+    } catch (_) {
+      // Mesaj gönderildiyse bildirim yazma hatası sohbeti bozmaz.
+    }
   }
 
   Future<void> blockUser(String otherUserId) async {
