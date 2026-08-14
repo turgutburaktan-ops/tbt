@@ -6,10 +6,10 @@ import '../widgets/spot_image.dart';
 import 'camera_screen.dart';
 import 'feed_screen.dart';
 import 'map_screen.dart';
-import 'profile_page.dart';
+import 'profile_page_v2.dart';
 import 'social_events_screen.dart';
 import 'spot_detail_screen.dart';
-import 'spot_explore_screen.dart';
+import 'spot_explore_screen_v2.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
