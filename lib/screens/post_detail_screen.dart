@@ -263,7 +263,16 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
               AspectRatio(
                 aspectRatio: 1,
                 child: Container(
-                  color: Colors.black,
+                  margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.black,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: const Color(0x88FFC107),
+                      width: 1.5,
+                    ),
+                  ),
+                  clipBehavior: Clip.antiAlias,
                   child: imageUrl.isEmpty
                       ? const Center(
                           child: Icon(

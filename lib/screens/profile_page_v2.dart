@@ -57,18 +57,10 @@ class _ProfileBody extends StatefulWidget {
 }
 
 class _ProfileBodyState extends State<_ProfileBody> {
-  OverlayEntry? _preview;
-
   @override
   void initState() {
     super.initState();
     SocialService.instance.ensureUserProfile();
-  }
-
-  @override
-  void dispose() {
-    _closePreview();
-    super.dispose();
   }
 
   void _openFollowList(bool followers) {
@@ -104,64 +96,6 @@ class _ProfileBodyState extends State<_ProfileBody> {
         ),
       ),
     );
-  }
-
-  void _showPreview(String url) {
-    if (url.isEmpty || _preview != null || !mounted) return;
-    _preview = OverlayEntry(
-      builder: (overlayContext) => Material(
-        color: Colors.black87,
-        child: SafeArea(
-          child: Stack(
-            children: [
-              Positioned.fill(
-                child: GestureDetector(
-                  onTap: _closePreview,
-                  behavior: HitTestBehavior.opaque,
-                  child: const SizedBox.expand(),
-                ),
-              ),
-              Positioned.fill(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(18, 70, 18, 70),
-                  child: InteractiveViewer(
-                    minScale: 1,
-                    maxScale: 5,
-                    panEnabled: true,
-                    clipBehavior: Clip.none,
-                    child: Center(
-                      child: Image.network(
-                        url,
-                        fit: BoxFit.contain,
-                        errorBuilder: (_, __, ___) => const Icon(
-                          Icons.broken_image_outlined,
-                          color: Colors.white54,
-                          size: 64,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                top: 12,
-                right: 12,
-                child: IconButton.filledTonal(
-                  onPressed: _closePreview,
-                  icon: const Icon(Icons.close),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-    Overlay.of(context, rootOverlay: true).insert(_preview!);
-  }
-
-  void _closePreview() {
-    _preview?.remove();
-    _preview = null;
   }
 
   @override
@@ -351,7 +285,6 @@ class _ProfileBodyState extends State<_ProfileBody> {
                                 context,
                                 MaterialPageRoute(builder: (_) => PostDetailScreen(post: data)),
                               ),
-                              onLongPress: () => _showPreview(imageUrl),
                             );
                           },
                           childCount: posts.length,
@@ -464,25 +397,28 @@ class _PostTile extends StatelessWidget {
   final String caption;
   final String spotName;
   final VoidCallback onTap;
-  final VoidCallback onLongPress;
 
   const _PostTile({
     required this.imageUrl,
     required this.caption,
     required this.spotName,
     required this.onTap,
-    required this.onLongPress,
   });
 
   @override
   Widget build(BuildContext context) {
     return Material(
       color: const Color(0xFF151A22),
-      borderRadius: BorderRadius.circular(10),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: const BorderSide(
+          color: Color(0x88FFC107),
+          width: 1.4,
+        ),
+      ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
-        onLongPress: onLongPress,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
