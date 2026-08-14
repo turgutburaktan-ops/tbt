@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../services/auth_service.dart';
@@ -93,6 +94,53 @@ class _ProfileBodyState extends State<_ProfileBody> {
             clipBehavior: Clip.none,
             child: Center(child: Image.network(url, fit: BoxFit.contain)),
           ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _shareProfile(String displayName) async {
+    final handle = displayName.trim().isEmpty ? 'Fotoğrafçı' : displayName.trim();
+    await Clipboard.setData(ClipboardData(text: '@$handle'));
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(const SnackBar(content: Text('Profil adı panoya kopyalandı.')));
+  }
+
+  void _showPostPreview(String imageUrl) {
+    if (imageUrl.isEmpty) return;
+    showDialog<void>(
+      context: context,
+      barrierColor: Colors.black87,
+      builder: (dialogContext) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 54),
+        child: Stack(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(18),
+              child: AspectRatio(
+                aspectRatio: 1,
+                child: Image.network(
+                  imageUrl,
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, __, ___) => const ColoredBox(
+                    color: Color(0xFF141126),
+                    child: Center(child: Icon(Icons.broken_image_outlined, size: 48)),
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              right: 8,
+              top: 8,
+              child: IconButton.filledTonal(
+                onPressed: () => Navigator.pop(dialogContext),
+                icon: const Icon(Icons.close),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -229,20 +277,67 @@ class _ProfileBodyState extends State<_ProfileBody> {
                             ),
                           ),
                           const SizedBox(height: 14),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: SizedBox(
+                                  height: 42,
+                                  child: FilledButton(
+                                    style: FilledButton.styleFrom(
+                                      backgroundColor: const Color(0xFF1B1728),
+                                      foregroundColor: Colors.white,
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(11)),
+                                    ),
+                                    onPressed: () => _editProfile(displayName, bio),
+                                    child: const Text('Profili Düzenle', style: TextStyle(fontWeight: FontWeight.w800)),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: SizedBox(
+                                  height: 42,
+                                  child: FilledButton(
+                                    style: FilledButton.styleFrom(
+                                      backgroundColor: const Color(0xFF1B1728),
+                                      foregroundColor: Colors.white,
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(11)),
+                                    ),
+                                    onPressed: () => _shareProfile(displayName),
+                                    child: const Text('Profili Paylaş', style: TextStyle(fontWeight: FontWeight.w800)),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  SliverToBoxAdapter(
+                    child: Container(
+                      height: 52,
+                      decoration: const BoxDecoration(
+                        border: Border(bottom: BorderSide(color: Colors.white12)),
+                      ),
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
                           SizedBox(
-                            width: double.infinity,
-                            height: 42,
-                            child: OutlinedButton.icon(
-                              onPressed: () => _editProfile(displayName, bio),
-                              icon: const Icon(Icons.edit_outlined, size: 18),
-                              label: const Text('Profili Düzenle'),
+                            width: 110,
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.grid_on_rounded, color: Colors.white, size: 23),
+                                SizedBox(height: 10),
+                                SizedBox(height: 2, width: 70, child: ColoredBox(color: Color(0xFF8B5CF6))),
+                              ],
                             ),
                           ),
                         ],
                       ),
                     ),
                   ),
-                  const SliverToBoxAdapter(child: Divider(height: 1, color: Colors.white12)),
                   if (postSnapshot.connectionState == ConnectionState.waiting)
                     const SliverFillRemaining(
                       child: Center(child: CircularProgressIndicator(color: Color(0xFF8B5CF6))),
@@ -263,13 +358,13 @@ class _ProfileBodyState extends State<_ProfileBody> {
                     )
                   else
                     SliverPadding(
-                      padding: const EdgeInsets.fromLTRB(6, 6, 6, 100),
+                      padding: const EdgeInsets.fromLTRB(1, 2, 1, 100),
                       sliver: SliverGrid(
                         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 3,
-                          crossAxisSpacing: 5,
-                          mainAxisSpacing: 5,
-                          childAspectRatio: 0.68,
+                          crossAxisSpacing: 2,
+                          mainAxisSpacing: 2,
+                          childAspectRatio: 1,
                         ),
                         delegate: SliverChildBuilderDelegate(
                           (context, index) {
@@ -281,6 +376,7 @@ class _ProfileBodyState extends State<_ProfileBody> {
                               imageUrl: imageUrl,
                               caption: caption,
                               spotName: spotName,
+                              onLongPress: () => _showPostPreview(imageUrl),
                               onTap: () => Navigator.push(
                                 context,
                                 MaterialPageRoute(builder: (_) => PostDetailScreen(post: data)),
@@ -397,81 +493,36 @@ class _PostTile extends StatelessWidget {
   final String caption;
   final String spotName;
   final VoidCallback onTap;
+  final VoidCallback onLongPress;
 
   const _PostTile({
     required this.imageUrl,
     required this.caption,
     required this.spotName,
     required this.onTap,
+    required this.onLongPress,
   });
 
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: const Color(0xFF141126),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: const BorderSide(
-          color: Color(0x888B5CF6),
-          width: 1.4,
-        ),
-      ),
+      color: const Color(0xFF0F0B18),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Expanded(
-              child: Container(
-                color: const Color(0xFF10151C),
-                child: imageUrl.isEmpty
-                    ? const Icon(Icons.image_outlined, color: Colors.white30)
-                    : Image.network(
-                        imageUrl,
-                        fit: BoxFit.cover,
-                        filterQuality: FilterQuality.low,
-                        errorBuilder: (_, __, ___) => const Icon(
-                          Icons.broken_image_outlined,
-                          color: Colors.white30,
-                        ),
-                      ),
+        onLongPress: onLongPress,
+        child: imageUrl.isEmpty
+            ? const Center(child: Icon(Icons.image_outlined, color: Colors.white30))
+            : Image.network(
+                imageUrl,
+                width: double.infinity,
+                height: double.infinity,
+                fit: BoxFit.cover,
+                filterQuality: FilterQuality.medium,
+                errorBuilder: (_, __, ___) => const Center(
+                  child: Icon(Icons.broken_image_outlined, color: Colors.white30),
+                ),
               ),
-            ),
-            Container(
-              padding: const EdgeInsets.fromLTRB(7, 6, 7, 7),
-              decoration: const BoxDecoration(
-                border: Border(top: BorderSide(color: Colors.white10)),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    caption.isEmpty ? 'Fotoğraf' : caption,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700),
-                  ),
-                  const SizedBox(height: 3),
-                  Row(
-                    children: [
-                      const Icon(Icons.location_on_outlined, size: 11, color: Color(0xFF8B5CF6)),
-                      const SizedBox(width: 2),
-                      Expanded(
-                        child: Text(
-                          spotName.isEmpty ? 'Konum yok' : spotName,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontSize: 9.5, color: Colors.white54),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
