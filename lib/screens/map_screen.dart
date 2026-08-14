@@ -4,6 +4,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '../models/photo_spot.dart';
 import '../services/spot_repository.dart';
+import '../widgets/spot_image.dart';
 import 'spot_detail_screen.dart';
 
 class MapScreen extends StatefulWidget {
@@ -86,9 +87,7 @@ class _MapScreenState extends State<MapScreen> {
 
     try {
       if (!await Geolocator.isLocationServiceEnabled()) {
-        if (showErrors && mounted) {
-          _message('Konum servisi kapalı.');
-        }
+        if (showErrors && mounted) _message('Konum servisi kapalı.');
         return;
       }
 
@@ -316,20 +315,11 @@ class _SpotCard extends StatelessWidget {
           padding: const EdgeInsets.all(12),
           child: Row(
             children: [
-              ClipRRect(
+              SpotImage(
+                spot: spot,
+                width: 88,
+                height: 88,
                 borderRadius: BorderRadius.circular(12),
-                child: Image.network(
-                  spot.imageUrl,
-                  width: 88,
-                  height: 88,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Container(
-                    width: 88,
-                    height: 88,
-                    color: const Color(0xFF222831),
-                    child: const Icon(Icons.photo, color: Colors.white38),
-                  ),
-                ),
               ),
               const SizedBox(width: 12),
               Expanded(
