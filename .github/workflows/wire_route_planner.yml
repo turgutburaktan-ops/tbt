@@ -5,6 +5,7 @@ on:
     paths:
       - 'tools/wire_route_planner.py'
       - '.github/workflows/wire_route_planner.yml'
+      - 'pubspec.yaml'
 
 permissions:
   contents: write
