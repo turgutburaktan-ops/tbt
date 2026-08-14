@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import 'screens/chat_inbox_screen.dart';
 import 'screens/home_shell_screen.dart';
+import 'screens/notifications_screen.dart';
 import 'services/favorites_service.dart';
 
 Future<void> main() async {
@@ -33,6 +34,7 @@ class BestPhotoSpotApp extends StatelessWidget {
       ),
       routes: {
         '/messages': (_) => const ChatInboxScreen(),
+        '/notifications': (_) => const NotificationsScreen(),
       },
       home: const HomeScreen(),
     );
