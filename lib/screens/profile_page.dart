@@ -22,8 +22,13 @@ class ProfilePage extends StatelessWidget {
       stream: AuthService.instance.authStateChanges,
       builder: (context, auth) {
         if (auth.connectionState == ConnectionState.waiting) {
-          return const SafeArea(child: Center(child: CircularProgressIndicator(color: Color(0xFFFFC107))));
+          return const SafeArea(
+            child: Center(
+              child: CircularProgressIndicator(color: Color(0xFFFFC107)),
+            ),
+          );
         }
+
         final user = auth.data;
         if (user == null) {
           return SafeArea(
@@ -35,11 +40,20 @@ class ProfilePage extends StatelessWidget {
                   children: [
                     const Icon(Icons.person_outline, size: 72, color: Colors.white38),
                     const SizedBox(height: 18),
-                    const Text('Profilini görmek için giriş yap', style: TextStyle(fontSize: 21, fontWeight: FontWeight.w800)),
+                    const Text(
+                      'Profilini görmek için giriş yap',
+                      style: TextStyle(fontSize: 21, fontWeight: FontWeight.w800),
+                    ),
                     const SizedBox(height: 18),
                     FilledButton(
-                      style: FilledButton.styleFrom(backgroundColor: const Color(0xFFFFC107), foregroundColor: Colors.black),
-                      onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const LoginScreen())),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: const Color(0xFFFFC107),
+                        foregroundColor: Colors.black,
+                      ),
+                      onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const LoginScreen()),
+                      ),
                       child: const Text('Giriş Yap / Kayıt Ol'),
                     ),
                   ],
@@ -48,6 +62,7 @@ class ProfilePage extends StatelessWidget {
             ),
           );
         }
+
         return _ProfileBody(user: user);
       },
     );
@@ -56,6 +71,7 @@ class ProfilePage extends StatelessWidget {
 
 class _ProfileBody extends StatefulWidget {
   final User user;
+
   const _ProfileBody({required this.user});
 
   @override
@@ -63,10 +79,18 @@ class _ProfileBody extends StatefulWidget {
 }
 
 class _ProfileBodyState extends State<_ProfileBody> {
+  OverlayEntry? _postPreview;
+
   @override
   void initState() {
     super.initState();
     SocialService.instance.ensureUserProfile();
+  }
+
+  @override
+  void dispose() {
+    _hidePostPreview();
+    super.dispose();
   }
 
   void _openPhoto(String photoUrl, String displayName) {
@@ -84,11 +108,16 @@ class _ProfileBodyState extends State<_ProfileBody> {
           body: InteractiveViewer(
             minScale: 1,
             maxScale: 5,
+            clipBehavior: Clip.none,
             child: Center(
               child: Image.network(
                 photoUrl,
                 fit: BoxFit.contain,
-                errorBuilder: (_, __, ___) => const Icon(Icons.broken_image_outlined, size: 72, color: Colors.white38),
+                errorBuilder: (_, __, ___) => const Icon(
+                  Icons.broken_image_outlined,
+                  size: 72,
+                  color: Colors.white38,
+                ),
               ),
             ),
           ),
@@ -97,11 +126,64 @@ class _ProfileBodyState extends State<_ProfileBody> {
     );
   }
 
+  void _showPostPreview(String imageUrl) {
+    if (imageUrl.isEmpty || _postPreview != null || !mounted) return;
+
+    _postPreview = OverlayEntry(
+      builder: (overlayContext) {
+        return Material(
+          color: Colors.black54,
+          child: SafeArea(
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 64),
+                child: InteractiveViewer(
+                  minScale: 1,
+                  maxScale: 4,
+                  panEnabled: true,
+                  clipBehavior: Clip.none,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(18),
+                    child: Image.network(
+                      imageUrl,
+                      fit: BoxFit.contain,
+                      errorBuilder: (_, __, ___) => Container(
+                        width: 260,
+                        height: 260,
+                        color: const Color(0xFF171C24),
+                        alignment: Alignment.center,
+                        child: const Icon(
+                          Icons.broken_image_outlined,
+                          size: 58,
+                          color: Colors.white38,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+
+    Overlay.of(context, rootOverlay: true).insert(_postPreview!);
+  }
+
+  void _hidePostPreview() {
+    _postPreview?.remove();
+    _postPreview = null;
+  }
+
   void _openFollowList({required bool followers}) {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => FollowListScreen(userId: widget.user.uid, followers: followers),
+        builder: (_) => FollowListScreen(
+          userId: widget.user.uid,
+          followers: followers,
+        ),
       ),
     );
   }
@@ -120,7 +202,9 @@ class _ProfileBodyState extends State<_ProfileBody> {
           return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
             stream: SocialService.instance.userPosts(widget.user.uid),
             builder: (context, postSnapshot) {
-              final posts = [...(postSnapshot.data?.docs ?? <QueryDocumentSnapshot<Map<String, dynamic>>>[])];
+              final posts = [
+                ...(postSnapshot.data?.docs ?? <QueryDocumentSnapshot<Map<String, dynamic>>>[]),
+              ];
               posts.sort((a, b) {
                 final at = a.data()['createdAt'];
                 final bt = b.data()['createdAt'];
@@ -135,9 +219,31 @@ class _ProfileBodyState extends State<_ProfileBody> {
                       padding: const EdgeInsets.fromLTRB(16, 10, 16, 14),
                       child: Row(
                         children: [
-                          Expanded(child: Text(displayName, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w900))),
-                          IconButton(onPressed: () => _editProfile(displayName, bio), icon: const Icon(Icons.edit_outlined, color: Color(0xFFFFC107))),
-                          IconButton(onPressed: () => AuthService.instance.logout(), icon: const Icon(Icons.logout_rounded, color: Colors.white60)),
+                          Expanded(
+                            child: Text(
+                              displayName,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 21,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: () => _editProfile(displayName, bio),
+                            icon: const Icon(
+                              Icons.edit_outlined,
+                              color: Color(0xFFFFC107),
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: () => AuthService.instance.logout(),
+                            icon: const Icon(
+                              Icons.logout_rounded,
+                              color: Colors.white60,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -162,7 +268,13 @@ class _ProfileBodyState extends State<_ProfileBody> {
                                         radius: 43,
                                         backgroundColor: const Color(0xFF171C24),
                                         backgroundImage: photoUrl.isNotEmpty ? NetworkImage(photoUrl) : null,
-                                        child: photoUrl.isEmpty ? const Icon(Icons.person, size: 48, color: Colors.white54) : null,
+                                        child: photoUrl.isEmpty
+                                            ? const Icon(
+                                                Icons.person,
+                                                size: 48,
+                                                color: Colors.white54,
+                                              )
+                                            : null,
                                       ),
                                     ),
                                   ),
@@ -174,8 +286,15 @@ class _ProfileBodyState extends State<_ProfileBody> {
                                       child: Container(
                                         width: 29,
                                         height: 29,
-                                        decoration: const BoxDecoration(color: Color(0xFFFFC107), shape: BoxShape.circle),
-                                        child: const Icon(Icons.add_a_photo_outlined, size: 17, color: Colors.black),
+                                        decoration: const BoxDecoration(
+                                          color: Color(0xFFFFC107),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: const Icon(
+                                          Icons.add_a_photo_outlined,
+                                          size: 17,
+                                          color: Colors.black,
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -189,11 +308,19 @@ class _ProfileBodyState extends State<_ProfileBody> {
                                     _Stat('${posts.length}', 'Gönderi'),
                                     StreamBuilder<int>(
                                       stream: SocialService.instance.followersCount(widget.user.uid),
-                                      builder: (_, s) => _Stat('${s.data ?? 0}', 'Takipçi', onTap: () => _openFollowList(followers: true)),
+                                      builder: (_, s) => _Stat(
+                                        '${s.data ?? 0}',
+                                        'Takipçi',
+                                        onTap: () => _openFollowList(followers: true),
+                                      ),
                                     ),
                                     StreamBuilder<int>(
                                       stream: SocialService.instance.followingCount(widget.user.uid),
-                                      builder: (_, s) => _Stat('${s.data ?? 0}', 'Takip', onTap: () => _openFollowList(followers: false)),
+                                      builder: (_, s) => _Stat(
+                                        '${s.data ?? 0}',
+                                        'Takip',
+                                        onTap: () => _openFollowList(followers: false),
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -201,29 +328,83 @@ class _ProfileBodyState extends State<_ProfileBody> {
                             ],
                           ),
                           const SizedBox(height: 14),
-                          Text(displayName, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+                          Text(
+                            displayName,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w800,
+                              fontSize: 16,
+                            ),
+                          ),
                           const SizedBox(height: 5),
                           Text(
                             bio.trim().isEmpty ? 'Profiline bir açıklama ekle' : bio,
-                            style: TextStyle(color: bio.trim().isEmpty ? Colors.white38 : Colors.white70, height: 1.4),
+                            style: TextStyle(
+                              color: bio.trim().isEmpty ? Colors.white38 : Colors.white70,
+                              height: 1.4,
+                            ),
                           ),
                           const SizedBox(height: 14),
-                          SizedBox(width: double.infinity, height: 42, child: OutlinedButton.icon(onPressed: () => _editProfile(displayName, bio), icon: const Icon(Icons.edit_outlined, size: 18), label: const Text('Profili Düzenle'))),
+                          SizedBox(
+                            width: double.infinity,
+                            height: 42,
+                            child: OutlinedButton.icon(
+                              onPressed: () => _editProfile(displayName, bio),
+                              icon: const Icon(Icons.edit_outlined, size: 18),
+                              label: const Text('Profili Düzenle'),
+                            ),
+                          ),
                         ],
                       ),
                     ),
                   ),
-                  const SliverToBoxAdapter(child: Divider(height: 1, color: Colors.white12)),
-                  const SliverToBoxAdapter(child: Padding(padding: EdgeInsets.symmetric(vertical: 10), child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(Icons.grid_on_rounded, size: 20, color: Color(0xFFFFC107)), SizedBox(width: 7), Text('Paylaşımlarım', style: TextStyle(fontWeight: FontWeight.w800, color: Color(0xFFFFC107)))]))),
+                  const SliverToBoxAdapter(
+                    child: Divider(height: 1, color: Colors.white12),
+                  ),
+                  const SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(vertical: 10),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.grid_on_rounded,
+                            size: 20,
+                            color: Color(0xFFFFC107),
+                          ),
+                          SizedBox(width: 7),
+                          Text(
+                            'Paylaşımlarım',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w800,
+                              color: Color(0xFFFFC107),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                   if (postSnapshot.connectionState == ConnectionState.waiting)
-                    const SliverFillRemaining(hasScrollBody: false, child: Center(child: CircularProgressIndicator(color: Color(0xFFFFC107))))
+                    const SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: Center(
+                        child: CircularProgressIndicator(
+                          color: Color(0xFFFFC107),
+                        ),
+                      ),
+                    )
                   else if (posts.isEmpty)
                     SliverFillRemaining(
                       hasScrollBody: false,
                       child: Center(
                         child: FilledButton.icon(
-                          style: FilledButton.styleFrom(backgroundColor: const Color(0xFFFFC107), foregroundColor: Colors.black),
-                          onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CreatePostScreen())),
+                          style: FilledButton.styleFrom(
+                            backgroundColor: const Color(0xFFFFC107),
+                            foregroundColor: Colors.black,
+                          ),
+                          onPressed: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const CreatePostScreen()),
+                          ),
                           icon: const Icon(Icons.add_a_photo_outlined),
                           label: const Text('İlk Fotoğrafını Paylaş'),
                         ),
@@ -233,16 +414,41 @@ class _ProfileBodyState extends State<_ProfileBody> {
                     SliverPadding(
                       padding: const EdgeInsets.fromLTRB(2, 2, 2, 100),
                       sliver: SliverGrid(
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3, crossAxisSpacing: 2, mainAxisSpacing: 2),
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 3,
+                          crossAxisSpacing: 2,
+                          mainAxisSpacing: 2,
+                        ),
                         delegate: SliverChildBuilderDelegate(
                           (context, index) {
                             final data = posts[index].data();
                             final imageUrl = (data['imageUrl'] ?? '').toString();
+
                             return GestureDetector(
-                              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => PostDetailScreen(post: data))),
+                              onTap: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => PostDetailScreen(post: data),
+                                ),
+                              ),
+                              onLongPressStart: (_) => _showPostPreview(imageUrl),
+                              onLongPressEnd: (_) => _hidePostPreview(),
+                              onLongPressCancel: _hidePostPreview,
                               child: Container(
                                 color: const Color(0xFF171C24),
-                                child: imageUrl.isEmpty ? const Icon(Icons.image_outlined, color: Colors.white30) : Image.network(imageUrl, fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Icon(Icons.broken_image_outlined, color: Colors.white30)),
+                                child: imageUrl.isEmpty
+                                    ? const Icon(
+                                        Icons.image_outlined,
+                                        color: Colors.white30,
+                                      )
+                                    : Image.network(
+                                        imageUrl,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (_, __, ___) => const Icon(
+                                          Icons.broken_image_outlined,
+                                          color: Colors.white30,
+                                        ),
+                                      ),
                               ),
                             );
                           },
@@ -273,40 +479,115 @@ class _ProfileBodyState extends State<_ProfileBody> {
       builder: (sheetContext) => StatefulBuilder(
         builder: (context, setSheetState) {
           Future<void> pick() async {
-            final image = await ImagePicker().pickImage(source: ImageSource.gallery, imageQuality: 88, maxWidth: 1200);
-            if (image != null) setSheetState(() => photo = File(image.path));
+            final image = await ImagePicker().pickImage(
+              source: ImageSource.gallery,
+              imageQuality: 88,
+              maxWidth: 1200,
+            );
+            if (image != null) {
+              setSheetState(() => photo = File(image.path));
+            }
           }
 
           return Padding(
-            padding: EdgeInsets.fromLTRB(20, 16, 20, MediaQuery.of(context).viewInsets.bottom + 24),
+            padding: EdgeInsets.fromLTRB(
+              20,
+              16,
+              20,
+              MediaQuery.of(context).viewInsets.bottom + 24,
+            ),
             child: SingleChildScrollView(
               child: Column(
                 children: [
-                  Row(children: [const Expanded(child: Text('Profili Düzenle', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900))), IconButton(onPressed: () => Navigator.pop(sheetContext), icon: const Icon(Icons.close))]),
+                  Row(
+                    children: [
+                      const Expanded(
+                        child: Text(
+                          'Profili Düzenle',
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () => Navigator.pop(sheetContext),
+                        icon: const Icon(Icons.close),
+                      ),
+                    ],
+                  ),
                   const SizedBox(height: 14),
-                  GestureDetector(onTap: pick, child: CircleAvatar(radius: 48, backgroundColor: const Color(0xFF202833), backgroundImage: photo != null ? FileImage(photo!) : null, child: photo == null ? const Icon(Icons.add_a_photo_outlined, size: 34, color: Color(0xFFFFC107)) : null)),
-                  TextButton(onPressed: pick, child: const Text('Profil fotoğrafı seç')),
+                  GestureDetector(
+                    onTap: pick,
+                    child: CircleAvatar(
+                      radius: 48,
+                      backgroundColor: const Color(0xFF202833),
+                      backgroundImage: photo != null ? FileImage(photo!) : null,
+                      child: photo == null
+                          ? const Icon(
+                              Icons.add_a_photo_outlined,
+                              size: 34,
+                              color: Color(0xFFFFC107),
+                            )
+                          : null,
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: pick,
+                    child: const Text('Profil fotoğrafı seç'),
+                  ),
                   const SizedBox(height: 8),
-                  TextField(controller: nameController, decoration: const InputDecoration(labelText: 'Ad / kullanıcı adı')),
+                  TextField(
+                    controller: nameController,
+                    decoration: const InputDecoration(labelText: 'Ad / kullanıcı adı'),
+                  ),
                   const SizedBox(height: 12),
-                  TextField(controller: bioController, maxLength: 160, minLines: 3, maxLines: 5, decoration: const InputDecoration(labelText: 'Açıklama')),
+                  TextField(
+                    controller: bioController,
+                    maxLength: 160,
+                    minLines: 3,
+                    maxLines: 5,
+                    decoration: const InputDecoration(labelText: 'Açıklama'),
+                  ),
                   const SizedBox(height: 14),
                   SizedBox(
                     width: double.infinity,
                     height: 52,
                     child: FilledButton(
-                      style: FilledButton.styleFrom(backgroundColor: const Color(0xFFFFC107), foregroundColor: Colors.black),
-                      onPressed: saving ? null : () async {
-                        setSheetState(() => saving = true);
-                        try {
-                          await ProfileService.instance.updateProfile(displayName: nameController.text, bio: bioController.text, photo: photo);
-                          if (sheetContext.mounted) Navigator.pop(sheetContext);
-                        } catch (e) {
-                          setSheetState(() => saving = false);
-                          if (sheetContext.mounted) ScaffoldMessenger.of(sheetContext).showSnackBar(SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))));
-                        }
-                      },
-                      child: Text(saving ? 'Kaydediliyor...' : 'Kaydet', style: const TextStyle(fontWeight: FontWeight.w800)),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: const Color(0xFFFFC107),
+                        foregroundColor: Colors.black,
+                      ),
+                      onPressed: saving
+                          ? null
+                          : () async {
+                              setSheetState(() => saving = true);
+                              try {
+                                await ProfileService.instance.updateProfile(
+                                  displayName: nameController.text,
+                                  bio: bioController.text,
+                                  photo: photo,
+                                );
+                                if (sheetContext.mounted) {
+                                  Navigator.pop(sheetContext);
+                                }
+                              } catch (e) {
+                                setSheetState(() => saving = false);
+                                if (sheetContext.mounted) {
+                                  ScaffoldMessenger.of(sheetContext).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        e.toString().replaceFirst('Exception: ', ''),
+                                      ),
+                                    ),
+                                  );
+                                }
+                              }
+                            },
+                      child: Text(
+                        saving ? 'Kaydediliyor...' : 'Kaydet',
+                        style: const TextStyle(fontWeight: FontWeight.w800),
+                      ),
                     ),
                   ),
                 ],
@@ -326,6 +607,7 @@ class _Stat extends StatelessWidget {
   final String value;
   final String label;
   final VoidCallback? onTap;
+
   const _Stat(this.value, this.label, {this.onTap});
 
   @override
@@ -333,17 +615,27 @@ class _Stat extends StatelessWidget {
     final child = Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(value, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
+        Text(
+          value,
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
+        ),
         const SizedBox(height: 2),
-        Text(label, style: const TextStyle(color: Colors.white60, fontSize: 12)),
+        Text(
+          label,
+          style: const TextStyle(color: Colors.white60, fontSize: 12),
+        ),
       ],
     );
+
     return onTap == null
         ? child
         : InkWell(
             borderRadius: BorderRadius.circular(10),
             onTap: onTap,
-            child: Padding(padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4), child: child),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+              child: child,
+            ),
           );
   }
 }
