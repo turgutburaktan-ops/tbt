@@ -22,7 +22,7 @@ class ContentEngagementBar extends StatelessWidget {
     required this.ownerId,
     required this.title,
     required this.sourceType,
-    this.showTagAction = true,
+    this.showTagAction = false,
   });
 
   void _message(BuildContext context, String text) {
@@ -42,7 +42,7 @@ class ContentEngagementBar extends StatelessWidget {
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
-      backgroundColor: const Color(0xFF0D1418),
+      backgroundColor: const Color(0xFF0E1012),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
@@ -160,7 +160,7 @@ class ContentEngagementBar extends StatelessWidget {
                             return ListTile(
                               contentPadding: EdgeInsets.zero,
                               leading: const CircleAvatar(
-                                backgroundColor: Color(0xFF152128),
+                                backgroundColor: Color(0xFF1A1D20),
                                 child: Icon(Icons.person_outline),
                               ),
                               title: Text(
@@ -173,7 +173,7 @@ class ContentEngagementBar extends StatelessWidget {
                                 text: (data['text'] ?? '').toString(),
                                 style: const TextStyle(color: Colors.white70),
                                 mentionStyle: const TextStyle(
-                                  color: Color(0xFF4FD1C5),
+                                  color: Color(0xFFD7DADF),
                                   fontWeight: FontWeight.w800,
                                 ),
                               ),
@@ -187,9 +187,9 @@ class ContentEngagementBar extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.fromLTRB(12, 4, 6, 4),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF121A1F),
+                      color: const Color(0xFF15181B),
                       borderRadius: BorderRadius.circular(22),
-                      border: Border.all(color: const Color(0x3316B8A6)),
+                      border: Border.all(color: const Color(0x334B5158)),
                     ),
                     child: Row(
                       children: [
@@ -209,7 +209,7 @@ class ContentEngagementBar extends StatelessWidget {
                         ),
                         IconButton.filled(
                           style: IconButton.styleFrom(
-                            backgroundColor: const Color(0xFF16B8A6),
+                            backgroundColor: const Color(0xFFB7BCC2),
                             foregroundColor: Colors.white,
                           ),
                           onPressed: sending ? null : sendComment,
@@ -245,7 +245,7 @@ class ContentEngagementBar extends StatelessWidget {
     return showModalBottomSheet<Map<String, String>>(
       context: context,
       useSafeArea: true,
-      backgroundColor: const Color(0xFF0D1418),
+      backgroundColor: const Color(0xFF0E1012),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
@@ -327,7 +327,7 @@ class ContentEngagementBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const accent = Color(0xFF16B8A6);
+    const accent = Color(0xFFB7BCC2);
     const likedColor = Color(0xFFFF5D7A);
     return Row(
       children: [

@@ -14,7 +14,7 @@ class FeedScreen extends StatelessWidget {
 
     if (currentUser == null) {
       return const Scaffold(
-        backgroundColor: Color(0xFF090D10),
+        backgroundColor: Color(0xFF090A0C),
         body: Center(
           child: Text(
             'Akışı görmek için giriş yapmalısın.',
@@ -28,9 +28,9 @@ class FeedScreen extends StatelessWidget {
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFF090D10),
+      backgroundColor: const Color(0xFF090A0C),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF090D10),
+        backgroundColor: const Color(0xFF090A0C),
         elevation: 0,
         title: const Text(
           'Akış',
@@ -46,7 +46,7 @@ class FeedScreen extends StatelessWidget {
           if (followingSnapshot.connectionState == ConnectionState.waiting) {
             return const Center(
               child: CircularProgressIndicator(
-                color: Color(0xFF16B8A6),
+                color: Color(0xFFB7BCC2),
               ),
             );
           }
@@ -75,7 +75,7 @@ class FeedScreen extends StatelessWidget {
                     Icon(
                       Icons.people_outline,
                       size: 70,
-                      color: Color(0xFF16B8A6),
+                      color: Color(0xFFB7BCC2),
                     ),
                     SizedBox(height: 18),
                     Text(
@@ -114,7 +114,7 @@ class FeedScreen extends StatelessWidget {
               if (postsSnapshot.connectionState == ConnectionState.waiting) {
                 return const Center(
                   child: CircularProgressIndicator(
-                    color: Color(0xFF16B8A6),
+                    color: Color(0xFFB7BCC2),
                   ),
                 );
               }
@@ -245,7 +245,7 @@ class _FeedPostCard extends StatelessWidget {
         12,
       ),
       decoration: BoxDecoration(
-        color: const Color(0xFF11181D),
+        color: const Color(0xFF121416),
         borderRadius: BorderRadius.circular(20),
       ),
       clipBehavior: Clip.antiAlias,
@@ -271,10 +271,10 @@ class _FeedPostCard extends StatelessWidget {
                 children: [
                   const CircleAvatar(
                     radius: 21,
-                    backgroundColor: Color(0xFF16B8A6),
+                    backgroundColor: Color(0xFFB7BCC2),
                     child: CircleAvatar(
                       radius: 18,
-                      backgroundColor: Color(0xFF152128),
+                      backgroundColor: Color(0xFF1A1D20),
                       child: Icon(
                         Icons.person,
                         color: Colors.white54,
@@ -313,7 +313,7 @@ class _FeedPostCard extends StatelessWidget {
                   stackTrace,
                 ) {
                   return Container(
-                    color: const Color(0xFF152128),
+                    color: const Color(0xFF1A1D20),
                     child: const Center(
                       child: Icon(
                         Icons.broken_image_outlined,
@@ -347,7 +347,7 @@ class _FeedPostCard extends StatelessWidget {
                 if (spotName.isNotEmpty)
                   const Icon(
                     Icons.location_on_outlined,
-                    color: Color(0xFF16B8A6),
+                    color: Color(0xFFB7BCC2),
                   ),
               ],
             ),
@@ -393,14 +393,14 @@ class _FeedPostCard extends StatelessWidget {
                   const Icon(
                     Icons.location_on,
                     size: 17,
-                    color: Color(0xFF16B8A6),
+                    color: Color(0xFFB7BCC2),
                   ),
                   const SizedBox(width: 5),
                   Expanded(
                     child: Text(
                       spotName,
                       style: const TextStyle(
-                        color: Color(0xFF16B8A6),
+                        color: Color(0xFFB7BCC2),
                         fontWeight: FontWeight.w600,
                       ),
                     ),

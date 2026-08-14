@@ -119,13 +119,13 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
           const SizedBox(height: 22),
           if (analyzing)
             const Card(
-              color: Color(0xFF11181D),
+              color: Color(0xFF121416),
               child: Padding(
                 padding: EdgeInsets.all(24),
                 child: Column(
                   children: [
                     CircularProgressIndicator(
-                      color: Color(0xFF16B8A6),
+                      color: Color(0xFFB7BCC2),
                     ),
                     SizedBox(height: 18),
                     Text(
@@ -138,7 +138,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
             ),
           if (errorMessage != null && !analyzing)
             Card(
-              color: const Color(0xFF11181D),
+              color: const Color(0xFF121416),
               child: Padding(
                 padding: const EdgeInsets.all(20),
                 child: Column(
@@ -167,7 +167,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
             ),
           if (analysis != null && !analyzing) ...[
             Card(
-              color: const Color(0xFF11181D),
+              color: const Color(0xFF121416),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
               ),
@@ -178,7 +178,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                     Text(
                       '${analysis.score}/100',
                       style: const TextStyle(
-                        color: Color(0xFF16B8A6),
+                        color: Color(0xFFB7BCC2),
                         fontSize: 48,
                         fontWeight: FontWeight.bold,
                       ),
@@ -222,7 +222,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
             ),
             const SizedBox(height: 12),
             Card(
-              color: const Color(0xFF11181D),
+              color: const Color(0xFF121416),
               child: Padding(
                 padding: const EdgeInsets.all(18),
                 child: Text(
@@ -245,7 +245,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
             const SizedBox(height: 12),
             ...analysis.suggestions.map(
               (suggestion) => Card(
-                color: const Color(0xFF11181D),
+                color: const Color(0xFF121416),
                 child: ListTile(
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 18,
@@ -253,7 +253,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                   ),
                   leading: const Icon(
                     Icons.auto_awesome,
-                    color: Color(0xFF16B8A6),
+                    color: Color(0xFFB7BCC2),
                   ),
                   title: Text(
                     suggestion,
@@ -268,7 +268,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
           const SizedBox(height: 24),
           FilledButton.icon(
             style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFF16B8A6),
+              backgroundColor: const Color(0xFFB7BCC2),
               foregroundColor: Colors.black,
               padding: const EdgeInsets.all(17),
             ),

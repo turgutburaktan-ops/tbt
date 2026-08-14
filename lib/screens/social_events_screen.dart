@@ -124,7 +124,7 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
-      backgroundColor: const Color(0xFF090D10),
+      backgroundColor: const Color(0xFF090A0C),
       builder: (sheetContext) => StatefulBuilder(
         builder: (context, setSheetState) {
           Future<void> chooseDateTime() async {
@@ -304,20 +304,20 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
                             horizontal: 14, vertical: 11),
                         decoration: BoxDecoration(
                           color: citySuggestionSelected
-                              ? const Color(0x3322D3EE)
-                              : const Color(0xFF11181D),
+                              ? const Color(0x33383D43)
+                              : const Color(0xFF121416),
                           borderRadius: BorderRadius.circular(14),
                           border: Border.all(
                               color: citySuggestionSelected
-                                  ? const Color(0xFF22D3EE)
-                                  : const Color(0xFF26383D)),
+                                  ? const Color(0xFFC5C9CE)
+                                  : const Color(0xFF2A2E33)),
                         ),
                         child: Row(children: [
                           Icon(
                               citySuggestionSelected
                                   ? Icons.check_circle
                                   : Icons.location_on_outlined,
-                              color: const Color(0xFF4FD1C5)),
+                              color: const Color(0xFFD7DADF)),
                           const SizedBox(width: 9),
                           Text('${cityController.text.trim()}, Türkiye',
                               style:
@@ -450,7 +450,7 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
                     height: 52,
                     child: FilledButton.icon(
                       style: FilledButton.styleFrom(
-                        backgroundColor: const Color(0xFF16B8A6),
+                        backgroundColor: const Color(0xFFB7BCC2),
                         foregroundColor: Colors.black,
                       ),
                       onPressed: saving
@@ -573,7 +573,7 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
             const SizedBox(width: 6),
             FilledButton.icon(
               style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFF16B8A6),
+                  backgroundColor: const Color(0xFFB7BCC2),
                   foregroundColor: Colors.black),
               onPressed: _openCreate,
               icon: const Icon(Icons.add, size: 19),
@@ -616,7 +616,7 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
               if (snapshot.connectionState == ConnectionState.waiting &&
                   !snapshot.hasData) {
                 return const Center(
-                    child: CircularProgressIndicator(color: Color(0xFF16B8A6)));
+                    child: CircularProgressIndicator(color: Color(0xFFB7BCC2)));
               }
               if (snapshot.hasError) {
                 final permissionDenied =
@@ -661,7 +661,7 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
                       uid != null && event.participantIds.contains(uid);
                   final isHost = uid != null && event.hostId == uid;
                   return Card(
-                    color: const Color(0xFF11181D),
+                    color: const Color(0xFF121416),
                     child: Padding(
                       padding: const EdgeInsets.all(14),
                       child: Column(
@@ -670,7 +670,7 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
                           Row(children: [
                             CircleAvatar(
                               backgroundColor: const Color(0x228B5CF6),
-                              foregroundColor: const Color(0xFF16B8A6),
+                              foregroundColor: const Color(0xFFB7BCC2),
                               child: Icon(_iconFor(event.type)),
                             ),
                             const SizedBox(width: 10),
@@ -685,7 +685,7 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
                                   Text(
                                     '${event.typeLabel} • ${_priceLabel(event)}',
                                     style: const TextStyle(
-                                        color: Color(0xFF16B8A6),
+                                        color: Color(0xFFB7BCC2),
                                         fontSize: 12,
                                         fontWeight: FontWeight.w700),
                                   ),
@@ -784,7 +784,7 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
                               style: FilledButton.styleFrom(
                                 backgroundColor: (joined || isHost)
                                     ? const Color(0xFF241D3D)
-                                    : const Color(0xFF16B8A6),
+                                    : const Color(0xFFB7BCC2),
                                 foregroundColor: (joined || isHost)
                                     ? Colors.white
                                     : Colors.black,

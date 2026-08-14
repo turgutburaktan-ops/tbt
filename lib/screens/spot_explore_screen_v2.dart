@@ -151,7 +151,7 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
   Widget build(BuildContext context) {
     return RefreshIndicator(
       onRefresh: _reload,
-      color: const Color(0xFF16B8A6),
+      color: const Color(0xFFB7BCC2),
       child: CustomScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
@@ -190,7 +190,7 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
                   hintText: 'Şehir veya çekim noktası ara...',
                   prefixIcon: const Icon(Icons.search_rounded),
                   filled: true,
-                  fillColor: const Color(0xFF11181D),
+                  fillColor: const Color(0xFF121416),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
                     borderSide: BorderSide.none,
@@ -203,7 +203,7 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
             const SliverFillRemaining(
               hasScrollBody: false,
               child: Center(
-                child: CircularProgressIndicator(color: Color(0xFF16B8A6)),
+                child: CircularProgressIndicator(color: Color(0xFFB7BCC2)),
               ),
             )
           else if (_visible.isEmpty)
@@ -229,7 +229,7 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
                 return Padding(
                   padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
                   child: Card(
-                    color: const Color(0xFF11181D),
+                    color: const Color(0xFF121416),
                     clipBehavior: Clip.antiAlias,
                     child: InkWell(
                       onTap: () => Navigator.push(
@@ -269,7 +269,7 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
                                         Text(
                                           _distanceLabel(spot),
                                           style: const TextStyle(
-                                            color: Color(0xFF16B8A6),
+                                            color: Color(0xFFB7BCC2),
                                             fontWeight: FontWeight.w800,
                                             fontSize: 12,
                                           ),
@@ -286,7 +286,7 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
                                   Row(
                                     children: [
                                       const Icon(Icons.star_rounded,
-                                          size: 16, color: Color(0xFF16B8A6)),
+                                          size: 16, color: Color(0xFFB7BCC2)),
                                       const SizedBox(width: 3),
                                       Text(spot.rating.toStringAsFixed(1)),
                                     ],

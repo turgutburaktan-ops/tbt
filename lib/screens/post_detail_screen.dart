@@ -6,7 +6,6 @@ import '../services/post_service.dart';
 import '../services/spot_repository.dart';
 import '../widgets/content_engagement_bar.dart';
 import '../widgets/mention_text.dart';
-import '../widgets/mention_text.dart';
 import 'spot_detail_screen.dart';
 
 class PostDetailScreen extends StatefulWidget {
@@ -80,7 +79,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
-      backgroundColor: const Color(0xFF0D1418),
+      backgroundColor: const Color(0xFF0E1012),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
@@ -120,7 +119,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                 height: 50,
                 child: FilledButton(
                   style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFF16B8A6),
+                    backgroundColor: const Color(0xFFB7BCC2),
                     foregroundColor: Colors.white,
                   ),
                   onPressed: () => Navigator.pop(sheetContext, true),
@@ -167,7 +166,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF11181D),
+        backgroundColor: const Color(0xFF121416),
         title: const Text('Gönderiyi sil'),
         content: const Text('Bu paylaşım kalıcı olarak silinecek.'),
         actions: [
@@ -205,7 +204,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   void _showMenu() {
     showModalBottomSheet<void>(
       context: context,
-      backgroundColor: const Color(0xFF11181D),
+      backgroundColor: const Color(0xFF121416),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
@@ -216,7 +215,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
             ListTile(
               leading: const Icon(
                 Icons.edit_outlined,
-                color: Color(0xFF16B8A6),
+                color: Color(0xFFB7BCC2),
               ),
               title: const Text('Düzenle'),
               onTap: () {
@@ -254,9 +253,9 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     final date = _dateLabel(_post['createdAt']);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF090D10),
+      backgroundColor: const Color(0xFF090A0C),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF090D10),
+        backgroundColor: const Color(0xFF090A0C),
         foregroundColor: Colors.white,
         title: const Text('Paylaşım'),
         actions: [
@@ -273,31 +272,14 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
         children: [
           Container(
             margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-            padding: const EdgeInsets.all(1.2),
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Color(0xFF38C7B7),
-                  Color(0xFF0F8F83),
-                  Color(0xFF123D3B),
-                ],
-              ),
-              borderRadius: BorderRadius.circular(26),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x3316B8A6),
-                  blurRadius: 24,
-                  spreadRadius: -10,
-                  offset: Offset(0, 10),
-                ),
-              ],
+              borderRadius: BorderRadius.circular(22),
+              border: Border.all(color: const Color(0xFF34383D)),
             ),
             child: Container(
               decoration: BoxDecoration(
-                color: const Color(0xFF0D0A15),
-                borderRadius: BorderRadius.circular(25),
+                color: const Color(0xFF0F1113),
+                borderRadius: BorderRadius.circular(21),
               ),
               clipBehavior: Clip.antiAlias,
               child: Column(
@@ -309,16 +291,15 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                         Container(
                           width: 38,
                           height: 38,
-                          decoration: const BoxDecoration(
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF1A1D20),
                             shape: BoxShape.circle,
-                            gradient: LinearGradient(
-                              colors: [Color(0xFF16B8A6), Color(0xFF5EEAD4)],
-                            ),
+                            border: Border.all(color: const Color(0xFF454A50)),
                           ),
                           child: const Icon(
                             Icons.person_outline_rounded,
                             size: 21,
-                            color: Colors.white,
+                            color: Colors.white70,
                           ),
                         ),
                         const SizedBox(width: 11),
@@ -350,7 +331,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                                       const Icon(
                                         Icons.location_on_rounded,
                                         size: 14,
-                                        color: Color(0xFF75DED4),
+                                        color: Color(0xFFBFC4CA),
                                       ),
                                       const SizedBox(width: 3),
                                       Flexible(
@@ -359,7 +340,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
                                           style: const TextStyle(
-                                            color: Color(0xFFB5C0C3),
+                                            color: Color(0xFFB8BDC4),
                                             fontSize: 11.5,
                                             fontWeight: FontWeight.w600,
                                           ),
@@ -371,11 +352,6 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                               ],
                             ],
                           ),
-                        ),
-                        const Icon(
-                          Icons.auto_awesome_rounded,
-                          size: 17,
-                          color: Color(0xFF16B8A6),
                         ),
                       ],
                     ),
@@ -442,7 +418,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                       fontSize: 14.5,
                     ),
                     mentionStyle: const TextStyle(
-                      color: Color(0xFF4FD1C5),
+                      color: Color(0xFFD7DADF),
                       height: 1.5,
                       fontSize: 14.5,
                       fontWeight: FontWeight.w900,

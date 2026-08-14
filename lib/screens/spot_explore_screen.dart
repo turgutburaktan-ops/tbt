@@ -148,7 +148,7 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
     SpotSort draftSort = _sort;
     showModalBottomSheet<void>(
       context: context,
-      backgroundColor: const Color(0xFF11181D),
+      backgroundColor: const Color(0xFF121416),
       isScrollControlled: true,
       builder: (sheetContext) => StatefulBuilder(
         builder: (context, setSheetState) => SafeArea(
@@ -215,7 +215,7 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
                   const Spacer(),
                   FilledButton(
                     style: FilledButton.styleFrom(
-                        backgroundColor: const Color(0xFF16B8A6),
+                        backgroundColor: const Color(0xFFB7BCC2),
                         foregroundColor: Colors.black),
                     onPressed: () {
                       Navigator.pop(sheetContext);
@@ -241,7 +241,7 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
   Widget build(BuildContext context) {
     return RefreshIndicator(
       onRefresh: _reload,
-      color: const Color(0xFF16B8A6),
+      color: const Color(0xFFB7BCC2),
       child: CustomScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
@@ -295,7 +295,7 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
                           icon: const Icon(Icons.close_rounded),
                         ),
                   filled: true,
-                  fillColor: const Color(0xFF11181D),
+                  fillColor: const Color(0xFF121416),
                   border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
                       borderSide: BorderSide.none),
@@ -329,7 +329,7 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
             const SliverFillRemaining(
                 hasScrollBody: false,
                 child: Center(
-                    child: CircularProgressIndicator(color: Color(0xFF16B8A6))))
+                    child: CircularProgressIndicator(color: Color(0xFFB7BCC2))))
           else if (_error != null && _spots.isEmpty)
             SliverFillRemaining(
                 hasScrollBody: false,
@@ -358,7 +358,7 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
                         width: 14,
                         height: 14,
                         child: CircularProgressIndicator(
-                            strokeWidth: 2, color: Color(0xFF16B8A6))),
+                            strokeWidth: 2, color: Color(0xFFB7BCC2))),
                   ],
                 ]),
               ),
@@ -387,7 +387,7 @@ class _SpotCard extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
       child: Card(
-        color: const Color(0xFF11181D),
+        color: const Color(0xFF121416),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: () => Navigator.push(context,
@@ -416,7 +416,7 @@ class _SpotCard extends StatelessWidget {
                         if (distanceLabel.isNotEmpty)
                           Text(distanceLabel,
                               style: const TextStyle(
-                                  color: Color(0xFF16B8A6),
+                                  color: Color(0xFFB7BCC2),
                                   fontWeight: FontWeight.w800,
                                   fontSize: 12)),
                       ]),
@@ -427,7 +427,7 @@ class _SpotCard extends StatelessWidget {
                       const SizedBox(height: 8),
                       Row(children: [
                         const Icon(Icons.star_rounded,
-                            size: 16, color: Color(0xFF16B8A6)),
+                            size: 16, color: Color(0xFFB7BCC2)),
                         const SizedBox(width: 3),
                         Text(spot.rating.toStringAsFixed(1)),
                         const SizedBox(width: 12),

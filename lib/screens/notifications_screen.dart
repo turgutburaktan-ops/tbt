@@ -33,9 +33,9 @@ class NotificationsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF090D10),
+      backgroundColor: const Color(0xFF090A0C),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF090D10),
+        backgroundColor: const Color(0xFF090A0C),
         foregroundColor: Colors.white,
         title: const Text('Bildirimler'),
         actions: [
@@ -51,7 +51,7 @@ class NotificationsScreen extends StatelessWidget {
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(
-              child: CircularProgressIndicator(color: Color(0xFF16B8A6)),
+              child: CircularProgressIndicator(color: Color(0xFFB7BCC2)),
             );
           }
 
@@ -88,7 +88,7 @@ class NotificationsScreen extends StatelessWidget {
               final item = items[index];
               return Material(
                 color: item.read
-                    ? const Color(0xFF11181D)
+                    ? const Color(0xFF121416)
                     : const Color(0xFF1C222B),
                 borderRadius: BorderRadius.circular(16),
                 child: InkWell(
@@ -108,7 +108,7 @@ class NotificationsScreen extends StatelessWidget {
                             shape: BoxShape.circle,
                           ),
                           child: Icon(_iconFor(item.type),
-                              color: const Color(0xFF16B8A6), size: 21),
+                              color: const Color(0xFFB7BCC2), size: 21),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
@@ -134,7 +134,7 @@ class NotificationsScreen extends StatelessWidget {
                                       width: 8,
                                       height: 8,
                                       decoration: const BoxDecoration(
-                                        color: Color(0xFF16B8A6),
+                                        color: Color(0xFFB7BCC2),
                                         shape: BoxShape.circle,
                                       ),
                                     ),

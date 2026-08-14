@@ -25,7 +25,7 @@ class ProfilePage extends StatelessWidget {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const SafeArea(
             child: Center(
-              child: CircularProgressIndicator(color: Color(0xFF16B8A6)),
+              child: CircularProgressIndicator(color: Color(0xFFB7BCC2)),
             ),
           );
         }
@@ -128,7 +128,7 @@ class _ProfileBodyState extends State<_ProfileBody> {
                   imageUrl,
                   fit: BoxFit.contain,
                   errorBuilder: (_, __, ___) => const ColoredBox(
-                    color: Color(0xFF11181D),
+                    color: Color(0xFF121416),
                     child: Center(
                         child: Icon(Icons.broken_image_outlined, size: 48)),
                   ),
@@ -196,9 +196,16 @@ class _ProfileBodyState extends State<_ProfileBody> {
                             ),
                           ),
                           IconButton(
+                            tooltip: 'Mesajlar',
+                            onPressed: () =>
+                                Navigator.pushNamed(context, '/messages'),
+                            icon: const Icon(Icons.chat_bubble_outline_rounded,
+                                color: Colors.white70),
+                          ),
+                          IconButton(
                             onPressed: () => _editProfile(displayName, bio),
                             icon: const Icon(Icons.edit_outlined,
-                                color: Color(0xFF16B8A6)),
+                                color: Colors.white70),
                           ),
                           IconButton(
                             onPressed: AuthService.instance.logout,
@@ -225,11 +232,11 @@ class _ProfileBodyState extends State<_ProfileBody> {
                                         photoUrl, displayName),
                                     child: CircleAvatar(
                                       radius: 47,
-                                      backgroundColor: const Color(0xFF16B8A6),
+                                      backgroundColor: const Color(0xFFB7BCC2),
                                       child: CircleAvatar(
                                         radius: 43,
                                         backgroundColor:
-                                            const Color(0xFF11181D),
+                                            const Color(0xFF121416),
                                         backgroundImage: photoUrl.isEmpty
                                             ? null
                                             : NetworkImage(photoUrl),
@@ -250,7 +257,7 @@ class _ProfileBodyState extends State<_ProfileBody> {
                                         width: 29,
                                         height: 29,
                                         decoration: const BoxDecoration(
-                                          color: Color(0xFF16B8A6),
+                                          color: Color(0xFFB7BCC2),
                                           shape: BoxShape.circle,
                                         ),
                                         child: const Icon(
@@ -316,7 +323,7 @@ class _ProfileBodyState extends State<_ProfileBody> {
                                   height: 42,
                                   child: FilledButton(
                                     style: FilledButton.styleFrom(
-                                      backgroundColor: const Color(0xFF1B1728),
+                                      backgroundColor: const Color(0xFF17191C),
                                       foregroundColor: Colors.white,
                                       shape: RoundedRectangleBorder(
                                           borderRadius:
@@ -336,7 +343,7 @@ class _ProfileBodyState extends State<_ProfileBody> {
                                   height: 42,
                                   child: FilledButton(
                                     style: FilledButton.styleFrom(
-                                      backgroundColor: const Color(0xFF1B1728),
+                                      backgroundColor: const Color(0xFF17191C),
                                       foregroundColor: Colors.white,
                                       shape: RoundedRectangleBorder(
                                           borderRadius:
@@ -377,7 +384,7 @@ class _ProfileBodyState extends State<_ProfileBody> {
                                     height: 2,
                                     width: 70,
                                     child:
-                                        ColoredBox(color: Color(0xFF16B8A6))),
+                                        ColoredBox(color: Color(0xFFB7BCC2))),
                               ],
                             ),
                           ),
@@ -389,7 +396,7 @@ class _ProfileBodyState extends State<_ProfileBody> {
                     const SliverFillRemaining(
                       child: Center(
                           child: CircularProgressIndicator(
-                              color: Color(0xFF16B8A6))),
+                              color: Color(0xFFB7BCC2))),
                     )
                   else if (posts.isEmpty)
                     SliverFillRemaining(
@@ -462,7 +469,7 @@ class _ProfileBodyState extends State<_ProfileBody> {
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
-      backgroundColor: const Color(0xFF090D10),
+      backgroundColor: const Color(0xFF090A0C),
       builder: (sheetContext) => StatefulBuilder(
         builder: (context, setSheetState) {
           Future<void> pick() async {

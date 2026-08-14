@@ -83,7 +83,7 @@ class _ChatScreenState extends State<ChatScreen> {
   Future<void> _showSafetyMenu() async {
     final action = await showModalBottomSheet<String>(
       context: context,
-      backgroundColor: const Color(0xFF11181D),
+      backgroundColor: const Color(0xFF121416),
       builder: (context) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -133,9 +133,9 @@ class _ChatScreenState extends State<ChatScreen> {
     final myId = FirebaseAuth.instance.currentUser?.uid ?? '';
 
     return Scaffold(
-      backgroundColor: const Color(0xFF090D10),
+      backgroundColor: const Color(0xFF090A0C),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF090D10),
+        backgroundColor: const Color(0xFF090A0C),
         foregroundColor: Colors.white,
         title: Text(widget.otherDisplayName),
         actions: [
@@ -147,7 +147,7 @@ class _ChatScreenState extends State<ChatScreen> {
       ),
       body: _loading
           ? const Center(
-              child: CircularProgressIndicator(color: Color(0xFF16B8A6)))
+              child: CircularProgressIndicator(color: Color(0xFFB7BCC2)))
           : _error != null
               ? Center(
                   child: Padding(
@@ -171,7 +171,7 @@ class _ChatScreenState extends State<ChatScreen> {
                               ConnectionState.waiting) {
                             return const Center(
                               child: CircularProgressIndicator(
-                                  color: Color(0xFF16B8A6)),
+                                  color: Color(0xFFB7BCC2)),
                             );
                           }
                           if (messages.isEmpty) {
@@ -206,7 +206,7 @@ class _ChatScreenState extends State<ChatScreen> {
                                       horizontal: 14, vertical: 10),
                                   decoration: BoxDecoration(
                                     color: mine
-                                        ? const Color(0xFF16B8A6)
+                                        ? const Color(0xFFB7BCC2)
                                         : const Color(0xFF1C232D),
                                     borderRadius: BorderRadius.circular(18),
                                   ),
@@ -259,7 +259,7 @@ class _ChatScreenState extends State<ChatScreen> {
                             const SizedBox(width: 8),
                             IconButton.filled(
                               style: IconButton.styleFrom(
-                                backgroundColor: const Color(0xFF16B8A6),
+                                backgroundColor: const Color(0xFFB7BCC2),
                                 foregroundColor: Colors.black,
                               ),
                               onPressed: _sending ? null : _send,

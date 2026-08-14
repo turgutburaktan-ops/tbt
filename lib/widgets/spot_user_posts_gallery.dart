@@ -23,7 +23,7 @@ class SpotUserPostsGallery extends StatelessWidget {
               child: Center(
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  color: Color(0xFF16B8A6),
+                  color: Color(0xFFB7BCC2),
                 ),
               ),
             ),
@@ -44,11 +44,11 @@ class SpotUserPostsGallery extends StatelessWidget {
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF16B8A6).withOpacity(.12),
+                    color: const Color(0xFFB7BCC2).withOpacity(.12),
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: const Icon(Icons.add_photo_alternate_outlined,
-                      color: Color(0xFF16B8A6)),
+                      color: Color(0xFFB7BCC2)),
                 ),
                 const SizedBox(width: 12),
                 const Expanded(
@@ -77,7 +77,7 @@ class SpotUserPostsGallery extends StatelessWidget {
             const Row(
               children: [
                 Icon(Icons.photo_library_outlined,
-                    size: 21, color: Color(0xFF16B8A6)),
+                    size: 21, color: Color(0xFFB7BCC2)),
                 SizedBox(width: 8),
                 Expanded(
                   child: Text('Bu Noktadan Paylaşımlar',
@@ -108,7 +108,7 @@ class SpotUserPostsGallery extends StatelessWidget {
                   child: Hero(
                     tag: 'spot-post-${top[index].id}',
                     child: Container(
-                      color: const Color(0xFF11181D),
+                      color: const Color(0xFF121416),
                       child: url.isEmpty
                           ? const Icon(Icons.image_outlined,
                               color: Colors.white30)
@@ -235,7 +235,7 @@ class _Shell extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.all(15),
         decoration: BoxDecoration(
-          color: const Color(0xFF11181D),
+          color: const Color(0xFF121416),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: Colors.white10),
         ),

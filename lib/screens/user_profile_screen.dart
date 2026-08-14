@@ -61,7 +61,8 @@ class UserProfileScreen extends StatelessWidget {
 
           if (!profileSnapshot.hasData || !profileSnapshot.data!.exists) {
             return const Center(
-              child: Text('Kullanıcı bulunamadı.', style: TextStyle(color: Colors.white70)),
+              child: Text('Kullanıcı bulunamadı.',
+                  style: TextStyle(color: Colors.white70)),
             );
           }
 
@@ -75,7 +76,10 @@ class UserProfileScreen extends StatelessWidget {
           return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
             stream: SocialService.instance.userPosts(userId),
             builder: (context, postsSnapshot) {
-              final docs = [...(postsSnapshot.data?.docs ?? const <QueryDocumentSnapshot<Map<String, dynamic>>>[])];
+              final docs = [
+                ...(postsSnapshot.data?.docs ??
+                    const <QueryDocumentSnapshot<Map<String, dynamic>>>[])
+              ];
               docs.sort((a, b) {
                 final at = a.data()['createdAt'];
                 final bt = b.data()['createdAt'];
@@ -97,30 +101,43 @@ class UserProfileScreen extends StatelessWidget {
                                 padding: const EdgeInsets.all(2),
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
-                                  border: Border.all(color: const Color(0xFF555B62)),
+                                  border: Border.all(
+                                      color: const Color(0xFF555B62)),
                                 ),
                                 child: CircleAvatar(
                                   radius: 43,
                                   backgroundColor: const Color(0xFF1A1D20),
-                                  backgroundImage: photoUrl.isEmpty ? null : NetworkImage(photoUrl),
+                                  backgroundImage: photoUrl.isEmpty
+                                      ? null
+                                      : NetworkImage(photoUrl),
                                   child: photoUrl.isEmpty
-                                      ? const Icon(Icons.person, size: 42, color: Colors.white54)
+                                      ? const Icon(Icons.person,
+                                          size: 42, color: Colors.white54)
                                       : null,
                                 ),
                               ),
                               const SizedBox(width: 20),
                               Expanded(
                                 child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceAround,
                                   children: [
-                                    _Stat(value: '${docs.length}', label: 'Gönderi'),
+                                    _Stat(
+                                        value: '${docs.length}',
+                                        label: 'Gönderi'),
                                     StreamBuilder<int>(
-                                      stream: SocialService.instance.followersCount(userId),
-                                      builder: (_, s) => _Stat(value: '${s.data ?? 0}', label: 'Takipçi'),
+                                      stream: SocialService.instance
+                                          .followersCount(userId),
+                                      builder: (_, s) => _Stat(
+                                          value: '${s.data ?? 0}',
+                                          label: 'Takipçi'),
                                     ),
                                     StreamBuilder<int>(
-                                      stream: SocialService.instance.followingCount(userId),
-                                      builder: (_, s) => _Stat(value: '${s.data ?? 0}', label: 'Takip'),
+                                      stream: SocialService.instance
+                                          .followingCount(userId),
+                                      builder: (_, s) => _Stat(
+                                          value: '${s.data ?? 0}',
+                                          label: 'Takip'),
                                     ),
                                   ],
                                 ),
@@ -128,22 +145,30 @@ class UserProfileScreen extends StatelessWidget {
                             ],
                           ),
                           const SizedBox(height: 14),
-                          Text(displayName, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
+                          Text(displayName,
+                              style: const TextStyle(
+                                  fontSize: 18, fontWeight: FontWeight.w900)),
                           const SizedBox(height: 3),
-                          Text('@${username.replaceFirst('@', '')}', style: const TextStyle(color: Colors.white46)),
+                          Text('@${username.replaceFirst('@', '')}',
+                              style: const TextStyle(color: Colors.white54)),
                           if (city.isNotEmpty) ...[
                             const SizedBox(height: 7),
                             Row(
                               children: [
-                                const Icon(Icons.location_on_outlined, size: 16, color: Colors.white54),
+                                const Icon(Icons.location_on_outlined,
+                                    size: 16, color: Colors.white54),
                                 const SizedBox(width: 5),
-                                Text(city, style: const TextStyle(color: Colors.white60)),
+                                Text(city,
+                                    style:
+                                        const TextStyle(color: Colors.white60)),
                               ],
                             ),
                           ],
                           if (bio.isNotEmpty) ...[
                             const SizedBox(height: 10),
-                            Text(bio, style: const TextStyle(color: Colors.white70, height: 1.4)),
+                            Text(bio,
+                                style: const TextStyle(
+                                    color: Colors.white70, height: 1.4)),
                           ],
                           if (!isOwnProfile) ...[
                             const SizedBox(height: 16),
@@ -151,7 +176,8 @@ class UserProfileScreen extends StatelessWidget {
                               children: [
                                 Expanded(
                                   child: StreamBuilder<bool>(
-                                    stream: SocialService.instance.isFollowing(userId),
+                                    stream: SocialService.instance
+                                        .isFollowing(userId),
                                     builder: (_, snapshot) {
                                       final following = snapshot.data ?? false;
                                       return SizedBox(
@@ -163,21 +189,29 @@ class UserProfileScreen extends StatelessWidget {
                                                 : const Color(0xFF34383D),
                                             foregroundColor: Colors.white,
                                             shape: RoundedRectangleBorder(
-                                              borderRadius: BorderRadius.circular(12),
-                                              side: const BorderSide(color: Color(0xFF353A40)),
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                              side: const BorderSide(
+                                                  color: Color(0xFF353A40)),
                                             ),
                                           ),
                                           onPressed: () async {
                                             try {
-                                              await SocialService.instance.toggleFollow(userId);
+                                              await SocialService.instance
+                                                  .toggleFollow(userId);
                                             } catch (e) {
                                               if (!context.mounted) return;
-                                              ScaffoldMessenger.of(context).showSnackBar(
-                                                SnackBar(content: Text(e.toString())),
+                                              ScaffoldMessenger.of(context)
+                                                  .showSnackBar(
+                                                SnackBar(
+                                                    content:
+                                                        Text(e.toString())),
                                               );
                                             }
                                           },
-                                          child: Text(following ? 'Takiptesin' : 'Takip Et'),
+                                          child: Text(following
+                                              ? 'Takiptesin'
+                                              : 'Takip Et'),
                                         ),
                                       );
                                     },
@@ -188,8 +222,11 @@ class UserProfileScreen extends StatelessWidget {
                                   child: SizedBox(
                                     height: 44,
                                     child: OutlinedButton.icon(
-                                      onPressed: () => _openChat(context, displayName),
-                                      icon: const Icon(Icons.chat_bubble_outline_rounded, size: 19),
+                                      onPressed: () =>
+                                          _openChat(context, displayName),
+                                      icon: const Icon(
+                                          Icons.chat_bubble_outline_rounded,
+                                          size: 19),
                                       label: const Text('Mesaj Gönder'),
                                     ),
                                   ),
@@ -205,17 +242,21 @@ class UserProfileScreen extends StatelessWidget {
                     child: Divider(height: 1, color: Color(0xFF2A2E33)),
                   ),
                   if (postsSnapshot.connectionState == ConnectionState.waiting)
-                    const SliverFillRemaining(child: Center(child: CircularProgressIndicator()))
+                    const SliverFillRemaining(
+                        child: Center(child: CircularProgressIndicator()))
                   else if (docs.isEmpty)
                     const SliverFillRemaining(
                       hasScrollBody: false,
-                      child: Center(child: Text('Henüz paylaşım yok', style: TextStyle(color: Colors.white46))),
+                      child: Center(
+                          child: Text('Henüz paylaşım yok',
+                              style: TextStyle(color: Colors.white54))),
                     )
                   else
                     SliverPadding(
                       padding: const EdgeInsets.fromLTRB(1, 2, 1, 36),
                       sliver: SliverGrid(
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 3,
                           crossAxisSpacing: 2,
                           mainAxisSpacing: 2,
@@ -225,20 +266,25 @@ class UserProfileScreen extends StatelessWidget {
                           (context, index) {
                             final doc = docs[index];
                             final post = {...doc.data(), 'id': doc.id};
-                            final imageUrl = (post['imageUrl'] ?? '').toString();
+                            final imageUrl =
+                                (post['imageUrl'] ?? '').toString();
                             return GestureDetector(
                               onTap: () => Navigator.push(
                                 context,
-                                MaterialPageRoute(builder: (_) => PostDetailScreen(post: post)),
+                                MaterialPageRoute(
+                                    builder: (_) =>
+                                        PostDetailScreen(post: post)),
                               ),
                               child: Container(
                                 color: const Color(0xFF121416),
                                 child: imageUrl.isEmpty
-                                    ? const Icon(Icons.image_outlined, color: Colors.white24)
+                                    ? const Icon(Icons.image_outlined,
+                                        color: Colors.white24)
                                     : Image.network(
                                         imageUrl,
                                         fit: BoxFit.cover,
-                                        errorBuilder: (_, __, ___) => const Icon(
+                                        errorBuilder: (_, __, ___) =>
+                                            const Icon(
                                           Icons.broken_image_outlined,
                                           color: Colors.white24,
                                         ),
@@ -270,9 +316,11 @@ class _Stat extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Text(value, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
+        Text(value,
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
         const SizedBox(height: 3),
-        Text(label, style: const TextStyle(color: Colors.white54, fontSize: 12)),
+        Text(label,
+            style: const TextStyle(color: Colors.white54, fontSize: 12)),
       ],
     );
   }

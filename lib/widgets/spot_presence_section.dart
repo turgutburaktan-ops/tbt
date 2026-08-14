@@ -32,7 +32,7 @@ class _SpotPresenceSectionState extends State<SpotPresenceSection> {
           width: double.infinity,
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: const Color(0xFF11181D),
+            color: const Color(0xFF121416),
             borderRadius: BorderRadius.circular(18),
             border: Border.all(color: Colors.white10),
           ),
@@ -50,7 +50,7 @@ class _SpotPresenceSectionState extends State<SpotPresenceSection> {
                   Row(
                     children: [
                       const Icon(Icons.people_outline,
-                          color: Color(0xFF16B8A6)),
+                          color: Color(0xFFB7BCC2)),
                       const SizedBox(width: 8),
                       const Expanded(
                         child: Column(
@@ -80,7 +80,7 @@ class _SpotPresenceSectionState extends State<SpotPresenceSection> {
                         child: Text(
                           '${items.length}',
                           style: const TextStyle(
-                            color: Color(0xFF16B8A6),
+                            color: Color(0xFFB7BCC2),
                             fontWeight: FontWeight.w900,
                           ),
                         ),
@@ -160,7 +160,7 @@ class _SpotPresenceSectionState extends State<SpotPresenceSection> {
                           onPressed:
                               _busy || currentUser == null ? null : _checkIn,
                           style: FilledButton.styleFrom(
-                            backgroundColor: const Color(0xFF16B8A6),
+                            backgroundColor: const Color(0xFFB7BCC2),
                             foregroundColor: Colors.black,
                           ),
                           icon: _busy

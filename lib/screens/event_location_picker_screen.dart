@@ -90,7 +90,7 @@ class _EventLocationPickerScreenState extends State<EventLocationPickerScreen> {
         : '${widget.city.trim()}, Türkiye';
     final address = widget.addressLabel.trim();
     return Scaffold(
-      backgroundColor: const Color(0xFF090D10),
+      backgroundColor: const Color(0xFF090A0C),
       appBar: AppBar(
         title: const Text('Etkinlik Konumunu Seç'),
         actions: [
@@ -143,9 +143,9 @@ class _EventLocationPickerScreenState extends State<EventLocationPickerScreen> {
             child: Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: const Color(0xFF11181D).withOpacity(.96),
+                color: const Color(0xFF121416).withOpacity(.96),
                 borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: const Color(0xFF26383D)),
+                border: Border.all(color: const Color(0xFF2A2E33)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -153,7 +153,7 @@ class _EventLocationPickerScreenState extends State<EventLocationPickerScreen> {
                   Row(
                     children: [
                       const Icon(Icons.location_city_outlined,
-                          color: Color(0xFF4FD1C5)),
+                          color: Color(0xFFD7DADF)),
                       const SizedBox(width: 8),
                       Expanded(
                           child: Text(cityLabel,

@@ -248,11 +248,11 @@ class _MapScreenState extends State<MapScreen> {
                     Container(
                       padding: const EdgeInsets.fromLTRB(14, 8, 8, 8),
                       decoration: BoxDecoration(
-                          color: const Color(0xFF0E1519).withOpacity(.95),
+                          color: const Color(0xFF0F1113).withOpacity(.95),
                           borderRadius: BorderRadius.circular(18)),
                       child: Row(children: [
                         const Icon(Icons.explore_outlined,
-                            color: Color(0xFF16B8A6)),
+                            color: Color(0xFFB7BCC2)),
                         const SizedBox(width: 9),
                         const Expanded(
                             child: Text('Noktalar ve Etkinlikler',
@@ -264,7 +264,7 @@ class _MapScreenState extends State<MapScreen> {
                               width: 18,
                               height: 18,
                               child: CircularProgressIndicator(
-                                  strokeWidth: 2, color: Color(0xFF16B8A6)))
+                                  strokeWidth: 2, color: Color(0xFFB7BCC2)))
                         else
                           Text(
                               '${_spots.length} + ${_events.where((e) => _eventPosition(e) != null && e.startsAt.isAfter(DateTime.now())).length}',
@@ -284,7 +284,7 @@ class _MapScreenState extends State<MapScreen> {
                     Container(
                       padding: const EdgeInsets.all(4),
                       decoration: BoxDecoration(
-                          color: const Color(0xFF0E1519).withOpacity(.95),
+                          color: const Color(0xFF0F1113).withOpacity(.95),
                           borderRadius: BorderRadius.circular(16)),
                       child: Row(children: [
                         _FilterButton(
@@ -316,15 +316,15 @@ class _MapScreenState extends State<MapScreen> {
                 bottom: bottomOffset + 68,
                 child: FloatingActionButton(
                   heroTag: 'myLocation',
-                  backgroundColor: const Color(0xFF0E1519),
-                  foregroundColor: const Color(0xFF16B8A6),
+                  backgroundColor: const Color(0xFF0F1113),
+                  foregroundColor: const Color(0xFFB7BCC2),
                   onPressed: _gettingLocation ? null : _goToMyLocation,
                   child: _gettingLocation
                       ? const SizedBox(
                           width: 22,
                           height: 22,
                           child: CircularProgressIndicator(
-                              strokeWidth: 2.5, color: Color(0xFF16B8A6)))
+                              strokeWidth: 2.5, color: Color(0xFFB7BCC2)))
                       : const Icon(Icons.my_location_rounded),
                 ),
               ),
@@ -333,8 +333,8 @@ class _MapScreenState extends State<MapScreen> {
                 bottom: bottomOffset,
                 child: FloatingActionButton(
                   heroTag: 'allMapContent',
-                  backgroundColor: const Color(0xFF0E1519),
-                  foregroundColor: const Color(0xFF16B8A6),
+                  backgroundColor: const Color(0xFF0F1113),
+                  foregroundColor: const Color(0xFFB7BCC2),
                   onPressed: _showAll,
                   child: const Icon(Icons.fit_screen),
                 ),
@@ -380,7 +380,7 @@ class _FilterButton extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 4),
             decoration: BoxDecoration(
-                color: selected ? const Color(0xFF16B8A6) : Colors.transparent,
+                color: selected ? const Color(0xFFB7BCC2) : Colors.transparent,
                 borderRadius: BorderRadius.circular(12)),
             child: Text(label,
                 textAlign: TextAlign.center,
@@ -464,7 +464,7 @@ class _SpotCard extends StatelessWidget {
       {required this.spot, required this.onClose, required this.onOpen});
   @override
   Widget build(BuildContext context) => Card(
-        color: const Color(0xFF0E1519),
+        color: const Color(0xFF0F1113),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: onOpen,
@@ -496,12 +496,12 @@ class _SpotCard extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
-                            color: Color(0xFF16B8A6), fontSize: 12)),
+                            color: Color(0xFFB7BCC2), fontSize: 12)),
                   ])),
               IconButton(
                   onPressed: onClose,
                   icon: const Icon(Icons.close, color: Colors.white54)),
-              const Icon(Icons.chevron_right, color: Color(0xFF16B8A6)),
+              const Icon(Icons.chevron_right, color: Color(0xFFB7BCC2)),
             ]),
           ),
         ),

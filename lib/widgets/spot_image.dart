@@ -92,14 +92,14 @@ class SpotImage extends StatelessWidget {
             return Container(
               width: width,
               height: height,
-              color: const Color(0xFF152128),
+              color: const Color(0xFF1A1D20),
               alignment: Alignment.center,
               child: const SizedBox(
                 width: 22,
                 height: 22,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  color: Color(0xFF16B8A6),
+                  color: Color(0xFFB7BCC2),
                 ),
               ),
             );
@@ -111,7 +111,7 @@ class SpotImage extends StatelessWidget {
   Widget _fallback() => Container(
         width: width,
         height: height,
-        color: const Color(0xFF152128),
+        color: const Color(0xFF1A1D20),
         alignment: Alignment.center,
         child: const Icon(
           Icons.photo_camera_back_outlined,

@@ -45,13 +45,13 @@ class SpotDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF090D10),
+      backgroundColor: const Color(0xFF090A0C),
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
             expandedHeight: 300,
             pinned: true,
-            backgroundColor: const Color(0xFF090D10),
+            backgroundColor: const Color(0xFF090A0C),
             foregroundColor: Colors.white,
             actions: [
               ValueListenableBuilder<List<PhotoSpot>>(
@@ -62,7 +62,7 @@ class SpotDetailScreen extends StatelessWidget {
                     tooltip: saved ? 'Kaydı kaldır' : 'Kaydet',
                     onPressed: () => FavoritesService.toggle(spot),
                     icon: Icon(saved ? Icons.favorite : Icons.favorite_border,
-                        color: saved ? const Color(0xFF16B8A6) : Colors.white),
+                        color: saved ? const Color(0xFFB7BCC2) : Colors.white),
                   );
                 },
               ),
@@ -120,7 +120,7 @@ class SpotDetailScreen extends StatelessWidget {
                           child: Text(spot.city,
                               style: const TextStyle(color: Colors.white60))),
                       const Icon(Icons.star,
-                          size: 18, color: Color(0xFF16B8A6)),
+                          size: 18, color: Color(0xFFB7BCC2)),
                       const SizedBox(width: 4),
                       Text(spot.rating.toString()),
                     ],
@@ -175,7 +175,7 @@ class SpotDetailScreen extends StatelessWidget {
                       children: spot.tags
                           .map((tag) => Chip(
                               label: Text(tag),
-                              backgroundColor: const Color(0xFF11181D),
+                              backgroundColor: const Color(0xFF121416),
                               side: BorderSide.none))
                           .toList(),
                     ),
@@ -186,7 +186,7 @@ class SpotDetailScreen extends StatelessWidget {
                     height: 56,
                     child: ElevatedButton.icon(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF16B8A6),
+                        backgroundColor: const Color(0xFFB7BCC2),
                         foregroundColor: Colors.black,
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16)),
@@ -254,7 +254,7 @@ class _PrimaryActionButton extends StatelessWidget {
       child: FilledButton.icon(
         onPressed: onPressed,
         style: FilledButton.styleFrom(
-          backgroundColor: const Color(0xFF16B8A6),
+          backgroundColor: const Color(0xFFB7BCC2),
           foregroundColor: Colors.black,
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
@@ -282,14 +282,14 @@ class _CompactShootingGuide extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
-          color: const Color(0xFF11181D),
+          color: const Color(0xFF121416),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: Colors.white10)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Row(children: [
-            Icon(Icons.auto_awesome, size: 20, color: Color(0xFF16B8A6)),
+            Icon(Icons.auto_awesome, size: 20, color: Color(0xFFB7BCC2)),
             SizedBox(width: 8),
             Text('Nasıl Çekilir?',
                 style: TextStyle(fontSize: 17, fontWeight: FontWeight.w900))
@@ -329,7 +329,7 @@ Future<void> _openActionSheet(BuildContext context,
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
-    backgroundColor: const Color(0xFF090D10),
+    backgroundColor: const Color(0xFF090A0C),
     shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
     builder: (sheetContext) => FractionallySizedBox(
@@ -370,10 +370,10 @@ class _InfoChip extends StatelessWidget {
   Widget build(BuildContext context) => Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
         decoration: BoxDecoration(
-            color: const Color(0xFF11181D),
+            color: const Color(0xFF121416),
             borderRadius: BorderRadius.circular(12)),
         child: Row(mainAxisSize: MainAxisSize.min, children: [
-          Icon(icon, size: 17, color: const Color(0xFF16B8A6)),
+          Icon(icon, size: 17, color: const Color(0xFFB7BCC2)),
           const SizedBox(width: 6),
           Text(label,
               style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600))
@@ -388,7 +388,7 @@ class _SectionTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Row(children: [
-        Icon(icon, size: 21, color: const Color(0xFF16B8A6)),
+        Icon(icon, size: 21, color: const Color(0xFFB7BCC2)),
         const SizedBox(width: 8),
         Text(title,
             style: const TextStyle(fontSize: 19, fontWeight: FontWeight.bold))
@@ -404,7 +404,7 @@ class _InfoCard extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-            color: const Color(0xFF11181D),
+            color: const Color(0xFF121416),
             borderRadius: BorderRadius.circular(16)),
         child: Text(text, style: const TextStyle(fontSize: 15, height: 1.4)),
       );

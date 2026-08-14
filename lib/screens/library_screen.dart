@@ -120,7 +120,8 @@ class _TabChip extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Icon(icon, size: 18, color: selected ? Colors.white : Colors.white54),
+                Icon(icon,
+                    size: 18, color: selected ? Colors.white : Colors.white54),
                 const SizedBox(width: 7),
                 Text(
                   label,
@@ -150,7 +151,8 @@ class _SavedSpotsTab extends StatelessWidget {
           return const _EmptyState(
             icon: Icons.bookmark_border_rounded,
             title: 'Henüz kaydettiğin bir nokta yok',
-            subtitle: 'Beğendiğin çekim noktalarını kaydettiğinde burada göreceksin.',
+            subtitle:
+                'Beğendiğin çekim noktalarını kaydettiğinde burada göreceksin.',
           );
         }
 
@@ -167,7 +169,8 @@ class _SavedSpotsTab extends StatelessWidget {
                 borderRadius: BorderRadius.circular(16),
                 onTap: () => Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => SpotDetailScreen(spot: spot)),
+                  MaterialPageRoute(
+                      builder: (_) => SpotDetailScreen(spot: spot)),
                 ),
                 child: Container(
                   padding: const EdgeInsets.all(9),
@@ -192,7 +195,8 @@ class _SavedSpotsTab extends StatelessWidget {
                               spot.name,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.w800, fontSize: 16),
                             ),
                             const SizedBox(height: 5),
                             Text(
@@ -202,14 +206,16 @@ class _SavedSpotsTab extends StatelessWidget {
                               style: const TextStyle(color: Colors.white54),
                             ),
                             const SizedBox(height: 5),
-                            Text('★ ${spot.rating}', style: const TextStyle(color: Colors.white70)),
+                            Text('★ ${spot.rating}',
+                                style: const TextStyle(color: Colors.white70)),
                           ],
                         ),
                       ),
                       IconButton(
                         tooltip: 'Kaydı kaldır',
                         onPressed: () => FavoritesService.toggle(spot),
-                        icon: const Icon(Icons.bookmark_rounded, color: Colors.white),
+                        icon: const Icon(Icons.bookmark_rounded,
+                            color: Colors.white),
                       ),
                     ],
                   ),
@@ -261,7 +267,8 @@ class _ActivityTab extends StatelessWidget {
     return StreamBuilder<List<AppNotificationItem>>(
       stream: AppNotificationService.instance.watchMine(limit: 120),
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
+        if (snapshot.connectionState == ConnectionState.waiting &&
+            !snapshot.hasData) {
           return const Center(child: CircularProgressIndicator());
         }
         final items = (snapshot.data ?? const <AppNotificationItem>[])
@@ -277,7 +284,8 @@ class _ActivityTab extends StatelessWidget {
         return ListView.separated(
           padding: const EdgeInsets.fromLTRB(14, 8, 14, 110),
           itemCount: items.length,
-          separatorBuilder: (_, __) => const Divider(height: 1, color: Colors.white10),
+          separatorBuilder: (_, __) =>
+              const Divider(height: 1, color: Colors.white10),
           itemBuilder: (context, index) => _ActivityTile(item: items[index]),
         );
       },
@@ -293,7 +301,8 @@ class _ActivityTile extends StatelessWidget {
     final value = type.toLowerCase();
     if (value.contains('like')) return Icons.favorite_rounded;
     if (value.contains('comment')) return Icons.chat_bubble_rounded;
-    if (value.contains('tag') || value.contains('mention')) return Icons.alternate_email_rounded;
+    if (value.contains('tag') || value.contains('mention'))
+      return Icons.alternate_email_rounded;
     if (value.contains('follow')) return Icons.person_add_alt_1_rounded;
     if (value.contains('event')) return Icons.groups_2_outlined;
     return Icons.notifications_none_rounded;
@@ -318,12 +327,16 @@ class _ActivityTile extends StatelessWidget {
     if (sourceId.isEmpty) return;
 
     if (item.type.startsWith('post_')) {
-      final doc = await FirebaseFirestore.instance.collection('posts').doc(sourceId).get();
+      final doc = await FirebaseFirestore.instance
+          .collection('posts')
+          .doc(sourceId)
+          .get();
       if (!context.mounted || !doc.exists) return;
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => PostDetailScreen(post: {...?doc.data(), 'id': doc.id}),
+          builder: (_) =>
+              PostDetailScreen(post: {...?doc.data(), 'id': doc.id}),
         ),
       );
       return;
@@ -333,9 +346,9 @@ class _ActivityTile extends StatelessWidget {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => const Scaffold(
-            appBar: AppBar(title: Text('Etkinlikler')),
-            body: SocialEventsScreen(),
+          builder: (_) => Scaffold(
+            appBar: AppBar(title: const Text('Etkinlikler')),
+            body: const SocialEventsScreen(),
           ),
         ),
       );
@@ -365,7 +378,8 @@ class _ActivityTile extends StatelessWidget {
         overflow: TextOverflow.ellipsis,
         style: const TextStyle(color: Colors.white54, height: 1.3),
       ),
-      trailing: Text(_timeLabel(), style: const TextStyle(color: Colors.white38, fontSize: 11)),
+      trailing: Text(_timeLabel(),
+          style: const TextStyle(color: Colors.white38, fontSize: 11)),
       onTap: () => _open(context),
     );
   }
@@ -376,7 +390,8 @@ class _EmptyState extends StatelessWidget {
   final String title;
   final String subtitle;
 
-  const _EmptyState({required this.icon, required this.title, required this.subtitle});
+  const _EmptyState(
+      {required this.icon, required this.title, required this.subtitle});
 
   @override
   Widget build(BuildContext context) {
@@ -388,9 +403,13 @@ class _EmptyState extends StatelessWidget {
           children: [
             Icon(icon, size: 54, color: Colors.white24),
             const SizedBox(height: 14),
-            Text(title, textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.w800)),
+            Text(title,
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontWeight: FontWeight.w800)),
             const SizedBox(height: 7),
-            Text(subtitle, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white46, height: 1.4)),
+            Text(subtitle,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.white54, height: 1.4)),
           ],
         ),
       ),

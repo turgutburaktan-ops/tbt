@@ -95,7 +95,7 @@ class _MentionTextState extends State<MentionText> {
     final base = widget.style ?? DefaultTextStyle.of(context).style;
     final mention = widget.mentionStyle ??
         base.copyWith(
-          color: const Color(0xFF4FD1C5),
+          color: const Color(0xFFD7DADF),
           fontWeight: FontWeight.w800,
         );
 
