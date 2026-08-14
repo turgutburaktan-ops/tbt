@@ -108,12 +108,67 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
       setState(() {
         _currentPosition = position;
         _useCurrentLocation = true;
+        _allSpots = _sortedFromCurrentPosition(_allSpots, position);
+        _stops
+          ..sort((a, b) => _distanceFromPosition(position, a)
+              .compareTo(_distanceFromPosition(position, b)));
       });
     } catch (_) {
       if (requestIfNeeded) _message('Konum alınamadı.');
     } finally {
       if (mounted) setState(() => _gettingLocation = false);
     }
+  }
+
+  double _distanceFromPosition(Position position, PhotoSpot spot) =>
+      Geolocator.distanceBetween(
+        position.latitude,
+        position.longitude,
+        spot.latitude,
+        spot.longitude,
+      );
+
+  List<PhotoSpot> _sortedFromCurrentPosition(
+    Iterable<PhotoSpot> spots,
+    Position position,
+  ) {
+    final sorted = spots.toList();
+    sorted.sort((a, b) => _distanceFromPosition(position, a)
+        .compareTo(_distanceFromPosition(position, b)));
+    return sorted;
+  }
+
+  double? _distanceToMeKm(PhotoSpot spot) {
+    final current = _currentPosition;
+    if (current == null) return null;
+    return _distanceFromPosition(current, spot) / 1000;
+  }
+
+  List<PhotoSpot> get _nearbyMapSpots {
+    final selectedIds = _stops.map((spot) => spot.id).toSet();
+    final candidates =
+        _allSpots.where((spot) => !selectedIds.contains(spot.id)).toList();
+    final current = _currentPosition;
+    if (current != null) {
+      candidates.sort((a, b) => _distanceFromPosition(current, a)
+          .compareTo(_distanceFromPosition(current, b)));
+    }
+    return candidates.take(60).toList();
+  }
+
+  Future<void> _addSpotFromMap(PhotoSpot spot) async {
+    if (_stops.any((item) => item.id == spot.id)) return;
+    setState(() {
+      _stops.add(spot);
+      final current = _currentPosition;
+      if (current != null) {
+        _stops.sort((a, b) => _distanceFromPosition(current, a)
+            .compareTo(_distanceFromPosition(current, b)));
+      }
+    });
+    await Future<void>.delayed(const Duration(milliseconds: 70));
+    await _fitRoute();
+    _message('${spot.name} rotaya eklendi.');
   }
 
   void _message(String text) {
@@ -137,6 +192,26 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
         ),
       );
     }
+    for (final spot in _nearbyMapSpots) {
+      final km = _distanceToMeKm(spot);
+      markers.add(
+        Marker(
+          markerId: MarkerId('nearby_${spot.id}'),
+          position: LatLng(spot.latitude, spot.longitude),
+          icon: BitmapDescriptor.defaultMarkerWithHue(
+            BitmapDescriptor.hueViolet,
+          ),
+          infoWindow: InfoWindow(
+            title: spot.name,
+            snippet: km == null
+                ? '${spot.city} • Rotaya eklemek için pine dokun'
+                : '${spot.city} • ${km < 10 ? km.toStringAsFixed(1) : km.toStringAsFixed(0)} km • Dokun ve rotaya ekle',
+          ),
+          onTap: () => _addSpotFromMap(spot),
+        ),
+      );
+    }
+
     for (var i = 0; i < _stops.length; i++) {
       final spot = _stops[i];
       markers.add(
@@ -194,8 +269,18 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
 
   Future<void> _fitRoute() async {
     final controller = _mapController;
-    final points = _routePoints;
-    if (controller == null || points.isEmpty) return;
+    var points = _routePoints;
+    if (controller == null) return;
+    if (points.isEmpty && _currentPosition != null) {
+      final current = _currentPosition!;
+      points = [
+        LatLng(current.latitude, current.longitude),
+        ..._nearbyMapSpots.take(12).map(
+              (spot) => LatLng(spot.latitude, spot.longitude),
+            ),
+      ];
+    }
+    if (points.isEmpty) return;
     if (points.length == 1) {
       await controller.animateCamera(
         CameraUpdate.newLatLngZoom(points.first, 14),
@@ -245,17 +330,19 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
         builder: (context, setSheetState) {
           final key = _normalize(query);
           final excluded = _stops.map((s) => s.id).toSet();
-          final matches = _allSpots
-              .where((spot) {
-                if (excluded.contains(spot.id)) return false;
-                if (key.isEmpty) return true;
-                final haystack = _normalize(
-                  '${spot.name} ${spot.city} ${spot.category} ${spot.tags.join(' ')}',
-                );
-                return haystack.contains(key);
-              })
-              .take(80)
-              .toList();
+          var matches = _allSpots.where((spot) {
+            if (excluded.contains(spot.id)) return false;
+            if (key.isEmpty) return true;
+            final haystack = _normalize(
+              '${spot.name} ${spot.city} ${spot.category} ${spot.tags.join(' ')}',
+            );
+            return haystack.contains(key);
+          }).toList();
+          final current = _currentPosition;
+          if (current != null) {
+            matches = _sortedFromCurrentPosition(matches, current);
+          }
+          matches = matches.take(80).toList();
 
           return FractionallySizedBox(
             heightFactor: .88,
@@ -324,10 +411,18 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
                                   fontWeight: FontWeight.w800,
                                 ),
                               ),
-                              subtitle: Text(
-                                '${spot.city} • ${spot.category} • ★ ${spot.rating}',
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
+                              subtitle: Builder(
+                                builder: (_) {
+                                  final km = _distanceToMeKm(spot);
+                                  final distanceLabel = km == null
+                                      ? ''
+                                      : ' • ${km < 10 ? km.toStringAsFixed(1) : km.toStringAsFixed(0)} km';
+                                  return Text(
+                                    '${spot.city} • ${spot.category}$distanceLabel • ★ ${spot.rating}',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  );
+                                },
                               ),
                               trailing: const Icon(Icons.add_circle_outline),
                               onTap: () => Navigator.pop(sheetContext, spot),
@@ -343,7 +438,14 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
     );
     queryController.dispose();
     if (selected == null || !mounted) return;
-    setState(() => _stops.add(selected));
+    setState(() {
+      _stops.add(selected);
+      final current = _currentPosition;
+      if (current != null) {
+        _stops.sort((a, b) => _distanceFromPosition(current, a)
+            .compareTo(_distanceFromPosition(current, b)));
+      }
+    });
     await Future<void>.delayed(const Duration(milliseconds: 80));
     await _fitRoute();
   }
@@ -659,11 +761,20 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
                                   fontWeight: FontWeight.w800,
                                 ),
                               ),
-                              subtitle: Text(
-                                '${spot.city} • ${spot.bestTime}',
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(color: Colors.white54),
+                              subtitle: Builder(
+                                builder: (_) {
+                                  final km = _distanceToMeKm(spot);
+                                  final distanceLabel = km == null
+                                      ? ''
+                                      : ' • ${km < 10 ? km.toStringAsFixed(1) : km.toStringAsFixed(0)} km';
+                                  return Text(
+                                    '${spot.city}$distanceLabel • ${spot.bestTime}',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style:
+                                        const TextStyle(color: Colors.white54),
+                                  );
+                                },
                               ),
                               trailing: Row(
                                 mainAxisSize: MainAxisSize.min,
