@@ -10,6 +10,7 @@ import '../data/curated_photo_spots_official_bulk.dart';
 import '../data/curated_photo_spots_verified_expansion.dart';
 import '../data/curated_photo_spots_official_complete.dart';
 import '../data/curated_photo_spots_nationwide_expansion_v2.dart';
+import '../data/curated_photo_spots_nationwide_expansion_v3.dart';
 import '../models/photo_spot.dart';
 import 'nationwide_candidate_spot_resolver.dart';
 
@@ -130,6 +131,7 @@ class SpotRepository {
       for (final spot in curatedPhotoSpotsVerifiedExpansion) spot.id: spot,
       for (final spot in curatedPhotoSpotsOfficialComplete) spot.id: spot,
       for (final spot in curatedPhotoSpotsNationwideExpansionV2) spot.id: spot,
+      for (final spot in curatedPhotoSpotsNationwideExpansionV3) spot.id: spot,
     };
     for (final spot in remote) {
       byId[spot.id] = spot;
