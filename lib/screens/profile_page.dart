@@ -1,12 +1,16 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../services/auth_service.dart';
+import '../services/profile_service.dart';
 import '../services/social_service.dart';
 import 'create_post_screen.dart';
 import 'login_screen.dart';
-import 'my_posts_screen.dart';
+import 'post_detail_screen.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -15,126 +19,49 @@ class ProfilePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return StreamBuilder<User?>(
       stream: AuthService.instance.authStateChanges,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const SafeArea(
+      builder: (context, auth) {
+        if (auth.connectionState == ConnectionState.waiting) {
+          return const SafeArea(child: Center(child: CircularProgressIndicator(color: Color(0xFFFFC107))));
+        }
+        final user = auth.data;
+        if (user == null) {
+          return SafeArea(
             child: Center(
-              child: CircularProgressIndicator(
-                color: Color(0xFFFFC107),
+              child: Padding(
+                padding: const EdgeInsets.all(28),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.person_outline, size: 72, color: Colors.white38),
+                    const SizedBox(height: 18),
+                    const Text('Profilini görmek için giriş yap', style: TextStyle(fontSize: 21, fontWeight: FontWeight.w800)),
+                    const SizedBox(height: 18),
+                    FilledButton(
+                      style: FilledButton.styleFrom(backgroundColor: const Color(0xFFFFC107), foregroundColor: Colors.black),
+                      onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const LoginScreen())),
+                      child: const Text('Giriş Yap / Kayıt Ol'),
+                    ),
+                  ],
+                ),
               ),
             ),
           );
         }
-
-        final user = snapshot.data;
-
-        if (user == null) {
-          return _LoggedOutProfile(
-            onLogin: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const LoginScreen(),
-                ),
-              );
-            },
-          );
-        }
-
-        return _InstagramStyleProfile(user: user);
+        return _ProfileBody(user: user);
       },
     );
   }
 }
 
-class _LoggedOutProfile extends StatelessWidget {
-  final VoidCallback onLogin;
-
-  const _LoggedOutProfile({
-    required this.onLogin,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      child: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(28),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const CircleAvatar(
-                radius: 58,
-                backgroundColor: Color(0xFFFFC107),
-                child: CircleAvatar(
-                  radius: 52,
-                  backgroundColor: Color(0xFF171C24),
-                  child: Icon(
-                    Icons.person_outline,
-                    size: 62,
-                    color: Colors.white54,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-              const Text(
-                'Profilini görmek için giriş yap',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 10),
-              const Text(
-                'Fotoğraflarını paylaşmak ve topluluğa katılmak için hesabına giriş yap.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Colors.white54,
-                  height: 1.45,
-                ),
-              ),
-              const SizedBox(height: 24),
-              SizedBox(
-                height: 52,
-                width: double.infinity,
-                child: FilledButton.icon(
-                  onPressed: onLogin,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFFFFC107),
-                    foregroundColor: Colors.black,
-                  ),
-                  icon: const Icon(Icons.login_rounded),
-                  label: const Text(
-                    'Giriş Yap / Kayıt Ol',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _InstagramStyleProfile extends StatefulWidget {
+class _ProfileBody extends StatefulWidget {
   final User user;
-
-  const _InstagramStyleProfile({
-    required this.user,
-  });
+  const _ProfileBody({required this.user});
 
   @override
-  State<_InstagramStyleProfile> createState() =>
-      _InstagramStyleProfileState();
+  State<_ProfileBody> createState() => _ProfileBodyState();
 }
 
-class _InstagramStyleProfileState
-    extends State<_InstagramStyleProfile> {
+class _ProfileBodyState extends State<_ProfileBody> {
   @override
   void initState() {
     super.initState();
@@ -143,615 +70,207 @@ class _InstagramStyleProfileState
 
   @override
   Widget build(BuildContext context) {
-    final user = widget.user;
-
-    final displayName =
-        user.displayName?.trim().isNotEmpty == true
-            ? user.displayName!
-            : 'Fotoğrafçı';
-
-    final photoUrl = user.photoURL ?? '';
-    final email = user.email ?? '';
-
     return SafeArea(
-      child: Column(
-        children: [
-          // ÜST BAR
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              18,
-              10,
-              12,
-              8,
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    displayName,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 21,
-                      fontWeight: FontWeight.w800,
+      child: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+        stream: SocialService.instance.userProfile(widget.user.uid),
+        builder: (context, profileSnapshot) {
+          final profile = profileSnapshot.data?.data() ?? const <String, dynamic>{};
+          final displayName = (profile['displayName'] ?? widget.user.displayName ?? 'Fotoğrafçı').toString();
+          final bio = (profile['bio'] ?? '').toString();
+          final photoUrl = (profile['photoUrl'] ?? widget.user.photoURL ?? '').toString();
+
+          return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+            stream: SocialService.instance.userPosts(widget.user.uid),
+            builder: (context, postSnapshot) {
+              final posts = [...(postSnapshot.data?.docs ?? <QueryDocumentSnapshot<Map<String, dynamic>>>[])];
+              posts.sort((a, b) {
+                final at = a.data()['createdAt'];
+                final bt = b.data()['createdAt'];
+                if (at is Timestamp && bt is Timestamp) return bt.compareTo(at);
+                return 0;
+              });
+
+              return CustomScrollView(
+                slivers: [
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 10, 16, 14),
+                      child: Row(
+                        children: [
+                          Expanded(child: Text(displayName, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w900))),
+                          IconButton(onPressed: () => _editProfile(displayName, bio), icon: const Icon(Icons.edit_outlined, color: Color(0xFFFFC107))),
+                          IconButton(onPressed: () => AuthService.instance.logout(), icon: const Icon(Icons.logout_rounded, color: Colors.white60)),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-                IconButton(
-                  tooltip: 'Ayarlar',
-                  onPressed: () => _openSettings(context),
-                  icon: const Icon(
-                    Icons.settings_outlined,
-                    color: Color(0xFFFFC107),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          Expanded(
-            child: StreamBuilder<
-                QuerySnapshot<Map<String, dynamic>>>(
-              stream: SocialService.instance.userPosts(
-                user.uid,
-              ),
-              builder: (context, postsSnapshot) {
-                final docs =
-                    postsSnapshot.data?.docs ?? [];
-
-                final sortedDocs = [...docs];
-
-                sortedDocs.sort((a, b) {
-                  final aTime =
-                      a.data()['createdAt'];
-                  final bTime =
-                      b.data()['createdAt'];
-
-                  if (aTime is Timestamp &&
-                      bTime is Timestamp) {
-                    return bTime.compareTo(aTime);
-                  }
-
-                  return 0;
-                });
-
-                return CustomScrollView(
-                  slivers: [
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(
-                          18,
-                          10,
-                          18,
-                          18,
-                        ),
-                        child: Column(
-                          children: [
-                            Row(
-                              crossAxisAlignment:
-                                  CrossAxisAlignment.center,
-                              children: [
-                                CircleAvatar(
-                                  radius: 46,
-                                  backgroundColor:
-                                      const Color(0xFFFFC107),
-                                  child: CircleAvatar(
-                                    radius: 42,
-                                    backgroundColor:
-                                        const Color(0xFF171C24),
-                                    backgroundImage:
-                                        photoUrl.isNotEmpty
-                                            ? NetworkImage(
-                                                photoUrl,
-                                              )
-                                            : null,
-                                    child: photoUrl.isEmpty
-                                        ? const Icon(
-                                            Icons.person,
-                                            size: 48,
-                                            color:
-                                                Colors.white54,
-                                          )
-                                        : null,
-                                  ),
-                                ),
-
-                                const SizedBox(width: 18),
-
-                                Expanded(
-                                  child: Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment
-                                            .spaceAround,
-                                    children: [
-                                      _SmallStat(
-                                        value:
-                                            '${sortedDocs.length}',
-                                        label: 'Fotoğraf',
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(18, 4, 18, 18),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              GestureDetector(
+                                onTap: () => _editProfile(displayName, bio),
+                                child: Stack(
+                                  clipBehavior: Clip.none,
+                                  children: [
+                                    CircleAvatar(
+                                      radius: 47,
+                                      backgroundColor: const Color(0xFFFFC107),
+                                      child: CircleAvatar(
+                                        radius: 43,
+                                        backgroundColor: const Color(0xFF171C24),
+                                        backgroundImage: photoUrl.isNotEmpty ? NetworkImage(photoUrl) : null,
+                                        child: photoUrl.isEmpty ? const Icon(Icons.person, size: 48, color: Colors.white54) : null,
                                       ),
-                                      StreamBuilder<int>(
-                                        stream: SocialService
-                                            .instance
-                                            .followingCount(
-                                          user.uid,
-                                        ),
-                                        builder: (
-                                          context,
-                                          snapshot,
-                                        ) {
-                                          return _SmallStat(
-                                            value:
-                                                '${snapshot.data ?? 0}',
-                                            label:
-                                                'Takip',
-                                          );
-                                        },
-                                      ),
-                                      StreamBuilder<int>(
-                                        stream: SocialService
-                                            .instance
-                                            .followersCount(
-                                          user.uid,
-                                        ),
-                                        builder: (
-                                          context,
-                                          snapshot,
-                                        ) {
-                                          return _SmallStat(
-                                            value:
-                                                '${snapshot.data ?? 0}',
-                                            label:
-                                                'Takipçi',
-                                          );
-                                        },
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-
-                            const SizedBox(height: 14),
-
-                            Align(
-                              alignment: Alignment.centerLeft,
-                              child: Text(
-                                displayName,
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight:
-                                      FontWeight.w700,
+                                    ),
+                                    Positioned(right: -2, bottom: 0, child: Container(width: 29, height: 29, decoration: const BoxDecoration(color: Color(0xFFFFC107), shape: BoxShape.circle), child: const Icon(Icons.add_a_photo_outlined, size: 17, color: Colors.black))),
+                                  ],
                                 ),
                               ),
-                            ),
-
-                            if (email.isNotEmpty) ...[
-                              const SizedBox(height: 4),
-                              Align(
-                                alignment:
-                                    Alignment.centerLeft,
-                                child: Text(
-                                  email,
-                                  style:
-                                      const TextStyle(
-                                    color:
-                                        Colors.white38,
-                                    fontSize: 12,
-                                  ),
+                              const SizedBox(width: 20),
+                              Expanded(
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                  children: [
+                                    _Stat('${posts.length}', 'Gönderi'),
+                                    StreamBuilder<int>(stream: SocialService.instance.followersCount(widget.user.uid), builder: (_, s) => _Stat('${s.data ?? 0}', 'Takipçi')),
+                                    StreamBuilder<int>(stream: SocialService.instance.followingCount(widget.user.uid), builder: (_, s) => _Stat('${s.data ?? 0}', 'Takip')),
+                                  ],
                                 ),
                               ),
                             ],
-                          ],
-                        ),
+                          ),
+                          const SizedBox(height: 14),
+                          Text(displayName, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+                          const SizedBox(height: 5),
+                          Text(
+                            bio.trim().isEmpty ? 'Profiline bir açıklama ekle' : bio,
+                            style: TextStyle(color: bio.trim().isEmpty ? Colors.white38 : Colors.white70, height: 1.4),
+                          ),
+                          const SizedBox(height: 14),
+                          SizedBox(width: double.infinity, height: 42, child: OutlinedButton.icon(onPressed: () => _editProfile(displayName, bio), icon: const Icon(Icons.edit_outlined, size: 18), label: const Text('Profili Düzenle'))),
+                        ],
                       ),
                     ),
-
-                    const SliverToBoxAdapter(
-                      child: Divider(
-                        height: 1,
-                        color: Color(0xFF242A33),
-                      ),
-                    ),
-
-                    const SliverToBoxAdapter(
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(
-                          vertical: 11,
+                  ),
+                  const SliverToBoxAdapter(child: Divider(height: 1, color: Colors.white12)),
+                  const SliverToBoxAdapter(child: Padding(padding: EdgeInsets.symmetric(vertical: 10), child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(Icons.grid_on_rounded, size: 20, color: Color(0xFFFFC107)), SizedBox(width: 7), Text('Paylaşımlarım', style: TextStyle(fontWeight: FontWeight.w800, color: Color(0xFFFFC107)))]))),
+                  if (postSnapshot.connectionState == ConnectionState.waiting)
+                    const SliverFillRemaining(hasScrollBody: false, child: Center(child: CircularProgressIndicator(color: Color(0xFFFFC107))))
+                  else if (posts.isEmpty)
+                    SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: Center(
+                        child: FilledButton.icon(
+                          style: FilledButton.styleFrom(backgroundColor: const Color(0xFFFFC107), foregroundColor: Colors.black),
+                          onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CreatePostScreen())),
+                          icon: const Icon(Icons.add_a_photo_outlined),
+                          label: const Text('İlk Fotoğrafını Paylaş'),
                         ),
-                        child: Row(
-                          mainAxisAlignment:
-                              MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.grid_on_rounded,
-                              size: 20,
-                              color: Color(
-                                0xFFFFC107,
+                      ),
+                    )
+                  else
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(2, 2, 2, 100),
+                      sliver: SliverGrid(
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3, crossAxisSpacing: 2, mainAxisSpacing: 2),
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) {
+                            final data = posts[index].data();
+                            final imageUrl = (data['imageUrl'] ?? '').toString();
+                            return GestureDetector(
+                              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => PostDetailScreen(post: data))),
+                              child: Container(
+                                color: const Color(0xFF171C24),
+                                child: imageUrl.isEmpty ? const Icon(Icons.image_outlined, color: Colors.white30) : Image.network(imageUrl, fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Icon(Icons.broken_image_outlined, color: Colors.white30)),
                               ),
-                            ),
-                            SizedBox(width: 7),
-                            Text(
-                              'Paylaşımlarım',
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight:
-                                    FontWeight.w700,
-                                color:
-                                    Color(0xFFFFC107),
-                              ),
-                            ),
-                          ],
+                            );
+                          },
+                          childCount: posts.length,
                         ),
                       ),
                     ),
-
-                    if (postsSnapshot.connectionState ==
-                        ConnectionState.waiting)
-                      const SliverFillRemaining(
-                        hasScrollBody: false,
-                        child: Center(
-                          child:
-                              CircularProgressIndicator(
-                            color:
-                                Color(0xFFFFC107),
-                          ),
-                        ),
-                      )
-                    else if (sortedDocs.isEmpty)
-                      SliverFillRemaining(
-                        hasScrollBody: false,
-                        child: Center(
-                          child: Padding(
-                            padding:
-                                const EdgeInsets.all(
-                              32,
-                            ),
-                            child: Column(
-                              mainAxisSize:
-                                  MainAxisSize.min,
-                              children: [
-                                const Icon(
-                                  Icons
-                                      .photo_library_outlined,
-                                  size: 58,
-                                  color:
-                                      Colors.white30,
-                                ),
-                                const SizedBox(
-                                  height: 12,
-                                ),
-                                const Text(
-                                  'Henüz fotoğraf paylaşmadın',
-                                  style: TextStyle(
-                                    fontWeight:
-                                        FontWeight.bold,
-                                  ),
-                                ),
-                                const SizedBox(
-                                  height: 6,
-                                ),
-                                const Text(
-                                  'İlk paylaşımın burada görünecek.',
-                                  textAlign:
-                                      TextAlign.center,
-                                  style: TextStyle(
-                                    color:
-                                        Colors.white54,
-                                    fontSize: 13,
-                                  ),
-                                ),
-                                const SizedBox(
-                                  height: 16,
-                                ),
-                                FilledButton.icon(
-                                  style: FilledButton
-                                      .styleFrom(
-                                    backgroundColor:
-                                        const Color(
-                                      0xFFFFC107,
-                                    ),
-                                    foregroundColor:
-                                        Colors.black,
-                                  ),
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (_) =>
-                                            const CreatePostScreen(),
-                                      ),
-                                    );
-                                  },
-                                  icon: const Icon(
-                                    Icons
-                                        .add_a_photo_outlined,
-                                  ),
-                                  label: const Text(
-                                    'Fotoğraf Paylaş',
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      )
-                    else
-                      SliverPadding(
-                        padding:
-                            const EdgeInsets.fromLTRB(
-                          3,
-                          3,
-                          3,
-                          90,
-                        ),
-                        sliver: SliverGrid(
-                          delegate:
-                              SliverChildBuilderDelegate(
-                            (context, index) {
-                              final data =
-                                  sortedDocs[index]
-                                      .data();
-
-                              final imageUrl =
-                                  (data['imageUrl'] ??
-                                          '')
-                                      .toString();
-
-                              return GestureDetector(
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) =>
-                                          const MyPostsScreen(),
-                                    ),
-                                  );
-                                },
-                                child: Container(
-                                  color: const Color(
-                                    0xFF171C24,
-                                  ),
-                                  child:
-                                      imageUrl.isNotEmpty
-                                          ? Image.network(
-                                              imageUrl,
-                                              fit: BoxFit
-                                                  .cover,
-                                              errorBuilder:
-                                                  (
-                                                context,
-                                                error,
-                                                stackTrace,
-                                              ) {
-                                                return const Icon(
-                                                  Icons
-                                                      .broken_image_outlined,
-                                                  color:
-                                                      Colors.white30,
-                                                );
-                                              },
-                                            )
-                                          : const Icon(
-                                              Icons
-                                                  .image_outlined,
-                                              color:
-                                                  Colors.white30,
-                                            ),
-                                ),
-                              );
-                            },
-                            childCount:
-                                sortedDocs.length,
-                          ),
-                          gridDelegate:
-                              const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 3,
-                            crossAxisSpacing: 3,
-                            mainAxisSpacing: 3,
-                          ),
-                        ),
-                      ),
-                  ],
-                );
-              },
-            ),
-          ),
-        ],
+                ],
+              );
+            },
+          );
+        },
       ),
     );
   }
 
-  void _openSettings(BuildContext context) {
-    showModalBottomSheet(
+  Future<void> _editProfile(String displayName, String bio) async {
+    final nameController = TextEditingController(text: displayName);
+    final bioController = TextEditingController(text: bio);
+    File? photo;
+    bool saving = false;
+
+    await showModalBottomSheet<void>(
       context: context,
-      backgroundColor:
-          const Color(0xFF151A22),
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(24),
-        ),
-      ),
-      builder: (sheetContext) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(
-              12,
-              12,
-              12,
-              18,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 44,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Colors.white24,
-                    borderRadius:
-                        BorderRadius.circular(20),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                const ListTile(
-                  title: Text(
-                    'Ayarlar',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
+      useSafeArea: true,
+      backgroundColor: const Color(0xFF0D1117),
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (context, setSheetState) {
+          Future<void> pick() async {
+            final image = await ImagePicker().pickImage(source: ImageSource.gallery, imageQuality: 88, maxWidth: 1200);
+            if (image != null) setSheetState(() => photo = File(image.path));
+          }
+
+          return Padding(
+            padding: EdgeInsets.fromLTRB(20, 16, 20, MediaQuery.of(context).viewInsets.bottom + 24),
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  Row(children: [const Expanded(child: Text('Profili Düzenle', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900))), IconButton(onPressed: () => Navigator.pop(sheetContext), icon: const Icon(Icons.close))]),
+                  const SizedBox(height: 14),
+                  GestureDetector(onTap: pick, child: CircleAvatar(radius: 48, backgroundColor: const Color(0xFF202833), backgroundImage: photo != null ? FileImage(photo!) : null, child: photo == null ? const Icon(Icons.add_a_photo_outlined, size: 34, color: Color(0xFFFFC107)) : null)),
+                  TextButton(onPressed: pick, child: const Text('Profil fotoğrafı seç')),
+                  const SizedBox(height: 8),
+                  TextField(controller: nameController, decoration: const InputDecoration(labelText: 'Ad / kullanıcı adı')),
+                  const SizedBox(height: 12),
+                  TextField(controller: bioController, maxLength: 160, minLines: 3, maxLines: 5, decoration: const InputDecoration(labelText: 'Açıklama')),
+                  const SizedBox(height: 14),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 52,
+                    child: FilledButton(
+                      style: FilledButton.styleFrom(backgroundColor: const Color(0xFFFFC107), foregroundColor: Colors.black),
+                      onPressed: saving ? null : () async {
+                        setSheetState(() => saving = true);
+                        try {
+                          await ProfileService.instance.updateProfile(displayName: nameController.text, bio: bioController.text, photo: photo);
+                          if (sheetContext.mounted) Navigator.pop(sheetContext);
+                        } catch (e) {
+                          setSheetState(() => saving = false);
+                          if (sheetContext.mounted) ScaffoldMessenger.of(sheetContext).showSnackBar(SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))));
+                        }
+                      },
+                      child: Text(saving ? 'Kaydediliyor...' : 'Kaydet', style: const TextStyle(fontWeight: FontWeight.w800)),
                     ),
                   ),
-                ),
-                _SettingsTile(
-                  icon: Icons.add_a_photo_outlined,
-                  title: 'Fotoğraf Paylaş',
-                  onTap: () {
-                    Navigator.pop(sheetContext);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) =>
-                            const CreatePostScreen(),
-                      ),
-                    );
-                  },
-                ),
-                _SettingsTile(
-                  icon:
-                      Icons.photo_library_outlined,
-                  title: 'Çekimlerim',
-                  onTap: () {
-                    Navigator.pop(sheetContext);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) =>
-                            const MyPostsScreen(),
-                      ),
-                    );
-                  },
-                ),
-                _SettingsTile(
-                  icon: Icons.favorite_border,
-                  title: 'Kaydedilen Noktalar',
-                  onTap: () {
-                    Navigator.pop(sheetContext);
-                    ScaffoldMessenger.of(context)
-                        .showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          'Kaydedilenlere alt menüden ulaşabilirsin.',
-                        ),
-                      ),
-                    );
-                  },
-                ),
-                _SettingsTile(
-                  icon:
-                      Icons.location_on_outlined,
-                  title: 'Konum Tercihleri',
-                  onTap: () {
-                    Navigator.pop(sheetContext);
-                    ScaffoldMessenger.of(context)
-                        .showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          'Konum tercihlerini harita geliştirmesinde bağlayacağız.',
-                        ),
-                      ),
-                    );
-                  },
-                ),
-                const Divider(
-                  color: Color(0xFF242A33),
-                ),
-                _SettingsTile(
-                  icon: Icons.logout_rounded,
-                  title: 'Çıkış Yap',
-                  danger: true,
-                  onTap: () async {
-                    Navigator.pop(sheetContext);
-                    await AuthService.instance.logout();
-                  },
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
+
+    nameController.dispose();
+    bioController.dispose();
   }
 }
 
-class _SmallStat extends StatelessWidget {
+class _Stat extends StatelessWidget {
   final String value;
   final String label;
-
-  const _SmallStat({
-    required this.value,
-    required this.label,
-  });
+  const _Stat(this.value, this.label);
 
   @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          label,
-          style: const TextStyle(
-            color: Colors.white54,
-            fontSize: 11,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _SettingsTile extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final VoidCallback onTap;
-  final bool danger;
-
-  const _SettingsTile({
-    required this.icon,
-    required this.title,
-    required this.onTap,
-    this.danger = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      leading: Icon(
-        icon,
-        color: danger
-            ? Colors.redAccent
-            : const Color(0xFFFFC107),
-      ),
-      title: Text(
-        title,
-        style: TextStyle(
-          color:
-              danger ? Colors.redAccent : Colors.white,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-      trailing: const Icon(
-        Icons.chevron_right,
-        color: Colors.white30,
-      ),
-      onTap: onTap,
-    );
-  }
+  Widget build(BuildContext context) => Column(mainAxisSize: MainAxisSize.min, children: [Text(value, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900)), const SizedBox(height: 2), Text(label, style: const TextStyle(color: Colors.white60, fontSize: 12))]);
 }
