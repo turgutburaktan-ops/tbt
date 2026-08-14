@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../services/post_service.dart';
 import '../services/spot_repository.dart';
 import '../widgets/content_engagement_bar.dart';
+import '../widgets/mention_text.dart';
 import 'spot_detail_screen.dart';
 
 class PostDetailScreen extends StatefulWidget {
@@ -432,12 +433,18 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 if (caption.isNotEmpty)
-                  Text(
-                    caption,
+                  MentionText(
+                    text: caption,
                     style: const TextStyle(
                       color: Colors.white,
                       height: 1.5,
                       fontSize: 14.5,
+                    ),
+                    mentionStyle: const TextStyle(
+                      color: Color(0xFFA78BFA),
+                      height: 1.5,
+                      fontSize: 14.5,
+                      fontWeight: FontWeight.w900,
                     ),
                   ),
                 if (date.isNotEmpty) ...[

@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../services/content_engagement_service.dart';
+import 'mention_text.dart';
 
 class ContentEngagementBar extends StatelessWidget {
   final String collection;
@@ -167,7 +168,14 @@ class ContentEngagementBar extends StatelessWidget {
                                   fontWeight: FontWeight.w800,
                                 ),
                               ),
-                              subtitle: Text((data['text'] ?? '').toString()),
+                              subtitle: MentionText(
+                                text: (data['text'] ?? '').toString(),
+                                style: const TextStyle(color: Colors.white70),
+                                mentionStyle: const TextStyle(
+                                  color: Color(0xFFA78BFA),
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
                             );
                           },
                         );
