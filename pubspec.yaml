@@ -22,6 +22,8 @@ dependencies:
   image: ^4.3.0
   http: ^1.2.2
   sensors_plus: ^6.1.2
+  qr_flutter: ^4.1.0
+  mobile_scanner: ^6.0.11
 
 dev_dependencies:
   flutter_test:
