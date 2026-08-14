@@ -2,7 +2,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import '../services/chat_service.dart';
 import '../services/social_service.dart';
+import 'chat_screen.dart';
+import 'post_detail_screen.dart';
 
 class UserProfileScreen extends StatelessWidget {
   final String userId;
@@ -12,395 +15,244 @@ class UserProfileScreen extends StatelessWidget {
     required this.userId,
   });
 
+  Future<void> _openChat(
+    BuildContext context,
+    String displayName,
+  ) async {
+    try {
+      await ChatService.instance.ensureDirectThread(userId);
+      if (!context.mounted) return;
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ChatScreen(
+            otherUserId: userId,
+            otherDisplayName: displayName,
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final currentUser = FirebaseAuth.instance.currentUser;
-
     final isOwnProfile = currentUser?.uid == userId;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF090D10),
+      backgroundColor: const Color(0xFF090A0C),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF090D10),
+        backgroundColor: const Color(0xFF090A0C),
         foregroundColor: Colors.white,
         elevation: 0,
-        title: const Text(
-          'Profil',
-        ),
+        title: const Text('Profil'),
       ),
       body: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
         stream: SocialService.instance.userProfile(userId),
-        builder: (
-          context,
-          profileSnapshot,
-        ) {
+        builder: (context, profileSnapshot) {
           if (profileSnapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
-              child: CircularProgressIndicator(
-                color: Color(0xFF16B8A6),
-              ),
-            );
+            return const Center(child: CircularProgressIndicator());
           }
 
           if (!profileSnapshot.hasData || !profileSnapshot.data!.exists) {
             return const Center(
-              child: Text(
-                'Kullanıcı bulunamadı.',
-                style: TextStyle(
-                  color: Colors.white70,
-                ),
-              ),
+              child: Text('Kullanıcı bulunamadı.', style: TextStyle(color: Colors.white70)),
             );
           }
 
           final data = profileSnapshot.data!.data() ?? {};
-
           final displayName = (data['displayName'] ?? 'Fotoğrafçı').toString();
-
+          final username = (data['username'] ?? displayName).toString();
           final photoUrl = (data['photoUrl'] ?? '').toString();
+          final bio = (data['bio'] ?? '').toString().trim();
+          final city = (data['city'] ?? '').toString().trim();
 
-          final email = (data['email'] ?? '').toString();
+          return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+            stream: SocialService.instance.userPosts(userId),
+            builder: (context, postsSnapshot) {
+              final docs = [...(postsSnapshot.data?.docs ?? const <QueryDocumentSnapshot<Map<String, dynamic>>>[])];
+              docs.sort((a, b) {
+                final at = a.data()['createdAt'];
+                final bt = b.data()['createdAt'];
+                if (at is Timestamp && bt is Timestamp) return bt.compareTo(at);
+                return 0;
+              });
 
-          return ListView(
-            padding: const EdgeInsets.fromLTRB(
-              20,
-              20,
-              20,
-              40,
-            ),
-            children: [
-              Center(
-                child: CircleAvatar(
-                  radius: 54,
-                  backgroundColor: const Color(
-                    0xFF16B8A6,
-                  ),
-                  child: CircleAvatar(
-                    radius: 49,
-                    backgroundColor: const Color(
-                      0xFF11181D,
-                    ),
-                    backgroundImage: photoUrl.isNotEmpty
-                        ? NetworkImage(
-                            photoUrl,
-                          )
-                        : null,
-                    child: photoUrl.isEmpty
-                        ? const Icon(
-                            Icons.person,
-                            size: 56,
-                            color: Colors.white54,
-                          )
-                        : null,
-                  ),
-                ),
-              ),
-              const SizedBox(
-                height: 16,
-              ),
-              Center(
-                child: Text(
-                  displayName,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              if (email.isNotEmpty) ...[
-                const SizedBox(
-                  height: 5,
-                ),
-                Center(
-                  child: Text(
-                    email,
-                    style: const TextStyle(
-                      color: Colors.white38,
-                      fontSize: 13,
-                    ),
-                  ),
-                ),
-              ],
-              const SizedBox(
-                height: 24,
-              ),
-              Row(
-                children: [
-                  Expanded(
-                    child: StreamBuilder<int>(
-                      stream: SocialService.instance.followersCount(
-                        userId,
-                      ),
-                      builder: (
-                        context,
-                        snapshot,
-                      ) {
-                        return _StatBox(
-                          value: '${snapshot.data ?? 0}',
-                          label: 'Takipçi',
-                        );
-                      },
-                    ),
-                  ),
-                  const SizedBox(
-                    width: 10,
-                  ),
-                  Expanded(
-                    child: StreamBuilder<int>(
-                      stream: SocialService.instance.followingCount(
-                        userId,
-                      ),
-                      builder: (
-                        context,
-                        snapshot,
-                      ) {
-                        return _StatBox(
-                          value: '${snapshot.data ?? 0}',
-                          label: 'Takip',
-                        );
-                      },
-                    ),
-                  ),
-                  const SizedBox(
-                    width: 10,
-                  ),
-                  Expanded(
-                    child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-                      stream: SocialService.instance.userPosts(
-                        userId,
-                      ),
-                      builder: (
-                        context,
-                        snapshot,
-                      ) {
-                        return _StatBox(
-                          value: '${snapshot.data?.docs.length ?? 0}',
-                          label: 'Çekim',
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ),
-              if (!isOwnProfile) ...[
-                const SizedBox(
-                  height: 18,
-                ),
-                StreamBuilder<bool>(
-                  stream: SocialService.instance.isFollowing(
-                    userId,
-                  ),
-                  builder: (
-                    context,
-                    snapshot,
-                  ) {
-                    final following = snapshot.data ?? false;
-
-                    return SizedBox(
-                      height: 52,
-                      child: FilledButton(
-                        style: FilledButton.styleFrom(
-                          backgroundColor: following
-                              ? const Color(
-                                  0xFF152128,
-                                )
-                              : const Color(
-                                  0xFF16B8A6,
+              return CustomScrollView(
+                slivers: [
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(18, 10, 18, 16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(2),
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: const Color(0xFF555B62)),
                                 ),
-                          foregroundColor:
-                              following ? Colors.white : Colors.black,
-                        ),
-                        onPressed: () async {
-                          try {
-                            await SocialService.instance.toggleFollow(
-                              userId,
-                            );
-                          } catch (e) {
-                            if (!context.mounted) {
-                              return;
-                            }
-
-                            ScaffoldMessenger.of(
-                              context,
-                            ).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  e.toString(),
+                                child: CircleAvatar(
+                                  radius: 43,
+                                  backgroundColor: const Color(0xFF1A1D20),
+                                  backgroundImage: photoUrl.isEmpty ? null : NetworkImage(photoUrl),
+                                  child: photoUrl.isEmpty
+                                      ? const Icon(Icons.person, size: 42, color: Colors.white54)
+                                      : null,
                                 ),
                               ),
-                            );
-                          }
-                        },
-                        child: Text(
-                          following ? 'Takiptesin' : 'Takip Et',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
+                              const SizedBox(width: 20),
+                              Expanded(
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                  children: [
+                                    _Stat(value: '${docs.length}', label: 'Gönderi'),
+                                    StreamBuilder<int>(
+                                      stream: SocialService.instance.followersCount(userId),
+                                      builder: (_, s) => _Stat(value: '${s.data ?? 0}', label: 'Takipçi'),
+                                    ),
+                                    StreamBuilder<int>(
+                                      stream: SocialService.instance.followingCount(userId),
+                                      builder: (_, s) => _Stat(value: '${s.data ?? 0}', label: 'Takip'),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ],
-              const SizedBox(
-                height: 28,
-              ),
-              const Row(
-                children: [
-                  Icon(
-                    Icons.grid_on,
-                    color: Color(
-                      0xFF16B8A6,
-                    ),
-                  ),
-                  SizedBox(
-                    width: 8,
-                  ),
-                  Text(
-                    'Paylaşımlar',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(
-                height: 14,
-              ),
-              StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-                stream: SocialService.instance.userPosts(
-                  userId,
-                ),
-                builder: (
-                  context,
-                  snapshot,
-                ) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Padding(
-                      padding: EdgeInsets.all(
-                        30,
-                      ),
-                      child: Center(
-                        child: CircularProgressIndicator(
-                          color: Color(
-                            0xFF16B8A6,
-                          ),
-                        ),
-                      ),
-                    );
-                  }
-
-                  final docs = snapshot.data?.docs ?? [];
-
-                  docs.sort(
-                    (a, b) {
-                      final aTime = a.data()['createdAt'];
-                      final bTime = b.data()['createdAt'];
-
-                      if (aTime is Timestamp && bTime is Timestamp) {
-                        return bTime.compareTo(
-                          aTime,
-                        );
-                      }
-
-                      return 0;
-                    },
-                  );
-
-                  if (docs.isEmpty) {
-                    return Container(
-                      padding: const EdgeInsets.all(
-                        30,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(
-                          0xFF11181D,
-                        ),
-                        borderRadius: BorderRadius.circular(
-                          18,
-                        ),
-                      ),
-                      child: const Column(
-                        children: [
-                          Icon(
-                            Icons.photo_library_outlined,
-                            color: Colors.white38,
-                            size: 48,
-                          ),
-                          SizedBox(
-                            height: 10,
-                          ),
-                          Text(
-                            'Henüz paylaşım yok',
-                            style: TextStyle(
-                              color: Colors.white54,
+                          const SizedBox(height: 14),
+                          Text(displayName, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
+                          const SizedBox(height: 3),
+                          Text('@${username.replaceFirst('@', '')}', style: const TextStyle(color: Colors.white46)),
+                          if (city.isNotEmpty) ...[
+                            const SizedBox(height: 7),
+                            Row(
+                              children: [
+                                const Icon(Icons.location_on_outlined, size: 16, color: Colors.white54),
+                                const SizedBox(width: 5),
+                                Text(city, style: const TextStyle(color: Colors.white60)),
+                              ],
                             ),
-                          ),
+                          ],
+                          if (bio.isNotEmpty) ...[
+                            const SizedBox(height: 10),
+                            Text(bio, style: const TextStyle(color: Colors.white70, height: 1.4)),
+                          ],
+                          if (!isOwnProfile) ...[
+                            const SizedBox(height: 16),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: StreamBuilder<bool>(
+                                    stream: SocialService.instance.isFollowing(userId),
+                                    builder: (_, snapshot) {
+                                      final following = snapshot.data ?? false;
+                                      return SizedBox(
+                                        height: 44,
+                                        child: FilledButton(
+                                          style: FilledButton.styleFrom(
+                                            backgroundColor: following
+                                                ? const Color(0xFF1A1D20)
+                                                : const Color(0xFF34383D),
+                                            foregroundColor: Colors.white,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(12),
+                                              side: const BorderSide(color: Color(0xFF353A40)),
+                                            ),
+                                          ),
+                                          onPressed: () async {
+                                            try {
+                                              await SocialService.instance.toggleFollow(userId);
+                                            } catch (e) {
+                                              if (!context.mounted) return;
+                                              ScaffoldMessenger.of(context).showSnackBar(
+                                                SnackBar(content: Text(e.toString())),
+                                              );
+                                            }
+                                          },
+                                          child: Text(following ? 'Takiptesin' : 'Takip Et'),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: SizedBox(
+                                    height: 44,
+                                    child: OutlinedButton.icon(
+                                      onPressed: () => _openChat(context, displayName),
+                                      icon: const Icon(Icons.chat_bubble_outline_rounded, size: 19),
+                                      label: const Text('Mesaj Gönder'),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ],
                       ),
-                    );
-                  }
-
-                  return GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: docs.length,
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 3,
-                      crossAxisSpacing: 4,
-                      mainAxisSpacing: 4,
                     ),
-                    itemBuilder: (
-                      context,
-                      index,
-                    ) {
-                      final data = docs[index].data();
-
-                      final imageUrl = (data['imageUrl'] ?? '').toString();
-
-                      return ClipRRect(
-                        borderRadius: BorderRadius.circular(
-                          8,
+                  ),
+                  const SliverToBoxAdapter(
+                    child: Divider(height: 1, color: Color(0xFF2A2E33)),
+                  ),
+                  if (postsSnapshot.connectionState == ConnectionState.waiting)
+                    const SliverFillRemaining(child: Center(child: CircularProgressIndicator()))
+                  else if (docs.isEmpty)
+                    const SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: Center(child: Text('Henüz paylaşım yok', style: TextStyle(color: Colors.white46))),
+                    )
+                  else
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(1, 2, 1, 36),
+                      sliver: SliverGrid(
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 3,
+                          crossAxisSpacing: 2,
+                          mainAxisSpacing: 2,
+                          childAspectRatio: 1,
                         ),
-                        child: imageUrl.isNotEmpty
-                            ? Image.network(
-                                imageUrl,
-                                fit: BoxFit.cover,
-                                errorBuilder: (
-                                  context,
-                                  error,
-                                  stackTrace,
-                                ) {
-                                  return Container(
-                                    color: const Color(
-                                      0xFF11181D,
-                                    ),
-                                    child: const Icon(
-                                      Icons.broken_image_outlined,
-                                      color: Colors.white38,
-                                    ),
-                                  );
-                                },
-                              )
-                            : Container(
-                                color: const Color(
-                                  0xFF11181D,
-                                ),
-                                child: const Icon(
-                                  Icons.image_outlined,
-                                  color: Colors.white38,
-                                ),
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) {
+                            final doc = docs[index];
+                            final post = {...doc.data(), 'id': doc.id};
+                            final imageUrl = (post['imageUrl'] ?? '').toString();
+                            return GestureDetector(
+                              onTap: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (_) => PostDetailScreen(post: post)),
                               ),
-                      );
-                    },
-                  );
-                },
-              ),
-            ],
+                              child: Container(
+                                color: const Color(0xFF121416),
+                                child: imageUrl.isEmpty
+                                    ? const Icon(Icons.image_outlined, color: Colors.white24)
+                                    : Image.network(
+                                        imageUrl,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (_, __, ___) => const Icon(
+                                          Icons.broken_image_outlined,
+                                          color: Colors.white24,
+                                        ),
+                                      ),
+                              ),
+                            );
+                          },
+                          childCount: docs.length,
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
           );
         },
       ),
@@ -408,55 +260,20 @@ class UserProfileScreen extends StatelessWidget {
   }
 }
 
-class _StatBox extends StatelessWidget {
+class _Stat extends StatelessWidget {
   final String value;
   final String label;
 
-  const _StatBox({
-    required this.value,
-    required this.label,
-  });
+  const _Stat({required this.value, required this.label});
 
   @override
-  Widget build(
-    BuildContext context,
-  ) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        vertical: 16,
-      ),
-      decoration: BoxDecoration(
-        color: const Color(
-          0xFF11181D,
-        ),
-        borderRadius: BorderRadius.circular(
-          16,
-        ),
-      ),
-      child: Column(
-        children: [
-          Text(
-            value,
-            style: const TextStyle(
-              color: Color(
-                0xFF16B8A6,
-              ),
-              fontSize: 21,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(
-            height: 4,
-          ),
-          Text(
-            label,
-            style: const TextStyle(
-              color: Colors.white54,
-              fontSize: 12,
-            ),
-          ),
-        ],
-      ),
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Text(value, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
+        const SizedBox(height: 3),
+        Text(label, style: const TextStyle(color: Colors.white54, fontSize: 12)),
+      ],
     );
   }
 }
