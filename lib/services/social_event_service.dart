@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 import '../models/photo_spot.dart';
 import '../models/social_event.dart';
+import 'app_notification_service.dart';
 import 'chat_service.dart';
 
 class SocialEventService {
@@ -134,7 +135,7 @@ class SocialEventService {
     }
 
     final ref = _firestore.collection(collection).doc(eventId);
-    final hostId = await _firestore.runTransaction<String>((transaction) async {
+    final result = await _firestore.runTransaction<Map<String, String>>((transaction) async {
       final snapshot = await transaction.get(ref);
       if (!snapshot.exists) throw Exception('Etkinlik artık mevcut değil.');
 
@@ -148,6 +149,7 @@ class SocialEventService {
           .map((item) => item.toString())
           .toList();
       final hostId = (data['hostId'] ?? '').toString();
+      final title = (data['title'] ?? 'Etkinlik').toString();
 
       if (hostId.isEmpty) {
         throw Exception('Etkinliği düzenleyen kullanıcı bulunamadı.');
@@ -164,10 +166,12 @@ class SocialEventService {
         });
       }
 
-      return hostId;
+      return {'hostId': hostId, 'title': title};
     });
 
-    if (hostId == user.uid) return;
+    final hostId = result['hostId'] ?? '';
+    final title = result['title'] ?? 'Etkinlik';
+    if (hostId == user.uid || hostId.isEmpty) return;
 
     try {
       await ChatService.instance.ensureDirectThread(
@@ -178,6 +182,22 @@ class SocialEventService {
     } catch (_) {
       // Katılım tamamlandıysa geçici sohbet hatası etkinlik katılımını bozmaz.
     }
+
+    final participantName = (user.displayName ?? '').trim().isNotEmpty
+        ? user.displayName!.trim()
+        : 'Bir kullanıcı';
+    try {
+      await AppNotificationService.instance.notifyUser(
+        userId: hostId,
+        type: 'event_join',
+        title: '$participantName etkinliğine katıldı',
+        body: title,
+        sourceId: eventId,
+        actorId: user.uid,
+      );
+    } catch (_) {
+      // Bildirim hatası etkinlik katılımını bozmaz.
+    }
   }
 
   Future<void> leave(String eventId) async {
@@ -185,17 +205,26 @@ class SocialEventService {
     if (user == null) return;
 
     final ref = _firestore.collection(collection).doc(eventId);
+    final before = await ref.get();
+    final beforeData = before.data() ?? const <String, dynamic>{};
+    final hostId = (beforeData['hostId'] ?? '').toString();
+    final title = (beforeData['title'] ?? 'Etkinlik').toString();
+    final participantIds = (beforeData['participantIds'] as List? ?? const [])
+        .map((item) => item.toString())
+        .where((id) => id.isNotEmpty && id != user.uid)
+        .toList(growable: false);
+
     await _firestore.runTransaction((transaction) async {
       final snapshot = await transaction.get(ref);
       if (!snapshot.exists) return;
 
       final data = snapshot.data() ?? const <String, dynamic>{};
-      final hostId = (data['hostId'] ?? '').toString();
+      final currentHostId = (data['hostId'] ?? '').toString();
       final participants = (data['participantIds'] as List? ?? const [])
           .map((item) => item.toString())
           .toList();
 
-      if (hostId == user.uid) {
+      if (currentHostId == user.uid) {
         transaction.update(ref, {
           'status': 'cancelled',
           'updatedAt': FieldValue.serverTimestamp(),
@@ -209,5 +238,20 @@ class SocialEventService {
         'updatedAt': FieldValue.serverTimestamp(),
       });
     });
+
+    if (hostId == user.uid && participantIds.isNotEmpty) {
+      try {
+        await AppNotificationService.instance.notifyUsers(
+          userIds: participantIds,
+          type: 'event_cancelled',
+          title: 'Etkinlik iptal edildi',
+          body: title,
+          sourceId: eventId,
+          actorId: user.uid,
+        );
+      } catch (_) {
+        // İptal tamamlandıysa bildirim hatası işlemi geri döndürmez.
+      }
+    }
   }
 }
