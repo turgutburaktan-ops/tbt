@@ -21,6 +21,8 @@ class PostService {
     required String spotName,
     double? latitude,
     double? longitude,
+    List<String> taggedUserIds = const <String>[],
+    List<String> taggedUserNames = const <String>[],
   }) async {
     final user = _auth.currentUser;
     if (user == null) {
@@ -52,6 +54,8 @@ class PostService {
       'spotName': spotName.trim(),
       'latitude': latitude,
       'longitude': longitude,
+      'taggedUserIds': taggedUserIds.toSet().toList(),
+      'taggedUserNames': taggedUserNames.toSet().toList(),
       'likesCount': 0,
       'commentsCount': 0,
       'createdAt': FieldValue.serverTimestamp(),
