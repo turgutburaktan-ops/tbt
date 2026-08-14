@@ -1,0 +1,38 @@
+name: Patch Tappable Mentions
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'tool/patch_tappable_mentions.py'
+      - 'lib/widgets/mention_text.dart'
+      - 'lib/screens/mention_profile_screen.dart'
+      - '.github/workflows/patch_tappable_mentions.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Apply mention integration
+        run: python3 tool/patch_tappable_mentions.py
+
+      - name: Commit changes
+        run: |
+          if git diff --quiet; then
+            echo 'No mention patch changes.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add lib/screens/post_detail_screen.dart lib/widgets/content_engagement_bar.dart
+          git commit -m 'Wire tappable mentions into posts and comments'
+          git push
