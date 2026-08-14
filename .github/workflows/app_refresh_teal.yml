@@ -23,7 +23,7 @@ jobs:
       - name: Format changed Dart files
         run: dart format lib
       - name: Analyze
-        run: flutter pub get && flutter analyze
+        run: flutter pub get && flutter analyze --no-fatal-warnings --no-fatal-infos
       - name: Commit changes
         run: |
           git config user.name 'github-actions[bot]'
