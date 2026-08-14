@@ -1,0 +1,47 @@
+name: Localize Verified Spot Images
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'tool/localize_spot_images.py'
+      - 'lib/data/spot_image_registry.dart'
+      - '.github/workflows/localize_spot_images.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  localize:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Download verified Commons images
+        run: python tool/localize_spot_images.py
+
+      - name: Show localized files
+        run: |
+          find assets/spots -maxdepth 1 -type f -printf '%f %k KB\n' | sort
+          git diff --stat
+
+      - name: Commit localized assets
+        run: |
+          if git diff --quiet && [ -z "$(git status --porcelain --untracked-files=all)" ]; then
+            echo 'No localization changes to commit.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add assets/spots lib/data/spot_image_registry.dart
+          git commit -m 'Localize verified real spot photos'
+          git push
