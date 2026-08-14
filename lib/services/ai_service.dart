@@ -85,14 +85,16 @@ class AiService {
     final file = File(imagePath);
     if (!await file.exists()) throw Exception('Fotoğraf bulunamadı.');
 
-    final request = http.MultipartRequest('POST', Uri.parse('$baseUrl/analyze'));
+    final request =
+        http.MultipartRequest('POST', Uri.parse('$baseUrl/analyze'));
     request.files.add(await http.MultipartFile.fromPath('image', imagePath));
 
     final streamed = await request.send().timeout(const Duration(seconds: 75));
     final response = await http.Response.fromStream(streamed);
 
     if (response.statusCode != 200) {
-      throw Exception('AI analizi başarısız: ${response.statusCode}\n${response.body}');
+      throw Exception(
+          'AI analizi başarısız: ${response.statusCode}\n${response.body}');
     }
 
     final decoded = jsonDecode(response.body);
@@ -109,7 +111,8 @@ class AiService {
     final file = File(imagePath);
     if (!await file.exists()) throw Exception('Kamera karesi bulunamadı.');
 
-    final request = http.MultipartRequest('POST', Uri.parse('$baseUrl/live-analyze'));
+    final request =
+        http.MultipartRequest('POST', Uri.parse('$baseUrl/live-analyze'));
     request.fields['mode'] = mode;
     request.files.add(await http.MultipartFile.fromPath('image', imagePath));
 
@@ -139,7 +142,8 @@ class AiService {
       throw Exception('Düzenlenecek fotoğraf bulunamadı.');
     }
 
-    final request = http.MultipartRequest('POST', Uri.parse('$baseUrl/edit-photo'));
+    final request =
+        http.MultipartRequest('POST', Uri.parse('$baseUrl/edit-photo'));
     request.fields['action'] = action;
 
     if (pointX != null) request.fields['point_x'] = pointX.toStringAsFixed(5);
@@ -154,7 +158,8 @@ class AiService {
     final response = await http.Response.fromStream(streamed);
 
     if (response.statusCode != 200) {
-      throw Exception('AI düzenleme başarısız: ${response.statusCode}\n${response.body}');
+      throw Exception(
+          'AI düzenleme başarısız: ${response.statusCode}\n${response.body}');
     }
 
     List<int> outputBytes;

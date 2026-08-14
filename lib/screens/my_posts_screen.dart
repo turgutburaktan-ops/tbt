@@ -10,9 +10,9 @@ class MyPostsScreen extends StatelessWidget {
     final user = FirebaseAuth.instance.currentUser;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF090812),
+      backgroundColor: const Color(0xFF090D10),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF090812),
+        backgroundColor: const Color(0xFF090D10),
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
         title: const Text(
@@ -42,7 +42,7 @@ class MyPostsScreen extends StatelessWidget {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(
                     child: CircularProgressIndicator(
-                      color: Color(0xFF8B5CF6),
+                      color: Color(0xFF16B8A6),
                     ),
                   );
                 }
@@ -72,7 +72,7 @@ class MyPostsScreen extends StatelessWidget {
                         Icon(
                           Icons.photo_camera_outlined,
                           size: 70,
-                          color: Color(0xFF8B5CF6),
+                          color: Color(0xFF16B8A6),
                         ),
                         SizedBox(height: 20),
                         Text(
@@ -106,8 +106,7 @@ class MyPostsScreen extends StatelessWidget {
                   final aTimestamp = aData['createdAt'];
                   final bTimestamp = bData['createdAt'];
 
-                  if (aTimestamp is Timestamp &&
-                      bTimestamp is Timestamp) {
+                  if (aTimestamp is Timestamp && bTimestamp is Timestamp) {
                     return bTimestamp.compareTo(aTimestamp);
                   }
 
@@ -117,8 +116,7 @@ class MyPostsScreen extends StatelessWidget {
                 return GridView.builder(
                   padding: const EdgeInsets.all(12),
                   itemCount: sortedDocs.length,
-                  gridDelegate:
-                      const SliverGridDelegateWithFixedCrossAxisCount(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
                     crossAxisSpacing: 10,
                     mainAxisSpacing: 10,
@@ -127,19 +125,14 @@ class MyPostsScreen extends StatelessWidget {
                   itemBuilder: (context, index) {
                     final document = sortedDocs[index];
 
-                    final data =
-                        document.data() as Map<String, dynamic>;
+                    final data = document.data() as Map<String, dynamic>;
 
-                    final imageUrl =
-                        (data['imageUrl'] ?? '').toString();
+                    final imageUrl = (data['imageUrl'] ?? '').toString();
 
-                    final title =
-                        (data['title'] ?? 'Çekim').toString();
+                    final title = (data['title'] ?? 'Çekim').toString();
 
                     final location =
-                        (data['locationName'] ??
-                                data['location'] ??
-                                '')
+                        (data['locationName'] ?? data['location'] ?? '')
                             .toString();
 
                     return Container(
@@ -178,10 +171,8 @@ class MyPostsScreen extends StatelessWidget {
                                     ),
                             ),
                           ),
-
                           Padding(
-                            padding:
-                                const EdgeInsets.fromLTRB(12, 10, 12, 4),
+                            padding: const EdgeInsets.fromLTRB(12, 10, 12, 4),
                             child: Text(
                               title,
                               maxLines: 1,
@@ -193,16 +184,14 @@ class MyPostsScreen extends StatelessWidget {
                               ),
                             ),
                           ),
-
                           if (location.isNotEmpty)
                             Padding(
-                              padding:
-                                  const EdgeInsets.fromLTRB(12, 0, 12, 6),
+                              padding: const EdgeInsets.fromLTRB(12, 0, 12, 6),
                               child: Row(
                                 children: [
                                   const Icon(
                                     Icons.location_on_outlined,
-                                    color: Color(0xFF8B5CF6),
+                                    color: Color(0xFF16B8A6),
                                     size: 15,
                                   ),
                                   const SizedBox(width: 4),
@@ -220,7 +209,6 @@ class MyPostsScreen extends StatelessWidget {
                                 ],
                               ),
                             ),
-
                           Align(
                             alignment: Alignment.centerRight,
                             child: IconButton(

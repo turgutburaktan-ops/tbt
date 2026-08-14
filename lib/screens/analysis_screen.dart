@@ -116,18 +116,16 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
               fit: BoxFit.cover,
             ),
           ),
-
           const SizedBox(height: 22),
-
           if (analyzing)
             const Card(
-              color: Color(0xFF141126),
+              color: Color(0xFF11181D),
               child: Padding(
                 padding: EdgeInsets.all(24),
                 child: Column(
                   children: [
                     CircularProgressIndicator(
-                      color: Color(0xFF8B5CF6),
+                      color: Color(0xFF16B8A6),
                     ),
                     SizedBox(height: 18),
                     Text(
@@ -138,10 +136,9 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                 ),
               ),
             ),
-
           if (errorMessage != null && !analyzing)
             Card(
-              color: const Color(0xFF141126),
+              color: const Color(0xFF11181D),
               child: Padding(
                 padding: const EdgeInsets.all(20),
                 child: Column(
@@ -168,10 +165,9 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                 ),
               ),
             ),
-
           if (analysis != null && !analyzing) ...[
             Card(
-              color: const Color(0xFF141126),
+              color: const Color(0xFF11181D),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
               ),
@@ -182,14 +178,12 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                     Text(
                       '${analysis.score}/100',
                       style: const TextStyle(
-                        color: Color(0xFF8B5CF6),
+                        color: Color(0xFF16B8A6),
                         fontSize: 48,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-
                     const SizedBox(height: 4),
-
                     const Text(
                       'Fotoğraf Skoru',
                       style: TextStyle(
@@ -197,24 +191,19 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                         color: Colors.white70,
                       ),
                     ),
-
                     const SizedBox(height: 24),
-
                     _scoreRow(
                       'Kompozisyon',
                       analysis.composition,
                     ),
-
                     _scoreRow(
                       'Işık',
                       analysis.lighting,
                     ),
-
                     _scoreRow(
                       'Perspektif',
                       analysis.perspective,
                     ),
-
                     _scoreRow(
                       'Netlik',
                       analysis.sharpness,
@@ -223,9 +212,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                 ),
               ),
             ),
-
             const SizedBox(height: 24),
-
             const Text(
               'AI Değerlendirmesi',
               style: TextStyle(
@@ -233,11 +220,9 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                 fontWeight: FontWeight.bold,
               ),
             ),
-
             const SizedBox(height: 12),
-
             Card(
-              color: const Color(0xFF141126),
+              color: const Color(0xFF11181D),
               child: Padding(
                 padding: const EdgeInsets.all(18),
                 child: Text(
@@ -249,9 +234,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                 ),
               ),
             ),
-
             const SizedBox(height: 24),
-
             const Text(
               'Fotoğrafı İyileştirmek İçin',
               style: TextStyle(
@@ -259,12 +242,10 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                 fontWeight: FontWeight.bold,
               ),
             ),
-
             const SizedBox(height: 12),
-
             ...analysis.suggestions.map(
               (suggestion) => Card(
-                color: const Color(0xFF141126),
+                color: const Color(0xFF11181D),
                 child: ListTile(
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 18,
@@ -272,7 +253,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                   ),
                   leading: const Icon(
                     Icons.auto_awesome,
-                    color: Color(0xFF8B5CF6),
+                    color: Color(0xFF16B8A6),
                   ),
                   title: Text(
                     suggestion,
@@ -284,12 +265,10 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
               ),
             ),
           ],
-
           const SizedBox(height: 24),
-
           FilledButton.icon(
             style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFF8B5CF6),
+              backgroundColor: const Color(0xFF16B8A6),
               foregroundColor: Colors.black,
               padding: const EdgeInsets.all(17),
             ),
@@ -298,14 +277,10 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
               Icons.auto_awesome,
             ),
             label: Text(
-              analyzing
-                  ? 'Analiz Ediliyor...'
-                  : 'Tekrar Analiz Et',
+              analyzing ? 'Analiz Ediliyor...' : 'Tekrar Analiz Et',
             ),
           ),
-
           const SizedBox(height: 12),
-
           OutlinedButton.icon(
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
@@ -323,7 +298,6 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
               'Kaydet',
             ),
           ),
-
           const SizedBox(height: 30),
         ],
       ),

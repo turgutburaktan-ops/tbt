@@ -32,12 +32,13 @@ class _SpotPresenceSectionState extends State<SpotPresenceSection> {
           width: double.infinity,
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: const Color(0xFF141126),
+            color: const Color(0xFF11181D),
             borderRadius: BorderRadius.circular(18),
             border: Border.all(color: Colors.white10),
           ),
           child: StreamBuilder<List<SpotPresence>>(
-            stream: SpotPresenceService.instance.watchVisibleForSpot(widget.spot.id),
+            stream: SpotPresenceService.instance
+                .watchVisibleForSpot(widget.spot.id),
             builder: (context, snapshot) {
               final items = snapshot.data ?? const <SpotPresence>[];
               final isVisible = currentUser != null &&
@@ -48,7 +49,8 @@ class _SpotPresenceSectionState extends State<SpotPresenceSection> {
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.people_outline, color: Color(0xFF8B5CF6)),
+                      const Icon(Icons.people_outline,
+                          color: Color(0xFF16B8A6)),
                       const SizedBox(width: 8),
                       const Expanded(
                         child: Column(
@@ -56,18 +58,21 @@ class _SpotPresenceSectionState extends State<SpotPresenceSection> {
                           children: [
                             Text(
                               'Şu anda burada',
-                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
+                              style: TextStyle(
+                                  fontSize: 18, fontWeight: FontWeight.w900),
                             ),
                             SizedBox(height: 3),
                             Text(
                               'Yalnızca görünür olmayı seçen kullanıcılar gösterilir.',
-                              style: TextStyle(color: Colors.white60, fontSize: 12.5),
+                              style: TextStyle(
+                                  color: Colors.white60, fontSize: 12.5),
                             ),
                           ],
                         ),
                       ),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 6),
                         decoration: BoxDecoration(
                           color: const Color(0x228B5CF6),
                           borderRadius: BorderRadius.circular(20),
@@ -75,7 +80,7 @@ class _SpotPresenceSectionState extends State<SpotPresenceSection> {
                         child: Text(
                           '${items.length}',
                           style: const TextStyle(
-                            color: Color(0xFF8B5CF6),
+                            color: Color(0xFF16B8A6),
                             fontWeight: FontWeight.w900,
                           ),
                         ),
@@ -83,7 +88,8 @@ class _SpotPresenceSectionState extends State<SpotPresenceSection> {
                     ],
                   ),
                   const SizedBox(height: 14),
-                  if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData)
+                  if (snapshot.connectionState == ConnectionState.waiting &&
+                      !snapshot.hasData)
                     const Center(
                       child: Padding(
                         padding: EdgeInsets.symmetric(vertical: 10),
@@ -98,7 +104,8 @@ class _SpotPresenceSectionState extends State<SpotPresenceSection> {
                   else if (items.isEmpty)
                     const _StatusMessage(
                       icon: Icons.location_on_outlined,
-                      text: 'Şu an görünür olan kimse yok. İstersen ilk sen görünür olabilirsin.',
+                      text:
+                          'Şu an görünür olan kimse yok. İstersen ilk sen görünür olabilirsin.',
                     )
                   else
                     SizedBox(
@@ -117,7 +124,8 @@ class _SpotPresenceSectionState extends State<SpotPresenceSection> {
                   if (currentUser == null) ...[
                     const _StatusMessage(
                       icon: Icons.lock_outline,
-                      text: 'Buradayım özelliğini kullanmak için giriş yapmalısın. Diğer kullanıcıların görünürlüğü yalnızca yaklaşık çekim noktası seviyesindedir.',
+                      text:
+                          'Buradayım özelliğini kullanmak için giriş yapmalısın. Diğer kullanıcıların görünürlüğü yalnızca yaklaşık çekim noktası seviyesindedir.',
                     ),
                     const SizedBox(height: 12),
                   ],
@@ -126,7 +134,10 @@ class _SpotPresenceSectionState extends State<SpotPresenceSection> {
                       const Expanded(
                         child: Text(
                           'Kesin konum paylaşılmaz. Görünürlük 90 dakika sonra otomatik kapanır.',
-                          style: TextStyle(color: Colors.white54, fontSize: 11.5, height: 1.35),
+                          style: TextStyle(
+                              color: Colors.white54,
+                              fontSize: 11.5,
+                              height: 1.35),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -137,16 +148,19 @@ class _SpotPresenceSectionState extends State<SpotPresenceSection> {
                               ? const SizedBox(
                                   width: 16,
                                   height: 16,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                  child:
+                                      CircularProgressIndicator(strokeWidth: 2),
                                 )
-                              : const Icon(Icons.visibility_off_outlined, size: 18),
+                              : const Icon(Icons.visibility_off_outlined,
+                                  size: 18),
                           label: const Text('Gizlen'),
                         )
                       else
                         FilledButton.icon(
-                          onPressed: _busy || currentUser == null ? null : _checkIn,
+                          onPressed:
+                              _busy || currentUser == null ? null : _checkIn,
                           style: FilledButton.styleFrom(
-                            backgroundColor: const Color(0xFF8B5CF6),
+                            backgroundColor: const Color(0xFF16B8A6),
                             foregroundColor: Colors.black,
                           ),
                           icon: _busy
@@ -249,7 +263,8 @@ class _StatusMessage extends StatelessWidget {
           Expanded(
             child: Text(
               text,
-              style: const TextStyle(color: Colors.white70, height: 1.4, fontSize: 12.5),
+              style: const TextStyle(
+                  color: Colors.white70, height: 1.4, fontSize: 12.5),
             ),
           ),
         ],
@@ -276,11 +291,13 @@ class _PresenceAvatar extends StatelessWidget {
           CircleAvatar(
             radius: 23,
             backgroundColor: const Color(0xFF252C37),
-            backgroundImage: item.photoUrl.isNotEmpty ? NetworkImage(item.photoUrl) : null,
+            backgroundImage:
+                item.photoUrl.isNotEmpty ? NetworkImage(item.photoUrl) : null,
             child: item.photoUrl.isEmpty
                 ? Text(
                     firstLetter,
-                    style: const TextStyle(fontWeight: FontWeight.w900, color: Colors.white),
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w900, color: Colors.white),
                   )
                 : null,
           ),

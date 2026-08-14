@@ -33,9 +33,9 @@ class NotificationsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF090812),
+      backgroundColor: const Color(0xFF090D10),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF090812),
+        backgroundColor: const Color(0xFF090D10),
         foregroundColor: Colors.white,
         title: const Text('Bildirimler'),
         actions: [
@@ -51,7 +51,7 @@ class NotificationsScreen extends StatelessWidget {
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(
-              child: CircularProgressIndicator(color: Color(0xFF8B5CF6)),
+              child: CircularProgressIndicator(color: Color(0xFF16B8A6)),
             );
           }
 
@@ -63,9 +63,11 @@ class NotificationsScreen extends StatelessWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.notifications_none_rounded, size: 58, color: Colors.white30),
+                    Icon(Icons.notifications_none_rounded,
+                        size: 58, color: Colors.white30),
                     SizedBox(height: 12),
-                    Text('Henüz bildirimin yok', style: TextStyle(fontWeight: FontWeight.w800)),
+                    Text('Henüz bildirimin yok',
+                        style: TextStyle(fontWeight: FontWeight.w800)),
                     SizedBox(height: 6),
                     Text(
                       'Yeni mesajlar ve etkinlik hareketleri burada görünecek.',
@@ -85,11 +87,14 @@ class NotificationsScreen extends StatelessWidget {
             itemBuilder: (context, index) {
               final item = items[index];
               return Material(
-                color: item.read ? const Color(0xFF141126) : const Color(0xFF1C222B),
+                color: item.read
+                    ? const Color(0xFF11181D)
+                    : const Color(0xFF1C222B),
                 borderRadius: BorderRadius.circular(16),
                 child: InkWell(
                   borderRadius: BorderRadius.circular(16),
-                  onTap: () => AppNotificationService.instance.markRead(item.id),
+                  onTap: () =>
+                      AppNotificationService.instance.markRead(item.id),
                   child: Padding(
                     padding: const EdgeInsets.all(14),
                     child: Row(
@@ -102,7 +107,8 @@ class NotificationsScreen extends StatelessWidget {
                             color: Color(0x228B5CF6),
                             shape: BoxShape.circle,
                           ),
-                          child: Icon(_iconFor(item.type), color: const Color(0xFF8B5CF6), size: 21),
+                          child: Icon(_iconFor(item.type),
+                              color: const Color(0xFF16B8A6), size: 21),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
@@ -113,10 +119,13 @@ class NotificationsScreen extends StatelessWidget {
                                 children: [
                                   Expanded(
                                     child: Text(
-                                      item.title.isEmpty ? 'Bildirim' : item.title,
+                                      item.title.isEmpty
+                                          ? 'Bildirim'
+                                          : item.title,
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(fontWeight: FontWeight.w800),
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.w800),
                                     ),
                                   ),
                                   if (!item.read) ...[
@@ -125,7 +134,7 @@ class NotificationsScreen extends StatelessWidget {
                                       width: 8,
                                       height: 8,
                                       decoration: const BoxDecoration(
-                                        color: Color(0xFF8B5CF6),
+                                        color: Color(0xFF16B8A6),
                                         shape: BoxShape.circle,
                                       ),
                                     ),
@@ -138,12 +147,15 @@ class NotificationsScreen extends StatelessWidget {
                                   item.body,
                                   maxLines: 3,
                                   overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(color: Colors.white60, height: 1.35),
+                                  style: const TextStyle(
+                                      color: Colors.white60, height: 1.35),
                                 ),
                               ],
                               if (item.createdAt != null) ...[
                                 const SizedBox(height: 7),
-                                Text(_timeLabel(item.createdAt), style: const TextStyle(color: Colors.white38, fontSize: 12)),
+                                Text(_timeLabel(item.createdAt),
+                                    style: const TextStyle(
+                                        color: Colors.white38, fontSize: 12)),
                               ],
                             ],
                           ),

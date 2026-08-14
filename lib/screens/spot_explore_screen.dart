@@ -50,13 +50,15 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
       }
-      if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) {
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
         if (mounted) setState(() => _locationChecked = true);
         return;
       }
 
       final position = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(accuracy: LocationAccuracy.medium, timeLimit: Duration(seconds: 3)),
+        locationSettings: const LocationSettings(
+            accuracy: LocationAccuracy.medium, timeLimit: Duration(seconds: 3)),
       ).timeout(const Duration(seconds: 4));
 
       if (!mounted) return;
@@ -75,7 +77,8 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
   double? _distanceMeters(PhotoSpot spot) {
     final p = _position;
     if (p == null) return null;
-    return Geolocator.distanceBetween(p.latitude, p.longitude, spot.latitude, spot.longitude);
+    return Geolocator.distanceBetween(
+        p.latitude, p.longitude, spot.latitude, spot.longitude);
   }
 
   String _distanceLabel(PhotoSpot spot) {
@@ -88,7 +91,8 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
 
   void _sortByDistanceIfPossible(List<PhotoSpot> spots) {
     if (_position == null) return;
-    spots.sort((a, b) => (_distanceMeters(a) ?? double.infinity).compareTo(_distanceMeters(b) ?? double.infinity));
+    spots.sort((a, b) => (_distanceMeters(a) ?? double.infinity)
+        .compareTo(_distanceMeters(b) ?? double.infinity));
   }
 
   Future<void> _reload() async {
@@ -100,7 +104,8 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
     }
     try {
       final spotFuture = SpotRepository.instance.discover(
-        query: SpotDiscoveryQuery(text: _search, city: _city, category: _category, sort: _sort),
+        query: SpotDiscoveryQuery(
+            text: _search, city: _city, category: _category, sort: _sort),
       );
       final metaFuture = Future.wait([
         SpotRepository.instance.availableCities(),
@@ -143,7 +148,7 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
     SpotSort draftSort = _sort;
     showModalBottomSheet<void>(
       context: context,
-      backgroundColor: const Color(0xFF141126),
+      backgroundColor: const Color(0xFF11181D),
       isScrollControlled: true,
       builder: (sheetContext) => StatefulBuilder(
         builder: (context, setSheetState) => SafeArea(
@@ -153,14 +158,18 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Keşfet filtreleri', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
+                const Text('Keşfet filtreleri',
+                    style:
+                        TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
                 const SizedBox(height: 18),
                 DropdownButtonFormField<String?>(
                   value: draftCity,
                   decoration: const InputDecoration(labelText: 'Şehir'),
                   items: [
-                    const DropdownMenuItem<String?>(value: null, child: Text('Tüm şehirler')),
-                    ..._cities.map((city) => DropdownMenuItem<String?>(value: city, child: Text(city))),
+                    const DropdownMenuItem<String?>(
+                        value: null, child: Text('Tüm şehirler')),
+                    ..._cities.map((city) => DropdownMenuItem<String?>(
+                        value: city, child: Text(city))),
                   ],
                   onChanged: (value) => setSheetState(() => draftCity = value),
                 ),
@@ -169,19 +178,29 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
                   value: draftCategory,
                   decoration: const InputDecoration(labelText: 'Kategori'),
                   items: [
-                    const DropdownMenuItem<String?>(value: null, child: Text('Tüm kategoriler')),
-                    ..._categories.map((category) => DropdownMenuItem<String?>(value: category, child: Text(category))),
+                    const DropdownMenuItem<String?>(
+                        value: null, child: Text('Tüm kategoriler')),
+                    ..._categories.map((category) => DropdownMenuItem<String?>(
+                        value: category, child: Text(category))),
                   ],
-                  onChanged: (value) => setSheetState(() => draftCategory = value),
+                  onChanged: (value) =>
+                      setSheetState(() => draftCategory = value),
                 ),
                 const SizedBox(height: 12),
                 SegmentedButton<SpotSort>(
                   segments: const [
-                    ButtonSegment(value: SpotSort.rating, label: Text('Puana göre'), icon: Icon(Icons.star_rounded)),
-                    ButtonSegment(value: SpotSort.name, label: Text('İsme göre'), icon: Icon(Icons.sort_by_alpha_rounded)),
+                    ButtonSegment(
+                        value: SpotSort.rating,
+                        label: Text('Puana göre'),
+                        icon: Icon(Icons.star_rounded)),
+                    ButtonSegment(
+                        value: SpotSort.name,
+                        label: Text('İsme göre'),
+                        icon: Icon(Icons.sort_by_alpha_rounded)),
                   ],
                   selected: {draftSort},
-                  onSelectionChanged: (value) => setSheetState(() => draftSort = value.first),
+                  onSelectionChanged: (value) =>
+                      setSheetState(() => draftSort = value.first),
                 ),
                 const SizedBox(height: 20),
                 Row(children: [
@@ -195,7 +214,9 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
                   ),
                   const Spacer(),
                   FilledButton(
-                    style: FilledButton.styleFrom(backgroundColor: const Color(0xFF8B5CF6), foregroundColor: Colors.black),
+                    style: FilledButton.styleFrom(
+                        backgroundColor: const Color(0xFF16B8A6),
+                        foregroundColor: Colors.black),
                     onPressed: () {
                       Navigator.pop(sheetContext);
                       setState(() {
@@ -220,7 +241,7 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
   Widget build(BuildContext context) {
     return RefreshIndicator(
       onRefresh: _reload,
-      color: const Color(0xFF8B5CF6),
+      color: const Color(0xFF16B8A6),
       child: CustomScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
@@ -229,18 +250,27 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
               padding: const EdgeInsets.fromLTRB(20, 18, 20, 12),
               child: Row(children: [
                 Expanded(
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    const Text('Çekim Noktaları', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800)),
-                    const SizedBox(height: 4),
-                    Text(
-                      _position != null
-                          ? 'Sana en yakın noktalardan başlayarak sıralandı.'
-                          : (_locationChecked ? 'Noktalar hazır. Konum izni verirsen yakınlığa göre sıralanır.' : 'Noktalar yükleniyor; konum arka planda hazırlanıyor.'),
-                      style: const TextStyle(color: Colors.white60),
-                    ),
-                  ]),
+                  child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Çekim Noktaları',
+                            style: TextStyle(
+                                fontSize: 26, fontWeight: FontWeight.w800)),
+                        const SizedBox(height: 4),
+                        Text(
+                          _position != null
+                              ? 'Sana en yakın noktalardan başlayarak sıralandı.'
+                              : (_locationChecked
+                                  ? 'Noktalar hazır. Konum izni verirsen yakınlığa göre sıralanır.'
+                                  : 'Noktalar yükleniyor; konum arka planda hazırlanıyor.'),
+                          style: const TextStyle(color: Colors.white60),
+                        ),
+                      ]),
                 ),
-                IconButton.filledTonal(tooltip: 'Filtrele', onPressed: _openFilters, icon: const Icon(Icons.tune_rounded)),
+                IconButton.filledTonal(
+                    tooltip: 'Filtrele',
+                    onPressed: _openFilters,
+                    icon: const Icon(Icons.tune_rounded)),
               ]),
             ),
           ),
@@ -265,8 +295,10 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
                           icon: const Icon(Icons.close_rounded),
                         ),
                   filled: true,
-                  fillColor: const Color(0xFF141126),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+                  fillColor: const Color(0xFF11181D),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide.none),
                 ),
               ),
             ),
@@ -276,33 +308,66 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
                 child: Wrap(spacing: 8, runSpacing: 8, children: [
-                  if (_city != null) InputChip(label: Text(_city!), onDeleted: () { setState(() => _city = null); _reload(); }),
-                  if (_category != null) InputChip(label: Text(_category!), onDeleted: () { setState(() => _category = null); _reload(); }),
+                  if (_city != null)
+                    InputChip(
+                        label: Text(_city!),
+                        onDeleted: () {
+                          setState(() => _city = null);
+                          _reload();
+                        }),
+                  if (_category != null)
+                    InputChip(
+                        label: Text(_category!),
+                        onDeleted: () {
+                          setState(() => _category = null);
+                          _reload();
+                        }),
                 ]),
               ),
             ),
           if (_loading && _spots.isEmpty)
-            const SliverFillRemaining(hasScrollBody: false, child: Center(child: CircularProgressIndicator(color: Color(0xFF8B5CF6))))
+            const SliverFillRemaining(
+                hasScrollBody: false,
+                child: Center(
+                    child: CircularProgressIndicator(color: Color(0xFF16B8A6))))
           else if (_error != null && _spots.isEmpty)
-            SliverFillRemaining(hasScrollBody: false, child: _ExploreState(icon: Icons.cloud_off_rounded, title: _error!, actionLabel: 'Tekrar dene', onAction: _reload))
+            SliverFillRemaining(
+                hasScrollBody: false,
+                child: _ExploreState(
+                    icon: Icons.cloud_off_rounded,
+                    title: _error!,
+                    actionLabel: 'Tekrar dene',
+                    onAction: _reload))
           else if (_spots.isEmpty)
-            const SliverFillRemaining(hasScrollBody: false, child: _ExploreState(icon: Icons.search_off_rounded, title: 'Bu filtrelerde çekim noktası bulunamadı.'))
+            const SliverFillRemaining(
+                hasScrollBody: false,
+                child: _ExploreState(
+                    icon: Icons.search_off_rounded,
+                    title: 'Bu filtrelerde çekim noktası bulunamadı.'))
           else ...[
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 4, 20, 10),
                 child: Row(children: [
-                  Text('${_spots.length} çekim noktası', style: const TextStyle(color: Colors.white54, fontWeight: FontWeight.w600)),
+                  Text('${_spots.length} çekim noktası',
+                      style: const TextStyle(
+                          color: Colors.white54, fontWeight: FontWeight.w600)),
                   if (_loading) ...[
                     const SizedBox(width: 10),
-                    const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF8B5CF6))),
+                    const SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(
+                            strokeWidth: 2, color: Color(0xFF16B8A6))),
                   ],
                 ]),
               ),
             ),
             SliverList.builder(
               itemCount: _spots.length,
-              itemBuilder: (context, index) => _SpotCard(spot: _spots[index], distanceLabel: _distanceLabel(_spots[index])),
+              itemBuilder: (context, index) => _SpotCard(
+                  spot: _spots[index],
+                  distanceLabel: _distanceLabel(_spots[index])),
             ),
             const SliverToBoxAdapter(child: SizedBox(height: 100)),
           ],
@@ -322,34 +387,61 @@ class _SpotCard extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
       child: Card(
-        color: const Color(0xFF141126),
+        color: const Color(0xFF11181D),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
-          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => SpotDetailScreen(spot: spot))),
+          onTap: () => Navigator.push(context,
+              MaterialPageRoute(builder: (_) => SpotDetailScreen(spot: spot))),
           child: Padding(
             padding: const EdgeInsets.all(10),
             child: Row(children: [
-              SpotImage(spot: spot, width: 88, height: 88, borderRadius: BorderRadius.circular(12)),
+              SpotImage(
+                  spot: spot,
+                  width: 88,
+                  height: 88,
+                  borderRadius: BorderRadius.circular(12)),
               const SizedBox(width: 12),
               Expanded(
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Row(children: [
-                    Expanded(child: Text(spot.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16))),
-                    if (distanceLabel.isNotEmpty) Text(distanceLabel, style: const TextStyle(color: Color(0xFF8B5CF6), fontWeight: FontWeight.w800, fontSize: 12)),
-                  ]),
-                  const SizedBox(height: 4),
-                  Text('${spot.city} • ${spot.category}', style: const TextStyle(color: Colors.white60, fontSize: 12)),
-                  const SizedBox(height: 8),
-                  Row(children: [
-                    const Icon(Icons.star_rounded, size: 16, color: Color(0xFF8B5CF6)),
-                    const SizedBox(width: 3),
-                    Text(spot.rating.toStringAsFixed(1)),
-                    const SizedBox(width: 12),
-                    const Icon(Icons.schedule_rounded, size: 15, color: Colors.white54),
-                    const SizedBox(width: 4),
-                    Expanded(child: Text(spot.bestTime, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white54, fontSize: 11))),
-                  ]),
-                ]),
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(children: [
+                        Expanded(
+                            child: Text(spot.name,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 16))),
+                        if (distanceLabel.isNotEmpty)
+                          Text(distanceLabel,
+                              style: const TextStyle(
+                                  color: Color(0xFF16B8A6),
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 12)),
+                      ]),
+                      const SizedBox(height: 4),
+                      Text('${spot.city} • ${spot.category}',
+                          style: const TextStyle(
+                              color: Colors.white60, fontSize: 12)),
+                      const SizedBox(height: 8),
+                      Row(children: [
+                        const Icon(Icons.star_rounded,
+                            size: 16, color: Color(0xFF16B8A6)),
+                        const SizedBox(width: 3),
+                        Text(spot.rating.toStringAsFixed(1)),
+                        const SizedBox(width: 12),
+                        const Icon(Icons.schedule_rounded,
+                            size: 15, color: Colors.white54),
+                        const SizedBox(width: 4),
+                        Expanded(
+                            child: Text(spot.bestTime,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                    color: Colors.white54, fontSize: 11))),
+                      ]),
+                    ]),
               ),
               const Icon(Icons.chevron_right_rounded, color: Colors.white38),
             ]),
@@ -365,7 +457,11 @@ class _ExploreState extends StatelessWidget {
   final String title;
   final String? actionLabel;
   final VoidCallback? onAction;
-  const _ExploreState({required this.icon, required this.title, this.actionLabel, this.onAction});
+  const _ExploreState(
+      {required this.icon,
+      required this.title,
+      this.actionLabel,
+      this.onAction});
 
   @override
   Widget build(BuildContext context) => Center(
@@ -374,7 +470,9 @@ class _ExploreState extends StatelessWidget {
           child: Column(mainAxisSize: MainAxisSize.min, children: [
             Icon(icon, size: 54, color: Colors.white30),
             const SizedBox(height: 14),
-            Text(title, textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.w700)),
+            Text(title,
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontWeight: FontWeight.w700)),
             if (actionLabel != null && onAction != null) ...[
               const SizedBox(height: 14),
               TextButton(onPressed: onAction, child: Text(actionLabel!)),

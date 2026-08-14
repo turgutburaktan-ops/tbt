@@ -33,8 +33,8 @@ class PostService {
     final lowerPath = image.path.toLowerCase();
     final extension = lowerPath.endsWith('.png') ? 'png' : 'jpg';
     final storageRef = _storage.ref().child(
-      'users/${user.uid}/posts/${postRef.id}.$extension',
-    );
+          'users/${user.uid}/posts/${postRef.id}.$extension',
+        );
     final metadata = SettableMetadata(
       contentType: extension == 'png' ? 'image/png' : 'image/jpeg',
     );

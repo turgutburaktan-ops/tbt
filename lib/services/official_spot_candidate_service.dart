@@ -23,7 +23,8 @@ class OfficialSpotCandidateAudit {
 
 class OfficialSpotCandidateService {
   OfficialSpotCandidateService._();
-  static final OfficialSpotCandidateService instance = OfficialSpotCandidateService._();
+  static final OfficialSpotCandidateService instance =
+      OfficialSpotCandidateService._();
 
   List<OfficialSpotCandidate> get allCandidates {
     final byKey = <String, OfficialSpotCandidate>{};

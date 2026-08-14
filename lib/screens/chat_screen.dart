@@ -83,19 +83,21 @@ class _ChatScreenState extends State<ChatScreen> {
   Future<void> _showSafetyMenu() async {
     final action = await showModalBottomSheet<String>(
       context: context,
-      backgroundColor: const Color(0xFF141126),
+      backgroundColor: const Color(0xFF11181D),
       builder: (context) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
               leading: const Icon(Icons.flag_outlined, color: Colors.orange),
-              title: const Text('Kullanıcıyı bildir', style: TextStyle(color: Colors.white)),
+              title: const Text('Kullanıcıyı bildir',
+                  style: TextStyle(color: Colors.white)),
               onTap: () => Navigator.pop(context, 'report'),
             ),
             ListTile(
               leading: const Icon(Icons.block, color: Colors.redAccent),
-              title: const Text('Kullanıcıyı engelle', style: TextStyle(color: Colors.white)),
+              title: const Text('Kullanıcıyı engelle',
+                  style: TextStyle(color: Colors.white)),
               onTap: () => Navigator.pop(context, 'block'),
             ),
           ],
@@ -131,9 +133,9 @@ class _ChatScreenState extends State<ChatScreen> {
     final myId = FirebaseAuth.instance.currentUser?.uid ?? '';
 
     return Scaffold(
-      backgroundColor: const Color(0xFF090812),
+      backgroundColor: const Color(0xFF090D10),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF090812),
+        backgroundColor: const Color(0xFF090D10),
         foregroundColor: Colors.white,
         title: Text(widget.otherDisplayName),
         actions: [
@@ -144,7 +146,8 @@ class _ChatScreenState extends State<ChatScreen> {
         ],
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFF8B5CF6)))
+          ? const Center(
+              child: CircularProgressIndicator(color: Color(0xFF16B8A6)))
           : _error != null
               ? Center(
                   child: Padding(
@@ -162,10 +165,13 @@ class _ChatScreenState extends State<ChatScreen> {
                       child: StreamBuilder<List<ChatMessage>>(
                         stream: ChatService.instance.messages(_threadId!),
                         builder: (context, snapshot) {
-                          final messages = snapshot.data ?? const <ChatMessage>[];
-                          if (snapshot.connectionState == ConnectionState.waiting) {
+                          final messages =
+                              snapshot.data ?? const <ChatMessage>[];
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
                             return const Center(
-                              child: CircularProgressIndicator(color: Color(0xFF8B5CF6)),
+                              child: CircularProgressIndicator(
+                                  color: Color(0xFF16B8A6)),
                             );
                           }
                           if (messages.isEmpty) {
@@ -175,7 +181,8 @@ class _ChatScreenState extends State<ChatScreen> {
                                 child: Text(
                                   'İlk mesajı gönder. Buluşma detaylarını paylaşırken kişisel adres veya hassas bilgi göndermemeye dikkat et.',
                                   textAlign: TextAlign.center,
-                                  style: TextStyle(color: Colors.white54, height: 1.4),
+                                  style: TextStyle(
+                                      color: Colors.white54, height: 1.4),
                                 ),
                               ),
                             );
@@ -188,14 +195,18 @@ class _ChatScreenState extends State<ChatScreen> {
                               final message = messages[index];
                               final mine = message.senderId == myId;
                               return Align(
-                                alignment: mine ? Alignment.centerRight : Alignment.centerLeft,
+                                alignment: mine
+                                    ? Alignment.centerRight
+                                    : Alignment.centerLeft,
                                 child: Container(
-                                  constraints: const BoxConstraints(maxWidth: 310),
+                                  constraints:
+                                      const BoxConstraints(maxWidth: 310),
                                   margin: const EdgeInsets.only(bottom: 9),
-                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 14, vertical: 10),
                                   decoration: BoxDecoration(
                                     color: mine
-                                        ? const Color(0xFF8B5CF6)
+                                        ? const Color(0xFF16B8A6)
                                         : const Color(0xFF1C232D),
                                     borderRadius: BorderRadius.circular(18),
                                   ),
@@ -219,7 +230,8 @@ class _ChatScreenState extends State<ChatScreen> {
                         padding: const EdgeInsets.fromLTRB(12, 10, 10, 10),
                         decoration: const BoxDecoration(
                           color: Color(0xFF121820),
-                          border: Border(top: BorderSide(color: Colors.white10)),
+                          border:
+                              Border(top: BorderSide(color: Colors.white10)),
                         ),
                         child: Row(
                           children: [
@@ -233,7 +245,8 @@ class _ChatScreenState extends State<ChatScreen> {
                                 decoration: InputDecoration(
                                   counterText: '',
                                   hintText: 'Mesaj yaz...',
-                                  hintStyle: const TextStyle(color: Colors.white38),
+                                  hintStyle:
+                                      const TextStyle(color: Colors.white38),
                                   filled: true,
                                   fillColor: const Color(0xFF1C232D),
                                   border: OutlineInputBorder(
@@ -246,7 +259,7 @@ class _ChatScreenState extends State<ChatScreen> {
                             const SizedBox(width: 8),
                             IconButton.filled(
                               style: IconButton.styleFrom(
-                                backgroundColor: const Color(0xFF8B5CF6),
+                                backgroundColor: const Color(0xFF16B8A6),
                                 foregroundColor: Colors.black,
                               ),
                               onPressed: _sending ? null : _send,
@@ -254,7 +267,8 @@ class _ChatScreenState extends State<ChatScreen> {
                                   ? const SizedBox(
                                       width: 18,
                                       height: 18,
-                                      child: CircularProgressIndicator(strokeWidth: 2),
+                                      child: CircularProgressIndicator(
+                                          strokeWidth: 2),
                                     )
                                   : const Icon(Icons.send_rounded),
                             ),

@@ -14,49 +14,35 @@ class UserProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final currentUser =
-        FirebaseAuth.instance.currentUser;
+    final currentUser = FirebaseAuth.instance.currentUser;
 
-    final isOwnProfile =
-        currentUser?.uid == userId;
+    final isOwnProfile = currentUser?.uid == userId;
 
     return Scaffold(
-      backgroundColor:
-          const Color(0xFF090812),
+      backgroundColor: const Color(0xFF090D10),
       appBar: AppBar(
-        backgroundColor:
-            const Color(0xFF090812),
-        foregroundColor:
-            Colors.white,
+        backgroundColor: const Color(0xFF090D10),
+        foregroundColor: Colors.white,
         elevation: 0,
         title: const Text(
           'Profil',
         ),
       ),
-      body: StreamBuilder<
-          DocumentSnapshot<
-              Map<String, dynamic>>>(
-        stream: SocialService.instance
-            .userProfile(userId),
+      body: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+        stream: SocialService.instance.userProfile(userId),
         builder: (
           context,
           profileSnapshot,
         ) {
-          if (profileSnapshot
-                  .connectionState ==
-              ConnectionState.waiting) {
+          if (profileSnapshot.connectionState == ConnectionState.waiting) {
             return const Center(
-              child:
-                  CircularProgressIndicator(
-                color:
-                    Color(0xFF8B5CF6),
+              child: CircularProgressIndicator(
+                color: Color(0xFF16B8A6),
               ),
             );
           }
 
-          if (!profileSnapshot.hasData ||
-              !profileSnapshot
-                  .data!.exists) {
+          if (!profileSnapshot.hasData || !profileSnapshot.data!.exists) {
             return const Center(
               child: Text(
                 'Kullanıcı bulunamadı.',
@@ -67,26 +53,16 @@ class UserProfileScreen extends StatelessWidget {
             );
           }
 
-          final data =
-              profileSnapshot.data!.data() ??
-                  {};
+          final data = profileSnapshot.data!.data() ?? {};
 
-          final displayName =
-              (data['displayName'] ??
-                      'Fotoğrafçı')
-                  .toString();
+          final displayName = (data['displayName'] ?? 'Fotoğrafçı').toString();
 
-          final photoUrl =
-              (data['photoUrl'] ?? '')
-                  .toString();
+          final photoUrl = (data['photoUrl'] ?? '').toString();
 
-          final email =
-              (data['email'] ?? '')
-                  .toString();
+          final email = (data['email'] ?? '').toString();
 
           return ListView(
-            padding:
-                const EdgeInsets.fromLTRB(
+            padding: const EdgeInsets.fromLTRB(
               20,
               20,
               20,
@@ -96,51 +72,42 @@ class UserProfileScreen extends StatelessWidget {
               Center(
                 child: CircleAvatar(
                   radius: 54,
-                  backgroundColor:
-                      const Color(
-                    0xFF8B5CF6,
+                  backgroundColor: const Color(
+                    0xFF16B8A6,
                   ),
                   child: CircleAvatar(
                     radius: 49,
-                    backgroundColor:
-                        const Color(
-                      0xFF141126,
+                    backgroundColor: const Color(
+                      0xFF11181D,
                     ),
-                    backgroundImage:
-                        photoUrl.isNotEmpty
-                            ? NetworkImage(
-                                photoUrl,
-                              )
-                            : null,
+                    backgroundImage: photoUrl.isNotEmpty
+                        ? NetworkImage(
+                            photoUrl,
+                          )
+                        : null,
                     child: photoUrl.isEmpty
                         ? const Icon(
                             Icons.person,
                             size: 56,
-                            color:
-                                Colors.white54,
+                            color: Colors.white54,
                           )
                         : null,
                   ),
                 ),
               ),
-
               const SizedBox(
                 height: 16,
               ),
-
               Center(
                 child: Text(
                   displayName,
-                  style:
-                      const TextStyle(
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 24,
-                    fontWeight:
-                        FontWeight.bold,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
-
               if (email.isNotEmpty) ...[
                 const SizedBox(
                   height: 5,
@@ -148,28 +115,21 @@ class UserProfileScreen extends StatelessWidget {
                 Center(
                   child: Text(
                     email,
-                    style:
-                        const TextStyle(
-                      color:
-                          Colors.white38,
+                    style: const TextStyle(
+                      color: Colors.white38,
                       fontSize: 13,
                     ),
                   ),
                 ),
               ],
-
               const SizedBox(
                 height: 24,
               ),
-
               Row(
                 children: [
                   Expanded(
-                    child: StreamBuilder<
-                        int>(
-                      stream: SocialService
-                          .instance
-                          .followersCount(
+                    child: StreamBuilder<int>(
+                      stream: SocialService.instance.followersCount(
                         userId,
                       ),
                       builder: (
@@ -177,25 +137,18 @@ class UserProfileScreen extends StatelessWidget {
                         snapshot,
                       ) {
                         return _StatBox(
-                          value:
-                              '${snapshot.data ?? 0}',
-                          label:
-                              'Takipçi',
+                          value: '${snapshot.data ?? 0}',
+                          label: 'Takipçi',
                         );
                       },
                     ),
                   ),
-
                   const SizedBox(
                     width: 10,
                   ),
-
                   Expanded(
-                    child: StreamBuilder<
-                        int>(
-                      stream: SocialService
-                          .instance
-                          .followingCount(
+                    child: StreamBuilder<int>(
+                      stream: SocialService.instance.followingCount(
                         userId,
                       ),
                       builder: (
@@ -203,28 +156,18 @@ class UserProfileScreen extends StatelessWidget {
                         snapshot,
                       ) {
                         return _StatBox(
-                          value:
-                              '${snapshot.data ?? 0}',
-                          label:
-                              'Takip',
+                          value: '${snapshot.data ?? 0}',
+                          label: 'Takip',
                         );
                       },
                     ),
                   ),
-
                   const SizedBox(
                     width: 10,
                   ),
-
                   Expanded(
-                    child: StreamBuilder<
-                        QuerySnapshot<
-                            Map<String,
-                                dynamic>>>(
-                      stream:
-                          SocialService
-                              .instance
-                              .userPosts(
+                    child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                      stream: SocialService.instance.userPosts(
                         userId,
                       ),
                       builder: (
@@ -232,78 +175,57 @@ class UserProfileScreen extends StatelessWidget {
                         snapshot,
                       ) {
                         return _StatBox(
-                          value:
-                              '${snapshot.data?.docs.length ?? 0}',
-                          label:
-                              'Çekim',
+                          value: '${snapshot.data?.docs.length ?? 0}',
+                          label: 'Çekim',
                         );
                       },
                     ),
                   ),
                 ],
               ),
-
               if (!isOwnProfile) ...[
                 const SizedBox(
                   height: 18,
                 ),
-
                 StreamBuilder<bool>(
-                  stream: SocialService
-                      .instance
-                      .isFollowing(
+                  stream: SocialService.instance.isFollowing(
                     userId,
                   ),
                   builder: (
                     context,
                     snapshot,
                   ) {
-                    final following =
-                        snapshot.data ??
-                            false;
+                    final following = snapshot.data ?? false;
 
                     return SizedBox(
                       height: 52,
-                      child:
-                          FilledButton(
-                        style:
-                            FilledButton
-                                .styleFrom(
-                          backgroundColor:
-                              following
-                                  ? const Color(
-                                      0xFF1C1733,
-                                    )
-                                  : const Color(
-                                      0xFF8B5CF6,
-                                    ),
+                      child: FilledButton(
+                        style: FilledButton.styleFrom(
+                          backgroundColor: following
+                              ? const Color(
+                                  0xFF152128,
+                                )
+                              : const Color(
+                                  0xFF16B8A6,
+                                ),
                           foregroundColor:
-                              following
-                                  ? Colors.white
-                                  : Colors.black,
+                              following ? Colors.white : Colors.black,
                         ),
-                        onPressed:
-                            () async {
+                        onPressed: () async {
                           try {
-                            await SocialService
-                                .instance
-                                .toggleFollow(
+                            await SocialService.instance.toggleFollow(
                               userId,
                             );
                           } catch (e) {
-                            if (!context
-                                .mounted) {
+                            if (!context.mounted) {
                               return;
                             }
 
-                            ScaffoldMessenger
-                                    .of(
-                                  context,
-                                )
-                                .showSnackBar(
+                            ScaffoldMessenger.of(
+                              context,
+                            ).showSnackBar(
                               SnackBar(
-                                content:
-                                    Text(
+                                content: Text(
                                   e.toString(),
                                 ),
                               ),
@@ -311,14 +233,9 @@ class UserProfileScreen extends StatelessWidget {
                           }
                         },
                         child: Text(
-                          following
-                              ? 'Takiptesin'
-                              : 'Takip Et',
-                          style:
-                              const TextStyle(
-                            fontWeight:
-                                FontWeight
-                                    .bold,
+                          following ? 'Takiptesin' : 'Takip Et',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
                       ),
@@ -326,17 +243,15 @@ class UserProfileScreen extends StatelessWidget {
                   },
                 ),
               ],
-
               const SizedBox(
                 height: 28,
               ),
-
               const Row(
                 children: [
                   Icon(
                     Icons.grid_on,
                     color: Color(
-                      0xFF8B5CF6,
+                      0xFF16B8A6,
                     ),
                   ),
                   SizedBox(
@@ -344,75 +259,49 @@ class UserProfileScreen extends StatelessWidget {
                   ),
                   Text(
                     'Paylaşımlar',
-                    style:
-                        TextStyle(
+                    style: TextStyle(
                       color: Colors.white,
                       fontSize: 20,
-                      fontWeight:
-                          FontWeight.bold,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ],
               ),
-
               const SizedBox(
                 height: 14,
               ),
-
-              StreamBuilder<
-                  QuerySnapshot<
-                      Map<String,
-                          dynamic>>>(
-                stream: SocialService
-                    .instance
-                    .userPosts(
+              StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                stream: SocialService.instance.userPosts(
                   userId,
                 ),
                 builder: (
                   context,
                   snapshot,
                 ) {
-                  if (snapshot
-                          .connectionState ==
-                      ConnectionState
-                          .waiting) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Padding(
-                      padding:
-                          EdgeInsets.all(
+                      padding: EdgeInsets.all(
                         30,
                       ),
                       child: Center(
-                        child:
-                            CircularProgressIndicator(
-                          color:
-                              Color(
-                            0xFF8B5CF6,
+                        child: CircularProgressIndicator(
+                          color: Color(
+                            0xFF16B8A6,
                           ),
                         ),
                       ),
                     );
                   }
 
-                  final docs =
-                      snapshot.data
-                              ?.docs ??
-                          [];
+                  final docs = snapshot.data?.docs ?? [];
 
                   docs.sort(
                     (a, b) {
-                      final aTime =
-                          a.data()[
-                              'createdAt'];
-                      final bTime =
-                          b.data()[
-                              'createdAt'];
+                      final aTime = a.data()['createdAt'];
+                      final bTime = b.data()['createdAt'];
 
-                      if (aTime
-                              is Timestamp &&
-                          bTime
-                              is Timestamp) {
-                        return bTime
-                            .compareTo(
+                      if (aTime is Timestamp && bTime is Timestamp) {
+                        return bTime.compareTo(
                           aTime,
                         );
                       }
@@ -423,31 +312,22 @@ class UserProfileScreen extends StatelessWidget {
 
                   if (docs.isEmpty) {
                     return Container(
-                      padding:
-                          const EdgeInsets
-                              .all(
+                      padding: const EdgeInsets.all(
                         30,
                       ),
-                      decoration:
-                          BoxDecoration(
-                        color:
-                            const Color(
-                          0xFF141126,
+                      decoration: BoxDecoration(
+                        color: const Color(
+                          0xFF11181D,
                         ),
-                        borderRadius:
-                            BorderRadius
-                                .circular(
+                        borderRadius: BorderRadius.circular(
                           18,
                         ),
                       ),
-                      child:
-                          const Column(
+                      child: const Column(
                         children: [
                           Icon(
-                            Icons
-                                .photo_library_outlined,
-                            color:
-                                Colors.white38,
+                            Icons.photo_library_outlined,
+                            color: Colors.white38,
                             size: 48,
                           ),
                           SizedBox(
@@ -455,10 +335,8 @@ class UserProfileScreen extends StatelessWidget {
                           ),
                           Text(
                             'Henüz paylaşım yok',
-                            style:
-                                TextStyle(
-                              color:
-                                  Colors.white54,
+                            style: TextStyle(
+                              color: Colors.white54,
                             ),
                           ),
                         ],
@@ -466,84 +344,57 @@ class UserProfileScreen extends StatelessWidget {
                     );
                   }
 
-                  return GridView
-                      .builder(
+                  return GridView.builder(
                     shrinkWrap: true,
-                    physics:
-                        const NeverScrollableScrollPhysics(),
-                    itemCount:
-                        docs.length,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: docs.length,
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount:
-                          3,
-                      crossAxisSpacing:
-                          4,
-                      mainAxisSpacing:
-                          4,
+                      crossAxisCount: 3,
+                      crossAxisSpacing: 4,
+                      mainAxisSpacing: 4,
                     ),
-                    itemBuilder:
-                        (
+                    itemBuilder: (
                       context,
                       index,
                     ) {
-                      final data =
-                          docs[index]
-                              .data();
+                      final data = docs[index].data();
 
-                      final imageUrl =
-                          (data['imageUrl'] ??
-                                  '')
-                              .toString();
+                      final imageUrl = (data['imageUrl'] ?? '').toString();
 
                       return ClipRRect(
-                        borderRadius:
-                            BorderRadius
-                                .circular(
+                        borderRadius: BorderRadius.circular(
                           8,
                         ),
-                        child:
-                            imageUrl
-                                    .isNotEmpty
-                                ? Image
-                                    .network(
-                                    imageUrl,
-                                    fit: BoxFit
-                                        .cover,
-                                    errorBuilder:
-                                        (
-                                      context,
-                                      error,
-                                      stackTrace,
-                                    ) {
-                                      return Container(
-                                        color:
-                                            const Color(
-                                          0xFF141126,
-                                        ),
-                                        child:
-                                            const Icon(
-                                          Icons
-                                              .broken_image_outlined,
-                                          color:
-                                              Colors.white38,
-                                        ),
-                                      );
-                                    },
-                                  )
-                                : Container(
-                                    color:
-                                        const Color(
-                                      0xFF141126,
+                        child: imageUrl.isNotEmpty
+                            ? Image.network(
+                                imageUrl,
+                                fit: BoxFit.cover,
+                                errorBuilder: (
+                                  context,
+                                  error,
+                                  stackTrace,
+                                ) {
+                                  return Container(
+                                    color: const Color(
+                                      0xFF11181D,
                                     ),
-                                    child:
-                                        const Icon(
-                                      Icons
-                                          .image_outlined,
-                                      color:
-                                          Colors.white38,
+                                    child: const Icon(
+                                      Icons.broken_image_outlined,
+                                      color: Colors.white38,
                                     ),
-                                  ),
+                                  );
+                                },
+                              )
+                            : Container(
+                                color: const Color(
+                                  0xFF11181D,
+                                ),
+                                child: const Icon(
+                                  Icons.image_outlined,
+                                  color: Colors.white38,
+                                ),
+                              ),
                       );
                     },
                   );
@@ -571,16 +422,14 @@ class _StatBox extends StatelessWidget {
     BuildContext context,
   ) {
     return Container(
-      padding:
-          const EdgeInsets.symmetric(
+      padding: const EdgeInsets.symmetric(
         vertical: 16,
       ),
       decoration: BoxDecoration(
         color: const Color(
-          0xFF141126,
+          0xFF11181D,
         ),
-        borderRadius:
-            BorderRadius.circular(
+        borderRadius: BorderRadius.circular(
           16,
         ),
       ),
@@ -588,15 +437,12 @@ class _StatBox extends StatelessWidget {
         children: [
           Text(
             value,
-            style:
-                const TextStyle(
-              color:
-                  Color(
-                0xFF8B5CF6,
+            style: const TextStyle(
+              color: Color(
+                0xFF16B8A6,
               ),
               fontSize: 21,
-              fontWeight:
-                  FontWeight.bold,
+              fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(
@@ -604,10 +450,8 @@ class _StatBox extends StatelessWidget {
           ),
           Text(
             label,
-            style:
-                const TextStyle(
-              color:
-                  Colors.white54,
+            style: const TextStyle(
+              color: Colors.white54,
               fontSize: 12,
             ),
           ),

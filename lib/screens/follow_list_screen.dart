@@ -20,9 +20,9 @@ class FollowListScreen extends StatelessWidget {
         : SocialService.instance.following(userId);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF090812),
+      backgroundColor: const Color(0xFF090D10),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF090812),
+        backgroundColor: const Color(0xFF090D10),
         foregroundColor: Colors.white,
         title: Text(followers ? 'Takipçiler' : 'Takip'),
       ),
@@ -31,7 +31,7 @@ class FollowListScreen extends StatelessWidget {
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(
-              child: CircularProgressIndicator(color: Color(0xFF8B5CF6)),
+              child: CircularProgressIndicator(color: Color(0xFF16B8A6)),
             );
           }
 
@@ -39,7 +39,9 @@ class FollowListScreen extends StatelessWidget {
           if (docs.isEmpty) {
             return Center(
               child: Text(
-                followers ? 'Henüz takipçi yok.' : 'Henüz kimseyi takip etmiyorsun.',
+                followers
+                    ? 'Henüz takipçi yok.'
+                    : 'Henüz kimseyi takip etmiyorsun.',
                 style: const TextStyle(color: Colors.white54),
               ),
             );
@@ -61,17 +63,25 @@ class FollowListScreen extends StatelessWidget {
               return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
                 stream: SocialService.instance.userProfile(targetId),
                 builder: (context, profileSnapshot) {
-                  final profile = profileSnapshot.data?.data() ?? const <String, dynamic>{};
-                  final name = (profile['displayName'] ?? data['displayName'] ?? 'Fotoğrafçı').toString();
-                  final photoUrl = (profile['photoUrl'] ?? data['photoUrl'] ?? '').toString();
+                  final profile =
+                      profileSnapshot.data?.data() ?? const <String, dynamic>{};
+                  final name = (profile['displayName'] ??
+                          data['displayName'] ??
+                          'Fotoğrafçı')
+                      .toString();
+                  final photoUrl =
+                      (profile['photoUrl'] ?? data['photoUrl'] ?? '')
+                          .toString();
                   final bio = (profile['bio'] ?? '').toString().trim();
 
                   return ListTile(
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                     leading: CircleAvatar(
                       radius: 25,
-                      backgroundColor: const Color(0xFF1C1733),
-                      backgroundImage: photoUrl.isNotEmpty ? NetworkImage(photoUrl) : null,
+                      backgroundColor: const Color(0xFF152128),
+                      backgroundImage:
+                          photoUrl.isNotEmpty ? NetworkImage(photoUrl) : null,
                       child: photoUrl.isEmpty
                           ? const Icon(Icons.person, color: Colors.white54)
                           : null,

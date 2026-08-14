@@ -153,9 +153,7 @@ class _CameraScreenState extends State<CameraScreen> {
       minEv = await _camera.getMinExposureOffset();
       maxEv = await _camera.getMaxExposureOffset();
     } catch (_) {}
-    return wanted
-        .clamp(max(-0.75, minEv), min(0.55, maxEv))
-        .toDouble();
+    return wanted.clamp(max(-0.75, minEv), min(0.55, maxEv)).toDouble();
   }
 
   Future<void> _applyMode() async {
@@ -603,7 +601,8 @@ class _CameraScreenState extends State<CameraScreen> {
         children: [
           _param('MOD', _mode),
           _param(_aiEnabled ? 'AI ISO' : 'ISO', _aiEnabled ? '$_iso' : 'AUTO'),
-          _param(_aiEnabled ? 'AI S' : 'S', _aiEnabled ? '1/$_shutter' : 'AUTO'),
+          _param(
+              _aiEnabled ? 'AI S' : 'S', _aiEnabled ? '1/$_shutter' : 'AUTO'),
           _param('ODAK', _locked ? 'AF-L' : 'AF'),
           _param('EV', '${_ev >= 0 ? '+' : ''}${_ev.toStringAsFixed(1)}'),
         ],

@@ -15,9 +15,9 @@ class ChatInboxScreen extends StatelessWidget {
     final myId = FirebaseAuth.instance.currentUser?.uid;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF090812),
+      backgroundColor: const Color(0xFF090D10),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF090812),
+        backgroundColor: const Color(0xFF090D10),
         foregroundColor: Colors.white,
         title: const Text('Mesajlar'),
         actions: [
@@ -51,7 +51,7 @@ class ChatInboxScreen extends StatelessWidget {
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(
-                    child: CircularProgressIndicator(color: Color(0xFF8B5CF6)),
+                    child: CircularProgressIndicator(color: Color(0xFF16B8A6)),
                   );
                 }
 
@@ -79,9 +79,11 @@ class ChatInboxScreen extends StatelessWidget {
                   ),
                   itemBuilder: (context, index) {
                     final thread = threads[index];
-                    final otherIds = thread.memberIds.where((id) => id != myId).toList();
+                    final otherIds =
+                        thread.memberIds.where((id) => id != myId).toList();
                     if (otherIds.isEmpty) return const SizedBox.shrink();
-                    return _ThreadTile(thread: thread, otherUserId: otherIds.first);
+                    return _ThreadTile(
+                        thread: thread, otherUserId: otherIds.first);
                   },
                 );
               },
@@ -102,18 +104,23 @@ class _ThreadTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-      stream: FirebaseFirestore.instance.collection('users').doc(otherUserId).snapshots(),
+      stream: FirebaseFirestore.instance
+          .collection('users')
+          .doc(otherUserId)
+          .snapshots(),
       builder: (context, snapshot) {
         final data = snapshot.data?.data() ?? const <String, dynamic>{};
         final name = (data['displayName'] ?? 'Topluluk üyesi').toString();
         final photoUrl = (data['photoUrl'] ?? '').toString();
 
         return ListTile(
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
           leading: CircleAvatar(
             radius: 25,
-            backgroundColor: const Color(0xFF1C1733),
-            backgroundImage: photoUrl.isNotEmpty ? NetworkImage(photoUrl) : null,
+            backgroundColor: const Color(0xFF152128),
+            backgroundImage:
+                photoUrl.isNotEmpty ? NetworkImage(photoUrl) : null,
             child: photoUrl.isEmpty
                 ? const Icon(Icons.person, color: Colors.white54)
                 : null,
@@ -122,7 +129,8 @@ class _ThreadTile extends StatelessWidget {
             name,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+            style: const TextStyle(
+                color: Colors.white, fontWeight: FontWeight.w700),
           ),
           subtitle: Text(
             thread.lastMessage.isEmpty ? 'Sohbeti aç' : thread.lastMessage,

@@ -14,8 +14,7 @@ class FavoritesService {
   static Future<void> initialize() async {
     final prefs = await SharedPreferences.getInstance();
 
-    final savedIds =
-        prefs.getStringList(_storageKey) ?? [];
+    final savedIds = prefs.getStringList(_storageKey) ?? [];
 
     savedSpots.value = demoSpots
         .where(
@@ -77,9 +76,7 @@ class FavoritesService {
   static Future<void> _save() async {
     final prefs = await SharedPreferences.getInstance();
 
-    final ids = savedSpots.value
-        .map((spot) => spot.id)
-        .toList();
+    final ids = savedSpots.value.map((spot) => spot.id).toList();
 
     await prefs.setStringList(
       _storageKey,

@@ -6,11 +6,9 @@ class SocialService {
 
   static final SocialService instance = SocialService._();
 
-  final FirebaseFirestore _firestore =
-      FirebaseFirestore.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  final FirebaseAuth _auth =
-      FirebaseAuth.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
   User? get currentUser => _auth.currentUser;
 
@@ -23,17 +21,15 @@ class SocialService {
 
     if (user == null) return;
 
-    final userRef =
-        _firestore.collection('users').doc(user.uid);
+    final userRef = _firestore.collection('users').doc(user.uid);
 
     final snapshot = await userRef.get();
 
     final data = {
       'uid': user.uid,
-      'displayName':
-          user.displayName?.trim().isNotEmpty == true
-              ? user.displayName
-              : 'Fotoğrafçı',
+      'displayName': user.displayName?.trim().isNotEmpty == true
+          ? user.displayName
+          : 'Fotoğrafçı',
       'email': user.email ?? '',
       'photoUrl': user.photoURL ?? '',
       'updatedAt': FieldValue.serverTimestamp(),
@@ -59,10 +55,7 @@ class SocialService {
   Stream<DocumentSnapshot<Map<String, dynamic>>> userProfile(
     String userId,
   ) {
-    return _firestore
-        .collection('users')
-        .doc(userId)
-        .snapshots();
+    return _firestore.collection('users').doc(userId).snapshots();
   }
 
   // =========================================================
@@ -124,8 +117,7 @@ class SocialService {
         .collection('followers')
         .doc(user.uid);
 
-    final existing =
-        await followingRef.get();
+    final existing = await followingRef.get();
 
     if (existing.exists) {
       return;
@@ -137,8 +129,7 @@ class SocialService {
       followingRef,
       {
         'userId': targetUserId,
-        'createdAt':
-            FieldValue.serverTimestamp(),
+        'createdAt': FieldValue.serverTimestamp(),
       },
     );
 
@@ -146,14 +137,11 @@ class SocialService {
       followerRef,
       {
         'userId': user.uid,
-        'displayName':
-            user.displayName?.trim().isNotEmpty == true
-                ? user.displayName
-                : 'Fotoğrafçı',
-        'photoUrl':
-            user.photoURL ?? '',
-        'createdAt':
-            FieldValue.serverTimestamp(),
+        'displayName': user.displayName?.trim().isNotEmpty == true
+            ? user.displayName
+            : 'Fotoğrafçı',
+        'photoUrl': user.photoURL ?? '',
+        'createdAt': FieldValue.serverTimestamp(),
       },
     );
 
@@ -191,8 +179,7 @@ class SocialService {
         .collection('followers')
         .doc(user.uid);
 
-    final batch =
-        _firestore.batch();
+    final batch = _firestore.batch();
 
     batch.delete(
       followingRef,
@@ -226,8 +213,7 @@ class SocialService {
         .collection('following')
         .doc(targetUserId);
 
-    final snapshot =
-        await followingRef.get();
+    final snapshot = await followingRef.get();
 
     if (snapshot.exists) {
       await unfollowUser(
@@ -253,8 +239,7 @@ class SocialService {
         .collection('followers')
         .snapshots()
         .map(
-          (snapshot) =>
-              snapshot.docs.length,
+          (snapshot) => snapshot.docs.length,
         );
   }
 
@@ -271,8 +256,7 @@ class SocialService {
         .collection('following')
         .snapshots()
         .map(
-          (snapshot) =>
-              snapshot.docs.length,
+          (snapshot) => snapshot.docs.length,
         );
   }
 
@@ -281,8 +265,7 @@ class SocialService {
   // Akış ekranında kullanacağız.
   // =========================================================
 
-  Stream<List<String>>
-      followingIds() {
+  Stream<List<String>> followingIds() {
     final user = _auth.currentUser;
 
     if (user == null) {
@@ -309,10 +292,7 @@ class SocialService {
   // TAKİPÇİLER
   // =========================================================
 
-  Stream<
-          QuerySnapshot<
-              Map<String, dynamic>>>
-      followers(
+  Stream<QuerySnapshot<Map<String, dynamic>>> followers(
     String userId,
   ) {
     return _firestore
@@ -326,10 +306,7 @@ class SocialService {
   // TAKİP EDİLENLER
   // =========================================================
 
-  Stream<
-          QuerySnapshot<
-              Map<String, dynamic>>>
-      following(
+  Stream<QuerySnapshot<Map<String, dynamic>>> following(
     String userId,
   ) {
     return _firestore
@@ -343,10 +320,7 @@ class SocialService {
   // KULLANICININ PAYLAŞIMLARI
   // =========================================================
 
-  Stream<
-          QuerySnapshot<
-              Map<String, dynamic>>>
-      userPosts(
+  Stream<QuerySnapshot<Map<String, dynamic>>> userPosts(
     String userId,
   ) {
     return _firestore

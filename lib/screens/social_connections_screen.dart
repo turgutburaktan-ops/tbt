@@ -20,9 +20,9 @@ class SocialConnectionsScreen extends StatelessWidget {
         : SocialService.instance.following(userId);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF090812),
+      backgroundColor: const Color(0xFF090D10),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF090812),
+        backgroundColor: const Color(0xFF090D10),
         foregroundColor: Colors.white,
         title: Text(followersMode ? 'Takipçiler' : 'Takip Edilenler'),
       ),
@@ -31,7 +31,7 @@ class SocialConnectionsScreen extends StatelessWidget {
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(
-              child: CircularProgressIndicator(color: Color(0xFF8B5CF6)),
+              child: CircularProgressIndicator(color: Color(0xFF16B8A6)),
             );
           }
 
@@ -39,7 +39,9 @@ class SocialConnectionsScreen extends StatelessWidget {
           if (docs.isEmpty) {
             return Center(
               child: Text(
-                followersMode ? 'Henüz takipçin yok.' : 'Henüz kimseyi takip etmiyorsun.',
+                followersMode
+                    ? 'Henüz takipçin yok.'
+                    : 'Henüz kimseyi takip etmiyorsun.',
                 style: const TextStyle(color: Colors.white54),
               ),
             );
@@ -48,7 +50,8 @@ class SocialConnectionsScreen extends StatelessWidget {
           return ListView.separated(
             padding: const EdgeInsets.symmetric(vertical: 8),
             itemCount: docs.length,
-            separatorBuilder: (_, __) => const Divider(height: 1, color: Colors.white10),
+            separatorBuilder: (_, __) =>
+                const Divider(height: 1, color: Colors.white10),
             itemBuilder: (context, index) {
               final data = docs[index].data();
               final targetId = (data['userId'] ?? docs[index].id).toString();
@@ -78,11 +81,13 @@ class _UserTile extends StatelessWidget {
         final photoUrl = (data['photoUrl'] ?? '').toString();
 
         return ListTile(
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
           leading: CircleAvatar(
             radius: 25,
-            backgroundColor: const Color(0xFF1C1733),
-            backgroundImage: photoUrl.isNotEmpty ? NetworkImage(photoUrl) : null,
+            backgroundColor: const Color(0xFF152128),
+            backgroundImage:
+                photoUrl.isNotEmpty ? NetworkImage(photoUrl) : null,
             child: photoUrl.isEmpty
                 ? const Icon(Icons.person, color: Colors.white54)
                 : null,

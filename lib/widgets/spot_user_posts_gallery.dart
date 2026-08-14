@@ -23,7 +23,7 @@ class SpotUserPostsGallery extends StatelessWidget {
               child: Center(
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  color: Color(0xFF8B5CF6),
+                  color: Color(0xFF16B8A6),
                 ),
               ),
             ),
@@ -32,7 +32,8 @@ class SpotUserPostsGallery extends StatelessWidget {
 
         final docs = snapshot.data?.docs ?? const [];
         final matches = docs.where((doc) => _matches(doc.data(), spot)).toList()
-          ..sort((a, b) => _score(b.data(), spot).compareTo(_score(a.data(), spot)));
+          ..sort((a, b) =>
+              _score(b.data(), spot).compareTo(_score(a.data(), spot)));
         final top = matches.take(9).toList(growable: false);
 
         if (top.isEmpty) {
@@ -43,21 +44,24 @@ class SpotUserPostsGallery extends StatelessWidget {
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF8B5CF6).withOpacity(.12),
+                    color: const Color(0xFF16B8A6).withOpacity(.12),
                     borderRadius: BorderRadius.circular(14),
                   ),
-                  child: const Icon(Icons.add_photo_alternate_outlined, color: Color(0xFF8B5CF6)),
+                  child: const Icon(Icons.add_photo_alternate_outlined,
+                      color: Color(0xFF16B8A6)),
                 ),
                 const SizedBox(width: 12),
                 const Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Henüz paylaşım yok', style: TextStyle(fontWeight: FontWeight.w800)),
+                      Text('Henüz paylaşım yok',
+                          style: TextStyle(fontWeight: FontWeight.w800)),
                       SizedBox(height: 3),
                       Text(
                         'Bu noktadan yapılan kullanıcı paylaşımları burada görünecek.',
-                        style: TextStyle(color: Colors.white54, fontSize: 12, height: 1.3),
+                        style: TextStyle(
+                            color: Colors.white54, fontSize: 12, height: 1.3),
                       ),
                     ],
                   ),
@@ -72,10 +76,13 @@ class SpotUserPostsGallery extends StatelessWidget {
           children: [
             const Row(
               children: [
-                Icon(Icons.photo_library_outlined, size: 21, color: Color(0xFF8B5CF6)),
+                Icon(Icons.photo_library_outlined,
+                    size: 21, color: Color(0xFF16B8A6)),
                 SizedBox(width: 8),
                 Expanded(
-                  child: Text('Bu Noktadan Paylaşımlar', style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold)),
+                  child: Text('Bu Noktadan Paylaşımlar',
+                      style:
+                          TextStyle(fontSize: 19, fontWeight: FontWeight.bold)),
                 ),
               ],
             ),
@@ -95,19 +102,23 @@ class SpotUserPostsGallery extends StatelessWidget {
                 return GestureDetector(
                   onTap: () => Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => PostDetailScreen(post: data)),
+                    MaterialPageRoute(
+                        builder: (_) => PostDetailScreen(post: data)),
                   ),
                   child: Hero(
                     tag: 'spot-post-${top[index].id}',
                     child: Container(
-                      color: const Color(0xFF141126),
+                      color: const Color(0xFF11181D),
                       child: url.isEmpty
-                          ? const Icon(Icons.image_outlined, color: Colors.white30)
+                          ? const Icon(Icons.image_outlined,
+                              color: Colors.white30)
                           : Image.network(
                               url,
                               fit: BoxFit.cover,
                               filterQuality: FilterQuality.low,
-                              errorBuilder: (_, __, ___) => const Icon(Icons.broken_image_outlined, color: Colors.white30),
+                              errorBuilder: (_, __, ___) => const Icon(
+                                  Icons.broken_image_outlined,
+                                  color: Colors.white30),
                             ),
                     ),
                   ),
@@ -130,15 +141,20 @@ class SpotUserPostsGallery extends StatelessWidget {
     // Yeni paylaşımlara küçük bir avantaj veriyoruz; eski ve çok etkileşimli
     // içerikler yine rahatça önde kalabilir.
     if (createdAt is Timestamp) {
-      final ageDays = DateTime.now().difference(createdAt.toDate()).inHours / 24.0;
+      final ageDays =
+          DateTime.now().difference(createdAt.toDate()).inHours / 24.0;
       score += 12.0 / (1.0 + (ageDays / 14.0));
     }
 
-    final postName = _normalize((post['spotName'] ?? post['locationName'] ?? post['location'] ?? '').toString());
+    final postName = _normalize(
+        (post['spotName'] ?? post['locationName'] ?? post['location'] ?? '')
+            .toString());
     final spotName = _normalize(spot.name);
     if (postName == spotName && postName.isNotEmpty) {
       score += 20;
-    } else if (postName.isNotEmpty && spotName.isNotEmpty && (postName.contains(spotName) || spotName.contains(postName))) {
+    } else if (postName.isNotEmpty &&
+        spotName.isNotEmpty &&
+        (postName.contains(spotName) || spotName.contains(postName))) {
       score += 12;
     }
 
@@ -159,16 +175,21 @@ class SpotUserPostsGallery extends StatelessWidget {
   }
 
   static bool _matches(Map<String, dynamic> post, PhotoSpot spot) {
-    final postName = _normalize((post['spotName'] ?? post['locationName'] ?? post['location'] ?? '').toString());
+    final postName = _normalize(
+        (post['spotName'] ?? post['locationName'] ?? post['location'] ?? '')
+            .toString());
     final spotName = _normalize(spot.name);
 
     if (postName.isNotEmpty && spotName.isNotEmpty) {
-      if (postName == spotName || postName.contains(spotName) || spotName.contains(postName)) {
+      if (postName == spotName ||
+          postName.contains(spotName) ||
+          spotName.contains(postName)) {
         return true;
       }
       final postTokens = postName.split(' ').where((e) => e.length > 2).toSet();
       final spotTokens = spotName.split(' ').where((e) => e.length > 2).toSet();
-      if (postTokens.intersection(spotTokens).length >= math.min(2, spotTokens.length)) return true;
+      if (postTokens.intersection(spotTokens).length >=
+          math.min(2, spotTokens.length)) return true;
     }
 
     final lat = (post['latitude'] as num?)?.toDouble();
@@ -189,12 +210,16 @@ class SpotUserPostsGallery extends StatelessWidget {
       .replaceAll(RegExp(r'\s+'), ' ')
       .trim();
 
-  static double _distanceMeters(double lat1, double lon1, double lat2, double lon2) {
+  static double _distanceMeters(
+      double lat1, double lon1, double lat2, double lon2) {
     const r = 6371000.0;
     final dLat = _rad(lat2 - lat1);
     final dLon = _rad(lon2 - lon1);
     final a = math.sin(dLat / 2) * math.sin(dLat / 2) +
-        math.cos(_rad(lat1)) * math.cos(_rad(lat2)) * math.sin(dLon / 2) * math.sin(dLon / 2);
+        math.cos(_rad(lat1)) *
+            math.cos(_rad(lat2)) *
+            math.sin(dLon / 2) *
+            math.sin(dLon / 2);
     return r * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
   }
 
@@ -210,7 +235,7 @@ class _Shell extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.all(15),
         decoration: BoxDecoration(
-          color: const Color(0xFF141126),
+          color: const Color(0xFF11181D),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: Colors.white10),
         ),

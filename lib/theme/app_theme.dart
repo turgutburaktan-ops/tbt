@@ -3,15 +3,15 @@ import 'package:flutter/material.dart';
 class AppColors {
   AppColors._();
 
-  static const background = Color(0xFF090812);
-  static const surface = Color(0xFF141126);
-  static const surfaceAlt = Color(0xFF1C1733);
-  static const primary = Color(0xFF8B5CF6);
-  static const primaryBright = Color(0xFFA78BFA);
-  static const secondary = Color(0xFFC084FC);
+  static const background = Color(0xFF090D10);
+  static const surface = Color(0xFF11181D);
+  static const surfaceAlt = Color(0xFF152128);
+  static const primary = Color(0xFF16B8A6);
+  static const primaryBright = Color(0xFF4FD1C5);
+  static const secondary = Color(0xFF5EEAD4);
   static const accent = Color(0xFF22D3EE);
-  static const border = Color(0xFF352A55);
-  static const textMuted = Color(0xFFAAA1C2);
+  static const border = Color(0xFF26383D);
+  static const textMuted = Color(0xFFA7B4B8);
 }
 
 class AppTheme {
@@ -68,14 +68,16 @@ class AppTheme {
         style: FilledButton.styleFrom(
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.primaryBright,
           side: const BorderSide(color: AppColors.border),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         ),
       ),
       chipTheme: ChipThemeData(
@@ -86,7 +88,7 @@ class AppTheme {
       ),
       navigationBarTheme: const NavigationBarThemeData(
         backgroundColor: AppColors.surface,
-        indicatorColor: Color(0x338B5CF6),
+        indicatorColor: Color(0x3316B8A6),
         surfaceTintColor: Colors.transparent,
       ),
       progressIndicatorTheme: const ProgressIndicatorThemeData(

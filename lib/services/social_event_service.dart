@@ -18,12 +18,20 @@ class SocialEventService {
 
   static const String collection = 'social_events';
 
-  Stream<List<SocialEvent>> watchUpcoming({String? city, SocialEventType? type, int limit = 80}) {
-    return _firestore.collection(collection).limit(limit).snapshots().map((snapshot) {
+  Stream<List<SocialEvent>> watchUpcoming(
+      {String? city, SocialEventType? type, int limit = 80}) {
+    return _firestore
+        .collection(collection)
+        .limit(limit)
+        .snapshots()
+        .map((snapshot) {
       final threshold = DateTime.now().subtract(const Duration(minutes: 30));
       final items = snapshot.docs.map(SocialEvent.fromDocument).where((event) {
-        if (event.status != 'open' || !event.startsAt.isAfter(threshold)) return false;
-        if (city != null && city.trim().isNotEmpty && event.city.toLowerCase() != city.trim().toLowerCase()) return false;
+        if (event.status != 'open' || !event.startsAt.isAfter(threshold))
+          return false;
+        if (city != null &&
+            city.trim().isNotEmpty &&
+            event.city.toLowerCase() != city.trim().toLowerCase()) return false;
         if (type != null && event.type != type) return false;
         return true;
       }).toList();
@@ -33,9 +41,18 @@ class SocialEventService {
   }
 
   Stream<List<SocialEvent>> watchForSpot(String spotId, {int limit = 40}) {
-    return _firestore.collection(collection).where('spotId', isEqualTo: spotId).limit(limit).snapshots().map((snapshot) {
+    return _firestore
+        .collection(collection)
+        .where('spotId', isEqualTo: spotId)
+        .limit(limit)
+        .snapshots()
+        .map((snapshot) {
       final threshold = DateTime.now().subtract(const Duration(minutes: 30));
-      final items = snapshot.docs.map(SocialEvent.fromDocument).where((event) => event.status == 'open' && event.startsAt.isAfter(threshold)).toList();
+      final items = snapshot.docs
+          .map(SocialEvent.fromDocument)
+          .where((event) =>
+              event.status == 'open' && event.startsAt.isAfter(threshold))
+          .toList();
       items.sort((a, b) => a.startsAt.compareTo(b.startsAt));
       return items;
     });
@@ -59,17 +76,25 @@ class SocialEventService {
     double? longitude,
   }) async {
     final user = _auth.currentUser;
-    if (user == null) throw Exception('Etkinlik oluşturmak için giriş yapmalısın.');
+    if (user == null)
+      throw Exception('Etkinlik oluşturmak için giriş yapmalısın.');
 
     final safeTitle = title.trim();
-    if (safeTitle.length < 3) throw Exception('Etkinlik başlığı en az 3 karakter olmalı.');
+    if (safeTitle.length < 3)
+      throw Exception('Etkinlik başlığı en az 3 karakter olmalı.');
     final minimum = DateTime.now().add(const Duration(minutes: 15));
-    if (startsAt.isBefore(minimum)) throw Exception('Etkinlik saati en az 15 dakika ileride olmalı.');
-    if (type == SocialEventType.other && customTypeLabel.trim().length < 3) throw Exception('Diğer etkinlik türü için kısa bir ad yazmalısın.');
-    if (accessType == EventAccessType.paid && ticketPriceMinor <= 0) throw Exception('Ücretli etkinlik için geçerli bir bilet fiyatı yazmalısın.');
+    if (startsAt.isBefore(minimum))
+      throw Exception('Etkinlik saati en az 15 dakika ileride olmalı.');
+    if (type == SocialEventType.other && customTypeLabel.trim().length < 3)
+      throw Exception('Diğer etkinlik türü için kısa bir ad yazmalısın.');
+    if (accessType == EventAccessType.paid && ticketPriceMinor <= 0)
+      throw Exception(
+          'Ücretli etkinlik için geçerli bir bilet fiyatı yazmalısın.');
 
     final ref = _firestore.collection(collection).doc();
-    final hostName = (user.displayName ?? '').trim().isNotEmpty ? user.displayName!.trim() : 'Topluluk üyesi';
+    final hostName = (user.displayName ?? '').trim().isNotEmpty
+        ? user.displayName!.trim()
+        : 'Topluluk üyesi';
 
     await ref.set({
       'id': ref.id,
@@ -83,7 +108,9 @@ class SocialEventService {
       'participantIds': [user.uid],
       'description': description.trim(),
       'city': city.trim().isNotEmpty ? city.trim() : (spot?.city ?? ''),
-      'locationLabel': locationLabel.trim().isNotEmpty ? locationLabel.trim() : (spot?.name ?? ''),
+      'locationLabel': locationLabel.trim().isNotEmpty
+          ? locationLabel.trim()
+          : (spot?.name ?? ''),
       'spotId': spot?.id,
       'spotName': spot?.name,
       'latitude': latitude ?? spot?.latitude,
@@ -94,10 +121,15 @@ class SocialEventService {
       'status': 'open',
       'approximateLocationOnly': false,
       'accessType': accessType.name,
-      'ticketPriceMinor': accessType == EventAccessType.paid ? ticketPriceMinor : 0,
+      'ticketPriceMinor':
+          accessType == EventAccessType.paid ? ticketPriceMinor : 0,
       'currency': currency,
-      'ticketSalesEndAt': ticketSalesEndAt == null ? null : Timestamp.fromDate(ticketSalesEndAt),
-      'paymentStatus': accessType == EventAccessType.paid ? EventPaymentStatus.comingSoon.name : EventPaymentStatus.notRequired.name,
+      'ticketSalesEndAt': ticketSalesEndAt == null
+          ? null
+          : Timestamp.fromDate(ticketSalesEndAt),
+      'paymentStatus': accessType == EventAccessType.paid
+          ? EventPaymentStatus.comingSoon.name
+          : EventPaymentStatus.notRequired.name,
       'paymentProvider': null,
       'externalProductId': null,
       'createdAt': FieldValue.serverTimestamp(),
@@ -109,40 +141,62 @@ class SocialEventService {
 
   Future<void> join(String eventId) async {
     final user = _auth.currentUser;
-    if (user == null) throw Exception('Etkinliğe katılmak için giriş yapmalısın.');
+    if (user == null)
+      throw Exception('Etkinliğe katılmak için giriş yapmalısın.');
 
     final ref = _firestore.collection(collection).doc(eventId);
-    final ticketRef = _firestore.collection(EventTicketService.collection).doc(EventTicketService.instance.ticketIdFor(eventId, user.uid));
+    final ticketRef = _firestore
+        .collection(EventTicketService.collection)
+        .doc(EventTicketService.instance.ticketIdFor(eventId, user.uid));
     final qrToken = EventTicketService.instance.createSecureQrToken();
 
-    final result = await _firestore.runTransaction<Map<String, String>>((transaction) async {
+    final result = await _firestore
+        .runTransaction<Map<String, String>>((transaction) async {
       final snapshot = await transaction.get(ref);
       if (!snapshot.exists) throw Exception('Etkinlik artık mevcut değil.');
 
       final data = snapshot.data() ?? const <String, dynamic>{};
-      if ((data['status'] ?? 'open') != 'open') throw Exception('Bu etkinlik katılıma kapalı.');
+      if ((data['status'] ?? 'open') != 'open')
+        throw Exception('Bu etkinlik katılıma kapalı.');
 
-      final accessType = (data['accessType'] ?? EventAccessType.free.name).toString();
-      final paymentStatus = (data['paymentStatus'] ?? EventPaymentStatus.notRequired.name).toString();
-      if (accessType == EventAccessType.paid.name && paymentStatus != EventPaymentStatus.enabled.name) {
-        throw Exception('Bu etkinlik ücretli. Online ödeme ve bilet satışı yakında aktif olacak.');
+      final accessType =
+          (data['accessType'] ?? EventAccessType.free.name).toString();
+      final paymentStatus =
+          (data['paymentStatus'] ?? EventPaymentStatus.notRequired.name)
+              .toString();
+      if (accessType == EventAccessType.paid.name &&
+          paymentStatus != EventPaymentStatus.enabled.name) {
+        throw Exception(
+            'Bu etkinlik ücretli. Online ödeme ve bilet satışı yakında aktif olacak.');
       }
 
-      final capacity = ((data['capacity'] as num?)?.toInt() ?? 1).clamp(1, 2147483647);
-      final participants = (data['participantIds'] as List? ?? const []).map((item) => item.toString()).toList();
+      final capacity =
+          ((data['capacity'] as num?)?.toInt() ?? 1).clamp(1, 2147483647);
+      final participants = (data['participantIds'] as List? ?? const [])
+          .map((item) => item.toString())
+          .toList();
       final hostId = (data['hostId'] ?? '').toString();
       final title = (data['title'] ?? 'Etkinlik').toString();
-      if (hostId.isEmpty) throw Exception('Etkinliği düzenleyen kullanıcı bulunamadı.');
+      if (hostId.isEmpty)
+        throw Exception('Etkinliği düzenleyen kullanıcı bulunamadı.');
 
       if (!participants.contains(user.uid)) {
-        if (participants.length >= capacity) throw Exception('Bu etkinlikte boş yer kalmadı.');
+        if (participants.length >= capacity)
+          throw Exception('Bu etkinlikte boş yer kalmadı.');
         participants.add(user.uid);
-        transaction.update(ref, {'participantIds': participants, 'updatedAt': FieldValue.serverTimestamp()});
+        transaction.update(ref, {
+          'participantIds': participants,
+          'updatedAt': FieldValue.serverTimestamp()
+        });
       }
 
       final existingTicket = await transaction.get(ticketRef);
-      if (!existingTicket.exists || (existingTicket.data()?['status'] ?? '').toString() == EventTicketStatus.cancelled.name) {
-        final userName = (user.displayName ?? '').trim().isNotEmpty ? user.displayName!.trim() : 'Katılımcı';
+      if (!existingTicket.exists ||
+          (existingTicket.data()?['status'] ?? '').toString() ==
+              EventTicketStatus.cancelled.name) {
+        final userName = (user.displayName ?? '').trim().isNotEmpty
+            ? user.displayName!.trim()
+            : 'Katılımcı';
         final isPaid = accessType == EventAccessType.paid.name;
         transaction.set(ticketRef, {
           'id': ticketRef.id,
@@ -150,7 +204,9 @@ class SocialEventService {
           'eventTitle': title,
           'userId': user.uid,
           'userName': userName,
-          'status': isPaid ? EventTicketStatus.pendingPayment.name : EventTicketStatus.active.name,
+          'status': isPaid
+              ? EventTicketStatus.pendingPayment.name
+              : EventTicketStatus.active.name,
           'isPaidEvent': isPaid,
           'priceMinor': ((data['ticketPriceMinor'] as num?)?.toInt() ?? 0),
           'currency': (data['currency'] ?? 'TRY').toString(),
@@ -168,9 +224,12 @@ class SocialEventService {
     final title = result['title'] ?? 'Etkinlik';
     if (hostId != user.uid && hostId.isNotEmpty) {
       try {
-        await ChatService.instance.ensureDirectThread(hostId, sourceType: 'social_event', sourceId: eventId);
+        await ChatService.instance.ensureDirectThread(hostId,
+            sourceType: 'social_event', sourceId: eventId);
       } catch (_) {}
-      final participantName = (user.displayName ?? '').trim().isNotEmpty ? user.displayName!.trim() : 'Bir kullanıcı';
+      final participantName = (user.displayName ?? '').trim().isNotEmpty
+          ? user.displayName!.trim()
+          : 'Bir kullanıcı';
       try {
         await AppNotificationService.instance.notifyUser(
           userId: hostId,
@@ -189,30 +248,44 @@ class SocialEventService {
     if (user == null) return;
 
     final ref = _firestore.collection(collection).doc(eventId);
-    final ticketRef = _firestore.collection(EventTicketService.collection).doc(EventTicketService.instance.ticketIdFor(eventId, user.uid));
+    final ticketRef = _firestore
+        .collection(EventTicketService.collection)
+        .doc(EventTicketService.instance.ticketIdFor(eventId, user.uid));
     final before = await ref.get();
     final beforeData = before.data() ?? const <String, dynamic>{};
     final hostId = (beforeData['hostId'] ?? '').toString();
     final title = (beforeData['title'] ?? 'Etkinlik').toString();
-    final participantIds = (beforeData['participantIds'] as List? ?? const []).map((item) => item.toString()).where((id) => id.isNotEmpty && id != user.uid).toList(growable: false);
+    final participantIds = (beforeData['participantIds'] as List? ?? const [])
+        .map((item) => item.toString())
+        .where((id) => id.isNotEmpty && id != user.uid)
+        .toList(growable: false);
 
     await _firestore.runTransaction((transaction) async {
       final snapshot = await transaction.get(ref);
       if (!snapshot.exists) return;
       final data = snapshot.data() ?? const <String, dynamic>{};
       final currentHostId = (data['hostId'] ?? '').toString();
-      final participants = (data['participantIds'] as List? ?? const []).map((item) => item.toString()).toList();
+      final participants = (data['participantIds'] as List? ?? const [])
+          .map((item) => item.toString())
+          .toList();
 
       if (currentHostId == user.uid) {
-        transaction.update(ref, {'status': 'cancelled', 'updatedAt': FieldValue.serverTimestamp()});
+        transaction.update(ref,
+            {'status': 'cancelled', 'updatedAt': FieldValue.serverTimestamp()});
         return;
       }
 
       participants.remove(user.uid);
-      transaction.update(ref, {'participantIds': participants, 'updatedAt': FieldValue.serverTimestamp()});
+      transaction.update(ref, {
+        'participantIds': participants,
+        'updatedAt': FieldValue.serverTimestamp()
+      });
       final ticket = await transaction.get(ticketRef);
       if (ticket.exists) {
-        transaction.update(ticketRef, {'status': EventTicketStatus.cancelled.name, 'updatedAt': FieldValue.serverTimestamp()});
+        transaction.update(ticketRef, {
+          'status': EventTicketStatus.cancelled.name,
+          'updatedAt': FieldValue.serverTimestamp()
+        });
       }
     });
 

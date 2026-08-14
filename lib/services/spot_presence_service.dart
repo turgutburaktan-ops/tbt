@@ -26,15 +26,12 @@ class SpotPresenceService {
         .snapshots()
         .map((snapshot) {
       final now = DateTime.now();
-      final items = snapshot.docs
-          .map(SpotPresence.fromDocument)
-          .where((item) {
-            final expiry = item.expiresAt;
-            return item.visible &&
-                item.approximateLocationOnly &&
-                (expiry == null || expiry.isAfter(now));
-          })
-          .toList();
+      final items = snapshot.docs.map(SpotPresence.fromDocument).where((item) {
+        final expiry = item.expiresAt;
+        return item.visible &&
+            item.approximateLocationOnly &&
+            (expiry == null || expiry.isAfter(now));
+      }).toList();
 
       items.sort((a, b) {
         final aTime = a.checkedInAt ?? DateTime.fromMillisecondsSinceEpoch(0);
@@ -91,9 +88,8 @@ class SpotPresenceService {
     final safeDuration = visibility.inMinutes.clamp(15, 180);
     final now = DateTime.now();
     final expiry = now.add(Duration(minutes: safeDuration));
-    final ref = _firestore
-        .collection(collection)
-        .doc(_presenceId(spot.id, user.uid));
+    final ref =
+        _firestore.collection(collection).doc(_presenceId(spot.id, user.uid));
 
     final displayName = (user.displayName ?? '').trim().isNotEmpty
         ? user.displayName!.trim()
@@ -128,9 +124,8 @@ class SpotPresenceService {
       throw Exception('Görünürlüğü kapatmak için giriş yapmalısın.');
     }
 
-    final ref = _firestore
-        .collection(collection)
-        .doc(_presenceId(spotId, user.uid));
+    final ref =
+        _firestore.collection(collection).doc(_presenceId(spotId, user.uid));
 
     try {
       await ref.set({

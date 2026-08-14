@@ -14,7 +14,7 @@ class FeedScreen extends StatelessWidget {
 
     if (currentUser == null) {
       return const Scaffold(
-        backgroundColor: Color(0xFF090812),
+        backgroundColor: Color(0xFF090D10),
         body: Center(
           child: Text(
             'Akışı görmek için giriş yapmalısın.',
@@ -28,9 +28,9 @@ class FeedScreen extends StatelessWidget {
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFF090812),
+      backgroundColor: const Color(0xFF090D10),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF090812),
+        backgroundColor: const Color(0xFF090D10),
         elevation: 0,
         title: const Text(
           'Akış',
@@ -43,11 +43,10 @@ class FeedScreen extends StatelessWidget {
       body: StreamBuilder<List<String>>(
         stream: SocialService.instance.followingIds(),
         builder: (context, followingSnapshot) {
-          if (followingSnapshot.connectionState ==
-              ConnectionState.waiting) {
+          if (followingSnapshot.connectionState == ConnectionState.waiting) {
             return const Center(
               child: CircularProgressIndicator(
-                color: Color(0xFF8B5CF6),
+                color: Color(0xFF16B8A6),
               ),
             );
           }
@@ -64,8 +63,7 @@ class FeedScreen extends StatelessWidget {
             );
           }
 
-          final followingIds =
-              followingSnapshot.data ?? <String>[];
+          final followingIds = followingSnapshot.data ?? <String>[];
 
           if (followingIds.isEmpty) {
             return const Center(
@@ -77,7 +75,7 @@ class FeedScreen extends StatelessWidget {
                     Icon(
                       Icons.people_outline,
                       size: 70,
-                      color: Color(0xFF8B5CF6),
+                      color: Color(0xFF16B8A6),
                     ),
                     SizedBox(height: 18),
                     Text(
@@ -104,8 +102,7 @@ class FeedScreen extends StatelessWidget {
             );
           }
 
-          return StreamBuilder<
-              QuerySnapshot<Map<String, dynamic>>>(
+          return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
             stream: FirebaseFirestore.instance
                 .collection('posts')
                 .orderBy(
@@ -114,11 +111,10 @@ class FeedScreen extends StatelessWidget {
                 )
                 .snapshots(),
             builder: (context, postsSnapshot) {
-              if (postsSnapshot.connectionState ==
-                  ConnectionState.waiting) {
+              if (postsSnapshot.connectionState == ConnectionState.waiting) {
                 return const Center(
                   child: CircularProgressIndicator(
-                    color: Color(0xFF8B5CF6),
+                    color: Color(0xFF16B8A6),
                   ),
                 );
               }
@@ -138,14 +134,12 @@ class FeedScreen extends StatelessWidget {
                 );
               }
 
-              final allPosts =
-                  postsSnapshot.data?.docs ?? [];
+              final allPosts = postsSnapshot.data?.docs ?? [];
 
               final feedPosts = allPosts.where(
                 (doc) {
                   final data = doc.data();
-                  final userId =
-                      (data['userId'] ?? '').toString();
+                  final userId = (data['userId'] ?? '').toString();
 
                   return followingIds.contains(userId);
                 },
@@ -188,27 +182,20 @@ class FeedScreen extends StatelessWidget {
                   final doc = feedPosts[index];
                   final data = doc.data();
 
-                  final userId =
-                      (data['userId'] ?? '').toString();
+                  final userId = (data['userId'] ?? '').toString();
 
                   final userName =
-                      (data['userName'] ?? 'Fotoğrafçı')
-                          .toString();
+                      (data['userName'] ?? 'Fotoğrafçı').toString();
 
-                  final imageUrl =
-                      (data['imageUrl'] ?? '').toString();
+                  final imageUrl = (data['imageUrl'] ?? '').toString();
 
-                  final caption =
-                      (data['caption'] ?? '').toString();
+                  final caption = (data['caption'] ?? '').toString();
 
-                  final spotName =
-                      (data['spotName'] ?? '').toString();
+                  final spotName = (data['spotName'] ?? '').toString();
 
-                  final latitude =
-                      data['latitude'];
+                  final latitude = data['latitude'];
 
-                  final longitude =
-                      data['longitude'];
+                  final longitude = data['longitude'];
 
                   return _FeedPostCard(
                     userId: userId,
@@ -216,12 +203,8 @@ class FeedScreen extends StatelessWidget {
                     imageUrl: imageUrl,
                     caption: caption,
                     spotName: spotName,
-                    latitude: latitude is num
-                        ? latitude.toDouble()
-                        : null,
-                    longitude: longitude is num
-                        ? longitude.toDouble()
-                        : null,
+                    latitude: latitude is num ? latitude.toDouble() : null,
+                    longitude: longitude is num ? longitude.toDouble() : null,
                   );
                 },
               );
@@ -262,7 +245,7 @@ class _FeedPostCard extends StatelessWidget {
         12,
       ),
       decoration: BoxDecoration(
-        color: const Color(0xFF141126),
+        color: const Color(0xFF11181D),
         borderRadius: BorderRadius.circular(20),
       ),
       clipBehavior: Clip.antiAlias,
@@ -288,10 +271,10 @@ class _FeedPostCard extends StatelessWidget {
                 children: [
                   const CircleAvatar(
                     radius: 21,
-                    backgroundColor: Color(0xFF8B5CF6),
+                    backgroundColor: Color(0xFF16B8A6),
                     child: CircleAvatar(
                       radius: 18,
-                      backgroundColor: Color(0xFF1C1733),
+                      backgroundColor: Color(0xFF152128),
                       child: Icon(
                         Icons.person,
                         color: Colors.white54,
@@ -317,7 +300,6 @@ class _FeedPostCard extends StatelessWidget {
               ),
             ),
           ),
-
           if (imageUrl.isNotEmpty)
             AspectRatio(
               aspectRatio: 1,
@@ -331,7 +313,7 @@ class _FeedPostCard extends StatelessWidget {
                   stackTrace,
                 ) {
                   return Container(
-                    color: const Color(0xFF1C1733),
+                    color: const Color(0xFF152128),
                     child: const Center(
                       child: Icon(
                         Icons.broken_image_outlined,
@@ -343,7 +325,6 @@ class _FeedPostCard extends StatelessWidget {
                 },
               ),
             ),
-
           Padding(
             padding: const EdgeInsets.fromLTRB(
               14,
@@ -366,12 +347,11 @@ class _FeedPostCard extends StatelessWidget {
                 if (spotName.isNotEmpty)
                   const Icon(
                     Icons.location_on_outlined,
-                    color: Color(0xFF8B5CF6),
+                    color: Color(0xFF16B8A6),
                   ),
               ],
             ),
           ),
-
           if (caption.isNotEmpty)
             Padding(
               padding: const EdgeInsets.fromLTRB(
@@ -400,7 +380,6 @@ class _FeedPostCard extends StatelessWidget {
                 ),
               ),
             ),
-
           if (spotName.isNotEmpty)
             Padding(
               padding: const EdgeInsets.fromLTRB(
@@ -414,14 +393,14 @@ class _FeedPostCard extends StatelessWidget {
                   const Icon(
                     Icons.location_on,
                     size: 17,
-                    color: Color(0xFF8B5CF6),
+                    color: Color(0xFF16B8A6),
                   ),
                   const SizedBox(width: 5),
                   Expanded(
                     child: Text(
                       spotName,
                       style: const TextStyle(
-                        color: Color(0xFF8B5CF6),
+                        color: Color(0xFF16B8A6),
                         fontWeight: FontWeight.w600,
                       ),
                     ),

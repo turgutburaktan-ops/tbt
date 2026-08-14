@@ -1,12 +1,36 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 enum SocialEventType {
-  photography, cycling, running, walking, hiking, camping, followerMeetup, trip, social,
-  concert, party, theatre, seminar, workshop, festival, talk, exhibition, standUp, dance,
-  cinema, gaming, foodDrink, networking, education, charity, other,
+  photography,
+  cycling,
+  running,
+  walking,
+  hiking,
+  camping,
+  followerMeetup,
+  trip,
+  social,
+  concert,
+  party,
+  theatre,
+  seminar,
+  workshop,
+  festival,
+  talk,
+  exhibition,
+  standUp,
+  dance,
+  cinema,
+  gaming,
+  foodDrink,
+  networking,
+  education,
+  charity,
+  other,
 }
 
 enum EventAccessType { free, paid }
+
 enum EventPaymentStatus { notRequired, comingSoon, enabled }
 
 extension SocialEventTypeX on SocialEventType {
@@ -100,12 +124,14 @@ class SocialEvent {
   bool get isFull => participantCount >= capacity;
   bool get isOpen => status == 'open' && !isFull;
   bool get isPaid => accessType == EventAccessType.paid;
-  bool get paymentAvailable => isPaid && paymentStatus == EventPaymentStatus.enabled;
+  bool get paymentAvailable =>
+      isPaid && paymentStatus == EventPaymentStatus.enabled;
   bool get hasCoordinates => latitude != null && longitude != null;
   double get ticketPrice => ticketPriceMinor / 100.0;
-  String get typeLabel => type == SocialEventType.other && customTypeLabel.trim().isNotEmpty
-      ? customTypeLabel.trim()
-      : type.label;
+  String get typeLabel =>
+      type == SocialEventType.other && customTypeLabel.trim().isNotEmpty
+          ? customTypeLabel.trim()
+          : type.label;
 
   factory SocialEvent.fromDocument(DocumentSnapshot<Map<String, dynamic>> doc) {
     final data = doc.data() ?? const <String, dynamic>{};
@@ -124,21 +150,30 @@ class SocialEvent {
     );
     final rawParticipants = data['participantIds'];
     final participantIds = rawParticipants is List
-        ? rawParticipants.map((value) => value.toString()).where((value) => value.isNotEmpty).toList()
+        ? rawParticipants
+            .map((value) => value.toString())
+            .where((value) => value.isNotEmpty)
+            .toList()
         : <String>[];
     final rawAccess = (data['accessType'] ?? 'free').toString();
     final access = EventAccessType.values.firstWhere(
       (value) => value.name == rawAccess,
       orElse: () => EventAccessType.free,
     );
-    final rawPayment = (data['paymentStatus'] ?? (access == EventAccessType.paid ? 'comingSoon' : 'notRequired')).toString();
+    final rawPayment = (data['paymentStatus'] ??
+            (access == EventAccessType.paid ? 'comingSoon' : 'notRequired'))
+        .toString();
     final payment = EventPaymentStatus.values.firstWhere(
       (value) => value.name == rawPayment,
-      orElse: () => access == EventAccessType.paid ? EventPaymentStatus.comingSoon : EventPaymentStatus.notRequired,
+      orElse: () => access == EventAccessType.paid
+          ? EventPaymentStatus.comingSoon
+          : EventPaymentStatus.notRequired,
     );
     final geo = data['location'];
-    final lat = (data['latitude'] as num?)?.toDouble() ?? (geo is GeoPoint ? geo.latitude : null);
-    final lng = (data['longitude'] as num?)?.toDouble() ?? (geo is GeoPoint ? geo.longitude : null);
+    final lat = (data['latitude'] as num?)?.toDouble() ??
+        (geo is GeoPoint ? geo.latitude : null);
+    final lng = (data['longitude'] as num?)?.toDouble() ??
+        (geo is GeoPoint ? geo.longitude : null);
 
     return SocialEvent(
       id: doc.id,
@@ -160,7 +195,8 @@ class SocialEvent {
       status: (data['status'] ?? 'open').toString(),
       approximateLocationOnly: data['approximateLocationOnly'] != false,
       accessType: access,
-      ticketPriceMinor: ((data['ticketPriceMinor'] as num?)?.toInt() ?? 0).clamp(0, 1000000000),
+      ticketPriceMinor: ((data['ticketPriceMinor'] as num?)?.toInt() ?? 0)
+          .clamp(0, 1000000000),
       currency: (data['currency'] ?? 'TRY').toString(),
       ticketSalesEndAt: salesEnd,
       paymentStatus: payment,

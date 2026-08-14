@@ -98,7 +98,8 @@ class AppNotificationService {
     String? sourceId,
     String? actorId,
   }) async {
-    final unique = userIds.map((e) => e.trim()).where((e) => e.isNotEmpty).toSet();
+    final unique =
+        userIds.map((e) => e.trim()).where((e) => e.isNotEmpty).toSet();
     if (unique.isEmpty) return;
 
     await Future.wait(unique.map((userId) => notifyUser(
@@ -123,15 +124,19 @@ class AppNotificationService {
   Future<void> markAllRead() async {
     final user = _auth.currentUser;
     if (user == null) return;
-    final snapshot = await _items(user.uid).where('read', isEqualTo: false).limit(100).get();
+    final snapshot =
+        await _items(user.uid).where('read', isEqualTo: false).limit(100).get();
     if (snapshot.docs.isEmpty) return;
 
     final batch = _firestore.batch();
     for (final doc in snapshot.docs) {
-      batch.set(doc.reference, {
-        'read': true,
-        'readAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
+      batch.set(
+          doc.reference,
+          {
+            'read': true,
+            'readAt': FieldValue.serverTimestamp(),
+          },
+          SetOptions(merge: true));
     }
     await batch.commit();
   }

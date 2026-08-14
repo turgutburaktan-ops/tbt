@@ -33,10 +33,11 @@ class _HomeScreenState extends State<HomeScreen> {
     ];
 
     return Scaffold(
-      backgroundColor: const Color(0xFF090812),
+      resizeToAvoidBottomInset: false,
+      backgroundColor: const Color(0xFF090D10),
       body: IndexedStack(index: _selectedIndex, children: pages),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: const Color(0xFF8B5CF6),
+        backgroundColor: const Color(0xFF16B8A6),
         foregroundColor: Colors.black,
         onPressed: () {
           Navigator.push(
@@ -49,9 +50,10 @@ class _HomeScreenState extends State<HomeScreen> {
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       bottomNavigationBar: NavigationBar(
         height: 72,
-        backgroundColor: const Color(0xFF11151C),
+        backgroundColor: const Color(0xFF0E1519),
         selectedIndex: _selectedIndex,
-        onDestinationSelected: (value) => setState(() => _selectedIndex = value),
+        onDestinationSelected: (value) =>
+            setState(() => _selectedIndex = value),
         destinations: const [
           NavigationDestination(
             icon: Icon(Icons.explore_outlined),
@@ -90,7 +92,7 @@ class _ProfileGate extends StatelessWidget {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const SafeArea(
             child: Center(
-              child: CircularProgressIndicator(color: Color(0xFF8B5CF6)),
+              child: CircularProgressIndicator(color: Color(0xFF16B8A6)),
             ),
           );
         }
@@ -135,7 +137,8 @@ class _CommunityHubState extends State<_CommunityHub> {
                   onPressed: () => Navigator.pushNamed(context, '/messages'),
                   icon: const Badge(
                     smallSize: 7,
-                    child: Icon(Icons.chat_bubble_outline_rounded, color: Color(0xFF8B5CF6)),
+                    child: Icon(Icons.chat_bubble_outline_rounded,
+                        color: Color(0xFF16B8A6)),
                   ),
                 ),
               ],
@@ -146,7 +149,7 @@ class _CommunityHubState extends State<_CommunityHub> {
             child: Container(
               padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
-                color: const Color(0xFF141126),
+                color: const Color(0xFF11181D),
                 borderRadius: BorderRadius.circular(17),
               ),
               child: Row(
@@ -211,7 +214,7 @@ class _HubButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: selected ? const Color(0xFF8B5CF6) : Colors.transparent,
+      color: selected ? const Color(0xFF16B8A6) : Colors.transparent,
       borderRadius: BorderRadius.circular(13),
       child: InkWell(
         borderRadius: BorderRadius.circular(13),
@@ -221,7 +224,8 @@ class _HubButton extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, size: 18, color: selected ? Colors.black : Colors.white60),
+              Icon(icon,
+                  size: 18, color: selected ? Colors.black : Colors.white60),
               const SizedBox(width: 5),
               Flexible(
                 child: Text(
@@ -259,9 +263,11 @@ class _SavedSpotsPage extends StatelessWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.favorite_border, size: 60, color: Colors.white30),
+                    Icon(Icons.favorite_border,
+                        size: 60, color: Colors.white30),
                     SizedBox(height: 14),
-                    Text('Henüz kaydettiğin bir nokta yok', style: TextStyle(fontWeight: FontWeight.w800)),
+                    Text('Henüz kaydettiğin bir nokta yok',
+                        style: TextStyle(fontWeight: FontWeight.w800)),
                     SizedBox(height: 6),
                     Text(
                       'Beğendiğin çekim noktalarını detay ekranından kaydedebilirsin.',
@@ -281,7 +287,7 @@ class _SavedSpotsPage extends StatelessWidget {
             itemBuilder: (context, index) {
               final spot = spots[index];
               return Card(
-                color: const Color(0xFF141126),
+                color: const Color(0xFF11181D),
                 clipBehavior: Clip.antiAlias,
                 child: ListTile(
                   contentPadding: const EdgeInsets.all(10),
@@ -291,17 +297,19 @@ class _SavedSpotsPage extends StatelessWidget {
                     height: 72,
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  title: Text(spot.name, style: const TextStyle(fontWeight: FontWeight.w800)),
+                  title: Text(spot.name,
+                      style: const TextStyle(fontWeight: FontWeight.w800)),
                   subtitle: Text('${spot.city} • ⭐ ${spot.rating}'),
                   trailing: IconButton(
                     tooltip: 'Kaydı kaldır',
                     onPressed: () => FavoritesService.toggle(spot),
-                    icon: const Icon(Icons.favorite, color: Color(0xFF8B5CF6)),
+                    icon: const Icon(Icons.favorite, color: Color(0xFF16B8A6)),
                   ),
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) => SpotDetailScreen(spot: spot)),
+                      MaterialPageRoute(
+                          builder: (_) => SpotDetailScreen(spot: spot)),
                     );
                   },
                 ),

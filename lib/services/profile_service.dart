@@ -24,12 +24,15 @@ class ProfileService {
     File? photo,
   }) async {
     final user = _auth.currentUser;
-    if (user == null) throw Exception('Profilini düzenlemek için giriş yapmalısın.');
+    if (user == null)
+      throw Exception('Profilini düzenlemek için giriş yapmalısın.');
 
     final cleanName = displayName.trim();
     final cleanBio = bio.trim();
-    if (cleanName.length < 2) throw Exception('Kullanıcı adı en az 2 karakter olmalı.');
-    if (cleanBio.length > 160) throw Exception('Açıklama en fazla 160 karakter olabilir.');
+    if (cleanName.length < 2)
+      throw Exception('Kullanıcı adı en az 2 karakter olmalı.');
+    if (cleanBio.length > 160)
+      throw Exception('Açıklama en fazla 160 karakter olabilir.');
 
     String photoUrl = user.photoURL ?? '';
     if (photo != null) {
@@ -38,7 +41,8 @@ class ProfileService {
       final ref = _storage.ref().child('users/${user.uid}/profile/avatar.$ext');
       final task = await ref.putFile(
         photo,
-        SettableMetadata(contentType: ext == 'png' ? 'image/png' : 'image/jpeg'),
+        SettableMetadata(
+            contentType: ext == 'png' ? 'image/png' : 'image/jpeg'),
       );
       photoUrl = await task.ref.getDownloadURL();
     }

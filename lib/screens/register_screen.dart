@@ -6,18 +6,14 @@ class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
 
   @override
-  State<RegisterScreen> createState() =>
-      _RegisterScreenState();
+  State<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _RegisterScreenState
-    extends State<RegisterScreen> {
+class _RegisterScreenState extends State<RegisterScreen> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
-  final _passwordController =
-      TextEditingController();
-  final _passwordAgainController =
-      TextEditingController();
+  final _passwordController = TextEditingController();
+  final _passwordAgainController = TextEditingController();
 
   bool _loading = false;
   bool _hidePassword = true;
@@ -35,10 +31,8 @@ class _RegisterScreenState
   Future<void> _register() async {
     final name = _nameController.text.trim();
     final email = _emailController.text.trim();
-    final password =
-        _passwordController.text;
-    final passwordAgain =
-        _passwordAgainController.text;
+    final password = _passwordController.text;
+    final passwordAgain = _passwordAgainController.text;
 
     if (name.isEmpty ||
         email.isEmpty ||
@@ -74,8 +68,7 @@ class _RegisterScreenState
         password: password,
       );
 
-      await AuthService.instance
-          .updateDisplayName(
+      await AuthService.instance.updateDisplayName(
         name,
       );
 
@@ -90,9 +83,9 @@ class _RegisterScreenState
 
       _showMessage(
         e.toString().replaceFirst(
-          'Exception: ',
-          '',
-        ),
+              'Exception: ',
+              '',
+            ),
       );
     } finally {
       if (mounted) {
@@ -113,12 +106,12 @@ class _RegisterScreenState
 
   @override
   Widget build(BuildContext context) {
-    const yellow = Color(0xFF8B5CF6);
+    const yellow = Color(0xFF16B8A6);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF090812),
+      backgroundColor: const Color(0xFF090D10),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF090812),
+        backgroundColor: const Color(0xFF090D10),
         foregroundColor: Colors.white,
         title: const Text(
           'Hesap Oluştur',
@@ -130,15 +123,12 @@ class _RegisterScreenState
           child: Column(
             children: [
               const SizedBox(height: 12),
-
               const Icon(
                 Icons.person_add_alt_1_rounded,
                 size: 66,
                 color: yellow,
               ),
-
               const SizedBox(height: 18),
-
               const Text(
                 'Topluluğa Katıl',
                 style: TextStyle(
@@ -146,9 +136,7 @@ class _RegisterScreenState
                   fontWeight: FontWeight.w800,
                 ),
               ),
-
               const SizedBox(height: 8),
-
               const Text(
                 'Çekim noktalarını keşfet ve fotoğraflarını paylaş.',
                 textAlign: TextAlign.center,
@@ -156,9 +144,7 @@ class _RegisterScreenState
                   color: Colors.white54,
                 ),
               ),
-
               const SizedBox(height: 34),
-
               TextField(
                 controller: _nameController,
                 style: const TextStyle(
@@ -169,13 +155,10 @@ class _RegisterScreenState
                   icon: Icons.person_outline,
                 ),
               ),
-
               const SizedBox(height: 16),
-
               TextField(
                 controller: _emailController,
-                keyboardType:
-                    TextInputType.emailAddress,
+                keyboardType: TextInputType.emailAddress,
                 style: const TextStyle(
                   color: Colors.white,
                 ),
@@ -184,9 +167,7 @@ class _RegisterScreenState
                   icon: Icons.email_outlined,
                 ),
               ),
-
               const SizedBox(height: 16),
-
               TextField(
                 controller: _passwordController,
                 obscureText: _hidePassword,
@@ -198,38 +179,29 @@ class _RegisterScreenState
                   icon: Icons.lock_outline,
                   suffix: IconButton(
                     icon: Icon(
-                      _hidePassword
-                          ? Icons.visibility_off
-                          : Icons.visibility,
+                      _hidePassword ? Icons.visibility_off : Icons.visibility,
                     ),
                     onPressed: () {
                       setState(() {
-                        _hidePassword =
-                            !_hidePassword;
+                        _hidePassword = !_hidePassword;
                       });
                     },
                   ),
                 ),
               ),
-
               const SizedBox(height: 16),
-
               TextField(
-                controller:
-                    _passwordAgainController,
+                controller: _passwordAgainController,
                 obscureText: _hidePassword,
                 style: const TextStyle(
                   color: Colors.white,
                 ),
                 decoration: _decoration(
                   label: 'Şifre tekrar',
-                  icon:
-                      Icons.lock_reset_outlined,
+                  icon: Icons.lock_reset_outlined,
                 ),
               ),
-
               const SizedBox(height: 26),
-
               SizedBox(
                 width: double.infinity,
                 height: 56,
@@ -238,14 +210,12 @@ class _RegisterScreenState
                     backgroundColor: yellow,
                     foregroundColor: Colors.black,
                   ),
-                  onPressed:
-                      _loading ? null : _register,
+                  onPressed: _loading ? null : _register,
                   child: _loading
                       ? const SizedBox(
                           width: 23,
                           height: 23,
-                          child:
-                              CircularProgressIndicator(
+                          child: CircularProgressIndicator(
                             strokeWidth: 3,
                             color: Colors.black,
                           ),
@@ -254,8 +224,7 @@ class _RegisterScreenState
                           'Hesap Oluştur',
                           style: TextStyle(
                             fontSize: 17,
-                            fontWeight:
-                                FontWeight.bold,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
                 ),
@@ -276,11 +245,11 @@ class _RegisterScreenState
       labelText: label,
       prefixIcon: Icon(
         icon,
-        color: const Color(0xFF8B5CF6),
+        color: const Color(0xFF16B8A6),
       ),
       suffixIcon: suffix,
       filled: true,
-      fillColor: const Color(0xFF141126),
+      fillColor: const Color(0xFF11181D),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(18),
         borderSide: BorderSide.none,
@@ -294,7 +263,7 @@ class _RegisterScreenState
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(18),
         borderSide: const BorderSide(
-          color: Color(0xFF8B5CF6),
+          color: Color(0xFF16B8A6),
         ),
       ),
     );

@@ -18,8 +18,7 @@ class AuthService {
     required String password,
   }) async {
     try {
-      final credential =
-          await _auth.createUserWithEmailAndPassword(
+      final credential = await _auth.createUserWithEmailAndPassword(
         email: email.trim(),
         password: password,
       );
@@ -41,8 +40,7 @@ class AuthService {
     required String password,
   }) async {
     try {
-      final credential =
-          await _auth.signInWithEmailAndPassword(
+      final credential = await _auth.signInWithEmailAndPassword(
         email: email.trim(),
         password: password,
       );

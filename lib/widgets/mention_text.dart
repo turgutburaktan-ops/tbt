@@ -42,21 +42,16 @@ class _MentionTextState extends State<MentionText> {
     _recognizers.clear();
   }
 
-  String _normalize(String value) => value
-      .trim()
-      .replaceFirst('@', '')
-      .replaceAll(' ', '')
-      .toLowerCase();
+  String _normalize(String value) =>
+      value.trim().replaceFirst('@', '').replaceAll(' ', '').toLowerCase();
 
   Future<void> _openMention(String mention) async {
     final wanted = _normalize(mention);
     if (wanted.isEmpty) return;
 
     try {
-      final snapshot = await FirebaseFirestore.instance
-          .collection('users')
-          .limit(250)
-          .get();
+      final snapshot =
+          await FirebaseFirestore.instance.collection('users').limit(250).get();
 
       QueryDocumentSnapshot<Map<String, dynamic>>? match;
       for (final doc in snapshot.docs) {
@@ -100,7 +95,7 @@ class _MentionTextState extends State<MentionText> {
     final base = widget.style ?? DefaultTextStyle.of(context).style;
     final mention = widget.mentionStyle ??
         base.copyWith(
-          color: const Color(0xFFA78BFA),
+          color: const Color(0xFF4FD1C5),
           fontWeight: FontWeight.w800,
         );
 
@@ -112,7 +107,8 @@ class _MentionTextState extends State<MentionText> {
         spans.add(TextSpan(text: widget.text.substring(cursor, match.start)));
       }
       final token = match.group(0)!;
-      final recognizer = TapGestureRecognizer()..onTap = () => _openMention(token);
+      final recognizer = TapGestureRecognizer()
+        ..onTap = () => _openMention(token);
       _recognizers.add(recognizer);
       spans.add(TextSpan(text: token, style: mention, recognizer: recognizer));
       cursor = match.end;

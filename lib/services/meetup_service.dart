@@ -25,16 +25,15 @@ class MeetupService {
         .limit(limit)
         .snapshots()
         .map((snapshot) {
-          final threshold = DateTime.now().subtract(const Duration(minutes: 30));
-          final items = snapshot.docs
-              .map(SpotMeetup.fromDocument)
-              .where((item) =>
-                  item.status == 'open' &&
-                  item.startsAt.isAfter(threshold))
-              .toList();
-          items.sort((a, b) => a.startsAt.compareTo(b.startsAt));
-          return items;
-        });
+      final threshold = DateTime.now().subtract(const Duration(minutes: 30));
+      final items = snapshot.docs
+          .map(SpotMeetup.fromDocument)
+          .where((item) =>
+              item.status == 'open' && item.startsAt.isAfter(threshold))
+          .toList();
+      items.sort((a, b) => a.startsAt.compareTo(b.startsAt));
+      return items;
+    });
   }
 
   Future<String> createMeetup({
@@ -46,7 +45,8 @@ class MeetupService {
   }) async {
     final user = _auth.currentUser;
     if (user == null) {
-      throw Exception('Birlikte Git buluşması oluşturmak için giriş yapmalısın.');
+      throw Exception(
+          'Birlikte Git buluşması oluşturmak için giriş yapmalısın.');
     }
 
     final minimum = DateTime.now().add(const Duration(minutes: 15));

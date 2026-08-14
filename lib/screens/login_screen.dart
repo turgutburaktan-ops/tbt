@@ -79,11 +79,12 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const yellow = Color(0xFF8B5CF6);
+    const yellow = Color(0xFF16B8A6);
 
     final body = SafeArea(
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
+        padding: EdgeInsets.fromLTRB(
+            24, 24, 24, MediaQuery.of(context).viewInsets.bottom + 24),
         child: Column(
           children: [
             SizedBox(height: widget.embedded ? 42 : 20),
@@ -105,7 +106,8 @@ class _LoginScreenState extends State<LoginScreen> {
               controller: _emailController,
               keyboardType: TextInputType.emailAddress,
               style: const TextStyle(color: Colors.white),
-              decoration: _decoration(label: 'E-posta', icon: Icons.email_outlined),
+              decoration:
+                  _decoration(label: 'E-posta', icon: Icons.email_outlined),
             ),
             const SizedBox(height: 16),
             TextField(
@@ -116,8 +118,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 label: 'Şifre',
                 icon: Icons.lock_outline,
                 suffix: IconButton(
-                  icon: Icon(_hidePassword ? Icons.visibility_off : Icons.visibility),
-                  onPressed: () => setState(() => _hidePassword = !_hidePassword),
+                  icon: Icon(
+                      _hidePassword ? Icons.visibility_off : Icons.visibility),
+                  onPressed: () =>
+                      setState(() => _hidePassword = !_hidePassword),
                 ),
               ),
             ),
@@ -133,17 +137,20 @@ class _LoginScreenState extends State<LoginScreen> {
               width: double.infinity,
               height: 56,
               child: FilledButton(
-                style: FilledButton.styleFrom(backgroundColor: yellow, foregroundColor: Colors.black),
+                style: FilledButton.styleFrom(
+                    backgroundColor: yellow, foregroundColor: Colors.black),
                 onPressed: _loading ? null : _login,
                 child: _loading
                     ? const SizedBox(
                         width: 23,
                         height: 23,
-                        child: CircularProgressIndicator(strokeWidth: 3, color: Colors.black),
+                        child: CircularProgressIndicator(
+                            strokeWidth: 3, color: Colors.black),
                       )
                     : const Text(
                         'Giriş Yap',
-                        style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            fontSize: 17, fontWeight: FontWeight.bold),
                       ),
               ),
             ),
@@ -151,7 +158,8 @@ class _LoginScreenState extends State<LoginScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text('Hesabın yok mu?', style: TextStyle(color: Colors.white54)),
+                const Text('Hesabın yok mu?',
+                    style: TextStyle(color: Colors.white54)),
                 TextButton(
                   onPressed: () {
                     Navigator.push(
@@ -159,7 +167,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       MaterialPageRoute(builder: (_) => const RegisterScreen()),
                     );
                   },
-                  child: const Text('Kayıt Ol', style: TextStyle(fontWeight: FontWeight.bold)),
+                  child: const Text('Kayıt Ol',
+                      style: TextStyle(fontWeight: FontWeight.bold)),
                 ),
               ],
             ),
@@ -169,13 +178,13 @@ class _LoginScreenState extends State<LoginScreen> {
     );
 
     if (widget.embedded) {
-      return ColoredBox(color: const Color(0xFF090812), child: body);
+      return ColoredBox(color: const Color(0xFF090D10), child: body);
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFF090812),
+      backgroundColor: const Color(0xFF090D10),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF090812),
+        backgroundColor: const Color(0xFF090D10),
         foregroundColor: Colors.white,
         title: const Text('Giriş Yap'),
       ),
@@ -190,10 +199,10 @@ class _LoginScreenState extends State<LoginScreen> {
   }) {
     return InputDecoration(
       labelText: label,
-      prefixIcon: Icon(icon, color: const Color(0xFF8B5CF6)),
+      prefixIcon: Icon(icon, color: const Color(0xFF16B8A6)),
       suffixIcon: suffix,
       filled: true,
-      fillColor: const Color(0xFF141126),
+      fillColor: const Color(0xFF11181D),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(18),
         borderSide: BorderSide.none,
@@ -204,7 +213,7 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(18),
-        borderSide: const BorderSide(color: Color(0xFF8B5CF6)),
+        borderSide: const BorderSide(color: Color(0xFF16B8A6)),
       ),
     );
   }

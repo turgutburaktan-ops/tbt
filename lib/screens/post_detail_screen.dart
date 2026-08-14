@@ -42,7 +42,8 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     if (_openingSpot || spotName.trim().isEmpty) return;
     setState(() => _openingSpot = true);
     try {
-      final results = await SpotRepository.instance.search(spotName, limit: 2000);
+      final results =
+          await SpotRepository.instance.search(spotName, limit: 2000);
       if (!mounted) return;
       if (results.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -78,7 +79,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
-      backgroundColor: const Color(0xFF0F0B1A),
+      backgroundColor: const Color(0xFF0D1418),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
@@ -118,7 +119,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                 height: 50,
                 child: FilledButton(
                   style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFF8B5CF6),
+                    backgroundColor: const Color(0xFF16B8A6),
                     foregroundColor: Colors.white,
                   ),
                   onPressed: () => Navigator.pop(sheetContext, true),
@@ -165,7 +166,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF141126),
+        backgroundColor: const Color(0xFF11181D),
         title: const Text('Gönderiyi sil'),
         content: const Text('Bu paylaşım kalıcı olarak silinecek.'),
         actions: [
@@ -203,7 +204,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   void _showMenu() {
     showModalBottomSheet<void>(
       context: context,
-      backgroundColor: const Color(0xFF141126),
+      backgroundColor: const Color(0xFF11181D),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
@@ -214,7 +215,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
             ListTile(
               leading: const Icon(
                 Icons.edit_outlined,
-                color: Color(0xFF8B5CF6),
+                color: Color(0xFF16B8A6),
               ),
               title: const Text('Düzenle'),
               onTap: () {
@@ -223,7 +224,8 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.delete_outline, color: Colors.redAccent),
+              leading:
+                  const Icon(Icons.delete_outline, color: Colors.redAccent),
               title: const Text(
                 'Sil',
                 style: TextStyle(color: Colors.redAccent),
@@ -243,19 +245,17 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   Widget build(BuildContext context) {
     final imageUrl = (_post['imageUrl'] ?? '').toString();
     final caption = (_post['caption'] ?? '').toString().trim();
-    final spot = (_post['spotName'] ??
-            _post['locationName'] ??
-            _post['location'] ??
-            '')
-        .toString()
-        .trim();
+    final spot =
+        (_post['spotName'] ?? _post['locationName'] ?? _post['location'] ?? '')
+            .toString()
+            .trim();
     final userName = (_post['userName'] ?? 'Fotoğrafçı').toString();
     final date = _dateLabel(_post['createdAt']);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF090812),
+      backgroundColor: const Color(0xFF090D10),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF090812),
+        backgroundColor: const Color(0xFF090D10),
         foregroundColor: Colors.white,
         title: const Text('Paylaşım'),
         actions: [
@@ -278,15 +278,15 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  Color(0xFF9F7AEA),
-                  Color(0xFF6D28D9),
-                  Color(0xFF3B1B68),
+                  Color(0xFF38C7B7),
+                  Color(0xFF0F8F83),
+                  Color(0xFF123D3B),
                 ],
               ),
               borderRadius: BorderRadius.circular(26),
               boxShadow: const [
                 BoxShadow(
-                  color: Color(0x338B5CF6),
+                  color: Color(0x3316B8A6),
                   blurRadius: 24,
                   spreadRadius: -10,
                   offset: Offset(0, 10),
@@ -311,7 +311,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                           decoration: const BoxDecoration(
                             shape: BoxShape.circle,
                             gradient: LinearGradient(
-                              colors: [Color(0xFF8B5CF6), Color(0xFFC084FC)],
+                              colors: [Color(0xFF16B8A6), Color(0xFF5EEAD4)],
                             ),
                           ),
                           child: const Icon(
@@ -349,7 +349,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                                       const Icon(
                                         Icons.location_on_rounded,
                                         size: 14,
-                                        color: Color(0xFFC4B5FD),
+                                        color: Color(0xFF75DED4),
                                       ),
                                       const SizedBox(width: 3),
                                       Flexible(
@@ -358,7 +358,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
                                           style: const TextStyle(
-                                            color: Color(0xFFB9B1C8),
+                                            color: Color(0xFFB5C0C3),
                                             fontSize: 11.5,
                                             fontWeight: FontWeight.w600,
                                           ),
@@ -374,7 +374,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                         const Icon(
                           Icons.auto_awesome_rounded,
                           size: 17,
-                          color: Color(0xFF8B5CF6),
+                          color: Color(0xFF16B8A6),
                         ),
                       ],
                     ),
@@ -441,7 +441,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                       fontSize: 14.5,
                     ),
                     mentionStyle: const TextStyle(
-                      color: Color(0xFFA78BFA),
+                      color: Color(0xFF4FD1C5),
                       height: 1.5,
                       fontSize: 14.5,
                       fontWeight: FontWeight.w900,

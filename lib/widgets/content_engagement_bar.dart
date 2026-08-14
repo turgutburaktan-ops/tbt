@@ -41,7 +41,7 @@ class ContentEngagementBar extends StatelessWidget {
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
-      backgroundColor: const Color(0xFF0F0B1A),
+      backgroundColor: const Color(0xFF0D1418),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
@@ -159,7 +159,7 @@ class ContentEngagementBar extends StatelessWidget {
                             return ListTile(
                               contentPadding: EdgeInsets.zero,
                               leading: const CircleAvatar(
-                                backgroundColor: Color(0xFF1C1630),
+                                backgroundColor: Color(0xFF152128),
                                 child: Icon(Icons.person_outline),
                               ),
                               title: Text(
@@ -172,7 +172,7 @@ class ContentEngagementBar extends StatelessWidget {
                                 text: (data['text'] ?? '').toString(),
                                 style: const TextStyle(color: Colors.white70),
                                 mentionStyle: const TextStyle(
-                                  color: Color(0xFFA78BFA),
+                                  color: Color(0xFF4FD1C5),
                                   fontWeight: FontWeight.w800,
                                 ),
                               ),
@@ -186,9 +186,9 @@ class ContentEngagementBar extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.fromLTRB(12, 4, 6, 4),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF171126),
+                      color: const Color(0xFF121A1F),
                       borderRadius: BorderRadius.circular(22),
-                      border: Border.all(color: const Color(0x338B5CF6)),
+                      border: Border.all(color: const Color(0x3316B8A6)),
                     ),
                     child: Row(
                       children: [
@@ -208,7 +208,7 @@ class ContentEngagementBar extends StatelessWidget {
                         ),
                         IconButton.filled(
                           style: IconButton.styleFrom(
-                            backgroundColor: const Color(0xFF8B5CF6),
+                            backgroundColor: const Color(0xFF16B8A6),
                             foregroundColor: Colors.white,
                           ),
                           onPressed: sending ? null : sendComment,
@@ -244,7 +244,7 @@ class ContentEngagementBar extends StatelessWidget {
     return showModalBottomSheet<Map<String, String>>(
       context: context,
       useSafeArea: true,
-      backgroundColor: const Color(0xFF0F0B1A),
+      backgroundColor: const Color(0xFF0D1418),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
@@ -288,18 +288,16 @@ class ContentEngagementBar extends StatelessWidget {
                   if (!snapshot.hasData) {
                     return const Center(child: CircularProgressIndicator());
                   }
-                  final users = snapshot.data!.docs
-                      .where((d) => d.id != me)
-                      .toList();
+                  final users =
+                      snapshot.data!.docs.where((d) => d.id != me).toList();
                   return ListView.builder(
                     itemCount: users.length,
                     itemBuilder: (_, index) {
                       final doc = users[index];
                       final data = doc.data();
-                      final name = (data['displayName'] ??
-                              data['email'] ??
-                              'Kullanıcı')
-                          .toString();
+                      final name =
+                          (data['displayName'] ?? data['email'] ?? 'Kullanıcı')
+                              .toString();
                       final photo = (data['photoUrl'] ?? '').toString();
                       return ListTile(
                         leading: CircleAvatar(
@@ -328,60 +326,77 @@ class ContentEngagementBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const accent = Color(0xFF16B8A6);
+    const likedColor = Color(0xFFFF5D7A);
     return Row(
       children: [
         StreamBuilder<bool>(
-          stream: ContentEngagementService.instance
-              .isLiked(collection, contentId),
+          stream:
+              ContentEngagementService.instance.isLiked(collection, contentId),
           builder: (_, likedSnapshot) => StreamBuilder<int>(
             stream: ContentEngagementService.instance
                 .likesCount(collection, contentId),
             builder: (_, countSnapshot) {
               final liked = likedSnapshot.data ?? false;
               final count = countSnapshot.data ?? 0;
-              return TextButton.icon(
-                style: TextButton.styleFrom(
-                  foregroundColor: liked
-                      ? const Color(0xFFE879F9)
-                      : const Color(0xFFC4B5FD),
-                ),
-                onPressed: contentId.trim().isEmpty
-                    ? null
-                    : () async {
-                        try {
-                          await ContentEngagementService.instance.toggleLike(
-                            collection: collection,
-                            id: contentId,
-                            ownerId: ownerId,
-                            title: title,
-                            sourceType: sourceType,
-                          );
-                        } catch (e) {
-                          if (context.mounted) {
-                            _message(
-                              context,
-                              e.toString().replaceFirst('Exception: ', ''),
-                            );
-                          }
-                        }
-                      },
-                icon: Icon(
-                  liked ? Icons.favorite : Icons.favorite_border,
-                  color: liked ? const Color(0xFFE879F9) : null,
-                ),
-                label: Text(count == 0 ? 'Beğen' : '$count'),
+              return Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    tooltip: liked ? 'Beğeniyi kaldır' : 'Beğen',
+                    visualDensity: VisualDensity.compact,
+                    onPressed: contentId.trim().isEmpty
+                        ? null
+                        : () async {
+                            try {
+                              await ContentEngagementService.instance
+                                  .toggleLike(
+                                collection: collection,
+                                id: contentId,
+                                ownerId: ownerId,
+                                title: title,
+                                sourceType: sourceType,
+                              );
+                            } catch (e) {
+                              if (context.mounted) {
+                                _message(
+                                    context,
+                                    e
+                                        .toString()
+                                        .replaceFirst('Exception: ', ''));
+                              }
+                            }
+                          },
+                    icon: Icon(
+                      liked
+                          ? Icons.favorite_rounded
+                          : Icons.favorite_border_rounded,
+                      color: liked ? likedColor : Colors.white,
+                      size: 27,
+                    ),
+                  ),
+                  if (count > 0)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 4),
+                      child: Text('$count',
+                          style: const TextStyle(
+                              fontSize: 12, fontWeight: FontWeight.w700)),
+                    ),
+                ],
               );
             },
           ),
         ),
         IconButton(
           tooltip: 'Yorumlar',
+          visualDensity: VisualDensity.compact,
           onPressed: contentId.trim().isEmpty ? null : () => _comments(context),
-          icon: const Icon(Icons.mode_comment_outlined),
+          icon: const Icon(Icons.chat_bubble_outline_rounded, size: 25),
         ),
         if (showTagAction)
           IconButton(
             tooltip: 'Etiketle',
+            visualDensity: VisualDensity.compact,
             onPressed: () async {
               final user = await _pickUser(context, 'Birini etiketle');
               if (user == null || !context.mounted) return;
@@ -394,28 +409,23 @@ class ContentEngagementBar extends StatelessWidget {
                   title: title,
                   sourceType: sourceType,
                 );
-                if (context.mounted) {
+                if (context.mounted)
                   _message(context, '${user['name']} etiketlendi.');
-                }
               } catch (e) {
-                if (context.mounted) {
+                if (context.mounted)
                   _message(
-                    context,
-                    e.toString().replaceFirst('Exception: ', ''),
-                  );
-                }
+                      context, e.toString().replaceFirst('Exception: ', ''));
               }
             },
-            icon: const Icon(Icons.person_add_alt_1_outlined),
+            icon: const Icon(Icons.alternate_email_rounded,
+                size: 25, color: accent),
           ),
         const Spacer(),
         IconButton(
           tooltip: 'Gönder',
+          visualDensity: VisualDensity.compact,
           onPressed: () async {
-            final user = await _pickUser(
-              context,
-              'Kime göndermek istiyorsun?',
-            );
+            final user = await _pickUser(context, 'Kime göndermek istiyorsun?');
             if (user == null || !context.mounted) return;
             try {
               await ContentEngagementService.instance.shareToUser(
@@ -424,22 +434,14 @@ class ContentEngagementBar extends StatelessWidget {
                 sourceId: contentId,
                 title: title,
               );
-              if (context.mounted) {
-                _message(
-                  context,
-                  '${user['name']} kullanıcısına gönderildi.',
-                );
-              }
+              if (context.mounted)
+                _message(context, '${user['name']} kullanıcısına gönderildi.');
             } catch (e) {
-              if (context.mounted) {
-                _message(
-                  context,
-                  e.toString().replaceFirst('Exception: ', ''),
-                );
-              }
+              if (context.mounted)
+                _message(context, e.toString().replaceFirst('Exception: ', ''));
             }
           },
-          icon: const Icon(Icons.send_outlined),
+          icon: const Icon(Icons.send_outlined, size: 26),
         ),
       ],
     );

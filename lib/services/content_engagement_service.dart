@@ -17,11 +17,17 @@ class ContentEngagementService {
   Stream<bool> isLiked(String collection, String id) {
     final uid = _auth.currentUser?.uid;
     if (uid == null) return Stream.value(false);
-    return _ref(collection, id).collection('likes').doc(uid).snapshots().map((s) => s.exists);
+    return _ref(collection, id)
+        .collection('likes')
+        .doc(uid)
+        .snapshots()
+        .map((s) => s.exists);
   }
 
-  Stream<int> likesCount(String collection, String id) =>
-      _ref(collection, id).collection('likes').snapshots().map((s) => s.docs.length);
+  Stream<int> likesCount(String collection, String id) => _ref(collection, id)
+      .collection('likes')
+      .snapshots()
+      .map((s) => s.docs.length);
 
   Future<void> toggleLike({
     required String collection,
@@ -40,7 +46,9 @@ class ContentEngagementService {
     }
     await likeRef.set({
       'userId': user.uid,
-      'userName': (user.displayName ?? '').trim().isEmpty ? 'Bir kullanıcı' : user.displayName!.trim(),
+      'userName': (user.displayName ?? '').trim().isEmpty
+          ? 'Bir kullanıcı'
+          : user.displayName!.trim(),
       'createdAt': FieldValue.serverTimestamp(),
     });
     if (ownerId.isNotEmpty && ownerId != user.uid) {
@@ -48,7 +56,8 @@ class ContentEngagementService {
         await AppNotificationService.instance.notifyUser(
           userId: ownerId,
           type: '${sourceType}_like',
-          title: '${(user.displayName ?? '').trim().isEmpty ? 'Bir kullanıcı' : user.displayName!.trim()} beğendi',
+          title:
+              '${(user.displayName ?? '').trim().isEmpty ? 'Bir kullanıcı' : user.displayName!.trim()} beğendi',
           body: title,
           sourceId: id,
           actorId: user.uid,
@@ -57,8 +66,12 @@ class ContentEngagementService {
     }
   }
 
-  Stream<QuerySnapshot<Map<String, dynamic>>> comments(String collection, String id) =>
-      _ref(collection, id).collection('comments').orderBy('createdAt', descending: false).snapshots();
+  Stream<QuerySnapshot<Map<String, dynamic>>> comments(
+          String collection, String id) =>
+      _ref(collection, id)
+          .collection('comments')
+          .orderBy('createdAt', descending: false)
+          .snapshots();
 
   Future<void> addComment({
     required String collection,
@@ -72,10 +85,13 @@ class ContentEngagementService {
     if (user == null) throw Exception('Yorum yapmak için giriş yapmalısın.');
     final clean = text.trim();
     if (clean.isEmpty) return;
-    if (clean.length > 500) throw Exception('Yorum en fazla 500 karakter olabilir.');
+    if (clean.length > 500)
+      throw Exception('Yorum en fazla 500 karakter olabilir.');
     await _ref(collection, id).collection('comments').add({
       'userId': user.uid,
-      'userName': (user.displayName ?? '').trim().isEmpty ? 'Fotoğrafçı' : user.displayName!.trim(),
+      'userName': (user.displayName ?? '').trim().isEmpty
+          ? 'Fotoğrafçı'
+          : user.displayName!.trim(),
       'text': clean,
       'createdAt': FieldValue.serverTimestamp(),
     });
@@ -84,7 +100,8 @@ class ContentEngagementService {
         await AppNotificationService.instance.notifyUser(
           userId: ownerId,
           type: '${sourceType}_comment',
-          title: '${(user.displayName ?? '').trim().isEmpty ? 'Bir kullanıcı' : user.displayName!.trim()} yorum yaptı',
+          title:
+              '${(user.displayName ?? '').trim().isEmpty ? 'Bir kullanıcı' : user.displayName!.trim()} yorum yaptı',
           body: clean.length > 90 ? '${clean.substring(0, 90)}…' : clean,
           sourceId: id,
           actorId: user.uid,
@@ -93,7 +110,8 @@ class ContentEngagementService {
     }
   }
 
-  Stream<QuerySnapshot<Map<String, dynamic>>> tags(String collection, String id) =>
+  Stream<QuerySnapshot<Map<String, dynamic>>> tags(
+          String collection, String id) =>
       _ref(collection, id).collection('tags').snapshots();
 
   Future<void> tagUser({
@@ -118,7 +136,8 @@ class ContentEngagementService {
         await AppNotificationService.instance.notifyUser(
           userId: userId,
           type: '${sourceType}_tag',
-          title: '${(me.displayName ?? '').trim().isEmpty ? 'Bir kullanıcı' : me.displayName!.trim()} seni etiketledi',
+          title:
+              '${(me.displayName ?? '').trim().isEmpty ? 'Bir kullanıcı' : me.displayName!.trim()} seni etiketledi',
           body: title,
           sourceId: id,
           actorId: me.uid,

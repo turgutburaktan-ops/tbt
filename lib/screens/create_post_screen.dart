@@ -53,7 +53,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     if (_loading) return;
     await showModalBottomSheet<void>(
       context: context,
-      backgroundColor: const Color(0xFF141126),
+      backgroundColor: const Color(0xFF11181D),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
@@ -66,7 +66,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
               ListTile(
                 leading: const Icon(
                   Icons.camera_alt,
-                  color: Color(0xFF8B5CF6),
+                  color: Color(0xFF16B8A6),
                 ),
                 title: const Text('Kamera ile çek'),
                 onTap: () {
@@ -77,7 +77,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
               ListTile(
                 leading: const Icon(
                   Icons.photo_library_outlined,
-                  color: Color(0xFF8B5CF6),
+                  color: Color(0xFF16B8A6),
                 ),
                 title: const Text('Galeriden seç'),
                 onTap: () {
@@ -145,7 +145,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     final selected = await showModalBottomSheet<Map<String, String>>(
       context: context,
       useSafeArea: true,
-      backgroundColor: const Color(0xFF0F0B1A),
+      backgroundColor: const Color(0xFF0D1418),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
@@ -160,7 +160,8 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                   const Expanded(
                     child: Text(
                       'Açıklamaya kişi etiketle',
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
+                      style:
+                          TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
                     ),
                   ),
                   IconButton(
@@ -186,23 +187,21 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                   if (!snapshot.hasData) {
                     return const Center(child: CircularProgressIndicator());
                   }
-                  final users = snapshot.data!.docs
-                      .where((d) => d.id != me)
-                      .toList();
+                  final users =
+                      snapshot.data!.docs.where((d) => d.id != me).toList();
                   return ListView.builder(
                     itemCount: users.length,
                     itemBuilder: (_, index) {
                       final doc = users[index];
                       final data = doc.data();
-                      final name = (data['displayName'] ??
-                              data['email'] ??
-                              'Kullanıcı')
-                          .toString()
-                          .trim();
+                      final name =
+                          (data['displayName'] ?? data['email'] ?? 'Kullanıcı')
+                              .toString()
+                              .trim();
                       final photo = (data['photoUrl'] ?? '').toString();
                       return ListTile(
                         leading: CircleAvatar(
-                          backgroundColor: const Color(0xFF1C1630),
+                          backgroundColor: const Color(0xFF152128),
                           backgroundImage:
                               photo.isEmpty ? null : NetworkImage(photo),
                           child: photo.isEmpty
@@ -280,8 +279,10 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
         spotName: _spotController.text,
         latitude: _latitude,
         longitude: _longitude,
-        taggedUserIds:
-            _taggedUsers.map((u) => u['id'] ?? '').where((e) => e.isNotEmpty).toList(),
+        taggedUserIds: _taggedUsers
+            .map((u) => u['id'] ?? '')
+            .where((e) => e.isNotEmpty)
+            .toList(),
         taggedUserNames: _taggedUsers
             .map((u) => u['name'] ?? '')
             .where((e) => e.isNotEmpty)
@@ -309,12 +310,12 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const purple = Color(0xFF8B5CF6);
+    const purple = Color(0xFF16B8A6);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF090812),
+      backgroundColor: const Color(0xFF090D10),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF090812),
+        backgroundColor: const Color(0xFF090D10),
         foregroundColor: Colors.white,
         title: const Text('Fotoğraf Paylaş'),
       ),
@@ -326,9 +327,9 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
             child: Container(
               height: 330,
               decoration: BoxDecoration(
-                color: const Color(0xFF141126),
+                color: const Color(0xFF11181D),
                 borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: const Color(0x338B5CF6)),
+                border: Border.all(color: const Color(0x3316B8A6)),
               ),
               clipBehavior: Clip.antiAlias,
               child: _image == null
@@ -383,7 +384,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
               hintText: 'Örn. Galata Köprüsü',
               prefixIcon: const Icon(Icons.place_outlined, color: purple),
               filled: true,
-              fillColor: const Color(0xFF141126),
+              fillColor: const Color(0xFF11181D),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(18),
                 borderSide: BorderSide.none,
@@ -393,7 +394,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
           const SizedBox(height: 14),
           Container(
             decoration: BoxDecoration(
-              color: const Color(0xFF141126),
+              color: const Color(0xFF11181D),
               borderRadius: BorderRadius.circular(18),
               border: Border.all(color: const Color(0x228B5CF6)),
             ),
@@ -421,13 +422,14 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                       OutlinedButton.icon(
                         onPressed: _addTag,
                         style: OutlinedButton.styleFrom(
-                          foregroundColor: const Color(0xFFC4B5FD),
+                          foregroundColor: const Color(0xFF75DED4),
                           side: const BorderSide(color: Color(0x558B5CF6)),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(99),
                           ),
                         ),
-                        icon: const Icon(Icons.alternate_email_rounded, size: 18),
+                        icon:
+                            const Icon(Icons.alternate_email_rounded, size: 18),
                         label: const Text('Kişi etiketle'),
                       ),
                       const Spacer(),
@@ -452,7 +454,8 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
               children: _taggedUsers
                   .map(
                     (user) => InputChip(
-                      avatar: const Icon(Icons.alternate_email_rounded, size: 16),
+                      avatar:
+                          const Icon(Icons.alternate_email_rounded, size: 16),
                       label: Text(user['name'] ?? 'Kullanıcı'),
                       onDeleted: () => _removeTag(user),
                       backgroundColor: const Color(0xFF1B1430),

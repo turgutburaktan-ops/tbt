@@ -76,8 +76,10 @@ class SpotRepository {
     final filtered = all.where((spot) {
       if (query.minRating > 0 && spot.rating < query.minRating) return false;
       if (cityKey.isNotEmpty && _key(spot.city) != cityKey) return false;
-      if (categoryKey.isNotEmpty && _key(spot.category) != categoryKey) return false;
-      if (tagKey.isNotEmpty && !spot.tags.any((tag) => _key(tag).contains(tagKey))) {
+      if (categoryKey.isNotEmpty && _key(spot.category) != categoryKey)
+        return false;
+      if (tagKey.isNotEmpty &&
+          !spot.tags.any((tag) => _key(tag).contains(tagKey))) {
         return false;
       }
       return textKey.isEmpty || _searchableText(spot).contains(textKey);
@@ -101,13 +103,15 @@ class SpotRepository {
       _distinct((await loadSpots(limit: limit)).map((spot) => spot.category));
 
   Stream<List<PhotoSpot>> watchPublishedSpots({int limit = 2000}) => _firestore
-      .collection(spotsCollection)
-      .where('status', isEqualTo: 'published')
-      .limit(limit)
-      .snapshots()
-      .map((snapshot) {
-        final remote = snapshot.docs.map(_fromDocument).whereType<PhotoSpot>().toList();
-        return NationwideCandidateSpotResolver.mergeInto(_mergeWithCurated(remote));
+          .collection(spotsCollection)
+          .where('status', isEqualTo: 'published')
+          .limit(limit)
+          .snapshots()
+          .map((snapshot) {
+        final remote =
+            snapshot.docs.map(_fromDocument).whereType<PhotoSpot>().toList();
+        return NationwideCandidateSpotResolver.mergeInto(
+            _mergeWithCurated(remote));
       });
 
   Future<List<PhotoSpot>> search(String input, {int limit = 2000}) =>
@@ -151,7 +155,10 @@ class SpotRepository {
     if (name.trim().length < 3 || city.trim().length < 2) {
       throw Exception('Nokta adı ve şehir bilgisi eksik.');
     }
-    if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
+    if (latitude < -90 ||
+        latitude > 90 ||
+        longitude < -180 ||
+        longitude > 180) {
       throw Exception('Geçersiz koordinat.');
     }
 
@@ -168,7 +175,8 @@ class SpotRepository {
       'description': description.trim(),
       'bestTime': bestTime.trim(),
       'angle': angle.trim(),
-      'recommendedLens': recommendedLens.trim().isEmpty ? '24-70mm' : recommendedLens.trim(),
+      'recommendedLens':
+          recommendedLens.trim().isEmpty ? '24-70mm' : recommendedLens.trim(),
       'tags': tags.map((e) => e.trim()).where((e) => e.isNotEmpty).toList(),
       'imageUrl': imageUrl.trim(),
       'submittedBy': user.uid,
@@ -193,7 +201,8 @@ class SpotRepository {
     String imageUrl = '',
     double rating = 0,
     List<String> tags = const [],
-  }) => {
+  }) =>
+      {
         'externalId': externalId.trim(),
         'sourceType': source.trim(),
         'name': name.trim(),
@@ -245,7 +254,9 @@ class SpotRepository {
     String? category,
   }) =>
       items.where((spot) {
-        final cityMatches = city == null || city.trim().isEmpty || _key(spot.city) == _key(city);
+        final cityMatches = city == null ||
+            city.trim().isEmpty ||
+            _key(spot.city) == _key(city);
         final categoryMatches = category == null ||
             category.trim().isEmpty ||
             _key(spot.category) == _key(category);
@@ -274,11 +285,15 @@ class SpotRepository {
     return byKey.values.toList()..sort();
   }
 
-  static double? _asDouble(dynamic value) =>
-      value is num ? value.toDouble() : double.tryParse(value?.toString() ?? '');
+  static double? _asDouble(dynamic value) => value is num
+      ? value.toDouble()
+      : double.tryParse(value?.toString() ?? '');
 
   static List<String> _stringList(dynamic value) => value is List
-      ? value.map((e) => e.toString()).where((e) => e.trim().isNotEmpty).toList()
+      ? value
+          .map((e) => e.toString())
+          .where((e) => e.trim().isNotEmpty)
+          .toList()
       : const [];
 
   static String _key(String value) => value

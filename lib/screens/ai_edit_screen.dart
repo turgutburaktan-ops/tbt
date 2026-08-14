@@ -119,7 +119,7 @@ class _AiEditScreenState extends State<AiEditScreen> {
     final prompt = await showModalBottomSheet<String>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: const Color(0xFF11151C),
+      backgroundColor: const Color(0xFF0E1519),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -156,7 +156,8 @@ class _AiEditScreenState extends State<AiEditScreen> {
                 maxLength: 600,
                 style: const TextStyle(color: Colors.white),
                 decoration: InputDecoration(
-                  hintText: 'Örn: Gökyüzünü daha dramatik yap ama binayı ve insanları değiştirme.',
+                  hintText:
+                      'Örn: Gökyüzünü daha dramatik yap ama binayı ve insanları değiştirme.',
                   hintStyle: const TextStyle(color: Colors.white38),
                   filled: true,
                   fillColor: const Color(0xFF1A2029),
@@ -176,7 +177,7 @@ class _AiEditScreenState extends State<AiEditScreen> {
                     if (text.isNotEmpty) Navigator.pop(context, text);
                   },
                   style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFF8B5CF6),
+                    backgroundColor: const Color(0xFF16B8A6),
                     foregroundColor: Colors.black,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(15),
@@ -227,11 +228,13 @@ class _AiEditScreenState extends State<AiEditScreen> {
       appBar: AppBar(
         backgroundColor: const Color(0xFF07090D),
         elevation: 0,
-        title: const Text('AI Düzenle', style: TextStyle(fontWeight: FontWeight.w800)),
+        title: const Text('AI Düzenle',
+            style: TextStyle(fontWeight: FontWeight.w800)),
         actions: [
           TextButton(
             onPressed: _processing ? null : _resetOriginal,
-            child: const Text('Orijinal', style: TextStyle(color: Color(0xFF8B5CF6))),
+            child: const Text('Orijinal',
+                style: TextStyle(color: Color(0xFF16B8A6))),
           ),
         ],
       ),
@@ -253,8 +256,12 @@ class _AiEditScreenState extends State<AiEditScreen> {
                               ? null
                               : (details) {
                                   final normalized = Offset(
-                                    (details.localPosition.dx / constraints.maxWidth).clamp(0.0, 1.0),
-                                    (details.localPosition.dy / constraints.maxHeight).clamp(0.0, 1.0),
+                                    (details.localPosition.dx /
+                                            constraints.maxWidth)
+                                        .clamp(0.0, 1.0),
+                                    (details.localPosition.dy /
+                                            constraints.maxHeight)
+                                        .clamp(0.0, 1.0),
                                   );
                                   setState(() => _removePoint = normalized);
                                 },
@@ -266,9 +273,14 @@ class _AiEditScreenState extends State<AiEditScreen> {
                                 Container(color: Colors.black.withOpacity(.10)),
                               if (_selectingObject && _removePoint != null)
                                 Positioned(
-                                  left: _removePoint!.dx * constraints.maxWidth - 26,
-                                  top: _removePoint!.dy * constraints.maxHeight - 26,
-                                  child: const IgnorePointer(child: _TargetMarker()),
+                                  left:
+                                      _removePoint!.dx * constraints.maxWidth -
+                                          26,
+                                  top:
+                                      _removePoint!.dy * constraints.maxHeight -
+                                          26,
+                                  child: const IgnorePointer(
+                                      child: _TargetMarker()),
                                 ),
                               if (_processing)
                                 Container(
@@ -277,11 +289,14 @@ class _AiEditScreenState extends State<AiEditScreen> {
                                     child: Column(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
-                                        const CircularProgressIndicator(color: Color(0xFF8B5CF6)),
+                                        const CircularProgressIndicator(
+                                            color: Color(0xFF16B8A6)),
                                         const SizedBox(height: 14),
                                         Text(
                                           _processingText(),
-                                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+                                          style: const TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.w700),
                                         ),
                                       ],
                                     ),
@@ -302,12 +317,13 @@ class _AiEditScreenState extends State<AiEditScreen> {
                 child: Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF141126),
+                    color: const Color(0xFF11181D),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.touch_app_outlined, color: Color(0xFF8B5CF6)),
+                      const Icon(Icons.touch_app_outlined,
+                          color: Color(0xFF16B8A6)),
                       const SizedBox(width: 10),
                       const Expanded(
                         child: Text(
@@ -334,12 +350,30 @@ class _AiEditScreenState extends State<AiEditScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 scrollDirection: Axis.horizontal,
                 children: [
-                  _EditTool(icon: Icons.auto_awesome, label: 'Otomatik', onTap: () => _runEdit(AiEditAction.autoEnhance)),
-                  _EditTool(icon: Icons.light_mode_outlined, label: 'Işık', onTap: () => _runEdit(AiEditAction.fixLight)),
-                  _EditTool(icon: Icons.groups_2_outlined, label: 'İnsanları\nKaldır', onTap: () => _runEdit(AiEditAction.removePeople)),
-                  _EditTool(icon: Icons.auto_fix_high, label: 'Nesne\nKaldır', onTap: _beginRemoveObject),
-                  _EditTool(icon: Icons.chat_bubble_outline_rounded, label: 'AI’ye\nYaz', onTap: _openAiPrompt),
-                  _EditTool(icon: Icons.undo_rounded, label: 'Orijinale\nDön', onTap: _resetOriginal),
+                  _EditTool(
+                      icon: Icons.auto_awesome,
+                      label: 'Otomatik',
+                      onTap: () => _runEdit(AiEditAction.autoEnhance)),
+                  _EditTool(
+                      icon: Icons.light_mode_outlined,
+                      label: 'Işık',
+                      onTap: () => _runEdit(AiEditAction.fixLight)),
+                  _EditTool(
+                      icon: Icons.groups_2_outlined,
+                      label: 'İnsanları\nKaldır',
+                      onTap: () => _runEdit(AiEditAction.removePeople)),
+                  _EditTool(
+                      icon: Icons.auto_fix_high,
+                      label: 'Nesne\nKaldır',
+                      onTap: _beginRemoveObject),
+                  _EditTool(
+                      icon: Icons.chat_bubble_outline_rounded,
+                      label: 'AI’ye\nYaz',
+                      onTap: _openAiPrompt),
+                  _EditTool(
+                      icon: Icons.undo_rounded,
+                      label: 'Orijinale\nDön',
+                      onTap: _resetOriginal),
                 ],
               ),
             ),
@@ -351,12 +385,14 @@ class _AiEditScreenState extends State<AiEditScreen> {
                 child: FilledButton.icon(
                   onPressed: _processing ? null : _continueToShare,
                   style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFF8B5CF6),
+                    backgroundColor: const Color(0xFF16B8A6),
                     foregroundColor: Colors.black,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16)),
                   ),
                   icon: const Icon(Icons.arrow_forward_rounded),
-                  label: const Text('Paylaşmaya Devam Et', style: TextStyle(fontWeight: FontWeight.w800)),
+                  label: const Text('Paylaşmaya Devam Et',
+                      style: TextStyle(fontWeight: FontWeight.w800)),
                 ),
               ),
             ),
@@ -388,7 +424,8 @@ class _EditTool extends StatelessWidget {
   final IconData icon;
   final String label;
   final VoidCallback onTap;
-  const _EditTool({required this.icon, required this.label, required this.onTap});
+  const _EditTool(
+      {required this.icon, required this.label, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -401,14 +438,14 @@ class _EditTool extends StatelessWidget {
           width: 92,
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
           decoration: BoxDecoration(
-            color: const Color(0xFF141126),
+            color: const Color(0xFF11181D),
             borderRadius: BorderRadius.circular(18),
             border: Border.all(color: Colors.white10),
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, color: const Color(0xFF8B5CF6), size: 26),
+              Icon(icon, color: const Color(0xFF16B8A6), size: 26),
               const SizedBox(height: 7),
               Text(
                 label,
@@ -437,10 +474,10 @@ class _TargetMarker extends StatelessWidget {
       height: 52,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        border: Border.all(color: const Color(0xFF8B5CF6), width: 3),
+        border: Border.all(color: const Color(0xFF16B8A6), width: 3),
         color: Colors.black.withOpacity(.25),
       ),
-      child: const Icon(Icons.close_rounded, color: Color(0xFF8B5CF6)),
+      child: const Icon(Icons.close_rounded, color: Color(0xFF16B8A6)),
     );
   }
 }

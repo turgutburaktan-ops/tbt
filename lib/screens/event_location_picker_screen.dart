@@ -30,7 +30,8 @@ class EventLocationPickerScreen extends StatefulWidget {
   });
 
   @override
-  State<EventLocationPickerScreen> createState() => _EventLocationPickerScreenState();
+  State<EventLocationPickerScreen> createState() =>
+      _EventLocationPickerScreenState();
 }
 
 class _EventLocationPickerScreenState extends State<EventLocationPickerScreen> {
@@ -57,9 +58,12 @@ class _EventLocationPickerScreenState extends State<EventLocationPickerScreen> {
       final city = widget.city.trim().toLowerCase();
       if (city.isNotEmpty) {
         final spots = await SpotRepository.instance.loadSpots();
-        final matches = spots.where((spot) => spot.city.trim().toLowerCase() == city).toList();
+        final matches = spots
+            .where((spot) => spot.city.trim().toLowerCase() == city)
+            .toList();
         if (matches.isNotEmpty) {
-          _initialTarget = LatLng(matches.first.latitude, matches.first.longitude);
+          _initialTarget =
+              LatLng(matches.first.latitude, matches.first.longitude);
         } else if (city == 'elazığ' || city == 'elazig') {
           _initialTarget = const LatLng(38.6743, 39.2232);
         }
@@ -69,7 +73,8 @@ class _EventLocationPickerScreenState extends State<EventLocationPickerScreen> {
     } finally {
       if (mounted) {
         setState(() => _loadingCity = false);
-        _controller?.animateCamera(CameraUpdate.newLatLngZoom(_initialTarget, 12));
+        _controller
+            ?.animateCamera(CameraUpdate.newLatLngZoom(_initialTarget, 12));
       }
     }
   }
@@ -80,10 +85,12 @@ class _EventLocationPickerScreenState extends State<EventLocationPickerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final cityLabel = widget.city.trim().isEmpty ? 'Türkiye' : '${widget.city.trim()}, Türkiye';
+    final cityLabel = widget.city.trim().isEmpty
+        ? 'Türkiye'
+        : '${widget.city.trim()}, Türkiye';
     final address = widget.addressLabel.trim();
     return Scaffold(
-      backgroundColor: const Color(0xFF090812),
+      backgroundColor: const Color(0xFF090D10),
       appBar: AppBar(
         title: const Text('Etkinlik Konumunu Seç'),
         actions: [
@@ -105,11 +112,13 @@ class _EventLocationPickerScreenState extends State<EventLocationPickerScreen> {
       body: Stack(
         children: [
           GoogleMap(
-            initialCameraPosition: CameraPosition(target: _initialTarget, zoom: 6),
+            initialCameraPosition:
+                CameraPosition(target: _initialTarget, zoom: 6),
             onMapCreated: (controller) {
               _controller = controller;
               if (!_loadingCity) {
-                controller.animateCamera(CameraUpdate.newLatLngZoom(_initialTarget, 12));
+                controller.animateCamera(
+                    CameraUpdate.newLatLngZoom(_initialTarget, 12));
               }
             },
             onTap: _select,
@@ -134,23 +143,28 @@ class _EventLocationPickerScreenState extends State<EventLocationPickerScreen> {
             child: Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: const Color(0xFF141126).withOpacity(.96),
+                color: const Color(0xFF11181D).withOpacity(.96),
                 borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: const Color(0xFF352A55)),
+                border: Border.all(color: const Color(0xFF26383D)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.location_city_outlined, color: Color(0xFFA78BFA)),
+                      const Icon(Icons.location_city_outlined,
+                          color: Color(0xFF4FD1C5)),
                       const SizedBox(width: 8),
-                      Expanded(child: Text(cityLabel, style: const TextStyle(fontWeight: FontWeight.w800))),
+                      Expanded(
+                          child: Text(cityLabel,
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.w800))),
                     ],
                   ),
                   if (address.isNotEmpty) ...[
                     const SizedBox(height: 6),
-                    Text(address, style: const TextStyle(color: Colors.white70)),
+                    Text(address,
+                        style: const TextStyle(color: Colors.white70)),
                   ],
                   const SizedBox(height: 8),
                   const Text(

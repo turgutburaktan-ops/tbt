@@ -107,8 +107,9 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
     final key = _search.trim().toLowerCase();
     final next = _all.where((spot) {
       if (key.isEmpty) return true;
-      final haystack = '${spot.name} ${spot.city} ${spot.category} ${spot.description}'
-          .toLowerCase();
+      final haystack =
+          '${spot.name} ${spot.city} ${spot.category} ${spot.description}'
+              .toLowerCase();
       return haystack.contains(key);
     }).toList();
     if (_position != null) {
@@ -150,7 +151,7 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
   Widget build(BuildContext context) {
     return RefreshIndicator(
       onRefresh: _reload,
-      color: const Color(0xFF8B5CF6),
+      color: const Color(0xFF16B8A6),
       child: CustomScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
@@ -189,7 +190,7 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
                   hintText: 'Şehir veya çekim noktası ara...',
                   prefixIcon: const Icon(Icons.search_rounded),
                   filled: true,
-                  fillColor: const Color(0xFF141126),
+                  fillColor: const Color(0xFF11181D),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
                     borderSide: BorderSide.none,
@@ -202,7 +203,7 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
             const SliverFillRemaining(
               hasScrollBody: false,
               child: Center(
-                child: CircularProgressIndicator(color: Color(0xFF8B5CF6)),
+                child: CircularProgressIndicator(color: Color(0xFF16B8A6)),
               ),
             )
           else if (_visible.isEmpty)
@@ -216,7 +217,8 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
                 padding: const EdgeInsets.fromLTRB(20, 2, 20, 10),
                 child: Text(
                   '${_visible.length} çekim noktası',
-                  style: const TextStyle(color: Colors.white54, fontWeight: FontWeight.w700),
+                  style: const TextStyle(
+                      color: Colors.white54, fontWeight: FontWeight.w700),
                 ),
               ),
             ),
@@ -227,12 +229,13 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
                 return Padding(
                   padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
                   child: Card(
-                    color: const Color(0xFF141126),
+                    color: const Color(0xFF11181D),
                     clipBehavior: Clip.antiAlias,
                     child: InkWell(
                       onTap: () => Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (_) => SpotDetailScreen(spot: spot)),
+                        MaterialPageRoute(
+                            builder: (_) => SpotDetailScreen(spot: spot)),
                       ),
                       child: Padding(
                         padding: const EdgeInsets.all(10),
@@ -266,7 +269,7 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
                                         Text(
                                           _distanceLabel(spot),
                                           style: const TextStyle(
-                                            color: Color(0xFF8B5CF6),
+                                            color: Color(0xFF16B8A6),
                                             fontWeight: FontWeight.w800,
                                             fontSize: 12,
                                           ),
@@ -276,12 +279,14 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
                                   const SizedBox(height: 4),
                                   Text(
                                     '${spot.city} • ${spot.category}',
-                                    style: const TextStyle(color: Colors.white60, fontSize: 12),
+                                    style: const TextStyle(
+                                        color: Colors.white60, fontSize: 12),
                                   ),
                                   const SizedBox(height: 8),
                                   Row(
                                     children: [
-                                      const Icon(Icons.star_rounded, size: 16, color: Color(0xFF8B5CF6)),
+                                      const Icon(Icons.star_rounded,
+                                          size: 16, color: Color(0xFF16B8A6)),
                                       const SizedBox(width: 3),
                                       Text(spot.rating.toStringAsFixed(1)),
                                     ],
@@ -289,7 +294,8 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
                                 ],
                               ),
                             ),
-                            const Icon(Icons.chevron_right_rounded, color: Colors.white38),
+                            const Icon(Icons.chevron_right_rounded,
+                                color: Colors.white38),
                           ],
                         ),
                       ),

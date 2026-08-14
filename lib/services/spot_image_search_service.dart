@@ -38,65 +38,60 @@ class SpotImageSearchService {
     SharedPreferences prefs,
   ) async {
     try {
-      final query = '${spot.name} ${spot.city} Türkiye Turkey';
-      final uri = Uri.https('commons.wikimedia.org', '/w/api.php', {
-        'action': 'query',
-        'generator': 'search',
-        'gsrsearch': query,
-        'gsrnamespace': '6',
-        'gsrlimit': '5',
-        'prop': 'imageinfo',
-        'iiprop': 'url',
-        'iiurlwidth': '900',
-        'format': 'json',
-        'formatversion': '2',
-        'origin': '*',
-      });
+      final queries = <String>[
+        '${spot.name} ${spot.city}',
+        '${spot.name} Türkiye',
+        '${spot.name} Turkey',
+      ];
+      for (final query in queries) {
+        final uri = Uri.https('commons.wikimedia.org', '/w/api.php', {
+          'action': 'query',
+          'generator': 'search',
+          'gsrsearch': query,
+          'gsrnamespace': '6',
+          'gsrlimit': '5',
+          'prop': 'imageinfo',
+          'iiprop': 'url',
+          'iiurlwidth': '900',
+          'format': 'json',
+          'formatversion': '2',
+          'origin': '*',
+        });
 
-      final response = await http.get(
-        uri,
-        headers: const {
-          'User-Agent': 'BestPhotoSpot/0.1 (photo spot image resolver)',
-        },
-      ).timeout(const Duration(seconds: 4));
+        final response = await http.get(
+          uri,
+          headers: const {
+            'User-Agent': 'BestPhotoSpot/0.1 (photo spot image resolver)',
+          },
+        ).timeout(const Duration(seconds: 8));
 
-      if (response.statusCode != 200) {
-        _cache[key] = null;
-        return null;
-      }
+        if (response.statusCode != 200) continue;
 
-      final decoded = jsonDecode(response.body);
-      if (decoded is! Map<String, dynamic>) {
-        _cache[key] = null;
-        return null;
-      }
+        final decoded = jsonDecode(response.body);
+        if (decoded is! Map<String, dynamic>) continue;
 
-      final queryData = decoded['query'];
-      if (queryData is! Map<String, dynamic>) {
-        _cache[key] = null;
-        return null;
-      }
+        final queryData = decoded['query'];
+        if (queryData is! Map<String, dynamic>) continue;
 
-      final pages = queryData['pages'];
-      if (pages is! List || pages.isEmpty) {
-        _cache[key] = null;
-        return null;
-      }
+        final pages = queryData['pages'];
+        if (pages is! List || pages.isEmpty) continue;
 
-      final ranked = pages.whereType<Map<String, dynamic>>().toList()
-        ..sort((a, b) => _score(b, spot).compareTo(_score(a, spot)));
+        final ranked = pages.whereType<Map<String, dynamic>>().toList()
+          ..sort((a, b) => _score(b, spot).compareTo(_score(a, spot)));
 
-      for (final page in ranked) {
-        if (_score(page, spot) <= 0) continue;
-        final imageInfo = page['imageinfo'];
-        if (imageInfo is! List || imageInfo.isEmpty) continue;
-        final info = imageInfo.first;
-        if (info is! Map<String, dynamic>) continue;
-        final thumbUrl = (info['thumburl'] ?? info['url'] ?? '').toString().trim();
-        if (thumbUrl.startsWith('https://')) {
-          _cache[key] = thumbUrl;
-          await prefs.setString(_prefsKey(key), thumbUrl);
-          return thumbUrl;
+        for (final page in ranked) {
+          if (_score(page, spot) <= 0) continue;
+          final imageInfo = page['imageinfo'];
+          if (imageInfo is! List || imageInfo.isEmpty) continue;
+          final info = imageInfo.first;
+          if (info is! Map<String, dynamic>) continue;
+          final thumbUrl =
+              (info['thumburl'] ?? info['url'] ?? '').toString().trim();
+          if (thumbUrl.startsWith('https://')) {
+            _cache[key] = thumbUrl;
+            await prefs.setString(_prefsKey(key), thumbUrl);
+            return thumbUrl;
+          }
         }
       }
 

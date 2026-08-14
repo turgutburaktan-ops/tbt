@@ -29,13 +29,13 @@ class _HomeScreenState extends State<HomeScreen> {
     ];
 
     return Scaffold(
-      backgroundColor: const Color(0xFF090812),
+      backgroundColor: const Color(0xFF090D10),
       body: IndexedStack(
         index: _selectedIndex,
         children: pages,
       ),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: const Color(0xFF8B5CF6),
+        backgroundColor: const Color(0xFF16B8A6),
         foregroundColor: Colors.black,
         onPressed: () {
           Navigator.push(
@@ -50,11 +50,10 @@ class _HomeScreenState extends State<HomeScreen> {
           size: 28,
         ),
       ),
-      floatingActionButtonLocation:
-          FloatingActionButtonLocation.centerDocked,
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       bottomNavigationBar: NavigationBar(
         height: 72,
-        backgroundColor: const Color(0xFF11151C),
+        backgroundColor: const Color(0xFF0E1519),
         selectedIndex: _selectedIndex,
         onDestinationSelected: (value) {
           setState(() {
@@ -87,7 +86,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
-
 
 class _DiscoverHubPage extends StatefulWidget {
   const _DiscoverHubPage();
@@ -122,7 +120,7 @@ class _DiscoverHubPageState extends State<_DiscoverHubPage> {
             child: Container(
               padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
-                color: const Color(0xFF141126),
+                color: const Color(0xFF11181D),
                 borderRadius: BorderRadius.circular(18),
               ),
               child: Row(
@@ -182,9 +180,7 @@ class _HomeSectionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: selected
-          ? const Color(0xFF8B5CF6)
-          : Colors.transparent,
+      color: selected ? const Color(0xFF16B8A6) : Colors.transparent,
       borderRadius: BorderRadius.circular(14),
       child: InkWell(
         borderRadius: BorderRadius.circular(14),
@@ -202,9 +198,7 @@ class _HomeSectionButton extends StatelessWidget {
               Icon(
                 selected ? selectedIcon : icon,
                 size: 20,
-                color: selected
-                    ? Colors.black
-                    : Colors.white60,
+                color: selected ? Colors.black : Colors.white60,
               ),
               const SizedBox(width: 7),
               Flexible(
@@ -213,13 +207,9 @@ class _HomeSectionButton extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    color: selected
-                        ? Colors.black
-                        : Colors.white70,
+                    color: selected ? Colors.black : Colors.white70,
                     fontSize: 13,
-                    fontWeight: selected
-                        ? FontWeight.w800
-                        : FontWeight.w600,
+                    fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
                   ),
                 ),
               ),
@@ -239,8 +229,7 @@ class _ExplorePage extends StatefulWidget {
 }
 
 class _ExplorePageState extends State<_ExplorePage> {
-  final TextEditingController _searchController =
-      TextEditingController();
+  final TextEditingController _searchController = TextEditingController();
 
   String _searchQuery = '';
   String _selectedFilter = 'Tümü';
@@ -295,40 +284,33 @@ class _ExplorePageState extends State<_ExplorePage> {
       switch (_selectedFilter) {
         case 'Gün Batımı':
           return _containsTag(spot, 'gün batımı') ||
-              spot.category.toLowerCase() ==
-                  'gün batımı';
+              spot.category.toLowerCase() == 'gün batımı';
 
         case 'Gün Doğumu':
           return _containsTag(spot, 'gün doğumu');
 
         case 'Şehir':
-          return spot.category.toLowerCase() ==
-                  'şehir' ||
+          return spot.category.toLowerCase() == 'şehir' ||
               _containsTag(spot, 'şehir');
 
         case 'Doğa':
-          return spot.category.toLowerCase() ==
-                  'doğa' ||
+          return spot.category.toLowerCase() == 'doğa' ||
               _containsTag(spot, 'doğa');
 
         case 'Mimari':
-          return spot.category.toLowerCase() ==
-                  'mimari' ||
+          return spot.category.toLowerCase() == 'mimari' ||
               _containsTag(spot, 'mimari');
 
         case 'Manzara':
-          return spot.category.toLowerCase() ==
-                  'manzara' ||
+          return spot.category.toLowerCase() == 'manzara' ||
               _containsTag(spot, 'manzara');
 
         case 'Sokak':
-          return spot.category.toLowerCase() ==
-                  'sokak' ||
+          return spot.category.toLowerCase() == 'sokak' ||
               _containsTag(spot, 'sokak');
 
         case 'Tarih':
-          return spot.category.toLowerCase() ==
-                  'tarih' ||
+          return spot.category.toLowerCase() == 'tarih' ||
               _containsTag(spot, 'tarih');
 
         default:
@@ -403,8 +385,7 @@ class _ExplorePageState extends State<_ExplorePage> {
                 },
                 textInputAction: TextInputAction.search,
                 decoration: InputDecoration(
-                  hintText:
-                      'Şehir, nokta, gün batımı, mimari...',
+                  hintText: 'Şehir, nokta, gün batımı, mimari...',
                   prefixIcon: const Icon(
                     Icons.search,
                   ),
@@ -417,10 +398,9 @@ class _ExplorePageState extends State<_ExplorePage> {
                         )
                       : null,
                   filled: true,
-                  fillColor: const Color(0xFF141126),
+                  fillColor: const Color(0xFF11181D),
                   border: OutlineInputBorder(
-                    borderRadius:
-                        BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(16),
                     borderSide: BorderSide.none,
                   ),
                 ),
@@ -441,12 +421,10 @@ class _ExplorePageState extends State<_ExplorePage> {
                 ),
                 scrollDirection: Axis.horizontal,
                 itemCount: _filters.length,
-                separatorBuilder: (_, __) =>
-                    const SizedBox(width: 8),
+                separatorBuilder: (_, __) => const SizedBox(width: 8),
                 itemBuilder: (context, index) {
                   final filter = _filters[index];
-                  final selected =
-                      filter == _selectedFilter;
+                  final selected = filter == _selectedFilter;
 
                   return ChoiceChip(
                     label: Text(filter),
@@ -456,15 +434,11 @@ class _ExplorePageState extends State<_ExplorePage> {
                         _selectedFilter = filter;
                       });
                     },
-                    selectedColor:
-                        const Color(0xFF8B5CF6),
-                    backgroundColor:
-                        const Color(0xFF141126),
+                    selectedColor: const Color(0xFF16B8A6),
+                    backgroundColor: const Color(0xFF11181D),
                     side: BorderSide.none,
                     labelStyle: TextStyle(
-                      color: selected
-                          ? Colors.black
-                          : Colors.white,
+                      color: selected ? Colors.black : Colors.white,
                       fontWeight: FontWeight.w600,
                     ),
                   );
@@ -485,8 +459,7 @@ class _ExplorePageState extends State<_ExplorePage> {
                 children: [
                   Expanded(
                     child: Text(
-                      _searchQuery.isEmpty &&
-                              _selectedFilter == 'Tümü'
+                      _searchQuery.isEmpty && _selectedFilter == 'Tümü'
                           ? 'Popüler çekim noktaları'
                           : '${spots.length} sonuç bulundu',
                       style: const TextStyle(
@@ -582,7 +555,7 @@ class _ExploreSpotCard extends StatelessWidget {
         12,
       ),
       child: Card(
-        color: const Color(0xFF141126),
+        color: const Color(0xFF11181D),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: () {
@@ -600,8 +573,7 @@ class _ExploreSpotCard extends StatelessWidget {
             child: Row(
               children: [
                 ClipRRect(
-                  borderRadius:
-                      BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(12),
                   child: Image.network(
                     spot.imageUrl,
                     width: 88,
@@ -611,8 +583,7 @@ class _ExploreSpotCard extends StatelessWidget {
                       return Container(
                         width: 88,
                         height: 88,
-                        color:
-                            const Color(0xFF1C1733),
+                        color: const Color(0xFF152128),
                         child: const Icon(
                           Icons.photo,
                           color: Colors.white38,
@@ -621,28 +592,21 @@ class _ExploreSpotCard extends StatelessWidget {
                     },
                   ),
                 ),
-
                 const SizedBox(width: 12),
-
                 Expanded(
                   child: Column(
-                    crossAxisAlignment:
-                        CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         spot.name,
                         maxLines: 1,
-                        overflow:
-                            TextOverflow.ellipsis,
+                        overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
                           fontSize: 17,
-                          fontWeight:
-                              FontWeight.bold,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-
                       const SizedBox(height: 4),
-
                       Text(
                         '${spot.city} • ${spot.category}',
                         style: const TextStyle(
@@ -650,49 +614,37 @@ class _ExploreSpotCard extends StatelessWidget {
                           fontSize: 13,
                         ),
                       ),
-
                       const SizedBox(height: 6),
-
                       Text(
                         '⭐ ${spot.rating}   📸 ${spot.bestTime}',
                         maxLines: 1,
-                        overflow:
-                            TextOverflow.ellipsis,
+                        overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
                           fontSize: 12,
                         ),
                       ),
-
                       const SizedBox(height: 6),
-
                       Text(
                         '📐 ${spot.angle}',
                         maxLines: 1,
-                        overflow:
-                            TextOverflow.ellipsis,
+                        overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
-                          color:
-                              Color(0xFF8B5CF6),
+                          color: Color(0xFF16B8A6),
                           fontSize: 12,
                         ),
                       ),
                     ],
                   ),
                 ),
-
-                ValueListenableBuilder<
-                    List<PhotoSpot>>(
-                  valueListenable:
-                      FavoritesService.savedSpots,
+                ValueListenableBuilder<List<PhotoSpot>>(
+                  valueListenable: FavoritesService.savedSpots,
                   builder: (
                     context,
                     savedSpots,
                     _,
                   ) {
-                    final isSaved =
-                        savedSpots.any(
-                      (item) =>
-                          item.id == spot.id,
+                    final isSaved = savedSpots.any(
+                      (item) => item.id == spot.id,
                     );
 
                     return IconButton(
@@ -702,13 +654,10 @@ class _ExploreSpotCard extends StatelessWidget {
                         );
                       },
                       icon: Icon(
-                        isSaved
-                            ? Icons.favorite
-                            : Icons
-                                .favorite_border,
+                        isSaved ? Icons.favorite : Icons.favorite_border,
                         color: isSaved
                             ? const Color(
-                                0xFF8B5CF6,
+                                0xFF16B8A6,
                               )
                             : Colors.white54,
                       ),
@@ -735,8 +684,7 @@ class _SavedPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return SafeArea(
       child: ValueListenableBuilder<List<PhotoSpot>>(
-        valueListenable:
-            FavoritesService.savedSpots,
+        valueListenable: FavoritesService.savedSpots,
         builder: (
           context,
           spots,
@@ -759,8 +707,7 @@ class _SavedPage extends StatelessWidget {
                       'Henüz kaydedilen nokta yok',
                       style: TextStyle(
                         fontSize: 20,
-                        fontWeight:
-                            FontWeight.bold,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                     SizedBox(height: 8),
@@ -792,47 +739,39 @@ class _SavedPage extends StatelessWidget {
                   fontWeight: FontWeight.w800,
                 ),
               ),
-
               const SizedBox(height: 4),
-
               Text(
                 '${spots.length} çekim noktası',
                 style: const TextStyle(
                   color: Colors.white54,
                 ),
               ),
-
               const SizedBox(height: 18),
-
               ...spots.map(
                 (spot) => Card(
-                  color: const Color(0xFF141126),
+                  color: const Color(0xFF11181D),
                   margin: const EdgeInsets.only(
                     bottom: 12,
                   ),
                   child: ListTile(
-                    contentPadding:
-                        const EdgeInsets.all(10),
+                    contentPadding: const EdgeInsets.all(10),
                     leading: ClipRRect(
-                      borderRadius:
-                          BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(10),
                       child: Image.network(
                         spot.imageUrl,
                         width: 70,
                         height: 70,
                         fit: BoxFit.cover,
-                        errorBuilder:
-                            (_, __, ___) {
+                        errorBuilder: (_, __, ___) {
                           return Container(
                             width: 70,
                             height: 70,
                             color: const Color(
-                              0xFF1C1733,
+                              0xFF152128,
                             ),
                             child: const Icon(
                               Icons.photo,
-                              color:
-                                  Colors.white38,
+                              color: Colors.white38,
                             ),
                           );
                         },
@@ -841,11 +780,9 @@ class _SavedPage extends StatelessWidget {
                     title: Text(
                       spot.name,
                       maxLines: 1,
-                      overflow:
-                          TextOverflow.ellipsis,
+                      overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        fontWeight:
-                            FontWeight.bold,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                     subtitle: Text(
@@ -856,8 +793,7 @@ class _SavedPage extends StatelessWidget {
                       tooltip: 'Kaydı kaldır',
                       icon: const Icon(
                         Icons.favorite,
-                        color:
-                            Color(0xFF8B5CF6),
+                        color: Color(0xFF16B8A6),
                       ),
                       onPressed: () {
                         FavoritesService.remove(
@@ -869,8 +805,7 @@ class _SavedPage extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) =>
-                              SpotDetailScreen(
+                          builder: (_) => SpotDetailScreen(
                             spot: spot,
                           ),
                         ),
@@ -909,7 +844,7 @@ class _ProfileStat extends StatelessWidget {
           style: const TextStyle(
             fontSize: 23,
             fontWeight: FontWeight.bold,
-            color: Color(0xFF8B5CF6),
+            color: Color(0xFF16B8A6),
           ),
         ),
         const SizedBox(height: 4),
@@ -944,10 +879,9 @@ class _ProfileMenuItem extends StatelessWidget {
       margin: const EdgeInsets.only(
         bottom: 10,
       ),
-      color: const Color(0xFF141126),
+      color: const Color(0xFF11181D),
       child: ListTile(
-        contentPadding:
-            const EdgeInsets.symmetric(
+        contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
           vertical: 6,
         ),
@@ -955,14 +889,12 @@ class _ProfileMenuItem extends StatelessWidget {
           width: 44,
           height: 44,
           decoration: BoxDecoration(
-            color: const Color(0xFF8B5CF6)
-                .withOpacity(.12),
-            borderRadius:
-                BorderRadius.circular(12),
+            color: const Color(0xFF16B8A6).withOpacity(.12),
+            borderRadius: BorderRadius.circular(12),
           ),
           child: Icon(
             icon,
-            color: const Color(0xFF8B5CF6),
+            color: const Color(0xFF16B8A6),
           ),
         ),
         title: Text(

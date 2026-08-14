@@ -16,7 +16,8 @@ class NationwideCandidateSpotResolver {
       ...officialPhotoSpotCandidatesSupplement,
       ...turkiye81SpotCandidates,
     ]) {
-      byKey.putIfAbsent(_placeKey(candidate.city, candidate.name), () => candidate);
+      byKey.putIfAbsent(
+          _placeKey(candidate.city, candidate.name), () => candidate);
     }
     return List.unmodifiable(byKey.values);
   }
@@ -28,7 +29,9 @@ class NationwideCandidateSpotResolver {
 
     final currentByCity = <String, List<PhotoSpot>>{};
     for (final spot in current) {
-      currentByCity.putIfAbsent(_normalize(spot.city), () => <PhotoSpot>[]).add(spot);
+      currentByCity
+          .putIfAbsent(_normalize(spot.city), () => <PhotoSpot>[])
+          .add(spot);
     }
 
     for (final candidate in allCandidates) {
@@ -48,7 +51,8 @@ class NationwideCandidateSpotResolver {
 
       // Aynı kaynak noktası daha önce kürasyon kataloğuna farklı bir adla
       // alınmışsa koordinatını tekrar kullan. Şehir dışına asla eşleştirme yapma.
-      final citySpots = currentByCity[_normalize(candidate.city)] ?? const <PhotoSpot>[];
+      final citySpots =
+          currentByCity[_normalize(candidate.city)] ?? const <PhotoSpot>[];
       final matched = _bestExistingMatch(candidate.name, citySpots);
       if (matched != null) {
         resultByPlace[exactKey] = _fromCandidate(
@@ -80,7 +84,8 @@ class NationwideCandidateSpotResolver {
     required double longitude,
     String imageUrl = '',
     String bestTime = 'Altın saat ve gün ışığı koşullarına göre planla',
-    String angle = 'Ana manzarayı ve çevresel detayları farklı açılardan değerlendir',
+    String angle =
+        'Ana manzarayı ve çevresel detayları farklı açılardan değerlendir',
     String lens = '24-70mm',
     String difficulty = 'Kolay',
     String description = '',
@@ -104,7 +109,8 @@ class NationwideCandidateSpotResolver {
     );
   }
 
-  static PhotoSpot? _bestExistingMatch(String candidateName, List<PhotoSpot> spots) {
+  static PhotoSpot? _bestExistingMatch(
+      String candidateName, List<PhotoSpot> spots) {
     final candidateTokens = _tokens(candidateName);
     if (candidateTokens.isEmpty) return null;
 
@@ -119,7 +125,8 @@ class NationwideCandidateSpotResolver {
 
       final union = candidateTokens.union(spotTokens);
       final score = shared.length / union.length;
-      final hasDistinctiveSharedToken = shared.any((token) => token.length >= 5);
+      final hasDistinctiveSharedToken =
+          shared.any((token) => token.length >= 5);
       if (!hasDistinctiveSharedToken) continue;
 
       // Yanlış pin riskini azaltmak için güçlü benzerlik iste.
@@ -133,8 +140,21 @@ class NationwideCandidateSpotResolver {
 
   static Set<String> _tokens(String value) {
     const ignored = <String>{
-      've', 'ile', 'eski', 'tarihi', 'merkezi', 'merkez', 'cevresi', 'noktasi',
-      'panorama', 'seyir', 'fotograf', 'milli', 'parki', 'ilce', 'kasabasi',
+      've',
+      'ile',
+      'eski',
+      'tarihi',
+      'merkezi',
+      'merkez',
+      'cevresi',
+      'noktasi',
+      'panorama',
+      'seyir',
+      'fotograf',
+      'milli',
+      'parki',
+      'ilce',
+      'kasabasi',
     };
     return _normalize(value)
         .split(' ')

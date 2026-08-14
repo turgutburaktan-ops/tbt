@@ -9,12 +9,14 @@ class MentionProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final userRef = FirebaseFirestore.instance.collection('users').doc(userId);
-    final postsQuery = FirebaseFirestore.instance.collection('posts').where('userId', isEqualTo: userId);
+    final postsQuery = FirebaseFirestore.instance
+        .collection('posts')
+        .where('userId', isEqualTo: userId);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF090812),
+      backgroundColor: const Color(0xFF090D10),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF090812),
+        backgroundColor: const Color(0xFF090D10),
         foregroundColor: Colors.white,
         title: const Text('Profil'),
       ),
@@ -29,7 +31,9 @@ class MentionProfileScreen extends StatelessWidget {
             return const Center(child: Text('Kullanıcı bulunamadı.'));
           }
 
-          final displayName = (data['displayName'] ?? data['username'] ?? 'Fotoğrafçı').toString();
+          final displayName =
+              (data['displayName'] ?? data['username'] ?? 'Fotoğrafçı')
+                  .toString();
           final username = (data['username'] ?? displayName).toString();
           final bio = (data['bio'] ?? '').toString().trim();
           final photoUrl = (data['photoUrl'] ?? '').toString();
@@ -51,15 +55,18 @@ class MentionProfileScreen extends StatelessWidget {
                           decoration: const BoxDecoration(
                             shape: BoxShape.circle,
                             gradient: LinearGradient(
-                              colors: [Color(0xFF8B5CF6), Color(0xFFC084FC)],
+                              colors: [Color(0xFF16B8A6), Color(0xFF5EEAD4)],
                             ),
                           ),
                           child: CircleAvatar(
                             radius: 42,
-                            backgroundColor: const Color(0xFF1C1733),
-                            backgroundImage: photoUrl.isEmpty ? null : NetworkImage(photoUrl),
+                            backgroundColor: const Color(0xFF152128),
+                            backgroundImage: photoUrl.isEmpty
+                                ? null
+                                : NetworkImage(photoUrl),
                             child: photoUrl.isEmpty
-                                ? const Icon(Icons.person, size: 38, color: Colors.white54)
+                                ? const Icon(Icons.person,
+                                    size: 38, color: Colors.white54)
                                 : null,
                           ),
                         ),
@@ -70,13 +77,19 @@ class MentionProfileScreen extends StatelessWidget {
                             children: [
                               Text(
                                 '@${username.replaceFirst('@', '')}',
-                                style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w900),
+                                style: const TextStyle(
+                                    fontSize: 21, fontWeight: FontWeight.w900),
                               ),
                               const SizedBox(height: 4),
                               if (displayName != username)
-                                Text(displayName, style: const TextStyle(color: Colors.white70)),
+                                Text(displayName,
+                                    style:
+                                        const TextStyle(color: Colors.white70)),
                               const SizedBox(height: 10),
-                              Text('${posts.length} gönderi', style: const TextStyle(color: Color(0xFFA78BFA), fontWeight: FontWeight.w700)),
+                              Text('${posts.length} gönderi',
+                                  style: const TextStyle(
+                                      color: Color(0xFF4FD1C5),
+                                      fontWeight: FontWeight.w700)),
                             ],
                           ),
                         ),
@@ -86,7 +99,9 @@ class MentionProfileScreen extends StatelessWidget {
                   if (bio.isNotEmpty)
                     Padding(
                       padding: const EdgeInsets.fromLTRB(20, 0, 20, 18),
-                      child: Text(bio, style: const TextStyle(color: Colors.white70, height: 1.45)),
+                      child: Text(bio,
+                          style: const TextStyle(
+                              color: Colors.white70, height: 1.45)),
                     ),
                   const Divider(height: 1, color: Color(0xFF241A3A)),
                   if (postsSnapshot.connectionState == ConnectionState.waiting)
@@ -97,14 +112,17 @@ class MentionProfileScreen extends StatelessWidget {
                   else if (posts.isEmpty)
                     const Padding(
                       padding: EdgeInsets.all(40),
-                      child: Center(child: Text('Henüz gönderi yok.', style: TextStyle(color: Colors.white54))),
+                      child: Center(
+                          child: Text('Henüz gönderi yok.',
+                              style: TextStyle(color: Colors.white54))),
                     )
                   else
                     GridView.builder(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
                       padding: const EdgeInsets.all(2),
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 3,
                         crossAxisSpacing: 2,
                         mainAxisSpacing: 2,
@@ -114,13 +132,16 @@ class MentionProfileScreen extends StatelessWidget {
                         final post = posts[index].data();
                         final imageUrl = (post['imageUrl'] ?? '').toString();
                         return Container(
-                          color: const Color(0xFF141126),
+                          color: const Color(0xFF11181D),
                           child: imageUrl.isEmpty
-                              ? const Icon(Icons.image_outlined, color: Colors.white24)
+                              ? const Icon(Icons.image_outlined,
+                                  color: Colors.white24)
                               : Image.network(
                                   imageUrl,
                                   fit: BoxFit.cover,
-                                  errorBuilder: (_, __, ___) => const Icon(Icons.broken_image_outlined, color: Colors.white24),
+                                  errorBuilder: (_, __, ___) => const Icon(
+                                      Icons.broken_image_outlined,
+                                      color: Colors.white24),
                                 ),
                         );
                       },

@@ -46,19 +46,47 @@ class ShootingGuideSection extends StatelessWidget {
 
         final rows = <({IconData icon, String title, String text})>[
           if (guide.shootingPosition.trim().isNotEmpty)
-            (icon: Icons.place_outlined, title: 'Nerede dur?', text: guide.shootingPosition),
+            (
+              icon: Icons.place_outlined,
+              title: 'Nerede dur?',
+              text: guide.shootingPosition
+            ),
           if (guide.subjectPlacement.trim().isNotEmpty)
-            (icon: Icons.person_pin_circle_outlined, title: 'Özneyi yerleştir', text: guide.subjectPlacement),
+            (
+              icon: Icons.person_pin_circle_outlined,
+              title: 'Özneyi yerleştir',
+              text: guide.subjectPlacement
+            ),
           if (guide.lightDirection.trim().isNotEmpty)
-            (icon: Icons.wb_sunny_outlined, title: 'Işığı kullan', text: guide.lightDirection),
+            (
+              icon: Icons.wb_sunny_outlined,
+              title: 'Işığı kullan',
+              text: guide.lightDirection
+            ),
           if (guide.compositionTip.trim().isNotEmpty)
-            (icon: Icons.grid_3x3_outlined, title: 'Kadraj', text: guide.compositionTip),
+            (
+              icon: Icons.grid_3x3_outlined,
+              title: 'Kadraj',
+              text: guide.compositionTip
+            ),
           if (guide.portraitTip.trim().isNotEmpty)
-            (icon: Icons.portrait_outlined, title: 'Portre', text: guide.portraitTip),
+            (
+              icon: Icons.portrait_outlined,
+              title: 'Portre',
+              text: guide.portraitTip
+            ),
           if (guide.recommendedSettings.trim().isNotEmpty)
-            (icon: Icons.tune, title: 'Başlangıç ayarları', text: guide.recommendedSettings),
+            (
+              icon: Icons.tune,
+              title: 'Başlangıç ayarları',
+              text: guide.recommendedSettings
+            ),
           if (guide.accessibilityNote.trim().isNotEmpty)
-            (icon: Icons.shield_outlined, title: 'Erişim ve güvenlik', text: guide.accessibilityNote),
+            (
+              icon: Icons.shield_outlined,
+              title: 'Erişim ve güvenlik',
+              text: guide.accessibilityNote
+            ),
         ];
 
         return _Shell(
@@ -71,27 +99,34 @@ class ShootingGuideSection extends StatelessWidget {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(rows[i].icon, size: 20, color: const Color(0xFF8B5CF6)),
+                    Icon(rows[i].icon,
+                        size: 20, color: const Color(0xFF16B8A6)),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(rows[i].title, style: const TextStyle(fontWeight: FontWeight.w800)),
+                          Text(rows[i].title,
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.w800)),
                           const SizedBox(height: 3),
-                          Text(rows[i].text, style: const TextStyle(color: Colors.white70, height: 1.4)),
+                          Text(rows[i].text,
+                              style: const TextStyle(
+                                  color: Colors.white70, height: 1.4)),
                         ],
                       ),
                     ),
                   ],
                 ),
-                if (i != rows.length - 1) const Divider(height: 24, color: Colors.white10),
+                if (i != rows.length - 1)
+                  const Divider(height: 24, color: Colors.white10),
               ],
               if (guide.shotIdeas.isNotEmpty) ...[
                 const SizedBox(height: 16),
                 const Align(
                   alignment: Alignment.centerLeft,
-                  child: Text('Denenecek kareler', style: TextStyle(fontWeight: FontWeight.w800)),
+                  child: Text('Denenecek kareler',
+                      style: TextStyle(fontWeight: FontWeight.w800)),
                 ),
                 const SizedBox(height: 8),
                 Wrap(
@@ -100,12 +135,15 @@ class ShootingGuideSection extends StatelessWidget {
                   children: guide.shotIdeas
                       .map(
                         (idea) => Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 8),
                           decoration: BoxDecoration(
                             color: const Color(0xFF202631),
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          child: Text(idea, style: const TextStyle(color: Colors.white70, fontSize: 12.5)),
+                          child: Text(idea,
+                              style: const TextStyle(
+                                  color: Colors.white70, fontSize: 12.5)),
                         ),
                       )
                       .toList(),
@@ -152,7 +190,8 @@ class TogetherGoSection extends StatelessWidget {
             return const _Notice(
               icon: Icons.cloud_off_outlined,
               title: 'Buluşmalar yüklenemedi',
-              text: 'Bağlantı düzeldiğinde yaklaşan buluşmalar burada görünecek.',
+              text:
+                  'Bağlantı düzeldiğinde yaklaşan buluşmalar burada görünecek.',
             );
           }
 
@@ -161,7 +200,8 @@ class TogetherGoSection extends StatelessWidget {
             return const _Notice(
               icon: Icons.group_add_outlined,
               title: 'İlk buluşmayı sen başlat',
-              text: 'Tarih, saat ve kişi sayısını seç. Kesin canlı konum paylaşılmaz.',
+              text:
+                  'Tarih, saat ve kişi sayısını seç. Kesin canlı konum paylaşılmaz.',
             );
           }
 
@@ -215,7 +255,8 @@ class TogetherGoSection extends StatelessWidget {
             if (time == null) return;
 
             setSheetState(() {
-              selected = DateTime(date.year, date.month, date.day, time.hour, time.minute);
+              selected = DateTime(
+                  date.year, date.month, date.day, time.hour, time.minute);
             });
           }
 
@@ -253,7 +294,8 @@ class TogetherGoSection extends StatelessWidget {
                   children: [
                     Text(
                       '${spot.name} • Birlikte Git',
-                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
+                      style: const TextStyle(
+                          fontSize: 20, fontWeight: FontWeight.w900),
                     ),
                     const SizedBox(height: 6),
                     const Text(
@@ -263,24 +305,32 @@ class TogetherGoSection extends StatelessWidget {
                     const SizedBox(height: 16),
                     ListTile(
                       contentPadding: EdgeInsets.zero,
-                      leading: const Icon(Icons.event_outlined, color: Color(0xFF8B5CF6)),
+                      leading: const Icon(Icons.event_outlined,
+                          color: Color(0xFF16B8A6)),
                       title: const Text('Tarih ve saat'),
                       subtitle: Text(_dateTimeText(selected)),
                       trailing: const Icon(Icons.chevron_right),
                       onTap: chooseDateTime,
                     ),
                     const SizedBox(height: 8),
-                    const Text('Amaç', style: TextStyle(fontWeight: FontWeight.w800)),
+                    const Text('Amaç',
+                        style: TextStyle(fontWeight: FontWeight.w800)),
                     const SizedBox(height: 8),
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,
-                      children: ['Fotoğraf çekimi', 'Gün batımı', 'Portre', 'Gece çekimi']
+                      children: [
+                        'Fotoğraf çekimi',
+                        'Gün batımı',
+                        'Portre',
+                        'Gece çekimi'
+                      ]
                           .map(
                             (item) => ChoiceChip(
                               label: Text(item),
                               selected: purpose == item,
-                              onSelected: (_) => setSheetState(() => purpose = item),
+                              onSelected: (_) =>
+                                  setSheetState(() => purpose = item),
                             ),
                           )
                           .toList(),
@@ -289,15 +339,22 @@ class TogetherGoSection extends StatelessWidget {
                     Row(
                       children: [
                         const Expanded(
-                          child: Text('Toplam kişi sayısı', style: TextStyle(fontWeight: FontWeight.w800)),
+                          child: Text('Toplam kişi sayısı',
+                              style: TextStyle(fontWeight: FontWeight.w800)),
                         ),
                         IconButton(
-                          onPressed: capacity > 2 ? () => setSheetState(() => capacity--) : null,
+                          onPressed: capacity > 2
+                              ? () => setSheetState(() => capacity--)
+                              : null,
                           icon: const Icon(Icons.remove_circle_outline),
                         ),
-                        Text('$capacity', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
+                        Text('$capacity',
+                            style: const TextStyle(
+                                fontSize: 18, fontWeight: FontWeight.w900)),
                         IconButton(
-                          onPressed: capacity < 12 ? () => setSheetState(() => capacity++) : null,
+                          onPressed: capacity < 12
+                              ? () => setSheetState(() => capacity++)
+                              : null,
                           icon: const Icon(Icons.add_circle_outline),
                         ),
                       ],
@@ -318,17 +375,19 @@ class TogetherGoSection extends StatelessWidget {
                       child: FilledButton.icon(
                         onPressed: saving ? null : save,
                         style: FilledButton.styleFrom(
-                          backgroundColor: const Color(0xFF8B5CF6),
+                          backgroundColor: const Color(0xFF16B8A6),
                           foregroundColor: Colors.black,
                         ),
                         icon: saving
                             ? const SizedBox(
                                 width: 18,
                                 height: 18,
-                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
+                                child: CircularProgressIndicator(
+                                    strokeWidth: 2, color: Colors.black),
                               )
                             : const Icon(Icons.groups_2_outlined),
-                        label: Text(saving ? 'Oluşturuluyor...' : 'Buluşmayı oluştur'),
+                        label: Text(
+                            saving ? 'Oluşturuluyor...' : 'Buluşmayı oluştur'),
                       ),
                     ),
                   ],
@@ -383,18 +442,21 @@ class _MeetupCardState extends State<_MeetupCard> {
                   shape: BoxShape.circle,
                   color: Color(0x228B5CF6),
                 ),
-                child: const Icon(Icons.people_alt_outlined, color: Color(0xFF8B5CF6)),
+                child: const Icon(Icons.people_alt_outlined,
+                    color: Color(0xFF16B8A6)),
               ),
               const SizedBox(width: 11),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(meetup.purpose, style: const TextStyle(fontWeight: FontWeight.w900)),
+                    Text(meetup.purpose,
+                        style: const TextStyle(fontWeight: FontWeight.w900)),
                     const SizedBox(height: 3),
                     Text(
                       '${meetup.hostName} • ${_dateTimeText(meetup.startsAt)}',
-                      style: const TextStyle(color: Colors.white60, fontSize: 12.5),
+                      style: const TextStyle(
+                          color: Colors.white60, fontSize: 12.5),
                     ),
                   ],
                 ),
@@ -403,7 +465,8 @@ class _MeetupCardState extends State<_MeetupCard> {
           ),
           if (meetup.note.trim().isNotEmpty) ...[
             const SizedBox(height: 10),
-            Text(meetup.note, style: const TextStyle(color: Colors.white70, height: 1.35)),
+            Text(meetup.note,
+                style: const TextStyle(color: Colors.white70, height: 1.35)),
           ],
           const SizedBox(height: 12),
           Row(
@@ -425,9 +488,11 @@ class _MeetupCardState extends State<_MeetupCard> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     FilledButton.icon(
-                      onPressed: busy ? null : () => openMeetupHostChat(context, meetup),
+                      onPressed: busy
+                          ? null
+                          : () => openMeetupHostChat(context, meetup),
                       style: FilledButton.styleFrom(
-                        backgroundColor: const Color(0xFF8B5CF6),
+                        backgroundColor: const Color(0xFF16B8A6),
                         foregroundColor: Colors.black,
                       ),
                       icon: const Icon(Icons.chat_bubble_outline, size: 17),
@@ -444,7 +509,7 @@ class _MeetupCardState extends State<_MeetupCard> {
                 FilledButton(
                   onPressed: busy || meetup.isFull ? null : _join,
                   style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFF8B5CF6),
+                    backgroundColor: const Color(0xFF16B8A6),
                     foregroundColor: Colors.black,
                   ),
                   child: Text(meetup.isFull ? 'Dolu' : 'Katıl'),
@@ -488,11 +553,13 @@ class _MeetupCardState extends State<_MeetupCard> {
 
   Future<void> _leave() async {
     setState(() => busy = true);
-    final isHost = FirebaseAuth.instance.currentUser?.uid == widget.meetup.hostId;
+    final isHost =
+        FirebaseAuth.instance.currentUser?.uid == widget.meetup.hostId;
     try {
       await MeetupService.instance.leave(widget.meetup.id);
       if (mounted) {
-        _message(context, isHost ? 'Buluşma iptal edildi.' : 'Buluşmadan ayrıldın.');
+        _message(
+            context, isHost ? 'Buluşma iptal edildi.' : 'Buluşmadan ayrıldın.');
       }
     } catch (e) {
       if (mounted) _message(context, _cleanError(e));
@@ -523,7 +590,7 @@ class _Shell extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF141126),
+        color: const Color(0xFF11181D),
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: Colors.white10),
       ),
@@ -540,17 +607,21 @@ class _Shell extends StatelessWidget {
                   color: const Color(0x228B5CF6),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(icon, color: const Color(0xFF8B5CF6)),
+                child: Icon(icon, color: const Color(0xFF16B8A6)),
               ),
               const SizedBox(width: 11),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
+                    Text(title,
+                        style: const TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.w900)),
                     if (subtitle != null) ...[
                       const SizedBox(height: 3),
-                      Text(subtitle!, style: const TextStyle(color: Colors.white60, fontSize: 12.5)),
+                      Text(subtitle!,
+                          style: const TextStyle(
+                              color: Colors.white60, fontSize: 12.5)),
                     ],
                   ],
                 ),
@@ -589,9 +660,12 @@ class _Notice extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: const TextStyle(fontWeight: FontWeight.w800)),
+                Text(title,
+                    style: const TextStyle(fontWeight: FontWeight.w800)),
                 const SizedBox(height: 3),
-                Text(text, style: const TextStyle(color: Colors.white60, fontSize: 12.5, height: 1.35)),
+                Text(text,
+                    style: const TextStyle(
+                        color: Colors.white60, fontSize: 12.5, height: 1.35)),
               ],
             ),
           ),

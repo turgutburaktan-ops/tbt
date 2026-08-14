@@ -86,13 +86,15 @@ class _MapScreenState extends State<MapScreen> {
         markers.add(Marker(
           markerId: MarkerId('spot_${spot.id}'),
           position: LatLng(spot.latitude, spot.longitude),
-          infoWindow: InfoWindow(title: spot.name, snippet: '${spot.city} • ⭐ ${spot.rating}'),
+          infoWindow: InfoWindow(
+              title: spot.name, snippet: '${spot.city} • ⭐ ${spot.rating}'),
           onTap: () {
             setState(() {
               _selectedSpot = spot;
               _selectedEvent = null;
             });
-            _mapController?.animateCamera(CameraUpdate.newLatLngZoom(LatLng(spot.latitude, spot.longitude), 15));
+            _mapController?.animateCamera(CameraUpdate.newLatLngZoom(
+                LatLng(spot.latitude, spot.longitude), 15));
           },
         ));
       }
@@ -100,13 +102,15 @@ class _MapScreenState extends State<MapScreen> {
 
     if (_filter != _MapContentFilter.spots) {
       final now = DateTime.now();
-      for (final event in _events.where((e) => e.status == 'open' && e.startsAt.isAfter(now))) {
+      for (final event in _events
+          .where((e) => e.status == 'open' && e.startsAt.isAfter(now))) {
         final position = _eventPosition(event);
         if (position == null) continue;
         markers.add(Marker(
           markerId: MarkerId('event_${event.id}'),
           position: position,
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueViolet),
+          icon:
+              BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueViolet),
           infoWindow: InfoWindow(
             title: '🎟️ ${event.title}',
             snippet: '${event.typeLabel} • ${_eventDate(event.startsAt)}',
@@ -116,7 +120,8 @@ class _MapScreenState extends State<MapScreen> {
               _selectedEvent = event;
               _selectedSpot = null;
             });
-            _mapController?.animateCamera(CameraUpdate.newLatLngZoom(position, 15));
+            _mapController
+                ?.animateCamera(CameraUpdate.newLatLngZoom(position, 15));
           },
         ));
       }
@@ -132,8 +137,10 @@ class _MapScreenState extends State<MapScreen> {
   Future<void> _prepareLocation() async {
     if (!await Geolocator.isLocationServiceEnabled()) return;
     var permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) permission = await Geolocator.requestPermission();
-    if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) return;
+    if (permission == LocationPermission.denied)
+      permission = await Geolocator.requestPermission();
+    if (permission == LocationPermission.denied ||
+        permission == LocationPermission.deniedForever) return;
     if (!mounted) return;
     setState(() => _locationPermissionGranted = true);
     await _goToMyLocation(showErrors: false);
@@ -148,12 +155,16 @@ class _MapScreenState extends State<MapScreen> {
         return;
       }
       var permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) {
+      if (permission == LocationPermission.denied)
+        permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
         if (showErrors && mounted) _message('Konum izni gerekli.');
         return;
       }
-      final position = await Geolocator.getCurrentPosition(locationSettings: const LocationSettings(accuracy: LocationAccuracy.high));
+      final position = await Geolocator.getCurrentPosition(
+          locationSettings:
+              const LocationSettings(accuracy: LocationAccuracy.high));
       if (!mounted) return;
       setState(() {
         _locationPermissionGranted = true;
@@ -161,7 +172,8 @@ class _MapScreenState extends State<MapScreen> {
         _selectedSpot = null;
         _selectedEvent = null;
       });
-      await _mapController?.animateCamera(CameraUpdate.newLatLngZoom(LatLng(position.latitude, position.longitude), 15));
+      await _mapController?.animateCamera(CameraUpdate.newLatLngZoom(
+          LatLng(position.latitude, position.longitude), 15));
     } catch (_) {
       if (showErrors && mounted) _message('Konum alınamadı.');
     } finally {
@@ -176,7 +188,8 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   void _showAll() {
-    _mapController?.animateCamera(CameraUpdate.newLatLngZoom(_defaultLocation, 5));
+    _mapController
+        ?.animateCamera(CameraUpdate.newLatLngZoom(_defaultLocation, 5));
     setState(() {
       _selectedSpot = null;
       _selectedEvent = null;
@@ -184,11 +197,16 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   void _openSpot(PhotoSpot spot) {
-    Navigator.push(context, MaterialPageRoute(builder: (_) => SpotDetailScreen(spot: spot)));
+    Navigator.push(context,
+        MaterialPageRoute(builder: (_) => SpotDetailScreen(spot: spot)));
   }
 
   void _openEvents() {
-    Navigator.push(context, MaterialPageRoute(builder: (_) => const Scaffold(body: SafeArea(child: SocialEventsScreen()))));
+    Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (_) =>
+                const Scaffold(body: SafeArea(child: SocialEventsScreen()))));
   }
 
   @override
@@ -204,7 +222,8 @@ class _MapScreenState extends State<MapScreen> {
           child: Stack(
             children: [
               GoogleMap(
-                initialCameraPosition: const CameraPosition(target: _defaultLocation, zoom: 5),
+                initialCameraPosition:
+                    const CameraPosition(target: _defaultLocation, zoom: 5),
                 markers: _markers,
                 myLocationEnabled: _locationPermissionGranted,
                 myLocationButtonEnabled: false,
@@ -215,7 +234,8 @@ class _MapScreenState extends State<MapScreen> {
                   _mapController = controller;
                   final position = _currentPosition;
                   if (position != null) {
-                    await controller.animateCamera(CameraUpdate.newLatLngZoom(LatLng(position.latitude, position.longitude), 15));
+                    await controller.animateCamera(CameraUpdate.newLatLngZoom(
+                        LatLng(position.latitude, position.longitude), 15));
                   }
                 },
               ),
@@ -227,26 +247,65 @@ class _MapScreenState extends State<MapScreen> {
                   children: [
                     Container(
                       padding: const EdgeInsets.fromLTRB(14, 8, 8, 8),
-                      decoration: BoxDecoration(color: const Color(0xFF11151C).withOpacity(.95), borderRadius: BorderRadius.circular(18)),
+                      decoration: BoxDecoration(
+                          color: const Color(0xFF0E1519).withOpacity(.95),
+                          borderRadius: BorderRadius.circular(18)),
                       child: Row(children: [
-                        const Icon(Icons.explore_outlined, color: Color(0xFF8B5CF6)),
+                        const Icon(Icons.explore_outlined,
+                            color: Color(0xFF16B8A6)),
                         const SizedBox(width: 9),
-                        const Expanded(child: Text('Noktalar ve Etkinlikler', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w900))),
+                        const Expanded(
+                            child: Text('Noktalar ve Etkinlikler',
+                                style: TextStyle(
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.w900))),
                         if (_loadingSpots)
-                          const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF8B5CF6)))
+                          const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                  strokeWidth: 2, color: Color(0xFF16B8A6)))
                         else
-                          Text('${_spots.length} + ${_events.where((e) => _eventPosition(e) != null && e.startsAt.isAfter(DateTime.now())).length}', style: const TextStyle(color: Colors.white54, fontWeight: FontWeight.w700)),
-                        IconButton(onPressed: () { setState(() => _loadingSpots = true); _loadSpots(); }, icon: const Icon(Icons.refresh, color: Colors.white70)),
+                          Text(
+                              '${_spots.length} + ${_events.where((e) => _eventPosition(e) != null && e.startsAt.isAfter(DateTime.now())).length}',
+                              style: const TextStyle(
+                                  color: Colors.white54,
+                                  fontWeight: FontWeight.w700)),
+                        IconButton(
+                            onPressed: () {
+                              setState(() => _loadingSpots = true);
+                              _loadSpots();
+                            },
+                            icon: const Icon(Icons.refresh,
+                                color: Colors.white70)),
                       ]),
                     ),
                     const SizedBox(height: 8),
                     Container(
                       padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(color: const Color(0xFF11151C).withOpacity(.95), borderRadius: BorderRadius.circular(16)),
+                      decoration: BoxDecoration(
+                          color: const Color(0xFF0E1519).withOpacity(.95),
+                          borderRadius: BorderRadius.circular(16)),
                       child: Row(children: [
-                        _FilterButton(label: 'Tümü', selected: _filter == _MapContentFilter.all, onTap: () => setState(() => _filter = _MapContentFilter.all)),
-                        _FilterButton(label: 'Çekim Noktaları', selected: _filter == _MapContentFilter.spots, onTap: () => setState(() { _filter = _MapContentFilter.spots; _selectedEvent = null; })),
-                        _FilterButton(label: 'Etkinlikler', selected: _filter == _MapContentFilter.events, onTap: () => setState(() { _filter = _MapContentFilter.events; _selectedSpot = null; })),
+                        _FilterButton(
+                            label: 'Tümü',
+                            selected: _filter == _MapContentFilter.all,
+                            onTap: () => setState(
+                                () => _filter = _MapContentFilter.all)),
+                        _FilterButton(
+                            label: 'Çekim Noktaları',
+                            selected: _filter == _MapContentFilter.spots,
+                            onTap: () => setState(() {
+                                  _filter = _MapContentFilter.spots;
+                                  _selectedEvent = null;
+                                })),
+                        _FilterButton(
+                            label: 'Etkinlikler',
+                            selected: _filter == _MapContentFilter.events,
+                            onTap: () => setState(() {
+                                  _filter = _MapContentFilter.events;
+                                  _selectedSpot = null;
+                                })),
                       ]),
                     ),
                   ],
@@ -257,11 +316,15 @@ class _MapScreenState extends State<MapScreen> {
                 bottom: bottomOffset + 68,
                 child: FloatingActionButton(
                   heroTag: 'myLocation',
-                  backgroundColor: const Color(0xFF11151C),
-                  foregroundColor: const Color(0xFF8B5CF6),
+                  backgroundColor: const Color(0xFF0E1519),
+                  foregroundColor: const Color(0xFF16B8A6),
                   onPressed: _gettingLocation ? null : _goToMyLocation,
                   child: _gettingLocation
-                      ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.5, color: Color(0xFF8B5CF6)))
+                      ? const SizedBox(
+                          width: 22,
+                          height: 22,
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2.5, color: Color(0xFF16B8A6)))
                       : const Icon(Icons.my_location_rounded),
                 ),
               ),
@@ -270,16 +333,31 @@ class _MapScreenState extends State<MapScreen> {
                 bottom: bottomOffset,
                 child: FloatingActionButton(
                   heroTag: 'allMapContent',
-                  backgroundColor: const Color(0xFF11151C),
-                  foregroundColor: const Color(0xFF8B5CF6),
+                  backgroundColor: const Color(0xFF0E1519),
+                  foregroundColor: const Color(0xFF16B8A6),
                   onPressed: _showAll,
                   child: const Icon(Icons.fit_screen),
                 ),
               ),
               if (_selectedSpot != null)
-                Positioned(left: 16, right: 16, bottom: 16, child: _SpotCard(spot: _selectedSpot!, onClose: () => setState(() => _selectedSpot = null), onOpen: () => _openSpot(_selectedSpot!))),
+                Positioned(
+                    left: 16,
+                    right: 16,
+                    bottom: 16,
+                    child: _SpotCard(
+                        spot: _selectedSpot!,
+                        onClose: () => setState(() => _selectedSpot = null),
+                        onOpen: () => _openSpot(_selectedSpot!))),
               if (_selectedEvent != null)
-                Positioned(left: 16, right: 16, bottom: 16, child: _EventCard(event: _selectedEvent!, dateLabel: _eventDate(_selectedEvent!.startsAt), onClose: () => setState(() => _selectedEvent = null), onOpen: _openEvents)),
+                Positioned(
+                    left: 16,
+                    right: 16,
+                    bottom: 16,
+                    child: _EventCard(
+                        event: _selectedEvent!,
+                        dateLabel: _eventDate(_selectedEvent!.startsAt),
+                        onClose: () => setState(() => _selectedEvent = null),
+                        onOpen: _openEvents)),
             ],
           ),
         );
@@ -292,7 +370,8 @@ class _FilterButton extends StatelessWidget {
   final String label;
   final bool selected;
   final VoidCallback onTap;
-  const _FilterButton({required this.label, required this.selected, required this.onTap});
+  const _FilterButton(
+      {required this.label, required this.selected, required this.onTap});
   @override
   Widget build(BuildContext context) => Expanded(
         child: InkWell(
@@ -300,8 +379,15 @@ class _FilterButton extends StatelessWidget {
           onTap: onTap,
           child: Container(
             padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 4),
-            decoration: BoxDecoration(color: selected ? const Color(0xFF8B5CF6) : Colors.transparent, borderRadius: BorderRadius.circular(12)),
-            child: Text(label, textAlign: TextAlign.center, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: selected ? Colors.black : Colors.white70)),
+            decoration: BoxDecoration(
+                color: selected ? const Color(0xFF16B8A6) : Colors.transparent,
+                borderRadius: BorderRadius.circular(12)),
+            child: Text(label,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                    color: selected ? Colors.black : Colors.white70)),
           ),
         ),
       );
@@ -312,7 +398,11 @@ class _EventCard extends StatelessWidget {
   final String dateLabel;
   final VoidCallback onClose;
   final VoidCallback onOpen;
-  const _EventCard({required this.event, required this.dateLabel, required this.onClose, required this.onOpen});
+  const _EventCard(
+      {required this.event,
+      required this.dateLabel,
+      required this.onClose,
+      required this.onOpen});
   @override
   Widget build(BuildContext context) => Card(
         color: const Color(0xFF161226),
@@ -322,18 +412,43 @@ class _EventCard extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.all(14),
             child: Row(children: [
-              const CircleAvatar(radius: 30, backgroundColor: Color(0x334B2A8A), child: Icon(Icons.confirmation_number_outlined, color: Color(0xFFB794F6), size: 28)),
+              const CircleAvatar(
+                  radius: 30,
+                  backgroundColor: Color(0x334B2A8A),
+                  child: Icon(Icons.confirmation_number_outlined,
+                      color: Color(0xFFB794F6), size: 28)),
               const SizedBox(width: 12),
-              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(event.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900)),
-                const SizedBox(height: 4),
-                Text('${event.typeLabel} • $dateLabel', style: const TextStyle(color: Color(0xFFB794F6), fontWeight: FontWeight.w700, fontSize: 12)),
-                const SizedBox(height: 5),
-                Text(event.locationLabel.isNotEmpty ? event.locationLabel : event.city, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white60)),
-                const SizedBox(height: 5),
-                Text('${event.participantCount}/${event.capacity} katılımcı • ${event.isPaid ? '${event.ticketPrice.toStringAsFixed(0)} ${event.currency}' : 'Ücretsiz'}', style: const TextStyle(fontSize: 12)),
-              ])),
-              IconButton(onPressed: onClose, icon: const Icon(Icons.close, color: Colors.white54)),
+              Expanded(
+                  child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                    Text(event.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                            fontSize: 17, fontWeight: FontWeight.w900)),
+                    const SizedBox(height: 4),
+                    Text('${event.typeLabel} • $dateLabel',
+                        style: const TextStyle(
+                            color: Color(0xFFB794F6),
+                            fontWeight: FontWeight.w700,
+                            fontSize: 12)),
+                    const SizedBox(height: 5),
+                    Text(
+                        event.locationLabel.isNotEmpty
+                            ? event.locationLabel
+                            : event.city,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(color: Colors.white60)),
+                    const SizedBox(height: 5),
+                    Text(
+                        '${event.participantCount}/${event.capacity} katılımcı • ${event.isPaid ? '${event.ticketPrice.toStringAsFixed(0)} ${event.currency}' : 'Ücretsiz'}',
+                        style: const TextStyle(fontSize: 12)),
+                  ])),
+              IconButton(
+                  onPressed: onClose,
+                  icon: const Icon(Icons.close, color: Colors.white54)),
               const Icon(Icons.chevron_right, color: Color(0xFFB794F6)),
             ]),
           ),
@@ -345,29 +460,48 @@ class _SpotCard extends StatelessWidget {
   final PhotoSpot spot;
   final VoidCallback onClose;
   final VoidCallback onOpen;
-  const _SpotCard({required this.spot, required this.onClose, required this.onOpen});
+  const _SpotCard(
+      {required this.spot, required this.onClose, required this.onOpen});
   @override
   Widget build(BuildContext context) => Card(
-        color: const Color(0xFF11151C),
+        color: const Color(0xFF0E1519),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: onOpen,
           child: Padding(
             padding: const EdgeInsets.all(12),
             child: Row(children: [
-              SpotImage(spot: spot, width: 88, height: 88, borderRadius: BorderRadius.circular(12)),
+              SpotImage(
+                  spot: spot,
+                  width: 88,
+                  height: 88,
+                  borderRadius: BorderRadius.circular(12)),
               const SizedBox(width: 12),
-              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(spot.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 4),
-                Text(spot.city, style: const TextStyle(color: Colors.white54)),
-                const SizedBox(height: 6),
-                Text('⭐ ${spot.rating} • ${spot.category}'),
-                const SizedBox(height: 6),
-                Text(spot.bestTime, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Color(0xFF8B5CF6), fontSize: 12)),
-              ])),
-              IconButton(onPressed: onClose, icon: const Icon(Icons.close, color: Colors.white54)),
-              const Icon(Icons.chevron_right, color: Color(0xFF8B5CF6)),
+              Expanded(
+                  child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                    Text(spot.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                            fontSize: 17, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 4),
+                    Text(spot.city,
+                        style: const TextStyle(color: Colors.white54)),
+                    const SizedBox(height: 6),
+                    Text('⭐ ${spot.rating} • ${spot.category}'),
+                    const SizedBox(height: 6),
+                    Text(spot.bestTime,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                            color: Color(0xFF16B8A6), fontSize: 12)),
+                  ])),
+              IconButton(
+                  onPressed: onClose,
+                  icon: const Icon(Icons.close, color: Colors.white54)),
+              const Icon(Icons.chevron_right, color: Color(0xFF16B8A6)),
             ]),
           ),
         ),

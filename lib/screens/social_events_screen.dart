@@ -83,7 +83,9 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
     try {
       if (event.hostId == uid || event.participantIds.contains(uid)) {
         await SocialEventService.instance.leave(event.id);
-        _showMessage(event.hostId == uid ? 'Etkinlik iptal edildi.' : 'Etkinlikten ayrıldın.');
+        _showMessage(event.hostId == uid
+            ? 'Etkinlik iptal edildi.'
+            : 'Etkinlikten ayrıldın.');
       } else {
         await SocialEventService.instance.join(event.id);
         _showMessage(event.isPaid
@@ -121,7 +123,7 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
-      backgroundColor: const Color(0xFF090812),
+      backgroundColor: const Color(0xFF090D10),
       builder: (sheetContext) => StatefulBuilder(
         builder: (context, setSheetState) {
           Future<void> chooseDateTime() async {
@@ -138,7 +140,8 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
             );
             if (time == null) return;
             setSheetState(() {
-              startsAt = DateTime(date.year, date.month, date.day, time.hour, time.minute);
+              startsAt = DateTime(
+                  date.year, date.month, date.day, time.hour, time.minute);
             });
           }
 
@@ -189,20 +192,27 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
                 children: [
                   Row(children: [
                     const Expanded(
-                      child: Text('Etkinlik Oluştur', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900)),
+                      child: Text('Etkinlik Oluştur',
+                          style: TextStyle(
+                              fontSize: 22, fontWeight: FontWeight.w900)),
                     ),
-                    IconButton(onPressed: () => Navigator.pop(sheetContext), icon: const Icon(Icons.close)),
+                    IconButton(
+                        onPressed: () => Navigator.pop(sheetContext),
+                        icon: const Icon(Icons.close)),
                   ]),
                   const SizedBox(height: 12),
                   TextField(
                     controller: titleController,
-                    decoration: const InputDecoration(labelText: 'Etkinlik başlığı', prefixIcon: Icon(Icons.title)),
+                    decoration: const InputDecoration(
+                        labelText: 'Etkinlik başlığı',
+                        prefixIcon: Icon(Icons.title)),
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<SocialEventType>(
                     value: type,
                     isExpanded: true,
-                    decoration: const InputDecoration(labelText: 'Etkinlik türü'),
+                    decoration:
+                        const InputDecoration(labelText: 'Etkinlik türü'),
                     items: SocialEventType.values
                         .map((item) => DropdownMenuItem(
                               value: item,
@@ -221,7 +231,8 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
                     const SizedBox(height: 12),
                     TextField(
                       controller: customTypeController,
-                      decoration: const InputDecoration(labelText: 'Etkinlik türünün adı'),
+                      decoration: const InputDecoration(
+                          labelText: 'Etkinlik türünün adı'),
                     ),
                   ],
                   const SizedBox(height: 12),
@@ -239,13 +250,15 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
                       ),
                     ],
                     selected: {accessType},
-                    onSelectionChanged: (values) => setSheetState(() => accessType = values.first),
+                    onSelectionChanged: (values) =>
+                        setSheetState(() => accessType = values.first),
                   ),
                   if (accessType == EventAccessType.paid) ...[
                     const SizedBox(height: 12),
                     TextField(
                       controller: priceController,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
                       decoration: const InputDecoration(
                         labelText: 'Bilet fiyatı (TL)',
                         helperText: 'Ödeme altyapısı daha sonra aktif olacak.',
@@ -256,8 +269,11 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
                   const SizedBox(height: 12),
                   TextField(
                     controller: cityController,
-                    decoration: const InputDecoration(labelText: 'Şehir', prefixIcon: Icon(Icons.location_city_outlined)),
-                    onChanged: (_) => setSheetState(() => citySuggestionSelected = false),
+                    decoration: const InputDecoration(
+                        labelText: 'Şehir',
+                        prefixIcon: Icon(Icons.location_city_outlined)),
+                    onChanged: (_) =>
+                        setSheetState(() => citySuggestionSelected = false),
                   ),
                   if (cityController.text.trim().length >= 2) ...[
                     const SizedBox(height: 6),
@@ -269,16 +285,28 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
                       },
                       child: Container(
                         width: double.infinity,
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 11),
                         decoration: BoxDecoration(
-                          color: citySuggestionSelected ? const Color(0x3322D3EE) : const Color(0xFF141126),
+                          color: citySuggestionSelected
+                              ? const Color(0x3322D3EE)
+                              : const Color(0xFF11181D),
                           borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: citySuggestionSelected ? const Color(0xFF22D3EE) : const Color(0xFF352A55)),
+                          border: Border.all(
+                              color: citySuggestionSelected
+                                  ? const Color(0xFF22D3EE)
+                                  : const Color(0xFF26383D)),
                         ),
                         child: Row(children: [
-                          Icon(citySuggestionSelected ? Icons.check_circle : Icons.location_on_outlined, color: const Color(0xFFA78BFA)),
+                          Icon(
+                              citySuggestionSelected
+                                  ? Icons.check_circle
+                                  : Icons.location_on_outlined,
+                              color: const Color(0xFF4FD1C5)),
                           const SizedBox(width: 9),
-                          Text('${cityController.text.trim()}, Türkiye', style: const TextStyle(fontWeight: FontWeight.w700)),
+                          Text('${cityController.text.trim()}, Türkiye',
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.w700)),
                         ]),
                       ),
                     ),
@@ -297,8 +325,12 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
                     width: double.infinity,
                     child: OutlinedButton.icon(
                       onPressed: chooseEventLocation,
-                      icon: Icon(selectedLocation == null ? Icons.map_outlined : Icons.location_on),
-                      label: Text(selectedLocation == null ? 'Haritadan kesin konumu seç' : 'Harita konumu seçildi • Değiştir'),
+                      icon: Icon(selectedLocation == null
+                          ? Icons.map_outlined
+                          : Icons.location_on),
+                      label: Text(selectedLocation == null
+                          ? 'Haritadan kesin konumu seç'
+                          : 'Harita konumu seçildi • Değiştir'),
                     ),
                   ),
                   if (selectedLocation != null)
@@ -306,7 +338,8 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
                       padding: const EdgeInsets.only(top: 6),
                       child: Text(
                         '${selectedLocation!.latitude.toStringAsFixed(5)}, ${selectedLocation!.longitude.toStringAsFixed(5)}',
-                        style: const TextStyle(color: Colors.white54, fontSize: 12),
+                        style: const TextStyle(
+                            color: Colors.white54, fontSize: 12),
                       ),
                     ),
                   const SizedBox(height: 12),
@@ -322,10 +355,13 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
                   Row(
                     children: [
                       const Expanded(
-                        child: Text('Katılımcı kapasitesi', style: TextStyle(fontWeight: FontWeight.w700)),
+                        child: Text('Katılımcı kapasitesi',
+                            style: TextStyle(fontWeight: FontWeight.w700)),
                       ),
                       IconButton(
-                        onPressed: capacity > 1 ? () => setCapacity(capacity - 1) : null,
+                        onPressed: capacity > 1
+                            ? () => setCapacity(capacity - 1)
+                            : null,
                         icon: const Icon(Icons.remove_circle_outline),
                       ),
                       SizedBox(
@@ -333,7 +369,9 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
                         child: TextField(
                           controller: capacityController,
                           keyboardType: TextInputType.number,
-                          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly
+                          ],
                           textAlign: TextAlign.center,
                           decoration: const InputDecoration(
                             isDense: true,
@@ -348,7 +386,9 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
                             });
                           },
                           onEditingComplete: () {
-                            final parsed = int.tryParse(capacityController.text) ?? capacity;
+                            final parsed =
+                                int.tryParse(capacityController.text) ??
+                                    capacity;
                             setCapacity(parsed);
                             FocusScope.of(context).unfocus();
                           },
@@ -362,14 +402,17 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
                   ),
                   const Padding(
                     padding: EdgeInsets.only(top: 4),
-                    child: Text('İstediğin katılımcı sayısını yazabilir veya + / - kullanabilirsin.', style: TextStyle(color: Colors.white54, fontSize: 12)),
+                    child: Text(
+                        'İstediğin katılımcı sayısını yazabilir veya + / - kullanabilirsin.',
+                        style: TextStyle(color: Colors.white54, fontSize: 12)),
                   ),
                   const SizedBox(height: 12),
                   TextField(
                     controller: descriptionController,
                     minLines: 2,
                     maxLines: 5,
-                    decoration: const InputDecoration(labelText: 'Açıklama / not'),
+                    decoration:
+                        const InputDecoration(labelText: 'Açıklama / not'),
                   ),
                   if (formError != null) ...[
                     const SizedBox(height: 14),
@@ -379,9 +422,11 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
                       decoration: BoxDecoration(
                         color: Colors.red.withOpacity(0.12),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.redAccent.withOpacity(0.5)),
+                        border: Border.all(
+                            color: Colors.redAccent.withOpacity(0.5)),
                       ),
-                      child: Text(formError!, style: const TextStyle(color: Colors.redAccent)),
+                      child: Text(formError!,
+                          style: const TextStyle(color: Colors.redAccent)),
                     ),
                   ],
                   const SizedBox(height: 20),
@@ -390,19 +435,22 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
                     height: 52,
                     child: FilledButton.icon(
                       style: FilledButton.styleFrom(
-                        backgroundColor: const Color(0xFF8B5CF6),
+                        backgroundColor: const Color(0xFF16B8A6),
                         foregroundColor: Colors.black,
                       ),
                       onPressed: saving
                           ? null
                           : () async {
-                              final typedCapacity = int.tryParse(capacityController.text.trim());
+                              final typedCapacity =
+                                  int.tryParse(capacityController.text.trim());
                               if (typedCapacity == null || typedCapacity < 1) {
-                                setSheetState(() => formError = 'Katılımcı sayısı en az 1 olmalı.');
+                                setSheetState(() => formError =
+                                    'Katılımcı sayısı en az 1 olmalı.');
                                 return;
                               }
                               if (selectedLocation == null) {
-                                setSheetState(() => formError = 'Etkinliğin haritadaki kesin konumunu seç.');
+                                setSheetState(() => formError =
+                                    'Etkinliğin haritadaki kesin konumunu seç.');
                                 return;
                               }
                               capacity = typedCapacity;
@@ -411,7 +459,11 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
                                 formError = null;
                               });
                               try {
-                                final price = double.tryParse(priceController.text.trim().replaceAll(',', '.')) ?? 0;
+                                final price = double.tryParse(priceController
+                                        .text
+                                        .trim()
+                                        .replaceAll(',', '.')) ??
+                                    0;
                                 await SocialEventService.instance.create(
                                   title: titleController.text,
                                   type: type,
@@ -426,7 +478,8 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
                                   latitude: selectedLocation!.latitude,
                                   longitude: selectedLocation!.longitude,
                                 );
-                                if (sheetContext.mounted) Navigator.pop(sheetContext);
+                                if (sheetContext.mounted)
+                                  Navigator.pop(sheetContext);
                                 _showMessage('Etkinlik oluşturuldu.');
                               } catch (e) {
                                 final message = _friendlyError(e);
@@ -439,9 +492,13 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
                               }
                             },
                       icon: saving
-                          ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2))
                           : const Icon(Icons.add_rounded),
-                      label: Text(saving ? 'Oluşturuluyor...' : 'Etkinliği Oluştur'),
+                      label: Text(
+                          saving ? 'Oluşturuluyor...' : 'Etkinliği Oluştur'),
                     ),
                   ),
                 ],
@@ -473,9 +530,12 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Etkinlikler', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900)),
+                  Text('Etkinlikler',
+                      style:
+                          TextStyle(fontSize: 24, fontWeight: FontWeight.w900)),
                   SizedBox(height: 3),
-                  Text('Keşfet, katıl, biletini al ve birlikte deneyimle.', style: TextStyle(color: Colors.white60)),
+                  Text('Keşfet, katıl, biletini al ve birlikte deneyimle.',
+                      style: TextStyle(color: Colors.white60)),
                 ],
               ),
             ),
@@ -489,7 +549,9 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
             ),
             const SizedBox(width: 6),
             FilledButton.icon(
-              style: FilledButton.styleFrom(backgroundColor: const Color(0xFF8B5CF6), foregroundColor: Colors.black),
+              style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xFF16B8A6),
+                  foregroundColor: Colors.black),
               onPressed: _openCreate,
               icon: const Icon(Icons.add, size: 19),
               label: const Text('Oluştur'),
@@ -528,21 +590,27 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
           child: StreamBuilder<List<SocialEvent>>(
             stream: _stream,
             builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
-                return const Center(child: CircularProgressIndicator(color: Color(0xFF8B5CF6)));
+              if (snapshot.connectionState == ConnectionState.waiting &&
+                  !snapshot.hasData) {
+                return const Center(
+                    child: CircularProgressIndicator(color: Color(0xFF16B8A6)));
               }
               if (snapshot.hasError) {
-                final permissionDenied = snapshot.error.toString().contains('permission-denied');
+                final permissionDenied =
+                    snapshot.error.toString().contains('permission-denied');
                 return Center(
                   child: Padding(
                     padding: const EdgeInsets.all(24),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.event_busy_outlined, size: 48, color: Colors.white38),
+                        const Icon(Icons.event_busy_outlined,
+                            size: 48, color: Colors.white38),
                         const SizedBox(height: 12),
                         Text(
-                          permissionDenied ? 'Etkinlik servisi için veritabanı izni bekleniyor.' : 'Etkinlikler yüklenemedi.',
+                          permissionDenied
+                              ? 'Etkinlik servisi için veritabanı izni bekleniyor.'
+                              : 'Etkinlikler yüklenemedi.',
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 6),
@@ -557,7 +625,8 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
                 );
               }
               final events = snapshot.data ?? const <SocialEvent>[];
-              if (events.isEmpty) return const Center(child: Text('Yaklaşan etkinlik yok.'));
+              if (events.isEmpty)
+                return const Center(child: Text('Yaklaşan etkinlik yok.'));
 
               return ListView.separated(
                 padding: const EdgeInsets.fromLTRB(14, 8, 14, 100),
@@ -565,10 +634,11 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
                 separatorBuilder: (_, __) => const SizedBox(height: 10),
                 itemBuilder: (context, index) {
                   final event = events[index];
-                  final joined = uid != null && event.participantIds.contains(uid);
+                  final joined =
+                      uid != null && event.participantIds.contains(uid);
                   final isHost = uid != null && event.hostId == uid;
                   return Card(
-                    color: const Color(0xFF141126),
+                    color: const Color(0xFF11181D),
                     child: Padding(
                       padding: const EdgeInsets.all(14),
                       child: Column(
@@ -577,7 +647,7 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
                           Row(children: [
                             CircleAvatar(
                               backgroundColor: const Color(0x228B5CF6),
-                              foregroundColor: const Color(0xFF8B5CF6),
+                              foregroundColor: const Color(0xFF16B8A6),
                               child: Icon(_iconFor(event.type)),
                             ),
                             const SizedBox(width: 10),
@@ -585,24 +655,40 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(event.title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900)),
+                                  Text(event.title,
+                                      style: const TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w900)),
                                   Text(
                                     '${event.typeLabel} • ${_priceLabel(event)}',
-                                    style: const TextStyle(color: Color(0xFF8B5CF6), fontSize: 12, fontWeight: FontWeight.w700),
+                                    style: const TextStyle(
+                                        color: Color(0xFF16B8A6),
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w700),
                                   ),
                                 ],
                               ),
                             ),
-                            Text('${event.participantCount}/${event.capacity}', style: const TextStyle(fontWeight: FontWeight.w800)),
+                            Text('${event.participantCount}/${event.capacity}',
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.w800)),
                           ]),
                           const SizedBox(height: 12),
                           Wrap(
                             spacing: 12,
                             runSpacing: 6,
                             children: [
-                              _Meta(icon: Icons.schedule, text: _dateLabel(event.startsAt)),
-                              if (event.city.isNotEmpty) _Meta(icon: Icons.location_city_outlined, text: event.city),
-                              if (event.locationLabel.isNotEmpty) _Meta(icon: Icons.place_outlined, text: event.locationLabel),
+                              _Meta(
+                                  icon: Icons.schedule,
+                                  text: _dateLabel(event.startsAt)),
+                              if (event.city.isNotEmpty)
+                                _Meta(
+                                    icon: Icons.location_city_outlined,
+                                    text: event.city),
+                              if (event.locationLabel.isNotEmpty)
+                                _Meta(
+                                    icon: Icons.place_outlined,
+                                    text: event.locationLabel),
                             ],
                           ),
                           if (event.description.isNotEmpty) ...[
@@ -611,7 +697,8 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
                               event.description,
                               maxLines: 3,
                               overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(color: Colors.white70, height: 1.35),
+                              style: const TextStyle(
+                                  color: Colors.white70, height: 1.35),
                             ),
                           ],
                           const SizedBox(height: 8),
@@ -625,22 +712,29 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
                           const SizedBox(height: 12),
                           Row(children: [
                             Expanded(
-                              child: Text('Düzenleyen: ${event.hostName}', style: const TextStyle(color: Colors.white54, fontSize: 12)),
+                              child: Text('Düzenleyen: ${event.hostName}',
+                                  style: const TextStyle(
+                                      color: Colors.white54, fontSize: 12)),
                             ),
                             if (joined && !isHost)
                               StreamBuilder<EventTicket?>(
-                                stream: EventTicketService.instance.watchTicket(event.id),
+                                stream: EventTicketService.instance
+                                    .watchTicket(event.id),
                                 builder: (context, ticketSnapshot) {
                                   final ticket = ticketSnapshot.data;
-                                  if (ticket == null || !ticket.isActive) return const SizedBox.shrink();
+                                  if (ticket == null || !ticket.isActive)
+                                    return const SizedBox.shrink();
                                   return Padding(
                                     padding: const EdgeInsets.only(right: 8),
                                     child: OutlinedButton.icon(
                                       onPressed: () => Navigator.push(
                                         context,
-                                        MaterialPageRoute(builder: (_) => TicketQrScreen(ticket: ticket)),
+                                        MaterialPageRoute(
+                                            builder: (_) =>
+                                                TicketQrScreen(ticket: ticket)),
                                       ),
-                                      icon: const Icon(Icons.qr_code_2_rounded, size: 18),
+                                      icon: const Icon(Icons.qr_code_2_rounded,
+                                          size: 18),
                                       label: const Text('Biletim'),
                                     ),
                                   );
@@ -653,19 +747,28 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
                                   onPressed: () => Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (_) => TicketScannerScreen(eventId: event.id, eventTitle: event.title),
+                                      builder: (_) => TicketScannerScreen(
+                                          eventId: event.id,
+                                          eventTitle: event.title),
                                     ),
                                   ),
-                                  icon: const Icon(Icons.qr_code_scanner, size: 18),
+                                  icon: const Icon(Icons.qr_code_scanner,
+                                      size: 18),
                                   label: const Text('Bilet Kontrol'),
                                 ),
                               ),
                             FilledButton(
                               style: FilledButton.styleFrom(
-                                backgroundColor: (joined || isHost) ? const Color(0xFF241D3D) : const Color(0xFF8B5CF6),
-                                foregroundColor: (joined || isHost) ? Colors.white : Colors.black,
+                                backgroundColor: (joined || isHost)
+                                    ? const Color(0xFF241D3D)
+                                    : const Color(0xFF16B8A6),
+                                foregroundColor: (joined || isHost)
+                                    ? Colors.white
+                                    : Colors.black,
                               ),
-                              onPressed: event.isFull && !joined && !isHost ? null : () => _toggleJoin(event),
+                              onPressed: event.isFull && !joined && !isHost
+                                  ? null
+                                  : () => _toggleJoin(event),
                               child: Text(
                                 isHost
                                     ? 'İptal Et'

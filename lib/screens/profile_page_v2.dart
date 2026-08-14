@@ -25,7 +25,7 @@ class ProfilePage extends StatelessWidget {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const SafeArea(
             child: Center(
-              child: CircularProgressIndicator(color: Color(0xFF8B5CF6)),
+              child: CircularProgressIndicator(color: Color(0xFF16B8A6)),
             ),
           );
         }
@@ -100,12 +100,14 @@ class _ProfileBodyState extends State<_ProfileBody> {
   }
 
   Future<void> _shareProfile(String displayName) async {
-    final handle = displayName.trim().isEmpty ? 'Fotoğrafçı' : displayName.trim();
+    final handle =
+        displayName.trim().isEmpty ? 'Fotoğrafçı' : displayName.trim();
     await Clipboard.setData(ClipboardData(text: '@$handle'));
     if (!mounted) return;
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(const SnackBar(content: Text('Profil adı panoya kopyalandı.')));
+      ..showSnackBar(
+          const SnackBar(content: Text('Profil adı panoya kopyalandı.')));
   }
 
   void _showPostPreview(String imageUrl) {
@@ -126,8 +128,9 @@ class _ProfileBodyState extends State<_ProfileBody> {
                   imageUrl,
                   fit: BoxFit.contain,
                   errorBuilder: (_, __, ___) => const ColoredBox(
-                    color: Color(0xFF141126),
-                    child: Center(child: Icon(Icons.broken_image_outlined, size: 48)),
+                    color: Color(0xFF11181D),
+                    child: Center(
+                        child: Icon(Icons.broken_image_outlined, size: 48)),
                   ),
                 ),
               ),
@@ -152,15 +155,23 @@ class _ProfileBodyState extends State<_ProfileBody> {
       child: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
         stream: SocialService.instance.userProfile(widget.user.uid),
         builder: (context, profileSnapshot) {
-          final profile = profileSnapshot.data?.data() ?? const <String, dynamic>{};
-          final displayName = (profile['displayName'] ?? widget.user.displayName ?? 'Fotoğrafçı').toString();
+          final profile =
+              profileSnapshot.data?.data() ?? const <String, dynamic>{};
+          final displayName = (profile['displayName'] ??
+                  widget.user.displayName ??
+                  'Fotoğrafçı')
+              .toString();
           final bio = (profile['bio'] ?? '').toString();
-          final photoUrl = (profile['photoUrl'] ?? widget.user.photoURL ?? '').toString();
+          final photoUrl =
+              (profile['photoUrl'] ?? widget.user.photoURL ?? '').toString();
 
           return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
             stream: SocialService.instance.userPosts(widget.user.uid),
             builder: (context, postSnapshot) {
-              final posts = [...(postSnapshot.data?.docs ?? <QueryDocumentSnapshot<Map<String, dynamic>>>[])];
+              final posts = [
+                ...(postSnapshot.data?.docs ??
+                    <QueryDocumentSnapshot<Map<String, dynamic>>>[])
+              ];
               posts.sort((a, b) {
                 final at = a.data()['createdAt'];
                 final bt = b.data()['createdAt'];
@@ -180,16 +191,19 @@ class _ProfileBodyState extends State<_ProfileBody> {
                               displayName,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w900),
+                              style: const TextStyle(
+                                  fontSize: 21, fontWeight: FontWeight.w900),
                             ),
                           ),
                           IconButton(
                             onPressed: () => _editProfile(displayName, bio),
-                            icon: const Icon(Icons.edit_outlined, color: Color(0xFF8B5CF6)),
+                            icon: const Icon(Icons.edit_outlined,
+                                color: Color(0xFF16B8A6)),
                           ),
                           IconButton(
                             onPressed: AuthService.instance.logout,
-                            icon: const Icon(Icons.logout_rounded, color: Colors.white60),
+                            icon: const Icon(Icons.logout_rounded,
+                                color: Colors.white60),
                           ),
                         ],
                       ),
@@ -207,16 +221,21 @@ class _ProfileBodyState extends State<_ProfileBody> {
                                 clipBehavior: Clip.none,
                                 children: [
                                   GestureDetector(
-                                    onTap: () => _openProfilePhoto(photoUrl, displayName),
+                                    onTap: () => _openProfilePhoto(
+                                        photoUrl, displayName),
                                     child: CircleAvatar(
                                       radius: 47,
-                                      backgroundColor: const Color(0xFF8B5CF6),
+                                      backgroundColor: const Color(0xFF16B8A6),
                                       child: CircleAvatar(
                                         radius: 43,
-                                        backgroundColor: const Color(0xFF141126),
-                                        backgroundImage: photoUrl.isEmpty ? null : NetworkImage(photoUrl),
+                                        backgroundColor:
+                                            const Color(0xFF11181D),
+                                        backgroundImage: photoUrl.isEmpty
+                                            ? null
+                                            : NetworkImage(photoUrl),
                                         child: photoUrl.isEmpty
-                                            ? const Icon(Icons.person, size: 48, color: Colors.white54)
+                                            ? const Icon(Icons.person,
+                                                size: 48, color: Colors.white54)
                                             : null,
                                       ),
                                     ),
@@ -225,15 +244,19 @@ class _ProfileBodyState extends State<_ProfileBody> {
                                     right: -2,
                                     bottom: 0,
                                     child: GestureDetector(
-                                      onTap: () => _editProfile(displayName, bio),
+                                      onTap: () =>
+                                          _editProfile(displayName, bio),
                                       child: Container(
                                         width: 29,
                                         height: 29,
                                         decoration: const BoxDecoration(
-                                          color: Color(0xFF8B5CF6),
+                                          color: Color(0xFF16B8A6),
                                           shape: BoxShape.circle,
                                         ),
-                                        child: const Icon(Icons.add_a_photo_outlined, size: 17, color: Colors.black),
+                                        child: const Icon(
+                                            Icons.add_a_photo_outlined,
+                                            size: 17,
+                                            color: Colors.black),
                                       ),
                                     ),
                                   ),
@@ -242,11 +265,13 @@ class _ProfileBodyState extends State<_ProfileBody> {
                               const SizedBox(width: 18),
                               Expanded(
                                 child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceAround,
                                   children: [
                                     _Stat('${posts.length}', 'Gönderi'),
                                     StreamBuilder<int>(
-                                      stream: SocialService.instance.followersCount(widget.user.uid),
+                                      stream: SocialService.instance
+                                          .followersCount(widget.user.uid),
                                       builder: (_, s) => _Stat(
                                         '${s.data ?? 0}',
                                         'Takipçi',
@@ -254,7 +279,8 @@ class _ProfileBodyState extends State<_ProfileBody> {
                                       ),
                                     ),
                                     StreamBuilder<int>(
-                                      stream: SocialService.instance.followingCount(widget.user.uid),
+                                      stream: SocialService.instance
+                                          .followingCount(widget.user.uid),
                                       builder: (_, s) => _Stat(
                                         '${s.data ?? 0}',
                                         'Takip',
@@ -267,12 +293,18 @@ class _ProfileBodyState extends State<_ProfileBody> {
                             ],
                           ),
                           const SizedBox(height: 14),
-                          Text(displayName, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+                          Text(displayName,
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.w800, fontSize: 16)),
                           const SizedBox(height: 5),
                           Text(
-                            bio.trim().isEmpty ? 'Profiline bir açıklama ekle' : bio,
+                            bio.trim().isEmpty
+                                ? 'Profiline bir açıklama ekle'
+                                : bio,
                             style: TextStyle(
-                              color: bio.trim().isEmpty ? Colors.white38 : Colors.white70,
+                              color: bio.trim().isEmpty
+                                  ? Colors.white38
+                                  : Colors.white70,
                               height: 1.4,
                             ),
                           ),
@@ -286,10 +318,15 @@ class _ProfileBodyState extends State<_ProfileBody> {
                                     style: FilledButton.styleFrom(
                                       backgroundColor: const Color(0xFF1B1728),
                                       foregroundColor: Colors.white,
-                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(11)),
+                                      shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(11)),
                                     ),
-                                    onPressed: () => _editProfile(displayName, bio),
-                                    child: const Text('Profili Düzenle', style: TextStyle(fontWeight: FontWeight.w800)),
+                                    onPressed: () =>
+                                        _editProfile(displayName, bio),
+                                    child: const Text('Profili Düzenle',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.w800)),
                                   ),
                                 ),
                               ),
@@ -301,10 +338,14 @@ class _ProfileBodyState extends State<_ProfileBody> {
                                     style: FilledButton.styleFrom(
                                       backgroundColor: const Color(0xFF1B1728),
                                       foregroundColor: Colors.white,
-                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(11)),
+                                      shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(11)),
                                     ),
                                     onPressed: () => _shareProfile(displayName),
-                                    child: const Text('Profili Paylaş', style: TextStyle(fontWeight: FontWeight.w800)),
+                                    child: const Text('Profili Paylaş',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.w800)),
                                   ),
                                 ),
                               ),
@@ -318,7 +359,8 @@ class _ProfileBodyState extends State<_ProfileBody> {
                     child: Container(
                       height: 52,
                       decoration: const BoxDecoration(
-                        border: Border(bottom: BorderSide(color: Colors.white12)),
+                        border:
+                            Border(bottom: BorderSide(color: Colors.white12)),
                       ),
                       child: const Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -328,9 +370,14 @@ class _ProfileBodyState extends State<_ProfileBody> {
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Icon(Icons.grid_on_rounded, color: Colors.white, size: 23),
+                                Icon(Icons.grid_on_rounded,
+                                    color: Colors.white, size: 23),
                                 SizedBox(height: 10),
-                                SizedBox(height: 2, width: 70, child: ColoredBox(color: Color(0xFF8B5CF6))),
+                                SizedBox(
+                                    height: 2,
+                                    width: 70,
+                                    child:
+                                        ColoredBox(color: Color(0xFF16B8A6))),
                               ],
                             ),
                           ),
@@ -340,7 +387,9 @@ class _ProfileBodyState extends State<_ProfileBody> {
                   ),
                   if (postSnapshot.connectionState == ConnectionState.waiting)
                     const SliverFillRemaining(
-                      child: Center(child: CircularProgressIndicator(color: Color(0xFF8B5CF6))),
+                      child: Center(
+                          child: CircularProgressIndicator(
+                              color: Color(0xFF16B8A6))),
                     )
                   else if (posts.isEmpty)
                     SliverFillRemaining(
@@ -349,7 +398,8 @@ class _ProfileBodyState extends State<_ProfileBody> {
                         child: FilledButton.icon(
                           onPressed: () => Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (_) => const CreatePostScreen()),
+                            MaterialPageRoute(
+                                builder: (_) => const CreatePostScreen()),
                           ),
                           icon: const Icon(Icons.add_a_photo_outlined),
                           label: const Text('İlk Fotoğrafını Paylaş'),
@@ -360,7 +410,8 @@ class _ProfileBodyState extends State<_ProfileBody> {
                     SliverPadding(
                       padding: const EdgeInsets.fromLTRB(1, 2, 1, 100),
                       sliver: SliverGrid(
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 3,
                           crossAxisSpacing: 2,
                           mainAxisSpacing: 2,
@@ -369,9 +420,12 @@ class _ProfileBodyState extends State<_ProfileBody> {
                         delegate: SliverChildBuilderDelegate(
                           (context, index) {
                             final data = posts[index].data();
-                            final imageUrl = (data['imageUrl'] ?? '').toString();
-                            final caption = (data['caption'] ?? '').toString().trim();
-                            final spotName = (data['spotName'] ?? '').toString().trim();
+                            final imageUrl =
+                                (data['imageUrl'] ?? '').toString();
+                            final caption =
+                                (data['caption'] ?? '').toString().trim();
+                            final spotName =
+                                (data['spotName'] ?? '').toString().trim();
                             return _PostTile(
                               imageUrl: imageUrl,
                               caption: caption,
@@ -379,7 +433,9 @@ class _ProfileBodyState extends State<_ProfileBody> {
                               onLongPress: () => _showPostPreview(imageUrl),
                               onTap: () => Navigator.push(
                                 context,
-                                MaterialPageRoute(builder: (_) => PostDetailScreen(post: data)),
+                                MaterialPageRoute(
+                                    builder: (_) =>
+                                        PostDetailScreen(post: data)),
                               ),
                             );
                           },
@@ -406,7 +462,7 @@ class _ProfileBodyState extends State<_ProfileBody> {
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
-      backgroundColor: const Color(0xFF090812),
+      backgroundColor: const Color(0xFF090D10),
       builder: (sheetContext) => StatefulBuilder(
         builder: (context, setSheetState) {
           Future<void> pick() async {
@@ -419,16 +475,21 @@ class _ProfileBodyState extends State<_ProfileBody> {
           }
 
           return Padding(
-            padding: EdgeInsets.fromLTRB(20, 16, 20, MediaQuery.of(context).viewInsets.bottom + 24),
+            padding: EdgeInsets.fromLTRB(
+                20, 16, 20, MediaQuery.of(context).viewInsets.bottom + 24),
             child: SingleChildScrollView(
               child: Column(
                 children: [
                   Row(
                     children: [
                       const Expanded(
-                        child: Text('Profili Düzenle', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900)),
+                        child: Text('Profili Düzenle',
+                            style: TextStyle(
+                                fontSize: 22, fontWeight: FontWeight.w900)),
                       ),
-                      IconButton(onPressed: () => Navigator.pop(sheetContext), icon: const Icon(Icons.close)),
+                      IconButton(
+                          onPressed: () => Navigator.pop(sheetContext),
+                          icon: const Icon(Icons.close)),
                     ],
                   ),
                   GestureDetector(
@@ -436,13 +497,18 @@ class _ProfileBodyState extends State<_ProfileBody> {
                     child: CircleAvatar(
                       radius: 48,
                       backgroundImage: photo == null ? null : FileImage(photo!),
-                      child: photo == null ? const Icon(Icons.add_a_photo_outlined) : null,
+                      child: photo == null
+                          ? const Icon(Icons.add_a_photo_outlined)
+                          : null,
                     ),
                   ),
-                  TextButton(onPressed: pick, child: const Text('Profil fotoğrafı seç')),
+                  TextButton(
+                      onPressed: pick,
+                      child: const Text('Profil fotoğrafı seç')),
                   TextField(
                     controller: nameController,
-                    decoration: const InputDecoration(labelText: 'Ad / kullanıcı adı'),
+                    decoration:
+                        const InputDecoration(labelText: 'Ad / kullanıcı adı'),
                   ),
                   const SizedBox(height: 12),
                   TextField(
@@ -467,7 +533,8 @@ class _ProfileBodyState extends State<_ProfileBody> {
                                   bio: bioController.text,
                                   photo: photo,
                                 );
-                                if (sheetContext.mounted) Navigator.pop(sheetContext);
+                                if (sheetContext.mounted)
+                                  Navigator.pop(sheetContext);
                               } catch (_) {
                                 setSheetState(() => saving = false);
                               }
@@ -512,7 +579,8 @@ class _PostTile extends StatelessWidget {
         onTap: onTap,
         onLongPress: onLongPress,
         child: imageUrl.isEmpty
-            ? const Center(child: Icon(Icons.image_outlined, color: Colors.white30))
+            ? const Center(
+                child: Icon(Icons.image_outlined, color: Colors.white30))
             : Image.network(
                 imageUrl,
                 width: double.infinity,
@@ -520,7 +588,8 @@ class _PostTile extends StatelessWidget {
                 fit: BoxFit.cover,
                 filterQuality: FilterQuality.medium,
                 errorBuilder: (_, __, ___) => const Center(
-                  child: Icon(Icons.broken_image_outlined, color: Colors.white30),
+                  child:
+                      Icon(Icons.broken_image_outlined, color: Colors.white30),
                 ),
               ),
       ),
@@ -540,8 +609,10 @@ class _Stat extends StatelessWidget {
     final child = Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(value, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
-        Text(label, style: const TextStyle(color: Colors.white60, fontSize: 12)),
+        Text(value,
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
+        Text(label,
+            style: const TextStyle(color: Colors.white60, fontSize: 12)),
       ],
     );
     return onTap == null

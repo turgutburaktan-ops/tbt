@@ -40,8 +40,18 @@ class ChatService {
   Future<bool> isBlockedBetween(String otherUserId) async {
     final me = (await _requiredUser()).uid;
     final refs = await Future.wait([
-      _firestore.collection('users').doc(me).collection('blocked').doc(otherUserId).get(),
-      _firestore.collection('users').doc(otherUserId).collection('blocked').doc(me).get(),
+      _firestore
+          .collection('users')
+          .doc(me)
+          .collection('blocked')
+          .doc(otherUserId)
+          .get(),
+      _firestore
+          .collection('users')
+          .doc(otherUserId)
+          .collection('blocked')
+          .doc(me)
+          .get(),
     ]);
     return refs.any((doc) => doc.exists);
   }
@@ -150,12 +160,15 @@ class ChatService {
       'createdAt': FieldValue.serverTimestamp(),
       'deleted': false,
     });
-    batch.set(threadRef, {
-      'lastMessage': clean,
-      'lastSenderId': user.uid,
-      'lastMessageAt': FieldValue.serverTimestamp(),
-      'updatedAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
+    batch.set(
+        threadRef,
+        {
+          'lastMessage': clean,
+          'lastSenderId': user.uid,
+          'lastMessageAt': FieldValue.serverTimestamp(),
+          'updatedAt': FieldValue.serverTimestamp(),
+        },
+        SetOptions(merge: true));
     await batch.commit();
 
     final senderName = (user.displayName ?? '').trim().isNotEmpty

@@ -15,7 +15,8 @@ class ShootingGuideService {
 
   Future<ShootingGuide> loadForSpot(PhotoSpot spot) async {
     try {
-      final spotDoc = await _firestore.collection(spotsCollection).doc(spot.id).get();
+      final spotDoc =
+          await _firestore.collection(spotsCollection).doc(spot.id).get();
       final spotData = spotDoc.data();
       final embedded = spotData?['shootingGuide'];
       if (embedded is Map) {
@@ -28,7 +29,8 @@ class ShootingGuideService {
     } catch (_) {}
 
     try {
-      final guideDoc = await _firestore.collection(guidesCollection).doc(spot.id).get();
+      final guideDoc =
+          await _firestore.collection(guidesCollection).doc(spot.id).get();
       final data = guideDoc.data();
       if (data != null) {
         final guide = ShootingGuide.fromMap(spot.id, data);
@@ -60,7 +62,8 @@ class ShootingGuideService {
       compositionTip: spot.description.trim().isNotEmpty
           ? 'Mekanin karakterini one cikar: ${spot.description.trim()}'
           : 'Simetri, yonlendiren cizgiler ve katmanli on plan alternatiflerini sirayla dene.',
-      recommendedSettings: 'Baslangic: ${spot.recommendedLens}. ISO 100-400, elde cekimde en az 1/125 sn; isiga gore EV ayarla.',
+      recommendedSettings:
+          'Baslangic: ${spot.recommendedLens}. ISO 100-400, elde cekimde en az 1/125 sn; isiga gore EV ayarla.',
       accessibilityNote: spot.difficulty.trim().isNotEmpty
           ? 'Erisim/zorluk: ${spot.difficulty.trim()}. Cekim yaparken gecis yollarini kapatma ve guvenli zeminde kal.'
           : 'Cekim sirasinda guvenli zeminde kal ve gecis yollarini kapatma.',
