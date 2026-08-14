@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../models/chat_message.dart';
+import '../services/app_notification_service.dart';
 import '../services/chat_service.dart';
 import 'chat_screen.dart';
 
@@ -19,6 +20,24 @@ class ChatInboxScreen extends StatelessWidget {
         backgroundColor: const Color(0xFF0D1117),
         foregroundColor: Colors.white,
         title: const Text('Mesajlar'),
+        actions: [
+          StreamBuilder<int>(
+            stream: AppNotificationService.instance.unreadCount(),
+            builder: (context, snapshot) {
+              final count = snapshot.data ?? 0;
+              return IconButton(
+                tooltip: 'Bildirimler',
+                onPressed: () => Navigator.pushNamed(context, '/notifications'),
+                icon: Badge(
+                  isLabelVisible: count > 0,
+                  label: Text(count > 99 ? '99+' : '$count'),
+                  child: const Icon(Icons.notifications_none_rounded),
+                ),
+              );
+            },
+          ),
+          const SizedBox(width: 6),
+        ],
       ),
       body: myId == null
           ? const Center(
@@ -42,7 +61,7 @@ class ChatInboxScreen extends StatelessWidget {
                     child: Padding(
                       padding: EdgeInsets.all(30),
                       child: Text(
-                        'Henüz mesajın yok. Bir kullanıcı profilinden veya Birlikte Git buluşmasından sohbet başlatabilirsin.',
+                        'Henüz mesajın yok. Bir kullanıcı profilinden veya bir etkinlikten sohbet başlatabilirsin.',
                         textAlign: TextAlign.center,
                         style: TextStyle(color: Colors.white54, height: 1.45),
                       ),
@@ -86,7 +105,7 @@ class _ThreadTile extends StatelessWidget {
       stream: FirebaseFirestore.instance.collection('users').doc(otherUserId).snapshots(),
       builder: (context, snapshot) {
         final data = snapshot.data?.data() ?? const <String, dynamic>{};
-        final name = (data['displayName'] ?? 'Fotoğrafçı').toString();
+        final name = (data['displayName'] ?? 'Topluluk üyesi').toString();
         final photoUrl = (data['photoUrl'] ?? '').toString();
 
         return ListTile(
