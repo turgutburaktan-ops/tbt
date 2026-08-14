@@ -31,9 +31,11 @@ class SpotUserPostsGallery extends StatelessWidget {
         }
 
         final docs = snapshot.data?.docs ?? const [];
-        final matches = docs.where((doc) => _matches(doc.data(), spot)).toList();
+        final matches = docs.where((doc) => _matches(doc.data(), spot)).toList()
+          ..sort((a, b) => _score(b.data(), spot).compareTo(_score(a.data(), spot)));
+        final top = matches.take(9).toList(growable: false);
 
-        if (matches.isEmpty) {
+        if (top.isEmpty) {
           return _Shell(
             child: Row(
               children: [
@@ -68,28 +70,27 @@ class SpotUserPostsGallery extends StatelessWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
+            const Row(
               children: [
-                const Icon(Icons.photo_library_outlined, size: 21, color: Color(0xFFFFC107)),
-                const SizedBox(width: 8),
-                const Expanded(
+                Icon(Icons.photo_library_outlined, size: 21, color: Color(0xFFFFC107)),
+                SizedBox(width: 8),
+                Expanded(
                   child: Text('Bu Noktadan Paylaşımlar', style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold)),
                 ),
-                Text('${matches.length}', style: const TextStyle(color: Colors.white54, fontWeight: FontWeight.w700)),
               ],
             ),
             const SizedBox(height: 10),
             GridView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              itemCount: matches.length > 9 ? 9 : matches.length,
+              itemCount: top.length,
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 3,
                 crossAxisSpacing: 3,
                 mainAxisSpacing: 3,
               ),
               itemBuilder: (context, index) {
-                final data = matches[index].data();
+                final data = top[index].data();
                 final url = (data['imageUrl'] ?? '').toString();
                 return GestureDetector(
                   onTap: () => Navigator.push(
@@ -97,7 +98,7 @@ class SpotUserPostsGallery extends StatelessWidget {
                     MaterialPageRoute(builder: (_) => PostDetailScreen(post: data)),
                   ),
                   child: Hero(
-                    tag: 'spot-post-${matches[index].id}',
+                    tag: 'spot-post-${top[index].id}',
                     child: Container(
                       color: const Color(0xFF171C24),
                       child: url.isEmpty
@@ -117,6 +118,44 @@ class SpotUserPostsGallery extends StatelessWidget {
         );
       },
     );
+  }
+
+  static double _score(Map<String, dynamic> post, PhotoSpot spot) {
+    final likes = (post['likesCount'] as num?)?.toDouble() ?? 0;
+    final comments = (post['commentsCount'] as num?)?.toDouble() ?? 0;
+    final createdAt = post['createdAt'];
+
+    var score = likes * 3.0 + comments * 5.0;
+
+    // Yeni paylaşımlara küçük bir avantaj veriyoruz; eski ve çok etkileşimli
+    // içerikler yine rahatça önde kalabilir.
+    if (createdAt is Timestamp) {
+      final ageDays = DateTime.now().difference(createdAt.toDate()).inHours / 24.0;
+      score += 12.0 / (1.0 + (ageDays / 14.0));
+    }
+
+    final postName = _normalize((post['spotName'] ?? post['locationName'] ?? post['location'] ?? '').toString());
+    final spotName = _normalize(spot.name);
+    if (postName == spotName && postName.isNotEmpty) {
+      score += 20;
+    } else if (postName.isNotEmpty && spotName.isNotEmpty && (postName.contains(spotName) || spotName.contains(postName))) {
+      score += 12;
+    }
+
+    final lat = (post['latitude'] as num?)?.toDouble();
+    final lng = (post['longitude'] as num?)?.toDouble();
+    if (lat != null && lng != null) {
+      final distance = _distanceMeters(lat, lng, spot.latitude, spot.longitude);
+      if (distance <= 100) {
+        score += 18;
+      } else if (distance <= 250) {
+        score += 12;
+      } else if (distance <= 500) {
+        score += 6;
+      }
+    }
+
+    return score;
   }
 
   static bool _matches(Map<String, dynamic> post, PhotoSpot spot) {
