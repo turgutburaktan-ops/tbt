@@ -6,6 +6,7 @@ import '../models/event_ticket.dart';
 import '../models/social_event.dart';
 import '../services/event_ticket_service.dart';
 import '../services/social_event_service.dart';
+import '../services/event_trust_service.dart';
 import '../widgets/content_engagement_bar.dart';
 import 'event_tickets_screen.dart';
 import 'event_location_picker_screen.dart';
@@ -255,6 +256,20 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
                   ),
                   if (accessType == EventAccessType.paid) ...[
                     const SizedBox(height: 12),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: const Color(0x1416B8A6),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: const Color(0x5516B8A6)),
+                      ),
+                      child: const Text(
+                        'Ücretli etkinlikler güvenlik incelemesinden geçer. İlk satış, etkinlik onaylanmadan açılamaz; ödeme etkinlik gerçekleşene kadar beklemede tutulur.',
+                        style: TextStyle(fontSize: 12, height: 1.35),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
                     TextField(
                       controller: priceController,
                       keyboardType:
@@ -464,6 +479,14 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
                                         .trim()
                                         .replaceAll(',', '.')) ??
                                     0;
+                                if (accessType == EventAccessType.paid) {
+                                  final eligibility = await EventTrustService
+                                      .instance
+                                      .paidEventEligibility();
+                                  if (!eligibility.allowed) {
+                                    throw Exception(eligibility.reason);
+                                  }
+                                }
                                 await SocialEventService.instance.create(
                                   title: titleController.text,
                                   type: type,

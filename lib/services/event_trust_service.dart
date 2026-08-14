@@ -56,8 +56,10 @@ class EventTrustService {
 
     final profile = await _firestore.collection('users').doc(user.uid).get();
     final data = profile.data() ?? const <String, dynamic>{};
-    final displayName = (data['displayName'] ?? user.displayName ?? '').toString().trim();
-    final photoUrl = (data['photoUrl'] ?? user.photoURL ?? '').toString().trim();
+    final displayName =
+        (data['displayName'] ?? user.displayName ?? '').toString().trim();
+    final photoUrl =
+        (data['photoUrl'] ?? user.photoURL ?? '').toString().trim();
 
     if (displayName.length < 3 || photoUrl.isEmpty) {
       return EventTrustEligibility(
@@ -81,14 +83,16 @@ class EventTrustService {
     String details = '',
   }) async {
     final user = _auth.currentUser;
-    if (user == null) throw Exception('Etkinliği bildirmek için giriş yapmalısın.');
+    if (user == null)
+      throw Exception('Etkinliği bildirmek için giriş yapmalısın.');
 
     final eventRef = _firestore.collection('social_events').doc(eventId);
     final reportRef = eventRef.collection('reports').doc(user.uid);
 
     await _firestore.runTransaction((transaction) async {
       final eventSnapshot = await transaction.get(eventRef);
-      if (!eventSnapshot.exists) throw Exception('Etkinlik artık mevcut değil.');
+      if (!eventSnapshot.exists)
+        throw Exception('Etkinlik artık mevcut değil.');
 
       final event = eventSnapshot.data() ?? const <String, dynamic>{};
       if ((event['hostId'] ?? '').toString() == user.uid) {
@@ -96,7 +100,8 @@ class EventTrustService {
       }
 
       final oldReport = await transaction.get(reportRef);
-      if (oldReport.exists) throw Exception('Bu etkinliği daha önce bildirdin.');
+      if (oldReport.exists)
+        throw Exception('Bu etkinliği daha önce bildirdin.');
 
       final currentCount = (event['reportCount'] as num?)?.toInt() ?? 0;
       final nextCount = currentCount + 1;

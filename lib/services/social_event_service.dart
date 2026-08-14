@@ -7,6 +7,7 @@ import '../models/social_event.dart';
 import 'app_notification_service.dart';
 import 'chat_service.dart';
 import 'event_ticket_service.dart';
+import 'event_trust_service.dart';
 
 class SocialEventService {
   SocialEventService._();
@@ -91,6 +92,12 @@ class SocialEventService {
       throw Exception(
           'Ücretli etkinlik için geçerli bir bilet fiyatı yazmalısın.');
 
+    if (accessType == EventAccessType.paid) {
+      final eligibility =
+          await EventTrustService.instance.paidEventEligibility();
+      if (!eligibility.allowed) throw Exception(eligibility.reason);
+    }
+
     final ref = _firestore.collection(collection).doc();
     final hostName = (user.displayName ?? '').trim().isNotEmpty
         ? user.displayName!.trim()
@@ -132,6 +139,14 @@ class SocialEventService {
           : EventPaymentStatus.notRequired.name,
       'paymentProvider': null,
       'externalProductId': null,
+      'trustStatus':
+          accessType == EventAccessType.paid ? 'pending_review' : 'new_host',
+      'salesStatus':
+          accessType == EventAccessType.paid ? 'blocked' : 'not_required',
+      'riskLevel': accessType == EventAccessType.paid ? 'medium' : 'low',
+      'reportCount': 0,
+      'paymentReleaseStatus':
+          accessType == EventAccessType.paid ? 'held' : 'not_applicable',
       'createdAt': FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
     });
@@ -164,10 +179,14 @@ class SocialEventService {
       final paymentStatus =
           (data['paymentStatus'] ?? EventPaymentStatus.notRequired.name)
               .toString();
+      final trustStatus = (data['trustStatus'] ?? 'new_host').toString();
+      final salesStatus = (data['salesStatus'] ?? 'blocked').toString();
       if (accessType == EventAccessType.paid.name &&
-          paymentStatus != EventPaymentStatus.enabled.name) {
+          (paymentStatus != EventPaymentStatus.enabled.name ||
+              trustStatus != 'approved' ||
+              salesStatus != 'open')) {
         throw Exception(
-            'Bu etkinlik ücretli. Online ödeme ve bilet satışı yakında aktif olacak.');
+            'Bu ücretli etkinlik güvenlik onayı tamamlanmadan bilet satışına açılamaz.');
       }
 
       final capacity =

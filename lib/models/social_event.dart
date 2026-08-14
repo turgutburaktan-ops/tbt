@@ -90,6 +90,11 @@ class SocialEvent {
   final EventPaymentStatus paymentStatus;
   final String? paymentProvider;
   final String? externalProductId;
+  final String trustStatus;
+  final String salesStatus;
+  final String riskLevel;
+  final int reportCount;
+  final String paymentReleaseStatus;
 
   const SocialEvent({
     required this.id,
@@ -117,6 +122,11 @@ class SocialEvent {
     this.paymentStatus = EventPaymentStatus.notRequired,
     this.paymentProvider,
     this.externalProductId,
+    this.trustStatus = 'new_host',
+    this.salesStatus = 'blocked',
+    this.riskLevel = 'low',
+    this.reportCount = 0,
+    this.paymentReleaseStatus = 'not_applicable',
   });
 
   int get participantCount => participantIds.length;
@@ -202,6 +212,14 @@ class SocialEvent {
       paymentStatus: payment,
       paymentProvider: data['paymentProvider']?.toString(),
       externalProductId: data['externalProductId']?.toString(),
+      trustStatus: (data['trustStatus'] ?? 'new_host').toString(),
+      salesStatus: (data['salesStatus'] ?? 'blocked').toString(),
+      riskLevel: (data['riskLevel'] ?? 'low').toString(),
+      reportCount:
+          ((data['reportCount'] as num?)?.toInt() ?? 0).clamp(0, 2147483647),
+      paymentReleaseStatus: (data['paymentReleaseStatus'] ??
+              (access == EventAccessType.paid ? 'held' : 'not_applicable'))
+          .toString(),
     );
   }
 }
