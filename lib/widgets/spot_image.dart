@@ -21,26 +21,40 @@ class SpotImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final local = spotImageRegistry[spot.id];
+    final verified = spotImageRegistry[spot.id];
     Widget child;
 
-    if (local != null && local.assetPath.trim().isNotEmpty) {
+    if (verified != null && verified.assetPath.trim().isNotEmpty) {
       child = Image.asset(
-        local.assetPath,
+        verified.assetPath,
         width: width,
         height: height,
         fit: fit,
-        errorBuilder: (_, __, ___) => _networkOrFallback(),
+        errorBuilder: (_, __, ___) => _networkOrFallback(verified),
       );
     } else {
-      child = _networkOrFallback();
+      child = _networkOrFallback(verified);
     }
 
     if (borderRadius == null) return child;
     return ClipRRect(borderRadius: borderRadius!, child: child);
   }
 
-  Widget _networkOrFallback() {
+  Widget _networkOrFallback(SpotImageInfo? verified) {
+    final verifiedUrl = verified?.networkUrl.trim() ?? '';
+    if (verifiedUrl.isNotEmpty) {
+      return Image.network(
+        verifiedUrl,
+        width: width,
+        height: height,
+        fit: fit,
+        errorBuilder: (_, __, ___) => _legacyNetworkOrFallback(),
+      );
+    }
+    return _legacyNetworkOrFallback();
+  }
+
+  Widget _legacyNetworkOrFallback() {
     if (spot.imageUrl.trim().isNotEmpty) {
       return Image.network(
         spot.imageUrl,
