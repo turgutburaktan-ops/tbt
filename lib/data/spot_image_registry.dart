@@ -25,6 +25,7 @@ class SpotImageInfo {
 /// kaynak sayfasından doğrulanmalıdır.
 const spotImageRegistry = <String, SpotImageInfo>{
   'ayasofya': SpotImageInfo(
+    assetPath: 'assets/spots/ayasofya.jpg',
     networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Ayasofya%2C_%C4%B0stanbul%2C_T%C3%BCrkiye.jpg?width=1280',
     sourceName: 'Wikimedia Commons',
     author: 'Mertaydintr',
@@ -32,6 +33,7 @@ const spotImageRegistry = <String, SpotImageInfo>{
     sourcePage: 'https://commons.wikimedia.org/wiki/File:Ayasofya,_İstanbul,_Türkiye.jpg',
   ),
   'kiz-kulesi': SpotImageInfo(
+    assetPath: 'assets/spots/kiz-kulesi.jpg',
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/f/fa/Maiden%27s_Tower_in_Istanbul.jpg',
     sourceName: 'Wikimedia Commons',
     author: 'İlke.bahceci',
@@ -39,6 +41,7 @@ const spotImageRegistry = <String, SpotImageInfo>{
     sourcePage: 'https://commons.wikimedia.org/wiki/File:Maiden%27s_Tower_in_Istanbul.jpg',
   ),
   'kapadokya': SpotImageInfo(
+    assetPath: 'assets/spots/kapadokya.jpg',
     networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Cappadocia_Goreme_hot_air_balloon.jpg?width=1280',
     sourceName: 'Wikimedia Commons',
     author: 'L1tr1z',
@@ -46,6 +49,7 @@ const spotImageRegistry = <String, SpotImageInfo>{
     sourcePage: 'https://commons.wikimedia.org/wiki/File:Cappadocia_Goreme_hot_air_balloon.jpg',
   ),
   'galata': SpotImageInfo(
+    assetPath: 'assets/spots/galata.jpg',
     networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Galata-Tower.jpg?width=1280',
     sourceName: 'Wikimedia Commons',
     author: 'Mohemedşebir Farook',
@@ -53,6 +57,7 @@ const spotImageRegistry = <String, SpotImageInfo>{
     sourcePage: 'https://commons.wikimedia.org/wiki/File:Galata-Tower.jpg',
   ),
   'efes': SpotImageInfo(
+    assetPath: 'assets/spots/efes.jpg',
     networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Library_of_Celsus.jpg?width=1280',
     sourceName: 'Wikimedia Commons',
     author: 'Carl Campbell',
@@ -60,6 +65,7 @@ const spotImageRegistry = <String, SpotImageInfo>{
     sourcePage: 'https://commons.wikimedia.org/wiki/File:Library_of_Celsus.jpg',
   ),
   'pamukkale': SpotImageInfo(
+    assetPath: 'assets/spots/pamukkale.jpg',
     networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Pamukkale_travertenleri.jpg?width=1280',
     sourceName: 'Wikimedia Commons',
     author: 'Cobija',
@@ -67,6 +73,7 @@ const spotImageRegistry = <String, SpotImageInfo>{
     sourcePage: 'https://commons.wikimedia.org/wiki/File:Pamukkale_travertenleri.jpg',
   ),
   'sumela': SpotImageInfo(
+    assetPath: 'assets/spots/sumela.jpg',
     networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Monastere_Sumela.jpg?width=1280',
     sourceName: 'Wikimedia Commons',
     author: 'Vol de nuit',
@@ -74,6 +81,7 @@ const spotImageRegistry = <String, SpotImageInfo>{
     sourcePage: 'https://commons.wikimedia.org/wiki/File:Monastere_Sumela.jpg',
   ),
   'nemrut': SpotImageInfo(
+    assetPath: 'assets/spots/nemrut.jpg',
     networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Mount_nemrut_in_Turkey.jpg?width=1280',
     sourceName: 'Wikimedia Commons',
     author: 'Mkrc85',
@@ -81,6 +89,7 @@ const spotImageRegistry = <String, SpotImageInfo>{
     sourcePage: 'https://commons.wikimedia.org/wiki/File:Mount_nemrut_in_Turkey.jpg',
   ),
   'mardin-eski': SpotImageInfo(
+    assetPath: 'assets/spots/mardin-eski.jpg',
     networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Mardin_old_city.jpg?width=1280',
     sourceName: 'Wikimedia Commons',
     author: 'Radosław Botev',
@@ -88,6 +97,7 @@ const spotImageRegistry = <String, SpotImageInfo>{
     sourcePage: 'https://commons.wikimedia.org/wiki/File:Mardin_old_city.jpg',
   ),
   'oludeniz': SpotImageInfo(
+    assetPath: 'assets/spots/oludeniz.jpg',
     networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/%C3%96l%C3%BCdeniz_on_the_Turquoise_Coast%2C_Turkey.jpg?width=1280',
     sourceName: 'Wikimedia Commons',
     author: 'Sevtap Ön',
@@ -95,6 +105,7 @@ const spotImageRegistry = <String, SpotImageInfo>{
     sourcePage: 'https://commons.wikimedia.org/wiki/File:%C3%96l%C3%BCdeniz_on_the_Turquoise_Coast%2C_Turkey.jpg',
   ),
   'anitkabir': SpotImageInfo(
+    assetPath: 'assets/spots/anitkabir.jpg',
     networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Anitkabir_Ankara.jpg?width=1280',
     sourceName: 'Wikimedia Commons',
     author: 'Lethiciasouza',
@@ -102,6 +113,7 @@ const spotImageRegistry = <String, SpotImageInfo>{
     sourcePage: 'https://commons.wikimedia.org/wiki/File:Anitkabir_Ankara.jpg',
   ),
   'alacati': SpotImageInfo(
+    assetPath: 'assets/spots/alacati.jpg',
     networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Alacati_Streets.jpg?width=1280',
     sourceName: 'Wikimedia Commons',
     author: 'Write it Right UAE',
@@ -109,6 +121,7 @@ const spotImageRegistry = <String, SpotImageInfo>{
     sourcePage: 'https://commons.wikimedia.org/wiki/File:Alacati_Streets.jpg',
   ),
   'bozcaada': SpotImageInfo(
+    assetPath: 'assets/spots/bozcaada.jpg',
     networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Polente_lighthouse_in_Bozcaada%2C_under_a_wind_turbine.jpg?width=1280',
     sourceName: 'Wikimedia Commons',
     author: 'Raicem',
