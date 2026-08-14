@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../data/curated_photo_spots.dart';
 import '../data/curated_photo_spots_extra.dart';
 import '../data/curated_photo_spots_cities.dart';
+import '../data/curated_photo_spots_regions.dart';
 import '../models/photo_spot.dart';
 
 enum SpotSort { rating, name }
@@ -70,6 +71,7 @@ class SpotRepository {
       for (final spot in curatedPhotoSpots) spot.id: spot,
       for (final spot in curatedPhotoSpotsExtra) spot.id: spot,
       for (final spot in curatedPhotoSpotsCities) spot.id: spot,
+      for (final spot in curatedPhotoSpotsRegions) spot.id: spot,
     };
     for (final spot in remote) { byId[spot.id] = spot; }
     final result = byId.values.toList();
