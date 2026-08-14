@@ -1,0 +1,130 @@
+name: Restore Non-Zoom Profile Preview
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - '.github/workflows/restore_nonzoom_profile_preview.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Restore long-press preview without zoom
+        shell: python
+        run: |
+          from pathlib import Path
+          p = Path('lib/screens/profile_page_v2.dart')
+          s = p.read_text()
+
+          s = s.replace(
+              'class _ProfileBodyState extends State<_ProfileBody> {\n  @override\n  void initState()',
+              'class _ProfileBodyState extends State<_ProfileBody> {\n  OverlayEntry? _preview;\n\n  @override\n  void initState()'
+          )
+
+          s = s.replace(
+              '  void _openFollowList(bool followers) {',
+              "  @override\n  void dispose() {\n    _closePreview();\n    super.dispose();\n  }\n\n  void _openFollowList(bool followers) {"
+          )
+
+          marker = '  @override\n  Widget build(BuildContext context) {'
+          preview = r'''  void _showPreview(String url) {
+    if (url.isEmpty || _preview != null || !mounted) return;
+    _preview = OverlayEntry(
+      builder: (_) => Material(
+        color: Colors.black.withOpacity(.82),
+        child: SafeArea(
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: _closePreview,
+                  child: const SizedBox.expand(),
+                ),
+              ),
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(22, 72, 22, 72),
+                  child: Container(
+                    constraints: const BoxConstraints(maxWidth: 520, maxHeight: 680),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF11151C),
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(color: const Color(0x88FFC107), width: 1.5),
+                      boxShadow: const [
+                        BoxShadow(color: Colors.black54, blurRadius: 28, spreadRadius: 4),
+                      ],
+                    ),
+                    clipBehavior: Clip.antiAlias,
+                    child: Image.network(
+                      url,
+                      fit: BoxFit.contain,
+                      errorBuilder: (_, __, ___) => const SizedBox(
+                        width: 280,
+                        height: 280,
+                        child: Center(
+                          child: Icon(Icons.broken_image_outlined, size: 64, color: Colors.white38),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 12,
+                right: 12,
+                child: IconButton.filled(
+                  style: IconButton.styleFrom(backgroundColor: const Color(0xFF6D5530)),
+                  onPressed: _closePreview,
+                  icon: const Icon(Icons.close, color: Colors.white),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    Overlay.of(context, rootOverlay: true).insert(_preview!);
+  }
+
+  void _closePreview() {
+    _preview?.remove();
+    _preview = null;
+  }
+
+'''
+          if '_showPreview(String url)' not in s:
+              s = s.replace(marker, preview + marker, 1)
+
+          s = s.replace(
+              "                              onTap: () => Navigator.push(\n                                context,\n                                MaterialPageRoute(builder: (_) => PostDetailScreen(post: data)),\n                              ),\n                            );",
+              "                              onTap: () => Navigator.push(\n                                context,\n                                MaterialPageRoute(builder: (_) => PostDetailScreen(post: data)),\n                              ),\n                              onLongPress: () => _showPreview(imageUrl),\n                            );"
+          )
+
+          s = s.replace(
+              '  final VoidCallback onTap;\n\n  const _PostTile({\n    required this.imageUrl,\n    required this.caption,\n    required this.spotName,\n    required this.onTap,\n  });',
+              '  final VoidCallback onTap;\n  final VoidCallback onLongPress;\n\n  const _PostTile({\n    required this.imageUrl,\n    required this.caption,\n    required this.spotName,\n    required this.onTap,\n    required this.onLongPress,\n  });'
+          )
+
+          s = s.replace(
+              '      child: InkWell(\n        onTap: onTap,\n        child: Column(',
+              '      child: InkWell(\n        onTap: onTap,\n        onLongPress: onLongPress,\n        child: Column('
+          )
+
+          p.write_text(s)
+      - name: Commit patch
+        run: |
+          git config user.name "turgutburaktan-ops"
+          git config user.email "turgutburaktan@gmail.com"
+          git add lib/screens/profile_page_v2.dart
+          git diff --cached --quiet && exit 0
+          git commit -m "Restore profile long-press preview without zoom"
+          git push
