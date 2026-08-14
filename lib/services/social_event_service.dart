@@ -55,6 +55,8 @@ class SocialEventService {
     int ticketPriceMinor = 0,
     String currency = 'TRY',
     DateTime? ticketSalesEndAt,
+    double? latitude,
+    double? longitude,
   }) async {
     final user = _auth.currentUser;
     if (user == null) throw Exception('Etkinlik oluşturmak için giriş yapmalısın.');
@@ -77,15 +79,20 @@ class SocialEventService {
       'hostId': user.uid,
       'hostName': hostName,
       'startsAt': Timestamp.fromDate(startsAt),
-      'capacity': capacity.clamp(2, 100),
+      'capacity': capacity < 1 ? 1 : capacity,
       'participantIds': [user.uid],
       'description': description.trim(),
       'city': city.trim().isNotEmpty ? city.trim() : (spot?.city ?? ''),
       'locationLabel': locationLabel.trim().isNotEmpty ? locationLabel.trim() : (spot?.name ?? ''),
       'spotId': spot?.id,
       'spotName': spot?.name,
+      'latitude': latitude ?? spot?.latitude,
+      'longitude': longitude ?? spot?.longitude,
+      'location': latitude != null && longitude != null
+          ? GeoPoint(latitude, longitude)
+          : (spot == null ? null : GeoPoint(spot.latitude, spot.longitude)),
       'status': 'open',
-      'approximateLocationOnly': true,
+      'approximateLocationOnly': false,
       'accessType': accessType.name,
       'ticketPriceMinor': accessType == EventAccessType.paid ? ticketPriceMinor : 0,
       'currency': currency,
@@ -121,7 +128,7 @@ class SocialEventService {
         throw Exception('Bu etkinlik ücretli. Online ödeme ve bilet satışı yakında aktif olacak.');
       }
 
-      final capacity = ((data['capacity'] as num?)?.toInt() ?? 2).clamp(2, 100);
+      final capacity = ((data['capacity'] as num?)?.toInt() ?? 1).clamp(1, 2147483647);
       final participants = (data['participantIds'] as List? ?? const []).map((item) => item.toString()).toList();
       final hostId = (data['hostId'] ?? '').toString();
       final title = (data['title'] ?? 'Etkinlik').toString();

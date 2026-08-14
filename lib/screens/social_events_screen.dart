@@ -8,6 +8,7 @@ import '../services/event_ticket_service.dart';
 import '../services/social_event_service.dart';
 import '../widgets/content_engagement_bar.dart';
 import 'event_tickets_screen.dart';
+import 'event_location_picker_screen.dart';
 
 class SocialEventsScreen extends StatefulWidget {
   const SocialEventsScreen({super.key});
@@ -111,6 +112,8 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
     EventAccessType accessType = EventAccessType.free;
     DateTime startsAt = DateTime.now().add(const Duration(hours: 2));
     int capacity = 10;
+    EventLocationSelection? selectedLocation;
+    bool citySuggestionSelected = false;
     bool saving = false;
     String? formError;
 
@@ -140,7 +143,7 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
           }
 
           void setCapacity(int value) {
-            final safe = value.clamp(2, 100);
+            final safe = value < 1 ? 1 : value;
             setSheetState(() {
               capacity = safe;
               formError = null;
@@ -149,6 +152,28 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
               text: '$safe',
               selection: TextSelection.collapsed(offset: '$safe'.length),
             );
+          }
+
+          Future<void> chooseEventLocation() async {
+            final result = await Navigator.push<EventLocationSelection>(
+              context,
+              MaterialPageRoute(
+                builder: (_) => EventLocationPickerScreen(
+                  city: cityController.text,
+                  addressLabel: locationController.text,
+                  initialLatitude: selectedLocation?.latitude,
+                  initialLongitude: selectedLocation?.longitude,
+                ),
+              ),
+            );
+            if (result == null || !context.mounted) return;
+            setSheetState(() {
+              selectedLocation = result;
+              formError = null;
+              if (locationController.text.trim().isEmpty) {
+                locationController.text = result.label;
+              }
+            });
           }
 
           return Padding(
@@ -232,12 +257,58 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
                   TextField(
                     controller: cityController,
                     decoration: const InputDecoration(labelText: 'Şehir', prefixIcon: Icon(Icons.location_city_outlined)),
+                    onChanged: (_) => setSheetState(() => citySuggestionSelected = false),
                   ),
+                  if (cityController.text.trim().length >= 2) ...[
+                    const SizedBox(height: 6),
+                    InkWell(
+                      borderRadius: BorderRadius.circular(14),
+                      onTap: () {
+                        setSheetState(() => citySuggestionSelected = true);
+                        FocusScope.of(context).unfocus();
+                      },
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+                        decoration: BoxDecoration(
+                          color: citySuggestionSelected ? const Color(0x3322D3EE) : const Color(0xFF141126),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: citySuggestionSelected ? const Color(0xFF22D3EE) : const Color(0xFF352A55)),
+                        ),
+                        child: Row(children: [
+                          Icon(citySuggestionSelected ? Icons.check_circle : Icons.location_on_outlined, color: const Color(0xFFA78BFA)),
+                          const SizedBox(width: 9),
+                          Text('${cityController.text.trim()}, Türkiye', style: const TextStyle(fontWeight: FontWeight.w700)),
+                        ]),
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 12),
                   TextField(
                     controller: locationController,
-                    decoration: const InputDecoration(labelText: 'Etkinlik / buluşma konumu', prefixIcon: Icon(Icons.place_outlined)),
+                    decoration: const InputDecoration(
+                      labelText: 'Etkinlik / buluşma adresi',
+                      hintText: 'Mekân, mahalle, cadde veya açık adres',
+                      prefixIcon: Icon(Icons.place_outlined),
+                    ),
                   ),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: chooseEventLocation,
+                      icon: Icon(selectedLocation == null ? Icons.map_outlined : Icons.location_on),
+                      label: Text(selectedLocation == null ? 'Haritadan kesin konumu seç' : 'Harita konumu seçildi • Değiştir'),
+                    ),
+                  ),
+                  if (selectedLocation != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 6),
+                      child: Text(
+                        '${selectedLocation!.latitude.toStringAsFixed(5)}, ${selectedLocation!.longitude.toStringAsFixed(5)}',
+                        style: const TextStyle(color: Colors.white54, fontSize: 12),
+                      ),
+                    ),
                   const SizedBox(height: 12),
                   ListTile(
                     contentPadding: EdgeInsets.zero,
@@ -254,7 +325,7 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
                         child: Text('Katılımcı kapasitesi', style: TextStyle(fontWeight: FontWeight.w700)),
                       ),
                       IconButton(
-                        onPressed: capacity > 2 ? () => setCapacity(capacity - 1) : null,
+                        onPressed: capacity > 1 ? () => setCapacity(capacity - 1) : null,
                         icon: const Icon(Icons.remove_circle_outline),
                       ),
                       SizedBox(
@@ -272,7 +343,7 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
                             final parsed = int.tryParse(value);
                             if (parsed == null) return;
                             setSheetState(() {
-                              capacity = parsed.clamp(2, 100);
+                              capacity = parsed < 1 ? 1 : parsed;
                               formError = null;
                             });
                           },
@@ -284,14 +355,14 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
                         ),
                       ),
                       IconButton(
-                        onPressed: capacity < 100 ? () => setCapacity(capacity + 1) : null,
+                        onPressed: () => setCapacity(capacity + 1),
                         icon: const Icon(Icons.add_circle_outline),
                       ),
                     ],
                   ),
                   const Padding(
                     padding: EdgeInsets.only(top: 4),
-                    child: Text('2 ile 100 arasında sayı yazabilir veya + / - kullanabilirsin.', style: TextStyle(color: Colors.white54, fontSize: 12)),
+                    child: Text('İstediğin katılımcı sayısını yazabilir veya + / - kullanabilirsin.', style: TextStyle(color: Colors.white54, fontSize: 12)),
                   ),
                   const SizedBox(height: 12),
                   TextField(
@@ -326,8 +397,12 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
                           ? null
                           : () async {
                               final typedCapacity = int.tryParse(capacityController.text.trim());
-                              if (typedCapacity == null || typedCapacity < 2 || typedCapacity > 100) {
-                                setSheetState(() => formError = 'Katılımcı sayısı 2 ile 100 arasında olmalı.');
+                              if (typedCapacity == null || typedCapacity < 1) {
+                                setSheetState(() => formError = 'Katılımcı sayısı en az 1 olmalı.');
+                                return;
+                              }
+                              if (selectedLocation == null) {
+                                setSheetState(() => formError = 'Etkinliğin haritadaki kesin konumunu seç.');
                                 return;
                               }
                               capacity = typedCapacity;
@@ -348,6 +423,8 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
                                   customTypeLabel: customTypeController.text,
                                   accessType: accessType,
                                   ticketPriceMinor: (price * 100).round(),
+                                  latitude: selectedLocation!.latitude,
+                                  longitude: selectedLocation!.longitude,
                                 );
                                 if (sheetContext.mounted) Navigator.pop(sheetContext);
                                 _showMessage('Etkinlik oluşturuldu.');

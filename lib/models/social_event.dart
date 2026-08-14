@@ -148,7 +148,7 @@ class SocialEvent {
       hostId: (data['hostId'] ?? '').toString(),
       hostName: (data['hostName'] ?? 'Topluluk üyesi').toString(),
       startsAt: startsAt,
-      capacity: ((data['capacity'] as num?)?.toInt() ?? 2).clamp(2, 100),
+      capacity: ((data['capacity'] as num?)?.toInt() ?? 1).clamp(1, 2147483647),
       participantIds: participantIds,
       description: (data['description'] ?? '').toString(),
       city: (data['city'] ?? '').toString(),
