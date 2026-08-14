@@ -9,6 +9,8 @@ import '../data/curated_photo_spots_official_routes.dart';
 import '../data/curated_photo_spots_official_bulk.dart';
 import '../data/curated_photo_spots_verified_expansion.dart';
 import '../data/curated_photo_spots_official_complete.dart';
+import '../data/turkiye81_spot_candidates.dart';
+import '../data/turkiye81_spot_coordinates.dart';
 import '../models/photo_spot.dart';
 
 enum SpotSort { rating, name }
@@ -22,52 +24,148 @@ class SpotDiscoveryQuery {
   final SpotSort sort;
   final int limit;
 
-  const SpotDiscoveryQuery({this.text = '', this.city, this.category, this.tag, this.minRating = 0, this.sort = SpotSort.rating, this.limit = 200});
+  const SpotDiscoveryQuery({
+    this.text = '',
+    this.city,
+    this.category,
+    this.tag,
+    this.minRating = 0,
+    this.sort = SpotSort.rating,
+    this.limit = 2000,
+  });
 }
 
 class SpotRepository {
   SpotRepository._();
   static final SpotRepository instance = SpotRepository._();
+
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
+
   static const String spotsCollection = 'photo_spots';
   static const String submissionsCollection = 'spot_submissions';
 
-  Future<List<PhotoSpot>> loadSpots({String? city, String? category, int limit = 200}) async {
+  Future<List<PhotoSpot>> loadSpots({
+    String? city,
+    String? category,
+    int limit = 2000,
+  }) async {
     var remote = <PhotoSpot>[];
     try {
-      final snapshot = await _firestore.collection(spotsCollection).where('status', isEqualTo: 'published').limit(limit).get();
+      final snapshot = await _firestore
+          .collection(spotsCollection)
+          .where('status', isEqualTo: 'published')
+          .limit(limit)
+          .get();
       remote = snapshot.docs.map(_fromDocument).whereType<PhotoSpot>().toList();
     } catch (_) {}
-    return _filterLocal(_mergeWithCurated(remote), city: city, category: category);
+
+    return _filterLocal(
+      _mergeWithNationwide(_mergeWithCurated(remote)),
+      city: city,
+      category: category,
+    );
   }
 
-  Future<List<PhotoSpot>> discover({SpotDiscoveryQuery query = const SpotDiscoveryQuery()}) async {
+  Future<List<PhotoSpot>> discover({
+    SpotDiscoveryQuery query = const SpotDiscoveryQuery(),
+  }) async {
     final all = await loadSpots(limit: query.limit);
-    final textKey = _key(query.text), cityKey = _key(query.city ?? ''), categoryKey = _key(query.category ?? ''), tagKey = _key(query.tag ?? '');
+    final textKey = _key(query.text);
+    final cityKey = _key(query.city ?? '');
+    final categoryKey = _key(query.category ?? '');
+    final tagKey = _key(query.tag ?? '');
+
     final filtered = all.where((spot) {
       if (query.minRating > 0 && spot.rating < query.minRating) return false;
       if (cityKey.isNotEmpty && _key(spot.city) != cityKey) return false;
       if (categoryKey.isNotEmpty && _key(spot.category) != categoryKey) return false;
-      if (tagKey.isNotEmpty && !spot.tags.any((tag) => _key(tag).contains(tagKey))) return false;
+      if (tagKey.isNotEmpty && !spot.tags.any((tag) => _key(tag).contains(tagKey))) {
+        return false;
+      }
       return textKey.isEmpty || _searchableText(spot).contains(textKey);
     }).toList();
+
     if (query.sort == SpotSort.name) {
-      filtered.sort((a,b) => a.name.compareTo(b.name));
+      filtered.sort((a, b) => a.name.compareTo(b.name));
     } else {
-      filtered.sort((a,b) { final r=b.rating.compareTo(a.rating); return r != 0 ? r : a.name.compareTo(b.name); });
+      filtered.sort((a, b) {
+        final r = b.rating.compareTo(a.rating);
+        return r != 0 ? r : a.name.compareTo(b.name);
+      });
     }
     return filtered;
   }
 
-  Future<List<String>> availableCities({int limit = 200}) async => _distinct((await loadSpots(limit: limit)).map((e) => e.city));
-  Future<List<String>> availableCategories({int limit = 200}) async => _distinct((await loadSpots(limit: limit)).map((e) => e.category));
+  Future<List<String>> availableCities({int limit = 2000}) async =>
+      _distinct((await loadSpots(limit: limit)).map((e) => e.city));
 
-  Stream<List<PhotoSpot>> watchPublishedSpots({int limit = 200}) => _firestore.collection(spotsCollection).where('status', isEqualTo: 'published').limit(limit).snapshots().map((snapshot) => _mergeWithCurated(snapshot.docs.map(_fromDocument).whereType<PhotoSpot>().toList()));
+  Future<List<String>> availableCategories({int limit = 2000}) async =>
+      _distinct((await loadSpots(limit: limit)).map((e) => e.category));
 
-  Future<List<PhotoSpot>> search(String input, {int limit = 200}) => discover(query: SpotDiscoveryQuery(text: input, limit: limit));
+  Stream<List<PhotoSpot>> watchPublishedSpots({int limit = 2000}) => _firestore
+      .collection(spotsCollection)
+      .where('status', isEqualTo: 'published')
+      .limit(limit)
+      .snapshots()
+      .map((snapshot) => _mergeWithNationwide(
+            _mergeWithCurated(
+              snapshot.docs.map(_fromDocument).whereType<PhotoSpot>().toList(),
+            ),
+          ));
 
-  static String _searchableText(PhotoSpot spot) => [spot.name,spot.city,spot.category,spot.description,spot.bestTime,spot.angle,spot.recommendedLens,spot.difficulty,...spot.tags].map(_key).join(' ');
+  Future<List<PhotoSpot>> search(String input, {int limit = 2000}) =>
+      discover(query: SpotDiscoveryQuery(text: input, limit: limit));
+
+  static String _searchableText(PhotoSpot spot) => [
+        spot.name,
+        spot.city,
+        spot.category,
+        spot.description,
+        spot.bestTime,
+        spot.angle,
+        spot.recommendedLens,
+        spot.difficulty,
+        ...spot.tags,
+      ].map(_key).join(' ');
+
+  List<PhotoSpot> _mergeWithNationwide(List<PhotoSpot> current) {
+    final byPlace = <String, PhotoSpot>{
+      for (final spot in current) _placeKey(spot.city, spot.name): spot,
+    };
+
+    for (final candidate in turkiye81SpotCandidates) {
+      final coordinate = turkiye81SpotCoordinates[candidate.id];
+      if (coordinate == null) continue;
+
+      final key = _placeKey(candidate.city, candidate.name);
+      if (byPlace.containsKey(key)) continue;
+
+      byPlace[key] = PhotoSpot(
+        id: candidate.id,
+        name: candidate.name,
+        city: candidate.city,
+        latitude: coordinate.latitude,
+        longitude: coordinate.longitude,
+        rating: 0,
+        bestTime: 'Altın saat ve gün ışığı koşullarına göre planla',
+        angle: 'Ana manzara ile çevresel detayları farklı açılardan değerlendir',
+        imageUrl: '',
+        category: candidate.suggestedCategory,
+        description: '',
+        recommendedLens: '24-70mm',
+        difficulty: 'Kolay',
+        tags: const ['Türkiye', 'kaynak-teyitli'],
+      );
+    }
+
+    final result = byPlace.values.toList();
+    result.sort((a, b) {
+      final city = a.city.compareTo(b.city);
+      return city != 0 ? city : a.name.compareTo(b.name);
+    });
+    return result;
+  }
 
   List<PhotoSpot> _mergeWithCurated(List<PhotoSpot> remote) {
     final byId = <String, PhotoSpot>{
@@ -81,34 +179,165 @@ class SpotRepository {
       for (final spot in curatedPhotoSpotsVerifiedExpansion) spot.id: spot,
       for (final spot in curatedPhotoSpotsOfficialComplete) spot.id: spot,
     };
-    for (final spot in remote) { byId[spot.id] = spot; }
+
+    for (final spot in remote) {
+      byId[spot.id] = spot;
+    }
+
     final result = byId.values.toList();
-    result.sort((a,b) { final r=b.rating.compareTo(a.rating); return r != 0 ? r : a.name.compareTo(b.name); });
+    result.sort((a, b) {
+      final r = b.rating.compareTo(a.rating);
+      return r != 0 ? r : a.name.compareTo(b.name);
+    });
     return result;
   }
 
-  Future<String> submitCandidate({required String name,required String city,required double latitude,required double longitude,String category='Genel',String description='',String bestTime='',String angle='',String recommendedLens='24-70mm',List<String> tags=const [],String imageUrl=''}) async {
-    final user=_auth.currentUser;
-    if(user==null) throw Exception('Yeni çekim noktası önermek için giriş yapmalısın.');
-    if(name.trim().length<3||city.trim().length<2) throw Exception('Nokta adı ve şehir bilgisi eksik.');
-    if(latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) throw Exception('Geçersiz koordinat.');
-    final ref=_firestore.collection(submissionsCollection).doc();
-    await ref.set({'id':ref.id,'name':name.trim(),'city':city.trim(),'cityKey':_key(city),'latitude':latitude,'longitude':longitude,'category':category.trim().isEmpty?'Genel':category.trim(),'categoryKey':_key(category.trim().isEmpty?'Genel':category),'description':description.trim(),'bestTime':bestTime.trim(),'angle':angle.trim(),'recommendedLens':recommendedLens.trim().isEmpty?'24-70mm':recommendedLens.trim(),'tags':tags.map((e)=>e.trim()).where((e)=>e.isNotEmpty).toList(),'imageUrl':imageUrl.trim(),'submittedBy':user.uid,'submittedByEmail':user.email??'','status':'pending','sourceType':'user','createdAt':FieldValue.serverTimestamp(),'updatedAt':FieldValue.serverTimestamp()});
+  Future<String> submitCandidate({
+    required String name,
+    required String city,
+    required double latitude,
+    required double longitude,
+    String category = 'Genel',
+    String description = '',
+    String bestTime = '',
+    String angle = '',
+    String recommendedLens = '24-70mm',
+    List<String> tags = const [],
+    String imageUrl = '',
+  }) async {
+    final user = _auth.currentUser;
+    if (user == null) {
+      throw Exception('Yeni çekim noktası önermek için giriş yapmalısın.');
+    }
+    if (name.trim().length < 3 || city.trim().length < 2) {
+      throw Exception('Nokta adı ve şehir bilgisi eksik.');
+    }
+    if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
+      throw Exception('Geçersiz koordinat.');
+    }
+
+    final ref = _firestore.collection(submissionsCollection).doc();
+    await ref.set({
+      'id': ref.id,
+      'name': name.trim(),
+      'city': city.trim(),
+      'cityKey': _key(city),
+      'latitude': latitude,
+      'longitude': longitude,
+      'category': category.trim().isEmpty ? 'Genel' : category.trim(),
+      'categoryKey': _key(category.trim().isEmpty ? 'Genel' : category),
+      'description': description.trim(),
+      'bestTime': bestTime.trim(),
+      'angle': angle.trim(),
+      'recommendedLens': recommendedLens.trim().isEmpty ? '24-70mm' : recommendedLens.trim(),
+      'tags': tags.map((e) => e.trim()).where((e) => e.isNotEmpty).toList(),
+      'imageUrl': imageUrl.trim(),
+      'submittedBy': user.uid,
+      'submittedByEmail': user.email ?? '',
+      'status': 'pending',
+      'sourceType': 'user',
+      'createdAt': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
     return ref.id;
   }
 
-  Map<String,dynamic> normalizeExternalSpot({required String externalId,required String source,required String name,required String city,required double latitude,required double longitude,String category='Genel',String description='',String imageUrl='',double rating=0,List<String> tags=const []}) => {'externalId':externalId.trim(),'sourceType':source.trim(),'name':name.trim(),'city':city.trim(),'cityKey':_key(city),'latitude':latitude,'longitude':longitude,'category':category.trim().isEmpty?'Genel':category.trim(),'categoryKey':_key(category.trim().isEmpty?'Genel':category),'description':description.trim(),'imageUrl':imageUrl.trim(),'rating':rating.clamp(0,5),'tags':tags.map((e)=>e.trim()).where((e)=>e.isNotEmpty).toList(),'status':'review','updatedAt':FieldValue.serverTimestamp()};
+  Map<String, dynamic> normalizeExternalSpot({
+    required String externalId,
+    required String source,
+    required String name,
+    required String city,
+    required double latitude,
+    required double longitude,
+    String category = 'Genel',
+    String description = '',
+    String imageUrl = '',
+    double rating = 0,
+    List<String> tags = const [],
+  }) => {
+        'externalId': externalId.trim(),
+        'sourceType': source.trim(),
+        'name': name.trim(),
+        'city': city.trim(),
+        'cityKey': _key(city),
+        'latitude': latitude,
+        'longitude': longitude,
+        'category': category.trim().isEmpty ? 'Genel' : category.trim(),
+        'categoryKey': _key(category.trim().isEmpty ? 'Genel' : category),
+        'description': description.trim(),
+        'imageUrl': imageUrl.trim(),
+        'rating': rating.clamp(0, 5),
+        'tags': tags.map((e) => e.trim()).where((e) => e.isNotEmpty).toList(),
+        'status': 'review',
+        'updatedAt': FieldValue.serverTimestamp(),
+      };
 
-  PhotoSpot? _fromDocument(DocumentSnapshot<Map<String,dynamic>> doc) {
-    final data=doc.data(); if(data==null) return null;
-    final lat=_asDouble(data['latitude']),lng=_asDouble(data['longitude']); if(lat==null||lng==null) return null;
-    final name=(data['name']??'').toString().trim(),city=(data['city']??'').toString().trim(); if(name.isEmpty||city.isEmpty) return null;
-    return PhotoSpot(id:(data['id']??doc.id).toString(),name:name,city:city,latitude:lat,longitude:lng,rating:_asDouble(data['rating'])??0,bestTime:(data['bestTime']??'Gün ışığına göre kontrol et').toString(),angle:(data['angle']??'Noktada farklı açılar dene').toString(),imageUrl:(data['imageUrl']??'').toString(),category:(data['category']??'Genel').toString(),description:(data['description']??'').toString(),recommendedLens:(data['recommendedLens']??'24-70mm').toString(),difficulty:(data['difficulty']??'Kolay').toString(),tags:_stringList(data['tags']));
+  PhotoSpot? _fromDocument(DocumentSnapshot<Map<String, dynamic>> doc) {
+    final data = doc.data();
+    if (data == null) return null;
+    final lat = _asDouble(data['latitude']);
+    final lng = _asDouble(data['longitude']);
+    if (lat == null || lng == null) return null;
+    final name = (data['name'] ?? '').toString().trim();
+    final city = (data['city'] ?? '').toString().trim();
+    if (name.isEmpty || city.isEmpty) return null;
+
+    return PhotoSpot(
+      id: (data['id'] ?? doc.id).toString(),
+      name: name,
+      city: city,
+      latitude: lat,
+      longitude: lng,
+      rating: _asDouble(data['rating']) ?? 0,
+      bestTime: (data['bestTime'] ?? 'Gün ışığına göre kontrol et').toString(),
+      angle: (data['angle'] ?? 'Noktada farklı açılar dene').toString(),
+      imageUrl: (data['imageUrl'] ?? '').toString(),
+      category: (data['category'] ?? 'Genel').toString(),
+      description: (data['description'] ?? '').toString(),
+      recommendedLens: (data['recommendedLens'] ?? '24-70mm').toString(),
+      difficulty: (data['difficulty'] ?? 'Kolay').toString(),
+      tags: _stringList(data['tags']),
+    );
   }
 
-  List<PhotoSpot> _filterLocal(List<PhotoSpot> items,{String? city,String? category}) => items.where((spot)=>(city==null||city.trim().isEmpty||_key(spot.city)==_key(city))&&(category==null||category.trim().isEmpty||_key(spot.category)==_key(category))).toList();
-  static List<String> _distinct(Iterable<String> values) { final map=<String,String>{}; for(final value in values){ if(value.trim().isNotEmpty) map.putIfAbsent(_key(value),()=>value.trim()); } final r=map.values.toList()..sort(); return r; }
-  static double? _asDouble(dynamic value)=>value is num?value.toDouble():double.tryParse(value?.toString()??'');
-  static List<String> _stringList(dynamic value)=>value is List?value.map((e)=>e.toString()).where((e)=>e.trim().isNotEmpty).toList():const [];
-  static String _key(String value)=>value.trim().toLowerCase().replaceAll('ı','i').replaceAll('İ','i').replaceAll('ş','s').replaceAll('ğ','g').replaceAll('ü','u').replaceAll('ö','o').replaceAll('ç','c');
+  List<PhotoSpot> _filterLocal(
+    List<PhotoSpot> items, {
+    String? city,
+    String? category,
+  }) =>
+      items
+          .where(
+            (spot) =>
+                (city == null || city.trim().isEmpty || _key(spot.city) == _key(city)) &&
+                (category == null || category.trim().isEmpty || _key(spot.category) == _key(category)),
+          )
+          .toList();
+
+  static List<String> _distinct(Iterable<String> values) {
+    final map = <String, String>{};
+    for (final value in values) {
+      if (value.trim().isNotEmpty) {
+        map.putIfAbsent(_key(value), () => value.trim());
+      }
+    }
+    final result = map.values.toList()..sort();
+    return result;
+  }
+
+  static String _placeKey(String city, String name) => '${_key(city)}|${_key(name)}';
+  static double? _asDouble(dynamic value) =>
+      value is num ? value.toDouble() : double.tryParse(value?.toString() ?? '');
+  static List<String> _stringList(dynamic value) => value is List
+      ? value.map((e) => e.toString()).where((e) => e.trim().isNotEmpty).toList()
+      : const [];
+  static String _key(String value) => value
+      .trim()
+      .toLowerCase()
+      .replaceAll('ı', 'i')
+      .replaceAll('İ', 'i')
+      .replaceAll('ş', 's')
+      .replaceAll('ğ', 'g')
+      .replaceAll('ü', 'u')
+      .replaceAll('ö', 'o')
+      .replaceAll('ç', 'c');
 }
