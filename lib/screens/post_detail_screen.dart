@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../services/post_service.dart';
 import '../services/spot_repository.dart';
 import 'spot_detail_screen.dart';
+import '../widgets/content_engagement_bar.dart';
 
 class PostDetailScreen extends StatefulWidget {
   final Map<String, dynamic> post;
@@ -362,6 +363,16 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                 ),
               ),
             ],
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+            child: ContentEngagementBar(
+              collection: 'posts',
+              contentId: (_post['id'] ?? '').toString(),
+              ownerId: (_post['userId'] ?? '').toString(),
+              title: caption.isEmpty ? 'Fotoğraf paylaşımı' : caption,
+              sourceType: 'post',
+            ),
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),

@@ -6,6 +6,7 @@ import '../models/event_ticket.dart';
 import '../models/social_event.dart';
 import '../services/event_ticket_service.dart';
 import '../services/social_event_service.dart';
+import '../widgets/content_engagement_bar.dart';
 import 'event_tickets_screen.dart';
 
 class SocialEventsScreen extends StatefulWidget {
@@ -536,6 +537,14 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
                               style: const TextStyle(color: Colors.white70, height: 1.35),
                             ),
                           ],
+                          const SizedBox(height: 8),
+                          ContentEngagementBar(
+                            collection: 'social_events',
+                            contentId: event.id,
+                            ownerId: event.hostId,
+                            title: event.title,
+                            sourceType: 'social_event',
+                          ),
                           const SizedBox(height: 12),
                           Row(children: [
                             Expanded(
