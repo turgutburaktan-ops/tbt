@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 import '../models/photo_spot.dart';
@@ -104,9 +105,7 @@ class _TabChip extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(right: 8),
       child: Material(
-        color: selected
-            ? _LibraryScreenState._surfaceAlt
-            : Colors.transparent,
+        color: selected ? _LibraryScreenState._surfaceAlt : Colors.transparent,
         borderRadius: BorderRadius.circular(13),
         child: InkWell(
           onTap: onTap,
@@ -116,9 +115,7 @@ class _TabChip extends StatelessWidget {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(13),
               border: Border.all(
-                color: selected
-                    ? Colors.white38
-                    : _LibraryScreenState._border,
+                color: selected ? Colors.white38 : _LibraryScreenState._border,
               ),
             ),
             child: Row(
