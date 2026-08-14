@@ -1,36 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 enum SocialEventType {
-  photography,
-  cycling,
-  running,
-  walking,
-  hiking,
-  camping,
-  followerMeetup,
-  trip,
-  social,
-  concert,
-  party,
-  theatre,
-  seminar,
-  workshop,
-  festival,
-  talk,
-  exhibition,
-  standUp,
-  dance,
-  cinema,
-  gaming,
-  foodDrink,
-  networking,
-  education,
-  charity,
-  other,
+  photography, cycling, running, walking, hiking, camping, followerMeetup, trip, social,
+  concert, party, theatre, seminar, workshop, festival, talk, exhibition, standUp, dance,
+  cinema, gaming, foodDrink, networking, education, charity, other,
 }
 
 enum EventAccessType { free, paid }
-
 enum EventPaymentStatus { notRequired, comingSoon, enabled }
 
 extension SocialEventTypeX on SocialEventType {
@@ -79,6 +55,8 @@ class SocialEvent {
   final String locationLabel;
   final String? spotId;
   final String? spotName;
+  final double? latitude;
+  final double? longitude;
   final String status;
   final bool approximateLocationOnly;
   final EventAccessType accessType;
@@ -106,6 +84,8 @@ class SocialEvent {
     required this.spotName,
     required this.status,
     required this.approximateLocationOnly,
+    this.latitude,
+    this.longitude,
     this.accessType = EventAccessType.free,
     this.ticketPriceMinor = 0,
     this.currency = 'TRY',
@@ -121,6 +101,7 @@ class SocialEvent {
   bool get isOpen => status == 'open' && !isFull;
   bool get isPaid => accessType == EventAccessType.paid;
   bool get paymentAvailable => isPaid && paymentStatus == EventPaymentStatus.enabled;
+  bool get hasCoordinates => latitude != null && longitude != null;
   double get ticketPrice => ticketPriceMinor / 100.0;
   String get typeLabel => type == SocialEventType.other && customTypeLabel.trim().isNotEmpty
       ? customTypeLabel.trim()
@@ -153,10 +134,11 @@ class SocialEvent {
     final rawPayment = (data['paymentStatus'] ?? (access == EventAccessType.paid ? 'comingSoon' : 'notRequired')).toString();
     final payment = EventPaymentStatus.values.firstWhere(
       (value) => value.name == rawPayment,
-      orElse: () => access == EventAccessType.paid
-          ? EventPaymentStatus.comingSoon
-          : EventPaymentStatus.notRequired,
+      orElse: () => access == EventAccessType.paid ? EventPaymentStatus.comingSoon : EventPaymentStatus.notRequired,
     );
+    final geo = data['location'];
+    final lat = (data['latitude'] as num?)?.toDouble() ?? (geo is GeoPoint ? geo.latitude : null);
+    final lng = (data['longitude'] as num?)?.toDouble() ?? (geo is GeoPoint ? geo.longitude : null);
 
     return SocialEvent(
       id: doc.id,
@@ -173,6 +155,8 @@ class SocialEvent {
       locationLabel: (data['locationLabel'] ?? '').toString(),
       spotId: data['spotId']?.toString(),
       spotName: data['spotName']?.toString(),
+      latitude: lat,
+      longitude: lng,
       status: (data['status'] ?? 'open').toString(),
       approximateLocationOnly: data['approximateLocationOnly'] != false,
       accessType: access,
