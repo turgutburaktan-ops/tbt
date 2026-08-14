@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/photo_spot.dart';
 import '../services/favorites_service.dart';
+import '../widgets/spot_image.dart';
 import 'camera_screen.dart';
 import 'feed_screen.dart';
 import 'map_screen.dart';
@@ -258,27 +259,11 @@ class _SavedSpotsPage extends StatelessWidget {
                 clipBehavior: Clip.antiAlias,
                 child: ListTile(
                   contentPadding: const EdgeInsets.all(10),
-                  leading: ClipRRect(
+                  leading: SpotImage(
+                    spot: spot,
+                    width: 72,
+                    height: 72,
                     borderRadius: BorderRadius.circular(10),
-                    child: spot.imageUrl.isEmpty
-                        ? Container(
-                            width: 72,
-                            height: 72,
-                            color: const Color(0xFF222831),
-                            child: const Icon(Icons.photo_outlined),
-                          )
-                        : Image.network(
-                            spot.imageUrl,
-                            width: 72,
-                            height: 72,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => Container(
-                              width: 72,
-                              height: 72,
-                              color: const Color(0xFF222831),
-                              child: const Icon(Icons.photo_outlined),
-                            ),
-                          ),
                   ),
                   title: Text(spot.name, style: const TextStyle(fontWeight: FontWeight.w800)),
                   subtitle: Text('${spot.city} • ⭐ ${spot.rating}'),
