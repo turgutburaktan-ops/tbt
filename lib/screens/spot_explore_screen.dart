@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/photo_spot.dart';
 import '../services/spot_repository.dart';
+import '../widgets/spot_image.dart';
 import 'spot_detail_screen.dart';
 
 class SpotExploreScreen extends StatefulWidget {
@@ -327,17 +328,11 @@ class _SpotCard extends StatelessWidget {
             padding: const EdgeInsets.all(10),
             child: Row(
               children: [
-                ClipRRect(
+                SpotImage(
+                  spot: spot,
+                  width: 88,
+                  height: 88,
                   borderRadius: BorderRadius.circular(12),
-                  child: spot.imageUrl.isEmpty
-                      ? _fallbackImage()
-                      : Image.network(
-                          spot.imageUrl,
-                          width: 88,
-                          height: 88,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => _fallbackImage(),
-                        ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -370,13 +365,6 @@ class _SpotCard extends StatelessWidget {
       ),
     );
   }
-
-  Widget _fallbackImage() => Container(
-        width: 88,
-        height: 88,
-        color: const Color(0xFF222831),
-        child: const Icon(Icons.photo_camera_back_outlined, color: Colors.white38),
-      );
 }
 
 class _ExploreState extends StatelessWidget {
