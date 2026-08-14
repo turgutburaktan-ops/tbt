@@ -5,6 +5,7 @@ import '../services/favorites_service.dart';
 import '../widgets/spot_experience_sections.dart';
 import '../widgets/spot_image.dart';
 import '../widgets/spot_presence_section.dart';
+import '../widgets/spot_user_posts_gallery.dart';
 import 'camera_screen.dart';
 
 class SpotDetailScreen extends StatelessWidget {
@@ -126,7 +127,9 @@ class SpotDetailScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 20),
                   _SocialActionButtons(spot: spot),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 18),
+                  SpotUserPostsGallery(spot: spot),
+                  const SizedBox(height: 20),
                   _CompactShootingGuide(spot: spot),
                   const SizedBox(height: 24),
                   const _SectionTitle(icon: Icons.schedule, title: 'En İyi Çekim Zamanı'),
