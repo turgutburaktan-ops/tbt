@@ -39,6 +39,12 @@ for path in ROOT.rglob('*.dart'):
         if needle in text:
             text = text.replace(needle, insert, 1)
 
+    if path.name == 'library_screen.dart':
+        text = text.replace(
+            "builder: (_) => const Scaffold(\n            appBar: AppBar(title: Text('Etkinlikler')),\n            body: SocialEventsScreen(),\n          ),",
+            "builder: (_) => Scaffold(\n            appBar: AppBar(title: const Text('Etkinlikler')),\n            body: const SocialEventsScreen(),\n          ),",
+        )
+
     if text != original:
         path.write_text(text, encoding='utf-8')
         changed.append(str(path))
