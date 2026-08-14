@@ -24,6 +24,7 @@ REPLACEMENTS = {
     '0x3322D3EE': '0x33383D43',
     '0xFF1B1728': '0xFF17191C',
     '0xFF241A3A': '0xFF2A2E33',
+    'Colors.white46': 'Colors.white54',
 }
 
 changed = []
