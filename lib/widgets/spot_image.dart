@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../data/spot_image_auto_registry.dart';
 import '../data/spot_image_registry.dart';
 import '../models/photo_spot.dart';
 import '../services/spot_image_search_service.dart';
@@ -22,7 +23,9 @@ class SpotImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final verified = spotImageRegistry[spot.id];
+    // Elle doğrulanmış kayıt her zaman önceliklidir. Türkiye genelindeki diğer
+    // noktalar için build sırasında üretilen lisanslı katalog kullanılır.
+    final verified = spotImageRegistry[spot.id] ?? spotImageAutoRegistry[spot.id];
     final hasVerifiedAsset =
         verified != null && verified.assetPath.trim().isNotEmpty;
     final hasVerifiedUrl =
@@ -85,7 +88,10 @@ class SpotImage extends StatelessWidget {
               width: width,
               height: height,
               fit: fit,
-              errorBuilder: (_, __, ___) => _fallback(),
+              errorBuilder: (_, __, ___) {
+                SpotImageSearchService.instance.invalidate(spot, url);
+                return _fallback();
+              },
             );
           }
           if (snapshot.connectionState == ConnectionState.waiting) {
