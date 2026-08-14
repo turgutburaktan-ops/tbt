@@ -5,6 +5,7 @@ import 'screens/chat_inbox_screen.dart';
 import 'screens/home_shell_screen.dart';
 import 'screens/notifications_screen.dart';
 import 'services/favorites_service.dart';
+import 'theme/app_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,15 +24,7 @@ class BestPhotoSpotApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'En İyi Çekim Noktası',
-      theme: ThemeData(
-        brightness: Brightness.dark,
-        scaffoldBackgroundColor: const Color(0xFF080B10),
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFFFFC107),
-          brightness: Brightness.dark,
-        ),
-        useMaterial3: true,
-      ),
+      theme: AppTheme.dark,
       routes: {
         '/messages': (_) => const ChatInboxScreen(),
         '/notifications': (_) => const NotificationsScreen(),
