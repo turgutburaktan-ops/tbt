@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../data/spot_image_registry.dart';
 import '../models/photo_spot.dart';
+import '../services/spot_image_search_service.dart';
 
 class SpotImage extends StatelessWidget {
   final PhotoSpot spot;
@@ -22,25 +23,30 @@ class SpotImage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final verified = spotImageRegistry[spot.id];
-    Widget child;
+    final hasVerifiedAsset = verified != null && verified.assetPath.trim().isNotEmpty;
+    final hasVerifiedUrl = verified != null && verified.networkUrl.trim().isNotEmpty;
+    final hasLegacyUrl = spot.imageUrl.trim().isNotEmpty;
 
-    if (verified != null && verified.assetPath.trim().isNotEmpty) {
+    Widget child;
+    if (hasVerifiedAsset) {
       child = Image.asset(
         verified.assetPath,
         width: width,
         height: height,
         fit: fit,
-        errorBuilder: (_, __, ___) => _networkOrFallback(verified),
+        errorBuilder: (_, __, ___) => _networkOrSearch(verified),
       );
+    } else if (hasVerifiedUrl || hasLegacyUrl) {
+      child = _networkOrSearch(verified);
     } else {
-      child = _networkOrFallback(verified);
+      child = _searchedImage();
     }
 
     if (borderRadius == null) return child;
     return ClipRRect(borderRadius: borderRadius!, child: child);
   }
 
-  Widget _networkOrFallback(SpotImageInfo? verified) {
+  Widget _networkOrSearch(SpotImageInfo? verified) {
     final verifiedUrl = verified?.networkUrl.trim() ?? '';
     if (verifiedUrl.isNotEmpty) {
       return Image.network(
@@ -48,24 +54,57 @@ class SpotImage extends StatelessWidget {
         width: width,
         height: height,
         fit: fit,
-        errorBuilder: (_, __, ___) => _legacyNetworkOrFallback(),
+        errorBuilder: (_, __, ___) => _legacyOrSearch(),
       );
     }
-    return _legacyNetworkOrFallback();
+    return _legacyOrSearch();
   }
 
-  Widget _legacyNetworkOrFallback() {
+  Widget _legacyOrSearch() {
     if (spot.imageUrl.trim().isNotEmpty) {
       return Image.network(
         spot.imageUrl,
         width: width,
         height: height,
         fit: fit,
-        errorBuilder: (_, __, ___) => _fallback(),
+        errorBuilder: (_, __, ___) => _searchedImage(),
       );
     }
-    return _fallback();
+    return _searchedImage();
   }
+
+  Widget _searchedImage() => FutureBuilder<String?>(
+        future: SpotImageSearchService.instance.findImage(spot),
+        builder: (context, snapshot) {
+          final url = snapshot.data?.trim() ?? '';
+          if (url.isNotEmpty) {
+            return Image.network(
+              url,
+              width: width,
+              height: height,
+              fit: fit,
+              errorBuilder: (_, __, ___) => _fallback(),
+            );
+          }
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Container(
+              width: width,
+              height: height,
+              color: const Color(0xFF222831),
+              alignment: Alignment.center,
+              child: const SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Color(0xFFFFC107),
+                ),
+              ),
+            );
+          }
+          return _fallback();
+        },
+      );
 
   Widget _fallback() => Container(
         width: width,
