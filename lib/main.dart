@@ -2,7 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
 import 'screens/chat_inbox_screen.dart';
-import 'screens/home_screen.dart';
+import 'screens/home_shell_screen.dart';
 import 'services/favorites_service.dart';
 
 Future<void> main() async {
