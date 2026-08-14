@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../models/event_ticket.dart';
 import '../models/social_event.dart';
@@ -58,6 +59,14 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
       ? '${event.ticketPrice.toStringAsFixed(2)} ${event.currency}'
       : 'Ücretsiz';
 
+  String _friendlyError(Object error) {
+    final text = error.toString().replaceFirst('Exception: ', '');
+    if (text.contains('permission-denied')) {
+      return 'Etkinlik servisi için veritabanı izni eksik. Formun silinmedi; tekrar deneyebilirsin.';
+    }
+    return text;
+  }
+
   void _showMessage(String text) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
@@ -80,7 +89,7 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
             : 'Etkinliğe katıldın. Biletin hazır.');
       }
     } catch (e) {
-      _showMessage(e.toString().replaceFirst('Exception: ', ''));
+      _showMessage(_friendlyError(e));
     }
   }
 
@@ -96,11 +105,13 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
     final descriptionController = TextEditingController();
     final customTypeController = TextEditingController();
     final priceController = TextEditingController();
+    final capacityController = TextEditingController(text: '10');
     SocialEventType type = SocialEventType.social;
     EventAccessType accessType = EventAccessType.free;
     DateTime startsAt = DateTime.now().add(const Duration(hours: 2));
     int capacity = 10;
     bool saving = false;
+    String? formError;
 
     await showModalBottomSheet<void>(
       context: context,
@@ -125,6 +136,18 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
             setSheetState(() {
               startsAt = DateTime(date.year, date.month, date.day, time.hour, time.minute);
             });
+          }
+
+          void setCapacity(int value) {
+            final safe = value.clamp(2, 100);
+            setSheetState(() {
+              capacity = safe;
+              formError = null;
+            });
+            capacityController.value = TextEditingValue(
+              text: '$safe',
+              selection: TextSelection.collapsed(offset: '$safe'.length),
+            );
           }
 
           return Padding(
@@ -223,25 +246,72 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
                     trailing: const Icon(Icons.chevron_right),
                     onTap: chooseDateTime,
                   ),
-                  Row(children: [
-                    const Expanded(child: Text('Kapasite', style: TextStyle(fontWeight: FontWeight.w700))),
-                    IconButton(
-                      onPressed: capacity > 2 ? () => setSheetState(() => capacity--) : null,
-                      icon: const Icon(Icons.remove_circle_outline),
-                    ),
-                    Text('$capacity', style: const TextStyle(fontWeight: FontWeight.w900)),
-                    IconButton(
-                      onPressed: capacity < 100 ? () => setSheetState(() => capacity++) : null,
-                      icon: const Icon(Icons.add_circle_outline),
-                    ),
-                  ]),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      const Expanded(
+                        child: Text('Katılımcı kapasitesi', style: TextStyle(fontWeight: FontWeight.w700)),
+                      ),
+                      IconButton(
+                        onPressed: capacity > 2 ? () => setCapacity(capacity - 1) : null,
+                        icon: const Icon(Icons.remove_circle_outline),
+                      ),
+                      SizedBox(
+                        width: 74,
+                        child: TextField(
+                          controller: capacityController,
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                          textAlign: TextAlign.center,
+                          decoration: const InputDecoration(
+                            isDense: true,
+                            hintText: '10',
+                          ),
+                          onChanged: (value) {
+                            final parsed = int.tryParse(value);
+                            if (parsed == null) return;
+                            setSheetState(() {
+                              capacity = parsed.clamp(2, 100);
+                              formError = null;
+                            });
+                          },
+                          onEditingComplete: () {
+                            final parsed = int.tryParse(capacityController.text) ?? capacity;
+                            setCapacity(parsed);
+                            FocusScope.of(context).unfocus();
+                          },
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: capacity < 100 ? () => setCapacity(capacity + 1) : null,
+                        icon: const Icon(Icons.add_circle_outline),
+                      ),
+                    ],
+                  ),
+                  const Padding(
+                    padding: EdgeInsets.only(top: 4),
+                    child: Text('2 ile 100 arasında sayı yazabilir veya + / - kullanabilirsin.', style: TextStyle(color: Colors.white54, fontSize: 12)),
+                  ),
+                  const SizedBox(height: 12),
                   TextField(
                     controller: descriptionController,
                     minLines: 2,
                     maxLines: 5,
                     decoration: const InputDecoration(labelText: 'Açıklama / not'),
                   ),
+                  if (formError != null) ...[
+                    const SizedBox(height: 14),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.red.withOpacity(0.12),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.redAccent.withOpacity(0.5)),
+                      ),
+                      child: Text(formError!, style: const TextStyle(color: Colors.redAccent)),
+                    ),
+                  ],
                   const SizedBox(height: 20),
                   SizedBox(
                     width: double.infinity,
@@ -254,7 +324,16 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
                       onPressed: saving
                           ? null
                           : () async {
-                              setSheetState(() => saving = true);
+                              final typedCapacity = int.tryParse(capacityController.text.trim());
+                              if (typedCapacity == null || typedCapacity < 2 || typedCapacity > 100) {
+                                setSheetState(() => formError = 'Katılımcı sayısı 2 ile 100 arasında olmalı.');
+                                return;
+                              }
+                              capacity = typedCapacity;
+                              setSheetState(() {
+                                saving = true;
+                                formError = null;
+                              });
                               try {
                                 final price = double.tryParse(priceController.text.trim().replaceAll(',', '.')) ?? 0;
                                 await SocialEventService.instance.create(
@@ -272,8 +351,13 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
                                 if (sheetContext.mounted) Navigator.pop(sheetContext);
                                 _showMessage('Etkinlik oluşturuldu.');
                               } catch (e) {
-                                setSheetState(() => saving = false);
-                                _showMessage(e.toString().replaceFirst('Exception: ', ''));
+                                final message = _friendlyError(e);
+                                if (sheetContext.mounted) {
+                                  setSheetState(() {
+                                    saving = false;
+                                    formError = message;
+                                  });
+                                }
                               }
                             },
                       icon: saving
@@ -296,6 +380,7 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
     descriptionController.dispose();
     customTypeController.dispose();
     priceController.dispose();
+    capacityController.dispose();
   }
 
   @override
@@ -368,7 +453,31 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
               if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
                 return const Center(child: CircularProgressIndicator(color: Color(0xFFFFC107)));
               }
-              if (snapshot.hasError) return const Center(child: Text('Etkinlikler yüklenemedi.'));
+              if (snapshot.hasError) {
+                final permissionDenied = snapshot.error.toString().contains('permission-denied');
+                return Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.event_busy_outlined, size: 48, color: Colors.white38),
+                        const SizedBox(height: 12),
+                        Text(
+                          permissionDenied ? 'Etkinlik servisi için veritabanı izni bekleniyor.' : 'Etkinlikler yüklenemedi.',
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 6),
+                        const Text(
+                          'Bu ekran kapanmayacak; bağlantı düzeldiğinde liste otomatik yenilenir.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: Colors.white54, fontSize: 12),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }
               final events = snapshot.data ?? const <SocialEvent>[];
               if (events.isEmpty) return const Center(child: Text('Yaklaşan etkinlik yok.'));
 
