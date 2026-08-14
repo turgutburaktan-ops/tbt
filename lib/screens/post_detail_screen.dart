@@ -73,7 +73,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
-      backgroundColor: const Color(0xFF0D1117),
+      backgroundColor: const Color(0xFF090812),
       builder: (sheetContext) => Padding(
         padding: EdgeInsets.fromLTRB(
           20,
@@ -109,7 +109,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                 height: 50,
                 child: FilledButton(
                   style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFFFFC107),
+                    backgroundColor: const Color(0xFF8B5CF6),
                     foregroundColor: Colors.black,
                   ),
                   onPressed: () => Navigator.pop(sheetContext, true),
@@ -194,7 +194,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   void _showMenu() {
     showModalBottomSheet<void>(
       context: context,
-      backgroundColor: const Color(0xFF151A22),
+      backgroundColor: const Color(0xFF141126),
       builder: (sheetContext) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -202,7 +202,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
             ListTile(
               leading: const Icon(
                 Icons.edit_outlined,
-                color: Color(0xFFFFC107),
+                color: Color(0xFF8B5CF6),
               ),
               title: const Text('Düzenle'),
               onTap: () {
@@ -242,9 +242,9 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     final date = _dateLabel(_post['createdAt']);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0D1117),
+      backgroundColor: const Color(0xFF090812),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0D1117),
+        backgroundColor: const Color(0xFF090812),
         foregroundColor: Colors.white,
         title: const Text('Paylaşım'),
         actions: [
@@ -269,7 +269,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                     color: Colors.black,
                     borderRadius: BorderRadius.circular(14),
                     border: Border.all(
-                      color: const Color(0x88FFC107),
+                      color: const Color(0x888B5CF6),
                       width: 1.5,
                     ),
                   ),
@@ -336,7 +336,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                                 const Icon(
                                   Icons.location_on_outlined,
                                   size: 13,
-                                  color: Color(0xFFFFC107),
+                                  color: Color(0xFF8B5CF6),
                                 ),
                                 const SizedBox(width: 3),
                                 ConstrainedBox(

@@ -71,7 +71,7 @@ class ShootingGuideSection extends StatelessWidget {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(rows[i].icon, size: 20, color: const Color(0xFFFFC107)),
+                    Icon(rows[i].icon, size: 20, color: const Color(0xFF8B5CF6)),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Column(
@@ -263,7 +263,7 @@ class TogetherGoSection extends StatelessWidget {
                     const SizedBox(height: 16),
                     ListTile(
                       contentPadding: EdgeInsets.zero,
-                      leading: const Icon(Icons.event_outlined, color: Color(0xFFFFC107)),
+                      leading: const Icon(Icons.event_outlined, color: Color(0xFF8B5CF6)),
                       title: const Text('Tarih ve saat'),
                       subtitle: Text(_dateTimeText(selected)),
                       trailing: const Icon(Icons.chevron_right),
@@ -318,7 +318,7 @@ class TogetherGoSection extends StatelessWidget {
                       child: FilledButton.icon(
                         onPressed: saving ? null : save,
                         style: FilledButton.styleFrom(
-                          backgroundColor: const Color(0xFFFFC107),
+                          backgroundColor: const Color(0xFF8B5CF6),
                           foregroundColor: Colors.black,
                         ),
                         icon: saving
@@ -381,9 +381,9 @@ class _MeetupCardState extends State<_MeetupCard> {
                 height: 42,
                 decoration: const BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Color(0x22FFC107),
+                  color: Color(0x228B5CF6),
                 ),
-                child: const Icon(Icons.people_alt_outlined, color: Color(0xFFFFC107)),
+                child: const Icon(Icons.people_alt_outlined, color: Color(0xFF8B5CF6)),
               ),
               const SizedBox(width: 11),
               Expanded(
@@ -427,7 +427,7 @@ class _MeetupCardState extends State<_MeetupCard> {
                     FilledButton.icon(
                       onPressed: busy ? null : () => openMeetupHostChat(context, meetup),
                       style: FilledButton.styleFrom(
-                        backgroundColor: const Color(0xFFFFC107),
+                        backgroundColor: const Color(0xFF8B5CF6),
                         foregroundColor: Colors.black,
                       ),
                       icon: const Icon(Icons.chat_bubble_outline, size: 17),
@@ -444,7 +444,7 @@ class _MeetupCardState extends State<_MeetupCard> {
                 FilledButton(
                   onPressed: busy || meetup.isFull ? null : _join,
                   style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFFFFC107),
+                    backgroundColor: const Color(0xFF8B5CF6),
                     foregroundColor: Colors.black,
                   ),
                   child: Text(meetup.isFull ? 'Dolu' : 'Katıl'),
@@ -523,7 +523,7 @@ class _Shell extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF151A22),
+        color: const Color(0xFF141126),
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: Colors.white10),
       ),
@@ -537,10 +537,10 @@ class _Shell extends StatelessWidget {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: const Color(0x22FFC107),
+                  color: const Color(0x228B5CF6),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(icon, color: const Color(0xFFFFC107)),
+                child: Icon(icon, color: const Color(0xFF8B5CF6)),
               ),
               const SizedBox(width: 11),
               Expanded(

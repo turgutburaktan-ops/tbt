@@ -31,7 +31,7 @@ class ContentEngagementBar extends StatelessWidget {
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
-      backgroundColor: const Color(0xFF0D1117),
+      backgroundColor: const Color(0xFF090812),
       builder: (sheetContext) => Padding(
         padding: EdgeInsets.fromLTRB(16, 16, 16, MediaQuery.of(sheetContext).viewInsets.bottom + 16),
         child: SizedBox(
@@ -112,7 +112,7 @@ class ContentEngagementBar extends StatelessWidget {
     return showModalBottomSheet<Map<String, String>>(
       context: context,
       useSafeArea: true,
-      backgroundColor: const Color(0xFF0D1117),
+      backgroundColor: const Color(0xFF090812),
       builder: (sheetContext) => SizedBox(
         height: MediaQuery.of(sheetContext).size.height * .65,
         child: Column(

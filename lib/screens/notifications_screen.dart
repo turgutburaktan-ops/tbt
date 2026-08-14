@@ -33,9 +33,9 @@ class NotificationsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0D1117),
+      backgroundColor: const Color(0xFF090812),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0D1117),
+        backgroundColor: const Color(0xFF090812),
         foregroundColor: Colors.white,
         title: const Text('Bildirimler'),
         actions: [
@@ -51,7 +51,7 @@ class NotificationsScreen extends StatelessWidget {
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(
-              child: CircularProgressIndicator(color: Color(0xFFFFC107)),
+              child: CircularProgressIndicator(color: Color(0xFF8B5CF6)),
             );
           }
 
@@ -85,7 +85,7 @@ class NotificationsScreen extends StatelessWidget {
             itemBuilder: (context, index) {
               final item = items[index];
               return Material(
-                color: item.read ? const Color(0xFF151A22) : const Color(0xFF1C222B),
+                color: item.read ? const Color(0xFF141126) : const Color(0xFF1C222B),
                 borderRadius: BorderRadius.circular(16),
                 child: InkWell(
                   borderRadius: BorderRadius.circular(16),
@@ -99,10 +99,10 @@ class NotificationsScreen extends StatelessWidget {
                           width: 42,
                           height: 42,
                           decoration: const BoxDecoration(
-                            color: Color(0x22FFC107),
+                            color: Color(0x228B5CF6),
                             shape: BoxShape.circle,
                           ),
-                          child: Icon(_iconFor(item.type), color: const Color(0xFFFFC107), size: 21),
+                          child: Icon(_iconFor(item.type), color: const Color(0xFF8B5CF6), size: 21),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
@@ -125,7 +125,7 @@ class NotificationsScreen extends StatelessWidget {
                                       width: 8,
                                       height: 8,
                                       decoration: const BoxDecoration(
-                                        color: Color(0xFFFFC107),
+                                        color: Color(0xFF8B5CF6),
                                         shape: BoxShape.circle,
                                       ),
                                     ),

@@ -79,7 +79,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const yellow = Color(0xFFFFC107);
+    const yellow = Color(0xFF8B5CF6);
 
     final body = SafeArea(
       child: SingleChildScrollView(
@@ -169,13 +169,13 @@ class _LoginScreenState extends State<LoginScreen> {
     );
 
     if (widget.embedded) {
-      return ColoredBox(color: const Color(0xFF0D1117), child: body);
+      return ColoredBox(color: const Color(0xFF090812), child: body);
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0D1117),
+      backgroundColor: const Color(0xFF090812),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0D1117),
+        backgroundColor: const Color(0xFF090812),
         foregroundColor: Colors.white,
         title: const Text('Giriş Yap'),
       ),
@@ -190,10 +190,10 @@ class _LoginScreenState extends State<LoginScreen> {
   }) {
     return InputDecoration(
       labelText: label,
-      prefixIcon: Icon(icon, color: const Color(0xFFFFC107)),
+      prefixIcon: Icon(icon, color: const Color(0xFF8B5CF6)),
       suffixIcon: suffix,
       filled: true,
-      fillColor: const Color(0xFF171C24),
+      fillColor: const Color(0xFF141126),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(18),
         borderSide: BorderSide.none,
@@ -204,7 +204,7 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(18),
-        borderSide: const BorderSide(color: Color(0xFFFFC107)),
+        borderSide: const BorderSide(color: Color(0xFF8B5CF6)),
       ),
     );
   }

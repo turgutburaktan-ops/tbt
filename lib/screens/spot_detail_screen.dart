@@ -44,13 +44,13 @@ class SpotDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0D1117),
+      backgroundColor: const Color(0xFF090812),
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
             expandedHeight: 300,
             pinned: true,
-            backgroundColor: const Color(0xFF0D1117),
+            backgroundColor: const Color(0xFF090812),
             foregroundColor: Colors.white,
             actions: [
               ValueListenableBuilder<List<PhotoSpot>>(
@@ -60,7 +60,7 @@ class SpotDetailScreen extends StatelessWidget {
                   return IconButton(
                     tooltip: saved ? 'Kaydı kaldır' : 'Kaydet',
                     onPressed: () => FavoritesService.toggle(spot),
-                    icon: Icon(saved ? Icons.favorite : Icons.favorite_border, color: saved ? const Color(0xFFFFC107) : Colors.white),
+                    icon: Icon(saved ? Icons.favorite : Icons.favorite_border, color: saved ? const Color(0xFF8B5CF6) : Colors.white),
                   );
                 },
               ),
@@ -110,7 +110,7 @@ class SpotDetailScreen extends StatelessWidget {
                       const Icon(Icons.location_on_outlined, size: 18, color: Colors.white54),
                       const SizedBox(width: 4),
                       Expanded(child: Text(spot.city, style: const TextStyle(color: Colors.white60))),
-                      const Icon(Icons.star, size: 18, color: Color(0xFFFFC107)),
+                      const Icon(Icons.star, size: 18, color: Color(0xFF8B5CF6)),
                       const SizedBox(width: 4),
                       Text(spot.rating.toString()),
                     ],
@@ -152,7 +152,7 @@ class SpotDetailScreen extends StatelessWidget {
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,
-                      children: spot.tags.map((tag) => Chip(label: Text(tag), backgroundColor: const Color(0xFF171C24), side: BorderSide.none)).toList(),
+                      children: spot.tags.map((tag) => Chip(label: Text(tag), backgroundColor: const Color(0xFF141126), side: BorderSide.none)).toList(),
                     ),
                   ],
                   const SizedBox(height: 30),
@@ -161,7 +161,7 @@ class SpotDetailScreen extends StatelessWidget {
                     height: 56,
                     child: ElevatedButton.icon(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFFFC107),
+                        backgroundColor: const Color(0xFF8B5CF6),
                         foregroundColor: Colors.black,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                       ),
@@ -221,7 +221,7 @@ class _PrimaryActionButton extends StatelessWidget {
       child: FilledButton.icon(
         onPressed: onPressed,
         style: FilledButton.styleFrom(
-          backgroundColor: const Color(0xFFFFC107),
+          backgroundColor: const Color(0xFF8B5CF6),
           foregroundColor: Colors.black,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
           padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -243,11 +243,11 @@ class _CompactShootingGuide extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(15),
-      decoration: BoxDecoration(color: const Color(0xFF151A22), borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.white10)),
+      decoration: BoxDecoration(color: const Color(0xFF141126), borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.white10)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(children: [Icon(Icons.auto_awesome, size: 20, color: Color(0xFFFFC107)), SizedBox(width: 8), Text('Nasıl Çekilir?', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w900))]),
+          const Row(children: [Icon(Icons.auto_awesome, size: 20, color: Color(0xFF8B5CF6)), SizedBox(width: 8), Text('Nasıl Çekilir?', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w900))]),
           const SizedBox(height: 9),
           Text('${spot.bestTime} • ${spot.recommendedLens}', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.w700)),
           const SizedBox(height: 5),
@@ -272,7 +272,7 @@ Future<void> _openActionSheet(BuildContext context, {required String title, requ
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
-    backgroundColor: const Color(0xFF0D1117),
+    backgroundColor: const Color(0xFF090812),
     shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
     builder: (sheetContext) => FractionallySizedBox(
       heightFactor: 0.86,
@@ -303,8 +303,8 @@ class _InfoChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
-        decoration: BoxDecoration(color: const Color(0xFF171C24), borderRadius: BorderRadius.circular(12)),
-        child: Row(mainAxisSize: MainAxisSize.min, children: [Icon(icon, size: 17, color: const Color(0xFFFFC107)), const SizedBox(width: 6), Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600))]),
+        decoration: BoxDecoration(color: const Color(0xFF141126), borderRadius: BorderRadius.circular(12)),
+        child: Row(mainAxisSize: MainAxisSize.min, children: [Icon(icon, size: 17, color: const Color(0xFF8B5CF6)), const SizedBox(width: 6), Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600))]),
       );
 }
 
@@ -314,7 +314,7 @@ class _SectionTitle extends StatelessWidget {
   const _SectionTitle({required this.icon, required this.title});
 
   @override
-  Widget build(BuildContext context) => Row(children: [Icon(icon, size: 21, color: const Color(0xFFFFC107)), const SizedBox(width: 8), Text(title, style: const TextStyle(fontSize: 19, fontWeight: FontWeight.bold))]);
+  Widget build(BuildContext context) => Row(children: [Icon(icon, size: 21, color: const Color(0xFF8B5CF6)), const SizedBox(width: 8), Text(title, style: const TextStyle(fontSize: 19, fontWeight: FontWeight.bold))]);
 }
 
 class _InfoCard extends StatelessWidget {
@@ -325,7 +325,7 @@ class _InfoCard extends StatelessWidget {
   Widget build(BuildContext context) => Container(
         width: double.infinity,
         padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(color: const Color(0xFF151A22), borderRadius: BorderRadius.circular(16)),
+        decoration: BoxDecoration(color: const Color(0xFF141126), borderRadius: BorderRadius.circular(16)),
         child: Text(text, style: const TextStyle(fontSize: 15, height: 1.4)),
       );
 }

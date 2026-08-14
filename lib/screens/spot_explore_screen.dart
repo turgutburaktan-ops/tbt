@@ -143,7 +143,7 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
     SpotSort draftSort = _sort;
     showModalBottomSheet<void>(
       context: context,
-      backgroundColor: const Color(0xFF151A22),
+      backgroundColor: const Color(0xFF141126),
       isScrollControlled: true,
       builder: (sheetContext) => StatefulBuilder(
         builder: (context, setSheetState) => SafeArea(
@@ -195,7 +195,7 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
                   ),
                   const Spacer(),
                   FilledButton(
-                    style: FilledButton.styleFrom(backgroundColor: const Color(0xFFFFC107), foregroundColor: Colors.black),
+                    style: FilledButton.styleFrom(backgroundColor: const Color(0xFF8B5CF6), foregroundColor: Colors.black),
                     onPressed: () {
                       Navigator.pop(sheetContext);
                       setState(() {
@@ -220,7 +220,7 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
   Widget build(BuildContext context) {
     return RefreshIndicator(
       onRefresh: _reload,
-      color: const Color(0xFFFFC107),
+      color: const Color(0xFF8B5CF6),
       child: CustomScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
@@ -265,7 +265,7 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
                           icon: const Icon(Icons.close_rounded),
                         ),
                   filled: true,
-                  fillColor: const Color(0xFF171C24),
+                  fillColor: const Color(0xFF141126),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
                 ),
               ),
@@ -282,7 +282,7 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
               ),
             ),
           if (_loading && _spots.isEmpty)
-            const SliverFillRemaining(hasScrollBody: false, child: Center(child: CircularProgressIndicator(color: Color(0xFFFFC107))))
+            const SliverFillRemaining(hasScrollBody: false, child: Center(child: CircularProgressIndicator(color: Color(0xFF8B5CF6))))
           else if (_error != null && _spots.isEmpty)
             SliverFillRemaining(hasScrollBody: false, child: _ExploreState(icon: Icons.cloud_off_rounded, title: _error!, actionLabel: 'Tekrar dene', onAction: _reload))
           else if (_spots.isEmpty)
@@ -295,7 +295,7 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
                   Text('${_spots.length} çekim noktası', style: const TextStyle(color: Colors.white54, fontWeight: FontWeight.w600)),
                   if (_loading) ...[
                     const SizedBox(width: 10),
-                    const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFFFFC107))),
+                    const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF8B5CF6))),
                   ],
                 ]),
               ),
@@ -322,7 +322,7 @@ class _SpotCard extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
       child: Card(
-        color: const Color(0xFF151A22),
+        color: const Color(0xFF141126),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => SpotDetailScreen(spot: spot))),
@@ -335,13 +335,13 @@ class _SpotCard extends StatelessWidget {
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Row(children: [
                     Expanded(child: Text(spot.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16))),
-                    if (distanceLabel.isNotEmpty) Text(distanceLabel, style: const TextStyle(color: Color(0xFFFFC107), fontWeight: FontWeight.w800, fontSize: 12)),
+                    if (distanceLabel.isNotEmpty) Text(distanceLabel, style: const TextStyle(color: Color(0xFF8B5CF6), fontWeight: FontWeight.w800, fontSize: 12)),
                   ]),
                   const SizedBox(height: 4),
                   Text('${spot.city} • ${spot.category}', style: const TextStyle(color: Colors.white60, fontSize: 12)),
                   const SizedBox(height: 8),
                   Row(children: [
-                    const Icon(Icons.star_rounded, size: 16, color: Color(0xFFFFC107)),
+                    const Icon(Icons.star_rounded, size: 16, color: Color(0xFF8B5CF6)),
                     const SizedBox(width: 3),
                     Text(spot.rating.toStringAsFixed(1)),
                     const SizedBox(width: 12),

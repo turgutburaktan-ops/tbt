@@ -23,7 +23,7 @@ class SpotUserPostsGallery extends StatelessWidget {
               child: Center(
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  color: Color(0xFFFFC107),
+                  color: Color(0xFF8B5CF6),
                 ),
               ),
             ),
@@ -43,10 +43,10 @@ class SpotUserPostsGallery extends StatelessWidget {
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFFC107).withOpacity(.12),
+                    color: const Color(0xFF8B5CF6).withOpacity(.12),
                     borderRadius: BorderRadius.circular(14),
                   ),
-                  child: const Icon(Icons.add_photo_alternate_outlined, color: Color(0xFFFFC107)),
+                  child: const Icon(Icons.add_photo_alternate_outlined, color: Color(0xFF8B5CF6)),
                 ),
                 const SizedBox(width: 12),
                 const Expanded(
@@ -72,7 +72,7 @@ class SpotUserPostsGallery extends StatelessWidget {
           children: [
             const Row(
               children: [
-                Icon(Icons.photo_library_outlined, size: 21, color: Color(0xFFFFC107)),
+                Icon(Icons.photo_library_outlined, size: 21, color: Color(0xFF8B5CF6)),
                 SizedBox(width: 8),
                 Expanded(
                   child: Text('Bu Noktadan Paylaşımlar', style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold)),
@@ -100,7 +100,7 @@ class SpotUserPostsGallery extends StatelessWidget {
                   child: Hero(
                     tag: 'spot-post-${top[index].id}',
                     child: Container(
-                      color: const Color(0xFF171C24),
+                      color: const Color(0xFF141126),
                       child: url.isEmpty
                           ? const Icon(Icons.image_outlined, color: Colors.white30)
                           : Image.network(
@@ -210,7 +210,7 @@ class _Shell extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.all(15),
         decoration: BoxDecoration(
-          color: const Color(0xFF151A22),
+          color: const Color(0xFF141126),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: Colors.white10),
         ),

@@ -26,7 +26,7 @@ class ProfilePage extends StatelessWidget {
         if (auth.connectionState == ConnectionState.waiting) {
           return const SafeArea(
             child: Center(
-              child: CircularProgressIndicator(color: Color(0xFFFFC107)),
+              child: CircularProgressIndicator(color: Color(0xFF8B5CF6)),
             ),
           );
         }
@@ -144,7 +144,7 @@ class _ProfileBodyState extends State<_ProfileBody> {
                           ),
                           IconButton(
                             onPressed: () => _editProfile(displayName, bio),
-                            icon: const Icon(Icons.edit_outlined, color: Color(0xFFFFC107)),
+                            icon: const Icon(Icons.edit_outlined, color: Color(0xFF8B5CF6)),
                           ),
                           IconButton(
                             onPressed: () => AuthService.instance.logout(),
@@ -169,10 +169,10 @@ class _ProfileBodyState extends State<_ProfileBody> {
                                     onTap: () => _openProfilePhoto(photoUrl, displayName),
                                     child: CircleAvatar(
                                       radius: 47,
-                                      backgroundColor: const Color(0xFFFFC107),
+                                      backgroundColor: const Color(0xFF8B5CF6),
                                       child: CircleAvatar(
                                         radius: 43,
-                                        backgroundColor: const Color(0xFF171C24),
+                                        backgroundColor: const Color(0xFF141126),
                                         backgroundImage: photoUrl.isNotEmpty ? NetworkImage(photoUrl) : null,
                                         child: photoUrl.isEmpty
                                             ? const Icon(Icons.person, size: 48, color: Colors.white54)
@@ -189,7 +189,7 @@ class _ProfileBodyState extends State<_ProfileBody> {
                                         width: 29,
                                         height: 29,
                                         decoration: const BoxDecoration(
-                                          color: Color(0xFFFFC107),
+                                          color: Color(0xFF8B5CF6),
                                           shape: BoxShape.circle,
                                         ),
                                         child: const Icon(
@@ -263,7 +263,7 @@ class _ProfileBodyState extends State<_ProfileBody> {
                     const SliverFillRemaining(
                       hasScrollBody: false,
                       child: Center(
-                        child: CircularProgressIndicator(color: Color(0xFFFFC107)),
+                        child: CircularProgressIndicator(color: Color(0xFF8B5CF6)),
                       ),
                     )
                   else if (posts.isEmpty)
@@ -272,7 +272,7 @@ class _ProfileBodyState extends State<_ProfileBody> {
                       child: Center(
                         child: FilledButton.icon(
                           style: FilledButton.styleFrom(
-                            backgroundColor: const Color(0xFFFFC107),
+                            backgroundColor: const Color(0xFF8B5CF6),
                             foregroundColor: Colors.black,
                           ),
                           onPressed: () => Navigator.push(
@@ -328,7 +328,7 @@ class _ProfileBodyState extends State<_ProfileBody> {
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
-      backgroundColor: const Color(0xFF0D1117),
+      backgroundColor: const Color(0xFF090812),
       builder: (sheetContext) => StatefulBuilder(
         builder: (context, setSheetState) {
           Future<void> pick() async {
@@ -369,13 +369,13 @@ class _ProfileBodyState extends State<_ProfileBody> {
                     onTap: pick,
                     child: CircleAvatar(
                       radius: 48,
-                      backgroundColor: const Color(0xFF202833),
+                      backgroundColor: const Color(0xFF1C1733),
                       backgroundImage: photo != null ? FileImage(photo!) : null,
                       child: photo == null
                           ? const Icon(
                               Icons.add_a_photo_outlined,
                               size: 34,
-                              color: Color(0xFFFFC107),
+                              color: Color(0xFF8B5CF6),
                             )
                           : null,
                     ),
@@ -400,7 +400,7 @@ class _ProfileBodyState extends State<_ProfileBody> {
                     height: 52,
                     child: FilledButton(
                       style: FilledButton.styleFrom(
-                        backgroundColor: const Color(0xFFFFC107),
+                        backgroundColor: const Color(0xFF8B5CF6),
                         foregroundColor: Colors.black,
                       ),
                       onPressed: saving
@@ -651,7 +651,7 @@ class _ProfilePostTileState extends State<_ProfilePostTile> {
               child: SizedBox.expand(
                 child: _imageUrl.isEmpty
                     ? const ColoredBox(
-                        color: Color(0xFF171C24),
+                        color: Color(0xFF141126),
                         child: Icon(Icons.image_outlined, color: Colors.white30),
                       )
                     : Image.network(
@@ -659,7 +659,7 @@ class _ProfilePostTileState extends State<_ProfilePostTile> {
                         fit: BoxFit.cover,
                         filterQuality: FilterQuality.low,
                         errorBuilder: (_, __, ___) => const ColoredBox(
-                          color: Color(0xFF171C24),
+                          color: Color(0xFF141126),
                           child: Icon(Icons.broken_image_outlined, color: Colors.white30),
                         ),
                       ),

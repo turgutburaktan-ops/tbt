@@ -22,10 +22,10 @@ class UserProfileScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor:
-          const Color(0xFF0D1117),
+          const Color(0xFF090812),
       appBar: AppBar(
         backgroundColor:
-            const Color(0xFF0D1117),
+            const Color(0xFF090812),
         foregroundColor:
             Colors.white,
         elevation: 0,
@@ -49,7 +49,7 @@ class UserProfileScreen extends StatelessWidget {
               child:
                   CircularProgressIndicator(
                 color:
-                    Color(0xFFFFC107),
+                    Color(0xFF8B5CF6),
               ),
             );
           }
@@ -98,13 +98,13 @@ class UserProfileScreen extends StatelessWidget {
                   radius: 54,
                   backgroundColor:
                       const Color(
-                    0xFFFFC107,
+                    0xFF8B5CF6,
                   ),
                   child: CircleAvatar(
                     radius: 49,
                     backgroundColor:
                         const Color(
-                      0xFF171C24,
+                      0xFF141126,
                     ),
                     backgroundImage:
                         photoUrl.isNotEmpty
@@ -272,10 +272,10 @@ class UserProfileScreen extends StatelessWidget {
                           backgroundColor:
                               following
                                   ? const Color(
-                                      0xFF222831,
+                                      0xFF1C1733,
                                     )
                                   : const Color(
-                                      0xFFFFC107,
+                                      0xFF8B5CF6,
                                     ),
                           foregroundColor:
                               following
@@ -336,7 +336,7 @@ class UserProfileScreen extends StatelessWidget {
                   Icon(
                     Icons.grid_on,
                     color: Color(
-                      0xFFFFC107,
+                      0xFF8B5CF6,
                     ),
                   ),
                   SizedBox(
@@ -386,7 +386,7 @@ class UserProfileScreen extends StatelessWidget {
                             CircularProgressIndicator(
                           color:
                               Color(
-                            0xFFFFC107,
+                            0xFF8B5CF6,
                           ),
                         ),
                       ),
@@ -432,7 +432,7 @@ class UserProfileScreen extends StatelessWidget {
                           BoxDecoration(
                         color:
                             const Color(
-                          0xFF151A22,
+                          0xFF141126,
                         ),
                         borderRadius:
                             BorderRadius
@@ -519,7 +519,7 @@ class UserProfileScreen extends StatelessWidget {
                                       return Container(
                                         color:
                                             const Color(
-                                          0xFF171C24,
+                                          0xFF141126,
                                         ),
                                         child:
                                             const Icon(
@@ -534,7 +534,7 @@ class UserProfileScreen extends StatelessWidget {
                                 : Container(
                                     color:
                                         const Color(
-                                      0xFF171C24,
+                                      0xFF141126,
                                     ),
                                     child:
                                         const Icon(
@@ -577,7 +577,7 @@ class _StatBox extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: const Color(
-          0xFF151A22,
+          0xFF141126,
         ),
         borderRadius:
             BorderRadius.circular(
@@ -592,7 +592,7 @@ class _StatBox extends StatelessWidget {
                 const TextStyle(
               color:
                   Color(
-                0xFFFFC107,
+                0xFF8B5CF6,
               ),
               fontSize: 21,
               fontWeight:

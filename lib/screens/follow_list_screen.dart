@@ -20,9 +20,9 @@ class FollowListScreen extends StatelessWidget {
         : SocialService.instance.following(userId);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0D1117),
+      backgroundColor: const Color(0xFF090812),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0D1117),
+        backgroundColor: const Color(0xFF090812),
         foregroundColor: Colors.white,
         title: Text(followers ? 'Takipçiler' : 'Takip'),
       ),
@@ -31,7 +31,7 @@ class FollowListScreen extends StatelessWidget {
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(
-              child: CircularProgressIndicator(color: Color(0xFFFFC107)),
+              child: CircularProgressIndicator(color: Color(0xFF8B5CF6)),
             );
           }
 
@@ -70,7 +70,7 @@ class FollowListScreen extends StatelessWidget {
                     contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                     leading: CircleAvatar(
                       radius: 25,
-                      backgroundColor: const Color(0xFF202833),
+                      backgroundColor: const Color(0xFF1C1733),
                       backgroundImage: photoUrl.isNotEmpty ? NetworkImage(photoUrl) : null,
                       child: photoUrl.isEmpty
                           ? const Icon(Icons.person, color: Colors.white54)

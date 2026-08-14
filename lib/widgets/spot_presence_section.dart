@@ -32,7 +32,7 @@ class _SpotPresenceSectionState extends State<SpotPresenceSection> {
           width: double.infinity,
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: const Color(0xFF151A22),
+            color: const Color(0xFF141126),
             borderRadius: BorderRadius.circular(18),
             border: Border.all(color: Colors.white10),
           ),
@@ -48,7 +48,7 @@ class _SpotPresenceSectionState extends State<SpotPresenceSection> {
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.people_outline, color: Color(0xFFFFC107)),
+                      const Icon(Icons.people_outline, color: Color(0xFF8B5CF6)),
                       const SizedBox(width: 8),
                       const Expanded(
                         child: Column(
@@ -69,13 +69,13 @@ class _SpotPresenceSectionState extends State<SpotPresenceSection> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                         decoration: BoxDecoration(
-                          color: const Color(0x22FFC107),
+                          color: const Color(0x228B5CF6),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
                           '${items.length}',
                           style: const TextStyle(
-                            color: Color(0xFFFFC107),
+                            color: Color(0xFF8B5CF6),
                             fontWeight: FontWeight.w900,
                           ),
                         ),
@@ -146,7 +146,7 @@ class _SpotPresenceSectionState extends State<SpotPresenceSection> {
                         FilledButton.icon(
                           onPressed: _busy || currentUser == null ? null : _checkIn,
                           style: FilledButton.styleFrom(
-                            backgroundColor: const Color(0xFFFFC107),
+                            backgroundColor: const Color(0xFF8B5CF6),
                             foregroundColor: Colors.black,
                           ),
                           icon: _busy

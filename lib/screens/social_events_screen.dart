@@ -118,7 +118,7 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
-      backgroundColor: const Color(0xFF0D1117),
+      backgroundColor: const Color(0xFF090812),
       builder: (sheetContext) => StatefulBuilder(
         builder: (context, setSheetState) {
           Future<void> chooseDateTime() async {
@@ -319,7 +319,7 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
                     height: 52,
                     child: FilledButton.icon(
                       style: FilledButton.styleFrom(
-                        backgroundColor: const Color(0xFFFFC107),
+                        backgroundColor: const Color(0xFF8B5CF6),
                         foregroundColor: Colors.black,
                       ),
                       onPressed: saving
@@ -412,7 +412,7 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
             ),
             const SizedBox(width: 6),
             FilledButton.icon(
-              style: FilledButton.styleFrom(backgroundColor: const Color(0xFFFFC107), foregroundColor: Colors.black),
+              style: FilledButton.styleFrom(backgroundColor: const Color(0xFF8B5CF6), foregroundColor: Colors.black),
               onPressed: _openCreate,
               icon: const Icon(Icons.add, size: 19),
               label: const Text('Oluştur'),
@@ -452,7 +452,7 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
             stream: _stream,
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
-                return const Center(child: CircularProgressIndicator(color: Color(0xFFFFC107)));
+                return const Center(child: CircularProgressIndicator(color: Color(0xFF8B5CF6)));
               }
               if (snapshot.hasError) {
                 final permissionDenied = snapshot.error.toString().contains('permission-denied');
@@ -491,7 +491,7 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
                   final joined = uid != null && event.participantIds.contains(uid);
                   final isHost = uid != null && event.hostId == uid;
                   return Card(
-                    color: const Color(0xFF151A22),
+                    color: const Color(0xFF141126),
                     child: Padding(
                       padding: const EdgeInsets.all(14),
                       child: Column(
@@ -499,8 +499,8 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
                         children: [
                           Row(children: [
                             CircleAvatar(
-                              backgroundColor: const Color(0x22FFC107),
-                              foregroundColor: const Color(0xFFFFC107),
+                              backgroundColor: const Color(0x228B5CF6),
+                              foregroundColor: const Color(0xFF8B5CF6),
                               child: Icon(_iconFor(event.type)),
                             ),
                             const SizedBox(width: 10),
@@ -511,7 +511,7 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
                                   Text(event.title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900)),
                                   Text(
                                     '${event.typeLabel} • ${_priceLabel(event)}',
-                                    style: const TextStyle(color: Color(0xFFFFC107), fontSize: 12, fontWeight: FontWeight.w700),
+                                    style: const TextStyle(color: Color(0xFF8B5CF6), fontSize: 12, fontWeight: FontWeight.w700),
                                   ),
                                 ],
                               ),
@@ -585,7 +585,7 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
                               ),
                             FilledButton(
                               style: FilledButton.styleFrom(
-                                backgroundColor: (joined || isHost) ? const Color(0xFF252B34) : const Color(0xFFFFC107),
+                                backgroundColor: (joined || isHost) ? const Color(0xFF241D3D) : const Color(0xFF8B5CF6),
                                 foregroundColor: (joined || isHost) ? Colors.white : Colors.black,
                               ),
                               onPressed: event.isFull && !joined && !isHost ? null : () => _toggleJoin(event),

@@ -58,7 +58,7 @@ class _CreatePostScreenState
 
     await showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF151A22),
+      backgroundColor: const Color(0xFF141126),
       builder: (sheetContext) {
         return SafeArea(
           child: Padding(
@@ -69,7 +69,7 @@ class _CreatePostScreenState
                 ListTile(
                   leading: const Icon(
                     Icons.camera_alt,
-                    color: Color(0xFFFFC107),
+                    color: Color(0xFF8B5CF6),
                   ),
                   title: const Text(
                     'Kamera ile çek',
@@ -82,7 +82,7 @@ class _CreatePostScreenState
                 ListTile(
                   leading: const Icon(
                     Icons.photo_library_outlined,
-                    color: Color(0xFFFFC107),
+                    color: Color(0xFF8B5CF6),
                   ),
                   title: const Text(
                     'Galeriden seç',
@@ -268,12 +268,12 @@ class _CreatePostScreenState
 
   @override
   Widget build(BuildContext context) {
-    const yellow = Color(0xFFFFC107);
+    const yellow = Color(0xFF8B5CF6);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0D1117),
+      backgroundColor: const Color(0xFF090812),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0D1117),
+        backgroundColor: const Color(0xFF090812),
         foregroundColor: Colors.white,
         title: const Text(
           'Fotoğraf Paylaş',
@@ -292,7 +292,7 @@ class _CreatePostScreenState
             child: Container(
               height: 330,
               decoration: BoxDecoration(
-                color: const Color(0xFF171C24),
+                color: const Color(0xFF141126),
                 borderRadius:
                     BorderRadius.circular(22),
               ),
@@ -369,7 +369,7 @@ class _CreatePostScreenState
               ),
               filled: true,
               fillColor:
-                  const Color(0xFF171C24),
+                  const Color(0xFF141126),
               border: OutlineInputBorder(
                 borderRadius:
                     BorderRadius.circular(18),
@@ -401,7 +401,7 @@ class _CreatePostScreenState
               ),
               filled: true,
               fillColor:
-                  const Color(0xFF171C24),
+                  const Color(0xFF141126),
               border: OutlineInputBorder(
                 borderRadius:
                     BorderRadius.circular(18),

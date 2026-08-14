@@ -29,13 +29,13 @@ class _HomeScreenState extends State<HomeScreen> {
     ];
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0D1117),
+      backgroundColor: const Color(0xFF090812),
       body: IndexedStack(
         index: _selectedIndex,
         children: pages,
       ),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: const Color(0xFFFFC107),
+        backgroundColor: const Color(0xFF8B5CF6),
         foregroundColor: Colors.black,
         onPressed: () {
           Navigator.push(
@@ -122,7 +122,7 @@ class _DiscoverHubPageState extends State<_DiscoverHubPage> {
             child: Container(
               padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
-                color: const Color(0xFF151A22),
+                color: const Color(0xFF141126),
                 borderRadius: BorderRadius.circular(18),
               ),
               child: Row(
@@ -183,7 +183,7 @@ class _HomeSectionButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: selected
-          ? const Color(0xFFFFC107)
+          ? const Color(0xFF8B5CF6)
           : Colors.transparent,
       borderRadius: BorderRadius.circular(14),
       child: InkWell(
@@ -417,7 +417,7 @@ class _ExplorePageState extends State<_ExplorePage> {
                         )
                       : null,
                   filled: true,
-                  fillColor: const Color(0xFF171C24),
+                  fillColor: const Color(0xFF141126),
                   border: OutlineInputBorder(
                     borderRadius:
                         BorderRadius.circular(16),
@@ -457,9 +457,9 @@ class _ExplorePageState extends State<_ExplorePage> {
                       });
                     },
                     selectedColor:
-                        const Color(0xFFFFC107),
+                        const Color(0xFF8B5CF6),
                     backgroundColor:
-                        const Color(0xFF171C24),
+                        const Color(0xFF141126),
                     side: BorderSide.none,
                     labelStyle: TextStyle(
                       color: selected
@@ -582,7 +582,7 @@ class _ExploreSpotCard extends StatelessWidget {
         12,
       ),
       child: Card(
-        color: const Color(0xFF151A22),
+        color: const Color(0xFF141126),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: () {
@@ -612,7 +612,7 @@ class _ExploreSpotCard extends StatelessWidget {
                         width: 88,
                         height: 88,
                         color:
-                            const Color(0xFF222831),
+                            const Color(0xFF1C1733),
                         child: const Icon(
                           Icons.photo,
                           color: Colors.white38,
@@ -672,7 +672,7 @@ class _ExploreSpotCard extends StatelessWidget {
                             TextOverflow.ellipsis,
                         style: const TextStyle(
                           color:
-                              Color(0xFFFFC107),
+                              Color(0xFF8B5CF6),
                           fontSize: 12,
                         ),
                       ),
@@ -708,7 +708,7 @@ class _ExploreSpotCard extends StatelessWidget {
                                 .favorite_border,
                         color: isSaved
                             ? const Color(
-                                0xFFFFC107,
+                                0xFF8B5CF6,
                               )
                             : Colors.white54,
                       ),
@@ -806,7 +806,7 @@ class _SavedPage extends StatelessWidget {
 
               ...spots.map(
                 (spot) => Card(
-                  color: const Color(0xFF151A22),
+                  color: const Color(0xFF141126),
                   margin: const EdgeInsets.only(
                     bottom: 12,
                   ),
@@ -827,7 +827,7 @@ class _SavedPage extends StatelessWidget {
                             width: 70,
                             height: 70,
                             color: const Color(
-                              0xFF222831,
+                              0xFF1C1733,
                             ),
                             child: const Icon(
                               Icons.photo,
@@ -857,7 +857,7 @@ class _SavedPage extends StatelessWidget {
                       icon: const Icon(
                         Icons.favorite,
                         color:
-                            Color(0xFFFFC107),
+                            Color(0xFF8B5CF6),
                       ),
                       onPressed: () {
                         FavoritesService.remove(
@@ -909,7 +909,7 @@ class _ProfileStat extends StatelessWidget {
           style: const TextStyle(
             fontSize: 23,
             fontWeight: FontWeight.bold,
-            color: Color(0xFFFFC107),
+            color: Color(0xFF8B5CF6),
           ),
         ),
         const SizedBox(height: 4),
@@ -944,7 +944,7 @@ class _ProfileMenuItem extends StatelessWidget {
       margin: const EdgeInsets.only(
         bottom: 10,
       ),
-      color: const Color(0xFF151A22),
+      color: const Color(0xFF141126),
       child: ListTile(
         contentPadding:
             const EdgeInsets.symmetric(
@@ -955,14 +955,14 @@ class _ProfileMenuItem extends StatelessWidget {
           width: 44,
           height: 44,
           decoration: BoxDecoration(
-            color: const Color(0xFFFFC107)
+            color: const Color(0xFF8B5CF6)
                 .withOpacity(.12),
             borderRadius:
                 BorderRadius.circular(12),
           ),
           child: Icon(
             icon,
-            color: const Color(0xFFFFC107),
+            color: const Color(0xFF8B5CF6),
           ),
         ),
         title: Text(

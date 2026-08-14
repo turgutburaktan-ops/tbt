@@ -113,12 +113,12 @@ class _RegisterScreenState
 
   @override
   Widget build(BuildContext context) {
-    const yellow = Color(0xFFFFC107);
+    const yellow = Color(0xFF8B5CF6);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0D1117),
+      backgroundColor: const Color(0xFF090812),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0D1117),
+        backgroundColor: const Color(0xFF090812),
         foregroundColor: Colors.white,
         title: const Text(
           'Hesap Oluştur',
@@ -276,11 +276,11 @@ class _RegisterScreenState
       labelText: label,
       prefixIcon: Icon(
         icon,
-        color: const Color(0xFFFFC107),
+        color: const Color(0xFF8B5CF6),
       ),
       suffixIcon: suffix,
       filled: true,
-      fillColor: const Color(0xFF171C24),
+      fillColor: const Color(0xFF141126),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(18),
         borderSide: BorderSide.none,
@@ -294,7 +294,7 @@ class _RegisterScreenState
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(18),
         borderSide: const BorderSide(
-          color: Color(0xFFFFC107),
+          color: Color(0xFF8B5CF6),
         ),
       ),
     );

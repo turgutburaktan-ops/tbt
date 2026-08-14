@@ -24,7 +24,7 @@ class EventTicketsScreen extends StatelessWidget {
         stream: EventTicketService.instance.watchMyTickets(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
-            return const Center(child: CircularProgressIndicator(color: Color(0xFFFFC107)));
+            return const Center(child: CircularProgressIndicator(color: Color(0xFF8B5CF6)));
           }
           final tickets = snapshot.data ?? const <EventTicket>[];
           if (tickets.isEmpty) {
@@ -51,12 +51,12 @@ class EventTicketsScreen extends StatelessWidget {
             itemBuilder: (context, index) {
               final ticket = tickets[index];
               return Card(
-                color: const Color(0xFF151A22),
+                color: const Color(0xFF141126),
                 child: ListTile(
                   contentPadding: const EdgeInsets.all(14),
                   leading: CircleAvatar(
-                    backgroundColor: const Color(0x22FFC107),
-                    foregroundColor: const Color(0xFFFFC107),
+                    backgroundColor: const Color(0x228B5CF6),
+                    foregroundColor: const Color(0xFF8B5CF6),
                     child: const Icon(Icons.confirmation_number_outlined),
                   ),
                   title: Text(ticket.eventTitle, style: const TextStyle(fontWeight: FontWeight.w800)),
@@ -65,7 +65,7 @@ class EventTicketsScreen extends StatelessWidget {
                         ? '${(ticket.priceMinor / 100).toStringAsFixed(2)} ${ticket.currency} • ${_statusLabel(ticket.status)}'
                         : 'Ücretsiz • ${_statusLabel(ticket.status)}',
                   ),
-                  trailing: ticket.isActive ? const Icon(Icons.qr_code_2_rounded, color: Color(0xFFFFC107)) : null,
+                  trailing: ticket.isActive ? const Icon(Icons.qr_code_2_rounded, color: Color(0xFF8B5CF6)) : null,
                   onTap: ticket.isActive
                       ? () => Navigator.push(context, MaterialPageRoute(builder: (_) => TicketQrScreen(ticket: ticket)))
                       : null,
@@ -95,7 +95,7 @@ class TicketQrScreen extends StatelessWidget {
             children: [
               Text(ticket.eventTitle, textAlign: TextAlign.center, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900)),
               const SizedBox(height: 8),
-              Text(ticket.isPaidEvent ? '${(ticket.priceMinor / 100).toStringAsFixed(2)} ${ticket.currency}' : 'Ücretsiz Bilet', style: const TextStyle(color: Color(0xFFFFC107), fontWeight: FontWeight.w800)),
+              Text(ticket.isPaidEvent ? '${(ticket.priceMinor / 100).toStringAsFixed(2)} ${ticket.currency}' : 'Ücretsiz Bilet', style: const TextStyle(color: Color(0xFF8B5CF6), fontWeight: FontWeight.w800)),
               const SizedBox(height: 22),
               Container(
                 padding: const EdgeInsets.all(18),
@@ -154,11 +154,11 @@ class _TicketScannerScreenState extends State<TicketScannerScreen> {
             child: Container(
               width: 260,
               height: 260,
-              decoration: BoxDecoration(border: Border.all(color: const Color(0xFFFFC107), width: 3), borderRadius: BorderRadius.circular(22)),
+              decoration: BoxDecoration(border: Border.all(color: const Color(0xFF8B5CF6), width: 3), borderRadius: BorderRadius.circular(22)),
             ),
           ),
           if (_processing)
-            const Positioned.fill(child: ColoredBox(color: Colors.black45, child: Center(child: CircularProgressIndicator(color: Color(0xFFFFC107))))),
+            const Positioned.fill(child: ColoredBox(color: Colors.black45, child: Center(child: CircularProgressIndicator(color: Color(0xFF8B5CF6))))),
           if (_done)
             Positioned(
               left: 20,

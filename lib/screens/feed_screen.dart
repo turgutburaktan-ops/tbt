@@ -14,7 +14,7 @@ class FeedScreen extends StatelessWidget {
 
     if (currentUser == null) {
       return const Scaffold(
-        backgroundColor: Color(0xFF0D1117),
+        backgroundColor: Color(0xFF090812),
         body: Center(
           child: Text(
             'Akışı görmek için giriş yapmalısın.',
@@ -28,9 +28,9 @@ class FeedScreen extends StatelessWidget {
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0D1117),
+      backgroundColor: const Color(0xFF090812),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0D1117),
+        backgroundColor: const Color(0xFF090812),
         elevation: 0,
         title: const Text(
           'Akış',
@@ -47,7 +47,7 @@ class FeedScreen extends StatelessWidget {
               ConnectionState.waiting) {
             return const Center(
               child: CircularProgressIndicator(
-                color: Color(0xFFFFC107),
+                color: Color(0xFF8B5CF6),
               ),
             );
           }
@@ -77,7 +77,7 @@ class FeedScreen extends StatelessWidget {
                     Icon(
                       Icons.people_outline,
                       size: 70,
-                      color: Color(0xFFFFC107),
+                      color: Color(0xFF8B5CF6),
                     ),
                     SizedBox(height: 18),
                     Text(
@@ -118,7 +118,7 @@ class FeedScreen extends StatelessWidget {
                   ConnectionState.waiting) {
                 return const Center(
                   child: CircularProgressIndicator(
-                    color: Color(0xFFFFC107),
+                    color: Color(0xFF8B5CF6),
                   ),
                 );
               }
@@ -262,7 +262,7 @@ class _FeedPostCard extends StatelessWidget {
         12,
       ),
       decoration: BoxDecoration(
-        color: const Color(0xFF151A22),
+        color: const Color(0xFF141126),
         borderRadius: BorderRadius.circular(20),
       ),
       clipBehavior: Clip.antiAlias,
@@ -288,10 +288,10 @@ class _FeedPostCard extends StatelessWidget {
                 children: [
                   const CircleAvatar(
                     radius: 21,
-                    backgroundColor: Color(0xFFFFC107),
+                    backgroundColor: Color(0xFF8B5CF6),
                     child: CircleAvatar(
                       radius: 18,
-                      backgroundColor: Color(0xFF222831),
+                      backgroundColor: Color(0xFF1C1733),
                       child: Icon(
                         Icons.person,
                         color: Colors.white54,
@@ -331,7 +331,7 @@ class _FeedPostCard extends StatelessWidget {
                   stackTrace,
                 ) {
                   return Container(
-                    color: const Color(0xFF222831),
+                    color: const Color(0xFF1C1733),
                     child: const Center(
                       child: Icon(
                         Icons.broken_image_outlined,
@@ -366,7 +366,7 @@ class _FeedPostCard extends StatelessWidget {
                 if (spotName.isNotEmpty)
                   const Icon(
                     Icons.location_on_outlined,
-                    color: Color(0xFFFFC107),
+                    color: Color(0xFF8B5CF6),
                   ),
               ],
             ),
@@ -414,14 +414,14 @@ class _FeedPostCard extends StatelessWidget {
                   const Icon(
                     Icons.location_on,
                     size: 17,
-                    color: Color(0xFFFFC107),
+                    color: Color(0xFF8B5CF6),
                   ),
                   const SizedBox(width: 5),
                   Expanded(
                     child: Text(
                       spotName,
                       style: const TextStyle(
-                        color: Color(0xFFFFC107),
+                        color: Color(0xFF8B5CF6),
                         fontWeight: FontWeight.w600,
                       ),
                     ),

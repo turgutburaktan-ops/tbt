@@ -176,7 +176,7 @@ class _AiEditScreenState extends State<AiEditScreen> {
                     if (text.isNotEmpty) Navigator.pop(context, text);
                   },
                   style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFFFFC107),
+                    backgroundColor: const Color(0xFF8B5CF6),
                     foregroundColor: Colors.black,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(15),
@@ -231,7 +231,7 @@ class _AiEditScreenState extends State<AiEditScreen> {
         actions: [
           TextButton(
             onPressed: _processing ? null : _resetOriginal,
-            child: const Text('Orijinal', style: TextStyle(color: Color(0xFFFFC107))),
+            child: const Text('Orijinal', style: TextStyle(color: Color(0xFF8B5CF6))),
           ),
         ],
       ),
@@ -277,7 +277,7 @@ class _AiEditScreenState extends State<AiEditScreen> {
                                     child: Column(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
-                                        const CircularProgressIndicator(color: Color(0xFFFFC107)),
+                                        const CircularProgressIndicator(color: Color(0xFF8B5CF6)),
                                         const SizedBox(height: 14),
                                         Text(
                                           _processingText(),
@@ -302,12 +302,12 @@ class _AiEditScreenState extends State<AiEditScreen> {
                 child: Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF151A22),
+                    color: const Color(0xFF141126),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.touch_app_outlined, color: Color(0xFFFFC107)),
+                      const Icon(Icons.touch_app_outlined, color: Color(0xFF8B5CF6)),
                       const SizedBox(width: 10),
                       const Expanded(
                         child: Text(
@@ -351,7 +351,7 @@ class _AiEditScreenState extends State<AiEditScreen> {
                 child: FilledButton.icon(
                   onPressed: _processing ? null : _continueToShare,
                   style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFFFFC107),
+                    backgroundColor: const Color(0xFF8B5CF6),
                     foregroundColor: Colors.black,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                   ),
@@ -401,14 +401,14 @@ class _EditTool extends StatelessWidget {
           width: 92,
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
           decoration: BoxDecoration(
-            color: const Color(0xFF151A22),
+            color: const Color(0xFF141126),
             borderRadius: BorderRadius.circular(18),
             border: Border.all(color: Colors.white10),
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, color: const Color(0xFFFFC107), size: 26),
+              Icon(icon, color: const Color(0xFF8B5CF6), size: 26),
               const SizedBox(height: 7),
               Text(
                 label,
@@ -437,10 +437,10 @@ class _TargetMarker extends StatelessWidget {
       height: 52,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        border: Border.all(color: const Color(0xFFFFC107), width: 3),
+        border: Border.all(color: const Color(0xFF8B5CF6), width: 3),
         color: Colors.black.withOpacity(.25),
       ),
-      child: const Icon(Icons.close_rounded, color: Color(0xFFFFC107)),
+      child: const Icon(Icons.close_rounded, color: Color(0xFF8B5CF6)),
     );
   }
 }

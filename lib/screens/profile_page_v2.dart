@@ -24,7 +24,7 @@ class ProfilePage extends StatelessWidget {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const SafeArea(
             child: Center(
-              child: CircularProgressIndicator(color: Color(0xFFFFC107)),
+              child: CircularProgressIndicator(color: Color(0xFF8B5CF6)),
             ),
           );
         }
@@ -137,7 +137,7 @@ class _ProfileBodyState extends State<_ProfileBody> {
                           ),
                           IconButton(
                             onPressed: () => _editProfile(displayName, bio),
-                            icon: const Icon(Icons.edit_outlined, color: Color(0xFFFFC107)),
+                            icon: const Icon(Icons.edit_outlined, color: Color(0xFF8B5CF6)),
                           ),
                           IconButton(
                             onPressed: AuthService.instance.logout,
@@ -162,10 +162,10 @@ class _ProfileBodyState extends State<_ProfileBody> {
                                     onTap: () => _openProfilePhoto(photoUrl, displayName),
                                     child: CircleAvatar(
                                       radius: 47,
-                                      backgroundColor: const Color(0xFFFFC107),
+                                      backgroundColor: const Color(0xFF8B5CF6),
                                       child: CircleAvatar(
                                         radius: 43,
-                                        backgroundColor: const Color(0xFF171C24),
+                                        backgroundColor: const Color(0xFF141126),
                                         backgroundImage: photoUrl.isEmpty ? null : NetworkImage(photoUrl),
                                         child: photoUrl.isEmpty
                                             ? const Icon(Icons.person, size: 48, color: Colors.white54)
@@ -182,7 +182,7 @@ class _ProfileBodyState extends State<_ProfileBody> {
                                         width: 29,
                                         height: 29,
                                         decoration: const BoxDecoration(
-                                          color: Color(0xFFFFC107),
+                                          color: Color(0xFF8B5CF6),
                                           shape: BoxShape.circle,
                                         ),
                                         child: const Icon(Icons.add_a_photo_outlined, size: 17, color: Colors.black),
@@ -245,7 +245,7 @@ class _ProfileBodyState extends State<_ProfileBody> {
                   const SliverToBoxAdapter(child: Divider(height: 1, color: Colors.white12)),
                   if (postSnapshot.connectionState == ConnectionState.waiting)
                     const SliverFillRemaining(
-                      child: Center(child: CircularProgressIndicator(color: Color(0xFFFFC107))),
+                      child: Center(child: CircularProgressIndicator(color: Color(0xFF8B5CF6))),
                     )
                   else if (posts.isEmpty)
                     SliverFillRemaining(
@@ -310,7 +310,7 @@ class _ProfileBodyState extends State<_ProfileBody> {
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
-      backgroundColor: const Color(0xFF0D1117),
+      backgroundColor: const Color(0xFF090812),
       builder: (sheetContext) => StatefulBuilder(
         builder: (context, setSheetState) {
           Future<void> pick() async {
@@ -408,11 +408,11 @@ class _PostTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: const Color(0xFF151A22),
+      color: const Color(0xFF141126),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: const BorderSide(
-          color: Color(0x88FFC107),
+          color: Color(0x888B5CF6),
           width: 1.4,
         ),
       ),
@@ -455,7 +455,7 @@ class _PostTile extends StatelessWidget {
                   const SizedBox(height: 3),
                   Row(
                     children: [
-                      const Icon(Icons.location_on_outlined, size: 11, color: Color(0xFFFFC107)),
+                      const Icon(Icons.location_on_outlined, size: 11, color: Color(0xFF8B5CF6)),
                       const SizedBox(width: 2),
                       Expanded(
                         child: Text(

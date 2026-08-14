@@ -229,11 +229,11 @@ class _MapScreenState extends State<MapScreen> {
                       padding: const EdgeInsets.fromLTRB(14, 8, 8, 8),
                       decoration: BoxDecoration(color: const Color(0xFF11151C).withOpacity(.95), borderRadius: BorderRadius.circular(18)),
                       child: Row(children: [
-                        const Icon(Icons.explore_outlined, color: Color(0xFFFFC107)),
+                        const Icon(Icons.explore_outlined, color: Color(0xFF8B5CF6)),
                         const SizedBox(width: 9),
                         const Expanded(child: Text('Noktalar ve Etkinlikler', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w900))),
                         if (_loadingSpots)
-                          const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFFFFC107)))
+                          const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF8B5CF6)))
                         else
                           Text('${_spots.length} + ${_events.where((e) => _eventPosition(e) != null && e.startsAt.isAfter(DateTime.now())).length}', style: const TextStyle(color: Colors.white54, fontWeight: FontWeight.w700)),
                         IconButton(onPressed: () { setState(() => _loadingSpots = true); _loadSpots(); }, icon: const Icon(Icons.refresh, color: Colors.white70)),
@@ -258,10 +258,10 @@ class _MapScreenState extends State<MapScreen> {
                 child: FloatingActionButton(
                   heroTag: 'myLocation',
                   backgroundColor: const Color(0xFF11151C),
-                  foregroundColor: const Color(0xFFFFC107),
+                  foregroundColor: const Color(0xFF8B5CF6),
                   onPressed: _gettingLocation ? null : _goToMyLocation,
                   child: _gettingLocation
-                      ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.5, color: Color(0xFFFFC107)))
+                      ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.5, color: Color(0xFF8B5CF6)))
                       : const Icon(Icons.my_location_rounded),
                 ),
               ),
@@ -271,7 +271,7 @@ class _MapScreenState extends State<MapScreen> {
                 child: FloatingActionButton(
                   heroTag: 'allMapContent',
                   backgroundColor: const Color(0xFF11151C),
-                  foregroundColor: const Color(0xFFFFC107),
+                  foregroundColor: const Color(0xFF8B5CF6),
                   onPressed: _showAll,
                   child: const Icon(Icons.fit_screen),
                 ),
@@ -300,7 +300,7 @@ class _FilterButton extends StatelessWidget {
           onTap: onTap,
           child: Container(
             padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 4),
-            decoration: BoxDecoration(color: selected ? const Color(0xFFFFC107) : Colors.transparent, borderRadius: BorderRadius.circular(12)),
+            decoration: BoxDecoration(color: selected ? const Color(0xFF8B5CF6) : Colors.transparent, borderRadius: BorderRadius.circular(12)),
             child: Text(label, textAlign: TextAlign.center, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: selected ? Colors.black : Colors.white70)),
           ),
         ),
@@ -364,10 +364,10 @@ class _SpotCard extends StatelessWidget {
                 const SizedBox(height: 6),
                 Text('⭐ ${spot.rating} • ${spot.category}'),
                 const SizedBox(height: 6),
-                Text(spot.bestTime, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Color(0xFFFFC107), fontSize: 12)),
+                Text(spot.bestTime, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Color(0xFF8B5CF6), fontSize: 12)),
               ])),
               IconButton(onPressed: onClose, icon: const Icon(Icons.close, color: Colors.white54)),
-              const Icon(Icons.chevron_right, color: Color(0xFFFFC107)),
+              const Icon(Icons.chevron_right, color: Color(0xFF8B5CF6)),
             ]),
           ),
         ),

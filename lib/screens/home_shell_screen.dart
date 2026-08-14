@@ -33,10 +33,10 @@ class _HomeScreenState extends State<HomeScreen> {
     ];
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0D1117),
+      backgroundColor: const Color(0xFF090812),
       body: IndexedStack(index: _selectedIndex, children: pages),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: const Color(0xFFFFC107),
+        backgroundColor: const Color(0xFF8B5CF6),
         foregroundColor: Colors.black,
         onPressed: () {
           Navigator.push(
@@ -90,7 +90,7 @@ class _ProfileGate extends StatelessWidget {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const SafeArea(
             child: Center(
-              child: CircularProgressIndicator(color: Color(0xFFFFC107)),
+              child: CircularProgressIndicator(color: Color(0xFF8B5CF6)),
             ),
           );
         }
@@ -135,7 +135,7 @@ class _CommunityHubState extends State<_CommunityHub> {
                   onPressed: () => Navigator.pushNamed(context, '/messages'),
                   icon: const Badge(
                     smallSize: 7,
-                    child: Icon(Icons.chat_bubble_outline_rounded, color: Color(0xFFFFC107)),
+                    child: Icon(Icons.chat_bubble_outline_rounded, color: Color(0xFF8B5CF6)),
                   ),
                 ),
               ],
@@ -146,7 +146,7 @@ class _CommunityHubState extends State<_CommunityHub> {
             child: Container(
               padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
-                color: const Color(0xFF151A22),
+                color: const Color(0xFF141126),
                 borderRadius: BorderRadius.circular(17),
               ),
               child: Row(
@@ -211,7 +211,7 @@ class _HubButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: selected ? const Color(0xFFFFC107) : Colors.transparent,
+      color: selected ? const Color(0xFF8B5CF6) : Colors.transparent,
       borderRadius: BorderRadius.circular(13),
       child: InkWell(
         borderRadius: BorderRadius.circular(13),
@@ -281,7 +281,7 @@ class _SavedSpotsPage extends StatelessWidget {
             itemBuilder: (context, index) {
               final spot = spots[index];
               return Card(
-                color: const Color(0xFF151A22),
+                color: const Color(0xFF141126),
                 clipBehavior: Clip.antiAlias,
                 child: ListTile(
                   contentPadding: const EdgeInsets.all(10),
@@ -296,7 +296,7 @@ class _SavedSpotsPage extends StatelessWidget {
                   trailing: IconButton(
                     tooltip: 'Kaydı kaldır',
                     onPressed: () => FavoritesService.toggle(spot),
-                    icon: const Icon(Icons.favorite, color: Color(0xFFFFC107)),
+                    icon: const Icon(Icons.favorite, color: Color(0xFF8B5CF6)),
                   ),
                   onTap: () {
                     Navigator.push(
