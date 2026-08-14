@@ -64,10 +64,11 @@ service cloud.firestore {
     match /social_events/{eventId} {
       allow read: if true;
 
+      // Free events remain compatible with older installed app versions.
+      // Paid events always require the protected trust/payment fields.
       allow create: if signedIn()
         && request.resource.data.hostId == request.auth.uid
         && request.resource.data.status == 'open'
-        && request.resource.data.reportCount == 0
         && validPaidCreate();
 
       allow update: if isAdmin()
@@ -98,9 +99,6 @@ service cloud.firestore {
       }
     }
 
-    // Existing application areas stay authenticated for writes. The event
-    // collection is intentionally excluded above so paid-event trust fields
-    // cannot be forged by a modified client.
     match /{collection}/{document} {
       allow read: if true;
       allow write: if signedIn() && collection != 'social_events';
