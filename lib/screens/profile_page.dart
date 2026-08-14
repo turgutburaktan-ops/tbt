@@ -9,6 +9,7 @@ import '../services/auth_service.dart';
 import '../services/profile_service.dart';
 import '../services/social_service.dart';
 import 'create_post_screen.dart';
+import 'follow_list_screen.dart';
 import 'login_screen.dart';
 import 'post_detail_screen.dart';
 
@@ -68,6 +69,43 @@ class _ProfileBodyState extends State<_ProfileBody> {
     SocialService.instance.ensureUserProfile();
   }
 
+  void _openPhoto(String photoUrl, String displayName) {
+    if (photoUrl.isEmpty) return;
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => Scaffold(
+          backgroundColor: Colors.black,
+          appBar: AppBar(
+            backgroundColor: Colors.black,
+            foregroundColor: Colors.white,
+            title: Text(displayName),
+          ),
+          body: InteractiveViewer(
+            minScale: 1,
+            maxScale: 5,
+            child: Center(
+              child: Image.network(
+                photoUrl,
+                fit: BoxFit.contain,
+                errorBuilder: (_, __, ___) => const Icon(Icons.broken_image_outlined, size: 72, color: Colors.white38),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _openFollowList({required bool followers}) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => FollowListScreen(userId: widget.user.uid, followers: followers),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -112,12 +150,12 @@ class _ProfileBodyState extends State<_ProfileBody> {
                         children: [
                           Row(
                             children: [
-                              GestureDetector(
-                                onTap: () => _editProfile(displayName, bio),
-                                child: Stack(
-                                  clipBehavior: Clip.none,
-                                  children: [
-                                    CircleAvatar(
+                              Stack(
+                                clipBehavior: Clip.none,
+                                children: [
+                                  GestureDetector(
+                                    onTap: () => _openPhoto(photoUrl, displayName),
+                                    child: CircleAvatar(
                                       radius: 47,
                                       backgroundColor: const Color(0xFFFFC107),
                                       child: CircleAvatar(
@@ -127,9 +165,21 @@ class _ProfileBodyState extends State<_ProfileBody> {
                                         child: photoUrl.isEmpty ? const Icon(Icons.person, size: 48, color: Colors.white54) : null,
                                       ),
                                     ),
-                                    Positioned(right: -2, bottom: 0, child: Container(width: 29, height: 29, decoration: const BoxDecoration(color: Color(0xFFFFC107), shape: BoxShape.circle), child: const Icon(Icons.add_a_photo_outlined, size: 17, color: Colors.black))),
-                                  ],
-                                ),
+                                  ),
+                                  Positioned(
+                                    right: -2,
+                                    bottom: 0,
+                                    child: GestureDetector(
+                                      onTap: () => _editProfile(displayName, bio),
+                                      child: Container(
+                                        width: 29,
+                                        height: 29,
+                                        decoration: const BoxDecoration(color: Color(0xFFFFC107), shape: BoxShape.circle),
+                                        child: const Icon(Icons.add_a_photo_outlined, size: 17, color: Colors.black),
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                               const SizedBox(width: 20),
                               Expanded(
@@ -137,8 +187,14 @@ class _ProfileBodyState extends State<_ProfileBody> {
                                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                                   children: [
                                     _Stat('${posts.length}', 'Gönderi'),
-                                    StreamBuilder<int>(stream: SocialService.instance.followersCount(widget.user.uid), builder: (_, s) => _Stat('${s.data ?? 0}', 'Takipçi')),
-                                    StreamBuilder<int>(stream: SocialService.instance.followingCount(widget.user.uid), builder: (_, s) => _Stat('${s.data ?? 0}', 'Takip')),
+                                    StreamBuilder<int>(
+                                      stream: SocialService.instance.followersCount(widget.user.uid),
+                                      builder: (_, s) => _Stat('${s.data ?? 0}', 'Takipçi', onTap: () => _openFollowList(followers: true)),
+                                    ),
+                                    StreamBuilder<int>(
+                                      stream: SocialService.instance.followingCount(widget.user.uid),
+                                      builder: (_, s) => _Stat('${s.data ?? 0}', 'Takip', onTap: () => _openFollowList(followers: false)),
+                                    ),
                                   ],
                                 ),
                               ),
@@ -269,8 +325,25 @@ class _ProfileBodyState extends State<_ProfileBody> {
 class _Stat extends StatelessWidget {
   final String value;
   final String label;
-  const _Stat(this.value, this.label);
+  final VoidCallback? onTap;
+  const _Stat(this.value, this.label, {this.onTap});
 
   @override
-  Widget build(BuildContext context) => Column(mainAxisSize: MainAxisSize.min, children: [Text(value, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900)), const SizedBox(height: 2), Text(label, style: const TextStyle(color: Colors.white60, fontSize: 12))]);
+  Widget build(BuildContext context) {
+    final child = Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(value, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
+        const SizedBox(height: 2),
+        Text(label, style: const TextStyle(color: Colors.white60, fontSize: 12)),
+      ],
+    );
+    return onTap == null
+        ? child
+        : InkWell(
+            borderRadius: BorderRadius.circular(10),
+            onTap: onTap,
+            child: Padding(padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4), child: child),
+          );
+  }
 }
