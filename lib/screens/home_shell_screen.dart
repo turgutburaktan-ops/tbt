@@ -179,7 +179,7 @@ class _CommunityHubState extends State<_CommunityHub> {
               child: Row(children: [
                 Expanded(child: _HubButton(label: 'Sana Özel', selected: _section == 0, onTap: () => setState(() => _section = 0))),
                 Expanded(child: _HubButton(label: 'Takip', selected: _section == 1, onTap: () => setState(() => _section = 1))),
-                Expanded(child: _HubButton(label: 'Noktalar', selected: _section == 2, onTap: () => setState(() => _section = 2))),
+                Expanded(child: _HubButton(label: 'Yerler', selected: _section == 2, onTap: () => setState(() => _section = 2))),
                 Expanded(child: _HubButton(label: 'Etkinlik', selected: _section == 3, onTap: () => setState(() => _section = 3))),
               ]),
             ),
