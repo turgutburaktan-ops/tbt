@@ -29,8 +29,11 @@ new_load = r'''  Future<void> _load() async {
         final decoded = img.decodeImage(bytes);
         if (decoded != null) {
           final longest = math.max(decoded.width, decoded.height);
-          if (longest > 1280) {
-            final scale = 1280 / longest;
+          // 1280px was visibly soft on modern high-density phones. Keep a
+          // 2560px working preview so the photo still looks crisp immediately
+          // after capture while final export continues to use fullTexture.
+          if (longest > 2560) {
+            final scale = 2560 / longest;
             final preview = img.copyResize(
               decoded,
               width: (decoded.width * scale).round(),
@@ -38,7 +41,7 @@ new_load = r'''  Future<void> _load() async {
               interpolation: img.Interpolation.average,
             );
             previewTexture = await TextureSource.fromMemory(
-              img.encodeJpg(preview, quality: 90),
+              img.encodeJpg(preview, quality: 97),
             );
           }
 
@@ -50,7 +53,7 @@ new_load = r'''  Future<void> _load() async {
             interpolation: img.Interpolation.average,
           );
           thumbTexture = await TextureSource.fromMemory(
-            img.encodeJpg(thumb, quality: 80),
+            img.encodeJpg(thumb, quality: 84),
           );
         }
       } catch (e) {
@@ -80,8 +83,6 @@ text, count = load_pattern.subn(new_load, text, count=1)
 if count != 1:
     raise SystemExit('GPU editor _load block not found')
 
-# Main editor works on the lightweight preview texture. Final export still uses
-# _texture (the original full-resolution image) in _exportAndContinue.
 main_anchor = '''  Widget _mainPreview() {
     final texture = _texture!;
 '''
@@ -96,8 +97,6 @@ if main_anchor in text:
 elif 'final texture = _previewTexture ?? _texture!;' not in text:
     raise SystemExit('GPU editor main preview anchor not found')
 
-# Saturation already exists in the shader state but the original editor did not
-# expose it in the UI. Add it next to contrast/vibrance.
 saturation_anchor = '''          _adjustmentRow(
             label: 'Canlılık',
 '''
@@ -116,4 +115,4 @@ if "label: 'Doygunluk'" not in text:
     text = text.replace(saturation_anchor, saturation_row + saturation_anchor, 1)
 
 path.write_text(text, encoding='utf-8')
-print('GPU editor runtime optimization + saturation control applied')
+print('GPU editor high-fidelity preview + saturation control applied')
