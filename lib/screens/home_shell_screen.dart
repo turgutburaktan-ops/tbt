@@ -6,10 +6,10 @@ import 'activity_demand_screen.dart';
 import 'camera_screen.dart';
 import 'events_hub_screen.dart';
 import 'feed_screen.dart';
-import 'library_screen.dart';
 import 'login_screen.dart';
 import 'map_screen.dart';
 import 'profile_page_v2.dart';
+import 'radar_screen.dart';
 import 'spot_explore_screen_v2.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -27,7 +27,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final pages = [
       const _CommunityHub(),
       const MapScreen(),
-      const LibraryScreen(),
+      const RadarScreen(),
       const _ProfileGate(),
     ];
 
@@ -53,7 +53,7 @@ class _HomeScreenState extends State<HomeScreen> {
         destinations: const [
           NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home_rounded), label: 'Ana Sayfa'),
           NavigationDestination(icon: Icon(Icons.explore_outlined), selectedIcon: Icon(Icons.explore_rounded), label: 'Keşfet'),
-          NavigationDestination(icon: Icon(Icons.bookmark_border_rounded), selectedIcon: Icon(Icons.bookmark_rounded), label: 'Kaydedilenler'),
+          NavigationDestination(icon: Icon(Icons.radar_outlined), selectedIcon: Icon(Icons.radar_rounded), label: 'Radar'),
           NavigationDestination(icon: Icon(Icons.person_outline), selectedIcon: Icon(Icons.person), label: 'Profil'),
         ],
       ),
