@@ -9,14 +9,13 @@ import 'screens/communities_screen.dart';
 import 'screens/notifications_screen.dart';
 import 'services/deep_link_service.dart';
 import 'services/favorites_service.dart';
+import 'services/push_notification_service.dart';
 import 'theme/app_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
   await Firebase.initializeApp();
   await FavoritesService.initialize();
-
   runApp(const BestPhotoSpotApp());
 }
 
@@ -34,11 +33,15 @@ class _BestPhotoSpotAppState extends State<BestPhotoSpotApp> {
   void initState() {
     super.initState();
     DeepLinkService.instance.start(_navigatorKey);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      PushNotificationService.instance.initialize(_navigatorKey);
+    });
   }
 
   @override
   void dispose() {
     DeepLinkService.instance.dispose();
+    PushNotificationService.instance.dispose();
     super.dispose();
   }
 
