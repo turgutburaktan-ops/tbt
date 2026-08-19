@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../data/spot_image_auto_registry.dart';
 import '../data/spot_image_registry.dart';
+import '../data/verified_travel_image_registry.dart';
 import '../models/photo_spot.dart';
 import '../services/spot_image_search_service.dart';
 
@@ -23,9 +24,13 @@ class SpotImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Elle doğrulanmış kayıt her zaman önceliklidir. Türkiye genelindeki diğer
-    // noktalar için build sırasında üretilen lisanslı katalog kullanılır.
-    final verified = spotImageRegistry[spot.id] ?? spotImageAutoRegistry[spot.id];
+    // Gezilecek yer çekirdeği için elle doğrulanan fotoğraf her şeyden önce
+    // gelir. Ardından eski elle doğrulanmış kayıt, build kataloğu ve en son
+    // arama fallback'i kullanılır. Böylece ikonik yerlerde yanlış görselin
+    // otomatik aramadan içeri sızması engellenir.
+    final verified = verifiedTravelImageRegistry[spot.id] ??
+        spotImageRegistry[spot.id] ??
+        spotImageAutoRegistry[spot.id];
     final hasVerifiedAsset =
         verified != null && verified.assetPath.trim().isNotEmpty;
     final hasVerifiedUrl =
