@@ -152,6 +152,21 @@ class SocialEventService {
       'createdAt': FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
     });
+
+    if (safeCommunityId != null && visibility == EventVisibility.public) {
+      try {
+        final followers = await _firestore.collection('communities').doc(safeCommunityId).collection('followers').limit(500).get();
+        await AppNotificationService.instance.notifyUsers(
+          userIds: followers.docs.map((d) => d.id),
+          type: 'community_event',
+          title: '$hostName yeni etkinlik oluşturdu',
+          body: safeTitle,
+          sourceId: ref.id,
+          actorId: user.uid,
+        );
+      } catch (_) {}
+    }
+
     return ref.id;
   }
 
