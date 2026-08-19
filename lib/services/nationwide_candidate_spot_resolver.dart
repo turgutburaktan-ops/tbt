@@ -1,5 +1,6 @@
 import '../data/official_photo_spot_candidates.dart';
 import '../data/official_photo_spot_candidates_supplement.dart';
+import '../data/spot_coordinate_verification_registry.dart';
 import '../data/turkiye81_spot_candidates.dart';
 import '../data/turkiye81_spot_coordinates.dart';
 import '../models/photo_spot.dart';
@@ -9,7 +10,7 @@ import '../models/photo_spot.dart';
 ///
 /// Kalite kuralı: isim benzerliği, aynı şehirde bulunma veya başka bir kaydın
 /// konumu hiçbir zaman koordinat kaynağı olarak kullanılamaz. Böylece yanlış
-/// pin üretmek yerine koordinatı doğrulanmamış aday görünmez kalır.
+/// pin üretmek yerine koordinatı bulunmayan aday görünmez kalır.
 class NationwideCandidateSpotResolver {
   NationwideCandidateSpotResolver._();
 
@@ -61,6 +62,7 @@ class NationwideCandidateSpotResolver {
     required double latitude,
     required double longitude,
   }) {
+    final verified = isSpotCoordinateIndependentlyVerified(candidate.id);
     return PhotoSpot(
       id: candidate.id,
       name: candidate.name,
@@ -75,7 +77,9 @@ class NationwideCandidateSpotResolver {
       description: '',
       recommendedLens: '24-70mm',
       difficulty: 'Kolay',
-      tags: const ['Türkiye', 'koordinat-kayitli'],
+      tags: verified
+          ? const ['Türkiye', 'koordinat-dogrulandi']
+          : const ['Türkiye', 'koordinat-kayitli'],
     );
   }
 
