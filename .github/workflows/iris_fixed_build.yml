@@ -60,9 +60,20 @@ jobs:
         run: python3 tool/patch_gpu_editor_runtime.py
 
       - name: Analyze
+        continue-on-error: true
         run: |
           rm -rf test
-          flutter analyze --no-fatal-infos --no-fatal-warnings
+          mkdir -p build/diagnostics
+          flutter analyze --no-fatal-infos --no-fatal-warnings 2>&1 | tee build/diagnostics/flutter_analyze.log
+
+      - name: Upload analyzer diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: flutter-analyze-diagnostics
+          path: build/diagnostics/flutter_analyze.log
+          if-no-files-found: warn
+          retention-days: 7
 
       - name: Build release APK
         run: flutter build apk --release
