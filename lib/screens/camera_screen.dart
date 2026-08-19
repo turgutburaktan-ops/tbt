@@ -309,9 +309,9 @@ class _CameraScreenState extends State<CameraScreen> {
       case '1:1':
         return 1;
       case '16:9':
-        return 9 / 16;
+        return 16 / 9;
       default:
-        return 3 / 4;
+        return 4 / 3;
     }
   }
 
@@ -1173,7 +1173,7 @@ class _CameraScreenState extends State<CameraScreen> {
               overlayColor: const Color(0x33FFC400),
               trackHeight: 2,
             ),
-            child: Slider(value: value.clamp(min, max), min: min, max: max, divisions: divisions, onChanged: onChanged),
+            child: Slider(value: value.clamp(min, max).toDouble(), min: min, max: max, divisions: divisions, onChanged: onChanged),
           ),
         ),
         SizedBox(width: 46, child: Text(maxLabel, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white38, fontSize: 9))),
