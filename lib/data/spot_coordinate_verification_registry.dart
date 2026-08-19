@@ -96,6 +96,68 @@ const verifiedSpotCoordinateEvidence =
     verifiedAt: '2026-08-19',
   ),
 
+  // İkinci doğrulanmış gezilecek yer grubu.
+  'sultanahmet-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata',
+    sourceRef: 'Q80541',
+    verifiedAt: '2026-08-19',
+  ),
+  'yerebatan-sarnici': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata',
+    sourceRef: 'Q216511',
+    verifiedAt: '2026-08-19',
+  ),
+  'topkapi-sarayi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata',
+    sourceRef: 'Q170495',
+    verifiedAt: '2026-08-19',
+  ),
+  'troya': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata',
+    sourceRef: 'Q16920985',
+    verifiedAt: '2026-08-19',
+  ),
+  'bergama-akropol': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata',
+    sourceRef: 'Q69567912',
+    verifiedAt: '2026-08-19',
+  ),
+  'aphrodisias': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata',
+    sourceRef: 'Q618495',
+    verifiedAt: '2026-08-19',
+  ),
+  'gobeklitepe': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata',
+    sourceRef: 'Q214944',
+    verifiedAt: '2026-08-19',
+  ),
+  'ani-oren-yeri': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata',
+    sourceRef: 'Q546010',
+    verifiedAt: '2026-08-19',
+  ),
+  'ishak-pasa-sarayi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata',
+    sourceRef: 'Q1501534',
+    verifiedAt: '2026-08-19',
+  ),
+  'akdamar-kilisesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata',
+    sourceRef: 'Q1281985',
+    verifiedAt: '2026-08-19',
+  ),
+  'mardin-tarihi-merkez': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata (Mardin Ulu Camii anchor)',
+    sourceRef: 'Q65220334',
+    verifiedAt: '2026-08-19',
+  ),
+  'hattusa': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata',
+    sourceRef: 'Q181007',
+    verifiedAt: '2026-08-19',
+  ),
+
   // Eski 81-il genişleme kayıtlarının doğrulanmış eşleri korunuyor.
   'tr-istanbul-galata81': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata',
