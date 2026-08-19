@@ -35,11 +35,16 @@ class _SearchableSelectionFieldState extends State<SearchableSelectionField> {
   @override
   void initState() {
     super.initState();
-    _focusNode = FocusNode();
+    _focusNode = FocusNode()..addListener(_refresh);
+  }
+
+  void _refresh() {
+    if (mounted) setState(() {});
   }
 
   @override
   void dispose() {
+    _focusNode.removeListener(_refresh);
     _focusNode.dispose();
     super.dispose();
   }
@@ -61,7 +66,7 @@ class _SearchableSelectionFieldState extends State<SearchableSelectionField> {
 
   Iterable<String> _matches(TextEditingValue value) {
     final query = _normalize(value.text);
-    if (query.isEmpty) return const Iterable<String>.empty();
+    if (query.isEmpty) return const <String>[];
 
     final starts = <String>[];
     final contains = <String>[];
@@ -92,7 +97,10 @@ class _SearchableSelectionFieldState extends State<SearchableSelectionField> {
           controller: controller,
           focusNode: focusNode,
           enabled: widget.enabled,
-          onChanged: widget.onChanged,
+          onChanged: (value) {
+            widget.onChanged?.call(value);
+            setState(() {});
+          },
           onSubmitted: (_) => onFieldSubmitted(),
           decoration: InputDecoration(
             labelText: widget.labelText,
