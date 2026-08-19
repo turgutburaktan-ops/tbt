@@ -16,6 +16,9 @@ helper_replacement = r'''  List<iris.CameraLensDescriptor> get _backLenses =>
   bool _isPhysicalLens(iris.CameraLensDescriptor lens) =>
       lens.id.contains('::physical::');
 
+  bool get _usingFront =>
+      _activeLens?.position == iris.CameraLensPosition.front;
+
   double? _usableFov(iris.CameraLensDescriptor lens) {
     final fov = lens.fieldOfView;
     if (fov == null || fov.isNaN || fov <= 5 || fov >= 170) return null;
@@ -31,15 +34,12 @@ helper_replacement = r'''  List<iris.CameraLensDescriptor> get _backLenses =>
       return _backLenses.isEmpty ? null : _backLenses.first;
     }
 
-    // A phone's 1x main camera is normally around a 60-75 degree horizontal
-    // FOV. Do not trust the plugin's coarse wide/ultra/tele category alone:
-    // logical multi-camera wrappers can expose misleading focal metadata.
     candidates.sort((a, b) {
       double score(iris.CameraLensDescriptor lens) {
         final fov = _usableFov(lens)!;
         var s = (fov - 68.0).abs();
-        if (fov > 88) s += 18; // likely ultra-wide
-        if (fov < 47) s += 18; // likely telephoto
+        if (fov > 88) s += 18;
+        if (fov < 47) s += 18;
         if (lens.category == iris.CameraLensCategory.wide) s -= 3;
         if (_isPhysicalLens(lens)) s -= 1.5;
         return s;
@@ -63,7 +63,6 @@ helper_replacement = r'''  List<iris.CameraLensDescriptor> get _backLenses =>
     final candidates = _backLenses.where((lens) {
       if (lens.id == mainId) return false;
       final fov = _usableFov(lens);
-      // Only call it 0.5x when it is materially wider than the selected 1x.
       return fov != null && fov >= mainFov * 1.18;
     }).toList();
     if (candidates.isEmpty) return null;
@@ -111,6 +110,19 @@ zoom_pattern = re.compile(
 zoom_replacement = r'''  Future<void> _selectZoom(double target) async {
     if (_takingPhoto) return;
     try {
+      // Selfie cameras must never route a zoom tap to a rear physical lens.
+      // Most front cameras expose only one optical field of view, so keep
+      // front capture at a truthful 1x instead of faking 0.5x / 2x.
+      if (_usingFront) {
+        if (target != 1) return;
+        await _camera.setZoom(1);
+        if (mounted) setState(() => _displayZoom = 1);
+        return;
+      }
+
+      _focusPoint = null;
+      _locked = false;
+
       if (target == .5) {
         final ultra = _ultraBack;
         if (ultra == null) {
@@ -137,8 +149,6 @@ zoom_replacement = r'''  Future<void> _selectZoom(double target) async {
         }
         final tele = _teleBack;
         if (tele != null) {
-          // Use a real tele sensor when the phone exposes one. If not, 2x is a
-          // predictable digital crop on the exact same 1x main lens.
           _activeLens = await _switchLensDescriptor(tele);
           await _camera.setZoom(1);
         } else {
@@ -160,8 +170,6 @@ text, count = zoom_pattern.subn(zoom_replacement, text, count=1)
 if count != 1:
     raise SystemExit('camera zoom selection block not found')
 
-# Returning from the selfie camera must always land on the selected 1x main
-# camera, never whichever back/physical descriptor happened to be first.
 text = text.replace(
     '    final target = candidates.first;\n',
     '''    final target = targetPosition == iris.CameraLensPosition.back
@@ -171,8 +179,34 @@ text = text.replace(
     1,
 )
 
-# Add a concise diagnostic line. This is invaluable on vendor-specific Android
-# camera stacks and has no UI impact.
+# A camera position switch invalidates any AF point from the previous sensor.
+toggle_anchor = '''    try {
+      _activeLens = await _switchLensDescriptor(target);
+'''
+if toggle_anchor in text:
+    text = text.replace(
+        toggle_anchor,
+        '''    try {
+      _focusPoint = null;
+      _locked = false;
+      _activeLens = await _switchLensDescriptor(target);
+''',
+        1,
+    )
+
+# Disable rear-only optical zoom controls while the selfie camera is active.
+zoom_row_old = '''          _zoomButton(.5, '0.5', enabled: _hasUltraWide),
+          _zoomButton(1, '1'),
+          _zoomButton(2, '2${_hasTele ? '' : '×'}'),
+'''
+zoom_row_new = '''          _zoomButton(.5, '0.5', enabled: !_usingFront && _hasUltraWide),
+          _zoomButton(1, '1'),
+          _zoomButton(2, '2${_hasTele ? '' : '×'}', enabled: !_usingFront),
+'''
+if zoom_row_old not in text:
+    raise SystemExit('camera zoom row not found')
+text = text.replace(zoom_row_old, zoom_row_new, 1)
+
 init_anchor = '      _lenses = await _camera.listAvailableLenses();\n'
 if "TBT lens map" not in text and init_anchor in text:
     text = text.replace(
@@ -182,4 +216,4 @@ if "TBT lens map" not in text and init_anchor in text:
     )
 
 path.write_text(text, encoding='utf-8')
-print('Camera FOV-based 0.5x / 1x / tele mapping applied')
+print('Camera FOV mapping + front camera zoom isolation applied')
