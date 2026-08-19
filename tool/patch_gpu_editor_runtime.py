@@ -28,7 +28,7 @@ new_load = r'''  Future<void> _load() async {
         final bytes = await file.readAsBytes();
         final decoded = img.decodeImage(bytes);
         if (decoded != null) {
-          final longest = max(decoded.width, decoded.height);
+          final longest = math.max(decoded.width, decoded.height);
           if (longest > 1280) {
             final scale = 1280 / longest;
             final preview = img.copyResize(
@@ -45,8 +45,8 @@ new_load = r'''  Future<void> _load() async {
           final thumbScale = 220 / longest;
           final thumb = img.copyResize(
             decoded,
-            width: max(1, (decoded.width * thumbScale).round()),
-            height: max(1, (decoded.height * thumbScale).round()),
+            width: math.max(1, (decoded.width * thumbScale).round()),
+            height: math.max(1, (decoded.height * thumbScale).round()),
             interpolation: img.Interpolation.average,
           );
           thumbTexture = await TextureSource.fromMemory(
