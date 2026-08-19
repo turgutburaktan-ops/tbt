@@ -42,12 +42,10 @@ class _HomeScreenState extends State<HomeScreen> {
         shape: const CircleBorder(
           side: BorderSide(color: Color(0xFF4A4F55), width: 1.2),
         ),
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const CameraScreen()),
-          );
-        },
+        onPressed: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const CameraScreen()),
+        ),
         child: const Icon(Icons.photo_camera_outlined, size: 22),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
@@ -58,14 +56,14 @@ class _HomeScreenState extends State<HomeScreen> {
         onDestinationSelected: (value) => setState(() => _selectedIndex = value),
         destinations: const [
           NavigationDestination(
-            icon: Icon(Icons.explore_outlined),
-            selectedIcon: Icon(Icons.explore),
+            icon: Icon(Icons.home_outlined),
+            selectedIcon: Icon(Icons.home_rounded),
             label: 'Ana Sayfa',
           ),
           NavigationDestination(
-            icon: Icon(Icons.map_outlined),
-            selectedIcon: Icon(Icons.map),
-            label: 'Harita',
+            icon: Icon(Icons.explore_outlined),
+            selectedIcon: Icon(Icons.explore_rounded),
+            label: 'Keşfet',
           ),
           NavigationDestination(
             icon: Icon(Icons.bookmark_border_rounded),
@@ -92,13 +90,9 @@ class _ProfileGate extends StatelessWidget {
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const SafeArea(
-            child: Center(child: CircularProgressIndicator()),
-          );
+          return const SafeArea(child: Center(child: CircularProgressIndicator()));
         }
-        if (snapshot.data == null) {
-          return const LoginScreen(embedded: true);
-        }
+        if (snapshot.data == null) return const LoginScreen(embedded: true);
         return const ProfilePage();
       },
     );
@@ -113,23 +107,45 @@ class _CommunityHub extends StatefulWidget {
 }
 
 class _CommunityHubState extends State<_CommunityHub> {
-  int _section = 1;
+  int _section = 0;
+
+  static const _accent = Color(0xFFB7BCC2);
+
+  void _openActivity(String label) {
+    if (label == 'Keşfet') {
+      setState(() => _section = 2);
+      return;
+    }
+    setState(() => _section = 3);
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text('$label etkinliklerini açtım.')));
+  }
 
   @override
   Widget build(BuildContext context) {
+    final showDailyHeader = _section <= 1;
     return SafeArea(
       child: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(14, 10, 10, 8),
+            padding: const EdgeInsets.fromLTRB(14, 10, 8, 6),
             child: Row(
               children: [
                 const Expanded(
-                  child: Text(
-                    'En İyi Çekim Noktası',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Bugün ne yapıyoruz?',
+                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
+                      ),
+                      SizedBox(height: 2),
+                      Text(
+                        'İnsanları, anları ve yakınındaki hayatı keşfet.',
+                        style: TextStyle(color: Colors.white54, fontSize: 12),
+                      ),
+                    ],
                   ),
                 ),
                 IconButton(
@@ -142,41 +158,49 @@ class _CommunityHubState extends State<_CommunityHub> {
                       return Badge(
                         isLabelVisible: count > 0,
                         label: Text(count > 99 ? '99+' : '$count'),
-                        child: const Icon(Icons.notifications_none_rounded, size: 22),
+                        child: const Icon(Icons.notifications_none_rounded),
                       );
                     },
                   ),
                 ),
-                const SizedBox(width: 2),
-                StreamBuilder<int>(
-                  stream: AppNotificationService.instance.unreadMessageCount(),
-                  builder: (_, snapshot) {
-                    final count = snapshot.data ?? 0;
-                    return OutlinedButton.icon(
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.white,
-                        side: const BorderSide(color: Color(0xFF34383D)),
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                        minimumSize: const Size(0, 38),
-                      ),
-                      onPressed: () => Navigator.pushNamed(context, '/messages'),
-                      icon: Badge(
+                IconButton(
+                  tooltip: 'Mesajlar',
+                  onPressed: () => Navigator.pushNamed(context, '/messages'),
+                  icon: StreamBuilder<int>(
+                    stream: AppNotificationService.instance.unreadMessageCount(),
+                    builder: (_, snapshot) {
+                      final count = snapshot.data ?? 0;
+                      return Badge(
                         isLabelVisible: count > 0,
                         label: Text(count > 99 ? '99+' : '$count'),
-                        child: const Icon(Icons.chat_bubble_outline_rounded, size: 19),
-                      ),
-                      label: const Text(
-                        'Mesajlar',
-                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800),
-                      ),
-                    );
-                  },
+                        child: const Icon(Icons.chat_bubble_outline_rounded),
+                      );
+                    },
+                  ),
                 ),
               ],
             ),
           ),
+          if (showDailyHeader) ...[
+            SizedBox(
+              height: 70,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
+                children: [
+                  _ActivityChip(icon: Icons.photo_camera_outlined, label: 'Fotoğraf', onTap: () => _openActivity('Fotoğraf')),
+                  _ActivityChip(icon: Icons.local_cafe_outlined, label: 'Kahve', onTap: () => _openActivity('Kahve')),
+                  _ActivityChip(icon: Icons.directions_walk_rounded, label: 'Yürüyüş', onTap: () => _openActivity('Yürüyüş')),
+                  _ActivityChip(icon: Icons.terrain_outlined, label: 'Kamp', onTap: () => _openActivity('Kamp')),
+                  _ActivityChip(icon: Icons.sports_basketball_outlined, label: 'Spor', onTap: () => _openActivity('Spor')),
+                  _ActivityChip(icon: Icons.sports_esports_outlined, label: 'Oyun', onTap: () => _openActivity('Oyun')),
+                  _ActivityChip(icon: Icons.place_outlined, label: 'Keşfet', onTap: () => _openActivity('Keşfet')),
+                ],
+              ),
+            ),
+          ],
           Padding(
-            padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
+            padding: const EdgeInsets.fromLTRB(12, 2, 12, 10),
             child: Container(
               padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
@@ -186,30 +210,10 @@ class _CommunityHubState extends State<_CommunityHub> {
               ),
               child: Row(
                 children: [
-                  Expanded(
-                    child: _HubButton(
-                      icon: Icons.people_alt_outlined,
-                      label: 'Takip',
-                      selected: _section == 0,
-                      onTap: () => setState(() => _section = 0),
-                    ),
-                  ),
-                  Expanded(
-                    child: _HubButton(
-                      icon: Icons.photo_library_outlined,
-                      label: 'Noktalar',
-                      selected: _section == 1,
-                      onTap: () => setState(() => _section = 1),
-                    ),
-                  ),
-                  Expanded(
-                    child: _HubButton(
-                      icon: Icons.groups_2_outlined,
-                      label: 'Etkinlikler',
-                      selected: _section == 2,
-                      onTap: () => setState(() => _section = 2),
-                    ),
-                  ),
+                  Expanded(child: _HubButton(label: 'Sana Özel', selected: _section == 0, onTap: () => setState(() => _section = 0))),
+                  Expanded(child: _HubButton(label: 'Takip', selected: _section == 1, onTap: () => setState(() => _section = 1))),
+                  Expanded(child: _HubButton(label: 'Noktalar', selected: _section == 2, onTap: () => setState(() => _section = 2))),
+                  Expanded(child: _HubButton(label: 'Etkinlik', selected: _section == 3, onTap: () => setState(() => _section = 3))),
                 ],
               ),
             ),
@@ -218,7 +222,8 @@ class _CommunityHubState extends State<_CommunityHub> {
             child: IndexedStack(
               index: _section,
               children: const [
-                FeedScreen(),
+                FeedScreen(mode: FeedMode.forYou, embedded: true),
+                FeedScreen(mode: FeedMode.following, embedded: true),
                 SpotExploreScreen(),
                 SocialEventsScreen(),
               ],
@@ -230,50 +235,71 @@ class _CommunityHubState extends State<_CommunityHub> {
   }
 }
 
-class _HubButton extends StatelessWidget {
+class _ActivityChip extends StatelessWidget {
   final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  const _ActivityChip({required this.icon, required this.label, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.only(right: 8),
+        child: Material(
+          color: const Color(0xFF15181B),
+          borderRadius: BorderRadius.circular(15),
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(15),
+            child: Container(
+              width: 82,
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(15),
+                border: Border.all(color: const Color(0xFF262B30)),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(icon, size: 21, color: _CommunityHubState._accent),
+                  const SizedBox(height: 5),
+                  Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800)),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+}
+
+class _HubButton extends StatelessWidget {
   final String label;
   final bool selected;
   final VoidCallback onTap;
 
-  const _HubButton({
-    required this.icon,
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
+  const _HubButton({required this.label, required this.selected, required this.onTap});
 
   @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: selected ? const Color(0xFF34383D) : Colors.transparent,
-      borderRadius: BorderRadius.circular(13),
-      child: InkWell(
+  Widget build(BuildContext context) => Material(
+        color: selected ? const Color(0xFF34383D) : Colors.transparent,
         borderRadius: BorderRadius.circular(13),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, size: 18, color: selected ? Colors.white : Colors.white54),
-              const SizedBox(width: 5),
-              Flexible(
-                child: Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: selected ? Colors.white : Colors.white60,
-                    fontSize: 12,
-                    fontWeight: selected ? FontWeight.w900 : FontWeight.w700,
-                  ),
-                ),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(13),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 3),
+            child: Text(
+              label,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: selected ? Colors.white : Colors.white60,
+                fontSize: 11,
+                fontWeight: selected ? FontWeight.w900 : FontWeight.w700,
               ),
-            ],
+            ),
           ),
         ),
-      ),
-    );
-  }
+      );
 }
