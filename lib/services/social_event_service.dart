@@ -19,6 +19,15 @@ class SocialEventService {
 
   static const String collection = 'social_events';
 
+  bool _canView(SocialEvent event) {
+    if (event.visibility == EventVisibility.public) return true;
+    final uid = _auth.currentUser?.uid;
+    if (uid == null) return false;
+    return event.hostId == uid ||
+        event.participantIds.contains(uid) ||
+        event.allowedUserIds.contains(uid);
+  }
+
   Stream<List<SocialEvent>> watchUpcoming(
       {String? city, SocialEventType? type, int limit = 80}) {
     return _firestore
@@ -28,11 +37,15 @@ class SocialEventService {
         .map((snapshot) {
       final threshold = DateTime.now().subtract(const Duration(minutes: 30));
       final items = snapshot.docs.map(SocialEvent.fromDocument).where((event) {
-        if (event.status != 'open' || !event.startsAt.isAfter(threshold))
+        if (!_canView(event)) return false;
+        if (event.status != 'open' || !event.startsAt.isAfter(threshold)) {
           return false;
+        }
         if (city != null &&
             city.trim().isNotEmpty &&
-            event.city.toLowerCase() != city.trim().toLowerCase()) return false;
+            event.city.toLowerCase() != city.trim().toLowerCase()) {
+          return false;
+        }
         if (type != null && event.type != type) return false;
         return true;
       }).toList();
@@ -52,7 +65,9 @@ class SocialEventService {
       final items = snapshot.docs
           .map(SocialEvent.fromDocument)
           .where((event) =>
-              event.status == 'open' && event.startsAt.isAfter(threshold))
+              _canView(event) &&
+              event.status == 'open' &&
+              event.startsAt.isAfter(threshold))
           .toList();
       items.sort((a, b) => a.startsAt.compareTo(b.startsAt));
       return items;
@@ -75,22 +90,33 @@ class SocialEventService {
     DateTime? ticketSalesEndAt,
     double? latitude,
     double? longitude,
+    EventVisibility visibility = EventVisibility.public,
+    List<String> allowedUserIds = const [],
   }) async {
     final user = _auth.currentUser;
-    if (user == null)
+    if (user == null) {
       throw Exception('Etkinlik oluşturmak için giriş yapmalısın.');
+    }
 
     final safeTitle = title.trim();
-    if (safeTitle.length < 3)
+    if (safeTitle.length < 3) {
       throw Exception('Etkinlik başlığı en az 3 karakter olmalı.');
+    }
     final minimum = DateTime.now().add(const Duration(minutes: 15));
-    if (startsAt.isBefore(minimum))
+    if (startsAt.isBefore(minimum)) {
       throw Exception('Etkinlik saati en az 15 dakika ileride olmalı.');
-    if (type == SocialEventType.other && customTypeLabel.trim().length < 3)
+    }
+    if (type == SocialEventType.other && customTypeLabel.trim().length < 3) {
       throw Exception('Diğer etkinlik türü için kısa bir ad yazmalısın.');
-    if (accessType == EventAccessType.paid && ticketPriceMinor <= 0)
+    }
+    if (accessType == EventAccessType.paid && ticketPriceMinor <= 0) {
       throw Exception(
           'Ücretli etkinlik için geçerli bir bilet fiyatı yazmalısın.');
+    }
+    if (visibility == EventVisibility.selectedPeople &&
+        allowedUserIds.where((id) => id.trim().isNotEmpty).isEmpty) {
+      throw Exception('Seçili kişiler etkinliği için en az bir kişi seçmelisin.');
+    }
 
     if (accessType == EventAccessType.paid) {
       final eligibility =
@@ -102,6 +128,12 @@ class SocialEventService {
     final hostName = (user.displayName ?? '').trim().isNotEmpty
         ? user.displayName!.trim()
         : 'Topluluk üyesi';
+    final safeAllowedIds = allowedUserIds
+        .map((id) => id.trim())
+        .where((id) => id.isNotEmpty && id != user.uid)
+        .toSet()
+        .take(300)
+        .toList();
 
     await ref.set({
       'id': ref.id,
@@ -126,7 +158,9 @@ class SocialEventService {
           ? GeoPoint(latitude, longitude)
           : (spot == null ? null : GeoPoint(spot.latitude, spot.longitude)),
       'status': 'open',
-      'approximateLocationOnly': false,
+      'approximateLocationOnly': visibility != EventVisibility.public,
+      'visibility': visibility.name,
+      'allowedUserIds': safeAllowedIds,
       'accessType': accessType.name,
       'ticketPriceMinor':
           accessType == EventAccessType.paid ? ticketPriceMinor : 0,
@@ -156,8 +190,9 @@ class SocialEventService {
 
   Future<void> join(String eventId) async {
     final user = _auth.currentUser;
-    if (user == null)
+    if (user == null) {
       throw Exception('Etkinliğe katılmak için giriş yapmalısın.');
+    }
 
     final ref = _firestore.collection(collection).doc(eventId);
     final ticketRef = _firestore
@@ -171,8 +206,20 @@ class SocialEventService {
       if (!snapshot.exists) throw Exception('Etkinlik artık mevcut değil.');
 
       final data = snapshot.data() ?? const <String, dynamic>{};
-      if ((data['status'] ?? 'open') != 'open')
+      if ((data['status'] ?? 'open') != 'open') {
         throw Exception('Bu etkinlik katılıma kapalı.');
+      }
+
+      final visibility = (data['visibility'] ?? 'public').toString();
+      final allowed = (data['allowedUserIds'] as List? ?? const [])
+          .map((item) => item.toString())
+          .toList();
+      final hostId = (data['hostId'] ?? '').toString();
+      if (visibility != EventVisibility.public.name &&
+          hostId != user.uid &&
+          !allowed.contains(user.uid)) {
+        throw Exception('Bu etkinlik sadece davet edilen kullanıcılar için.');
+      }
 
       final accessType =
           (data['accessType'] ?? EventAccessType.free.name).toString();
@@ -194,14 +241,15 @@ class SocialEventService {
       final participants = (data['participantIds'] as List? ?? const [])
           .map((item) => item.toString())
           .toList();
-      final hostId = (data['hostId'] ?? '').toString();
       final title = (data['title'] ?? 'Etkinlik').toString();
-      if (hostId.isEmpty)
+      if (hostId.isEmpty) {
         throw Exception('Etkinliği düzenleyen kullanıcı bulunamadı.');
+      }
 
       if (!participants.contains(user.uid)) {
-        if (participants.length >= capacity)
+        if (participants.length >= capacity) {
           throw Exception('Bu etkinlikte boş yer kalmadı.');
+        }
         participants.add(user.uid);
         transaction.update(ref, {
           'participantIds': participants,
