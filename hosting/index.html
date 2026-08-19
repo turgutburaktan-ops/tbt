@@ -59,7 +59,7 @@
     <h1 id="title">Davet açılıyor…</h1>
     <p id="description">Uygulama yüklüyse ilgili sayfaya yönlendirileceksin.</p>
     <button class="button" id="openButton" type="button">Uygulamada Aç</button>
-    <div class="hint" id="hint">Açılmazsa uygulamanın güncel sürümünün yüklü olduğundan emin ol.</div>
+    <div class="hint" id="hint">Açılmazsa En İyi Çekim Noktası uygulamasının güncel sürümünün yüklü olduğundan emin ol.</div>
   </main>
 
   <script>
@@ -95,8 +95,6 @@
 
       button.addEventListener('click', openApp);
 
-      // Some mobile browsers allow a custom-scheme handoff directly after QR navigation.
-      // If they block it, the explicit button above always remains available.
       if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         setTimeout(openApp, 500);
       }
