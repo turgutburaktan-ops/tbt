@@ -7,6 +7,7 @@ import 'screens/campus_profile_screen.dart';
 import 'screens/chat_inbox_screen.dart';
 import 'screens/communities_screen.dart';
 import 'screens/notifications_screen.dart';
+import 'services/deep_link_service.dart';
 import 'services/favorites_service.dart';
 import 'theme/app_theme.dart';
 
@@ -19,12 +20,32 @@ Future<void> main() async {
   runApp(const BestPhotoSpotApp());
 }
 
-class BestPhotoSpotApp extends StatelessWidget {
+class BestPhotoSpotApp extends StatefulWidget {
   const BestPhotoSpotApp({super.key});
+
+  @override
+  State<BestPhotoSpotApp> createState() => _BestPhotoSpotAppState();
+}
+
+class _BestPhotoSpotAppState extends State<BestPhotoSpotApp> {
+  final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
+
+  @override
+  void initState() {
+    super.initState();
+    DeepLinkService.instance.start(_navigatorKey);
+  }
+
+  @override
+  void dispose() {
+    DeepLinkService.instance.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: _navigatorKey,
       debugShowCheckedModeBanner: false,
       title: 'En İyi Çekim Noktası',
       theme: AppTheme.dark,
