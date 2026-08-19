@@ -61,7 +61,7 @@ class _EventMemoriesScreenState extends State<EventMemoriesScreen> {
     if (approved != true || !mounted) { caption.dispose(); return; }
     setState(() => _uploading = true);
     try {
-      await PostService.instance.createPost(
+      await PostService.instance.createEventMemory(
         image: File(selected.path),
         caption: caption.text,
         spotName: widget.event.locationLabel.isNotEmpty ? widget.event.locationLabel : widget.event.city,
@@ -70,7 +70,9 @@ class _EventMemoriesScreenState extends State<EventMemoriesScreen> {
         eventId: widget.event.id,
         eventTitle: widget.event.title,
       );
-      _message('Anı eklendi ve sosyal akışta paylaşıldı.');
+      _message(widget.event.visibility == EventVisibility.public
+          ? 'Anı eklendi ve sosyal akışta da paylaşıldı.'
+          : 'Anı eklendi. Bu özel etkinliğin görünürlüğü korunuyor.');
     } catch (e) {
       _message(e.toString().replaceFirst('Exception: ', ''));
     } finally {
@@ -91,6 +93,7 @@ class _EventMemoriesScreenState extends State<EventMemoriesScreen> {
         stream: PostService.instance.eventMemories(widget.event.id),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) return const Center(child: CircularProgressIndicator());
+          if (snapshot.hasError) return Center(child: Padding(padding: const EdgeInsets.all(28), child: Text('Anılar yüklenemedi.\n${snapshot.error}', textAlign: TextAlign.center)));
           final docs = snapshot.data?.docs.toList() ?? [];
           docs.sort((a, b) {
             final at = a.data()['createdAt'];
@@ -128,7 +131,7 @@ class _EventMemoriesScreenState extends State<EventMemoriesScreen> {
                     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                       Padding(padding: const EdgeInsets.all(12), child: Row(children: [const CircleAvatar(radius: 18, backgroundColor: Color(0xFF25292E), child: Icon(Icons.person_outline, size: 19)), const SizedBox(width: 9), Expanded(child: Text(name, style: const TextStyle(fontWeight: FontWeight.w900))), const Text('Etkinlik anısı', style: TextStyle(fontSize: 11, color: Colors.white54))])),
                       if (image.isNotEmpty) AspectRatio(aspectRatio: 4 / 5, child: Image.network(image, fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Center(child: Icon(Icons.broken_image_outlined)))),
-                      Padding(padding: const EdgeInsets.symmetric(horizontal: 7), child: ContentEngagementBar(collection: 'posts', contentId: doc.id, ownerId: uid, title: caption.isEmpty ? widget.event.title : caption, sourceType: 'event_memory')),
+                      Padding(padding: const EdgeInsets.symmetric(horizontal: 7), child: ContentEngagementBar(collection: 'event_memories', contentId: doc.id, ownerId: uid, title: caption.isEmpty ? widget.event.title : caption, sourceType: 'event_memory')),
                       if (caption.isNotEmpty) Padding(padding: const EdgeInsets.fromLTRB(13, 0, 13, 13), child: Text.rich(TextSpan(children: [TextSpan(text: '$name ', style: const TextStyle(fontWeight: FontWeight.w900)), TextSpan(text: caption, style: const TextStyle(color: Colors.white70))]))),
                     ]),
                   );
