@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../models/social_event.dart';
 import '../services/invite_link_service.dart';
 import '../services/social_event_service.dart';
+import 'invite_qr_screen.dart';
 
 class EventDeepLinkScreen extends StatelessWidget {
   final String eventId;
@@ -116,6 +117,22 @@ class EventDeepLinkScreen extends StatelessWidget {
                               ),
                             ],
                           ),
+                        ),
+                        IconButton(
+                          tooltip: 'QR',
+                          onPressed: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => InviteQrScreen(
+                                title: event.title,
+                                subtitle: event.city.isEmpty
+                                    ? 'Etkinlik daveti'
+                                    : '${event.city} • Etkinlik daveti',
+                                uri: InviteLinkService.instance.eventUri(event.id),
+                              ),
+                            ),
+                          ),
+                          icon: const Icon(Icons.qr_code_2_rounded),
                         ),
                         IconButton(
                           tooltip: 'Paylaş',
