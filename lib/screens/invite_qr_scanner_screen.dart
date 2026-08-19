@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
+import '../services/invite_link_service.dart';
 import 'community_profile_screen.dart';
 import 'event_deep_link_screen.dart';
 
@@ -20,23 +21,22 @@ class _InviteQrScannerScreenState extends State<InviteQrScannerScreen> {
     if (raw.isEmpty) return;
 
     final uri = Uri.tryParse(raw);
-    if (uri == null || uri.scheme != 'tbt' || uri.pathSegments.isEmpty) {
+    final target = uri == null ? null : InviteLinkService.instance.parse(uri);
+    if (target == null) {
       _show('Bu QR uygulamaya ait geçerli bir davet değil.');
       return;
     }
 
-    final id = uri.pathSegments.first.trim();
-    if (id.isEmpty) return;
     setState(() => _processing = true);
 
-    Widget? target;
-    if (uri.host == 'community') {
-      target = CommunityProfileScreen(communityId: id);
-    } else if (uri.host == 'event') {
-      target = EventDeepLinkScreen(eventId: id);
+    Widget? screen;
+    if (target.type == 'community') {
+      screen = CommunityProfileScreen(communityId: target.id);
+    } else if (target.type == 'event') {
+      screen = EventDeepLinkScreen(eventId: target.id);
     }
 
-    if (target == null) {
+    if (screen == null) {
       setState(() => _processing = false);
       _show('Bu davet türü desteklenmiyor.');
       return;
@@ -45,7 +45,7 @@ class _InviteQrScannerScreenState extends State<InviteQrScannerScreen> {
     if (!mounted) return;
     await Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (_) => target!),
+      MaterialPageRoute(builder: (_) => screen!),
     );
   }
 
