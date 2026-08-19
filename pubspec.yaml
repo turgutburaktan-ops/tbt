@@ -21,6 +21,7 @@ dependencies:
   google_maps_flutter: ^2.10.0
   image_picker: ^1.1.2
   image: ^4.3.0
+  flutter_image_filters: ^0.0.32
   http: ^1.2.2
   sensors_plus: ^6.1.2
   qr_flutter: ^4.1.0
