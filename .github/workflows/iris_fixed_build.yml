@@ -56,6 +56,9 @@ jobs:
       - name: Map zoom buttons by real FOV
         run: python3 tool/patch_camera_fov_lens_mapping.py
 
+      - name: Apply camera runtime fidelity fixes
+        run: python3 tool/patch_camera_runtime_fidelity.py
+
       - name: Optimize GPU editor preview
         run: python3 tool/patch_gpu_editor_runtime.py
 
