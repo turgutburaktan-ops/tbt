@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../data/turkey_selection_data.dart';
 import '../services/profile_service.dart';
+import '../widgets/searchable_selection_field.dart';
 
 class CampusProfileScreen extends StatefulWidget {
   const CampusProfileScreen({super.key});
@@ -100,9 +102,21 @@ class _CampusProfileScreenState extends State<CampusProfileScreen> {
             label: const Text('Üniversite Topluluklarını Keşfet'),
           ),
           const SizedBox(height: 20),
-          TextField(controller: _university, decoration: const InputDecoration(labelText: 'Üniversite', hintText: 'Örn. Fırat Üniversitesi', prefixIcon: Icon(Icons.school_outlined))),
+          SearchableSelectionField(
+            controller: _university,
+            options: turkeyUniversities,
+            labelText: 'Üniversite',
+            hintText: 'Yazmaya başla ve seç',
+            prefixIcon: Icons.school_outlined,
+          ),
           const SizedBox(height: 12),
-          TextField(controller: _faculty, decoration: const InputDecoration(labelText: 'Fakülte', hintText: 'Örn. Mühendislik Fakültesi', prefixIcon: Icon(Icons.account_balance_outlined))),
+          SearchableSelectionField(
+            controller: _faculty,
+            options: turkeyFaculties,
+            labelText: 'Fakülte',
+            hintText: 'Yazmaya başla ve seç',
+            prefixIcon: Icons.account_balance_outlined,
+          ),
           const SizedBox(height: 12),
           TextField(controller: _department, decoration: const InputDecoration(labelText: 'Bölüm', hintText: 'Örn. Yazılım Mühendisliği', prefixIcon: Icon(Icons.menu_book_outlined))),
           const SizedBox(height: 12),
