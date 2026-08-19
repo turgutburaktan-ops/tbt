@@ -14,6 +14,12 @@ service cloud.firestore {
         ));
     }
 
+    function memoryEventVisible(memoryData) {
+      let eid = memoryData.eventId;
+      return exists(/databases/$(database)/documents/social_events/$(eid))
+        && eventVisible(get(/databases/$(database)/documents/social_events/$(eid)).data);
+    }
+
     function validCommunityHostCreate() {
       let cid = request.resource.data.get('communityId', null);
       return cid == null || cid == '' || (
@@ -71,10 +77,21 @@ service cloud.firestore {
       let eid = request.resource.data.get('eventId', null);
       return eid == null || eid == '' || (
         exists(/databases/$(database)/documents/social_events/$(eid))
+        && get(/databases/$(database)/documents/social_events/$(eid)).data.visibility == 'public'
         && get(/databases/$(database)/documents/social_events/$(eid)).data.participantIds.hasAny([request.auth.uid])
         && get(/databases/$(database)/documents/social_events/$(eid)).data.startsAt <= request.time
         && get(/databases/$(database)/documents/social_events/$(eid)).data.status != 'cancelled'
       );
+    }
+
+    function validMemoryCreate() {
+      let eid = request.resource.data.eventId;
+      return signedIn()
+        && request.resource.data.userId == request.auth.uid
+        && exists(/databases/$(database)/documents/social_events/$(eid))
+        && get(/databases/$(database)/documents/social_events/$(eid)).data.participantIds.hasAny([request.auth.uid])
+        && get(/databases/$(database)/documents/social_events/$(eid)).data.startsAt <= request.time
+        && get(/databases/$(database)/documents/social_events/$(eid)).data.status != 'cancelled';
     }
 
     match /social_events/{eventId} {
@@ -101,6 +118,18 @@ service cloud.firestore {
           && request.resource.data.reason is string
           && request.resource.data.reason.size() >= 3;
         allow update, delete: if false;
+      }
+    }
+
+    match /event_memories/{memoryId} {
+      allow read: if memoryEventVisible(resource.data);
+      allow create: if validMemoryCreate();
+      allow update, delete: if isAdmin() || (signedIn() && resource.data.userId == request.auth.uid);
+
+      match /{subcollection}/{document} {
+        allow read: if memoryEventVisible(get(/databases/$(database)/documents/event_memories/$(memoryId)).data);
+        allow write: if signedIn()
+          && memoryEventVisible(get(/databases/$(database)/documents/event_memories/$(memoryId)).data);
       }
     }
 
@@ -149,18 +178,20 @@ service cloud.firestore {
     }
 
     match /{collection}/{document} {
-      allow read: if collection != 'social_events';
+      allow read: if collection != 'social_events' && collection != 'event_memories';
       allow write: if signedIn()
         && collection != 'social_events'
+        && collection != 'event_memories'
         && collection != 'posts'
         && collection != 'activity_demands'
         && collection != 'communities';
     }
 
     match /{collection}/{document}/{rest=**} {
-      allow read: if collection != 'social_events';
+      allow read: if collection != 'social_events' && collection != 'event_memories';
       allow write: if signedIn()
         && collection != 'social_events'
+        && collection != 'event_memories'
         && collection != 'posts'
         && collection != 'activity_demands'
         && collection != 'communities';
