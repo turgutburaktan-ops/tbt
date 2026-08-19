@@ -27,33 +27,22 @@ class ProfileService {
     if (user == null) {
       throw Exception('Profilini düzenlemek için giriş yapmalısın.');
     }
-
     final cleanName = displayName.trim();
     final cleanBio = bio.trim();
-    if (cleanName.length < 2) {
-      throw Exception('Kullanıcı adı en az 2 karakter olmalı.');
-    }
-    if (cleanBio.length > 160) {
-      throw Exception('Açıklama en fazla 160 karakter olabilir.');
-    }
+    if (cleanName.length < 2) throw Exception('Kullanıcı adı en az 2 karakter olmalı.');
+    if (cleanBio.length > 160) throw Exception('Açıklama en fazla 160 karakter olabilir.');
 
     String photoUrl = user.photoURL ?? '';
     if (photo != null) {
       final lower = photo.path.toLowerCase();
       final ext = lower.endsWith('.png') ? 'png' : 'jpg';
       final ref = _storage.ref().child('users/${user.uid}/profile/avatar.$ext');
-      final task = await ref.putFile(
-        photo,
-        SettableMetadata(
-          contentType: ext == 'png' ? 'image/png' : 'image/jpeg',
-        ),
-      );
+      final task = await ref.putFile(photo, SettableMetadata(contentType: ext == 'png' ? 'image/png' : 'image/jpeg'));
       photoUrl = await task.ref.getDownloadURL();
     }
 
     await user.updateDisplayName(cleanName);
     if (photoUrl.isNotEmpty) await user.updatePhotoURL(photoUrl);
-
     await _firestore.collection('users').doc(user.uid).set({
       'uid': user.uid,
       'displayName': cleanName,
@@ -71,12 +60,9 @@ class ProfileService {
     required List<String> interests,
     bool newStudent2026 = false,
     bool showEducationOnProfile = true,
-    bool openToMeetPeople = false,
   }) async {
     final user = _auth.currentUser;
-    if (user == null) {
-      throw Exception('Kampüs profilini düzenlemek için giriş yapmalısın.');
-    }
+    if (user == null) throw Exception('Kampüs profilini düzenlemek için giriş yapmalısın.');
 
     final cleanInterests = interests
         .map((item) => item.trim())
@@ -93,10 +79,7 @@ class ProfileService {
       'interests': cleanInterests,
       'newStudent2026': newStudent2026,
       'showEducationOnProfile': showEducationOnProfile,
-      'openToMeetPeople': openToMeetPeople,
-      'campusProfileCompleted': university.trim().isNotEmpty &&
-          department.trim().isNotEmpty &&
-          cleanInterests.length >= 3,
+      'campusProfileCompleted': university.trim().isNotEmpty && department.trim().isNotEmpty && cleanInterests.length >= 3,
       'updatedAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
   }
