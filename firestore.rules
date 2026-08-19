@@ -1,25 +1,17 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    function signedIn() {
-      return request.auth != null;
-    }
-
-    function isAdmin() {
-      return signedIn() && request.auth.token.admin == true;
-    }
+    function signedIn() { return request.auth != null; }
+    function isAdmin() { return signedIn() && request.auth.token.admin == true; }
 
     function eventVisible(data) {
       return !('visibility' in data)
         || data.visibility == 'public'
-        || (
-          signedIn()
-          && (
-            data.hostId == request.auth.uid
-            || (('participantIds' in data) && data.participantIds.hasAny([request.auth.uid]))
-            || (('allowedUserIds' in data) && data.allowedUserIds.hasAny([request.auth.uid]))
-          )
-        );
+        || (signedIn() && (
+          data.hostId == request.auth.uid
+          || (('participantIds' in data) && data.participantIds.hasAny([request.auth.uid]))
+          || (('allowedUserIds' in data) && data.allowedUserIds.hasAny([request.auth.uid]))
+        ));
     }
 
     function protectedEventFieldsUnchanged() {
@@ -38,70 +30,45 @@ service cloud.firestore {
     }
 
     function validPaidCreate() {
-      return request.resource.data.accessType != 'paid'
-        || (
-          request.resource.data.paymentStatus == 'comingSoon'
-          && request.resource.data.trustStatus == 'pending_review'
-          && request.resource.data.salesStatus == 'blocked'
-          && request.resource.data.paymentReleaseStatus == 'held'
-          && request.resource.data.reportCount == 0
-          && request.resource.data.riskLevel in ['low', 'medium']
-          && request.resource.data.ticketPriceMinor > 0
-        );
+      return request.resource.data.accessType != 'paid' || (
+        request.resource.data.paymentStatus == 'comingSoon'
+        && request.resource.data.trustStatus == 'pending_review'
+        && request.resource.data.salesStatus == 'blocked'
+        && request.resource.data.paymentReleaseStatus == 'held'
+        && request.resource.data.reportCount == 0
+        && request.resource.data.riskLevel in ['low', 'medium']
+        && request.resource.data.ticketPriceMinor > 0
+      );
     }
 
     function validPrivacyCreate() {
       return !('visibility' in request.resource.data)
-        || request.resource.data.visibility in [
-          'public', 'followers', 'mutuals', 'closeFriends', 'selectedPeople', 'private'
-        ];
+        || request.resource.data.visibility in ['public','followers','mutuals','closeFriends','selectedPeople','private'];
     }
 
     function participantJoinOrLeaveOnly() {
       let oldList = resource.data.participantIds;
       let newList = request.resource.data.participantIds;
       let changed = request.resource.data.diff(resource.data).affectedKeys();
-      return changed.hasOnly(['participantIds', 'updatedAt'])
-        && (
-          (
-            newList.size() == oldList.size() + 1
-            && newList.hasAll(oldList)
-            && newList.hasAny([request.auth.uid])
-          )
-          || (
-            oldList.size() == newList.size() + 1
-            && oldList.hasAll(newList)
-            && oldList.hasAny([request.auth.uid])
-            && !newList.hasAny([request.auth.uid])
-          )
-        );
+      return changed.hasOnly(['participantIds','updatedAt']) && (
+        (newList.size() == oldList.size() + 1 && newList.hasAll(oldList) && newList.hasAny([request.auth.uid]))
+        || (oldList.size() == newList.size() + 1 && oldList.hasAll(newList) && oldList.hasAny([request.auth.uid]) && !newList.hasAny([request.auth.uid]))
+      );
     }
 
     match /social_events/{eventId} {
       allow read: if eventVisible(resource.data);
-
       allow create: if signedIn()
         && request.resource.data.hostId == request.auth.uid
         && request.resource.data.status == 'open'
         && validPaidCreate()
         && validPrivacyCreate();
-
-      allow update: if isAdmin()
-        || (
-          signedIn()
-          && eventVisible(resource.data)
-          && protectedEventFieldsUnchanged()
-          && (
-            participantJoinOrLeaveOnly()
-            || (
-              resource.data.hostId == request.auth.uid
-              && request.resource.data.diff(resource.data).affectedKeys()
-                  .hasOnly(['status', 'updatedAt'])
-              && request.resource.data.status in ['open', 'cancelled']
-            )
-          )
-        );
-
+      allow update: if isAdmin() || (signedIn() && eventVisible(resource.data) && protectedEventFieldsUnchanged() && (
+        participantJoinOrLeaveOnly()
+        || (resource.data.hostId == request.auth.uid
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','updatedAt'])
+          && request.resource.data.status in ['open','cancelled'])
+      ));
       allow delete: if isAdmin();
 
       match /reports/{reporterId} {
@@ -117,24 +84,49 @@ service cloud.firestore {
 
     match /activity_demands/{demandId} {
       allow read: if true;
-      allow create, update: if signedIn()
-        && request.resource.data.userId == request.auth.uid;
-      allow delete: if signedIn()
-        && resource.data.userId == request.auth.uid;
+      allow create, update: if signedIn() && request.resource.data.userId == request.auth.uid;
+      allow delete: if signedIn() && resource.data.userId == request.auth.uid;
+    }
+
+    match /communities/{communityId} {
+      allow read: if true;
+      allow create: if signedIn()
+        && request.resource.data.ownerId == request.auth.uid
+        && request.resource.data.verified == false
+        && request.resource.data.verificationStatus == 'pending'
+        && request.resource.data.adminIds.hasAny([request.auth.uid]);
+      allow update: if isAdmin() || (
+        signedIn()
+        && resource.data.ownerId == request.auth.uid
+        && request.resource.data.ownerId == resource.data.ownerId
+        && request.resource.data.verified == resource.data.verified
+        && request.resource.data.verificationStatus == resource.data.verificationStatus
+      );
+      allow delete: if isAdmin();
+
+      match /followers/{userId} {
+        allow read: if true;
+        allow create, update: if signedIn()
+          && userId == request.auth.uid
+          && request.resource.data.userId == request.auth.uid;
+        allow delete: if signedIn() && userId == request.auth.uid;
+      }
     }
 
     match /{collection}/{document} {
       allow read: if collection != 'social_events';
       allow write: if signedIn()
         && collection != 'social_events'
-        && collection != 'activity_demands';
+        && collection != 'activity_demands'
+        && collection != 'communities';
     }
 
     match /{collection}/{document}/{rest=**} {
       allow read: if collection != 'social_events';
       allow write: if signedIn()
         && collection != 'social_events'
-        && collection != 'activity_demands';
+        && collection != 'activity_demands'
+        && collection != 'communities';
     }
   }
 }
