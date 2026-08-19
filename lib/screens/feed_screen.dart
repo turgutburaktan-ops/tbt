@@ -78,9 +78,7 @@ class FeedScreen extends StatelessWidget {
                     });
                   }
 
-                  if (docs.isEmpty) {
-                    return _EmptyFeed(mode: mode);
-                  }
+                  if (docs.isEmpty) return _EmptyFeed(mode: mode);
 
                   return RefreshIndicator(
                     onRefresh: () async =>
@@ -128,7 +126,6 @@ class FeedScreen extends StatelessWidget {
 
 class _SignedOutFeed extends StatelessWidget {
   const _SignedOutFeed();
-
   @override
   Widget build(BuildContext context) => const Center(
         child: Padding(
@@ -138,10 +135,8 @@ class _SignedOutFeed extends StatelessWidget {
             children: [
               Icon(Icons.dynamic_feed_outlined, size: 62, color: Colors.white38),
               SizedBox(height: 14),
-              Text(
-                'Sosyal akış için giriş yap',
-                style: TextStyle(fontSize: 19, fontWeight: FontWeight.w900),
-              ),
+              Text('Sosyal akış için giriş yap',
+                  style: TextStyle(fontSize: 19, fontWeight: FontWeight.w900)),
               SizedBox(height: 7),
               Text(
                 'Takip ettiğin kişilerin fotoğraflarını, keşiflerini ve etkinlik anılarını burada göreceksin.',
@@ -157,7 +152,6 @@ class _SignedOutFeed extends StatelessWidget {
 class _EmptyFeed extends StatelessWidget {
   final FeedMode mode;
   const _EmptyFeed({required this.mode});
-
   @override
   Widget build(BuildContext context) => ListView(
         physics: const AlwaysScrollableScrollPhysics(),
@@ -192,25 +186,9 @@ class _EmptyFeed extends StatelessWidget {
 }
 
 class _FeedPostCard extends StatelessWidget {
-  final String postId;
-  final String userId;
-  final String userName;
-  final String userPhotoUrl;
-  final String imageUrl;
-  final String caption;
-  final String spotName;
+  final String postId, userId, userName, userPhotoUrl, imageUrl, caption, spotName;
   final dynamic createdAt;
-
-  const _FeedPostCard({
-    required this.postId,
-    required this.userId,
-    required this.userName,
-    required this.userPhotoUrl,
-    required this.imageUrl,
-    required this.caption,
-    required this.spotName,
-    required this.createdAt,
-  });
+  const _FeedPostCard({required this.postId, required this.userId, required this.userName, required this.userPhotoUrl, required this.imageUrl, required this.caption, required this.spotName, required this.createdAt});
 
   String _timeLabel() {
     if (createdAt is! Timestamp) return '';
@@ -224,163 +202,58 @@ class _FeedPostCard extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(10, 5, 10, 13),
-      decoration: BoxDecoration(
-        color: const Color(0xFF111315),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFF24282D)),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+  Widget build(BuildContext context) => Container(
+        margin: const EdgeInsets.fromLTRB(10, 5, 10, 13),
+        decoration: BoxDecoration(
+          color: const Color(0xFF111315),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: const Color(0xFF24282D)),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           InkWell(
-            onTap: userId.isEmpty
-                ? null
-                : () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => UserProfileScreen(userId: userId),
-                      ),
-                    ),
+            onTap: userId.isEmpty ? null : () => Navigator.push(context, MaterialPageRoute(builder: (_) => UserProfileScreen(userId: userId))),
             child: Padding(
               padding: const EdgeInsets.fromLTRB(12, 11, 8, 10),
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    radius: 20,
-                    backgroundColor: const Color(0xFF22262A),
-                    backgroundImage:
-                        userPhotoUrl.isEmpty ? null : NetworkImage(userPhotoUrl),
-                    child: userPhotoUrl.isEmpty
-                        ? const Icon(Icons.person_outline, color: Colors.white60)
-                        : null,
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          userName,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w900,
-                            fontSize: 15,
-                          ),
-                        ),
-                        Row(
-                          children: [
-                            if (spotName.isNotEmpty) ...[
-                              const Icon(Icons.location_on_outlined,
-                                  size: 13, color: Colors.white46),
-                              const SizedBox(width: 2),
-                              Flexible(
-                                child: Text(
-                                  spotName,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                      fontSize: 11, color: Colors.white54),
-                                ),
-                              ),
-                              const Text('  •  ',
-                                  style: TextStyle(color: Colors.white30)),
-                            ],
-                            Text(_timeLabel(),
-                                style: const TextStyle(
-                                    fontSize: 11, color: Colors.white38)),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Icon(Icons.more_horiz_rounded, color: Colors.white38),
-                ],
-              ),
+              child: Row(children: [
+                CircleAvatar(radius: 20, backgroundColor: const Color(0xFF22262A), backgroundImage: userPhotoUrl.isEmpty ? null : NetworkImage(userPhotoUrl), child: userPhotoUrl.isEmpty ? const Icon(Icons.person_outline, color: Colors.white60) : null),
+                const SizedBox(width: 10),
+                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text(userName, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15)),
+                  Row(children: [
+                    if (spotName.isNotEmpty) ...[
+                      const Icon(Icons.location_on_outlined, size: 13, color: Colors.white54), const SizedBox(width: 2),
+                      Flexible(child: Text(spotName, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 11, color: Colors.white54))),
+                      const Text('  •  ', style: TextStyle(color: Colors.white30)),
+                    ],
+                    Text(_timeLabel(), style: const TextStyle(fontSize: 11, color: Colors.white38)),
+                  ]),
+                ])),
+                const Icon(Icons.more_horiz_rounded, color: Colors.white38),
+              ]),
             ),
           ),
           if (imageUrl.isNotEmpty)
-            AspectRatio(
-              aspectRatio: 4 / 5,
-              child: Image.network(
-                imageUrl,
-                width: double.infinity,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => Container(
-                  color: const Color(0xFF1A1D20),
-                  alignment: Alignment.center,
-                  child: const Icon(Icons.broken_image_outlined,
-                      color: Colors.white30, size: 52),
-                ),
-              ),
-            ),
+            AspectRatio(aspectRatio: 4 / 5, child: Image.network(imageUrl, width: double.infinity, fit: BoxFit.cover, errorBuilder: (_, __, ___) => Container(color: const Color(0xFF1A1D20), alignment: Alignment.center, child: const Icon(Icons.broken_image_outlined, color: Colors.white30, size: 52)))),
           Padding(
             padding: const EdgeInsets.fromLTRB(8, 4, 8, 0),
-            child: ContentEngagementBar(
-              collection: 'posts',
-              contentId: postId,
-              ownerId: userId,
-              title: caption.trim().isEmpty ? 'Fotoğraf paylaşımı' : caption,
-              sourceType: 'post',
-            ),
+            child: ContentEngagementBar(collection: 'posts', contentId: postId, ownerId: userId, title: caption.trim().isEmpty ? 'Fotoğraf paylaşımı' : caption, sourceType: 'post'),
           ),
           if (caption.trim().isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(13, 0, 13, 8),
-              child: Text.rich(
-                TextSpan(
-                  children: [
-                    TextSpan(
-                      text: '$userName ',
-                      style: const TextStyle(fontWeight: FontWeight.w900),
-                    ),
-                    TextSpan(
-                      text: caption,
-                      style: const TextStyle(color: Colors.white78, height: 1.35),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+            Padding(padding: const EdgeInsets.fromLTRB(13, 0, 13, 8), child: Text.rich(TextSpan(children: [TextSpan(text: '$userName ', style: const TextStyle(fontWeight: FontWeight.w900)), TextSpan(text: caption, style: const TextStyle(color: Colors.white70, height: 1.35))]))),
           if (spotName.isNotEmpty)
             Padding(
               padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
               child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF191C1F),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.place_outlined,
-                        size: 17, color: Color(0xFFB7BCC2)),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        spotName,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                            fontSize: 12, fontWeight: FontWeight.w800),
-                      ),
-                    ),
-                    const Text('Noktayı gör',
-                        style: TextStyle(
-                            color: Color(0xFFB7BCC2),
-                            fontSize: 11,
-                            fontWeight: FontWeight.w800)),
-                  ],
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
+                decoration: BoxDecoration(color: const Color(0xFF191C1F), borderRadius: BorderRadius.circular(12)),
+                child: Row(children: [
+                  const Icon(Icons.place_outlined, size: 17, color: Color(0xFFB7BCC2)), const SizedBox(width: 6),
+                  Expanded(child: Text(spotName, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800))),
+                  const Text('Noktayı gör', style: TextStyle(color: Color(0xFFB7BCC2), fontSize: 11, fontWeight: FontWeight.w800)),
+                ]),
               ),
             ),
-        ],
-      ),
-    );
-  }
+        ]),
+      );
 }
