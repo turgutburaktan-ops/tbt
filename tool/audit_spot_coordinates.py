@@ -1,0 +1,135 @@
+from __future__ import annotations
+
+import json
+import re
+from collections import defaultdict
+from pathlib import Path
+
+DATA_DIR = Path('lib/data')
+OUT_DIR = Path('build/spot_quality')
+OUT_FILE = OUT_DIR / 'coordinate_audit.json'
+
+MIN_LAT, MAX_LAT = 35.4, 42.3
+MIN_LNG, MAX_LNG = 25.4, 45.1
+
+PHOTO_SPOT_RE = re.compile(
+    r"PhotoSpot\((?P<body>.*?)\n\s*\)",
+    re.S,
+)
+FIELD_PATTERNS = {
+    'id': re.compile(r"id:\s*'([^']+)'"),
+    'name': re.compile(r"name:\s*'([^']+)'"),
+    'city': re.compile(r"city:\s*'([^']+)'"),
+    'latitude': re.compile(r"latitude:\s*(-?\d+(?:\.\d+)?)"),
+    'longitude': re.compile(r"longitude:\s*(-?\d+(?:\.\d+)?)"),
+}
+COORD_RE = re.compile(
+    r"'(?P<id>[^']+)'\s*:\s*SpotCoordinate\(\s*"
+    r"(?P<lat>-?\d+(?:\.\d+)?)\s*,\s*(?P<lng>-?\d+(?:\.\d+)?)\s*\)"
+)
+
+
+def parse_photo_spots(path: Path) -> list[dict]:
+    text = path.read_text(encoding='utf-8')
+    records: list[dict] = []
+    for match in PHOTO_SPOT_RE.finditer(text):
+        body = match.group('body')
+        record = {'source_file': str(path)}
+        ok = True
+        for field, pattern in FIELD_PATTERNS.items():
+            found = pattern.search(body)
+            if not found:
+                ok = False
+                break
+            record[field] = found.group(1)
+        if not ok:
+            continue
+        record['latitude'] = float(record['latitude'])
+        record['longitude'] = float(record['longitude'])
+        records.append(record)
+    return records
+
+
+def parse_coordinate_map(path: Path) -> list[dict]:
+    text = path.read_text(encoding='utf-8')
+    return [
+        {
+            'id': m.group('id'),
+            'name': '',
+            'city': '',
+            'latitude': float(m.group('lat')),
+            'longitude': float(m.group('lng')),
+            'source_file': str(path),
+        }
+        for m in COORD_RE.finditer(text)
+    ]
+
+
+def coord_key(item: dict, digits: int = 5) -> str:
+    return f"{item['latitude']:.{digits}f}|{item['longitude']:.{digits}f}"
+
+
+def main() -> None:
+    records: list[dict] = []
+    for path in sorted(DATA_DIR.glob('*.dart')):
+        if path.name == 'turkiye81_spot_coordinates.dart':
+            records.extend(parse_coordinate_map(path))
+        else:
+            records.extend(parse_photo_spots(path))
+
+    invalid_bounds = []
+    zero_coordinates = []
+    for item in records:
+        lat = item['latitude']
+        lng = item['longitude']
+        if lat == 0 or lng == 0:
+            zero_coordinates.append(item)
+        if not (MIN_LAT <= lat <= MAX_LAT and MIN_LNG <= lng <= MAX_LNG):
+            invalid_bounds.append(item)
+
+    by_exact = defaultdict(list)
+    for item in records:
+        by_exact[coord_key(item)].append(item)
+
+    duplicate_coordinates = []
+    for key, group in sorted(by_exact.items()):
+        unique_ids = {item['id'] for item in group}
+        if len(unique_ids) > 1:
+            duplicate_coordinates.append({'coordinate': key, 'records': group})
+
+    by_id = defaultdict(list)
+    for item in records:
+        by_id[item['id']].append(item)
+    duplicate_ids = [
+        {'id': item_id, 'records': group}
+        for item_id, group in sorted(by_id.items())
+        if len(group) > 1
+    ]
+
+    report = {
+        'summary': {
+            'parsed_records': len(records),
+            'invalid_bounds': len(invalid_bounds),
+            'zero_coordinates': len(zero_coordinates),
+            'duplicate_coordinate_groups': len(duplicate_coordinates),
+            'duplicate_id_groups': len(duplicate_ids),
+        },
+        'invalid_bounds': invalid_bounds,
+        'zero_coordinates': zero_coordinates,
+        'duplicate_coordinates': duplicate_coordinates,
+        'duplicate_ids': duplicate_ids,
+    }
+
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
+    OUT_FILE.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding='utf-8')
+
+    print(json.dumps(report['summary'], ensure_ascii=False, indent=2))
+    print(f'Audit report: {OUT_FILE}')
+
+    # Bariz koordinat hataları build kalitesini düşürür ve CI'da kırmızı olmalı.
+    if invalid_bounds or zero_coordinates:
+        raise SystemExit(2)
+
+
+if __name__ == '__main__':
+    main()
