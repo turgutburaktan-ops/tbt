@@ -39,6 +39,72 @@ def patch_camera_controller(root: Path) -> None:
     path = root / "android/src/main/kotlin/com/anies1212/iris_camera/CameraController.kt"
     text = path.read_text()
 
+    # Use the highest available still resolution by default. The original
+    # package defaults to HIGH (1920x1080), which is visibly below modern phone
+    # still-camera resolution.
+    text = text.replace(
+        "private var resolutionPreset: ResolutionPresetNative = ResolutionPresetNative.high",
+        "private var resolutionPreset: ResolutionPresetNative = ResolutionPresetNative.max",
+        1,
+    )
+
+    # Meter only AF on tap. Iris upstream combines AF + AE in setFocus(), which
+    # can push some vendor CameraX preview sessions into a grey/washed state.
+    text = text.replace(
+        "FocusMeteringAction.Builder(meteringPoint, FocusMeteringAction.FLAG_AF or FocusMeteringAction.FLAG_AE)",
+        "FocusMeteringAction.Builder(meteringPoint, FocusMeteringAction.FLAG_AF)",
+        1,
+    )
+
+    # When MAX leaves targetSize null, explicitly keep preview/capture on a 4:3
+    # sensor family so the viewfinder and JPEG are based on the same field of
+    # view instead of independently choosing 16:9/4:3 streams.
+    if "import androidx.camera.core.AspectRatio" not in text:
+        text = text.replace(
+            "import androidx.camera.core.Camera\n",
+            "import androidx.camera.core.Camera\nimport androidx.camera.core.AspectRatio\n",
+            1,
+        )
+
+    target_block = '''        if (targetSize != null) {
+            previewBuilder.setTargetResolution(targetSize)
+            captureBuilder.setTargetResolution(targetSize)
+            analysisBuilder.setTargetResolution(targetSize)
+        }
+'''
+    target_replacement = '''        if (targetSize != null) {
+            previewBuilder.setTargetResolution(targetSize)
+            captureBuilder.setTargetResolution(targetSize)
+            analysisBuilder.setTargetResolution(targetSize)
+        } else {
+            previewBuilder.setTargetAspectRatio(AspectRatio.RATIO_4_3)
+            captureBuilder.setTargetAspectRatio(AspectRatio.RATIO_4_3)
+            analysisBuilder.setTargetAspectRatio(AspectRatio.RATIO_4_3)
+        }
+'''
+    if target_block in text:
+        text = text.replace(target_block, target_replacement, 1)
+    elif "previewBuilder.setTargetAspectRatio(AspectRatio.RATIO_4_3)" not in text:
+        raise SystemExit("Iris target resolution block not found")
+
+    # CameraX documents MAXIMIZE_QUALITY as the still-capture mode that favors
+    # quality over latency; explicitly request JPEG 100 as well.
+    capture_block = '''        val captureUseCase = captureBuilder
+            .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
+            .setFlashMode(ImageCapture.FLASH_MODE_AUTO)
+            .build()
+'''
+    capture_replacement = '''        val captureUseCase = captureBuilder
+            .setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY)
+            .setJpegQuality(100)
+            .setFlashMode(ImageCapture.FLASH_MODE_AUTO)
+            .build()
+'''
+    if capture_block in text:
+        text = text.replace(capture_block, capture_replacement, 1)
+    elif "CAPTURE_MODE_MAXIMIZE_QUALITY" not in text:
+        raise SystemExit("Iris capture quality block not found")
+
     pattern = re.compile(
         r"        if \(exposureDurationMicros != null \|\| iso != null\) \{\n"
         r"            val camera2 = camera\?\.cameraControl\?\.let \{ Camera2CameraControl\.from\(it\) \}\n"
@@ -107,8 +173,9 @@ def patch_camera_controller(root: Path) -> None:
             }
         }"""
     text, count = pattern.subn(replacement, text, count=1)
-    if count != 1:
+    if count != 1 and "var manualCamera2: Camera2CameraControl?" not in text:
         raise SystemExit("Iris capturePhoto manual exposure block not found")
+
     path.write_text(text)
 
 
@@ -116,11 +183,18 @@ def patch_preview_composition(root: Path) -> None:
     path = root / "android/src/main/kotlin/com/anies1212/iris_camera/IrisCameraPlugin.kt"
     text = path.read_text()
     marker = "                val previewView = PreviewView(context)\n"
-    compatible = marker + "                previewView.implementationMode = PreviewView.ImplementationMode.COMPATIBLE\n"
-    if "PreviewView.ImplementationMode.COMPATIBLE" not in text:
+    compatible = marker + "                previewView.implementationMode = PreviewView.ImplementationMode.COMPATIBLE\n                previewView.scaleType = PreviewView.ScaleType.FIT_CENTER\n"
+    if "PreviewView.ScaleType.FIT_CENTER" not in text:
         if marker not in text:
             raise SystemExit("Iris PreviewView creation marker not found")
-        text = text.replace(marker, compatible, 1)
+        if "PreviewView.ImplementationMode.COMPATIBLE" in text:
+            text = text.replace(
+                "                previewView.implementationMode = PreviewView.ImplementationMode.COMPATIBLE\n",
+                "                previewView.implementationMode = PreviewView.ImplementationMode.COMPATIBLE\n                previewView.scaleType = PreviewView.ScaleType.FIT_CENTER\n",
+                1,
+            )
+        else:
+            text = text.replace(marker, compatible, 1)
     path.write_text(text)
 
 
@@ -146,7 +220,7 @@ def main() -> None:
     patch_camera_controller(root)
     patch_preview_composition(root)
     patch_flutter_focus_lock()
-    print(f"Iris Android capture + clamped true Pro manual exposure patch applied to {root.name}")
+    print(f"Iris Android MAX-quality capture + AF-only focus patch applied to {root.name}")
 
 
 if __name__ == "__main__":
