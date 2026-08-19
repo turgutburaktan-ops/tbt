@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import '../screens/community_profile_screen.dart';
 import '../screens/event_deep_link_screen.dart';
+import 'invite_link_service.dart';
 
 class DeepLinkService {
   DeepLinkService._();
@@ -27,31 +28,30 @@ class DeepLinkService {
   }
 
   void _open(Uri uri, GlobalKey<NavigatorState> navigatorKey) {
-    if (uri.scheme != 'tbt') return;
+    final target = InviteLinkService.instance.parse(uri);
+    if (target == null) return;
+
     final key = uri.toString();
     if (_recent.contains(key)) return;
     _recent.add(key);
     Future<void>.delayed(const Duration(seconds: 2), () => _recent.remove(key));
 
-    final id = uri.pathSegments.isEmpty ? '' : uri.pathSegments.first.trim();
-    if (id.isEmpty) return;
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final navigator = navigatorKey.currentState;
       if (navigator == null) return;
 
-      switch (uri.host) {
+      switch (target.type) {
         case 'community':
           navigator.push(
             MaterialPageRoute(
-              builder: (_) => CommunityProfileScreen(communityId: id),
+              builder: (_) => CommunityProfileScreen(communityId: target.id),
             ),
           );
           break;
         case 'event':
           navigator.push(
             MaterialPageRoute(
-              builder: (_) => EventDeepLinkScreen(eventId: id),
+              builder: (_) => EventDeepLinkScreen(eventId: target.id),
             ),
           );
           break;
