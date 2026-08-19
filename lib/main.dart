@@ -1,11 +1,11 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
+import 'screens/app_entry_gate.dart';
 import 'screens/campus_home_screen.dart';
 import 'screens/campus_profile_screen.dart';
 import 'screens/chat_inbox_screen.dart';
 import 'screens/communities_screen.dart';
-import 'screens/home_shell_screen.dart';
 import 'screens/notifications_screen.dart';
 import 'services/favorites_service.dart';
 import 'theme/app_theme.dart';
@@ -35,7 +35,7 @@ class BestPhotoSpotApp extends StatelessWidget {
         '/campus-profile': (_) => const CampusProfileScreen(),
         '/communities': (_) => const CommunitiesScreen(),
       },
-      home: const HomeScreen(),
+      home: const AppEntryGate(),
     );
   }
 }
