@@ -56,7 +56,22 @@ def patch_camera_controller(root: Path) -> None:
             manualCamera2 = camera?.cameraControl?.let { Camera2CameraControl.from(it) }
             val options = CaptureRequestOptions.Builder()
             val manager = context.getSystemService(Context.CAMERA_SERVICE) as CameraManager
-            val characteristics = selectedLensId?.let { manager.getCameraCharacteristics(it) }
+            val selectedCharacteristicsId = selectedLensId?.let { rawId ->
+                val physicalMarker = \"::physical::\"
+                val markerIndex = rawId.indexOf(physicalMarker)
+                if (markerIndex >= 0) {
+                    rawId.substring(markerIndex + physicalMarker.length)
+                } else {
+                    rawId
+                }
+            }
+            val characteristics = selectedCharacteristicsId?.let {
+                try {
+                    manager.getCameraCharacteristics(it)
+                } catch (_: Throwable) {
+                    null
+                }
+            }
             val exposureRange = characteristics?.get(CameraCharacteristics.SENSOR_INFO_EXPOSURE_TIME_RANGE)
             val sensitivityRange = characteristics?.get(CameraCharacteristics.SENSOR_INFO_SENSITIVITY_RANGE)
 
