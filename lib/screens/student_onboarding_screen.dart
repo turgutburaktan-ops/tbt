@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../data/turkey_selection_data.dart';
 import '../services/profile_service.dart';
+import '../widgets/searchable_selection_field.dart';
 
 class StudentOnboardingScreen extends StatefulWidget {
   const StudentOnboardingScreen({super.key});
@@ -58,7 +60,7 @@ class _StudentOnboardingScreenState extends State<StudentOnboardingScreen> {
   void _next() {
     if (_page == 0) {
       if (_university.text.trim().length < 3) {
-        _message('Üniversiteni yaz veya şimdilik geç.');
+        _message('Üniversiteni ara ve seç veya şimdilik geç.');
         return;
       }
       if (_department.text.trim().length < 2) {
@@ -235,26 +237,25 @@ class _SchoolStep extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           const Text(
-            'Sana kendi üniversitendeki toplulukları, etkinlikleri ve paylaşımları göstereceğiz.',
+            'Yazmaya başla, üniversite ve fakülteni listeden seç. Sana kendi kampüsündeki toplulukları ve etkinlikleri göstereceğiz.',
             textAlign: TextAlign.center,
             style: TextStyle(color: Colors.white60, height: 1.4),
           ),
           const SizedBox(height: 30),
-          TextField(
+          SearchableSelectionField(
             controller: university,
-            decoration: const InputDecoration(
-              labelText: 'Üniversite',
-              hintText: 'Örn. Fırat Üniversitesi',
-              prefixIcon: Icon(Icons.account_balance_outlined),
-            ),
+            options: turkeyUniversities,
+            labelText: 'Üniversite',
+            hintText: 'Örn. Fırat Üniversitesi',
+            prefixIcon: Icons.account_balance_outlined,
           ),
           const SizedBox(height: 12),
-          TextField(
+          SearchableSelectionField(
             controller: faculty,
-            decoration: const InputDecoration(
-              labelText: 'Fakülte (isteğe bağlı)',
-              prefixIcon: Icon(Icons.apartment_outlined),
-            ),
+            options: turkeyFaculties,
+            labelText: 'Fakülte (isteğe bağlı)',
+            hintText: 'Örn. Mühendislik Fakültesi',
+            prefixIcon: Icons.apartment_outlined,
           ),
           const SizedBox(height: 12),
           TextField(
