@@ -10,32 +10,67 @@ def configure_gradle() -> None:
     app_gradle = gradle if gradle.exists() else gradle_kts
     if not app_gradle.exists():
         raise SystemExit("Android app Gradle file not found")
+
     text = app_gradle.read_text()
     text = text.replace("compileSdkVersion flutter.compileSdkVersion", "compileSdkVersion 35")
     text = text.replace("compileSdk = flutter.compileSdkVersion", "compileSdk = 35")
     text = text.replace("minSdkVersion flutter.minSdkVersion", "minSdkVersion 26")
     text = text.replace("minSdk = flutter.minSdkVersion", "minSdk = 26")
     app_gradle.write_text(text)
+
     settings = Path("android/settings.gradle")
     settings_kts = Path("android/settings.gradle.kts")
     settings_file = settings if settings.exists() else settings_kts
     if not settings_file.exists():
         raise SystemExit("Android settings Gradle file not found")
+
     st = settings_file.read_text()
-    st = re.sub(r'(org\.jetbrains\.kotlin\.android[^\n]*version\s+["\'])[0-9.]+', r'\g<1>1.9.24', st)
+    st = re.sub(
+        r'(org\.jetbrains\.kotlin\.android[^\n]*version\s+["\'])[0-9.]+',
+        r'\g<1>2.2.20',
+        st,
+    )
     if "com.google.gms.google-services" not in st:
         if settings_file.suffix == ".kts":
-            st = st.replace("plugins {", 'plugins {\n    id("com.google.gms.google-services") version "4.4.2" apply false', 1)
+            st = st.replace(
+                "plugins {",
+                'plugins {\n    id("com.google.gms.google-services") version "4.4.2" apply false',
+                1,
+            )
         else:
-            st = st.replace("plugins {", 'plugins {\n    id "com.google.gms.google-services" version "4.4.2" apply false', 1)
+            st = st.replace(
+                "plugins {",
+                'plugins {\n    id "com.google.gms.google-services" version "4.4.2" apply false',
+                1,
+            )
     settings_file.write_text(st)
+
     text = app_gradle.read_text()
     if "com.google.gms.google-services" not in text:
         if app_gradle.suffix == ".kts":
-            text = text.replace("plugins {", 'plugins {\n    id("com.google.gms.google-services")', 1)
+            text = text.replace(
+                "plugins {",
+                'plugins {\n    id("com.google.gms.google-services")',
+                1,
+            )
         else:
-            text = text.replace("plugins {", 'plugins {\n    id "com.google.gms.google-services"', 1)
+            text = text.replace(
+                "plugins {",
+                'plugins {\n    id "com.google.gms.google-services"',
+                1,
+            )
         app_gradle.write_text(text)
+
+    gradle_properties = Path("android/gradle.properties")
+    if gradle_properties.exists():
+        gp = gradle_properties.read_text()
+        if "android.newDsl=" not in gp:
+            if gp and not gp.endswith("\n"):
+                gp += "\n"
+            gp += "android.newDsl=false\n"
+        else:
+            gp = re.sub(r'^android\.newDsl=.*$', 'android.newDsl=false', gp, flags=re.MULTILINE)
+        gradle_properties.write_text(gp)
 
 
 def configure_manifest() -> None:
