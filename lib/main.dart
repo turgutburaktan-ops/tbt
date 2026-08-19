@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import 'screens/campus_profile_screen.dart';
 import 'screens/chat_inbox_screen.dart';
+import 'screens/communities_screen.dart';
 import 'screens/home_shell_screen.dart';
 import 'screens/notifications_screen.dart';
 import 'services/favorites_service.dart';
@@ -30,6 +31,7 @@ class BestPhotoSpotApp extends StatelessWidget {
         '/messages': (_) => const ChatInboxScreen(),
         '/notifications': (_) => const NotificationsScreen(),
         '/campus-profile': (_) => const CampusProfileScreen(),
+        '/communities': (_) => const CommunitiesScreen(),
       },
       home: const HomeScreen(),
     );
