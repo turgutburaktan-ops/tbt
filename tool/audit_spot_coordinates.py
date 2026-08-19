@@ -12,10 +12,6 @@ OUT_FILE = OUT_DIR / 'coordinate_audit.json'
 MIN_LAT, MAX_LAT = 35.4, 42.3
 MIN_LNG, MAX_LNG = 25.4, 45.1
 
-PHOTO_SPOT_RE = re.compile(
-    r"PhotoSpot\((?P<body>.*?)\n\s*\)",
-    re.S,
-)
 FIELD_PATTERNS = {
     'id': re.compile(r"id:\s*'([^']+)'"),
     'name': re.compile(r"name:\s*'([^']+)'"),
@@ -29,24 +25,55 @@ COORD_RE = re.compile(
 )
 
 
+def photo_spot_bodies(text: str):
+    marker = 'PhotoSpot('
+    cursor = 0
+    while True:
+        start = text.find(marker, cursor)
+        if start < 0:
+            return
+        i = start + len(marker)
+        depth = 1
+        quote = None
+        escaped = False
+        while i < len(text) and depth > 0:
+            ch = text[i]
+            if quote is not None:
+                if escaped:
+                    escaped = False
+                elif ch == '\\':
+                    escaped = True
+                elif ch == quote:
+                    quote = None
+            else:
+                if ch in "'\"":
+                    quote = ch
+                elif ch == '(':
+                    depth += 1
+                elif ch == ')':
+                    depth -= 1
+            i += 1
+        if depth == 0:
+            yield text[start + len(marker): i - 1]
+            cursor = i
+        else:
+            return
+
+
 def parse_photo_spots(path: Path) -> list[dict]:
     text = path.read_text(encoding='utf-8')
     records: list[dict] = []
-    for match in PHOTO_SPOT_RE.finditer(text):
-        body = match.group('body')
+    for body in photo_spot_bodies(text):
         record = {'source_file': str(path)}
-        ok = True
         for field, pattern in FIELD_PATTERNS.items():
             found = pattern.search(body)
             if not found:
-                ok = False
                 break
             record[field] = found.group(1)
-        if not ok:
-            continue
-        record['latitude'] = float(record['latitude'])
-        record['longitude'] = float(record['longitude'])
-        records.append(record)
+        else:
+            record['latitude'] = float(record['latitude'])
+            record['longitude'] = float(record['longitude'])
+            records.append(record)
     return records
 
 
@@ -71,11 +98,18 @@ def coord_key(item: dict, digits: int = 5) -> str:
 
 def main() -> None:
     records: list[dict] = []
+    per_file: dict[str, int] = {}
     for path in sorted(DATA_DIR.glob('*.dart')):
         if path.name == 'turkiye81_spot_coordinates.dart':
-            records.extend(parse_coordinate_map(path))
+            parsed = parse_coordinate_map(path)
         else:
-            records.extend(parse_photo_spots(path))
+            parsed = parse_photo_spots(path)
+        if parsed:
+            per_file[str(path)] = len(parsed)
+            records.extend(parsed)
+
+    if not records:
+        raise SystemExit('Coordinate audit parsed zero records; parser/data format must be fixed.')
 
     invalid_bounds = []
     zero_coordinates = []
@@ -109,11 +143,13 @@ def main() -> None:
     report = {
         'summary': {
             'parsed_records': len(records),
+            'parsed_files': len(per_file),
             'invalid_bounds': len(invalid_bounds),
             'zero_coordinates': len(zero_coordinates),
             'duplicate_coordinate_groups': len(duplicate_coordinates),
             'duplicate_id_groups': len(duplicate_ids),
         },
+        'records_per_file': per_file,
         'invalid_bounds': invalid_bounds,
         'zero_coordinates': zero_coordinates,
         'duplicate_coordinates': duplicate_coordinates,
@@ -126,7 +162,7 @@ def main() -> None:
     print(json.dumps(report['summary'], ensure_ascii=False, indent=2))
     print(f'Audit report: {OUT_FILE}')
 
-    # Bariz koordinat hataları build kalitesini düşürür ve CI'da kırmızı olmalı.
+    # Sınır dışı veya sıfır koordinat kullanıcıyı açıkça yanlış yere götürür.
     if invalid_bounds or zero_coordinates:
         raise SystemExit(2)
 
