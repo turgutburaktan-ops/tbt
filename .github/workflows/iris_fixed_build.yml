@@ -62,6 +62,9 @@ jobs:
       - name: Optimize GPU editor preview
         run: python3 tool/patch_gpu_editor_runtime.py
 
+      - name: Add event city autocomplete
+        run: python3 tool/patch_social_event_city_autocomplete.py
+
       - name: Analyze
         continue-on-error: true
         run: |
