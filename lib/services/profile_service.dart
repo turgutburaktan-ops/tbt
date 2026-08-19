@@ -83,4 +83,16 @@ class ProfileService {
       'updatedAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
   }
+
+  Future<void> completeOnboarding({required bool skipped}) async {
+    final user = _auth.currentUser;
+    if (user == null) throw Exception('Onboarding için giriş yapmalısın.');
+    await _firestore.collection('users').doc(user.uid).set({
+      'onboardingRequired': false,
+      'onboardingCompleted': true,
+      'onboardingSkipped': skipped,
+      'onboardingCompletedAt': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  }
 }
