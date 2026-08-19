@@ -4,6 +4,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 
+import 'app_notification_service.dart';
+
 class PostService {
   PostService._();
   static final PostService instance = PostService._();
@@ -107,7 +109,6 @@ class PostService {
     };
     await memoryRef.set(memoryData);
 
-    // Sadece herkese açık etkinlik anıları genel sosyal akışa yansır.
     if (visibility == 'public') {
       await _firestore.collection('posts').doc(memoryRef.id).set({
         ...memoryData,
@@ -116,6 +117,17 @@ class PostService {
         'commentsCount': 0,
       });
     }
+
+    try {
+      await AppNotificationService.instance.notifyUsers(
+        userIds: participants.where((id) => id != user.uid),
+        type: 'event_memory',
+        title: '$userName etkinliğe yeni bir anı ekledi',
+        body: eventTitle.trim(),
+        sourceId: eventId,
+        actorId: user.uid,
+      );
+    } catch (_) {}
   }
 
   Stream<QuerySnapshot<Map<String, dynamic>>> eventMemories(String eventId) =>
