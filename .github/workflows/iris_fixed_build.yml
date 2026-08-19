@@ -56,6 +56,9 @@ jobs:
       - name: Patch Iris Android capture
         run: python3 tool/patch_iris_camera.py
 
+      - name: Enable physical 0.5x and tele lenses
+        run: python3 tool/patch_iris_physical_lenses.py
+
       - name: Analyze
         run: |
           rm -rf test
@@ -67,7 +70,7 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: en-iyi-cekim-noktasi-ai-camera-apk
+          name: en-iyi-cekim-noktasi-pro-camera-apk
           path: build/app/outputs/flutter-apk/app-release.apk
           if-no-files-found: error
           retention-days: 7
