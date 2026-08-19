@@ -128,6 +128,7 @@ def copy_firebase() -> None:
 def patch_app_features() -> None:
     subprocess.run(["python3", "tool/patch_explore_spot_repository.py"], check=True)
     subprocess.run(["python3", "tool/patch_messages_navigation.py"], check=True)
+    subprocess.run(["python3", "tool/patch_social_event_invites.py"], check=True)
 
 
 def main() -> None:
