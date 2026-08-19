@@ -1,9 +1,11 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import '../data/turkey_selection_data.dart';
 import '../models/social_event.dart';
 import '../services/activity_demand_service.dart';
 import '../services/social_event_service.dart';
+import '../widgets/searchable_selection_field.dart';
 import 'event_location_picker_screen.dart';
 
 class ActivityDemandScreen extends StatefulWidget {
@@ -97,7 +99,7 @@ class _ActivityDemandScreenState extends State<ActivityDemandScreen> {
       return;
     }
     if (_cityController.text.trim().length < 2) {
-      _message('Önce şehir yazmalısın.');
+      _message('Önce şehir seçmelisin.');
       return;
     }
     final location = await Navigator.push<EventLocationSelection>(
@@ -172,13 +174,13 @@ class _ActivityDemandScreenState extends State<ActivityDemandScreen> {
                 style: TextStyle(color: Colors.white60, height: 1.45),
               ),
               const SizedBox(height: 16),
-              TextField(
+              SearchableSelectionField(
                 controller: _cityController,
+                options: turkeyCities,
+                labelText: 'Şehir',
+                hintText: 'Yazmaya başla ve seç',
+                prefixIcon: Icons.location_city_outlined,
                 onChanged: (_) => setState(() {}),
-                decoration: const InputDecoration(
-                  labelText: 'Şehir',
-                  prefixIcon: Icon(Icons.location_city_outlined),
-                ),
               ),
               const SizedBox(height: 18),
               Wrap(
