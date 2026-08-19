@@ -14,8 +14,21 @@ service cloud.firestore {
         ));
     }
 
+    function validCommunityHostCreate() {
+      return !('communityId' in request.resource.data)
+        || request.resource.data.communityId == null
+        || request.resource.data.communityId == ''
+        || (
+          signedIn()
+          && exists(/databases/$(database)/documents/communities/$(request.resource.data.communityId))
+          && get(/databases/$(database)/documents/communities/$(request.resource.data.communityId)).data.adminIds.hasAny([request.auth.uid])
+        );
+    }
+
     function protectedEventFieldsUnchanged() {
       return request.resource.data.hostId == resource.data.hostId
+        && request.resource.data.communityId == resource.data.communityId
+        && request.resource.data.communityName == resource.data.communityName
         && request.resource.data.accessType == resource.data.accessType
         && request.resource.data.ticketPriceMinor == resource.data.ticketPriceMinor
         && request.resource.data.currency == resource.data.currency
@@ -62,7 +75,8 @@ service cloud.firestore {
         && request.resource.data.hostId == request.auth.uid
         && request.resource.data.status == 'open'
         && validPaidCreate()
-        && validPrivacyCreate();
+        && validPrivacyCreate()
+        && validCommunityHostCreate();
       allow update: if isAdmin() || (signedIn() && eventVisible(resource.data) && protectedEventFieldsUnchanged() && (
         participantJoinOrLeaveOnly()
         || (resource.data.hostId == request.auth.uid
