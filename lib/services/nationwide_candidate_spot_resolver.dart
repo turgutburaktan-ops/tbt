@@ -3,6 +3,7 @@ import '../data/official_photo_spot_candidates_supplement.dart';
 import '../data/spot_coordinate_verification_registry.dart';
 import '../data/turkiye81_spot_candidates.dart';
 import '../data/turkiye81_spot_coordinates.dart';
+import '../data/verified_travel_places.dart';
 import '../models/photo_spot.dart';
 
 /// Türkiye genelindeki kaynak adaylarını yalnızca kendilerine ait açıkça
@@ -49,8 +50,19 @@ class NationwideCandidateSpotResolver {
       );
     }
 
+    // Elle kaynak kontrolü tamamlanan gezilecek yer çekirdeği her zaman son
+    // sözü söyler. Aynı ID eski demo/otomatik katalogda başka ad veya pinle
+    // bulunuyorsa önce kaldırılır; böylece doğrulanmış koordinat ezilemez.
+    for (final verified in verifiedTravelPlaces) {
+      resultByPlace.removeWhere((_, spot) => spot.id == verified.id);
+      resultByPlace[_placeKey(verified.city, verified.name)] = verified;
+    }
+
     final result = resultByPlace.values.toList()
       ..sort((a, b) {
+        final aVerified = a.tags.contains('Doğrulanmış');
+        final bVerified = b.tags.contains('Doğrulanmış');
+        if (aVerified != bVerified) return aVerified ? -1 : 1;
         final city = a.city.compareTo(b.city);
         return city != 0 ? city : a.name.compareTo(b.name);
       });
