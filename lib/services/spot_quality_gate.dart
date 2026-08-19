@@ -1,3 +1,4 @@
+import '../data/spot_coordinate_verification_registry.dart';
 import '../models/photo_spot.dart';
 
 /// Son savunma hattı: katalog kaynaklarından bağımsız olarak haritaya çıkmadan
@@ -21,7 +22,8 @@ class SpotQualityGate {
 
     // 5 ondalık basamak yaklaşık metre seviyesinde aynı pini temsil eder.
     // Farklı isim/şehirlerin birebir aynı pini paylaşması otomatik veri
-    // çoğaltmanın güçlü işaretidir; doğrulanana kadar tamamını gizleriz.
+    // çoğaltmanın güçlü işaretidir. Bağımsız doğrulanmış kayıt varsa o kazanır;
+    // böylece eski bir kopya doğru destinasyonu görünmez yapamaz.
     final byCoordinate = <String, List<PhotoSpot>>{};
     for (final spot in valid) {
       final key = '${spot.latitude.toStringAsFixed(5)}|'
@@ -32,7 +34,20 @@ class SpotQualityGate {
     final suspiciousIds = <String>{};
     for (final group in byCoordinate.values) {
       if (group.length < 2) continue;
-      final placeKeys = group.map((spot) => _placeKey(spot.city, spot.name)).toSet();
+
+      final verified = group
+          .where((spot) => isSpotCoordinateIndependentlyVerified(spot.id))
+          .toList(growable: false);
+      if (verified.length == 1) {
+        final winner = verified.single.id;
+        suspiciousIds.addAll(
+          group.where((spot) => spot.id != winner).map((spot) => spot.id),
+        );
+        continue;
+      }
+
+      final placeKeys =
+          group.map((spot) => _placeKey(spot.city, spot.name)).toSet();
       if (placeKeys.length > 1) {
         suspiciousIds.addAll(group.map((spot) => spot.id));
       }
