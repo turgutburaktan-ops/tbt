@@ -9,6 +9,13 @@ DATA_DIR = Path('lib/data')
 OUT_DIR = Path('build/spot_quality')
 OUT_FILE = OUT_DIR / 'coordinate_audit.json'
 
+VERIFIED_TRAVEL_FILE = DATA_DIR / 'verified_travel_places.dart'
+EVIDENCE_FILE = DATA_DIR / 'spot_coordinate_verification_registry.dart'
+IMAGE_FILES = [
+    DATA_DIR / 'verified_travel_image_registry.dart',
+    DATA_DIR / 'spot_image_registry.dart',
+]
+
 MIN_LAT, MAX_LAT = 35.4, 42.3
 MIN_LNG, MAX_LNG = 25.4, 45.1
 
@@ -22,6 +29,14 @@ FIELD_PATTERNS = {
 COORD_RE = re.compile(
     r"'(?P<id>[^']+)'\s*:\s*SpotCoordinate\(\s*"
     r"(?P<lat>-?\d+(?:\.\d+)?)\s*,\s*(?P<lng>-?\d+(?:\.\d+)?)\s*\)"
+)
+EVIDENCE_ID_RE = re.compile(
+    r"^\s*'([^']+)'\s*:\s*SpotCoordinateVerificationEvidence\(",
+    re.MULTILINE,
+)
+IMAGE_ID_RE = re.compile(
+    r"^\s*'([^']+)'\s*:\s*SpotImageInfo\(",
+    re.MULTILINE,
 )
 
 
@@ -92,6 +107,12 @@ def parse_coordinate_map(path: Path) -> list[dict]:
     ]
 
 
+def parse_registry_ids(path: Path, pattern: re.Pattern[str]) -> set[str]:
+    if not path.exists():
+        return set()
+    return set(pattern.findall(path.read_text(encoding='utf-8')))
+
+
 def coord_key(item: dict, digits: int = 5) -> str:
     return f"{item['latitude']:.{digits}f}|{item['longitude']:.{digits}f}"
 
@@ -140,6 +161,25 @@ def main() -> None:
         if len(group) > 1
     ]
 
+    verified_travel = parse_photo_spots(VERIFIED_TRAVEL_FILE)
+    verified_ids = {item['id'] for item in verified_travel}
+    evidence_ids = parse_registry_ids(EVIDENCE_FILE, EVIDENCE_ID_RE)
+    image_ids: set[str] = set()
+    for path in IMAGE_FILES:
+        image_ids.update(parse_registry_ids(path, IMAGE_ID_RE))
+
+    missing_evidence = sorted(verified_ids - evidence_ids)
+    missing_images = sorted(verified_ids - image_ids)
+
+    verified_by_coord = defaultdict(list)
+    for item in verified_travel:
+        verified_by_coord[coord_key(item)].append(item)
+    verified_duplicate_coordinates = [
+        {'coordinate': key, 'records': group}
+        for key, group in sorted(verified_by_coord.items())
+        if len({item['id'] for item in group}) > 1
+    ]
+
     report = {
         'summary': {
             'parsed_records': len(records),
@@ -148,12 +188,24 @@ def main() -> None:
             'zero_coordinates': len(zero_coordinates),
             'duplicate_coordinate_groups': len(duplicate_coordinates),
             'duplicate_id_groups': len(duplicate_ids),
+            'verified_travel_places': len(verified_travel),
+            'verified_travel_missing_evidence': len(missing_evidence),
+            'verified_travel_missing_images': len(missing_images),
+            'verified_travel_duplicate_coordinate_groups': len(
+                verified_duplicate_coordinates
+            ),
         },
         'records_per_file': per_file,
         'invalid_bounds': invalid_bounds,
         'zero_coordinates': zero_coordinates,
         'duplicate_coordinates': duplicate_coordinates,
         'duplicate_ids': duplicate_ids,
+        'verified_travel': {
+            'records': verified_travel,
+            'missing_evidence_ids': missing_evidence,
+            'missing_image_ids': missing_images,
+            'duplicate_coordinates': verified_duplicate_coordinates,
+        },
     }
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -162,8 +214,15 @@ def main() -> None:
     print(json.dumps(report['summary'], ensure_ascii=False, indent=2))
     print(f'Audit report: {OUT_FILE}')
 
-    # Sınır dışı veya sıfır koordinat kullanıcıyı açıkça yanlış yere götürür.
-    if invalid_bounds or zero_coordinates:
+    # Sınır dışı/sıfır koordinat kullanıcıyı yanlış yere götürür. Doğrulanmış
+    # çekirdekte kanıt veya görsel eksikliği de yayın kalitesini düşürür.
+    if (
+        invalid_bounds
+        or zero_coordinates
+        or missing_evidence
+        or missing_images
+        or verified_duplicate_coordinates
+    ):
         raise SystemExit(2)
 
 
