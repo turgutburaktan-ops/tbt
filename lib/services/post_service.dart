@@ -22,28 +22,9 @@ class PostService {
     double? longitude,
     List<String> taggedUserIds = const <String>[],
     List<String> taggedUserNames = const <String>[],
-    String? eventId,
-    String? eventTitle,
   }) async {
     final user = _auth.currentUser;
     if (user == null) throw Exception('Fotoğraf paylaşmak için giriş yapmalısın.');
-
-    final cleanEventId = (eventId ?? '').trim();
-    if (cleanEventId.isNotEmpty) {
-      final event = await _firestore.collection('social_events').doc(cleanEventId).get();
-      final data = event.data();
-      if (data == null) throw Exception('Etkinlik bulunamadı.');
-      final participants = (data['participantIds'] as List? ?? const []).map((e) => e.toString()).toList();
-      if (!participants.contains(user.uid)) throw Exception('Bu etkinliğe yalnızca katılımcılar anı ekleyebilir.');
-      final rawStart = data['startsAt'];
-      final startsAt = rawStart is Timestamp ? rawStart.toDate() : DateTime.tryParse(rawStart?.toString() ?? '');
-      if (startsAt != null && startsAt.isAfter(DateTime.now())) {
-        throw Exception('Etkinlik başlamadan anı ekleyemezsin.');
-      }
-      if ((data['status'] ?? 'open').toString() == 'cancelled') {
-        throw Exception('İptal edilen etkinliğe anı eklenemez.');
-      }
-    }
 
     final postRef = _firestore.collection('posts').doc();
     final lowerPath = image.path.toLowerCase();
@@ -65,20 +46,80 @@ class PostService {
       'spotName': spotName.trim(),
       'latitude': latitude,
       'longitude': longitude,
-      'eventId': cleanEventId.isEmpty ? null : cleanEventId,
-      'eventTitle': cleanEventId.isEmpty ? null : (eventTitle ?? '').trim(),
-      'sourceType': cleanEventId.isEmpty ? 'post' : 'event_memory',
       'taggedUserIds': taggedUserIds.toSet().toList(),
       'taggedUserNames': taggedUserNames.toSet().toList(),
       'likesCount': 0,
       'commentsCount': 0,
+      'sourceType': 'post',
       'createdAt': FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
     });
   }
 
+  Future<void> createEventMemory({
+    required File image,
+    required String caption,
+    required String eventId,
+    required String eventTitle,
+    required String spotName,
+    double? latitude,
+    double? longitude,
+  }) async {
+    final user = _auth.currentUser;
+    if (user == null) throw Exception('Anı eklemek için giriş yapmalısın.');
+
+    final event = await _firestore.collection('social_events').doc(eventId).get();
+    final eventData = event.data();
+    if (eventData == null) throw Exception('Etkinlik bulunamadı.');
+    final participants = (eventData['participantIds'] as List? ?? const []).map((e) => e.toString()).toList();
+    if (!participants.contains(user.uid)) throw Exception('Bu etkinliğe yalnızca katılımcılar anı ekleyebilir.');
+    final rawStart = eventData['startsAt'];
+    final startsAt = rawStart is Timestamp ? rawStart.toDate() : DateTime.tryParse(rawStart?.toString() ?? '');
+    if (startsAt != null && startsAt.isAfter(DateTime.now())) throw Exception('Etkinlik başlamadan anı ekleyemezsin.');
+    if ((eventData['status'] ?? 'open').toString() == 'cancelled') throw Exception('İptal edilen etkinliğe anı eklenemez.');
+
+    final memoryRef = _firestore.collection('event_memories').doc();
+    final lowerPath = image.path.toLowerCase();
+    final extension = lowerPath.endsWith('.png') ? 'png' : 'jpg';
+    final storageRef = _storage.ref().child('users/${user.uid}/event_memories/$eventId/${memoryRef.id}.$extension');
+    final metadata = SettableMetadata(contentType: extension == 'png' ? 'image/png' : 'image/jpeg');
+    final uploadTask = await storageRef.putFile(image, metadata);
+    final imageUrl = await uploadTask.ref.getDownloadURL();
+    final userName = user.displayName?.trim().isNotEmpty == true ? user.displayName! : 'Katılımcı';
+    final visibility = (eventData['visibility'] ?? 'public').toString();
+
+    final memoryData = <String, dynamic>{
+      'id': memoryRef.id,
+      'eventId': eventId,
+      'eventTitle': eventTitle.trim(),
+      'eventVisibility': visibility,
+      'userId': user.uid,
+      'userName': userName,
+      'userPhotoUrl': user.photoURL ?? '',
+      'imageUrl': imageUrl,
+      'storagePath': storageRef.fullPath,
+      'caption': caption.trim(),
+      'spotName': spotName.trim(),
+      'latitude': latitude,
+      'longitude': longitude,
+      'createdAt': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    };
+    await memoryRef.set(memoryData);
+
+    // Sadece herkese açık etkinlik anıları genel sosyal akışa yansır.
+    if (visibility == 'public') {
+      await _firestore.collection('posts').doc(memoryRef.id).set({
+        ...memoryData,
+        'sourceType': 'event_memory',
+        'likesCount': 0,
+        'commentsCount': 0,
+      });
+    }
+  }
+
   Stream<QuerySnapshot<Map<String, dynamic>>> eventMemories(String eventId) =>
-      _firestore.collection('posts').where('eventId', isEqualTo: eventId).limit(120).snapshots();
+      _firestore.collection('event_memories').where('eventId', isEqualTo: eventId).limit(120).snapshots();
 
   Stream<QuerySnapshot<Map<String, dynamic>>> myPosts() {
     final user = _auth.currentUser;
