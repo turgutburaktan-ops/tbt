@@ -52,15 +52,16 @@ helper_replacement = r'''  List<iris.CameraLensDescriptor> get _backLenses =>
   iris.CameraLensDescriptor? get _ultraBack {
     final main = _mainBack;
     final mainFov = main == null ? null : _usableFov(main);
-    if (mainFov == null) {
+    if (main == null || mainFov == null) {
       for (final lens in _backLenses) {
         if (lens.category == iris.CameraLensCategory.ultraWide) return lens;
       }
       return null;
     }
+    final mainId = main.id;
 
     final candidates = _backLenses.where((lens) {
-      if (lens.id == main.id) return false;
+      if (lens.id == mainId) return false;
       final fov = _usableFov(lens);
       // Only call it 0.5x when it is materially wider than the selected 1x.
       return fov != null && fov >= mainFov * 1.18;
@@ -73,15 +74,16 @@ helper_replacement = r'''  List<iris.CameraLensDescriptor> get _backLenses =>
   iris.CameraLensDescriptor? get _teleBack {
     final main = _mainBack;
     final mainFov = main == null ? null : _usableFov(main);
-    if (mainFov == null) {
+    if (main == null || mainFov == null) {
       for (final lens in _backLenses) {
         if (lens.category == iris.CameraLensCategory.telephoto) return lens;
       }
       return null;
     }
+    final mainId = main.id;
 
     final candidates = _backLenses.where((lens) {
-      if (lens.id == main.id) return false;
+      if (lens.id == mainId) return false;
       final fov = _usableFov(lens);
       return fov != null && fov <= mainFov * .82;
     }).toList();
