@@ -9,8 +9,17 @@ service cloud.firestore {
       return signedIn() && request.auth.token.admin == true;
     }
 
-    function isPaid(data) {
-      return data.accessType == 'paid';
+    function eventVisible(data) {
+      return !('visibility' in data)
+        || data.visibility == 'public'
+        || (
+          signedIn()
+          && (
+            data.hostId == request.auth.uid
+            || (('participantIds' in data) && data.participantIds.hasAny([request.auth.uid]))
+            || (('allowedUserIds' in data) && data.allowedUserIds.hasAny([request.auth.uid]))
+          )
+        );
     }
 
     function protectedEventFieldsUnchanged() {
@@ -41,6 +50,13 @@ service cloud.firestore {
         );
     }
 
+    function validPrivacyCreate() {
+      return !('visibility' in request.resource.data)
+        || request.resource.data.visibility in [
+          'public', 'followers', 'mutuals', 'closeFriends', 'selectedPeople', 'private'
+        ];
+    }
+
     function participantJoinOrLeaveOnly() {
       let oldList = resource.data.participantIds;
       let newList = request.resource.data.participantIds;
@@ -62,18 +78,18 @@ service cloud.firestore {
     }
 
     match /social_events/{eventId} {
-      allow read: if true;
+      allow read: if eventVisible(resource.data);
 
-      // Free events remain compatible with older installed app versions.
-      // Paid events always require the protected trust/payment fields.
       allow create: if signedIn()
         && request.resource.data.hostId == request.auth.uid
         && request.resource.data.status == 'open'
-        && validPaidCreate();
+        && validPaidCreate()
+        && validPrivacyCreate();
 
       allow update: if isAdmin()
         || (
           signedIn()
+          && eventVisible(resource.data)
           && protectedEventFieldsUnchanged()
           && (
             participantJoinOrLeaveOnly()
@@ -100,12 +116,12 @@ service cloud.firestore {
     }
 
     match /{collection}/{document} {
-      allow read: if true;
+      allow read: if collection != 'social_events';
       allow write: if signedIn() && collection != 'social_events';
     }
 
     match /{collection}/{document}/{rest=**} {
-      allow read: if true;
+      allow read: if collection != 'social_events';
       allow write: if signedIn() && collection != 'social_events';
     }
   }
