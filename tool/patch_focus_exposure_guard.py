@@ -1,5 +1,10 @@
 from pathlib import Path
 import re
+import subprocess
+
+# Apply the full-screen/pro/preset/lens camera upgrade first. The focus guard
+# below then protects the upgraded camera from exposure jumps during tap focus.
+subprocess.run(["python3", "tool/patch_camera_experience_v3.py"], check=True)
 
 path = Path('lib/screens/camera_screen.dart')
 text = path.read_text(encoding='utf-8')
@@ -10,7 +15,9 @@ new_tap = '''  Future<void> _tapFocus(TapDownDetails details, BoxConstraints c) 
       (details.localPosition.dx / c.maxWidth).clamp(0.0, 1.0),
       (details.localPosition.dy / c.maxHeight).clamp(0.0, 1.0),
     );
-    final stableEv = await _safeEv(_ev);
+    final stableEv = await _safeEv(
+      _mode == 'Pro' ? _proExposureStops() + _ev : _ev,
+    );
     _focusPoint = point;
     try {
       // Some camera implementations briefly meter exposure when AF is moved.
@@ -28,7 +35,6 @@ new_tap = '''  Future<void> _tapFocus(TapDownDetails details, BoxConstraints c) 
     } catch (_) {}
     if (mounted) {
       setState(() {
-        _ev = stableEv;
         _tip = 'Odaklandı • pozlama korunuyor';
       });
     }
@@ -43,7 +49,9 @@ new_lock = '''  Future<void> _longPressLock(
       (details.localPosition.dx / c.maxWidth).clamp(0.0, 1.0),
       (details.localPosition.dy / c.maxHeight).clamp(0.0, 1.0),
     );
-    final stableEv = await _safeEv(_ev);
+    final stableEv = await _safeEv(
+      _mode == 'Pro' ? _proExposureStops() + _ev : _ev,
+    );
     _focusPoint = point;
     _locked = true;
     try {
@@ -60,8 +68,7 @@ new_lock = '''  Future<void> _longPressLock(
     } catch (_) {}
     if (mounted) {
       setState(() {
-        _ev = stableEv;
-        _tip = 'ODAK KİLİTLİ • pozlama otomatik • açmak için uzun bas';
+        _tip = 'ODAK KİLİTLİ • pozlama korunuyor • açmak için uzun bas';
       });
     }
   }
@@ -88,4 +95,4 @@ if lock_count != 1:
     raise SystemExit('focus lock block not found')
 
 path.write_text(text, encoding='utf-8')
-print('Tap focus exposure guard applied')
+print('Camera v3 + tap focus exposure guard applied')
