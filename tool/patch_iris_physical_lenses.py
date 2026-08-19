@@ -77,16 +77,9 @@ def patch_controller(root: Path) -> None:
                 val logicalCharacteristics = manager.getCameraCharacteristics(cameraId)
                 val logicalFacing = logicalCharacteristics.get(CameraCharacteristics.LENS_FACING)
 
-                appendDescriptor(
-                    descriptorId = cameraId,
-                    displayName = "Camera $cameraId",
-                    characteristics = logicalCharacteristics,
-                    fallbackFacing = logicalFacing,
-                )
-
-                // On many modern phones the 0.5x / tele cameras are physical
-                // members of one logical back camera and do not appear in
-                // cameraIdList. Expose those sensors as normal lens descriptors.
+                // Physical sensors must be listed before the logical wrapper.
+                // Some logical multi-camera descriptors report the shortest
+                // focal length and may otherwise look like an ultra-wide lens.
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                     logicalCharacteristics.physicalCameraIds.forEach { physicalId ->
                         try {
@@ -106,6 +99,13 @@ def patch_controller(root: Path) -> None:
                         }
                     }
                 }
+
+                appendDescriptor(
+                    descriptorId = cameraId,
+                    displayName = "Camera $cameraId",
+                    characteristics = logicalCharacteristics,
+                    fallbackFacing = logicalFacing,
+                )
             }
         } catch (error: CameraAccessException) {
             Log.e("IrisCamera", "Failed to list cameras", error)
