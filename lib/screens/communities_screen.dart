@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../services/community_service.dart';
 import '../services/invite_link_service.dart';
 import 'community_profile_screen.dart';
+import 'invite_qr_scanner_screen.dart';
 import 'invite_qr_screen.dart';
 
 class CommunitiesScreen extends StatefulWidget {
@@ -77,7 +78,17 @@ class _CommunitiesScreenState extends State<CommunitiesScreen> {
       appBar: AppBar(
         backgroundColor: const Color(0xFF090A0C),
         title: const Text('Topluluklar'),
-        actions: [IconButton(onPressed: _create, icon: const Icon(Icons.add_circle_outline), tooltip: 'Topluluk oluştur')],
+        actions: [
+          IconButton(
+            tooltip: 'Davet QR oku',
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const InviteQrScannerScreen()),
+            ),
+            icon: const Icon(Icons.qr_code_scanner_rounded),
+          ),
+          IconButton(onPressed: _create, icon: const Icon(Icons.add_circle_outline), tooltip: 'Topluluk oluştur'),
+        ],
       ),
       body: Column(children: [
         Padding(
