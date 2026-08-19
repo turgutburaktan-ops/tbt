@@ -168,15 +168,15 @@ class _CommunityHubState extends State<_CommunityHub> {
                   ),
                 ),
                 IconButton(
-                  tooltip: 'Kampüs profilim',
+                  tooltip: 'Kampüs',
                   onPressed: () {
                     if (FirebaseAuth.instance.currentUser == null) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Kampüs profili için giriş yapmalısın.')),
+                        const SnackBar(content: Text('Kampüs alanı için giriş yapmalısın.')),
                       );
                       return;
                     }
-                    Navigator.pushNamed(context, '/campus-profile');
+                    Navigator.pushNamed(context, '/campus');
                   },
                   icon: const Icon(Icons.school_outlined),
                 ),
