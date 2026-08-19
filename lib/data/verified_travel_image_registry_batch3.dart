@@ -1,0 +1,90 @@
+import 'spot_image_registry.dart';
+
+/// Doğa ağırlıklı üçüncü doğrulanmış grup için elle kontrol edilmiş gerçek
+/// fotoğraflar. Otomatik arama bu kayıtların önüne geçemez.
+const verifiedTravelImageRegistryBatch3 = <String, SpotImageInfo>{
+  'uzungol': SpotImageInfo(
+    networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Uzungol_Lake.jpg?width=1280',
+    sourceName: 'Wikimedia Commons',
+    author: 'Cetintas555',
+    license: 'CC BY-SA 4.0',
+    sourcePage: 'https://commons.wikimedia.org/wiki/File:Uzungol_Lake.jpg',
+  ),
+  'rize-ayder': SpotImageInfo(
+    networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Rize%2C_Ayder_Yaylas%C4%B1.jpg?width=1280',
+    sourceName: 'Wikimedia Commons',
+    author: 'Phoenix2351',
+    license: 'CC BY-SA 4.0',
+    sourcePage: 'https://commons.wikimedia.org/wiki/File:Rize%2C_Ayder_Yaylas%C4%B1.jpg',
+  ),
+  'oludeniz': SpotImageInfo(
+    networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Babadag_view_of_Oludeniz.jpg?width=1280',
+    sourceName: 'Wikimedia Commons',
+    author: 'Aslı Yılmaz',
+    license: 'CC BY-SA 4.0',
+    sourcePage: 'https://commons.wikimedia.org/wiki/File:Babadag_view_of_Oludeniz.jpg',
+  ),
+  'kelebekler-vadisi': SpotImageInfo(
+    networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Kelebekler_Vadisi_-_Butterfly_Valley%2C_Turkey.jpg?width=1280',
+    sourceName: 'Wikimedia Commons',
+    author: 'Htkava',
+    license: 'CC BY-SA 3.0',
+    sourcePage: 'https://commons.wikimedia.org/wiki/File:Kelebekler_Vadisi_-_Butterfly_Valley%2C_Turkey.jpg',
+  ),
+  'saklikent-kanyonu': SpotImageInfo(
+    networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Sakl%C4%B1kent_kanyon.jpg?width=1280',
+    sourceName: 'Wikimedia Commons',
+    author: 'Buse Kocaaslan',
+    license: 'CC BY-SA 4.0',
+    sourcePage: 'https://commons.wikimedia.org/wiki/File:Sakl%C4%B1kent_kanyon.jpg',
+  ),
+  'ihlara-vadisi': SpotImageInfo(
+    networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Ihlara_valley_canyon.jpg?width=1280',
+    sourceName: 'Wikimedia Commons',
+    author: 'Benh LIEU SONG',
+    license: 'CC BY-SA 2.0',
+    sourcePage: 'https://commons.wikimedia.org/wiki/File:Ihlara_valley_canyon.jpg',
+  ),
+  'yedigoller-milli-parki': SpotImageInfo(
+    networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Yedig%C3%B6ller_National_Park.jpg?width=1280',
+    sourceName: 'Wikimedia Commons',
+    author: 'Emrahyazicioglu',
+    license: 'CC BY-SA 4.0',
+    sourcePage: 'https://commons.wikimedia.org/wiki/File:Yedig%C3%B6ller_National_Park.jpg',
+  ),
+  'abant-golu': SpotImageInfo(
+    networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Lake_Abant.jpg?width=1280',
+    sourceName: 'Wikimedia Commons',
+    author: 'Buse',
+    license: 'CC BY-SA 4.0',
+    sourcePage: 'https://commons.wikimedia.org/wiki/File:Lake_Abant.jpg',
+  ),
+  'antalya-duden': SpotImageInfo(
+    networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Lower_Duden_Falls.jpg?width=1280',
+    sourceName: 'Wikimedia Commons',
+    author: 'Saffron Blaze',
+    license: 'CC BY 3.0',
+    sourcePage: 'https://commons.wikimedia.org/wiki/File:Lower_Duden_Falls.jpg',
+  ),
+  'manavgat-selalesi': SpotImageInfo(
+    networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Manavgat_waterfall_by_tomgensler.JPG?width=1280',
+    sourceName: 'Wikimedia Commons',
+    author: 'Thomas Gensler',
+    license: 'CC BY-SA 2.0 DE',
+    sourcePage: 'https://commons.wikimedia.org/wiki/File:Manavgat_waterfall_by_tomgensler.JPG',
+  ),
+  'cennet-cehennem': SpotImageInfo(
+    networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/023_Cennetobrugu.07.2006_resize.JPG?width=1280',
+    sourceName: 'Wikimedia Commons',
+    author: 'Gothika',
+    license: 'CC BY-SA 3.0',
+    sourcePage: 'https://commons.wikimedia.org/wiki/File:023_Cennetobrugu.07.2006_resize.JPG',
+  ),
+  'egirdir-golu': SpotImageInfo(
+    networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Lake_Egirdir.jpg?width=1280',
+    sourceName: 'Wikimedia Commons',
+    author: 'Ingo Mehling',
+    license: 'CC BY-SA 3.0',
+    sourcePage: 'https://commons.wikimedia.org/wiki/File:Lake_Egirdir.jpg',
+  ),
+};
