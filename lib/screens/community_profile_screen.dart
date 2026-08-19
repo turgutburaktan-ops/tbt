@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 
 import '../models/social_event.dart';
 import '../services/community_service.dart';
+import '../services/invite_link_service.dart';
 import '../services/social_event_service.dart';
+import 'event_deep_link_screen.dart';
 import 'event_location_picker_screen.dart';
 
 class CommunityProfileScreen extends StatelessWidget {
@@ -179,6 +181,8 @@ class CommunityProfileScreen extends StatelessWidget {
           final admins = (d['adminIds'] as List? ?? const []).map((e) => e.toString()).toList();
           final isAdmin = uid != null && admins.contains(uid);
           final verified = d['verified'] == true;
+          final name = (d['name'] ?? 'Topluluk').toString();
+          final university = (d['university'] ?? '').toString();
 
           return ListView(
             padding: const EdgeInsets.fromLTRB(16, 14, 16, 36),
@@ -188,11 +192,11 @@ class CommunityProfileScreen extends StatelessWidget {
                 const SizedBox(width: 14),
                 Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Row(children: [
-                    Expanded(child: Text((d['name'] ?? 'Topluluk').toString(), style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900))),
+                    Expanded(child: Text(name, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900))),
                     if (verified) const Icon(Icons.verified, color: Color(0xFFB7BCC2)),
                   ]),
                   const SizedBox(height: 4),
-                  Text((d['university'] ?? '').toString(), style: const TextStyle(color: Colors.white60)),
+                  Text(university, style: const TextStyle(color: Colors.white60)),
                   if ((d['description'] ?? '').toString().trim().isNotEmpty) ...[
                     const SizedBox(height: 8),
                     Text(d['description'].toString(), style: const TextStyle(color: Colors.white70, height: 1.35)),
@@ -221,6 +225,16 @@ class CommunityProfileScreen extends StatelessWidget {
                       child: Text(s.data == true ? 'Takiptesin' : 'Takip Et'),
                     ),
                   ),
+                ),
+                const SizedBox(width: 8),
+                IconButton.filledTonal(
+                  tooltip: 'Topluluğu paylaş',
+                  onPressed: () => InviteLinkService.instance.shareCommunity(
+                    communityId: communityId,
+                    communityName: name,
+                    university: university,
+                  ),
+                  icon: const Icon(Icons.ios_share_outlined),
                 ),
                 if (isAdmin) ...[
                   const SizedBox(width: 8),
@@ -269,11 +283,26 @@ class _EventCard extends StatelessWidget {
     return Card(
       color: const Color(0xFF121416),
       child: ListTile(
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => EventDeepLinkScreen(eventId: event.id)),
+        ),
         leading: const CircleAvatar(backgroundColor: Color(0xFF25292E), child: Icon(Icons.event_outlined)),
         title: Text(event.title, style: const TextStyle(fontWeight: FontWeight.w900)),
         subtitle: Text('$date${event.city.isEmpty ? '' : ' • ${event.city}'}\n${event.participantCount}/${event.capacity} katılımcı'),
         isThreeLine: true,
-        trailing: event.status == 'cancelled' ? const Text('İptal', style: TextStyle(color: Colors.redAccent)) : const Icon(Icons.chevron_right),
+        trailing: event.status == 'cancelled'
+            ? const Text('İptal', style: TextStyle(color: Colors.redAccent))
+            : IconButton(
+                tooltip: 'Paylaş',
+                onPressed: () => InviteLinkService.instance.shareEvent(
+                  eventId: event.id,
+                  eventTitle: event.title,
+                  hostName: event.hostName,
+                  city: event.city,
+                ),
+                icon: const Icon(Icons.ios_share_outlined),
+              ),
       ),
     );
   }
