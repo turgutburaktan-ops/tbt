@@ -75,13 +75,29 @@ class _CampusProfileScreenState extends State<CampusProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF090A0C),
-      appBar: AppBar(backgroundColor: const Color(0xFF090A0C), title: const Text('Kampüs Profilim')),
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF090A0C),
+        title: const Text('Kampüs Profilim'),
+        actions: [
+          IconButton(
+            tooltip: 'Topluluklar',
+            onPressed: () => Navigator.pushNamed(context, '/communities'),
+            icon: const Icon(Icons.groups_2_outlined),
+          ),
+        ],
+      ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(18, 8, 18, 32),
         children: [
           const Text(
             'Üniversitendeki toplulukları, etkinlikleri ve sana uygun keşifleri gösterebilmemiz için birkaç bilgi ekle.',
             style: TextStyle(color: Colors.white60, height: 1.45),
+          ),
+          const SizedBox(height: 12),
+          OutlinedButton.icon(
+            onPressed: () => Navigator.pushNamed(context, '/communities'),
+            icon: const Icon(Icons.groups_2_outlined),
+            label: const Text('Üniversite Topluluklarını Keşfet'),
           ),
           const SizedBox(height: 20),
           TextField(controller: _university, decoration: const InputDecoration(labelText: 'Üniversite', hintText: 'Örn. Fırat Üniversitesi', prefixIcon: Icon(Icons.school_outlined))),
