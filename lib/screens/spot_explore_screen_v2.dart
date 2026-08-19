@@ -108,7 +108,7 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
     final next = _all.where((spot) {
       if (key.isEmpty) return true;
       final haystack =
-          '${spot.name} ${spot.city} ${spot.category} ${spot.description}'
+          '${spot.name} ${spot.city} ${spot.category} ${spot.description} ${spot.tags.join(' ')}'
               .toLowerCase();
       return haystack.contains(key);
     }).toList();
@@ -162,14 +162,14 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'Çekim Noktaları',
+                    'Gezilecek Yerler',
                     style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     _position == null
-                        ? 'Noktalar hemen yüklenir; konum gelince yakından uzağa sıralanır.'
-                        : 'Sana en yakın noktalardan başlayarak sıralandı.',
+                        ? 'Gerçek gezi noktalarını keşfet; fotoğraf önerilerini yer detayında gör.'
+                        : 'Yakınındaki gezilecek yerlerden başlayarak sıralandı.',
                     style: const TextStyle(color: Colors.white60),
                   ),
                 ],
@@ -187,7 +187,7 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
                   setState(() {});
                 },
                 decoration: InputDecoration(
-                  hintText: 'Şehir veya çekim noktası ara...',
+                  hintText: 'Yer, şehir veya kategori ara...',
                   prefixIcon: const Icon(Icons.search_rounded),
                   filled: true,
                   fillColor: const Color(0xFF121416),
@@ -209,14 +209,14 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
           else if (_visible.isEmpty)
             const SliverFillRemaining(
               hasScrollBody: false,
-              child: Center(child: Text('Çekim noktası bulunamadı.')),
+              child: Center(child: Text('Gezilecek yer bulunamadı.')),
             )
           else ...[
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 2, 20, 10),
                 child: Text(
-                  '${_visible.length} çekim noktası',
+                  '${_visible.length} gezilecek yer',
                   style: const TextStyle(
                       color: Colors.white54, fontWeight: FontWeight.w700),
                 ),
@@ -226,6 +226,7 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
               itemCount: _visible.length,
               itemBuilder: (context, index) {
                 final spot = _visible[index];
+                final verified = spot.tags.contains('Doğrulanmış');
                 return Padding(
                   padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
                   child: Card(
@@ -243,8 +244,8 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
                           children: [
                             SpotImage(
                               spot: spot,
-                              width: 88,
-                              height: 88,
+                              width: 96,
+                              height: 96,
                               borderRadius: BorderRadius.circular(12),
                             ),
                             const SizedBox(width: 12),
@@ -279,16 +280,54 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
                                   const SizedBox(height: 4),
                                   Text(
                                     '${spot.city} • ${spot.category}',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                     style: const TextStyle(
                                         color: Colors.white60, fontSize: 12),
                                   ),
-                                  const SizedBox(height: 8),
+                                  if (spot.description.trim().isNotEmpty) ...[
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      spot.description,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                          color: Colors.white54,
+                                          fontSize: 11,
+                                          height: 1.35),
+                                    ),
+                                  ],
+                                  const SizedBox(height: 7),
                                   Row(
                                     children: [
                                       const Icon(Icons.star_rounded,
                                           size: 16, color: Color(0xFFB7BCC2)),
                                       const SizedBox(width: 3),
                                       Text(spot.rating.toStringAsFixed(1)),
+                                      if (verified) ...[
+                                        const SizedBox(width: 9),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 7, vertical: 3),
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFF262A2E),
+                                            borderRadius: BorderRadius.circular(20),
+                                          ),
+                                          child: const Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Icon(Icons.verified_outlined,
+                                                  size: 13,
+                                                  color: Color(0xFFB7BCC2)),
+                                              SizedBox(width: 4),
+                                              Text('Doğrulanmış',
+                                                  style: TextStyle(
+                                                      fontSize: 10,
+                                                      fontWeight: FontWeight.w800)),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
                                     ],
                                   ),
                                 ],
