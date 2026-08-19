@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../services/app_notification_service.dart';
+import 'activity_demand_screen.dart';
 import 'camera_screen.dart';
 import 'feed_screen.dart';
 import 'library_screen.dart';
@@ -108,7 +109,6 @@ class _CommunityHub extends StatefulWidget {
 
 class _CommunityHubState extends State<_CommunityHub> {
   int _section = 0;
-
   static const _accent = Color(0xFFB7BCC2);
 
   void _openActivity(String label) {
@@ -116,10 +116,12 @@ class _CommunityHubState extends State<_CommunityHub> {
       setState(() => _section = 2);
       return;
     }
-    setState(() => _section = 3);
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text('$label etkinliklerini açtım.')));
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ActivityDemandScreen(initialActivity: label),
+      ),
+    );
   }
 
   @override
@@ -136,15 +138,11 @@ class _CommunityHubState extends State<_CommunityHub> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Bugün ne yapıyoruz?',
-                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
-                      ),
+                      Text('Bugün ne yapıyoruz?',
+                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900)),
                       SizedBox(height: 2),
-                      Text(
-                        'İnsanları, anları ve yakınındaki hayatı keşfet.',
-                        style: TextStyle(color: Colors.white54, fontSize: 12),
-                      ),
+                      Text('İnsanları, anları ve yakınındaki hayatı keşfet.',
+                          style: TextStyle(color: Colors.white54, fontSize: 12)),
                     ],
                   ),
                 ),
@@ -194,7 +192,7 @@ class _CommunityHubState extends State<_CommunityHub> {
               ],
             ),
           ),
-          if (showDailyHeader) ...[
+          if (showDailyHeader)
             SizedBox(
               height: 70,
               child: ListView(
@@ -211,7 +209,6 @@ class _CommunityHubState extends State<_CommunityHub> {
                 ],
               ),
             ),
-          ],
           Padding(
             padding: const EdgeInsets.fromLTRB(12, 2, 12, 10),
             child: Container(
@@ -252,7 +249,6 @@ class _ActivityChip extends StatelessWidget {
   final IconData icon;
   final String label;
   final VoidCallback onTap;
-
   const _ActivityChip({required this.icon, required this.label, required this.onTap});
 
   @override
@@ -276,7 +272,10 @@ class _ActivityChip extends StatelessWidget {
                 children: [
                   Icon(icon, size: 21, color: _CommunityHubState._accent),
                   const SizedBox(height: 5),
-                  Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800)),
+                  Text(label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800)),
                 ],
               ),
             ),
@@ -289,7 +288,6 @@ class _HubButton extends StatelessWidget {
   final String label;
   final bool selected;
   final VoidCallback onTap;
-
   const _HubButton({required this.label, required this.selected, required this.onTap});
 
   @override
