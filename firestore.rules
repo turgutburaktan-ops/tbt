@@ -16,13 +16,11 @@ service cloud.firestore {
 
     function validCommunityHostCreate() {
       let cid = request.resource.data.get('communityId', null);
-      return cid == null
-        || cid == ''
-        || (
-          signedIn()
-          && exists(/databases/$(database)/documents/communities/$(cid))
-          && get(/databases/$(database)/documents/communities/$(cid)).data.adminIds.hasAny([request.auth.uid])
-        );
+      return cid == null || cid == '' || (
+        signedIn()
+        && exists(/databases/$(database)/documents/communities/$(cid))
+        && get(/databases/$(database)/documents/communities/$(cid)).data.adminIds.hasAny([request.auth.uid])
+      );
     }
 
     function protectedEventFieldsUnchanged() {
@@ -69,6 +67,16 @@ service cloud.firestore {
       );
     }
 
+    function validEventMemoryPostCreate() {
+      let eid = request.resource.data.get('eventId', null);
+      return eid == null || eid == '' || (
+        exists(/databases/$(database)/documents/social_events/$(eid))
+        && get(/databases/$(database)/documents/social_events/$(eid)).data.participantIds.hasAny([request.auth.uid])
+        && get(/databases/$(database)/documents/social_events/$(eid)).data.startsAt <= request.time
+        && get(/databases/$(database)/documents/social_events/$(eid)).data.status != 'cancelled'
+      );
+    }
+
     match /social_events/{eventId} {
       allow read: if eventVisible(resource.data);
       allow create: if signedIn()
@@ -93,6 +101,19 @@ service cloud.firestore {
           && request.resource.data.reason is string
           && request.resource.data.reason.size() >= 3;
         allow update, delete: if false;
+      }
+    }
+
+    match /posts/{postId} {
+      allow read: if true;
+      allow create: if signedIn()
+        && request.resource.data.userId == request.auth.uid
+        && validEventMemoryPostCreate();
+      allow update, delete: if isAdmin() || (signedIn() && resource.data.userId == request.auth.uid);
+
+      match /{subcollection}/{document} {
+        allow read: if true;
+        allow write: if signedIn();
       }
     }
 
@@ -131,6 +152,7 @@ service cloud.firestore {
       allow read: if collection != 'social_events';
       allow write: if signedIn()
         && collection != 'social_events'
+        && collection != 'posts'
         && collection != 'activity_demands'
         && collection != 'communities';
     }
@@ -139,6 +161,7 @@ service cloud.firestore {
       allow read: if collection != 'social_events';
       allow write: if signedIn()
         && collection != 'social_events'
+        && collection != 'posts'
         && collection != 'activity_demands'
         && collection != 'communities';
     }
