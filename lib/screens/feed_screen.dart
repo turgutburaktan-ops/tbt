@@ -2,8 +2,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import '../models/social_event.dart';
+import '../services/social_event_service.dart';
 import '../services/social_service.dart';
 import '../widgets/content_engagement_bar.dart';
+import 'social_events_screen.dart';
 import 'user_profile_screen.dart';
 
 enum FeedMode { forYou, following }
@@ -12,11 +15,7 @@ class FeedScreen extends StatelessWidget {
   final FeedMode mode;
   final bool embedded;
 
-  const FeedScreen({
-    super.key,
-    this.mode = FeedMode.forYou,
-    this.embedded = false,
-  });
+  const FeedScreen({super.key, this.mode = FeedMode.forYou, this.embedded = false});
 
   @override
   Widget build(BuildContext context) {
@@ -44,11 +43,7 @@ class FeedScreen extends StatelessWidget {
                     return Center(
                       child: Padding(
                         padding: const EdgeInsets.all(30),
-                        child: Text(
-                          'Akış yüklenemedi.\n${postsSnapshot.error}',
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(color: Colors.white70),
-                        ),
+                        child: Text('Akış yüklenemedi.\n${postsSnapshot.error}', textAlign: TextAlign.center, style: const TextStyle(color: Colors.white70)),
                       ),
                     );
                   }
@@ -57,8 +52,7 @@ class FeedScreen extends StatelessWidget {
                   if (mode == FeedMode.following) {
                     docs.removeWhere((doc) {
                       final owner = (doc.data()['userId'] ?? '').toString();
-                      return owner != currentUser.uid &&
-                          !followingIds.contains(owner);
+                      return owner != currentUser.uid && !followingIds.contains(owner);
                     });
                   } else {
                     docs.sort((a, b) {
@@ -66,46 +60,77 @@ class FeedScreen extends StatelessWidget {
                       final bOwner = (b.data()['userId'] ?? '').toString();
                       final aFollowing = followingIds.contains(aOwner) ? 1 : 0;
                       final bFollowing = followingIds.contains(bOwner) ? 1 : 0;
-                      if (aFollowing != bFollowing) {
-                        return bFollowing.compareTo(aFollowing);
-                      }
+                      if (aFollowing != bFollowing) return bFollowing.compareTo(aFollowing);
                       final aTime = a.data()['createdAt'];
                       final bTime = b.data()['createdAt'];
-                      if (aTime is Timestamp && bTime is Timestamp) {
-                        return bTime.compareTo(aTime);
-                      }
+                      if (aTime is Timestamp && bTime is Timestamp) return bTime.compareTo(aTime);
                       return 0;
                     });
                   }
 
-                  if (docs.isEmpty) return _EmptyFeed(mode: mode);
+                  return StreamBuilder<List<SocialEvent>>(
+                    stream: SocialEventService.instance.watchUpcoming(limit: 50),
+                    builder: (context, eventsSnapshot) {
+                      final now = DateTime.now();
+                      var events = (eventsSnapshot.data ?? const <SocialEvent>[]).where((event) {
+                        final visible = event.visibility == EventVisibility.public ||
+                            event.hostId == currentUser.uid ||
+                            event.participantIds.contains(currentUser.uid) ||
+                            event.allowedUserIds.contains(currentUser.uid);
+                        if (!visible) return false;
+                        if (mode == FeedMode.following) {
+                          final social = followingIds.contains(event.hostId) ||
+                              event.participantIds.any(followingIds.contains);
+                          if (!social) return false;
+                        }
+                        return true;
+                      }).toList();
+                      events.sort((a, b) => a.startsAt.compareTo(b.startsAt));
 
-                  return RefreshIndicator(
-                    onRefresh: () async =>
-                        Future<void>.delayed(const Duration(milliseconds: 450)),
-                    child: ListView.builder(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      padding: const EdgeInsets.only(bottom: 34),
-                      itemCount: docs.length,
-                      itemBuilder: (context, index) {
-                        final doc = docs[index];
+                      final tonight = events.where((event) {
+                        final d = event.startsAt.toLocal();
+                        return d.year == now.year && d.month == now.month && d.day == now.day;
+                      }).take(6).toList();
+
+                      if (docs.isEmpty && events.isEmpty) return _EmptyFeed(mode: mode);
+
+                      final feedItems = <Widget>[];
+                      if (mode == FeedMode.forYou && tonight.isNotEmpty) {
+                        feedItems.add(_TonightStrip(events: tonight, followingIds: followingIds));
+                      }
+
+                      var eventIndex = 0;
+                      for (var i = 0; i < docs.length; i++) {
+                        final doc = docs[i];
                         final data = doc.data();
-                        final ownerId = (data['userId'] ?? '').toString();
-                        return _FeedPostCard(
+                        feedItems.add(_FeedPostCard(
                           postId: doc.id,
-                          userId: ownerId,
-                          userName:
-                              (data['userName'] ?? 'Topluluk üyesi').toString(),
-                          userPhotoUrl:
-                              (data['userPhotoUrl'] ?? data['photoUrl'] ?? '')
-                                  .toString(),
+                          userId: (data['userId'] ?? '').toString(),
+                          userName: (data['userName'] ?? 'Topluluk üyesi').toString(),
+                          userPhotoUrl: (data['userPhotoUrl'] ?? data['photoUrl'] ?? '').toString(),
                           imageUrl: (data['imageUrl'] ?? '').toString(),
                           caption: (data['caption'] ?? '').toString(),
                           spotName: (data['spotName'] ?? '').toString(),
                           createdAt: data['createdAt'],
-                        );
-                      },
-                    ),
+                        ));
+                        if ((i + 1) % 4 == 0 && eventIndex < events.length) {
+                          feedItems.add(_EventFeedCard(event: events[eventIndex++], followingIds: followingIds));
+                        }
+                      }
+
+                      while (eventIndex < events.length && feedItems.length < 10) {
+                        feedItems.add(_EventFeedCard(event: events[eventIndex++], followingIds: followingIds));
+                      }
+
+                      return RefreshIndicator(
+                        onRefresh: () async => Future<void>.delayed(const Duration(milliseconds: 450)),
+                        child: ListView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          padding: const EdgeInsets.only(bottom: 34),
+                          children: feedItems,
+                        ),
+                      );
+                    },
                   );
                 },
               );
@@ -115,11 +140,129 @@ class FeedScreen extends StatelessWidget {
     if (embedded) return body;
     return Scaffold(
       backgroundColor: const Color(0xFF090A0C),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF090A0C),
-        title: Text(mode == FeedMode.following ? 'Takip' : 'Sana Özel'),
-      ),
+      appBar: AppBar(backgroundColor: const Color(0xFF090A0C), title: Text(mode == FeedMode.following ? 'Takip' : 'Sana Özel')),
       body: body,
+    );
+  }
+}
+
+class _TonightStrip extends StatelessWidget {
+  final List<SocialEvent> events;
+  final List<String> followingIds;
+  const _TonightStrip({required this.events, required this.followingIds});
+
+  @override
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.fromLTRB(10, 4, 0, 12),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Padding(
+            padding: const EdgeInsets.only(right: 10, bottom: 8),
+            child: Row(children: [
+              const Expanded(child: Text('Bu Akşam 🔥', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900))),
+              TextButton(
+                onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SocialEventsScreen())),
+                child: const Text('Tümünü gör'),
+              ),
+            ]),
+          ),
+          SizedBox(
+            height: 154,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: events.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 9),
+              itemBuilder: (_, i) => SizedBox(width: 230, child: _CompactEventCard(event: events[i], followingIds: followingIds)),
+            ),
+          ),
+        ]),
+      );
+}
+
+class _CompactEventCard extends StatelessWidget {
+  final SocialEvent event;
+  final List<String> followingIds;
+  const _CompactEventCard({required this.event, required this.followingIds});
+
+  @override
+  Widget build(BuildContext context) {
+    final friendCount = event.participantIds.where(followingIds.contains).length;
+    final local = event.startsAt.toLocal();
+    final time = '${local.hour.toString().padLeft(2, '0')}:${local.minute.toString().padLeft(2, '0')}';
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(color: const Color(0xFF15181B), borderRadius: BorderRadius.circular(18), border: Border.all(color: const Color(0xFF2A2E33))),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), decoration: BoxDecoration(color: const Color(0xFF25292E), borderRadius: BorderRadius.circular(20)), child: Text(time, style: const TextStyle(fontWeight: FontWeight.w900))),
+          const Spacer(),
+          const Icon(Icons.groups_2_outlined, size: 16, color: Colors.white54),
+          const SizedBox(width: 4),
+          Text('${event.participantCount}', style: const TextStyle(fontSize: 12, color: Colors.white70)),
+        ]),
+        const SizedBox(height: 10),
+        Text(event.title, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w900)),
+        const SizedBox(height: 5),
+        Text(event.locationLabel.isNotEmpty ? event.locationLabel : event.city, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, color: Colors.white54)),
+        const Spacer(),
+        if (friendCount > 0) Text('$friendCount takip ettiğin kişi katılıyor', style: const TextStyle(fontSize: 11, color: Color(0xFFB7BCC2), fontWeight: FontWeight.w800)),
+      ]),
+    );
+  }
+}
+
+class _EventFeedCard extends StatelessWidget {
+  final SocialEvent event;
+  final List<String> followingIds;
+  const _EventFeedCard({required this.event, required this.followingIds});
+
+  @override
+  Widget build(BuildContext context) {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    final joined = uid != null && event.participantIds.contains(uid);
+    final friendCount = event.participantIds.where(followingIds.contains).length;
+    final local = event.startsAt.toLocal();
+    final date = '${local.day.toString().padLeft(2, '0')}.${local.month.toString().padLeft(2, '0')} • ${local.hour.toString().padLeft(2, '0')}:${local.minute.toString().padLeft(2, '0')}';
+
+    Future<void> join() async {
+      try {
+        await SocialEventService.instance.join(event.id);
+        if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Etkinliğe katıldın.')));
+      } catch (e) {
+        if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))));
+      }
+    }
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(10, 5, 10, 13),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(color: const Color(0xFF121416), borderRadius: BorderRadius.circular(20), border: Border.all(color: const Color(0xFF2A2E33))),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          Container(width: 42, height: 42, decoration: BoxDecoration(color: const Color(0xFF202327), borderRadius: BorderRadius.circular(13)), child: const Icon(Icons.celebration_outlined)),
+          const SizedBox(width: 10),
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            const Text('Yakınında bir etkinlik var', style: TextStyle(color: Colors.white54, fontSize: 11, fontWeight: FontWeight.w700)),
+            Text(event.hostName, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w900)),
+          ])),
+          if (friendCount > 0) Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5), decoration: BoxDecoration(color: const Color(0xFF23272B), borderRadius: BorderRadius.circular(12)), child: Text('$friendCount arkadaş', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800))),
+        ]),
+        const SizedBox(height: 14),
+        Text(event.title, style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w900)),
+        const SizedBox(height: 8),
+        Row(children: [const Icon(Icons.schedule, size: 16, color: Colors.white54), const SizedBox(width: 6), Text(date, style: const TextStyle(color: Colors.white70))]),
+        const SizedBox(height: 6),
+        Row(children: [const Icon(Icons.place_outlined, size: 16, color: Colors.white54), const SizedBox(width: 6), Expanded(child: Text(event.locationLabel.isNotEmpty ? '${event.locationLabel} • ${event.city}' : event.city, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white70)))]),
+        const SizedBox(height: 6),
+        Row(children: [const Icon(Icons.groups_2_outlined, size: 16, color: Colors.white54), const SizedBox(width: 6), Text('${event.participantCount} kişi katılıyor', style: const TextStyle(color: Colors.white70))]),
+        const SizedBox(height: 14),
+        Row(children: [
+          Expanded(child: OutlinedButton(onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SocialEventsScreen())), child: const Text('Etkinliği Gör'))),
+          const SizedBox(width: 9),
+          Expanded(child: FilledButton(onPressed: joined || event.isFull ? null : join, child: Text(joined ? 'Katıldın' : event.isFull ? 'Dolu' : 'Katıl'))),
+        ]),
+        const SizedBox(height: 5),
+        ContentEngagementBar(collection: 'social_events', contentId: event.id, ownerId: event.hostId, title: event.title, sourceType: 'social_event'),
+      ]),
     );
   }
 }
@@ -130,21 +273,13 @@ class _SignedOutFeed extends StatelessWidget {
   Widget build(BuildContext context) => const Center(
         child: Padding(
           padding: EdgeInsets.all(28),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.dynamic_feed_outlined, size: 62, color: Colors.white38),
-              SizedBox(height: 14),
-              Text('Sosyal akış için giriş yap',
-                  style: TextStyle(fontSize: 19, fontWeight: FontWeight.w900)),
-              SizedBox(height: 7),
-              Text(
-                'Takip ettiğin kişilerin fotoğraflarını, keşiflerini ve etkinlik anılarını burada göreceksin.',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.white60, height: 1.4),
-              ),
-            ],
-          ),
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            Icon(Icons.dynamic_feed_outlined, size: 62, color: Colors.white38),
+            SizedBox(height: 14),
+            Text('Sosyal akış için giriş yap', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w900)),
+            SizedBox(height: 7),
+            Text('Takip ettiğin kişilerin fotoğraflarını, keşiflerini ve etkinlik anılarını burada göreceksin.', textAlign: TextAlign.center, style: TextStyle(color: Colors.white60, height: 1.4)),
+          ]),
         ),
       );
 }
@@ -158,29 +293,11 @@ class _EmptyFeed extends StatelessWidget {
         padding: const EdgeInsets.all(30),
         children: [
           const SizedBox(height: 70),
-          Icon(
-            mode == FeedMode.following
-                ? Icons.people_outline_rounded
-                : Icons.photo_library_outlined,
-            size: 66,
-            color: Colors.white30,
-          ),
+          Icon(mode == FeedMode.following ? Icons.people_outline_rounded : Icons.photo_library_outlined, size: 66, color: Colors.white30),
           const SizedBox(height: 16),
-          Text(
-            mode == FeedMode.following
-                ? 'Takip akışın henüz sakin'
-                : 'Henüz paylaşım yok',
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w900),
-          ),
+          Text(mode == FeedMode.following ? 'Takip akışın henüz sakin' : 'Henüz paylaşım yok', textAlign: TextAlign.center, style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w900)),
           const SizedBox(height: 8),
-          Text(
-            mode == FeedMode.following
-                ? 'Yeni insanları takip ettikçe onların paylaşımları burada görünür.'
-                : 'İlk fotoğraf ve etkinlik anıları geldikçe burası canlanacak.',
-            textAlign: TextAlign.center,
-            style: const TextStyle(color: Colors.white54, height: 1.4),
-          ),
+          Text(mode == FeedMode.following ? 'Yeni insanları takip ettikçe onların paylaşımları ve katıldıkları etkinlikler burada görünür.' : 'İlk fotoğraf ve etkinlik anıları geldikçe burası canlanacak.', textAlign: TextAlign.center, style: const TextStyle(color: Colors.white54, height: 1.4)),
         ],
       );
 }
@@ -204,11 +321,7 @@ class _FeedPostCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Container(
         margin: const EdgeInsets.fromLTRB(10, 5, 10, 13),
-        decoration: BoxDecoration(
-          color: const Color(0xFF111315),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: const Color(0xFF24282D)),
-        ),
+        decoration: BoxDecoration(color: const Color(0xFF111315), borderRadius: BorderRadius.circular(20), border: Border.all(color: const Color(0xFF24282D))),
         clipBehavior: Clip.antiAlias,
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           InkWell(
@@ -221,11 +334,7 @@ class _FeedPostCard extends StatelessWidget {
                 Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Text(userName, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15)),
                   Row(children: [
-                    if (spotName.isNotEmpty) ...[
-                      const Icon(Icons.location_on_outlined, size: 13, color: Colors.white54), const SizedBox(width: 2),
-                      Flexible(child: Text(spotName, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 11, color: Colors.white54))),
-                      const Text('  •  ', style: TextStyle(color: Colors.white30)),
-                    ],
+                    if (spotName.isNotEmpty) ...[const Icon(Icons.location_on_outlined, size: 13, color: Colors.white54), const SizedBox(width: 2), Flexible(child: Text(spotName, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 11, color: Colors.white54))), const Text('  •  ', style: TextStyle(color: Colors.white30))],
                     Text(_timeLabel(), style: const TextStyle(fontSize: 11, color: Colors.white38)),
                   ]),
                 ])),
@@ -233,25 +342,16 @@ class _FeedPostCard extends StatelessWidget {
               ]),
             ),
           ),
-          if (imageUrl.isNotEmpty)
-            AspectRatio(aspectRatio: 4 / 5, child: Image.network(imageUrl, width: double.infinity, fit: BoxFit.cover, errorBuilder: (_, __, ___) => Container(color: const Color(0xFF1A1D20), alignment: Alignment.center, child: const Icon(Icons.broken_image_outlined, color: Colors.white30, size: 52)))),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(8, 4, 8, 0),
-            child: ContentEngagementBar(collection: 'posts', contentId: postId, ownerId: userId, title: caption.trim().isEmpty ? 'Fotoğraf paylaşımı' : caption, sourceType: 'post'),
-          ),
-          if (caption.trim().isNotEmpty)
-            Padding(padding: const EdgeInsets.fromLTRB(13, 0, 13, 8), child: Text.rich(TextSpan(children: [TextSpan(text: '$userName ', style: const TextStyle(fontWeight: FontWeight.w900)), TextSpan(text: caption, style: const TextStyle(color: Colors.white70, height: 1.35))]))),
+          if (imageUrl.isNotEmpty) AspectRatio(aspectRatio: 4 / 5, child: Image.network(imageUrl, width: double.infinity, fit: BoxFit.cover, errorBuilder: (_, __, ___) => Container(color: const Color(0xFF1A1D20), alignment: Alignment.center, child: const Icon(Icons.broken_image_outlined, color: Colors.white30, size: 52)))),
+          Padding(padding: const EdgeInsets.fromLTRB(8, 4, 8, 0), child: ContentEngagementBar(collection: 'posts', contentId: postId, ownerId: userId, title: caption.trim().isEmpty ? 'Fotoğraf paylaşımı' : caption, sourceType: 'post')),
+          if (caption.trim().isNotEmpty) Padding(padding: const EdgeInsets.fromLTRB(13, 0, 13, 8), child: Text.rich(TextSpan(children: [TextSpan(text: '$userName ', style: const TextStyle(fontWeight: FontWeight.w900)), TextSpan(text: caption, style: const TextStyle(color: Colors.white70, height: 1.35))]))),
           if (spotName.isNotEmpty)
             Padding(
               padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
                 decoration: BoxDecoration(color: const Color(0xFF191C1F), borderRadius: BorderRadius.circular(12)),
-                child: Row(children: [
-                  const Icon(Icons.place_outlined, size: 17, color: Color(0xFFB7BCC2)), const SizedBox(width: 6),
-                  Expanded(child: Text(spotName, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800))),
-                  const Text('Noktayı gör', style: TextStyle(color: Color(0xFFB7BCC2), fontSize: 11, fontWeight: FontWeight.w800)),
-                ]),
+                child: Row(children: [const Icon(Icons.place_outlined, size: 17, color: Color(0xFFB7BCC2)), const SizedBox(width: 6), Expanded(child: Text(spotName, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800))), const Text('Noktayı gör', style: TextStyle(color: Color(0xFFB7BCC2), fontSize: 11, fontWeight: FontWeight.w800))]),
               ),
             ),
         ]),
