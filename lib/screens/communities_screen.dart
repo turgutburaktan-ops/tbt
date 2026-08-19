@@ -2,8 +2,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import '../data/turkey_selection_data.dart';
 import '../services/community_service.dart';
 import '../services/invite_link_service.dart';
+import '../widgets/searchable_selection_field.dart';
 import 'community_profile_screen.dart';
 import 'invite_qr_scanner_screen.dart';
 import 'invite_qr_screen.dart';
@@ -16,7 +18,14 @@ class CommunitiesScreen extends StatefulWidget {
 }
 
 class _CommunitiesScreenState extends State<CommunitiesScreen> {
+  final _universityFilter = TextEditingController();
   String _university = '';
+
+  @override
+  void dispose() {
+    _universityFilter.dispose();
+    super.dispose();
+  }
 
   Future<void> _create() async {
     if (FirebaseAuth.instance.currentUser == null) {
@@ -39,7 +48,13 @@ class _CommunitiesScreenState extends State<CommunitiesScreen> {
             const SizedBox(height: 16),
             TextField(controller: name, decoration: const InputDecoration(labelText: 'Topluluk adı')),
             const SizedBox(height: 12),
-            TextField(controller: university, decoration: const InputDecoration(labelText: 'Üniversite')),
+            SearchableSelectionField(
+              controller: university,
+              options: turkeyUniversities,
+              labelText: 'Üniversite',
+              hintText: 'Yazmaya başla ve seç',
+              prefixIcon: Icons.school_outlined,
+            ),
             const SizedBox(height: 12),
             TextField(controller: description, minLines: 2, maxLines: 4, decoration: const InputDecoration(labelText: 'Açıklama')),
             const SizedBox(height: 18),
@@ -63,7 +78,9 @@ class _CommunitiesScreenState extends State<CommunitiesScreen> {
         ),
       ),
     );
-    name.dispose(); university.dispose(); description.dispose();
+    name.dispose();
+    university.dispose();
+    description.dispose();
   }
 
   void _message(String text) {
@@ -93,8 +110,12 @@ class _CommunitiesScreenState extends State<CommunitiesScreen> {
       body: Column(children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
-          child: TextField(
-            decoration: const InputDecoration(prefixIcon: Icon(Icons.school_outlined), labelText: 'Üniversiteye göre filtrele', hintText: 'Örn. Fırat Üniversitesi'),
+          child: SearchableSelectionField(
+            controller: _universityFilter,
+            options: turkeyUniversities,
+            labelText: 'Üniversiteye göre filtrele',
+            hintText: 'Örn. Fırat Üniversitesi',
+            prefixIcon: Icons.school_outlined,
             onChanged: (v) => setState(() => _university = v.trim()),
           ),
         ),
