@@ -19,14 +19,14 @@ def main() -> None:
         )
 
     screen_anchor = "import 'event_location_picker_screen.dart';\n"
-    screen_imports = (
-        "import 'event_deep_link_screen.dart';\n"
-        "import 'invite_qr_screen.dart';\n"
-    )
     if "invite_qr_screen.dart" not in text:
         if screen_anchor not in text:
             raise SystemExit('event screen import anchor not found')
-        text = text.replace(screen_anchor, screen_anchor + screen_imports, 1)
+        text = text.replace(
+            screen_anchor,
+            screen_anchor + "import 'invite_qr_screen.dart';\n",
+            1,
+        )
 
     join_anchor = """                        FilledButton(
                           onPressed: event.isFull && !joined && !isHost ? null : () => _toggleJoin(event),
@@ -67,33 +67,8 @@ def main() -> None:
             raise SystemExit('event join button anchor not found')
         text = text.replace(join_anchor, invite_actions, 1)
 
-    card_anchor = """                return Card(
-                  color: const Color(0xFF121416),
-"""
-    if "EventDeepLinkScreen(eventId: event.id)" not in text and card_anchor in text:
-        # Keep the card design but make its title area navigable through an explicit details action.
-        detail_anchor = """                      const SizedBox(height: 10),
-                      Row(children: [
-"""
-        detail_replacement = """                      const SizedBox(height: 10),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: TextButton.icon(
-                          onPressed: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (_) => EventDeepLinkScreen(eventId: event.id)),
-                          ),
-                          icon: const Icon(Icons.open_in_new_rounded, size: 17),
-                          label: const Text('Detay'),
-                        ),
-                      ),
-                      Row(children: [
-"""
-        if detail_anchor in text:
-            text = text.replace(detail_anchor, detail_replacement, 1)
-
     path.write_text(text, encoding='utf-8')
-    print('Social event cards patched with invite QR/share/detail actions')
+    print('Social event cards patched with invite QR/share actions')
 
 
 if __name__ == '__main__':
