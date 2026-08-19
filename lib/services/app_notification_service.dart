@@ -118,6 +118,83 @@ class AppNotificationService {
         )));
   }
 
+  Future<void> notifyMeOnce({
+    required String dedupeKey,
+    required String type,
+    required String title,
+    required String body,
+    String? sourceId,
+  }) async {
+    final user = _auth.currentUser;
+    if (user == null || dedupeKey.trim().isEmpty) return;
+    final safeKey = dedupeKey.replaceAll(RegExp(r'[^a-zA-Z0-9_-]'), '_');
+    final ref = _items(user.uid).doc('smart_$safeKey');
+    final existing = await ref.get();
+    if (existing.exists) return;
+    await ref.set({
+      'type': type,
+      'title': title.trim(),
+      'body': body.trim(),
+      'sourceId': sourceId,
+      'actorId': null,
+      'read': false,
+      'smart': true,
+      'dedupeKey': dedupeKey,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  Future<void> refreshCampusDigest() async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+    try {
+      final profile = await _firestore.collection('users').doc(user.uid).get();
+      final university = (profile.data()?['university'] ?? '').toString().trim();
+      if (university.isEmpty) return;
+
+      final communities = await _firestore
+          .collection('communities')
+          .where('university', isEqualTo: university)
+          .limit(80)
+          .get();
+      final ids = communities.docs.map((d) => d.id).toSet();
+      if (ids.isEmpty) return;
+
+      final now = DateTime.now();
+      final endOfDay = DateTime(now.year, now.month, now.day, 23, 59, 59);
+      final events = await _firestore
+          .collection('social_events')
+          .where('visibility', isEqualTo: 'public')
+          .limit(120)
+          .get();
+
+      final tonight = events.docs.where((doc) {
+        final d = doc.data();
+        if (!ids.contains((d['communityId'] ?? '').toString())) return false;
+        if ((d['status'] ?? 'open').toString() != 'open') return false;
+        final raw = d['startsAt'];
+        if (raw is! Timestamp) return false;
+        final start = raw.toDate();
+        return start.isAfter(now) && !start.isAfter(endOfDay);
+      }).toList();
+
+      if (tonight.isEmpty) return;
+      final dayKey = '${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}';
+      final firstId = tonight.first.id;
+      await notifyMeOnce(
+        dedupeKey: 'campus_evening_${university.hashCode}_$dayKey',
+        type: 'campus_digest',
+        title: 'Bu akşam kampüsünde ${tonight.length} etkinlik var',
+        body: tonight.length == 1
+            ? (tonight.first.data()['title'] ?? 'Etkinlik').toString()
+            : '${(tonight.first.data()['title'] ?? 'Etkinlik')} ve ${tonight.length - 1} etkinlik daha',
+        sourceId: firstId,
+      );
+    } catch (_) {
+      // Akıllı özet ana uygulama akışını hiçbir zaman engellememeli.
+    }
+  }
+
   Future<void> markRead(String notificationId) async {
     final user = _auth.currentUser;
     if (user == null || notificationId.trim().isEmpty) return;
