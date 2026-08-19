@@ -65,6 +65,9 @@ jobs:
       - name: Add event city autocomplete
         run: python3 tool/patch_social_event_city_autocomplete.py
 
+      - name: Align Radar with travel places
+        run: python3 tool/patch_radar_travel_copy.py
+
       - name: Analyze
         continue-on-error: true
         run: |
