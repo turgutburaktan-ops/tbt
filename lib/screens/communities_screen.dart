@@ -3,7 +3,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../services/community_service.dart';
+import '../services/invite_link_service.dart';
 import 'community_profile_screen.dart';
+import 'invite_qr_screen.dart';
 
 class CommunitiesScreen extends StatefulWidget {
   const CommunitiesScreen({super.key});
@@ -100,6 +102,8 @@ class _CommunitiesScreenState extends State<CommunitiesScreen> {
                   final d = docs[i].data();
                   final id = docs[i].id;
                   final verified = d['verified'] == true;
+                  final name = (d['name'] ?? 'Topluluk').toString();
+                  final university = (d['university'] ?? '').toString();
                   return Card(
                     color: const Color(0xFF121416),
                     clipBehavior: Clip.antiAlias,
@@ -111,24 +115,40 @@ class _CommunitiesScreenState extends State<CommunitiesScreen> {
                           const CircleAvatar(radius: 27, backgroundColor: Color(0xFF25292E), child: Icon(Icons.groups_2_outlined)),
                           const SizedBox(width: 12),
                           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                            Row(children: [Expanded(child: Text((d['name'] ?? 'Topluluk').toString(), style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16))), if (verified) const Icon(Icons.verified, size: 18, color: Color(0xFFB7BCC2))]),
+                            Row(children: [Expanded(child: Text(name, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16))), if (verified) const Icon(Icons.verified, size: 18, color: Color(0xFFB7BCC2))]),
                             const SizedBox(height: 3),
-                            Text((d['university'] ?? '').toString(), style: const TextStyle(color: Colors.white60, fontSize: 12)),
+                            Text(university, style: const TextStyle(color: Colors.white60, fontSize: 12)),
                             if ((d['description'] ?? '').toString().trim().isNotEmpty) ...[const SizedBox(height: 6), Text(d['description'].toString(), maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white70))],
                             const SizedBox(height: 8),
                             StreamBuilder<int>(stream: CommunityService.instance.followerCount(id), builder: (_, s) => Text('${s.data ?? 0} takipçi', style: const TextStyle(color: Colors.white54, fontSize: 12))),
                           ])),
                           const SizedBox(width: 8),
-                          StreamBuilder<bool>(
-                            stream: CommunityService.instance.isFollowing(id),
-                            builder: (_, s) => FilledButton.tonal(
-                              onPressed: () async {
-                                try { await CommunityService.instance.toggleFollow(id); }
-                                catch (e) { _message(e.toString().replaceFirst('Exception: ', '')); }
-                              },
-                              child: Text(s.data == true ? 'Takipte' : 'Takip Et'),
+                          Column(mainAxisSize: MainAxisSize.min, children: [
+                            IconButton(
+                              tooltip: 'Davet QR',
+                              onPressed: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => InviteQrScreen(
+                                    title: name,
+                                    subtitle: university,
+                                    uri: InviteLinkService.instance.communityUri(id),
+                                  ),
+                                ),
+                              ),
+                              icon: const Icon(Icons.qr_code_2_rounded),
                             ),
-                          ),
+                            StreamBuilder<bool>(
+                              stream: CommunityService.instance.isFollowing(id),
+                              builder: (_, s) => FilledButton.tonal(
+                                onPressed: () async {
+                                  try { await CommunityService.instance.toggleFollow(id); }
+                                  catch (e) { _message(e.toString().replaceFirst('Exception: ', '')); }
+                                },
+                                child: Text(s.data == true ? 'Takipte' : 'Takip Et'),
+                              ),
+                            ),
+                          ]),
                         ]),
                       ),
                     ),
