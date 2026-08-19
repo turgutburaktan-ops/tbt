@@ -15,34 +15,24 @@ exports.pushOnNotificationCreated = onDocumentCreated(
     const tokensSnap = await db.collection('users').doc(userId).collection('push_tokens').get();
     const tokens = tokensSnap.docs.map((doc) => (doc.data().token || '').trim()).filter(Boolean);
     if (!tokens.length) return;
-
     const sourceId = data.sourceId ? String(data.sourceId) : '';
     const type = data.type ? String(data.type) : 'general';
     const message = {
       tokens,
-      notification: {
-        title: String(data.title || 'TBT'),
-        body: String(data.body || 'Yeni bir bildirimin var.'),
-      },
+      notification: {title: String(data.title || 'TBT'), body: String(data.body || 'Yeni bir bildirimin var.')},
       data: {
         type,
         sourceId,
         eventId: ['event_join','social_event_join','event_cancelled','social_event_cancelled','community_event','event_memory','campus_digest'].includes(type) ? sourceId : '',
         communityId: type === 'community' ? sourceId : '',
       },
-      android: {
-        priority: 'high',
-        notification: {channelId: 'tbt_social', sound: 'default'},
-      },
+      android: {priority: 'high', notification: {sound: 'default'}},
     };
-
     const result = await getMessaging().sendEachForMulticast(message);
     const stale = [];
     result.responses.forEach((response, index) => {
       const code = response.error?.code || '';
-      if (code === 'messaging/registration-token-not-registered' || code === 'messaging/invalid-registration-token') {
-        stale.push(tokens[index]);
-      }
+      if (code === 'messaging/registration-token-not-registered' || code === 'messaging/invalid-registration-token') stale.push(tokens[index]);
     });
     await Promise.all(stale.map((token) => db.collection('users').doc(userId).collection('push_tokens').doc(token).delete()));
   }
