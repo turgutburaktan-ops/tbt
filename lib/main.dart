@@ -52,6 +52,15 @@ class _BestPhotoSpotAppState extends State<BestPhotoSpotApp> {
       debugShowCheckedModeBanner: false,
       title: 'En İyi Çekim Noktası',
       theme: AppTheme.dark,
+      builder: (context, child) {
+        final media = MediaQuery.of(context);
+        final currentScale = media.textScaler.scale(1.0);
+        final clampedScale = currentScale.clamp(0.90, 1.25).toDouble();
+        return MediaQuery(
+          data: media.copyWith(textScaler: TextScaler.linear(clampedScale)),
+          child: child ?? const SizedBox.shrink(),
+        );
+      },
       routes: {
         '/messages': (_) => const ChatInboxScreen(),
         '/notifications': (_) => const NotificationsScreen(),
