@@ -1,5 +1,6 @@
 from pathlib import Path
 import glob
+import re
 
 
 def find_iris_root() -> Path:
@@ -38,22 +39,52 @@ def patch_camera_controller(root: Path) -> None:
     path = root / "android/src/main/kotlin/com/anies1212/iris_camera/CameraController.kt"
     text = path.read_text()
 
-    # Do not force CONTROL_AE_MODE_OFF. On phones with fixed aperture this can
-    # produce completely white frames when a preset ISO/shutter combination is
-    # unsuitable for the actual scene. CameraX AE remains the safety authority;
-    # AI/modes may bias EV but never disable metering.
-    forced_ae = """            // Manual ISO and shutter only become real sensor requests when AE is off.
+    # PhotoCaptureOptions with ISO/exposureDuration are now reserved for the
+    # explicit Pro mode in the Flutter UI. Camera2 only honors real sensor ISO
+    # and shutter requests with AE disabled, so make those captures genuinely
+    # manual and immediately restore automatic exposure afterwards.
+    pattern = re.compile(
+        r"        if \(exposureDurationMicros != null \|\| iso != null\) \{\n"
+        r"            val camera2 = camera\?\.cameraControl\?\.let \{ Camera2CameraControl\.from\(it\) \}\n"
+        r"            val options = CaptureRequestOptions\.Builder\(\)\n"
+        r"            exposureDurationMicros\?\.let \{\n"
+        r"                options\.setCaptureRequestOption\(CaptureRequest\.SENSOR_EXPOSURE_TIME, it \* 1000\)\n"
+        r"            \}\n"
+        r"            iso\?\.let \{ options\.setCaptureRequestOption\(CaptureRequest\.SENSOR_SENSITIVITY, it\.toInt\(\)\) \}\n"
+        r"            camera2\?\.setCaptureRequestOptions\(options\.build\(\)\)(?:\?\.await\(\))?\n"
+        r"        \}\n"
+        r"        return suspendCancellableTakePicture\(capture\)"
+    )
+    replacement = """        var manualCamera2: Camera2CameraControl? = null
+        if (exposureDurationMicros != null || iso != null) {
+            manualCamera2 = camera?.cameraControl?.let { Camera2CameraControl.from(it) }
+            val options = CaptureRequestOptions.Builder()
             options.setCaptureRequestOption(
                 CaptureRequest.CONTROL_AE_MODE,
                 CaptureRequest.CONTROL_AE_MODE_OFF
             )
-"""
-    text = text.replace(forced_ae, "")
-
-    old_apply = "            camera2?.setCaptureRequestOptions(options.build())\n"
-    new_apply = "            camera2?.setCaptureRequestOptions(options.build())?.await()\n"
-    if old_apply in text:
-        text = text.replace(old_apply, new_apply, 1)
+            exposureDurationMicros?.let {
+                options.setCaptureRequestOption(CaptureRequest.SENSOR_EXPOSURE_TIME, it * 1000)
+            }
+            iso?.let {
+                options.setCaptureRequestOption(CaptureRequest.SENSOR_SENSITIVITY, it.toInt())
+            }
+            manualCamera2?.setCaptureRequestOptions(options.build())?.await()
+        }
+        return try {
+            suspendCancellableTakePicture(capture)
+        } finally {
+            if (manualCamera2 != null) {
+                try {
+                    manualCamera2.clearCaptureRequestOptions().await()
+                    setExposureMode(ExposureModeNative.AUTO)
+                } catch (_: Throwable) {
+                }
+            }
+        }"""
+    text, count = pattern.subn(replacement, text, count=1)
+    if count != 1:
+        raise SystemExit("Iris capturePhoto manual exposure block not found")
     path.write_text(text)
 
 
@@ -71,10 +102,13 @@ def patch_preview_composition(root: Path) -> None:
 
 def patch_flutter_focus_lock() -> None:
     path = Path("lib/screens/camera_screen.dart")
+    if not path.exists():
+        return
     text = path.read_text(encoding="utf-8")
 
-    # Tap-to-focus and long-press lock must never re-meter exposure from one
-    # tiny point. Exposure stays whole-scene auto; only focus follows/locks.
+    # Tap/lock must never meter exposure from a tiny focus point. The new camera
+    # screen already follows this rule; replacements below preserve compatibility
+    # with older source snapshots.
     text = text.replace(
         "await _camera.setFocus(point: _focusPoint!); await _camera.setExposurePoint(_focusPoint!);",
         "await _camera.setFocus(point: _focusPoint!);",
@@ -82,14 +116,6 @@ def patch_flutter_focus_lock() -> None:
     text = text.replace(
         "await _camera.setFocus(point: p);\n      await _camera.setExposurePoint(p);",
         "await _camera.setFocus(point: p);",
-    )
-    text = text.replace(
-        "await _camera.setFocus(point: p); await _camera.setExposurePoint(p); await _camera.setFocusMode(iris.FocusMode.locked);",
-        "await _camera.setExposureMode(iris.ExposureMode.auto); await _camera.setExposureOffset(_ev); await _camera.setFocus(point: p); await _camera.setFocusMode(iris.FocusMode.locked);",
-    )
-    text = text.replace(
-        "try { await _camera.setFocusMode(iris.FocusMode.auto); } catch (_) {}\n    await _applyMode();",
-        "try { await _camera.setExposureMode(iris.ExposureMode.auto); } catch (_) {}\n    try { await _camera.setFocusMode(iris.FocusMode.auto); } catch (_) {}\n    try { await _camera.setExposureOffset(_profile.ev); } catch (_) {}\n    await _applyMode();",
     )
     path.write_text(text, encoding="utf-8")
 
@@ -100,7 +126,7 @@ def main() -> None:
     patch_camera_controller(root)
     patch_preview_composition(root)
     patch_flutter_focus_lock()
-    print(f"Iris Android capture + safe focus-only lock patch applied to {root.name}")
+    print(f"Iris Android capture + true Pro manual exposure patch applied to {root.name}")
 
 
 if __name__ == "__main__":
