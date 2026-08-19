@@ -12,10 +12,14 @@ def configure_gradle() -> None:
         raise SystemExit("Android app Gradle file not found")
 
     text = app_gradle.read_text()
-    text = text.replace("compileSdkVersion flutter.compileSdkVersion", "compileSdkVersion 35")
-    text = text.replace("compileSdk = flutter.compileSdkVersion", "compileSdk = 35")
+    text = text.replace("compileSdkVersion flutter.compileSdkVersion", "compileSdkVersion 36")
+    text = text.replace("compileSdk = flutter.compileSdkVersion", "compileSdk = 36")
+    text = text.replace("compileSdkVersion 35", "compileSdkVersion 36")
+    text = text.replace("compileSdk = 35", "compileSdk = 36")
     text = text.replace("minSdkVersion flutter.minSdkVersion", "minSdkVersion 26")
     text = text.replace("minSdk = flutter.minSdkVersion", "minSdk = 26")
+    text = re.sub(r'applicationId\s+["\'][^"\']+["\']', 'applicationId "com.example.tbt"', text)
+    text = re.sub(r'applicationId\s*=\s*["\'][^"\']+["\']', 'applicationId = "com.example.tbt"', text)
     app_gradle.write_text(text)
 
     settings = Path("android/settings.gradle")
