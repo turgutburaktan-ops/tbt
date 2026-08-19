@@ -96,5 +96,24 @@ if main_anchor in text:
 elif 'final texture = _previewTexture ?? _texture!;' not in text:
     raise SystemExit('GPU editor main preview anchor not found')
 
+# Saturation already exists in the shader state but the original editor did not
+# expose it in the UI. Add it next to contrast/vibrance.
+saturation_anchor = '''          _adjustmentRow(
+            label: 'Canlılık',
+'''
+if "label: 'Doygunluk'" not in text:
+    saturation_row = '''          _adjustmentRow(
+            label: 'Doygunluk',
+            value: _saturation,
+            min: -.65,
+            max: .65,
+            onChanged: (v) => setState(() => _saturation = v),
+            onChangeEnd: (_) => _rebuildConfiguration(),
+          ),
+'''
+    if saturation_anchor not in text:
+        raise SystemExit('GPU editor vibrance adjustment anchor not found')
+    text = text.replace(saturation_anchor, saturation_row + saturation_anchor, 1)
+
 path.write_text(text, encoding='utf-8')
-print('GPU editor runtime optimization applied')
+print('GPU editor runtime optimization + saturation control applied')
