@@ -59,6 +59,12 @@ jobs:
       - name: Enable physical 0.5x and tele lenses
         run: python3 tool/patch_iris_physical_lenses.py
 
+      - name: Add exact lens ID switching
+        run: python3 tool/patch_iris_direct_lens_id.py
+
+      - name: Route camera buttons to exact lens IDs
+        run: python3 tool/patch_camera_direct_lens_switch.py
+
       - name: Optimize GPU editor preview
         run: python3 tool/patch_gpu_editor_runtime.py
 
