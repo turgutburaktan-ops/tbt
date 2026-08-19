@@ -15,20 +15,20 @@ service cloud.firestore {
     }
 
     function validCommunityHostCreate() {
-      return !('communityId' in request.resource.data)
-        || request.resource.data.communityId == null
-        || request.resource.data.communityId == ''
+      let cid = request.resource.data.get('communityId', null);
+      return cid == null
+        || cid == ''
         || (
           signedIn()
-          && exists(/databases/$(database)/documents/communities/$(request.resource.data.communityId))
-          && get(/databases/$(database)/documents/communities/$(request.resource.data.communityId)).data.adminIds.hasAny([request.auth.uid])
+          && exists(/databases/$(database)/documents/communities/$(cid))
+          && get(/databases/$(database)/documents/communities/$(cid)).data.adminIds.hasAny([request.auth.uid])
         );
     }
 
     function protectedEventFieldsUnchanged() {
       return request.resource.data.hostId == resource.data.hostId
-        && request.resource.data.communityId == resource.data.communityId
-        && request.resource.data.communityName == resource.data.communityName
+        && request.resource.data.get('communityId', null) == resource.data.get('communityId', null)
+        && request.resource.data.get('communityName', null) == resource.data.get('communityName', null)
         && request.resource.data.accessType == resource.data.accessType
         && request.resource.data.ticketPriceMinor == resource.data.ticketPriceMinor
         && request.resource.data.currency == resource.data.currency
