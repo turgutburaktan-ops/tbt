@@ -89,12 +89,33 @@ class _ProfileGate extends StatelessWidget {
   Widget build(BuildContext context) {
     return StreamBuilder<User?>(
       stream: FirebaseAuth.instance.authStateChanges(),
+      initialData: FirebaseAuth.instance.currentUser,
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
+        if (snapshot.connectionState == ConnectionState.waiting && snapshot.data == null) {
           return const SafeArea(child: Center(child: CircularProgressIndicator()));
         }
         if (snapshot.data == null) return const LoginScreen(embedded: true);
         return const ProfilePage();
+      },
+    );
+  }
+}
+
+class _AuthAwareFeed extends StatelessWidget {
+  final FeedMode mode;
+  const _AuthAwareFeed({required this.mode});
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      initialData: FirebaseAuth.instance.currentUser,
+      builder: (context, snapshot) {
+        return FeedScreen(
+          key: ValueKey('${mode.name}-${snapshot.data?.uid ?? 'signed-out'}'),
+          mode: mode,
+          embedded: true,
+        );
       },
     );
   }
@@ -232,8 +253,8 @@ class _CommunityHubState extends State<_CommunityHub> {
             child: IndexedStack(
               index: _section,
               children: const [
-                FeedScreen(mode: FeedMode.forYou, embedded: true),
-                FeedScreen(mode: FeedMode.following, embedded: true),
+                _AuthAwareFeed(mode: FeedMode.forYou),
+                _AuthAwareFeed(mode: FeedMode.following),
                 SpotExploreScreen(),
                 SocialEventsScreen(),
               ],
