@@ -39,10 +39,6 @@ def patch_camera_controller(root: Path) -> None:
     path = root / "android/src/main/kotlin/com/anies1212/iris_camera/CameraController.kt"
     text = path.read_text()
 
-    # PhotoCaptureOptions with ISO/exposureDuration are now reserved for the
-    # explicit Pro mode in the Flutter UI. Camera2 only honors real sensor ISO
-    # and shutter requests with AE disabled, so make those captures genuinely
-    # manual and immediately restore automatic exposure afterwards.
     pattern = re.compile(
         r"        if \(exposureDurationMicros != null \|\| iso != null\) \{\n"
         r"            val camera2 = camera\?\.cameraControl\?\.let \{ Camera2CameraControl\.from\(it\) \}\n"
@@ -59,15 +55,28 @@ def patch_camera_controller(root: Path) -> None:
         if (exposureDurationMicros != null || iso != null) {
             manualCamera2 = camera?.cameraControl?.let { Camera2CameraControl.from(it) }
             val options = CaptureRequestOptions.Builder()
+            val manager = context.getSystemService(Context.CAMERA_SERVICE) as CameraManager
+            val characteristics = selectedLensId?.let { manager.getCameraCharacteristics(it) }
+            val exposureRange = characteristics?.get(CameraCharacteristics.SENSOR_INFO_EXPOSURE_TIME_RANGE)
+            val sensitivityRange = characteristics?.get(CameraCharacteristics.SENSOR_INFO_SENSITIVITY_RANGE)
+
             options.setCaptureRequestOption(
                 CaptureRequest.CONTROL_AE_MODE,
                 CaptureRequest.CONTROL_AE_MODE_OFF
             )
             exposureDurationMicros?.let {
-                options.setCaptureRequestOption(CaptureRequest.SENSOR_EXPOSURE_TIME, it * 1000)
+                val requestedNs = it * 1000L
+                val safeNs = exposureRange?.let { range ->
+                    requestedNs.coerceIn(range.lower, range.upper)
+                } ?: requestedNs
+                options.setCaptureRequestOption(CaptureRequest.SENSOR_EXPOSURE_TIME, safeNs)
             }
             iso?.let {
-                options.setCaptureRequestOption(CaptureRequest.SENSOR_SENSITIVITY, it.toInt())
+                val requestedIso = it.toInt()
+                val safeIso = sensitivityRange?.let { range ->
+                    requestedIso.coerceIn(range.lower, range.upper)
+                } ?: requestedIso
+                options.setCaptureRequestOption(CaptureRequest.SENSOR_SENSITIVITY, safeIso)
             }
             manualCamera2?.setCaptureRequestOptions(options.build())?.await()
         }
@@ -105,10 +114,6 @@ def patch_flutter_focus_lock() -> None:
     if not path.exists():
         return
     text = path.read_text(encoding="utf-8")
-
-    # Tap/lock must never meter exposure from a tiny focus point. The new camera
-    # screen already follows this rule; replacements below preserve compatibility
-    # with older source snapshots.
     text = text.replace(
         "await _camera.setFocus(point: _focusPoint!); await _camera.setExposurePoint(_focusPoint!);",
         "await _camera.setFocus(point: _focusPoint!);",
@@ -126,7 +131,7 @@ def main() -> None:
     patch_camera_controller(root)
     patch_preview_composition(root)
     patch_flutter_focus_lock()
-    print(f"Iris Android capture + true Pro manual exposure patch applied to {root.name}")
+    print(f"Iris Android capture + clamped true Pro manual exposure patch applied to {root.name}")
 
 
 if __name__ == "__main__":
