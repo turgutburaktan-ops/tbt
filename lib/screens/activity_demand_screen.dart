@@ -10,7 +10,13 @@ import 'event_location_picker_screen.dart';
 
 class ActivityDemandScreen extends StatefulWidget {
   final String? initialActivity;
-  const ActivityDemandScreen({super.key, this.initialActivity});
+  final String? initialCity;
+
+  const ActivityDemandScreen({
+    super.key,
+    this.initialActivity,
+    this.initialCity,
+  });
 
   @override
   State<ActivityDemandScreen> createState() => _ActivityDemandScreenState();
@@ -29,6 +35,9 @@ class _ActivityDemandScreenState extends State<ActivityDemandScreen> {
   @override
   void initState() {
     super.initState();
+    if ((widget.initialCity ?? '').trim().isNotEmpty) {
+      _cityController.text = widget.initialCity!.trim();
+    }
     if (widget.initialActivity != null && activities.contains(widget.initialActivity)) {
       _activity = widget.initialActivity!;
     }
