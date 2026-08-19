@@ -1,20 +1,62 @@
 import 'package:flutter/material.dart';
 
 import '../services/app_notification_service.dart';
+import 'event_deep_link_screen.dart';
 
-class NotificationsScreen extends StatelessWidget {
+class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
+
+  @override
+  State<NotificationsScreen> createState() => _NotificationsScreenState();
+}
+
+class _NotificationsScreenState extends State<NotificationsScreen> {
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(AppNotificationService.instance.refreshCampusDigest);
+  }
 
   IconData _iconFor(String type) {
     switch (type) {
       case 'message':
         return Icons.chat_bubble_outline_rounded;
+      case 'event_join':
       case 'social_event_join':
         return Icons.person_add_alt_1_rounded;
+      case 'event_cancelled':
       case 'social_event_cancelled':
         return Icons.event_busy_rounded;
+      case 'community_event':
+        return Icons.groups_2_outlined;
+      case 'event_memory':
+        return Icons.photo_library_outlined;
+      case 'campus_digest':
+        return Icons.school_outlined;
       default:
         return Icons.notifications_none_rounded;
+    }
+  }
+
+  bool _opensEvent(String type) => const {
+        'event_join',
+        'social_event_join',
+        'event_cancelled',
+        'social_event_cancelled',
+        'community_event',
+        'event_memory',
+        'campus_digest',
+      }.contains(type);
+
+  Future<void> _openItem(AppNotificationItem item) async {
+    await AppNotificationService.instance.markRead(item.id);
+    if (!mounted) return;
+    final sourceId = item.sourceId?.trim() ?? '';
+    if (sourceId.isNotEmpty && _opensEvent(item.type)) {
+      await Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => EventDeepLinkScreen(eventId: sourceId)),
+      );
     }
   }
 
@@ -70,7 +112,7 @@ class NotificationsScreen extends StatelessWidget {
                         style: TextStyle(fontWeight: FontWeight.w800)),
                     SizedBox(height: 6),
                     Text(
-                      'Yeni mesajlar ve etkinlik hareketleri burada görünecek.',
+                      'Mesajlar, etkinlik hareketleri ve kampüs önerileri burada görünecek.',
                       textAlign: TextAlign.center,
                       style: TextStyle(color: Colors.white54),
                     ),
@@ -93,8 +135,7 @@ class NotificationsScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(16),
                 child: InkWell(
                   borderRadius: BorderRadius.circular(16),
-                  onTap: () =>
-                      AppNotificationService.instance.markRead(item.id),
+                  onTap: () => _openItem(item),
                   child: Padding(
                     padding: const EdgeInsets.all(14),
                     child: Row(
@@ -119,13 +160,10 @@ class NotificationsScreen extends StatelessWidget {
                                 children: [
                                   Expanded(
                                     child: Text(
-                                      item.title.isEmpty
-                                          ? 'Bildirim'
-                                          : item.title,
+                                      item.title.isEmpty ? 'Bildirim' : item.title,
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
-                                          fontWeight: FontWeight.w800),
+                                      style: const TextStyle(fontWeight: FontWeight.w800),
                                     ),
                                   ),
                                   if (!item.read) ...[
@@ -147,19 +185,22 @@ class NotificationsScreen extends StatelessWidget {
                                   item.body,
                                   maxLines: 3,
                                   overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                      color: Colors.white60, height: 1.35),
+                                  style: const TextStyle(color: Colors.white60, height: 1.35),
                                 ),
                               ],
                               if (item.createdAt != null) ...[
                                 const SizedBox(height: 7),
                                 Text(_timeLabel(item.createdAt),
-                                    style: const TextStyle(
-                                        color: Colors.white38, fontSize: 12)),
+                                    style: const TextStyle(color: Colors.white38, fontSize: 12)),
                               ],
                             ],
                           ),
                         ),
+                        if ((item.sourceId ?? '').isNotEmpty && _opensEvent(item.type))
+                          const Padding(
+                            padding: EdgeInsets.only(left: 6, top: 9),
+                            child: Icon(Icons.chevron_right, color: Colors.white38),
+                          ),
                       ],
                     ),
                   ),
