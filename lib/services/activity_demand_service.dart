@@ -6,6 +6,7 @@ class ActivityDemand {
   final String userId;
   final String activity;
   final String city;
+  final String university;
   final String window;
   final DateTime expiresAt;
 
@@ -14,6 +15,7 @@ class ActivityDemand {
     required this.userId,
     required this.activity,
     required this.city,
+    required this.university,
     required this.window,
     required this.expiresAt,
   });
@@ -27,6 +29,7 @@ class ActivityDemand {
       userId: (data['userId'] ?? '').toString(),
       activity: (data['activity'] ?? '').toString(),
       city: (data['city'] ?? '').toString(),
+      university: (data['university'] ?? '').toString(),
       window: (data['window'] ?? 'today').toString(),
       expiresAt: rawExpiry is Timestamp
           ? rawExpiry.toDate()
@@ -98,6 +101,13 @@ class ActivityDemandService {
     if (cleanCity.length < 2) {
       throw Exception('Şehir seçmelisin.');
     }
+
+    String university = '';
+    try {
+      final profile = await _firestore.collection('users').doc(user.uid).get();
+      university = (profile.data()?['university'] ?? '').toString().trim();
+    } catch (_) {}
+
     final ref = _firestore
         .collection(collection)
         .doc(_docId(user.uid, activity, cleanCity, window));
@@ -107,6 +117,8 @@ class ActivityDemandService {
       'activityKey': _key(activity),
       'city': cleanCity,
       'cityKey': _key(cleanCity),
+      'university': university,
+      'universityKey': _key(university),
       'window': window,
       'expiresAt': Timestamp.fromDate(expiryFor(window)),
       'createdAt': FieldValue.serverTimestamp(),
