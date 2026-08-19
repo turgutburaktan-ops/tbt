@@ -7,6 +7,7 @@ import '../widgets/spot_image.dart';
 import '../widgets/spot_presence_section.dart';
 import '../widgets/spot_user_posts_gallery.dart';
 import 'camera_screen.dart';
+import 'route_planner_screen.dart';
 
 class SpotDetailScreen extends StatelessWidget {
   final PhotoSpot spot;
@@ -44,12 +45,13 @@ class SpotDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final verified = spot.tags.contains('Doğrulanmış');
     return Scaffold(
       backgroundColor: const Color(0xFF090A0C),
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
-            expandedHeight: 300,
+            expandedHeight: 320,
             pinned: true,
             backgroundColor: const Color(0xFF090A0C),
             foregroundColor: Colors.white,
@@ -79,10 +81,36 @@ class SpotDetailScreen extends StatelessWidget {
                         gradient: LinearGradient(
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
-                          colors: [Colors.transparent, Color(0xCC0D1117)],
+                          colors: [Colors.transparent, Color(0xE60D1117)],
                         ),
                       ),
                     ),
+                    if (verified)
+                      Positioned(
+                        left: 14,
+                        bottom: 14,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 7),
+                          decoration: BoxDecoration(
+                            color: const Color(0xDD171A1E),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: Colors.white24),
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.verified_rounded,
+                                  size: 17, color: Color(0xFFB7BCC2)),
+                              SizedBox(width: 5),
+                              Text('Doğrulanmış yer',
+                                  style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w900)),
+                            ],
+                          ),
+                        ),
+                      ),
                     const Positioned(
                       right: 14,
                       bottom: 14,
@@ -122,7 +150,7 @@ class SpotDetailScreen extends StatelessWidget {
                       const Icon(Icons.star,
                           size: 18, color: Color(0xFFB7BCC2)),
                       const SizedBox(width: 4),
-                      Text(spot.rating.toString()),
+                      Text(spot.rating.toStringAsFixed(1)),
                     ],
                   ),
                   const SizedBox(height: 18),
@@ -133,39 +161,57 @@ class SpotDetailScreen extends StatelessWidget {
                       _InfoChip(
                           icon: Icons.category_outlined, label: spot.category),
                       _InfoChip(
-                          icon: Icons.camera_alt_outlined,
-                          label: spot.recommendedLens),
-                      _InfoChip(
                           icon: Icons.route_outlined, label: spot.difficulty),
+                      if (verified)
+                        const _InfoChip(
+                          icon: Icons.verified_outlined,
+                          label: 'Konum doğrulandı',
+                        ),
                     ],
                   ),
-                  const SizedBox(height: 20),
-                  _SocialActionButtons(spot: spot),
-                  const SizedBox(height: 18),
-                  SpotUserPostsGallery(spot: spot),
-                  const SizedBox(height: 20),
-                  _CompactShootingGuide(spot: spot),
                   const SizedBox(height: 24),
                   const _SectionTitle(
-                      icon: Icons.schedule, title: 'En İyi Çekim Zamanı'),
-                  const SizedBox(height: 8),
-                  _InfoCard(text: spot.bestTime),
-                  const SizedBox(height: 20),
+                      icon: Icons.explore_outlined, title: 'Neden Gitmeli?'),
+                  const SizedBox(height: 9),
+                  _InfoCard(
+                    text: spot.description.trim().isEmpty
+                        ? 'Bu yer gezi kataloğunda öne çıkan duraklardan biri. Detaylar doğrulandıkça gezi bilgileri genişletilecek.'
+                        : spot.description.trim(),
+                  ),
+                  const SizedBox(height: 18),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 54,
+                    child: FilledButton.icon(
+                      style: FilledButton.styleFrom(
+                        backgroundColor: const Color(0xFFB7BCC2),
+                        foregroundColor: Colors.black,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(15)),
+                      ),
+                      onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => RoutePlannerScreen(initialSpot: spot),
+                        ),
+                      ),
+                      icon: const Icon(Icons.route_rounded),
+                      label: const Text('Rotaya Ekle',
+                          style: TextStyle(fontWeight: FontWeight.w900)),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  _SocialActionButtons(spot: spot),
+                  const SizedBox(height: 24),
+                  SpotUserPostsGallery(spot: spot),
+                  const SizedBox(height: 28),
                   const _SectionTitle(
-                      icon: Icons.architecture, title: 'Önerilen Çekim Açısı'),
-                  const SizedBox(height: 8),
-                  _InfoCard(text: spot.angle),
-                  if (spot.description.isNotEmpty) ...[
-                    const SizedBox(height: 24),
-                    const _SectionTitle(
-                        icon: Icons.info_outline, title: 'Bu Nokta Hakkında'),
-                    const SizedBox(height: 8),
-                    Text(spot.description,
-                        style: const TextStyle(
-                            color: Colors.white70, height: 1.55, fontSize: 15)),
-                  ],
+                      icon: Icons.photo_camera_outlined,
+                      title: 'Fotoğraf Rehberi'),
+                  const SizedBox(height: 10),
+                  _CompactShootingGuide(spot: spot),
                   if (spot.tags.isNotEmpty) ...[
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 26),
                     const _SectionTitle(
                         icon: Icons.sell_outlined, title: 'Etiketler'),
                     const SizedBox(height: 10),
@@ -184,10 +230,10 @@ class SpotDetailScreen extends StatelessWidget {
                   SizedBox(
                     width: double.infinity,
                     height: 56,
-                    child: ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFB7BCC2),
-                        foregroundColor: Colors.black,
+                    child: OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.white,
+                        side: const BorderSide(color: Color(0xFF4A4F55)),
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16)),
                       ),
@@ -196,7 +242,7 @@ class SpotDetailScreen extends StatelessWidget {
                           MaterialPageRoute(
                               builder: (_) => const CameraScreen())),
                       icon: const Icon(Icons.camera_alt_rounded),
-                      label: const Text('Bu Noktada Fotoğraf Çek',
+                      label: const Text('Burada Fotoğraf Çek',
                           style: TextStyle(fontWeight: FontWeight.bold)),
                     ),
                   ),
@@ -250,12 +296,12 @@ class _PrimaryActionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 54,
+      height: 52,
       child: FilledButton.icon(
         onPressed: onPressed,
         style: FilledButton.styleFrom(
-          backgroundColor: const Color(0xFFB7BCC2),
-          foregroundColor: Colors.black,
+          backgroundColor: const Color(0xFF171A1E),
+          foregroundColor: Colors.white,
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
           padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -277,50 +323,73 @@ class _CompactShootingGuide extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final angleSummary =
-        spot.angle.trim().isEmpty ? 'Çekim rehberini aç' : spot.angle.trim();
+        spot.angle.trim().isEmpty ? 'Farklı açılar deneyerek keşfet' : spot.angle.trim();
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(15),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
           color: const Color(0xFF121416),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(17),
           border: Border.all(color: Colors.white10)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(children: [
-            Icon(Icons.auto_awesome, size: 20, color: Color(0xFFB7BCC2)),
-            SizedBox(width: 8),
-            Text('Nasıl Çekilir?',
-                style: TextStyle(fontSize: 17, fontWeight: FontWeight.w900))
-          ]),
-          const SizedBox(height: 9),
-          Text('${spot.bestTime} • ${spot.recommendedLens}',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                  color: Colors.white70, fontWeight: FontWeight.w700)),
-          const SizedBox(height: 5),
+          Wrap(
+            spacing: 7,
+            runSpacing: 7,
+            children: [
+              _MiniGuideChip(icon: Icons.schedule_rounded, text: spot.bestTime),
+              _MiniGuideChip(
+                  icon: Icons.camera_alt_outlined,
+                  text: spot.recommendedLens),
+            ],
+          ),
+          const SizedBox(height: 12),
           Text(angleSummary,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
               style: const TextStyle(
-                  color: Colors.white60, height: 1.35, fontSize: 13)),
+                  color: Colors.white70, height: 1.45, fontSize: 14)),
           const SizedBox(height: 8),
           Align(
             alignment: Alignment.centerRight,
             child: TextButton.icon(
               onPressed: () => _openActionSheet(context,
-                  title: 'Nasıl Çekilir?',
+                  title: 'Fotoğraf Rehberi',
                   child: ShootingGuideSection(spot: spot)),
               icon: const Icon(Icons.open_in_new, size: 17),
-              label: const Text('Rehberi Aç'),
+              label: const Text('Detaylı Rehber'),
             ),
           ),
         ],
       ),
     );
   }
+}
+
+class _MiniGuideChip extends StatelessWidget {
+  final IconData icon;
+  final String text;
+  const _MiniGuideChip({required this.icon, required this.text});
+
+  @override
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 7),
+        decoration: BoxDecoration(
+          color: const Color(0xFF1B1E22),
+          borderRadius: BorderRadius.circular(11),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 15, color: const Color(0xFFB7BCC2)),
+            const SizedBox(width: 5),
+            Text(text,
+                style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700)),
+          ],
+        ),
+      );
 }
 
 Future<void> _openActionSheet(BuildContext context,
@@ -406,6 +475,6 @@ class _InfoCard extends StatelessWidget {
         decoration: BoxDecoration(
             color: const Color(0xFF121416),
             borderRadius: BorderRadius.circular(16)),
-        child: Text(text, style: const TextStyle(fontSize: 15, height: 1.4)),
+        child: Text(text, style: const TextStyle(fontSize: 15, height: 1.5)),
       );
 }
