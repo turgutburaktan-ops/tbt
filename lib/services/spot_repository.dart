@@ -13,6 +13,7 @@ import '../data/curated_photo_spots_nationwide_expansion_v2.dart';
 import '../data/curated_photo_spots_nationwide_expansion_v3.dart';
 import '../models/photo_spot.dart';
 import 'nationwide_candidate_spot_resolver.dart';
+import 'spot_quality_gate.dart';
 
 enum SpotSort { rating, name }
 
@@ -64,7 +65,8 @@ class SpotRepository {
 
     final curated = _mergeWithCurated(remote);
     final nationwide = NationwideCandidateSpotResolver.mergeInto(curated);
-    return _filterLocal(nationwide, city: city, category: category);
+    final safe = SpotQualityGate.filterSafe(nationwide);
+    return _filterLocal(safe, city: city, category: category);
   }
 
   Future<List<PhotoSpot>> discover({
@@ -113,9 +115,10 @@ class SpotRepository {
       .map((snapshot) {
         final remote =
             snapshot.docs.map(_fromDocument).whereType<PhotoSpot>().toList();
-        return NationwideCandidateSpotResolver.mergeInto(
+        final merged = NationwideCandidateSpotResolver.mergeInto(
           _mergeWithCurated(remote),
         );
+        return SpotQualityGate.filterSafe(merged);
       });
 
   Future<List<PhotoSpot>> search(String input, {int limit = 2000}) =>
