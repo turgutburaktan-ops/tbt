@@ -9,10 +9,14 @@ DATA_DIR = Path('lib/data')
 OUT_DIR = Path('build/spot_quality')
 OUT_FILE = OUT_DIR / 'coordinate_audit.json'
 
-VERIFIED_TRAVEL_FILE = DATA_DIR / 'verified_travel_places.dart'
+VERIFIED_TRAVEL_FILES = [
+    DATA_DIR / 'verified_travel_places.dart',
+    DATA_DIR / 'verified_travel_places_batch2.dart',
+]
 EVIDENCE_FILE = DATA_DIR / 'spot_coordinate_verification_registry.dart'
 IMAGE_FILES = [
     DATA_DIR / 'verified_travel_image_registry.dart',
+    DATA_DIR / 'verified_travel_image_registry_batch2.dart',
     DATA_DIR / 'spot_image_registry.dart',
 ]
 
@@ -161,7 +165,12 @@ def main() -> None:
         if len(group) > 1
     ]
 
-    verified_travel = parse_photo_spots(VERIFIED_TRAVEL_FILE)
+    verified_travel: list[dict] = []
+    for path in VERIFIED_TRAVEL_FILES:
+        if not path.exists():
+            raise SystemExit(f'Missing verified travel data file: {path}')
+        verified_travel.extend(parse_photo_spots(path))
+
     verified_ids = {item['id'] for item in verified_travel}
     evidence_ids = parse_registry_ids(EVIDENCE_FILE, EVIDENCE_ID_RE)
     image_ids: set[str] = set()
@@ -180,6 +189,15 @@ def main() -> None:
         if len({item['id'] for item in group}) > 1
     ]
 
+    verified_by_id = defaultdict(list)
+    for item in verified_travel:
+        verified_by_id[item['id']].append(item)
+    verified_duplicate_ids = [
+        {'id': item_id, 'records': group}
+        for item_id, group in sorted(verified_by_id.items())
+        if len(group) > 1
+    ]
+
     report = {
         'summary': {
             'parsed_records': len(records),
@@ -194,6 +212,7 @@ def main() -> None:
             'verified_travel_duplicate_coordinate_groups': len(
                 verified_duplicate_coordinates
             ),
+            'verified_travel_duplicate_id_groups': len(verified_duplicate_ids),
         },
         'records_per_file': per_file,
         'invalid_bounds': invalid_bounds,
@@ -205,6 +224,7 @@ def main() -> None:
             'missing_evidence_ids': missing_evidence,
             'missing_image_ids': missing_images,
             'duplicate_coordinates': verified_duplicate_coordinates,
+            'duplicate_ids': verified_duplicate_ids,
         },
     }
 
@@ -215,13 +235,15 @@ def main() -> None:
     print(f'Audit report: {OUT_FILE}')
 
     # Sınır dışı/sıfır koordinat kullanıcıyı yanlış yere götürür. Doğrulanmış
-    # çekirdekte kanıt veya görsel eksikliği de yayın kalitesini düşürür.
+    # çekirdekte kanıt/görsel eksikliği veya ID/koordinat çakışması da kalite
+    # kapısını düşürür.
     if (
         invalid_bounds
         or zero_coordinates
         or missing_evidence
         or missing_images
         or verified_duplicate_coordinates
+        or verified_duplicate_ids
     ):
         raise SystemExit(2)
 
