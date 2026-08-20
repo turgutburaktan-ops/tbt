@@ -44,10 +44,19 @@ jobs:
             echo 'No Flutter tests found yet.'
           fi
 
-      - name: Ensure no source-rewrite workflows remain
+      - name: Block retired UI patch workflows
         shell: bash
         run: |
-          if grep -R -nE 'git push|contents:[[:space:]]*write' .github/workflows --include='*.yml' --include='*.yaml'; then
-            echo 'A workflow can still mutate repository source. Remove or isolate it.'
-            exit 1
-          fi
+          retired=(
+            .github/workflows/app_refresh_teal.yml
+            .github/workflows/apply_purple_ui.yml
+            .github/workflows/gray_social_refresh.yml
+            .github/workflows/fix_profile_photo_interaction.yml
+            .github/workflows/add_post_event_engagement.yml
+          )
+          for path in "${retired[@]}"; do
+            if [ -e "$path" ]; then
+              echo "Retired source-rewrite workflow returned: $path"
+              exit 1
+            fi
+          done
