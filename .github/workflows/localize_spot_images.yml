@@ -6,6 +6,7 @@ on:
     paths:
       - 'tool/localize_spot_images.py'
       - 'lib/data/spot_image_registry.dart'
+      - 'lib/data/verified_travel_image_registry*.dart'
       - '.github/workflows/localize_spot_images.yml'
 
 permissions:
@@ -42,6 +43,11 @@ jobs:
           fi
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add assets/spots lib/data/spot_image_registry.dart
-          git commit -m 'Localize verified real spot photos'
+          git add assets/spots \
+            lib/data/spot_image_registry.dart \
+            lib/data/verified_travel_image_registry.dart \
+            lib/data/verified_travel_image_registry_batch2.dart \
+            lib/data/verified_travel_image_registry_batch3.dart \
+            lib/data/verified_travel_image_registry_batch4.dart
+          git commit -m 'Localize verified real travel photos'
           git push
