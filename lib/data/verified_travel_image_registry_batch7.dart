@@ -1,0 +1,90 @@
+import 'spot_image_registry.dart';
+
+/// Yedinci doğrulanmış gezi grubunun elle seçilmiş gerçek fotoğrafları.
+/// Kaynak, fotoğrafçı ve lisans bilgileri dosyayla birlikte tutulur.
+const verifiedTravelImageRegistryBatch7 = <String, SpotImageInfo>{
+  'kars-kalesi': SpotImageInfo(
+    networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Kars%2C_castello%2C_veduta_01.jpg?width=1280',
+    sourceName: 'Wikimedia Commons',
+    author: 'Francesco Bini',
+    license: 'CC BY-SA 4.0',
+    sourcePage: 'https://commons.wikimedia.org/wiki/File:Kars%2C_castello%2C_veduta_01.jpg',
+  ),
+  'cildir-golu': SpotImageInfo(
+    networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Lake_Cildir_NASA.jpg?width=1280',
+    sourceName: 'Wikimedia Commons / NASA',
+    author: 'NASA',
+    license: 'Public domain',
+    sourcePage: 'https://commons.wikimedia.org/wiki/File:Lake_Cildir_NASA.jpg',
+  ),
+  'yason-burnu': SpotImageInfo(
+    networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Cape_Jason.jpg?width=1280',
+    sourceName: 'Wikimedia Commons',
+    author: 'Vonatolia',
+    license: 'CC BY-SA 4.0',
+    sourcePage: 'https://commons.wikimedia.org/wiki/File:Cape_Jason.jpg',
+  ),
+  'hamsilos-tabiat-parki': SpotImageInfo(
+    networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Hamsilos_Tabiat_Park%C4%B1.jpg?width=1280',
+    sourceName: 'Wikimedia Commons',
+    author: 'Erturkercin',
+    license: 'CC BY-SA 4.0',
+    sourcePage: 'https://commons.wikimedia.org/wiki/File:Hamsilos_Tabiat_Park%C4%B1.jpg',
+  ),
+  'amasra-kalesi': SpotImageInfo(
+    networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Amasra%2C_Turkey%2C_Castle%2C_view_from_the_island.jpg?width=1280',
+    sourceName: 'Wikimedia Commons',
+    author: 'Babbsack',
+    license: 'CC BY-SA 3.0',
+    sourcePage: 'https://commons.wikimedia.org/wiki/File:Amasra%2C_Turkey%2C_Castle%2C_view_from_the_island.jpg',
+  ),
+  'amasya-kalesi': SpotImageInfo(
+    networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Amasya_Kalesi_01.jpg?width=1280',
+    sourceName: 'Wikimedia Commons',
+    author: 'Zeynel Cebeci',
+    license: 'CC BY-SA 4.0',
+    sourcePage: 'https://commons.wikimedia.org/wiki/File:Amasya_Kalesi_01.jpg',
+  ),
+  'amasya-kral-kaya-mezarlari': SpotImageInfo(
+    networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Tombs_of_the_kings_of_Pontus_at_night_in_Amsaya%2C_Turkey.JPG?width=1280',
+    sourceName: 'Wikimedia Commons',
+    author: 'Babbsack',
+    license: 'CC BY-SA 3.0',
+    sourcePage: 'https://commons.wikimedia.org/wiki/File:Tombs_of_the_kings_of_Pontus_at_night_in_Amsaya%2C_Turkey.JPG',
+  ),
+  'ballica-magarasi': SpotImageInfo(
+    networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Ballica-magarasi_109064.jpg?width=1280',
+    sourceName: 'Wikimedia Commons',
+    author: 'Ümit1991',
+    license: 'CC BY-SA 4.0',
+    sourcePage: 'https://commons.wikimedia.org/wiki/File:Ballica-magarasi_109064.jpg',
+  ),
+  'alacahoyuk': SpotImageInfo(
+    networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Sphinx_Gate%2C_Alaca_H%C3%B6y%C3%BCk_02.jpg?width=1280',
+    sourceName: 'Wikimedia Commons',
+    author: 'Bernard Gagnon',
+    license: 'CC BY-SA 3.0',
+    sourcePage: 'https://commons.wikimedia.org/wiki/File:Sphinx_Gate%2C_Alaca_H%C3%B6y%C3%BCk_02.jpg',
+  ),
+  'midas-aniti': SpotImageInfo(
+    networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/MidasSehri.Tomb.jpg?width=1280',
+    sourceName: 'Wikimedia Commons',
+    author: 'China_Crisis',
+    license: 'CC BY-SA 2.5',
+    sourcePage: 'https://commons.wikimedia.org/wiki/File:MidasSehri.Tomb.jpg',
+  ),
+  'ayazini-metropolisi': SpotImageInfo(
+    networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Ayazini_Metropolis_Multi_Storey_Settlement%2C_2024_6.jpg?width=1280',
+    sourceName: 'Wikimedia Commons',
+    author: 'Bluetime93',
+    license: 'CC BY-SA 4.0',
+    sourcePage: 'https://commons.wikimedia.org/wiki/File:Ayazini_Metropolis_Multi_Storey_Settlement%2C_2024_6.jpg',
+  ),
+  'divrigi-ulu-camii': SpotImageInfo(
+    networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Divri%C4%9Fi_Great_Mosque_and_Hospital.jpg?width=1280',
+    sourceName: 'Wikimedia Commons',
+    author: 'Dosseman',
+    license: 'CC BY-SA 4.0',
+    sourcePage: 'https://commons.wikimedia.org/wiki/File:Divri%C4%9Fi_Great_Mosque_and_Hospital.jpg',
+  ),
+};
