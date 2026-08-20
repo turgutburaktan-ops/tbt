@@ -2,7 +2,7 @@ from pathlib import Path
 import re
 
 
-path = Path('lib/screens/camera_screen.dart')
+path = Path('lib/screens/legacy_camera_screen.dart')
 text = path.read_text(encoding='utf-8')
 
 helper_pattern = re.compile(

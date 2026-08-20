@@ -1,7 +1,7 @@
 from pathlib import Path
 
 
-path = Path('lib/screens/camera_screen.dart')
+path = Path('lib/screens/legacy_camera_screen.dart')
 text = path.read_text(encoding='utf-8')
 
 if "package:flutter/services.dart" not in text:

@@ -199,7 +199,7 @@ def patch_preview_composition(root: Path) -> None:
 
 
 def patch_flutter_focus_lock() -> None:
-    path = Path("lib/screens/camera_screen.dart")
+    path = Path("lib/screens/legacy_camera_screen.dart")
     if not path.exists():
         return
     text = path.read_text(encoding="utf-8")

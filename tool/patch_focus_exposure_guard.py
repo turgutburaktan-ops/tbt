@@ -1,12 +1,12 @@
 from pathlib import Path
 
-# The camera UI is now maintained directly in lib/screens/camera_screen.dart.
+# The Iris camera UI is maintained as the legacy fallback.
 # Older builds used this step to run patch_camera_experience_v3.py first, but
 # that patch targets the retired preset-card camera and must never rewrite the
 # new full-screen/GPU Studio implementation.
-path = Path('lib/screens/camera_screen.dart')
+path = Path('lib/screens/legacy_camera_screen.dart')
 if not path.exists():
-    raise SystemExit('camera_screen.dart not found')
+    raise SystemExit('legacy_camera_screen.dart not found')
 
 text = path.read_text(encoding='utf-8')
 
@@ -28,4 +28,4 @@ text = text.replace(
 )
 
 path.write_text(text, encoding='utf-8')
-print('Tap focus exposure guard checked for current Pro camera')
+print('Tap focus exposure guard checked for legacy camera')
