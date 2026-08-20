@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Download verified spot photos into Flutter assets and wire registry asset paths.
+"""Download verified travel photos into Flutter assets and wire asset paths.
 
-Only entries already present in lib/data/spot_image_registry.dart are processed.
-Their author/license/source metadata stays in the registry and is also exported to
-assets/spots/ATTRIBUTION.md. No camera/Iris code is touched.
+Only manually verified image registries are processed. Author/license/source
+metadata remains in each registry and is also exported to
+assets/spots/ATTRIBUTION.md. Auto-search image catalogs are intentionally not
+localized because they are not part of the hand-verified travel core.
 """
 
 from __future__ import annotations
@@ -16,7 +17,13 @@ import urllib.request
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-REGISTRY = ROOT / "lib/data/spot_image_registry.dart"
+REGISTRIES = [
+    ROOT / "lib/data/spot_image_registry.dart",
+    ROOT / "lib/data/verified_travel_image_registry.dart",
+    ROOT / "lib/data/verified_travel_image_registry_batch2.dart",
+    ROOT / "lib/data/verified_travel_image_registry_batch3.dart",
+    ROOT / "lib/data/verified_travel_image_registry_batch4.dart",
+]
 ASSET_DIR = ROOT / "assets/spots"
 ATTRIBUTION = ASSET_DIR / "ATTRIBUTION.md"
 
@@ -86,70 +93,90 @@ def download(url: str, destination: Path) -> None:
 
 
 def main() -> int:
-    text = REGISTRY.read_text(encoding="utf-8")
     ASSET_DIR.mkdir(parents=True, exist_ok=True)
     attribution_rows: list[str] = []
     failures: list[str] = []
     downloaded = 0
+    localized = 0
 
-    def replace(match: re.Match[str]) -> str:
-        nonlocal downloaded
-        spot_id = match.group("id")
-        body = match.group("body")
-        data = fields(body)
-        url = data.get("networkUrl", "").strip()
-        if not url:
-            return match.group(0)
+    for registry in REGISTRIES:
+        if not registry.exists():
+            failures.append(f"missing registry: {registry.relative_to(ROOT)}")
+            continue
 
-        ext = extension_for(url)
-        relative_path = f"assets/spots/{spot_id}{ext}"
-        destination = ROOT / relative_path
+        text = registry.read_text(encoding="utf-8")
 
-        try:
-            if not destination.exists() or destination.stat().st_size < 1024:
-                print(f"Downloading {spot_id} -> {relative_path}")
-                download(url, destination)
-                downloaded += 1
-                time.sleep(2.0)
-        except Exception as exc:
-            failures.append(f"{spot_id}: {exc}")
-            print(f"ERROR {spot_id}: {exc}", file=sys.stderr)
-            return match.group(0)
+        def replace(match: re.Match[str]) -> str:
+            nonlocal downloaded, localized
+            spot_id = match.group("id")
+            body = match.group("body")
+            data = fields(body)
+            url = data.get("networkUrl", "").strip()
+            if not url:
+                return match.group(0)
 
-        if "assetPath:" in body:
-            body = re.sub(
-                r"(^\s*assetPath:\s*').*?(',\s*$)",
-                rf"\g<1>{relative_path}\g<2>",
-                body,
-                count=1,
-                flags=re.MULTILINE,
+            ext = extension_for(url)
+            relative_path = f"assets/spots/{spot_id}{ext}"
+            destination = ROOT / relative_path
+
+            try:
+                if not destination.exists() or destination.stat().st_size < 1024:
+                    print(
+                        f"Downloading {registry.name}:{spot_id} -> {relative_path}"
+                    )
+                    download(url, destination)
+                    downloaded += 1
+                    time.sleep(1.5)
+            except Exception as exc:
+                failures.append(f"{registry.name}:{spot_id}: {exc}")
+                print(f"ERROR {registry.name}:{spot_id}: {exc}", file=sys.stderr)
+                return match.group(0)
+
+            if "assetPath:" in body:
+                body = re.sub(
+                    r"(^\s*assetPath:\s*').*?(',\s*$)",
+                    rf"\g<1>{relative_path}\g<2>",
+                    body,
+                    count=1,
+                    flags=re.MULTILINE,
+                )
+            else:
+                body = f"    assetPath: '{relative_path}',\n" + body.lstrip("\n")
+
+            localized += 1
+            attribution_rows.append(
+                "\n".join(
+                    [
+                        f"### `{spot_id}`",
+                        f"- Registry: `{registry.relative_to(ROOT)}`",
+                        f"- Local asset: `{relative_path}`",
+                        f"- Source: {data.get('sourceName', '')}",
+                        f"- Author: {data.get('author', '')}",
+                        f"- License: {data.get('license', '')}",
+                        f"- Source page: {data.get('sourcePage', '')}",
+                    ]
+                )
             )
-        else:
-            body = f"    assetPath: '{relative_path}',\n" + body.lstrip("\n")
+            return match.group("prefix") + body + match.group("suffix")
 
-        attribution_rows.append(
-            "\n".join(
-                [
-                    f"### `{spot_id}`",
-                    f"- Local asset: `{relative_path}`",
-                    f"- Source: {data.get('sourceName', '')}",
-                    f"- Author: {data.get('author', '')}",
-                    f"- License: {data.get('license', '')}",
-                    f"- Source page: {data.get('sourcePage', '')}",
-                ]
-            )
-        )
-        return match.group("prefix") + body + match.group("suffix")
+        updated = ENTRY_RE.sub(replace, text)
+        registry.write_text(updated, encoding="utf-8")
 
-    updated = ENTRY_RE.sub(replace, text)
-    REGISTRY.write_text(updated, encoding="utf-8")
+    header = """# Localized verified travel photo attribution\n\nThese files are local copies of manually verified Wikimedia Commons images\nregistered in the app's verified image registries. Author, license and source\nmetadata is retained here so bundling the images does not lose attribution.\n\n"""
+    ATTRIBUTION.write_text(
+        header + "\n\n".join(attribution_rows) + "\n", encoding="utf-8"
+    )
 
-    header = """# Localized spot photo attribution\n\nThese files are local copies of the already verified Wikimedia Commons images\nregistered in `lib/data/spot_image_registry.dart`. Author and license details are\nkept here so bundling the files does not lose attribution metadata.\n\n"""
-    ATTRIBUTION.write_text(header + "\n\n".join(attribution_rows) + "\n", encoding="utf-8")
-
-    print(f"Localized registry entries: {len(attribution_rows)}; downloaded now: {downloaded}")
+    print(
+        f"Localized registry entries: {localized}; downloaded now: {downloaded}; "
+        f"registries: {len(REGISTRIES)}"
+    )
     if failures:
-        print("Some assets could not be localized; successful downloads will still be committed:", file=sys.stderr)
+        print(
+            "Some verified assets could not be localized; successful downloads "
+            "will still be kept:",
+            file=sys.stderr,
+        )
         for failure in failures:
             print(f"- {failure}", file=sys.stderr)
     return 0
