@@ -8,6 +8,7 @@ import '../data/verified_travel_places_batch7.dart';
 import '../data/verified_travel_places_batch8.dart';
 import '../data/verified_travel_places_batch9.dart';
 import '../data/verified_travel_places_batch10.dart';
+import '../data/verified_travel_places_batch11.dart';
 import '../models/photo_spot.dart';
 
 /// Kullanıcıya açık katalog yalnızca iki güvenilir kaynağı kabul eder:
@@ -35,6 +36,7 @@ class NationwideCandidateSpotResolver {
       ...verifiedTravelPlacesBatch8,
       ...verifiedTravelPlacesBatch9,
       ...verifiedTravelPlacesBatch10,
+      ...verifiedTravelPlacesBatch11,
     ]) {
       resultByPlace.removeWhere((_, spot) => spot.id == verified.id);
       resultByPlace[_placeKey(verified.city, verified.name)] = verified;
