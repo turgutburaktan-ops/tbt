@@ -4,6 +4,7 @@ import 'spot_image_registry.dart';
 /// Her kayıt ilgili yeri göstermeli; kaynak, yazar ve açık lisans birlikte tutulur.
 const verifiedTravelImageRegistryBatch4 = <String, SpotImageInfo>{
   'aspendos': SpotImageInfo(
+    assetPath: 'assets/spots/aspendos.jpg',
     networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Aspendos_teatro_romano_-_panoramio.jpg?width=1280',
     sourceName: 'Wikimedia Commons',
     author: 'Nicola Feola',
@@ -11,6 +12,7 @@ const verifiedTravelImageRegistryBatch4 = <String, SpotImageInfo>{
     sourcePage: 'https://commons.wikimedia.org/wiki/File:Aspendos_teatro_romano_-_panoramio.jpg',
   ),
   'perge': SpotImageInfo(
+    assetPath: 'assets/spots/perge.jpg',
     networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Perge_city_overview.jpg?width=1280',
     sourceName: 'Wikimedia Commons',
     author: 'Saffron Blaze',
@@ -18,6 +20,7 @@ const verifiedTravelImageRegistryBatch4 = <String, SpotImageInfo>{
     sourcePage: 'https://commons.wikimedia.org/wiki/File:Perge_city_overview.jpg',
   ),
   'patara': SpotImageInfo(
+    assetPath: 'assets/spots/patara.jpg',
     networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/PataraTheater.JPG?width=1280',
     sourceName: 'Wikimedia Commons',
     author: 'Procopius',
@@ -25,6 +28,7 @@ const verifiedTravelImageRegistryBatch4 = <String, SpotImageInfo>{
     sourcePage: 'https://commons.wikimedia.org/wiki/File:PataraTheater.JPG',
   ),
   'xanthos': SpotImageInfo(
+    assetPath: 'assets/spots/xanthos.jpg',
     networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Entrance_into_theatre_of_Xanthos.jpg?width=1280',
     sourceName: 'Wikimedia Commons',
     author: 'Pot Noodle',
@@ -32,6 +36,7 @@ const verifiedTravelImageRegistryBatch4 = <String, SpotImageInfo>{
     sourcePage: 'https://commons.wikimedia.org/wiki/File:Entrance_into_theatre_of_Xanthos.jpg',
   ),
   'letoon': SpotImageInfo(
+    assetPath: 'assets/spots/letoon.jpg',
     networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Letoon_stoa_axb01.jpg?width=1280',
     sourceName: 'Wikimedia Commons',
     author: 'Alexander Buschorn',
@@ -39,6 +44,7 @@ const verifiedTravelImageRegistryBatch4 = <String, SpotImageInfo>{
     sourcePage: 'https://commons.wikimedia.org/wiki/File:Letoon_stoa_axb01.jpg',
   ),
   'myra': SpotImageInfo(
+    assetPath: 'assets/spots/myra.jpg',
     networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Myra_theatre.jpg?width=1280',
     sourceName: 'Wikimedia Commons',
     author: 'Ingo Mehling',
@@ -46,6 +52,7 @@ const verifiedTravelImageRegistryBatch4 = <String, SpotImageInfo>{
     sourcePage: 'https://commons.wikimedia.org/wiki/File:Myra_theatre.jpg',
   ),
   'kaunos': SpotImageInfo(
+    assetPath: 'assets/spots/kaunos.jpg',
     networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/DALYAN-KAUNOS_-_panoramio.jpg?width=1280',
     sourceName: 'Wikimedia Commons',
     author: 'HALUK COMERTEL',
@@ -53,6 +60,7 @@ const verifiedTravelImageRegistryBatch4 = <String, SpotImageInfo>{
     sourcePage: 'https://commons.wikimedia.org/wiki/File:DALYAN-KAUNOS_-_panoramio.jpg',
   ),
   'knidos': SpotImageInfo(
+    assetPath: 'assets/spots/knidos.jpg',
     networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Knidos-H%C3%A4fen.jpg?width=1280',
     sourceName: 'Wikimedia Commons',
     author: 'Tischbeinahe',
@@ -60,6 +68,7 @@ const verifiedTravelImageRegistryBatch4 = <String, SpotImageInfo>{
     sourcePage: 'https://commons.wikimedia.org/wiki/File:Knidos-H%C3%A4fen.jpg',
   ),
   'balikligol': SpotImageInfo(
+    assetPath: 'assets/spots/balikligol.jpg',
     networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Bal%C4%B1kl%C4%B1g%C3%B6l_Urfa2.jpg?width=1280',
     sourceName: 'Wikimedia Commons',
     author: 'Anadolu',
@@ -67,6 +76,7 @@ const verifiedTravelImageRegistryBatch4 = <String, SpotImageInfo>{
     sourcePage: 'https://commons.wikimedia.org/wiki/File:Bal%C4%B1kl%C4%B1g%C3%B6l_Urfa2.jpg',
   ),
   'harran': SpotImageInfo(
+    assetPath: 'assets/spots/harran.jpg',
     networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Harran_beehive_houses_%282%29.JPG?width=1280',
     sourceName: 'Wikimedia Commons',
     author: 'Zhengan',
@@ -74,6 +84,7 @@ const verifiedTravelImageRegistryBatch4 = <String, SpotImageInfo>{
     sourcePage: 'https://commons.wikimedia.org/wiki/File:Harran_beehive_houses_%282%29.JPG',
   ),
   'zeugma-muzesi': SpotImageInfo(
+    assetPath: 'assets/spots/zeugma-muzesi.jpg',
     networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Zeugma_museum.jpg?width=1280',
     sourceName: 'Wikimedia Commons',
     author: 'atomsaskal',
@@ -81,6 +92,7 @@ const verifiedTravelImageRegistryBatch4 = <String, SpotImageInfo>{
     sourcePage: 'https://commons.wikimedia.org/wiki/File:Zeugma_museum.jpg',
   ),
   'dara-antik-kenti': SpotImageInfo(
+    assetPath: 'assets/spots/dara-antik-kenti.jpg',
     networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Dara_P1030851_20080424091200.JPG?width=1280',
     sourceName: 'Wikimedia Commons',
     author: 'Nevit Dilmen',

@@ -4,6 +4,7 @@ import 'spot_image_registry.dart';
 /// fotoğraflar. Otomatik arama bu kayıtların önüne geçemez.
 const verifiedTravelImageRegistryBatch3 = <String, SpotImageInfo>{
   'uzungol': SpotImageInfo(
+    assetPath: 'assets/spots/uzungol.jpg',
     networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Uzungol_Lake.jpg?width=1280',
     sourceName: 'Wikimedia Commons',
     author: 'Cetintas555',
@@ -11,6 +12,7 @@ const verifiedTravelImageRegistryBatch3 = <String, SpotImageInfo>{
     sourcePage: 'https://commons.wikimedia.org/wiki/File:Uzungol_Lake.jpg',
   ),
   'rize-ayder': SpotImageInfo(
+    assetPath: 'assets/spots/rize-ayder.jpg',
     networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Rize%2C_Ayder_Yaylas%C4%B1.jpg?width=1280',
     sourceName: 'Wikimedia Commons',
     author: 'Phoenix2351',
@@ -18,6 +20,7 @@ const verifiedTravelImageRegistryBatch3 = <String, SpotImageInfo>{
     sourcePage: 'https://commons.wikimedia.org/wiki/File:Rize%2C_Ayder_Yaylas%C4%B1.jpg',
   ),
   'oludeniz': SpotImageInfo(
+    assetPath: 'assets/spots/oludeniz.jpg',
     networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Babadag_view_of_Oludeniz.jpg?width=1280',
     sourceName: 'Wikimedia Commons',
     author: 'Aslı Yılmaz',
@@ -25,6 +28,7 @@ const verifiedTravelImageRegistryBatch3 = <String, SpotImageInfo>{
     sourcePage: 'https://commons.wikimedia.org/wiki/File:Babadag_view_of_Oludeniz.jpg',
   ),
   'kelebekler-vadisi': SpotImageInfo(
+    assetPath: 'assets/spots/kelebekler-vadisi.jpg',
     networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Kelebekler_Vadisi_-_Butterfly_Valley%2C_Turkey.jpg?width=1280',
     sourceName: 'Wikimedia Commons',
     author: 'Htkava',
@@ -32,6 +36,7 @@ const verifiedTravelImageRegistryBatch3 = <String, SpotImageInfo>{
     sourcePage: 'https://commons.wikimedia.org/wiki/File:Kelebekler_Vadisi_-_Butterfly_Valley%2C_Turkey.jpg',
   ),
   'saklikent-kanyonu': SpotImageInfo(
+    assetPath: 'assets/spots/saklikent-kanyonu.jpg',
     networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Sakl%C4%B1kent_kanyon.jpg?width=1280',
     sourceName: 'Wikimedia Commons',
     author: 'Buse Kocaaslan',
@@ -39,6 +44,7 @@ const verifiedTravelImageRegistryBatch3 = <String, SpotImageInfo>{
     sourcePage: 'https://commons.wikimedia.org/wiki/File:Sakl%C4%B1kent_kanyon.jpg',
   ),
   'ihlara-vadisi': SpotImageInfo(
+    assetPath: 'assets/spots/ihlara-vadisi.jpg',
     networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Ihlara_valley_canyon.jpg?width=1280',
     sourceName: 'Wikimedia Commons',
     author: 'Benh LIEU SONG',
@@ -46,6 +52,7 @@ const verifiedTravelImageRegistryBatch3 = <String, SpotImageInfo>{
     sourcePage: 'https://commons.wikimedia.org/wiki/File:Ihlara_valley_canyon.jpg',
   ),
   'yedigoller-milli-parki': SpotImageInfo(
+    assetPath: 'assets/spots/yedigoller-milli-parki.jpg',
     networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Yedig%C3%B6ller_National_Park.jpg?width=1280',
     sourceName: 'Wikimedia Commons',
     author: 'Emrahyazicioglu',
@@ -53,6 +60,7 @@ const verifiedTravelImageRegistryBatch3 = <String, SpotImageInfo>{
     sourcePage: 'https://commons.wikimedia.org/wiki/File:Yedig%C3%B6ller_National_Park.jpg',
   ),
   'abant-golu': SpotImageInfo(
+    assetPath: 'assets/spots/abant-golu.jpg',
     networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Lake_Abant.jpg?width=1280',
     sourceName: 'Wikimedia Commons',
     author: 'Buse',
@@ -60,6 +68,7 @@ const verifiedTravelImageRegistryBatch3 = <String, SpotImageInfo>{
     sourcePage: 'https://commons.wikimedia.org/wiki/File:Lake_Abant.jpg',
   ),
   'antalya-duden': SpotImageInfo(
+    assetPath: 'assets/spots/antalya-duden.jpg',
     networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Lower_Duden_Falls.jpg?width=1280',
     sourceName: 'Wikimedia Commons',
     author: 'Saffron Blaze',
@@ -67,6 +76,7 @@ const verifiedTravelImageRegistryBatch3 = <String, SpotImageInfo>{
     sourcePage: 'https://commons.wikimedia.org/wiki/File:Lower_Duden_Falls.jpg',
   ),
   'manavgat-selalesi': SpotImageInfo(
+    assetPath: 'assets/spots/manavgat-selalesi.jpg',
     networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Manavgat_waterfall_by_tomgensler.JPG?width=1280',
     sourceName: 'Wikimedia Commons',
     author: 'Thomas Gensler',
@@ -74,6 +84,7 @@ const verifiedTravelImageRegistryBatch3 = <String, SpotImageInfo>{
     sourcePage: 'https://commons.wikimedia.org/wiki/File:Manavgat_waterfall_by_tomgensler.JPG',
   ),
   'cennet-cehennem': SpotImageInfo(
+    assetPath: 'assets/spots/cennet-cehennem.jpg',
     networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/023_Cennetobrugu.07.2006_resize.JPG?width=1280',
     sourceName: 'Wikimedia Commons',
     author: 'Gothika',
@@ -81,6 +92,7 @@ const verifiedTravelImageRegistryBatch3 = <String, SpotImageInfo>{
     sourcePage: 'https://commons.wikimedia.org/wiki/File:023_Cennetobrugu.07.2006_resize.JPG',
   ),
   'egirdir-golu': SpotImageInfo(
+    assetPath: 'assets/spots/egirdir-golu.jpg',
     networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Lake_Egirdir.jpg?width=1280',
     sourceName: 'Wikimedia Commons',
     author: 'Ingo Mehling',
