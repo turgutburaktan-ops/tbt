@@ -10,14 +10,6 @@ const verifiedTravelImageRegistryBatch11 = <String, SpotImageInfo>{
     license: 'CC BY-SA 4.0',
     sourcePage: 'https://commons.wikimedia.org/wiki/File:Zerzevan_Kalesi_%28havadan%2C_2016%29.jpg',
   ),
-  'malabadi-koprusu': SpotImageInfo(
-    assetPath: 'assets/spots/malabadi-koprusu.jpg',
-    networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Malabadibridge.jpg?width=1280',
-    sourceName: 'Wikimedia Commons',
-    author: 'Dyrt',
-    license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Malabadibridge.jpg',
-  ),
   'karahantepe': SpotImageInfo(
     assetPath: 'assets/spots/karahantepe.jpg',
     networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Karahantepe2.jpg?width=1280',
