@@ -10,7 +10,7 @@ on:
   push:
     branches:
       - feature/verified-travel-batch-11
-    # Generated catalog/data commits are intentionally excluded to prevent loops.
+    # Generated catalog/data/status commits are intentionally excluded to prevent loops.
     paths:
       - 'tool/generate_verified_spot_catalog.py'
       - 'tool/audit_verified_spot_catalog.py'
@@ -46,22 +46,94 @@ jobs:
         run: python -m pip install --disable-pip-version-check pillow
 
       - name: Generate direct-source verified catalog
+        id: generate
+        continue-on-error: true
         env:
           TARGET_TOTAL: ${{ inputs.target_total || '1100' }}
-        run: python3 tool/generate_verified_spot_catalog.py --target-total "$TARGET_TOTAL"
+        run: |
+          mkdir -p build/spot_import
+          set +e
+          python3 tool/generate_verified_spot_catalog.py --target-total "$TARGET_TOTAL" 2>&1 | tee build/spot_import/generator.log
+          code=${PIPESTATUS[0]}
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          exit 0
 
       - name: Upgrade hand-verified local photos
+        if: steps.generate.outputs.exit_code == '0'
         run: python3 tool/upgrade_verified_spot_images.py --long-edge 1600 --short-edge 900 --request-width 1920
 
       - name: Coordinate and evidence audit
+        if: steps.generate.outputs.exit_code == '0'
         run: python3 tool/audit_spot_coordinates.py
 
       - name: 1000+ catalog and image quality audit
+        id: catalog_audit
+        if: steps.generate.outputs.exit_code == '0'
+        continue-on-error: true
         env:
           MIN_VERIFIED_SPOTS: ${{ inputs.target_total || '1100' }}
           MIN_IMAGE_LONG_EDGE: '1600'
           MIN_IMAGE_SHORT_EDGE: '900'
-        run: python3 tool/audit_verified_spot_catalog.py
+        run: |
+          set +e
+          python3 tool/audit_verified_spot_catalog.py 2>&1 | tee build/spot_quality/verified_catalog_audit.log
+          code=${PIPESTATUS[0]}
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Write pipeline status
+        if: always()
+        env:
+          GENERATOR_EXIT: ${{ steps.generate.outputs.exit_code || 'not-run' }}
+          AUDIT_EXIT: ${{ steps.catalog_audit.outputs.exit_code || 'not-run' }}
+          TARGET_TOTAL: ${{ inputs.target_total || '1100' }}
+        run: |
+          mkdir -p docs
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          report_path = Path('build/spot_import/wikidata_verified_catalog_report.json')
+          audit_path = Path('build/spot_quality/verified_catalog_audit.json')
+          generator_log = Path('build/spot_import/generator.log')
+          report = json.loads(report_path.read_text(encoding='utf-8')) if report_path.exists() else {}
+          audit = json.loads(audit_path.read_text(encoding='utf-8')) if audit_path.exists() else {}
+          log_tail = ''
+          if generator_log.exists():
+              lines = generator_log.read_text(encoding='utf-8', errors='replace').splitlines()
+              log_tail = '\n'.join(lines[-80:])
+          status = {
+              'target_total': int(os.environ.get('TARGET_TOTAL', '1100')),
+              'generator_exit': os.environ.get('GENERATOR_EXIT', 'not-run'),
+              'audit_exit': os.environ.get('AUDIT_EXIT', 'not-run'),
+              'generation_report': report,
+              'audit_summary': audit.get('summary', {}),
+              'generator_log_tail': log_tail,
+          }
+          Path('docs/verified_spot_pipeline_status.json').write_text(
+              json.dumps(status, ensure_ascii=False, indent=2) + '\n', encoding='utf-8'
+          )
+          PY
+
+      - name: Commit pipeline status
+        if: always()
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add docs/verified_spot_pipeline_status.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'chore: record verified spot pipeline status'
+            git push origin HEAD:${GITHUB_REF_NAME}
+          fi
+
+      - name: Fail if generator did not reach target
+        if: steps.generate.outputs.exit_code != '0'
+        run: exit 2
+
+      - name: Fail if catalog audit failed
+        if: steps.generate.outputs.exit_code == '0' && steps.catalog_audit.outputs.exit_code != '0'
+        run: exit 2
 
       - name: Upload quality reports
         if: always()
@@ -70,16 +142,20 @@ jobs:
           name: verified-photo-spot-quality
           path: |
             build/spot_import/wikidata_verified_catalog_report.json
+            build/spot_import/generator.log
             build/spot_quality/coordinate_audit.json
             build/spot_quality/verified_catalog_audit.json
+            build/spot_quality/verified_catalog_audit.log
+            docs/verified_spot_pipeline_status.json
           if-no-files-found: warn
           retention-days: 30
 
       - name: Commit verified catalog
-        if: success()
+        if: steps.generate.outputs.exit_code == '0' && steps.catalog_audit.outputs.exit_code == '0'
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git pull --rebase origin "${GITHUB_REF_NAME}"
           git add \
             lib/data/verified_travel_places_generated.dart \
             lib/data/spot_coordinate_verification_registry_generated.dart \
