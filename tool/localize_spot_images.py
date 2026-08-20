@@ -19,12 +19,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 REGISTRIES = [
     ROOT / "lib/data/spot_image_registry.dart",
-    ROOT / "lib/data/verified_travel_image_registry.dart",
-    ROOT / "lib/data/verified_travel_image_registry_batch2.dart",
-    ROOT / "lib/data/verified_travel_image_registry_batch3.dart",
-    ROOT / "lib/data/verified_travel_image_registry_batch4.dart",
-    ROOT / "lib/data/verified_travel_image_registry_batch5.dart",
-    ROOT / "lib/data/verified_travel_image_registry_batch6.dart",
+    *sorted((ROOT / "lib/data").glob("verified_travel_image_registry*.dart")),
 ]
 ASSET_DIR = ROOT / "assets/spots"
 ATTRIBUTION = ASSET_DIR / "ATTRIBUTION.md"
@@ -100,6 +95,9 @@ def main() -> int:
     failures: list[str] = []
     downloaded = 0
     localized = 0
+
+    if len(REGISTRIES) < 2:
+        raise SystemExit('No verified travel image registries found.')
 
     for registry in REGISTRIES:
         if not registry.exists():
