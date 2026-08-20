@@ -79,29 +79,82 @@ class AiEditResult {
 }
 
 class AiService {
-  static const String baseUrl = 'https://tbt-tx25.onrender.com';
+  // A new AI gateway can be supplied at build time. The existing Render
+  // service stays in the APK as a hot fallback, so a provider outage, quota
+  // error or a failed rollout does not remove the current camera tools.
+  static const String _legacyBaseUrl = 'https://tbt-tx25.onrender.com';
+  static const String _configuredPrimaryUrl = String.fromEnvironment(
+    'TBT_AI_PRIMARY_URL',
+    defaultValue: '',
+  );
+
+  static List<String> get _baseUrls {
+    final primary = _normalizeBaseUrl(_configuredPrimaryUrl);
+    final legacy = _normalizeBaseUrl(_legacyBaseUrl);
+    return <String>{
+      if (primary.isNotEmpty) primary,
+      legacy,
+    }.toList(growable: false);
+  }
+
+  static String _normalizeBaseUrl(String value) =>
+      value.trim().replaceFirst(RegExp(r'/+$'), '');
+
+  static bool _canFallbackStatus(int statusCode) =>
+      statusCode == 401 ||
+      statusCode == 403 ||
+      statusCode == 404 ||
+      statusCode == 408 ||
+      statusCode == 425 ||
+      statusCode == 429 ||
+      statusCode >= 500;
+
+  static String _shortBody(String value) {
+    final clean = value.trim();
+    return clean.length <= 800 ? clean : '${clean.substring(0, 800)}…';
+  }
 
   static Future<PhotoAnalysis> analyzePhoto(String imagePath) async {
     final file = File(imagePath);
     if (!await file.exists()) throw Exception('Fotoğraf bulunamadı.');
 
-    final request =
-        http.MultipartRequest('POST', Uri.parse('$baseUrl/analyze'));
-    request.files.add(await http.MultipartFile.fromPath('image', imagePath));
-
-    final streamed = await request.send().timeout(const Duration(seconds: 75));
-    final response = await http.Response.fromStream(streamed);
-
-    if (response.statusCode != 200) {
-      throw Exception(
-          'AI analizi başarısız: ${response.statusCode}\n${response.body}');
+    Object? lastError;
+    final urls = _baseUrls;
+    for (var i = 0; i < urls.length; i++) {
+      try {
+        final request = http.MultipartRequest(
+          'POST',
+          Uri.parse('${urls[i]}/analyze'),
+        );
+        request.files.add(
+          await http.MultipartFile.fromPath('image', imagePath),
+        );
+        final streamed =
+            await request.send().timeout(const Duration(seconds: 75));
+        final response = await http.Response.fromStream(streamed);
+        if (response.statusCode != 200) {
+          throw _AiHttpException(
+            response.statusCode,
+            'AI analizi başarısız: ${response.statusCode}\n'
+            '${_shortBody(response.body)}',
+          );
+        }
+        final decoded = jsonDecode(response.body);
+        if (decoded is! Map<String, dynamic>) {
+          throw const FormatException(
+            'AI sunucusundan geçersiz yanıt alındı.',
+          );
+        }
+        return PhotoAnalysis.fromJson(decoded);
+      } catch (error) {
+        lastError = error;
+        final canTryLegacy = i < urls.length - 1 &&
+            (error is! _AiHttpException ||
+                _canFallbackStatus(error.statusCode));
+        if (!canTryLegacy) rethrow;
+      }
     }
-
-    final decoded = jsonDecode(response.body);
-    if (decoded is! Map<String, dynamic>) {
-      throw Exception('AI sunucusundan geçersiz yanıt alındı.');
-    }
-    return PhotoAnalysis.fromJson(decoded);
+    throw Exception('AI analizi başarısız: $lastError');
   }
 
   static Future<LiveFrameAnalysis> analyzeLiveFrame({
@@ -111,23 +164,41 @@ class AiService {
     final file = File(imagePath);
     if (!await file.exists()) throw Exception('Kamera karesi bulunamadı.');
 
-    final request =
-        http.MultipartRequest('POST', Uri.parse('$baseUrl/live-analyze'));
-    request.fields['mode'] = mode;
-    request.files.add(await http.MultipartFile.fromPath('image', imagePath));
-
-    final streamed = await request.send().timeout(const Duration(seconds: 30));
-    final response = await http.Response.fromStream(streamed);
-
-    if (response.statusCode != 200) {
-      throw Exception('Canlı AI başarısız: ${response.statusCode}');
+    Object? lastError;
+    final urls = _baseUrls;
+    for (var i = 0; i < urls.length; i++) {
+      try {
+        final request = http.MultipartRequest(
+          'POST',
+          Uri.parse('${urls[i]}/live-analyze'),
+        );
+        request.fields['mode'] = mode;
+        request.files.add(
+          await http.MultipartFile.fromPath('image', imagePath),
+        );
+        final streamed =
+            await request.send().timeout(const Duration(seconds: 30));
+        final response = await http.Response.fromStream(streamed);
+        if (response.statusCode != 200) {
+          throw _AiHttpException(
+            response.statusCode,
+            'Canlı AI başarısız: ${response.statusCode}',
+          );
+        }
+        final decoded = jsonDecode(response.body);
+        if (decoded is! Map<String, dynamic>) {
+          throw const FormatException('Canlı AI geçersiz yanıt verdi.');
+        }
+        return LiveFrameAnalysis.fromJson(decoded);
+      } catch (error) {
+        lastError = error;
+        final canTryLegacy = i < urls.length - 1 &&
+            (error is! _AiHttpException ||
+                _canFallbackStatus(error.statusCode));
+        if (!canTryLegacy) rethrow;
+      }
     }
-
-    final decoded = jsonDecode(response.body);
-    if (decoded is! Map<String, dynamic>) {
-      throw Exception('Canlı AI geçersiz yanıt verdi.');
-    }
-    return LiveFrameAnalysis.fromJson(decoded);
+    throw Exception('Canlı AI başarısız: $lastError');
   }
 
   static Future<AiEditResult> editPhoto({
@@ -136,52 +207,92 @@ class AiService {
     double? pointX,
     double? pointY,
     String? prompt,
+    String? mode,
   }) async {
     final file = File(imagePath);
     if (!await file.exists()) {
       throw Exception('Düzenlenecek fotoğraf bulunamadı.');
     }
 
-    final request =
-        http.MultipartRequest('POST', Uri.parse('$baseUrl/edit-photo'));
-    request.fields['action'] = action;
+    Object? lastError;
+    final urls = _baseUrls;
+    for (var i = 0; i < urls.length; i++) {
+      try {
+        final request = http.MultipartRequest(
+          'POST',
+          Uri.parse('${urls[i]}/edit-photo'),
+        );
+        request.fields['action'] = action;
+        if (mode != null && mode.trim().isNotEmpty) {
+          request.fields['mode'] = mode.trim();
+        }
+        if (pointX != null) {
+          request.fields['point_x'] = pointX.toStringAsFixed(5);
+        }
+        if (pointY != null) {
+          request.fields['point_y'] = pointY.toStringAsFixed(5);
+        }
+        if (prompt != null && prompt.trim().isNotEmpty) {
+          request.fields['prompt'] = prompt.trim();
+        }
+        request.files.add(
+          await http.MultipartFile.fromPath('image', imagePath),
+        );
 
-    if (pointX != null) request.fields['point_x'] = pointX.toStringAsFixed(5);
-    if (pointY != null) request.fields['point_y'] = pointY.toStringAsFixed(5);
-    if (prompt != null && prompt.trim().isNotEmpty) {
-      request.fields['prompt'] = prompt.trim();
-    }
+        final streamed =
+            await request.send().timeout(const Duration(seconds: 120));
+        final response = await http.Response.fromStream(streamed);
+        if (response.statusCode != 200) {
+          throw _AiHttpException(
+            response.statusCode,
+            'AI düzenleme başarısız: ${response.statusCode}\n'
+            '${_shortBody(response.body)}',
+          );
+        }
 
-    request.files.add(await http.MultipartFile.fromPath('image', imagePath));
+        List<int> outputBytes;
+        final contentType = response.headers['content-type'] ?? '';
+        if (contentType.toLowerCase().startsWith('image/')) {
+          outputBytes = response.bodyBytes;
+        } else {
+          final decoded = jsonDecode(response.body);
+          if (decoded is! Map<String, dynamic>) {
+            throw const FormatException(
+              'AI düzenleme geçersiz yanıt verdi.',
+            );
+          }
+          final imageBase64 = decoded['image_base64']?.toString();
+          if (imageBase64 == null || imageBase64.isEmpty) {
+            throw const FormatException(
+              'AI düzenleme sonucunda görsel dönmedi.',
+            );
+          }
+          outputBytes = base64Decode(imageBase64);
+        }
 
-    final streamed = await request.send().timeout(const Duration(seconds: 120));
-    final response = await http.Response.fromStream(streamed);
-
-    if (response.statusCode != 200) {
-      throw Exception(
-          'AI düzenleme başarısız: ${response.statusCode}\n${response.body}');
-    }
-
-    List<int> outputBytes;
-    final contentType = response.headers['content-type'] ?? '';
-    if (contentType.toLowerCase().startsWith('image/')) {
-      outputBytes = response.bodyBytes;
-    } else {
-      final decoded = jsonDecode(response.body);
-      if (decoded is! Map<String, dynamic>) {
-        throw Exception('AI düzenleme geçersiz yanıt verdi.');
+        final outputPath =
+            '${Directory.systemTemp.path}/ai_edit_${DateTime.now().microsecondsSinceEpoch}.jpg';
+        final output = File(outputPath);
+        await output.writeAsBytes(outputBytes, flush: true);
+        return AiEditResult(outputPath: output.path);
+      } catch (error) {
+        lastError = error;
+        final canTryLegacy = i < urls.length - 1 &&
+            (error is! _AiHttpException ||
+                _canFallbackStatus(error.statusCode));
+        if (!canTryLegacy) rethrow;
       }
-      final imageBase64 = decoded['image_base64']?.toString();
-      if (imageBase64 == null || imageBase64.isEmpty) {
-        throw Exception('AI düzenleme sonucunda görsel dönmedi.');
-      }
-      outputBytes = base64Decode(imageBase64);
     }
-
-    final outputPath =
-        '${Directory.systemTemp.path}/ai_edit_${DateTime.now().microsecondsSinceEpoch}.jpg';
-    final output = File(outputPath);
-    await output.writeAsBytes(outputBytes, flush: true);
-    return AiEditResult(outputPath: output.path);
+    throw Exception('AI düzenleme başarısız: $lastError');
   }
+}
+
+class _AiHttpException implements Exception {
+  final int statusCode;
+  final String message;
+
+  const _AiHttpException(this.statusCode, this.message);
+
+  @override
+  String toString() => message;
 }

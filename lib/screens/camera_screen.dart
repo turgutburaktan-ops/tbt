@@ -42,6 +42,8 @@ class _CameraScreenState extends State<CameraScreen> {
   bool _showGrid = true;
   bool _locked = false;
   Offset? _focusPoint;
+  Timer? _focusIndicatorTimer;
+  DateTime? _lastMotionUiUpdate;
 
   String _mode = 'Fotoğraf';
   String _tip = 'Hazır';
@@ -98,9 +100,17 @@ class _CameraScreenState extends State<CameraScreen> {
     super.initState();
     _init();
     _motionSub = accelerometerEventStream().listen((event) {
-      _movement =
+      final movement =
           (sqrt(event.x * event.x + event.y * event.y + event.z * event.z) - 9.81)
               .abs();
+      final now = DateTime.now();
+      final shouldRefresh = _lastMotionUiUpdate == null ||
+          now.difference(_lastMotionUiUpdate!).inMilliseconds >= 500;
+      _movement = movement;
+      if (mounted && shouldRefresh) {
+        _lastMotionUiUpdate = now;
+        setState(() {});
+      }
     });
   }
 
@@ -151,11 +161,6 @@ class _CameraScreenState extends State<CameraScreen> {
     try {
       await _camera.setExposureOffset(ev);
     } catch (_) {}
-    if (_focusPoint != null) {
-      try {
-        await _camera.setFocus(point: _focusPoint!);
-      } catch (_) {}
-    }
     if (mounted) {
       setState(() {
         _ev = ev;
@@ -170,21 +175,22 @@ class _CameraScreenState extends State<CameraScreen> {
       (details.localPosition.dx / c.maxWidth).clamp(0.0, 1.0),
       (details.localPosition.dy / c.maxHeight).clamp(0.0, 1.0),
     );
-    final stableEv = await _safeEv(_ev);
     _focusPoint = point;
+
+    if (_activeLens?.supportsFocus == false) {
+      if (mounted) setState(() => _tip = 'Bu lens sabit odaklı');
+      _scheduleFocusIndicatorHide();
+      return;
+    }
+
     try {
-      await _camera.setExposureMode(iris.ExposureMode.auto);
-      await _camera.setExposureOffset(stableEv);
       await _camera.setFocusMode(iris.FocusMode.auto);
       await _camera.setFocus(point: point);
-      await _camera.setExposureOffset(stableEv);
-    } catch (_) {}
-    if (mounted) {
-      setState(() {
-        _ev = stableEv;
-        _tip = 'Odaklandı';
-      });
+    } catch (e) {
+      debugPrint('tap focus: $e');
     }
+    if (mounted) setState(() => _tip = 'Odaklandı');
+    _scheduleFocusIndicatorHide();
   }
 
   Future<void> _longPressLock(
@@ -195,21 +201,36 @@ class _CameraScreenState extends State<CameraScreen> {
       (details.localPosition.dx / c.maxWidth).clamp(0.0, 1.0),
       (details.localPosition.dy / c.maxHeight).clamp(0.0, 1.0),
     );
-    final stableEv = await _safeEv(_ev);
     _focusPoint = point;
+
+    if (_activeLens?.supportsFocus == false) {
+      if (mounted) setState(() => _tip = 'Bu lens sabit odaklı');
+      _scheduleFocusIndicatorHide();
+      return;
+    }
+
+    _focusIndicatorTimer?.cancel();
     _locked = true;
     try {
-      await _camera.setExposureMode(iris.ExposureMode.auto);
-      await _camera.setExposureOffset(stableEv);
+      await _camera.setFocusMode(iris.FocusMode.auto);
       await _camera.setFocus(point: point);
+      await Future<void>.delayed(const Duration(milliseconds: 120));
       await _camera.setFocusMode(iris.FocusMode.locked);
-    } catch (_) {}
-    if (mounted) {
-      setState(() {
-        _ev = stableEv;
-        _tip = 'AF-L • odak kilitli';
-      });
+    } catch (e) {
+      debugPrint('focus lock: $e');
     }
+    if (mounted) setState(() => _tip = 'AF-L • odak kilitli');
+  }
+
+  void _scheduleFocusIndicatorHide() {
+    _focusIndicatorTimer?.cancel();
+    _focusIndicatorTimer = Timer(const Duration(milliseconds: 1400), () {
+      if (!mounted || _locked) return;
+      setState(() {
+        _focusPoint = null;
+        _tip = _profile.hint;
+      });
+    });
   }
 
   Future<void> _unlock() async {
@@ -226,8 +247,11 @@ class _CameraScreenState extends State<CameraScreen> {
 
   Future<void> _selectMode(String mode) async {
     if (_takingPhoto) return;
+    _focusIndicatorTimer?.cancel();
     setState(() {
       _mode = mode;
+      _locked = false;
+      _focusPoint = null;
       _tip = '$mode hazırlanıyor…';
       if (mode == 'Pro') _activeProControl = 'ISO';
     });
@@ -320,8 +344,23 @@ class _CameraScreenState extends State<CameraScreen> {
       );
     }
 
-    final bytes = await _camera.capturePhoto(options: options);
+    var bytes = await _camera.capturePhoto(options: options);
     if (bytes.isEmpty) throw Exception('empty capture');
+
+    // The Android selfie preview is mirrored while the raw JPEG generally is
+    // not. Bake the same orientation into the saved photo so the result does
+    // not jump horizontally when the editor opens.
+    if (_activeLens?.position == iris.CameraLensPosition.front) {
+      try {
+        final decoded = img.decodeImage(bytes);
+        if (decoded != null) {
+          final oriented = img.bakeOrientation(decoded);
+          bytes = img.encodeJpg(img.flipHorizontal(oriented), quality: 100);
+        }
+      } catch (e) {
+        debugPrint('selfie mirror: $e');
+      }
+    }
     final file = File(
       '${Directory.systemTemp.path}/tbt_${DateTime.now().microsecondsSinceEpoch}.jpg',
     );
@@ -380,7 +419,10 @@ class _CameraScreenState extends State<CameraScreen> {
       await Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => ProFilterEditorScreen(imagePath: file.path),
+          builder: (_) => ProFilterEditorScreen(
+            imagePath: file.path,
+            captureMode: _mode,
+          ),
         ),
       );
       if (_mode == 'Pro') await _applyMode();
@@ -411,7 +453,10 @@ class _CameraScreenState extends State<CameraScreen> {
       await Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => ProFilterEditorScreen(imagePath: image.path),
+          builder: (_) => ProFilterEditorScreen(
+            imagePath: image.path,
+            captureMode: _mode,
+          ),
         ),
       );
     }
@@ -460,6 +505,7 @@ class _CameraScreenState extends State<CameraScreen> {
 
   @override
   void dispose() {
+    _focusIndicatorTimer?.cancel();
     _motionSub?.cancel();
     _camera.disposeSession();
     super.dispose();
@@ -494,6 +540,7 @@ class _CameraScreenState extends State<CameraScreen> {
           if (_showGrid) const IgnorePointer(child: _Grid()),
           IgnorePointer(child: _cropGuide()),
           _topOverlay(),
+          _cameraStatusHud(),
           _focusOverlay(),
           _bottomOverlay(),
           if (_countdown > 0) _countdownOverlay(),
@@ -556,6 +603,83 @@ class _CameraScreenState extends State<CameraScreen> {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _cameraStatusHud() {
+    final steady = _movement < .55;
+    final lens = _activeLens?.position == iris.CameraLensPosition.front
+        ? 'Ön kamera'
+        : '${_displayZoom.toStringAsFixed(_displayZoom % 1 == 0 ? 0 : 1)}x';
+    return Positioned(
+      top: MediaQuery.paddingOf(context).top + 72,
+      left: 14,
+      right: 14,
+      child: IgnorePointer(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Flexible(
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: .54),
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: Colors.white12),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      lens,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        _tip,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Icon(
+                      steady
+                          ? Icons.motion_photos_paused_rounded
+                          : Icons.vibration_rounded,
+                      size: 14,
+                      color: steady
+                          ? const Color(0xFF54E6D8)
+                          : const Color(0xFFFFC400),
+                    ),
+                    const SizedBox(width: 3),
+                    Text(
+                      steady ? 'Sabit' : 'Sabit tut',
+                      style: TextStyle(
+                        color: steady
+                            ? const Color(0xFF54E6D8)
+                            : const Color(0xFFFFC400),
+                        fontSize: 9,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -710,7 +834,7 @@ class _CameraScreenState extends State<CameraScreen> {
   Widget _zoomButton(double value, String label, {bool enabled = true}) {
     final selected = (_displayZoom - value).abs() < .05;
     return GestureDetector(
-      onTap: enabled ? () => _selectZoom(value) : () => _selectZoom(value),
+      onTap: enabled ? () => _selectZoom(value) : null,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 160),
         width: 52,

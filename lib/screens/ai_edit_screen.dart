@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:image/image.dart' as img;
 
 import '../services/ai_service.dart';
 import 'create_post_screen.dart';
@@ -15,10 +16,12 @@ enum AiEditAction {
 
 class AiEditScreen extends StatefulWidget {
   final String originalImagePath;
+  final String? captureMode;
 
   const AiEditScreen({
     super.key,
     required this.originalImagePath,
+    this.captureMode,
   });
 
   @override
@@ -31,11 +34,35 @@ class _AiEditScreenState extends State<AiEditScreen> {
   AiEditAction? _activeAction;
   Offset? _removePoint;
   bool _selectingObject = false;
+  Size? _imagePixelSize;
 
   @override
   void initState() {
     super.initState();
     _currentImagePath = widget.originalImagePath;
+    _loadImageSize(_currentImagePath);
+  }
+
+  void _loadImageSize(String path) async {
+    try {
+      final decoded = img.decodeImage(await File(path).readAsBytes());
+      if (!mounted || decoded == null) return;
+      setState(() {
+        _imagePixelSize = Size(
+          decoded.width.toDouble(),
+          decoded.height.toDouble(),
+        );
+      });
+    } catch (_) {}
+  }
+
+  Rect _imageRect(Size viewport) {
+    final source = _imagePixelSize;
+    if (source == null || source.isEmpty || viewport.isEmpty) {
+      return Offset.zero & viewport;
+    }
+    final fitted = applyBoxFit(BoxFit.contain, source, viewport).destination;
+    return Alignment.center.inscribe(fitted, Offset.zero & viewport);
   }
 
   Future<void> _runEdit(
@@ -57,6 +84,7 @@ class _AiEditScreenState extends State<AiEditScreen> {
         pointX: normalizedPoint?.dx,
         pointY: normalizedPoint?.dy,
         prompt: prompt,
+        mode: widget.captureMode,
       );
 
       if (!mounted) return;
@@ -67,6 +95,7 @@ class _AiEditScreenState extends State<AiEditScreen> {
         _selectingObject = false;
         _removePoint = null;
       });
+      _loadImageSize(result.outputPath);
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -208,6 +237,7 @@ class _AiEditScreenState extends State<AiEditScreen> {
       _removePoint = null;
       _selectingObject = false;
     });
+    _loadImageSize(widget.originalImagePath);
   }
 
   Future<void> _continueToShare() async {
@@ -250,17 +280,25 @@ class _AiEditScreenState extends State<AiEditScreen> {
                     color: Colors.black,
                     child: LayoutBuilder(
                       builder: (context, constraints) {
+                        final imageRect = _imageRect(constraints.biggest);
                         return GestureDetector(
                           behavior: HitTestBehavior.opaque,
                           onTapDown: !_selectingObject || _processing
                               ? null
                               : (details) {
+                                  if (!imageRect.contains(
+                                    details.localPosition,
+                                  )) {
+                                    return;
+                                  }
                                   final normalized = Offset(
-                                    (details.localPosition.dx /
-                                            constraints.maxWidth)
+                                    ((details.localPosition.dx -
+                                                imageRect.left) /
+                                            imageRect.width)
                                         .clamp(0.0, 1.0),
-                                    (details.localPosition.dy /
-                                            constraints.maxHeight)
+                                    ((details.localPosition.dy -
+                                                imageRect.top) /
+                                            imageRect.height)
                                         .clamp(0.0, 1.0),
                                   );
                                   setState(() => _removePoint = normalized);
@@ -274,10 +312,12 @@ class _AiEditScreenState extends State<AiEditScreen> {
                               if (_selectingObject && _removePoint != null)
                                 Positioned(
                                   left:
-                                      _removePoint!.dx * constraints.maxWidth -
+                                      imageRect.left +
+                                          _removePoint!.dx * imageRect.width -
                                           26,
                                   top:
-                                      _removePoint!.dy * constraints.maxHeight -
+                                      imageRect.top +
+                                          _removePoint!.dy * imageRect.height -
                                           26,
                                   child: const IgnorePointer(
                                       child: _TargetMarker()),

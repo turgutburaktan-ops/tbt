@@ -6,14 +6,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_image_filters/flutter_image_filters.dart';
 import 'package:image/image.dart' as img;
 
+import 'ai_edit_screen.dart';
 import 'create_post_screen.dart';
 
 class ProFilterEditorScreen extends StatefulWidget {
   final String imagePath;
+  final String? captureMode;
 
   const ProFilterEditorScreen({
     super.key,
     required this.imagePath,
+    this.captureMode,
   });
 
   @override
@@ -283,22 +286,46 @@ class _ProFilterEditorScreenState extends State<ProFilterEditorScreen> {
     _rebuildConfiguration();
   }
 
-  Future<void> _exportAndContinue() async {
+  Future<void> _exportAndContinue({bool openAi = false}) async {
     if (_exporting || _texture == null || _configuration == null) return;
     setState(() => _exporting = true);
     try {
       final rendered = await _configuration!.export(_texture!, _texture!.size);
       final data = await rendered.toByteData(format: ui.ImageByteFormat.png);
       if (data == null) throw Exception('GPU çıktısı oluşturulamadı.');
+      final pngBytes = data.buffer.asUint8List();
+      List<int> outputBytes = pngBytes;
+      var extension = 'png';
+      try {
+        final decoded = img.decodeImage(pngBytes);
+        if (decoded != null) {
+          final prepared = decoded.width > 4096 || decoded.height > 4096
+              ? img.copyResize(
+                  decoded,
+                  width: decoded.width >= decoded.height ? 4096 : null,
+                  height: decoded.height > decoded.width ? 4096 : null,
+                )
+              : decoded;
+          outputBytes = img.encodeJpg(prepared, quality: 96);
+          extension = 'jpg';
+        }
+      } catch (_) {
+        // PNG remains a lossless fallback if local JPEG preparation fails.
+      }
       final output = File(
-        '${Directory.systemTemp.path}/tbt_gpu_${DateTime.now().microsecondsSinceEpoch}.png',
+        '${Directory.systemTemp.path}/tbt_gpu_${DateTime.now().microsecondsSinceEpoch}.$extension',
       );
-      await output.writeAsBytes(data.buffer.asUint8List(), flush: true);
+      await output.writeAsBytes(outputBytes, flush: true);
       if (!mounted) return;
       await Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => CreatePostScreen(initialImagePath: output.path),
+          builder: (_) => openAi
+              ? AiEditScreen(
+                  originalImagePath: output.path,
+                  captureMode: widget.captureMode,
+                )
+              : CreatePostScreen(initialImagePath: output.path),
         ),
       );
     } catch (e) {
@@ -610,17 +637,24 @@ class _ProFilterEditorScreenState extends State<ProFilterEditorScreen> {
       color: Colors.black,
       child: Row(
         children: [
+          IconButton.outlined(
+            tooltip: 'Tekrar çek',
+            onPressed: _exporting ? null : () => Navigator.pop(context),
+            icon: const Icon(Icons.camera_alt_outlined),
+          ),
+          const SizedBox(width: 10),
           Expanded(
             child: OutlinedButton.icon(
-              onPressed: _exporting ? null : () => Navigator.pop(context),
-              icon: const Icon(Icons.camera_alt_outlined),
-              label: const Text('Tekrar Çek'),
+              onPressed:
+                  _exporting ? null : () => _exportAndContinue(openAi: true),
+              icon: const Icon(Icons.auto_awesome_rounded),
+              label: const Text('AI Düzenle'),
             ),
           ),
           const SizedBox(width: 10),
           Expanded(
             child: FilledButton.icon(
-              onPressed: _exporting ? null : _exportAndContinue,
+              onPressed: _exporting ? null : () => _exportAndContinue(),
               style: FilledButton.styleFrom(
                 backgroundColor: Colors.white,
                 foregroundColor: Colors.black,

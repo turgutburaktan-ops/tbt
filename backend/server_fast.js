@@ -165,13 +165,104 @@ function editPrompt(action, userPrompt, pointX, pointY) {
   }
 }
 
+function legacyDevelopProfile(mode, metrics, action) {
+  const normalizedMode = String(mode || "Fotoğraf").toLowerCase();
+  const settings = normalizedMode.includes("gece")
+    ? { exposure: 0.08, saturation: -2, contrast: 8, warmth: -1, sharpness: 5 }
+    : normalizedMode.includes("portre")
+      ? { exposure: 0.04, saturation: 1, contrast: 3, warmth: 2, sharpness: 3 }
+      : { exposure: 0, saturation: 0, contrast: 6, warmth: 0, sharpness: 6 };
+
+  if (metrics.mean < 62) settings.exposure += 0.20;
+  else if (metrics.mean < 92) settings.exposure += 0.10;
+  else if (metrics.mean > 195 || metrics.highlightRatio > 0.10) {
+    settings.exposure -= 0.22;
+  }
+  if (metrics.contrast < 28) settings.contrast += 4;
+  if (metrics.contrast > 72) settings.contrast -= 3;
+  if (action === "fix_light") {
+    settings.saturation = clamp(settings.saturation, -3, 4);
+    settings.sharpness = clamp(settings.sharpness, 0, 4);
+  }
+  return settings;
+}
+
+async function legacyDevelopPhoto(buffer, mode, action) {
+  const settings = legacyDevelopProfile(
+    mode,
+    await imageMetrics(buffer),
+    action,
+  );
+  const brightness = Math.pow(2, clamp(settings.exposure, -0.5, 0.4));
+  const saturation = clamp(1 + settings.saturation / 100, 0.90, 1.10);
+  const contrast = clamp(settings.contrast / 100, -0.08, 0.16);
+  const gain = 1 + contrast;
+  const offset = -contrast * 16;
+  let pipeline = sharp(buffer)
+    .rotate()
+    .removeAlpha()
+    .toColourspace("srgb")
+    .modulate({ brightness, saturation })
+    .linear([gain, gain, gain], [offset, offset, offset]);
+
+  if (Math.abs(settings.warmth) > 0.05) {
+    const red = clamp(1 + settings.warmth * 0.0035, 0.975, 1.025);
+    const blue = clamp(1 - settings.warmth * 0.0035, 0.975, 1.025);
+    pipeline = pipeline.linear([red, 1, blue], [0, 0, 0]);
+  }
+  if (settings.sharpness > 0.5) {
+    pipeline = pipeline.sharpen({ sigma: 0.5 + settings.sharpness / 36 });
+  }
+  return pipeline
+    .jpeg({ quality: 94, chromaSubsampling: "4:4:4" })
+    .toBuffer();
+}
+
+async function prepareAiInput(buffer) {
+  return sharp(buffer)
+    .rotate()
+    .removeAlpha()
+    .toColourspace("srgb")
+    .jpeg({ quality: 95, chromaSubsampling: "4:4:4" })
+    .toBuffer({ resolveWithObject: true });
+}
+
+async function buildRemovalMask(width, height, pointX, pointY) {
+  const x = Math.round(clamp(pointX, 0, 1) * width);
+  const y = Math.round(clamp(pointY, 0, 1) * height);
+  const radius = Math.round(Math.min(width, height) * 0.13);
+  const svg = Buffer.from(`
+    <svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <mask id="edit-region">
+          <rect width="100%" height="100%" fill="white"/>
+          <circle cx="${x}" cy="${y}" r="${radius}" fill="black"/>
+        </mask>
+      </defs>
+      <rect width="100%" height="100%" fill="white" mask="url(#edit-region)"/>
+    </svg>
+  `);
+  return sharp(svg).png().toBuffer();
+}
+
 async function aiImageEdit(buffer, mimeType, action, { pointX, pointY, userPrompt } = {}) {
   if (!process.env.OPENAI_API_KEY) throw new Error("OPENAI_API_KEY tanımlı değil.");
+
+  const prepared = await prepareAiInput(buffer);
 
   const form = new FormData();
   form.append("model", "gpt-image-2");
   form.append("prompt", editPrompt(action, userPrompt, pointX, pointY));
-  form.append("image", new Blob([buffer], { type: mimeType }), "input.jpg");
+  form.append("image", new Blob([prepared.data], { type: "image/jpeg" }), "input.jpg");
+  if (action === "remove_object" && pointX != null && pointY != null) {
+    const mask = await buildRemovalMask(
+      prepared.info.width,
+      prepared.info.height,
+      pointX,
+      pointY,
+    );
+    form.append("mask", new Blob([mask], { type: "image/png" }), "mask.png");
+  }
   form.append("size", "auto");
   form.append("quality", "medium");
   form.append("output_format", "jpeg");
@@ -245,6 +336,7 @@ app.post("/edit-photo", upload.single("image"), async (req, res) => {
     const x = req.body?.point_x != null ? clamp(req.body.point_x, 0, 1) : null;
     const y = req.body?.point_y != null ? clamp(req.body.point_y, 0, 1) : null;
     const prompt = String(req.body?.prompt || "").trim();
+    const mode = String(req.body?.mode || "Fotoğraf");
     if (action === "remove_object" && (x == null || y == null)) {
       return res.status(400).json({ error: "Nesne konumu seçilmedi." });
     }
@@ -252,13 +344,30 @@ app.post("/edit-photo", upload.single("image"), async (req, res) => {
       return res.status(400).json({ error: "Düzenleme tarifini yazmalısın." });
     }
 
-    const output = await aiImageEdit(req.file.buffer, detectMimeType(req.file), action, {
-      pointX: x,
-      pointY: y,
-      userPrompt: prompt,
-    });
+    let output;
+    let engine = `gpt-image-2-${action}`;
+    let usedLegacyFallback = false;
+    try {
+      output = await aiImageEdit(req.file.buffer, detectMimeType(req.file), action, {
+        pointX: x,
+        pointY: y,
+        userPrompt: prompt,
+      });
+    } catch (primaryError) {
+      // The previous deterministic editor remains available for the two
+      // operations it can perform safely. Generative removal/prompt failures
+      // stay visible instead of pretending that an unchanged image succeeded.
+      if (action !== "auto_enhance" && action !== "fix_light") {
+        throw primaryError;
+      }
+      console.error("Primary image API failed; using legacy develop", primaryError);
+      output = await legacyDevelopPhoto(req.file.buffer, mode, action);
+      engine = `legacy-sharp-${action}`;
+      usedLegacyFallback = true;
+    }
     res.setHeader("Content-Type", "image/jpeg");
-    res.setHeader("X-Develop-Engine", `gpt-image-2-${action}`);
+    res.setHeader("X-Develop-Engine", engine);
+    res.setHeader("X-AI-Fallback", usedLegacyFallback ? "legacy" : "none");
     res.setHeader("X-Processing-Ms", String(Date.now() - started));
     res.setHeader("Cache-Control", "no-store");
     return res.status(200).send(output);

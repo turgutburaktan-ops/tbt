@@ -41,6 +41,7 @@ tap_replacement = r'''  Future<void> _tapFocus(TapDownDetails details, BoxConstr
 
     if (_activeLens?.supportsFocus == false) {
       if (mounted) setState(() => _tip = 'Bu lens sabit odaklı');
+      _scheduleFocusIndicatorHide();
       return;
     }
 
@@ -51,6 +52,7 @@ tap_replacement = r'''  Future<void> _tapFocus(TapDownDetails details, BoxConstr
       debugPrint('tap focus: $e');
     }
     if (mounted) setState(() => _tip = 'Odaklandı');
+    _scheduleFocusIndicatorHide();
   }
 
   Future<void> _longPressLock'''
@@ -74,9 +76,11 @@ lock_replacement = r'''  Future<void> _longPressLock(
 
     if (_activeLens?.supportsFocus == false) {
       if (mounted) setState(() => _tip = 'Bu lens sabit odaklı');
+      _scheduleFocusIndicatorHide();
       return;
     }
 
+    _focusIndicatorTimer?.cancel();
     _locked = true;
     try {
       await _camera.setFocusMode(iris.FocusMode.auto);
