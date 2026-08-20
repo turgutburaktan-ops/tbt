@@ -45,11 +45,6 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add assets/spots \
             lib/data/spot_image_registry.dart \
-            lib/data/verified_travel_image_registry.dart \
-            lib/data/verified_travel_image_registry_batch2.dart \
-            lib/data/verified_travel_image_registry_batch3.dart \
-            lib/data/verified_travel_image_registry_batch4.dart \
-            lib/data/verified_travel_image_registry_batch5.dart \
-            lib/data/verified_travel_image_registry_batch6.dart
+            lib/data/verified_travel_image_registry*.dart
           git commit -m 'Localize verified real travel photos'
           git push
