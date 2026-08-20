@@ -4,6 +4,7 @@ import 'spot_image_registry.dart';
 /// Kaynak, fotoğrafçı ve lisans bilgileri dosyayla birlikte tutulur.
 const verifiedTravelImageRegistryBatch9 = <String, SpotImageInfo>{
   'dolmabahce-sarayi': SpotImageInfo(
+    assetPath: 'assets/spots/dolmabahce-sarayi.jpg',
     networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Dolmabahce_palace.jpg?width=1280',
     sourceName: 'Wikimedia Commons',
     author: 'Tcyagizefem',
@@ -11,6 +12,7 @@ const verifiedTravelImageRegistryBatch9 = <String, SpotImageInfo>{
     sourcePage: 'https://commons.wikimedia.org/wiki/File:Dolmabahce_palace.jpg',
   ),
   'rumeli-hisari': SpotImageInfo(
+    assetPath: 'assets/spots/rumeli-hisari.jpg',
     networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Rumeli_hisari.jpg?width=1280',
     sourceName: 'Wikimedia Commons',
     author: 'KeRR',
@@ -18,6 +20,7 @@ const verifiedTravelImageRegistryBatch9 = <String, SpotImageInfo>{
     sourcePage: 'https://commons.wikimedia.org/wiki/File:Rumeli_hisari.jpg',
   ),
   'iznik-ayasofya': SpotImageInfo(
+    assetPath: 'assets/spots/iznik-ayasofya.jpg',
     networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Iznik_Hagia_Sophia_Mosque_8100.jpg?width=1280',
     sourceName: 'Wikimedia Commons',
     author: 'Dosseman',
@@ -25,6 +28,7 @@ const verifiedTravelImageRegistryBatch9 = <String, SpotImageInfo>{
     sourcePage: 'https://commons.wikimedia.org/wiki/File:Iznik_Hagia_Sophia_Mosque_8100.jpg',
   ),
   'golyazi': SpotImageInfo(
+    assetPath: 'assets/spots/golyazi.jpg',
     networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/G%C3%B6lyaz%C4%B1_Evleri.jpg?width=1280',
     sourceName: 'Wikimedia Commons',
     author: 'Arif miletli',
@@ -32,6 +36,7 @@ const verifiedTravelImageRegistryBatch9 = <String, SpotImageInfo>{
     sourcePage: 'https://commons.wikimedia.org/wiki/File:G%C3%B6lyaz%C4%B1_Evleri.jpg',
   ),
   'dupnisa-magarasi': SpotImageInfo(
+    assetPath: 'assets/spots/dupnisa-magarasi.jpg',
     networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Dupnisa_Cave.jpg?width=1280',
     sourceName: 'Wikimedia Commons',
     author: 'Mrsevinc',
@@ -39,6 +44,7 @@ const verifiedTravelImageRegistryBatch9 = <String, SpotImageInfo>{
     sourcePage: 'https://commons.wikimedia.org/wiki/File:Dupnisa_Cave.jpg',
   ),
   'kilitbahir-kalesi': SpotImageInfo(
+    assetPath: 'assets/spots/kilitbahir-kalesi.jpg',
     networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Kilitbahir_Kalesi.jpg?width=1280',
     sourceName: 'Wikimedia Commons',
     author: 'Kcperspectives',
@@ -46,6 +52,7 @@ const verifiedTravelImageRegistryBatch9 = <String, SpotImageInfo>{
     sourcePage: 'https://commons.wikimedia.org/wiki/File:Kilitbahir_Kalesi.jpg',
   ),
   'cunda-taksiyarhis': SpotImageInfo(
+    assetPath: 'assets/spots/cunda-taksiyarhis.jpg',
     networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Taksiyarhis_Kilisesi.JPG?width=1280',
     sourceName: 'Wikimedia Commons',
     author: 'Ollios',
@@ -53,6 +60,7 @@ const verifiedTravelImageRegistryBatch9 = <String, SpotImageInfo>{
     sourcePage: 'https://commons.wikimedia.org/wiki/File:Taksiyarhis_Kilisesi.JPG',
   ),
   'acarlar-longozu': SpotImageInfo(
+    assetPath: 'assets/spots/acarlar-longozu.jpg',
     networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Acarlar_longozu.jpg?width=1280',
     sourceName: 'Wikimedia Commons',
     author: 'Mustafa Akça',
@@ -60,6 +68,7 @@ const verifiedTravelImageRegistryBatch9 = <String, SpotImageInfo>{
     sourcePage: 'https://commons.wikimedia.org/wiki/File:Acarlar_longozu.jpg',
   ),
   'horma-kanyonu': SpotImageInfo(
+    assetPath: 'assets/spots/horma-kanyonu.jpg',
     networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Horma_Canyon-Turkey.jpg?width=1280',
     sourceName: 'Wikimedia Commons',
     author: 'Buse Şabançelebi',
@@ -67,6 +76,7 @@ const verifiedTravelImageRegistryBatch9 = <String, SpotImageInfo>{
     sourcePage: 'https://commons.wikimedia.org/wiki/File:Horma_Canyon-Turkey.jpg',
   ),
   'valla-kanyonu': SpotImageInfo(
+    assetPath: 'assets/spots/valla-kanyonu.jpg',
     networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Valla_Canyon.jpg?width=1280',
     sourceName: 'Wikimedia Commons',
     author: 'KCCan00',
@@ -74,6 +84,7 @@ const verifiedTravelImageRegistryBatch9 = <String, SpotImageInfo>{
     sourcePage: 'https://commons.wikimedia.org/wiki/File:Valla_Canyon.jpg',
   ),
   'cehennemagzi-magaralari': SpotImageInfo(
+    assetPath: 'assets/spots/cehennemagzi-magaralari.jpg',
     networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Zonguldak_Cehennem_A%C4%9Fz%C4%B1_Ma%C4%9Faralar%C4%B1.jpg?width=1280',
     sourceName: 'Wikimedia Commons',
     author: 'Oğuz67',
@@ -81,6 +92,7 @@ const verifiedTravelImageRegistryBatch9 = <String, SpotImageInfo>{
     sourcePage: 'https://commons.wikimedia.org/wiki/File:Zonguldak_Cehennem_A%C4%9Fz%C4%B1_Ma%C4%9Faralar%C4%B1.jpg',
   ),
   'gokgol-magarasi': SpotImageInfo(
+    assetPath: 'assets/spots/gokgol-magarasi.jpg',
     networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/G%C3%B6kg%C3%B6l_ma%C4%9Faras%C4%B1.jpg?width=1280',
     sourceName: 'Wikimedia Commons',
     author: 'Acar54',

@@ -12,6 +12,9 @@ import '../data/verified_travel_image_registry_batch7.dart';
 import '../data/verified_travel_image_registry_batch8.dart';
 import '../data/verified_travel_image_registry_batch9.dart';
 import '../data/verified_travel_image_registry_batch10.dart';
+import '../data/verified_travel_image_registry_batch11.dart';
+import '../data/verified_travel_image_registry_batch12.dart';
+import '../data/verified_travel_image_registry_generated.dart';
 import '../models/photo_spot.dart';
 import '../services/spot_image_search_service.dart';
 
@@ -33,7 +36,10 @@ class SpotImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final verified = verifiedTravelImageRegistryBatch10[spot.id] ??
+    final verified = verifiedTravelImageRegistryGenerated[spot.id] ??
+        verifiedTravelImageRegistryBatch12[spot.id] ??
+        verifiedTravelImageRegistryBatch11[spot.id] ??
+        verifiedTravelImageRegistryBatch10[spot.id] ??
         verifiedTravelImageRegistryBatch9[spot.id] ??
         verifiedTravelImageRegistryBatch8[spot.id] ??
         verifiedTravelImageRegistryBatch7[spot.id] ??

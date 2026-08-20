@@ -204,6 +204,318 @@ metadata is retained here so bundling the images does not lose attribution.
 - License: CC BY-SA 3.0
 - Source page: https://commons.wikimedia.org/wiki/File:Festung_Harput.jpg
 
+### `alanya-kalesi`
+- Registry: `lib/data/verified_travel_image_registry_batch10.dart`
+- Local asset: `assets/spots/alanya-kalesi.jpg`
+- Source: Wikimedia Commons
+- Author: Luke_33
+- License: CC BY 2.5 Poland
+- Source page: https://commons.wikimedia.org/wiki/File:Alanya_kale.jpg
+
+### `mamure-kalesi`
+- Registry: `lib/data/verified_travel_image_registry_batch10.dart`
+- Local asset: `assets/spots/mamure-kalesi.jpg`
+- Source: Wikimedia Commons
+- Author: Beñat Irasuegi
+- License: CC BY-SA 2.0
+- Source page: https://commons.wikimedia.org/wiki/File:Castle_in_Mamure%2C_Anamur%2C_Turkey_from_the_Sea.jpg
+
+### `kizkalesi-deniz-kalesi`
+- Registry: `lib/data/verified_travel_image_registry_batch10.dart`
+- Local asset: `assets/spots/kizkalesi-deniz-kalesi.jpg`
+- Source: Wikimedia Commons
+- Author: Zeynel Cebeci
+- License: CC BY-SA 4.0
+- Source page: https://commons.wikimedia.org/wiki/File:Korykos_-_K%C4%B1zkalesi_01_%28cropped%29.jpg
+
+### `alahan-manastiri`
+- Registry: `lib/data/verified_travel_image_registry_batch10.dart`
+- Local asset: `assets/spots/alahan-manastiri.jpg`
+- Source: Wikimedia Commons
+- Author: Nedim Ardoğa
+- License: CC BY-SA 3.0
+- Source page: https://commons.wikimedia.org/wiki/File:Alahan_Monastery%2C_Mersin_Province.jpg
+
+### `saint-pierre-kilisesi`
+- Registry: `lib/data/verified_travel_image_registry_batch10.dart`
+- Local asset: `assets/spots/saint-pierre-kilisesi.jpg`
+- Source: Wikimedia Commons
+- Author: Volkan Hatem
+- License: CC BY-SA 3.0
+- Source page: https://commons.wikimedia.org/wiki/File:Antioch_Saint_Pierre_Church_Front.JPG
+
+### `titus-tuneli`
+- Registry: `lib/data/verified_travel_image_registry_batch10.dart`
+- Local asset: `assets/spots/titus-tuneli.jpg`
+- Source: Wikimedia Commons
+- Author: Vikiçizer
+- License: CC BY-SA 3.0
+- Source page: https://commons.wikimedia.org/wiki/File:Samandag4.JPG
+
+### `karatepe-aslantas`
+- Registry: `lib/data/verified_travel_image_registry_batch10.dart`
+- Local asset: `assets/spots/karatepe-aslantas.jpg`
+- Source: Wikimedia Commons
+- Author: Nedim Ardoğa
+- License: CC BY-SA 4.0
+- Source page: https://commons.wikimedia.org/wiki/File:Karatepe_Museum.jpg
+
+### `anavarza-antik-kenti`
+- Registry: `lib/data/verified_travel_image_registry_batch10.dart`
+- Local asset: `assets/spots/anavarza-antik-kenti.jpg`
+- Source: Wikimedia Commons
+- Author: MUSTAFA TOR
+- License: CC BY-SA 3.0
+- Source page: https://commons.wikimedia.org/wiki/File:Anazarbus_klikya_city_south_gate.jpg
+
+### `uzuncaburc`
+- Registry: `lib/data/verified_travel_image_registry_batch10.dart`
+- Local asset: `assets/spots/uzuncaburc.jpg`
+- Source: Wikimedia Commons
+- Author: Nedim Ardoğa
+- License: CC BY-SA 4.0
+- Source page: https://commons.wikimedia.org/wiki/File:Hellenistik_temple_in_Uzuncabur%C3%A7%2C_Turkey.jpg
+
+### `kapuzbasi-selaleleri`
+- Registry: `lib/data/verified_travel_image_registry_batch10.dart`
+- Local asset: `assets/spots/kapuzbasi-selaleleri.jpg`
+- Source: Wikimedia Commons
+- Author: Melih Rustu CALIKOGLU
+- License: CC BY-SA 3.0
+- Source page: https://commons.wikimedia.org/wiki/File:Kapuzba%C5%9F%C4%B1_Waterfalls_-_panoramio.jpg
+
+### `tarsus-selalesi`
+- Registry: `lib/data/verified_travel_image_registry_batch10.dart`
+- Local asset: `assets/spots/tarsus-selalesi.jpg`
+- Source: Wikimedia Commons
+- Author: Nedim Ardoğa
+- License: CC BY-SA 3.0
+- Source page: https://commons.wikimedia.org/wiki/File:Berdan_Waterfall_in_Tarsus.jpg
+
+### `soli-pompeiopolis`
+- Registry: `lib/data/verified_travel_image_registry_batch10.dart`
+- Local asset: `assets/spots/soli-pompeiopolis.jpg`
+- Source: Wikimedia Commons
+- Author: Klaus-Peter Simon
+- License: CC BY 3.0
+- Source page: https://commons.wikimedia.org/wiki/File:ViransehirS%C3%A4ulen.jpg
+
+### `zerzevan-kalesi`
+- Registry: `lib/data/verified_travel_image_registry_batch11.dart`
+- Local asset: `assets/spots/zerzevan-kalesi.jpg`
+- Source: Wikimedia Commons
+- Author: Zerzevan Kalesi
+- License: CC BY-SA 4.0
+- Source page: https://commons.wikimedia.org/wiki/File:Zerzevan_Kalesi_%28havadan%2C_2016%29.jpg
+
+### `karahantepe`
+- Registry: `lib/data/verified_travel_image_registry_batch11.dart`
+- Local asset: `assets/spots/karahantepe.jpg`
+- Source: Wikimedia Commons
+- Author: Vincent Vega
+- License: CC BY-SA 4.0
+- Source page: https://commons.wikimedia.org/wiki/File:Karahantepe2.jpg
+
+### `arsameia`
+- Registry: `lib/data/verified_travel_image_registry_batch11.dart`
+- Local asset: `assets/spots/arsameia.jpg`
+- Source: Wikimedia Commons
+- Author: Verity Cridland
+- License: CC BY 2.0
+- Source page: https://commons.wikimedia.org/wiki/File:Nemrut_Dag_area_A_Commagene_carving.jpg
+
+### `cendere-koprusu`
+- Registry: `lib/data/verified_travel_image_registry_batch11.dart`
+- Local asset: `assets/spots/cendere-koprusu.jpg`
+- Source: Wikimedia Commons
+- Author: Bernard Gagnon
+- License: CC BY-SA 3.0
+- Source page: https://commons.wikimedia.org/wiki/File:Severan_Bridge%2C_Turkey_02.jpg
+
+### `karakus-tumulusu`
+- Registry: `lib/data/verified_travel_image_registry_batch11.dart`
+- Local asset: `assets/spots/karakus-tumulusu.jpg`
+- Source: Wikimedia Commons
+- Author: Bernard Gagnon
+- License: CC BY-SA 3.0
+- Source page: https://commons.wikimedia.org/wiki/File:Tumulus_of_Karakus_01.jpg
+
+### `yeni-kale-kahta`
+- Registry: `lib/data/verified_travel_image_registry_batch11.dart`
+- Local asset: `assets/spots/yeni-kale-kahta.jpg`
+- Source: Wikimedia Commons
+- Author: Serhatburke
+- License: CC BY-SA 4.0
+- Source page: https://commons.wikimedia.org/wiki/File:1F5A2142_kopya.jpg
+
+### `koza-han`
+- Registry: `lib/data/verified_travel_image_registry_batch12.dart`
+- Local asset: `assets/spots/koza-han.jpg`
+- Source: Wikimedia Commons', author: 'Darwinek', license: 'CC BY-SA 3.0
+- Author: 
+- License: 
+- Source page: https://commons.wikimedia.org/wiki/File:Koza_Han%2C_Bursa.jpg
+
+### `yesil-turbe`
+- Registry: `lib/data/verified_travel_image_registry_batch12.dart`
+- Local asset: `assets/spots/yesil-turbe.jpg`
+- Source: Wikimedia Commons', author: 'Erdogan Orcin', license: 'CC BY-SA 4.0
+- Author: 
+- License: 
+- Source page: https://commons.wikimedia.org/wiki/File:Bursa_Ye%C5%9Fil_T%C3%BCrbe.jpg
+
+### `bayezid-saglik-muzesi`
+- Registry: `lib/data/verified_travel_image_registry_batch12.dart`
+- Local asset: `assets/spots/bayezid-saglik-muzesi.jpg`
+- Source: Wikimedia Commons', author: 'Dosseman', license: 'CC BY-SA 4.0
+- Author: 
+- License: 
+- Source page: https://commons.wikimedia.org/wiki/File:Edirne_Health_Museum_6213.jpg
+
+### `sirince`
+- Registry: `lib/data/verified_travel_image_registry_batch12.dart`
+- Local asset: `assets/spots/sirince.jpg`
+- Source: Wikimedia Commons', author: 'Peter Tritthart', license: 'CC BY 3.0
+- Author: 
+- License: 
+- Source page: https://commons.wikimedia.org/wiki/File:Sirince.jpg
+
+### `ulubey-kanyonu`
+- Registry: `lib/data/verified_travel_image_registry_batch12.dart`
+- Local asset: `assets/spots/ulubey-kanyonu.jpg`
+- Source: Wikimedia Commons', author: 'Emrahuygun', license: 'CC BY-SA 4.0
+- Author: 
+- License: 
+- Source page: https://commons.wikimedia.org/wiki/File:Ulubey_Canyon.jpg
+
+### `akyaka-kadin-azmagi`
+- Registry: `lib/data/verified_travel_image_registry_batch12.dart`
+- Local asset: `assets/spots/akyaka-kadin-azmagi.jpg`
+- Source: Wikimedia Commons', author: 'Nada05', license: 'CC BY-SA 4.0
+- Author: 
+- License: 
+- Source page: https://commons.wikimedia.org/wiki/File:Akyaka_Azmak.jpg
+
+### `st-nicholas-demre`
+- Registry: `lib/data/verified_travel_image_registry_batch12.dart`
+- Local asset: `assets/spots/st-nicholas-demre.jpg`
+- Source: Wikimedia Commons', author: 'Dosseman', license: 'CC BY-SA 4.0
+- Author: 
+- License: 
+- Source page: https://commons.wikimedia.org/wiki/File:St._Nicholas_Church%2C_Demre_5919.jpg
+
+### `koprulu-kanyon`
+- Registry: `lib/data/verified_travel_image_registry_batch12.dart`
+- Local asset: `assets/spots/koprulu-kanyon.jpg`
+- Source: Wikimedia Commons', author: 'Capyusuf', license: 'CC BY-SA 4.0
+- Author: 
+- License: 
+- Source page: https://commons.wikimedia.org/wiki/File:Koprulu_canyon.jpg
+
+### `kanlidivane`
+- Registry: `lib/data/verified_travel_image_registry_batch12.dart`
+- Local asset: `assets/spots/kanlidivane.jpg`
+- Source: Wikimedia Commons', author: 'U.S. Air Force / Senior Airman Daniel Phelps', license: 'Public domain
+- Author: 
+- License: 
+- Source page: https://commons.wikimedia.org/wiki/File:Kanlidivane_sinkhole.JPG
+
+### `kultepe-kanis-karum`
+- Registry: `lib/data/verified_travel_image_registry_batch12.dart`
+- Local asset: `assets/spots/kultepe-kanis-karum.jpg`
+- Source: Wikimedia Commons', author: 'Klaus-Peter Simon', license: 'CC BY-SA 3.0
+- Author: 
+- License: 
+- Source page: https://commons.wikimedia.org/wiki/File:K%C3%BCltepeOberstadtPalast.jpg
+
+### `eflatunpinar`
+- Registry: `lib/data/verified_travel_image_registry_batch12.dart`
+- Local asset: `assets/spots/eflatunpinar.jpg`
+- Source: Wikimedia Commons', author: 'Bluetime93', license: 'CC BY-SA 4.0
+- Author: 
+- License: 
+- Source page: https://commons.wikimedia.org/wiki/File:Eflatunp%C4%B1nar_Hittite_Water_Monument_5.jpg
+
+### `odunpazari-tarihi-evleri`
+- Registry: `lib/data/verified_travel_image_registry_batch12.dart`
+- Local asset: `assets/spots/odunpazari-tarihi-evleri.jpg`
+- Source: Wikimedia Commons', author: 'Serragok', license: 'CC BY-SA 4.0
+- Author: 
+- License: 
+- Source page: https://commons.wikimedia.org/wiki/File:Traditional_Odunpazar%C4%B1_houses%2C_Eski%C5%9Fehir.jpg
+
+### `borcka-karagol`
+- Registry: `lib/data/verified_travel_image_registry_batch12.dart`
+- Local asset: `assets/spots/borcka-karagol.jpg`
+- Source: Wikimedia Commons', author: 'Mutlu88', license: 'CC BY-SA 4.0
+- Author: 
+- License: 
+- Source page: https://commons.wikimedia.org/wiki/File:Borcka_Karagol_Nature_Park.jpg
+
+### `sahinkaya-kanyonu`
+- Registry: `lib/data/verified_travel_image_registry_batch12.dart`
+- Local asset: `assets/spots/sahinkaya-kanyonu.jpg`
+- Source: Wikimedia Commons', author: 'Assyrtiko', license: 'CC BY-SA 4.0
+- Author: 
+- License: 
+- Source page: https://commons.wikimedia.org/wiki/File:Sahinkaya_Canyon.jpg
+
+### `cal-magarasi`
+- Registry: `lib/data/verified_travel_image_registry_batch12.dart`
+- Local asset: `assets/spots/cal-magarasi.jpg`
+- Source: Wikimedia Commons', author: 'Varvara Kless-Kaminskaia', license: 'CC BY-SA 4.0
+- Author: 
+- License: 
+- Source page: https://commons.wikimedia.org/wiki/File:%C3%87al_Ma%C4%9Faras%C4%B11.jpg
+
+### `ahlat-selcuklu-mezarligi`
+- Registry: `lib/data/verified_travel_image_registry_batch12.dart`
+- Local asset: `assets/spots/ahlat-selcuklu-mezarligi.jpg`
+- Source: Wikimedia Commons', author: 'Zorka Sojka', license: 'CC BY-SA 4.0
+- Author: 
+- License: 
+- Source page: https://commons.wikimedia.org/wiki/File:Turkey_Seljuk_Cemetery_Ahlat_%2802%29.jpg
+
+### `hosap-kalesi`
+- Registry: `lib/data/verified_travel_image_registry_batch12.dart`
+- Local asset: `assets/spots/hosap-kalesi.jpg`
+- Source: Wikimedia Commons', author: 'Leon petrosyan', license: 'CC BY-SA 4.0
+- Author: 
+- License: 
+- Source page: https://commons.wikimedia.org/wiki/File:Hosap_Castle_3.jpg
+
+### `muradiye-selalesi`
+- Registry: `lib/data/verified_travel_image_registry_batch12.dart`
+- Local asset: `assets/spots/muradiye-selalesi.jpg`
+- Source: Wikimedia Commons', author: 'Leon petrosyan', license: 'CC BY-SA 4.0
+- Author: 
+- License: 
+- Source page: https://commons.wikimedia.org/wiki/File:Muradye%2C_waterfall.jpg
+
+### `deyrulzafaran-manastiri`
+- Registry: `lib/data/verified_travel_image_registry_batch12.dart`
+- Local asset: `assets/spots/deyrulzafaran-manastiri.jpg`
+- Source: Wikimedia Commons', author: 'Hamdigumus', license: 'CC0 1.0
+- Author: 
+- License: 
+- Source page: https://commons.wikimedia.org/wiki/File:Dayrulzafaran_Kilisesi.jpg
+
+### `hasankeyf-kalesi`
+- Registry: `lib/data/verified_travel_image_registry_batch12.dart`
+- Local asset: `assets/spots/hasankeyf-kalesi.jpg`
+- Source: Wikimedia Commons', author: 'Omer Unlu', license: 'CC BY 2.0
+- Author: 
+- License: 
+- Source page: https://commons.wikimedia.org/wiki/File:Hasankeyf_Castle.jpg
+
+### `on-gozlu-kopru`
+- Registry: `lib/data/verified_travel_image_registry_batch12.dart`
+- Local asset: `assets/spots/on-gozlu-kopru.jpg`
+- Source: Wikimedia Commons', author: 'Cemallamec', license: 'CC BY-SA 4.0
+- Author: 
+- License: 
+- Source page: https://commons.wikimedia.org/wiki/File:Dicle_Bridge.jpg
+
 ### `sultanahmet-camii`
 - Registry: `lib/data/verified_travel_image_registry_batch2.dart`
 - Local asset: `assets/spots/sultanahmet-camii.jpg`
@@ -732,13 +1044,13 @@ metadata is retained here so bundling the images does not lose attribution.
 - License: CC BY-SA 4.0
 - Source page: https://commons.wikimedia.org/wiki/File:Amasya_Kalesi_01.jpg
 
-### `amasya-kral-kaya-mezarlari`
+### `gordion`
 - Registry: `lib/data/verified_travel_image_registry_batch7.dart`
-- Local asset: `assets/spots/amasya-kral-kaya-mezarlari.jpg`
+- Local asset: `assets/spots/gordion.jpg`
 - Source: Wikimedia Commons
-- Author: Babbsack
-- License: CC BY-SA 3.0
-- Source page: https://commons.wikimedia.org/wiki/File:Tombs_of_the_kings_of_Pontus_at_night_in_Amsaya%2C_Turkey.JPG
+- Author: Dosseman
+- License: CC BY-SA 4.0
+- Source page: https://commons.wikimedia.org/wiki/File:Gordion_Midas_Citadel_Gate_complex_in_2012_0935.jpg
 
 ### `ballica-magarasi`
 - Registry: `lib/data/verified_travel_image_registry_batch7.dart`
@@ -772,10 +1084,202 @@ metadata is retained here so bundling the images does not lose attribution.
 - License: CC BY-SA 4.0
 - Source page: https://commons.wikimedia.org/wiki/File:Ayazini_Metropolis_Multi_Storey_Settlement%2C_2024_6.jpg
 
-### `divrigi-ulu-camii`
+### `catalhoyuk`
 - Registry: `lib/data/verified_travel_image_registry_batch7.dart`
-- Local asset: `assets/spots/divrigi-ulu-camii.jpg`
+- Local asset: `assets/spots/catalhoyuk.jpg`
+- Source: Wikimedia Commons
+- Author: Murat Özsoy 1958
+- License: CC BY-SA 4.0
+- Source page: https://commons.wikimedia.org/wiki/File:%C3%87atalh%C3%B6y%C3%BCk%2C_7400_BC%2C_Konya%2C_Turkey_-_UNESCO_World_Heritage_Site%2C_13.jpg
+
+### `sardes-antik-kenti`
+- Registry: `lib/data/verified_travel_image_registry_batch8.dart`
+- Local asset: `assets/spots/sardes-antik-kenti.jpg`
+- Source: Wikimedia Commons
+- Author: Carole Raddato
+- License: CC BY-SA 2.0
+- Source page: https://commons.wikimedia.org/wiki/File:The_Bath-Gymnasium_complex_at_Sardis%2C_late_2nd_-_early_3rd_century_AD%2C_Sardis%2C_Turkey_%2817098680002%29.jpg
+
+### `laodikeia`
+- Registry: `lib/data/verified_travel_image_registry_batch8.dart`
+- Local asset: `assets/spots/laodikeia.jpg`
+- Source: Wikimedia Commons
+- Author: A.Savin
+- License: Free Art License
+- Source page: https://commons.wikimedia.org/wiki/File:TR_Pamukkale_Laodicea_asv2020-02_img11.jpg
+
+### `sagalassos`
+- Registry: `lib/data/verified_travel_image_registry_batch8.dart`
+- Local asset: `assets/spots/sagalassos.jpg`
+- Source: Wikimedia Commons
+- Author: LeoniKalkis
+- License: CC BY-SA 4.0
+- Source page: https://commons.wikimedia.org/wiki/File:Sagalassos_Ancient_City.jpg
+
+### `kibyra`
+- Registry: `lib/data/verified_travel_image_registry_batch8.dart`
+- Local asset: `assets/spots/kibyra.jpg`
 - Source: Wikimedia Commons
 - Author: Dosseman
 - License: CC BY-SA 4.0
-- Source page: https://commons.wikimedia.org/wiki/File:Divri%C4%9Fi_Great_Mosque_and_Hospital.jpg
+- Source page: https://commons.wikimedia.org/wiki/File:Kibyra_Theatre_9919.jpg
+
+### `phaselis`
+- Registry: `lib/data/verified_travel_image_registry_batch8.dart`
+- Local asset: `assets/spots/phaselis.jpg`
+- Source: Wikimedia Commons
+- Author: Alexander Buschorn
+- License: CC BY-SA 3.0
+- Source page: https://commons.wikimedia.org/wiki/File:Phaselis_axb01.jpg
+
+### `olympos-antik-kenti`
+- Registry: `lib/data/verified_travel_image_registry_batch8.dart`
+- Local asset: `assets/spots/olympos-antik-kenti.jpg`
+- Source: Wikimedia Commons
+- Author: Capyusuf
+- License: CC BY-SA 4.0
+- Source page: https://commons.wikimedia.org/wiki/File:Olympos_Ancient_City.jpg
+
+### `termessos`
+- Registry: `lib/data/verified_travel_image_registry_batch8.dart`
+- Local asset: `assets/spots/termessos.jpg`
+- Source: Wikimedia Commons
+- Author: Ingo Mehling
+- License: CC BY-SA 3.0
+- Source page: https://commons.wikimedia.org/wiki/File:Termessos_-_Theater.jpg
+
+### `side-antik-kenti`
+- Registry: `lib/data/verified_travel_image_registry_batch8.dart`
+- Local asset: `assets/spots/side-antik-kenti.jpg`
+- Source: Wikimedia Commons
+- Author: Helen Simonsson
+- License: CC BY-SA 4.0
+- Source page: https://commons.wikimedia.org/wiki/File:Roman_theatre_Side_Turkey.jpg
+
+### `aizanoi`
+- Registry: `lib/data/verified_travel_image_registry_batch8.dart`
+- Local asset: `assets/spots/aizanoi.jpg`
+- Source: Wikimedia Commons
+- Author: China_Crisis
+- License: CC BY-SA 2.5
+- Source page: https://commons.wikimedia.org/wiki/File:Aizanoi.ZeusTemple.jpg
+
+### `priene`
+- Registry: `lib/data/verified_travel_image_registry_batch8.dart`
+- Local asset: `assets/spots/priene.jpg`
+- Source: Wikimedia Commons
+- Author: Ken and Nyetta
+- License: CC BY 2.0
+- Source page: https://commons.wikimedia.org/wiki/File:Temple_of_Athena_at_Priene.jpg
+
+### `miletos`
+- Registry: `lib/data/verified_travel_image_registry_batch8.dart`
+- Local asset: `assets/spots/miletos.jpg`
+- Source: Wikimedia Commons
+- Author: Jiuguang Wang
+- License: CC BY-SA 2.0
+- Source page: https://commons.wikimedia.org/wiki/File:The_Theater_of_Miletus.jpg
+
+### `didyma-apollon`
+- Registry: `lib/data/verified_travel_image_registry_batch8.dart`
+- Local asset: `assets/spots/didyma-apollon.jpg`
+- Source: Wikimedia Commons
+- Author: Mark Landon
+- License: CC BY 4.0
+- Source page: https://commons.wikimedia.org/wiki/File:Didyma_Temple_of_Apollo_pronaos_01.jpg
+
+### `dolmabahce-sarayi`
+- Registry: `lib/data/verified_travel_image_registry_batch9.dart`
+- Local asset: `assets/spots/dolmabahce-sarayi.jpg`
+- Source: Wikimedia Commons
+- Author: Tcyagizefem
+- License: CC BY-SA 4.0
+- Source page: https://commons.wikimedia.org/wiki/File:Dolmabahce_palace.jpg
+
+### `rumeli-hisari`
+- Registry: `lib/data/verified_travel_image_registry_batch9.dart`
+- Local asset: `assets/spots/rumeli-hisari.jpg`
+- Source: Wikimedia Commons
+- Author: KeRR
+- License: CC BY 2.5
+- Source page: https://commons.wikimedia.org/wiki/File:Rumeli_hisari.jpg
+
+### `iznik-ayasofya`
+- Registry: `lib/data/verified_travel_image_registry_batch9.dart`
+- Local asset: `assets/spots/iznik-ayasofya.jpg`
+- Source: Wikimedia Commons
+- Author: Dosseman
+- License: CC BY-SA 4.0
+- Source page: https://commons.wikimedia.org/wiki/File:Iznik_Hagia_Sophia_Mosque_8100.jpg
+
+### `golyazi`
+- Registry: `lib/data/verified_travel_image_registry_batch9.dart`
+- Local asset: `assets/spots/golyazi.jpg`
+- Source: Wikimedia Commons
+- Author: Arif miletli
+- License: CC BY-SA 4.0
+- Source page: https://commons.wikimedia.org/wiki/File:G%C3%B6lyaz%C4%B1_Evleri.jpg
+
+### `dupnisa-magarasi`
+- Registry: `lib/data/verified_travel_image_registry_batch9.dart`
+- Local asset: `assets/spots/dupnisa-magarasi.jpg`
+- Source: Wikimedia Commons
+- Author: Mrsevinc
+- License: CC BY-SA 4.0
+- Source page: https://commons.wikimedia.org/wiki/File:Dupnisa_Cave.jpg
+
+### `kilitbahir-kalesi`
+- Registry: `lib/data/verified_travel_image_registry_batch9.dart`
+- Local asset: `assets/spots/kilitbahir-kalesi.jpg`
+- Source: Wikimedia Commons
+- Author: Kcperspectives
+- License: CC BY-SA 4.0
+- Source page: https://commons.wikimedia.org/wiki/File:Kilitbahir_Kalesi.jpg
+
+### `cunda-taksiyarhis`
+- Registry: `lib/data/verified_travel_image_registry_batch9.dart`
+- Local asset: `assets/spots/cunda-taksiyarhis.jpg`
+- Source: Wikimedia Commons
+- Author: Ollios
+- License: CC BY-SA 3.0
+- Source page: https://commons.wikimedia.org/wiki/File:Taksiyarhis_Kilisesi.JPG
+
+### `acarlar-longozu`
+- Registry: `lib/data/verified_travel_image_registry_batch9.dart`
+- Local asset: `assets/spots/acarlar-longozu.jpg`
+- Source: Wikimedia Commons
+- Author: Mustafa Akça
+- License: CC BY-SA 4.0
+- Source page: https://commons.wikimedia.org/wiki/File:Acarlar_longozu.jpg
+
+### `horma-kanyonu`
+- Registry: `lib/data/verified_travel_image_registry_batch9.dart`
+- Local asset: `assets/spots/horma-kanyonu.jpg`
+- Source: Wikimedia Commons
+- Author: Buse Şabançelebi
+- License: CC BY-SA 4.0
+- Source page: https://commons.wikimedia.org/wiki/File:Horma_Canyon-Turkey.jpg
+
+### `valla-kanyonu`
+- Registry: `lib/data/verified_travel_image_registry_batch9.dart`
+- Local asset: `assets/spots/valla-kanyonu.jpg`
+- Source: Wikimedia Commons
+- Author: KCCan00
+- License: CC BY-SA 4.0
+- Source page: https://commons.wikimedia.org/wiki/File:Valla_Canyon.jpg
+
+### `cehennemagzi-magaralari`
+- Registry: `lib/data/verified_travel_image_registry_batch9.dart`
+- Local asset: `assets/spots/cehennemagzi-magaralari.jpg`
+- Source: Wikimedia Commons
+- Author: Oğuz67
+- License: CC BY-SA 4.0
+- Source page: https://commons.wikimedia.org/wiki/File:Zonguldak_Cehennem_A%C4%9Fz%C4%B1_Ma%C4%9Faralar%C4%B1.jpg
+
+### `gokgol-magarasi`
+- Registry: `lib/data/verified_travel_image_registry_batch9.dart`
+- Local asset: `assets/spots/gokgol-magarasi.jpg`
+- Source: Wikimedia Commons
+- Author: Acar54
+- License: CC BY-SA 4.0
+- Source page: https://commons.wikimedia.org/wiki/File:G%C3%B6kg%C3%B6l_ma%C4%9Faras%C4%B1.jpg
