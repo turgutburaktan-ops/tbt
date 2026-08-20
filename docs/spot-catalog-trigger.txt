@@ -1,0 +1,1 @@
+Trigger the direct-source 1000+ verified photo spot catalog pipeline.
