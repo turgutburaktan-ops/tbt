@@ -100,6 +100,32 @@ const verifiedSpotCoordinateEvidence =
   'egirdir-golu': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata', sourceRef: 'Q1334148', verifiedAt: '2026-08-19'),
 
+  // Dördüncü doğrulanmış grup: antik kent ve kültür rotaları.
+  'aspendos': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata', sourceRef: 'Q16697381', verifiedAt: '2026-08-20'),
+  'perge': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata', sourceRef: 'Q719815', verifiedAt: '2026-08-20'),
+  'patara': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata', sourceRef: 'Q233121', verifiedAt: '2026-08-20'),
+  'xanthos': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata', sourceRef: 'Q464936', verifiedAt: '2026-08-20'),
+  'letoon': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata / UNESCO grouping', sourceRef: 'Q703480 / Q16912661', verifiedAt: '2026-08-20'),
+  'myra': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata', sourceRef: 'Q652024', verifiedAt: '2026-08-20'),
+  'kaunos': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata + UNESCO tentative list', sourceRef: 'Q608095 / 5906', verifiedAt: '2026-08-20'),
+  'knidos': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata', sourceRef: 'Q690575', verifiedAt: '2026-08-20'),
+  'balikligol': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata', sourceRef: 'Q805908', verifiedAt: '2026-08-20'),
+  'harran': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata', sourceRef: 'Q199547', verifiedAt: '2026-08-20'),
+  'zeugma-muzesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata', sourceRef: 'Q196982', verifiedAt: '2026-08-20'),
+  'dara-antik-kenti': SpotCoordinateVerificationEvidence(
+    sourceName: 'T.C. Kültür ve Turizm Bakanlığı Müze + Wikidata', sourceRef: 'muze.gov.tr DRA01 / Q585145', verifiedAt: '2026-08-20'),
+
   // Eski 81-il genişleme kayıtlarının doğrulanmış eşleri korunuyor.
   'tr-istanbul-galata81': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata', sourceRef: 'Q91274', verifiedAt: '2026-08-19'),
