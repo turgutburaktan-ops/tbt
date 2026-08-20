@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import '../services/content_engagement_service.dart';
 import 'mention_text.dart';
 import 'mention_text.dart';
+import 'mention_text.dart';
 
 class ContentEngagementBar extends StatelessWidget {
   final String collection;
