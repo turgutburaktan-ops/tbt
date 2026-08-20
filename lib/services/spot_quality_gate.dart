@@ -1,5 +1,6 @@
 import '../data/spot_coordinate_verification_registry.dart';
 import '../data/spot_coordinate_verification_registry_batch5.dart';
+import '../data/spot_coordinate_verification_registry_batch6.dart';
 import '../models/photo_spot.dart';
 
 /// Son savunma hattı: katalog kaynaklarından bağımsız olarak haritaya çıkmadan
@@ -7,24 +8,15 @@ import '../models/photo_spot.dart';
 class SpotQualityGate {
   SpotQualityGate._();
 
-  // Türkiye + yakın kıyı/adalar için yeterince geniş, yanlış ülke pinlerini
-  // yakalayacak kadar dar güvenlik sınırı.
   static const double _minLat = 35.4;
   static const double _maxLat = 42.3;
   static const double _minLng = 25.4;
   static const double _maxLng = 45.1;
 
-  /// Manuel denetimde hatalı olduğu kesinleşen kayıtlar buraya alınır.
-  /// Bu liste büyüdükçe kullanıcıya hiçbir zaman yanlış pin gösterilmez.
   static const Set<String> blockedSpotIds = <String>{};
 
   static List<PhotoSpot> filterSafe(List<PhotoSpot> input) {
     final valid = input.where(_basicCoordinateCheck).toList();
-
-    // 5 ondalık basamak yaklaşık metre seviyesinde aynı pini temsil eder.
-    // Farklı isim/şehirlerin birebir aynı pini paylaşması otomatik veri
-    // çoğaltmanın güçlü işaretidir. Bağımsız doğrulanmış kayıt varsa o kazanır;
-    // böylece eski bir kopya doğru destinasyonu görünmez yapamaz.
     final byCoordinate = <String, List<PhotoSpot>>{};
     for (final spot in valid) {
       final key = '${spot.latitude.toStringAsFixed(5)}|'
@@ -62,7 +54,8 @@ class SpotQualityGate {
 
   static bool _isIndependentlyVerified(String spotId) =>
       isSpotCoordinateIndependentlyVerified(spotId) ||
-      isSpotCoordinateIndependentlyVerifiedBatch5(spotId);
+      isSpotCoordinateIndependentlyVerifiedBatch5(spotId) ||
+      isSpotCoordinateIndependentlyVerifiedBatch6(spotId);
 
   static bool _basicCoordinateCheck(PhotoSpot spot) {
     if (blockedSpotIds.contains(spot.id)) return false;
