@@ -683,3 +683,99 @@ metadata is retained here so bundling the images does not lose attribution.
 - Author: Engin Asil
 - License: CC BY-SA 3.0
 - Source page: https://commons.wikimedia.org/wiki/File:Canyone_2_%2832828345%29.jpeg
+
+### `kars-kalesi`
+- Registry: `lib/data/verified_travel_image_registry_batch7.dart`
+- Local asset: `assets/spots/kars-kalesi.jpg`
+- Source: Wikimedia Commons
+- Author: Francesco Bini
+- License: CC BY-SA 4.0
+- Source page: https://commons.wikimedia.org/wiki/File:Kars%2C_castello%2C_veduta_01.jpg
+
+### `cildir-golu`
+- Registry: `lib/data/verified_travel_image_registry_batch7.dart`
+- Local asset: `assets/spots/cildir-golu.jpg`
+- Source: Wikimedia Commons / NASA
+- Author: NASA
+- License: Public domain
+- Source page: https://commons.wikimedia.org/wiki/File:Lake_Cildir_NASA.jpg
+
+### `yason-burnu`
+- Registry: `lib/data/verified_travel_image_registry_batch7.dart`
+- Local asset: `assets/spots/yason-burnu.jpg`
+- Source: Wikimedia Commons
+- Author: Vonatolia
+- License: CC BY-SA 4.0
+- Source page: https://commons.wikimedia.org/wiki/File:Cape_Jason.jpg
+
+### `hamsilos-tabiat-parki`
+- Registry: `lib/data/verified_travel_image_registry_batch7.dart`
+- Local asset: `assets/spots/hamsilos-tabiat-parki.jpg`
+- Source: Wikimedia Commons
+- Author: Erturkercin
+- License: CC BY-SA 4.0
+- Source page: https://commons.wikimedia.org/wiki/File:Hamsilos_Tabiat_Park%C4%B1.jpg
+
+### `amasra-kalesi`
+- Registry: `lib/data/verified_travel_image_registry_batch7.dart`
+- Local asset: `assets/spots/amasra-kalesi.jpg`
+- Source: Wikimedia Commons
+- Author: Babbsack
+- License: CC BY-SA 3.0
+- Source page: https://commons.wikimedia.org/wiki/File:Amasra%2C_Turkey%2C_Castle%2C_view_from_the_island.jpg
+
+### `amasya-kalesi`
+- Registry: `lib/data/verified_travel_image_registry_batch7.dart`
+- Local asset: `assets/spots/amasya-kalesi.jpg`
+- Source: Wikimedia Commons
+- Author: Zeynel Cebeci
+- License: CC BY-SA 4.0
+- Source page: https://commons.wikimedia.org/wiki/File:Amasya_Kalesi_01.jpg
+
+### `amasya-kral-kaya-mezarlari`
+- Registry: `lib/data/verified_travel_image_registry_batch7.dart`
+- Local asset: `assets/spots/amasya-kral-kaya-mezarlari.jpg`
+- Source: Wikimedia Commons
+- Author: Babbsack
+- License: CC BY-SA 3.0
+- Source page: https://commons.wikimedia.org/wiki/File:Tombs_of_the_kings_of_Pontus_at_night_in_Amsaya%2C_Turkey.JPG
+
+### `ballica-magarasi`
+- Registry: `lib/data/verified_travel_image_registry_batch7.dart`
+- Local asset: `assets/spots/ballica-magarasi.jpg`
+- Source: Wikimedia Commons
+- Author: Ümit1991
+- License: CC BY-SA 4.0
+- Source page: https://commons.wikimedia.org/wiki/File:Ballica-magarasi_109064.jpg
+
+### `alacahoyuk`
+- Registry: `lib/data/verified_travel_image_registry_batch7.dart`
+- Local asset: `assets/spots/alacahoyuk.jpg`
+- Source: Wikimedia Commons
+- Author: Bernard Gagnon
+- License: CC BY-SA 3.0
+- Source page: https://commons.wikimedia.org/wiki/File:Sphinx_Gate%2C_Alaca_H%C3%B6y%C3%BCk_02.jpg
+
+### `midas-aniti`
+- Registry: `lib/data/verified_travel_image_registry_batch7.dart`
+- Local asset: `assets/spots/midas-aniti.jpg`
+- Source: Wikimedia Commons
+- Author: China_Crisis
+- License: CC BY-SA 2.5
+- Source page: https://commons.wikimedia.org/wiki/File:MidasSehri.Tomb.jpg
+
+### `ayazini-metropolisi`
+- Registry: `lib/data/verified_travel_image_registry_batch7.dart`
+- Local asset: `assets/spots/ayazini-metropolisi.jpg`
+- Source: Wikimedia Commons
+- Author: Bluetime93
+- License: CC BY-SA 4.0
+- Source page: https://commons.wikimedia.org/wiki/File:Ayazini_Metropolis_Multi_Storey_Settlement%2C_2024_6.jpg
+
+### `divrigi-ulu-camii`
+- Registry: `lib/data/verified_travel_image_registry_batch7.dart`
+- Local asset: `assets/spots/divrigi-ulu-camii.jpg`
+- Source: Wikimedia Commons
+- Author: Dosseman
+- License: CC BY-SA 4.0
+- Source page: https://commons.wikimedia.org/wiki/File:Divri%C4%9Fi_Great_Mosque_and_Hospital.jpg

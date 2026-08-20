@@ -4,6 +4,7 @@ import 'spot_image_registry.dart';
 /// Kaynak, fotoğrafçı ve lisans bilgileri dosyayla birlikte tutulur.
 const verifiedTravelImageRegistryBatch7 = <String, SpotImageInfo>{
   'kars-kalesi': SpotImageInfo(
+    assetPath: 'assets/spots/kars-kalesi.jpg',
     networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Kars%2C_castello%2C_veduta_01.jpg?width=1280',
     sourceName: 'Wikimedia Commons',
     author: 'Francesco Bini',
@@ -11,6 +12,7 @@ const verifiedTravelImageRegistryBatch7 = <String, SpotImageInfo>{
     sourcePage: 'https://commons.wikimedia.org/wiki/File:Kars%2C_castello%2C_veduta_01.jpg',
   ),
   'cildir-golu': SpotImageInfo(
+    assetPath: 'assets/spots/cildir-golu.jpg',
     networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Lake_Cildir_NASA.jpg?width=1280',
     sourceName: 'Wikimedia Commons / NASA',
     author: 'NASA',
@@ -18,6 +20,7 @@ const verifiedTravelImageRegistryBatch7 = <String, SpotImageInfo>{
     sourcePage: 'https://commons.wikimedia.org/wiki/File:Lake_Cildir_NASA.jpg',
   ),
   'yason-burnu': SpotImageInfo(
+    assetPath: 'assets/spots/yason-burnu.jpg',
     networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Cape_Jason.jpg?width=1280',
     sourceName: 'Wikimedia Commons',
     author: 'Vonatolia',
@@ -25,6 +28,7 @@ const verifiedTravelImageRegistryBatch7 = <String, SpotImageInfo>{
     sourcePage: 'https://commons.wikimedia.org/wiki/File:Cape_Jason.jpg',
   ),
   'hamsilos-tabiat-parki': SpotImageInfo(
+    assetPath: 'assets/spots/hamsilos-tabiat-parki.jpg',
     networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Hamsilos_Tabiat_Park%C4%B1.jpg?width=1280',
     sourceName: 'Wikimedia Commons',
     author: 'Erturkercin',
@@ -32,6 +36,7 @@ const verifiedTravelImageRegistryBatch7 = <String, SpotImageInfo>{
     sourcePage: 'https://commons.wikimedia.org/wiki/File:Hamsilos_Tabiat_Park%C4%B1.jpg',
   ),
   'amasra-kalesi': SpotImageInfo(
+    assetPath: 'assets/spots/amasra-kalesi.jpg',
     networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Amasra%2C_Turkey%2C_Castle%2C_view_from_the_island.jpg?width=1280',
     sourceName: 'Wikimedia Commons',
     author: 'Babbsack',
@@ -39,6 +44,7 @@ const verifiedTravelImageRegistryBatch7 = <String, SpotImageInfo>{
     sourcePage: 'https://commons.wikimedia.org/wiki/File:Amasra%2C_Turkey%2C_Castle%2C_view_from_the_island.jpg',
   ),
   'amasya-kalesi': SpotImageInfo(
+    assetPath: 'assets/spots/amasya-kalesi.jpg',
     networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Amasya_Kalesi_01.jpg?width=1280',
     sourceName: 'Wikimedia Commons',
     author: 'Zeynel Cebeci',
@@ -46,6 +52,7 @@ const verifiedTravelImageRegistryBatch7 = <String, SpotImageInfo>{
     sourcePage: 'https://commons.wikimedia.org/wiki/File:Amasya_Kalesi_01.jpg',
   ),
   'amasya-kral-kaya-mezarlari': SpotImageInfo(
+    assetPath: 'assets/spots/amasya-kral-kaya-mezarlari.jpg',
     networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Tombs_of_the_kings_of_Pontus_at_night_in_Amsaya%2C_Turkey.JPG?width=1280',
     sourceName: 'Wikimedia Commons',
     author: 'Babbsack',
@@ -53,6 +60,7 @@ const verifiedTravelImageRegistryBatch7 = <String, SpotImageInfo>{
     sourcePage: 'https://commons.wikimedia.org/wiki/File:Tombs_of_the_kings_of_Pontus_at_night_in_Amsaya%2C_Turkey.JPG',
   ),
   'ballica-magarasi': SpotImageInfo(
+    assetPath: 'assets/spots/ballica-magarasi.jpg',
     networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Ballica-magarasi_109064.jpg?width=1280',
     sourceName: 'Wikimedia Commons',
     author: 'Ümit1991',
@@ -60,6 +68,7 @@ const verifiedTravelImageRegistryBatch7 = <String, SpotImageInfo>{
     sourcePage: 'https://commons.wikimedia.org/wiki/File:Ballica-magarasi_109064.jpg',
   ),
   'alacahoyuk': SpotImageInfo(
+    assetPath: 'assets/spots/alacahoyuk.jpg',
     networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Sphinx_Gate%2C_Alaca_H%C3%B6y%C3%BCk_02.jpg?width=1280',
     sourceName: 'Wikimedia Commons',
     author: 'Bernard Gagnon',
@@ -67,6 +76,7 @@ const verifiedTravelImageRegistryBatch7 = <String, SpotImageInfo>{
     sourcePage: 'https://commons.wikimedia.org/wiki/File:Sphinx_Gate%2C_Alaca_H%C3%B6y%C3%BCk_02.jpg',
   ),
   'midas-aniti': SpotImageInfo(
+    assetPath: 'assets/spots/midas-aniti.jpg',
     networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/MidasSehri.Tomb.jpg?width=1280',
     sourceName: 'Wikimedia Commons',
     author: 'China_Crisis',
@@ -74,6 +84,7 @@ const verifiedTravelImageRegistryBatch7 = <String, SpotImageInfo>{
     sourcePage: 'https://commons.wikimedia.org/wiki/File:MidasSehri.Tomb.jpg',
   ),
   'ayazini-metropolisi': SpotImageInfo(
+    assetPath: 'assets/spots/ayazini-metropolisi.jpg',
     networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Ayazini_Metropolis_Multi_Storey_Settlement%2C_2024_6.jpg?width=1280',
     sourceName: 'Wikimedia Commons',
     author: 'Bluetime93',
@@ -81,6 +92,7 @@ const verifiedTravelImageRegistryBatch7 = <String, SpotImageInfo>{
     sourcePage: 'https://commons.wikimedia.org/wiki/File:Ayazini_Metropolis_Multi_Storey_Settlement%2C_2024_6.jpg',
   ),
   'divrigi-ulu-camii': SpotImageInfo(
+    assetPath: 'assets/spots/divrigi-ulu-camii.jpg',
     networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Divri%C4%9Fi_Great_Mosque_and_Hospital.jpg?width=1280',
     sourceName: 'Wikimedia Commons',
     author: 'Dosseman',
