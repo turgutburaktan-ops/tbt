@@ -1,0 +1,23 @@
+{
+  "target_total": 1100,
+  "generator_exit": "0",
+  "audit_exit": "not-run",
+  "generation_report": {
+    "existing_verified": 151,
+    "generated": 949,
+    "result_total": 1100,
+    "target_total": 1100,
+    "min_long_edge": 1600,
+    "min_short_edge": 900,
+    "selection": {
+      "needed": 949,
+      "no_commons": 0,
+      "bad_license": 23,
+      "low_res": 180,
+      "duplicate": 15,
+      "accepted": 949
+    }
+  },
+  "audit_summary": {},
+  "generator_log_tail": "existing verified: 151\nheritage unique: 420\nQ570116 Turistik Yer: unique total 449\nQ839954 Arkeolojik Alan: unique total 968\nQ23413 Kale: unique total 1063\nQ33506 Müze: unique total 1423\nQ12280 Köprü: unique total 1536\nQ34038 Şelale: unique total 1559\nQ35509 Mağara: unique total 1572\nQ150784 Kanyon: unique total 1577\nQ23397 Göl: unique total 1628\nQ40080 Sahil: unique total 1639\nQ8502 Dağ: unique total 1683\nQ22698 Park: unique total 1786\nQ174782 Meydan: unique total 1818\nQ32815 Cami: unique total 2814\nQ44613 Manastır: unique total 2886\nunique candidates: 2886\n{\n  \"existing_verified\": 151,\n  \"generated\": 949,\n  \"result_total\": 1100,\n  \"target_total\": 1100,\n  \"min_long_edge\": 1600,\n  \"min_short_edge\": 900,\n  \"selection\": {\n    \"needed\": 949,\n    \"no_commons\": 0,\n    \"bad_license\": 23,\n    \"low_res\": 180,\n    \"duplicate\": 15,\n    \"accepted\": 949\n  }\n}"
+}
