@@ -9,10 +9,10 @@ extension NearbyVenueCategoryX on NearbyVenueCategory {
 
   String get osmFilter => switch (this) {
         NearbyVenueCategory.dining =>
-          '["amenity"~"^(restaurant|fast_food|food_court)$"]',
+          '["amenity"~"^(restaurant|fast_food|food_court)\$"]',
         NearbyVenueCategory.cafe => '["amenity"="cafe"]',
         NearbyVenueCategory.hotel =>
-          '["tourism"~"^(hotel|hostel|guest_house|motel|apartment|chalet)$"]',
+          '["tourism"~"^(hotel|hostel|guest_house|motel|apartment|chalet)\$"]',
       };
 }
 
