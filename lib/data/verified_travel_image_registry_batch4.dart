@@ -1,0 +1,90 @@
+import 'spot_image_registry.dart';
+
+/// Dördüncü doğrulanmış gezi grubu için elle kontrol edilmiş gerçek görseller.
+/// Her kayıt ilgili yeri göstermeli; kaynak, yazar ve açık lisans birlikte tutulur.
+const verifiedTravelImageRegistryBatch4 = <String, SpotImageInfo>{
+  'aspendos': SpotImageInfo(
+    networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Aspendos_teatro_romano_-_panoramio.jpg?width=1280',
+    sourceName: 'Wikimedia Commons',
+    author: 'Nicola Feola',
+    license: 'CC BY 3.0',
+    sourcePage: 'https://commons.wikimedia.org/wiki/File:Aspendos_teatro_romano_-_panoramio.jpg',
+  ),
+  'perge': SpotImageInfo(
+    networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Perge_city_overview.jpg?width=1280',
+    sourceName: 'Wikimedia Commons',
+    author: 'Saffron Blaze',
+    license: 'CC BY-SA 3.0',
+    sourcePage: 'https://commons.wikimedia.org/wiki/File:Perge_city_overview.jpg',
+  ),
+  'patara': SpotImageInfo(
+    networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/PataraTheater.JPG?width=1280',
+    sourceName: 'Wikimedia Commons',
+    author: 'Procopius',
+    license: 'CC0 1.0',
+    sourcePage: 'https://commons.wikimedia.org/wiki/File:PataraTheater.JPG',
+  ),
+  'xanthos': SpotImageInfo(
+    networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Entrance_into_theatre_of_Xanthos.jpg?width=1280',
+    sourceName: 'Wikimedia Commons',
+    author: 'Pot Noodle',
+    license: 'CC BY 2.0',
+    sourcePage: 'https://commons.wikimedia.org/wiki/File:Entrance_into_theatre_of_Xanthos.jpg',
+  ),
+  'letoon': SpotImageInfo(
+    networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Letoon_stoa_axb01.jpg?width=1280',
+    sourceName: 'Wikimedia Commons',
+    author: 'Alexander Buschorn',
+    license: 'CC BY-SA 3.0',
+    sourcePage: 'https://commons.wikimedia.org/wiki/File:Letoon_stoa_axb01.jpg',
+  ),
+  'myra': SpotImageInfo(
+    networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Myra_theatre.jpg?width=1280',
+    sourceName: 'Wikimedia Commons',
+    author: 'Ingo Mehling',
+    license: 'CC BY-SA 3.0',
+    sourcePage: 'https://commons.wikimedia.org/wiki/File:Myra_theatre.jpg',
+  ),
+  'kaunos': SpotImageInfo(
+    networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/DALYAN-KAUNOS_-_panoramio.jpg?width=1280',
+    sourceName: 'Wikimedia Commons',
+    author: 'HALUK COMERTEL',
+    license: 'CC BY 3.0',
+    sourcePage: 'https://commons.wikimedia.org/wiki/File:DALYAN-KAUNOS_-_panoramio.jpg',
+  ),
+  'knidos': SpotImageInfo(
+    networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Knidos-H%C3%A4fen.jpg?width=1280',
+    sourceName: 'Wikimedia Commons',
+    author: 'Tischbeinahe',
+    license: 'CC BY-SA 3.0',
+    sourcePage: 'https://commons.wikimedia.org/wiki/File:Knidos-H%C3%A4fen.jpg',
+  ),
+  'balikligol': SpotImageInfo(
+    networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Bal%C4%B1kl%C4%B1g%C3%B6l_Urfa2.jpg?width=1280',
+    sourceName: 'Wikimedia Commons',
+    author: 'Anadolu',
+    license: 'CC BY-SA 3.0',
+    sourcePage: 'https://commons.wikimedia.org/wiki/File:Bal%C4%B1kl%C4%B1g%C3%B6l_Urfa2.jpg',
+  ),
+  'harran': SpotImageInfo(
+    networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Harran_beehive_houses_%282%29.JPG?width=1280',
+    sourceName: 'Wikimedia Commons',
+    author: 'Zhengan',
+    license: 'CC BY-SA 4.0',
+    sourcePage: 'https://commons.wikimedia.org/wiki/File:Harran_beehive_houses_%282%29.JPG',
+  ),
+  'zeugma-muzesi': SpotImageInfo(
+    networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Zeugma_museum.jpg?width=1280',
+    sourceName: 'Wikimedia Commons',
+    author: 'atomsaskal',
+    license: 'CC BY-SA 3.0',
+    sourcePage: 'https://commons.wikimedia.org/wiki/File:Zeugma_museum.jpg',
+  ),
+  'dara-antik-kenti': SpotImageInfo(
+    networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Dara_P1030851_20080424091200.JPG?width=1280',
+    sourceName: 'Wikimedia Commons',
+    author: 'Nevit Dilmen',
+    license: 'CC BY-SA 3.0',
+    sourcePage: 'https://commons.wikimedia.org/wiki/File:Dara_P1030851_20080424091200.JPG',
+  ),
+};
