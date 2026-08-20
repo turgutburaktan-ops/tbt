@@ -7,15 +7,12 @@ import '../data/verified_travel_places_batch6.dart';
 import '../data/verified_travel_places_batch7.dart';
 import '../data/verified_travel_places_batch8.dart';
 import '../data/verified_travel_places_batch9.dart';
+import '../data/verified_travel_places_batch10.dart';
 import '../models/photo_spot.dart';
 
 /// Kullanıcıya açık katalog yalnızca iki güvenilir kaynağı kabul eder:
 /// 1) Elle kaynak kontrolü tamamlanmış doğrulanmış gezi çekirdeği.
 /// 2) Firestore'da koordinat + görsel doğrulaması tamamlanarak yayınlanmış yerler.
-///
-/// Eski demo/curated/otomatik aday dosyaları kaynak havuzu olarak repoda kalır
-/// fakat burada artık doğrudan kullanıcı kataloğuna taşınmaz. Böylece yeni bir
-/// build eski yanlış pini veya alakasız fotoğrafı sessizce geri getiremez.
 class NationwideCandidateSpotResolver {
   NationwideCandidateSpotResolver._();
 
@@ -37,6 +34,7 @@ class NationwideCandidateSpotResolver {
       ...verifiedTravelPlacesBatch7,
       ...verifiedTravelPlacesBatch8,
       ...verifiedTravelPlacesBatch9,
+      ...verifiedTravelPlacesBatch10,
     ]) {
       resultByPlace.removeWhere((_, spot) => spot.id == verified.id);
       resultByPlace[_placeKey(verified.city, verified.name)] = verified;
