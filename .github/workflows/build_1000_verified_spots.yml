@@ -7,6 +7,14 @@ on:
         description: 'Minimum verified spot count'
         required: true
         default: '1100'
+  push:
+    branches:
+      - feature/verified-travel-batch-11
+    paths:
+      - 'tool/generate_verified_spot_catalog.py'
+      - 'tool/audit_verified_spot_catalog.py'
+      - 'tool/upgrade_verified_spot_images.py'
+      - '.github/workflows/build_1000_verified_spots.yml'
   schedule:
     - cron: '17 3 * * 1'
 
