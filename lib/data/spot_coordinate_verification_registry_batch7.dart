@@ -33,9 +33,9 @@ const verifiedSpotCoordinateEvidenceBatch7 =
     sourceRef: 'Q21524009',
     verifiedAt: '2026-08-20',
   ),
-  'amasya-kral-kaya-mezarlari': SpotCoordinateVerificationEvidence(
-    sourceName: 'Wikidata',
-    sourceRef: 'Q6022363',
+  'gordion': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata + UNESCO',
+    sourceRef: 'Q542854 / UNESCO 1669',
     verifiedAt: '2026-08-20',
   ),
   'ballica-magarasi': SpotCoordinateVerificationEvidence(
@@ -58,9 +58,9 @@ const verifiedSpotCoordinateEvidenceBatch7 =
     sourceRef: 'Q118956350',
     verifiedAt: '2026-08-20',
   ),
-  'divrigi-ulu-camii': SpotCoordinateVerificationEvidence(
+  'catalhoyuk': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata + UNESCO',
-    sourceRef: 'Q581641 / UNESCO 358',
+    sourceRef: 'Q192522 / UNESCO 1405',
     verifiedAt: '2026-08-20',
   ),
 };
