@@ -10,6 +10,7 @@ on:
   push:
     branches:
       - feature/verified-travel-batch-11
+    # Generated catalog/data commits are intentionally excluded to prevent loops.
     paths:
       - 'tool/generate_verified_spot_catalog.py'
       - 'tool/audit_verified_spot_catalog.py'
