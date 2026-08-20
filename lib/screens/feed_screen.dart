@@ -15,8 +15,14 @@ enum FeedMode { forYou, following }
 class FeedScreen extends StatelessWidget {
   final FeedMode mode;
   final bool embedded;
+  final bool includeEvents;
 
-  const FeedScreen({super.key, this.mode = FeedMode.forYou, this.embedded = false});
+  const FeedScreen({
+    super.key,
+    this.mode = FeedMode.forYou,
+    this.embedded = false,
+    this.includeEvents = true,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -73,7 +79,10 @@ class FeedScreen extends StatelessWidget {
                     stream: SocialEventService.instance.watchUpcoming(limit: 50),
                     builder: (context, eventsSnapshot) {
                       final now = DateTime.now();
-                      var events = (eventsSnapshot.data ?? const <SocialEvent>[]).where((event) {
+                      var events = (includeEvents
+                              ? eventsSnapshot.data ?? const <SocialEvent>[]
+                              : const <SocialEvent>[])
+                          .where((event) {
                         final visible = event.visibility == EventVisibility.public ||
                             event.hostId == currentUser.uid ||
                             event.participantIds.contains(currentUser.uid) ||

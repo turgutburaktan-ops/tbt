@@ -120,6 +120,30 @@ class _ProfileBodyState extends State<_ProfileBody> {
           const SnackBar(content: Text('Profil adı panoya kopyalandı.')));
   }
 
+  Future<void> _handleProfileMenu(
+    String value,
+    String displayName,
+    String bio,
+  ) async {
+    switch (value) {
+      case 'edit':
+        _editProfile(displayName, bio);
+        return;
+      case 'share':
+        await _shareProfile(displayName);
+        return;
+      case 'messages':
+        if (mounted) Navigator.pushNamed(context, '/messages');
+        return;
+      case 'campus':
+        if (mounted) Navigator.pushNamed(context, '/campus');
+        return;
+      case 'logout':
+        await AuthService.instance.logout();
+        return;
+    }
+  }
+
   void _showPostPreview(
     String imageUrl,
     String storagePath,
@@ -215,22 +239,57 @@ class _ProfileBodyState extends State<_ProfileBody> {
                                   fontSize: 21, fontWeight: FontWeight.w900),
                             ),
                           ),
-                          IconButton(
-                            tooltip: 'Mesajlar',
-                            onPressed: () =>
-                                Navigator.pushNamed(context, '/messages'),
-                            icon: const Icon(Icons.chat_bubble_outline_rounded,
-                                color: Colors.white70),
-                          ),
-                          IconButton(
-                            onPressed: () => _editProfile(displayName, bio),
-                            icon: const Icon(Icons.edit_outlined,
-                                color: Colors.white70),
-                          ),
-                          IconButton(
-                            onPressed: AuthService.instance.logout,
-                            icon: const Icon(Icons.logout_rounded,
-                                color: Colors.white60),
+                          PopupMenuButton<String>(
+                            tooltip: 'Profil işlemleri',
+                            icon: const Icon(
+                              Icons.more_horiz_rounded,
+                              color: Colors.white70,
+                            ),
+                            color: const Color(0xFF17191C),
+                            onSelected: (value) => _handleProfileMenu(
+                              value,
+                              displayName,
+                              bio,
+                            ),
+                            itemBuilder: (_) => const [
+                              PopupMenuItem(
+                                value: 'edit',
+                                child: ListTile(
+                                  leading: Icon(Icons.edit_outlined),
+                                  title: Text('Profili düzenle'),
+                                ),
+                              ),
+                              PopupMenuItem(
+                                value: 'share',
+                                child: ListTile(
+                                  leading: Icon(Icons.share_outlined),
+                                  title: Text('Profili paylaş'),
+                                ),
+                              ),
+                              PopupMenuItem(
+                                value: 'messages',
+                                child: ListTile(
+                                  leading:
+                                      Icon(Icons.chat_bubble_outline_rounded),
+                                  title: Text('Mesajlar'),
+                                ),
+                              ),
+                              PopupMenuItem(
+                                value: 'campus',
+                                child: ListTile(
+                                  leading: Icon(Icons.school_outlined),
+                                  title: Text('Kampüs'),
+                                ),
+                              ),
+                              PopupMenuDivider(),
+                              PopupMenuItem(
+                                value: 'logout',
+                                child: ListTile(
+                                  leading: Icon(Icons.logout_rounded),
+                                  title: Text('Çıkış yap'),
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
@@ -344,47 +403,23 @@ class _ProfileBodyState extends State<_ProfileBody> {
                             ),
                           ),
                           const SizedBox(height: 14),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: SizedBox(
-                                  height: 42,
-                                  child: FilledButton(
-                                    style: FilledButton.styleFrom(
-                                      backgroundColor: const Color(0xFF17191C),
-                                      foregroundColor: Colors.white,
-                                      shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(11)),
-                                    ),
-                                    onPressed: () =>
-                                        _editProfile(displayName, bio),
-                                    child: const Text('Profili Düzenle',
-                                        style: TextStyle(
-                                            fontWeight: FontWeight.w800)),
-                                  ),
+                          SizedBox(
+                            width: double.infinity,
+                            height: 42,
+                            child: FilledButton(
+                              style: FilledButton.styleFrom(
+                                backgroundColor: const Color(0xFF17191C),
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(11),
                                 ),
                               ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: SizedBox(
-                                  height: 42,
-                                  child: FilledButton(
-                                    style: FilledButton.styleFrom(
-                                      backgroundColor: const Color(0xFF17191C),
-                                      foregroundColor: Colors.white,
-                                      shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(11)),
-                                    ),
-                                    onPressed: () => _shareProfile(displayName),
-                                    child: const Text('Profili Paylaş',
-                                        style: TextStyle(
-                                            fontWeight: FontWeight.w800)),
-                                  ),
-                                ),
+                              onPressed: () => _editProfile(displayName, bio),
+                              child: const Text(
+                                'Profili Düzenle',
+                                style: TextStyle(fontWeight: FontWeight.w800),
                               ),
-                            ],
+                            ),
                           ),
                         ],
                       ),

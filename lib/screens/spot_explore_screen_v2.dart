@@ -18,7 +18,9 @@ import '../widgets/spot_image.dart';
 import 'spot_detail_screen.dart';
 
 class SpotExploreScreen extends StatefulWidget {
-  const SpotExploreScreen({super.key});
+  final bool embedded;
+
+  const SpotExploreScreen({super.key, this.embedded = false});
 
   @override
   State<SpotExploreScreen> createState() => _SpotExploreScreenState();
@@ -155,30 +157,37 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
       child: CustomScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 18, 20, 12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Gezilecek Yerler',
-                    style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    _position == null
-                        ? 'Gerçek gezi noktalarını keşfet; fotoğraf önerilerini yer detayında gör.'
-                        : 'Yakınındaki gezilecek yerlerden başlayarak sıralandı.',
-                    style: const TextStyle(color: Colors.white60),
-                  ),
-                ],
+          if (!widget.embedded)
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 18, 20, 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Gezilecek Yerler',
+                      style:
+                          TextStyle(fontSize: 26, fontWeight: FontWeight.w800),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      _position == null
+                          ? 'Gerçek gezi noktalarını keşfet; fotoğraf önerilerini yer detayında gör.'
+                          : 'Yakınındaki gezilecek yerlerden başlayarak sıralandı.',
+                      style: const TextStyle(color: Colors.white60),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 14),
+              padding: EdgeInsets.fromLTRB(
+                20,
+                widget.embedded ? 6 : 0,
+                20,
+                14,
+              ),
               child: TextField(
                 controller: _searchController,
                 onChanged: (value) {
