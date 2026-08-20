@@ -28,12 +28,22 @@ class PostService {
     final user = _auth.currentUser;
     if (user == null) throw Exception('Fotoğraf paylaşmak için giriş yapmalısın.');
 
+    if (!await image.exists()) throw Exception('Paylaşılacak fotoğraf bulunamadı.');
+    final sourceBytes = await image.length();
+    if (sourceBytes <= 0) throw Exception('Fotoğraf dosyası boş.');
+    if (sourceBytes > 40 * 1024 * 1024) {
+      throw Exception('Fotoğraf 40 MB sınırını aşıyor.');
+    }
+
     final postRef = _firestore.collection('posts').doc();
     final lowerPath = image.path.toLowerCase();
     final extension = lowerPath.endsWith('.png') ? 'png' : 'jpg';
     final storageRef = _storage.ref().child('users/${user.uid}/posts/${postRef.id}.$extension');
     final metadata = SettableMetadata(contentType: extension == 'png' ? 'image/png' : 'image/jpeg');
     final uploadTask = await storageRef.putFile(image, metadata);
+    if (uploadTask.totalBytes <= 0 || uploadTask.bytesTransferred <= 0) {
+      throw Exception('Fotoğraf Storage alanına eksik yüklendi.');
+    }
     final imageUrl = await uploadTask.ref.getDownloadURL();
 
     await postRef.set({

@@ -378,12 +378,16 @@ class _FeedPostCard extends StatelessWidget {
               ]),
             ),
           ),
-          if (imageUrl.isNotEmpty || storagePath.isNotEmpty)
+          if (imageUrl.isNotEmpty ||
+              storagePath.isNotEmpty ||
+              (userId.isNotEmpty && postId.isNotEmpty))
             AspectRatio(
               aspectRatio: 4 / 5,
               child: FirebaseMediaImage(
                 imageUrl: imageUrl,
                 storagePath: storagePath,
+                fallbackStoragePaths:
+                    FirebaseMediaImage.postPaths(userId, postId),
                 width: double.infinity,
                 fit: BoxFit.cover,
                 errorWidget: const ColoredBox(

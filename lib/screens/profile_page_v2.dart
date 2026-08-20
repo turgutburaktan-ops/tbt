@@ -120,8 +120,16 @@ class _ProfileBodyState extends State<_ProfileBody> {
           const SnackBar(content: Text('Profil adı panoya kopyalandı.')));
   }
 
-  void _showPostPreview(String imageUrl, String storagePath) {
-    if (imageUrl.isEmpty && storagePath.isEmpty) return;
+  void _showPostPreview(
+    String imageUrl,
+    String storagePath,
+    List<String> fallbackStoragePaths,
+  ) {
+    if (imageUrl.isEmpty &&
+        storagePath.isEmpty &&
+        fallbackStoragePaths.isEmpty) {
+      return;
+    }
     showDialog<void>(
       context: context,
       barrierColor: Colors.black87,
@@ -137,6 +145,7 @@ class _ProfileBodyState extends State<_ProfileBody> {
                 child: FirebaseMediaImage(
                   imageUrl: imageUrl,
                   storagePath: storagePath,
+                  fallbackStoragePaths: fallbackStoragePaths,
                   fit: BoxFit.contain,
                   errorWidget: const ColoredBox(
                     color: Color(0xFF121416),
@@ -450,6 +459,11 @@ class _ProfileBodyState extends State<_ProfileBody> {
                                 (data['imageUrl'] ?? '').toString();
                             final storagePath =
                                 (data['storagePath'] ?? '').toString();
+                            final fallbackStoragePaths =
+                                FirebaseMediaImage.postPaths(
+                              widget.user.uid,
+                              posts[index].id,
+                            );
                             final caption =
                                 (data['caption'] ?? '').toString().trim();
                             final spotName =
@@ -457,10 +471,14 @@ class _ProfileBodyState extends State<_ProfileBody> {
                             return _PostTile(
                               imageUrl: imageUrl,
                               storagePath: storagePath,
+                              fallbackStoragePaths: fallbackStoragePaths,
                               caption: caption,
                               spotName: spotName,
-                              onLongPress: () =>
-                                  _showPostPreview(imageUrl, storagePath),
+                              onLongPress: () => _showPostPreview(
+                                imageUrl,
+                                storagePath,
+                                fallbackStoragePaths,
+                              ),
                               onTap: () => Navigator.push(
                                 context,
                                 MaterialPageRoute(
@@ -588,6 +606,7 @@ class _ProfileBodyState extends State<_ProfileBody> {
 class _PostTile extends StatelessWidget {
   final String imageUrl;
   final String storagePath;
+  final List<String> fallbackStoragePaths;
   final String caption;
   final String spotName;
   final VoidCallback onTap;
@@ -596,6 +615,7 @@ class _PostTile extends StatelessWidget {
   const _PostTile({
     required this.imageUrl,
     required this.storagePath,
+    required this.fallbackStoragePaths,
     required this.caption,
     required this.spotName,
     required this.onTap,
@@ -610,12 +630,15 @@ class _PostTile extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         onLongPress: onLongPress,
-        child: imageUrl.isEmpty && storagePath.isEmpty
+        child: imageUrl.isEmpty &&
+                storagePath.isEmpty &&
+                fallbackStoragePaths.isEmpty
             ? const Center(
                 child: Icon(Icons.image_outlined, color: Colors.white30))
             : FirebaseMediaImage(
                 imageUrl: imageUrl,
                 storagePath: storagePath,
+                fallbackStoragePaths: fallbackStoragePaths,
                 width: double.infinity,
                 height: double.infinity,
                 fit: BoxFit.cover,

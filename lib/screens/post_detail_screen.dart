@@ -246,6 +246,10 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   Widget build(BuildContext context) {
     final imageUrl = (_post['imageUrl'] ?? '').toString();
     final storagePath = (_post['storagePath'] ?? '').toString();
+    final fallbackStoragePaths = FirebaseMediaImage.postPaths(
+      (_post['userId'] ?? '').toString(),
+      (_post['id'] ?? '').toString(),
+    );
     final caption = (_post['caption'] ?? '').toString().trim();
     final spot =
         (_post['spotName'] ?? _post['locationName'] ?? _post['location'] ?? '')
@@ -362,7 +366,9 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                     color: Colors.black,
                     child: AspectRatio(
                       aspectRatio: 1,
-                      child: imageUrl.isEmpty && storagePath.isEmpty
+                      child: imageUrl.isEmpty &&
+                              storagePath.isEmpty &&
+                              fallbackStoragePaths.isEmpty
                           ? const Center(
                               child: Icon(
                                 Icons.image_outlined,
@@ -379,6 +385,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                                 child: FirebaseMediaImage(
                                   imageUrl: imageUrl,
                                   storagePath: storagePath,
+                                  fallbackStoragePaths: fallbackStoragePaths,
                                   fit: BoxFit.contain,
                                   errorWidget: const Center(
                                     child: Icon(

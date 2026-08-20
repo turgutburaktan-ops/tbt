@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
@@ -38,13 +40,27 @@ class FirebaseMediaImage extends StatefulWidget {
     ];
   }
 
+  static List<String> postPaths(String userId, String postId) {
+    if (userId.trim().isEmpty || postId.trim().isEmpty) {
+      return const <String>[];
+    }
+    return <String>[
+      'users/$userId/posts/$postId.jpg',
+      'users/$userId/posts/$postId.png',
+    ];
+  }
+
   @override
   State<FirebaseMediaImage> createState() => _FirebaseMediaImageState();
 }
 
 class _FirebaseMediaImageState extends State<FirebaseMediaImage> {
+  static const int _maxRecoveryBytes = 40 * 1024 * 1024;
+
   late Future<String?> _resolvedUrl;
+  Uint8List? _resolvedBytes;
   bool _recoveryAttempted = false;
+  bool _recoveringBytes = false;
 
   @override
   void initState() {
@@ -60,6 +76,8 @@ class _FirebaseMediaImageState extends State<FirebaseMediaImage> {
         !_samePaths(
             oldWidget.fallbackStoragePaths, widget.fallbackStoragePaths)) {
       _recoveryAttempted = false;
+      _recoveringBytes = false;
+      _resolvedBytes = null;
       _resolvedUrl = _initialUrl();
     }
   }
@@ -84,48 +102,45 @@ class _FirebaseMediaImageState extends State<FirebaseMediaImage> {
   }
 
   Future<String?> _resolveFreshUrl() async {
-    final storagePath = widget.storagePath.trim();
-    if (storagePath.isNotEmpty) {
+    for (final reference in _storageReferences()) {
       try {
-        return await FirebaseStorage.instance
-            .ref()
-            .child(storagePath)
-            .getDownloadURL();
+        return await reference.getDownloadURL();
       } catch (_) {
-        // The saved URL and known fallback paths can still recover the image.
-      }
-    }
-
-    final savedUrl = widget.imageUrl.trim();
-    // Firebase download tokens can be rotated. Resolve the reference again so
-    // posts created with an older token continue to render.
-    if (savedUrl.isNotEmpty && _isFirebaseStorageUrl(savedUrl)) {
-      try {
-        return await FirebaseStorage.instance
-            .refFromURL(savedUrl)
-            .getDownloadURL();
-      } catch (_) {
-        // The original URL may still be public or supplied by another host.
-      }
-    }
-
-    final fallbackPaths = <String>{
-      ...widget.fallbackStoragePaths.map((path) => path.trim()).where(
-            (path) => path.isNotEmpty,
-          ),
-    };
-    for (final path in fallbackPaths) {
-      try {
-        return await FirebaseStorage.instance
-            .ref()
-            .child(path)
-            .getDownloadURL();
-      } catch (_) {
-        // Try the next predictable path.
+        // Try the next known Storage reference.
       }
     }
 
     return null;
+  }
+
+  List<Reference> _storageReferences() {
+    final references = <Reference>[];
+    final seen = <String>{};
+
+    void add(Reference reference) {
+      final key = '${reference.bucket}/${reference.fullPath}';
+      if (seen.add(key)) references.add(reference);
+    }
+
+    final storage = FirebaseStorage.instance;
+    final storagePath = widget.storagePath.trim();
+    if (storagePath.isNotEmpty) add(storage.ref().child(storagePath));
+
+    final savedUrl = widget.imageUrl.trim();
+    if (savedUrl.isNotEmpty && _isFirebaseStorageUrl(savedUrl)) {
+      try {
+        add(storage.refFromURL(savedUrl));
+      } catch (_) {
+        // A malformed legacy URL must not block predictable path recovery.
+      }
+    }
+
+    for (final path in widget.fallbackStoragePaths) {
+      final cleanPath = path.trim();
+      if (cleanPath.isNotEmpty) add(storage.ref().child(cleanPath));
+    }
+
+    return references;
   }
 
   bool get _canRecover {
@@ -135,12 +150,28 @@ class _FirebaseMediaImageState extends State<FirebaseMediaImage> {
         _isFirebaseStorageUrl(savedUrl);
   }
 
-  void _recoverAfterLoadError() {
+  Future<void> _recoverAfterLoadError() async {
     if (_recoveryAttempted || !_canRecover) return;
     _recoveryAttempted = true;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      setState(() => _resolvedUrl = _resolveFreshUrl());
+    if (mounted) setState(() => _recoveringBytes = true);
+
+    Uint8List? bytes;
+    for (final reference in _storageReferences()) {
+      try {
+        final candidate = await reference.getData(_maxRecoveryBytes);
+        if (candidate != null && candidate.isNotEmpty) {
+          bytes = candidate;
+          break;
+        }
+      } catch (_) {
+        // Authenticated byte download is the last recovery path.
+      }
+    }
+
+    if (!mounted) return;
+    setState(() {
+      _resolvedBytes = bytes;
+      _recoveringBytes = false;
     });
   }
 
@@ -180,8 +211,40 @@ class _FirebaseMediaImageState extends State<FirebaseMediaImage> {
         );
   }
 
+  Widget _memoryImage(Uint8List bytes) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final logicalWidth = widget.width != null && widget.width!.isFinite
+            ? widget.width!
+            : constraints.maxWidth.isFinite
+                ? constraints.maxWidth
+                : MediaQuery.sizeOf(context).width;
+        final deviceWidth =
+            (logicalWidth * MediaQuery.devicePixelRatioOf(context))
+                .round()
+                .clamp(64, 2160)
+                .toInt();
+        return Image.memory(
+          bytes,
+          width: widget.width,
+          height: widget.height,
+          fit: widget.fit,
+          alignment: widget.alignment,
+          filterQuality: widget.filterQuality,
+          cacheWidth: deviceWidth,
+          gaplessPlayback: true,
+          errorBuilder: (_, __, ___) => _error(),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final bytes = _resolvedBytes;
+    if (bytes != null) return _memoryImage(bytes);
+    if (_recoveringBytes) return _placeholder();
+
     return FutureBuilder<String?>(
       future: _resolvedUrl,
       builder: (context, snapshot) {
@@ -201,7 +264,11 @@ class _FirebaseMediaImageState extends State<FirebaseMediaImage> {
           placeholder: (_, __) => _placeholder(),
           errorWidget: (_, __, ___) {
             final willRecover = !_recoveryAttempted && _canRecover;
-            _recoverAfterLoadError();
+            if (willRecover) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (mounted) _recoverAfterLoadError();
+              });
+            }
             return willRecover ? _placeholder() : _error();
           },
         );
