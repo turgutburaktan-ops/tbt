@@ -96,8 +96,6 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     try {
       final selected = await _picker.pickImage(
         source: source,
-        imageQuality: 88,
-        maxWidth: 2000,
       );
       if (selected == null || !mounted) return;
       setState(() => _image = File(selected.path));

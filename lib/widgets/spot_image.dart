@@ -108,6 +108,7 @@ class SpotImage extends StatelessWidget {
   }) {
     return CachedNetworkImage(
       imageUrl: url,
+      httpHeaders: _httpHeaders(url),
       width: width,
       height: height,
       fit: fit,
@@ -165,10 +166,27 @@ class SpotImage extends StatelessWidget {
 
   String _previewUrl(String sourceUrl) {
     return sourceUrl
-        .replaceFirst(RegExp(r'/2560px-'), '/480px-')
-        .replaceFirst(RegExp(r'/1920px-'), '/480px-')
-        .replaceFirst(RegExp(r'/1280px-'), '/480px-')
-        .replaceFirst(RegExp(r'([?&])width=(2560|1920|1280)'), r'$1width=480');
+        .replaceFirst(
+          RegExp(r'/(3840|2560|1920|1280|1000|960)px-'),
+          '/500px-',
+        )
+        .replaceFirst(
+          RegExp(r'([?&])width=(3840|2560|1920|1280|1000|960)'),
+          r'$1width=500',
+        );
+  }
+
+  Map<String, String>? _httpHeaders(String url) {
+    final host = Uri.tryParse(url)?.host.toLowerCase() ?? '';
+    if (!host.endsWith('wikimedia.org') &&
+        !host.endsWith('wikipedia.org')) {
+      return null;
+    }
+    return const <String, String>{
+      'User-Agent':
+          'BestPhotoSpot/1.0 (contact: turgutburaktan@gmail.com)',
+      'Accept': 'image/avif,image/webp,image/apng,image/*,*/*;q=0.8',
+    };
   }
 
   Widget _searchedImage() => FutureBuilder<String?>(

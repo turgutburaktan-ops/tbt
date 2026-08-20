@@ -40,35 +40,8 @@ jobs:
           MAPS_API_KEY: ${{ secrets.MAPS_API_KEY }}
         run: python3 tool/prepare_android_build.py
 
-      - name: Guard exposure during tap focus
-        run: python3 tool/patch_focus_exposure_guard.py
-
       - name: Install dependencies
         run: flutter pub get
-
-      - name: Enable maximum-quality CamerAwesome capture
-        run: python3 tool/patch_camerawesome_capture_quality.py
-
-      - name: Keep live filters memory-safe
-        run: python3 tool/patch_camerawesome_preview_filters.py
-
-      - name: Patch Iris Android capture
-        run: python3 tool/patch_iris_camera.py
-
-      - name: Enable physical 0.5x and tele lenses
-        run: python3 tool/patch_iris_physical_lenses.py
-
-      - name: Add exact lens ID switching
-        run: python3 tool/patch_iris_direct_lens_id.py
-
-      - name: Route camera buttons to exact lens IDs
-        run: python3 tool/patch_camera_direct_lens_switch.py
-
-      - name: Map zoom buttons by real FOV
-        run: python3 tool/patch_camera_fov_lens_mapping.py
-
-      - name: Apply camera runtime fidelity fixes
-        run: python3 tool/patch_camera_runtime_fidelity.py
 
       - name: Add event city autocomplete
         run: python3 tool/patch_social_event_city_autocomplete.py
