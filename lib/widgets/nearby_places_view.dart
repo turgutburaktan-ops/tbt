@@ -28,6 +28,7 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
   final _searchController = TextEditingController();
   Position? _position;
   List<NearbyVenue> _venues = const [];
+  final Set<String> _selectedIds = <String>{};
   bool _loading = true;
   String? _error;
 
@@ -61,7 +62,9 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
         longitude: position.longitude,
         forceRefresh: forceRefresh,
       );
-      venues.sort((a, b) => _distance(position, a).compareTo(_distance(position, b)));
+      venues.sort(
+        (a, b) => _distance(position, a).compareTo(_distance(position, b)),
+      );
       if (!mounted) return;
       setState(() {
         _position = position;
@@ -116,6 +119,49 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
     if (!await launchUrl(uri, mode: LaunchMode.externalApplication) && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Harita uygulaması açılamadı.')),
+      );
+    }
+  }
+
+  void _toggleSelection(NearbyVenue venue) {
+    setState(() {
+      if (!_selectedIds.add(venue.id)) _selectedIds.remove(venue.id);
+    });
+  }
+
+  Future<void> _openSelectedRoute() async {
+    var selected = _venues
+        .where((venue) => _selectedIds.contains(venue.id))
+        .toList();
+    if (selected.isEmpty) return;
+    if (selected.length > 10) {
+      selected = selected.take(10).toList();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Google Maps sınırı nedeniyle en yakın 10 mekan açıldı.'),
+        ),
+      );
+    }
+    final destination = selected.last;
+    final params = <String, String>{
+      'api': '1',
+      'destination': '${destination.latitude},${destination.longitude}',
+      'travelmode': 'driving',
+    };
+    final position = _position;
+    if (position != null) {
+      params['origin'] = '${position.latitude},${position.longitude}';
+    }
+    if (selected.length > 1) {
+      params['waypoints'] = selected
+          .take(selected.length - 1)
+          .map((venue) => '${venue.latitude},${venue.longitude}')
+          .join('|');
+    }
+    final uri = Uri.https('www.google.com', '/maps/dir/', params);
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication) && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Google Maps açılamadı.')),
       );
     }
   }
@@ -197,6 +243,17 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
               ),
             ],
           ),
+          if (_selectedIds.isNotEmpty) ...[
+            const SizedBox(height: 9),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: _openSelectedRoute,
+                icon: const Icon(Icons.route_rounded),
+                label: Text('Rotaya Git (${_selectedIds.length})'),
+              ),
+            ),
+          ],
           Padding(
             padding: const EdgeInsets.fromLTRB(3, 12, 3, 8),
             child: Text(
@@ -218,6 +275,8 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
                 venue: venue,
                 distance: _distanceLabel(venue),
                 onDirections: () => _openDirections(venue),
+                selected: _selectedIds.contains(venue.id),
+                onSelected: () => _toggleSelection(venue),
               ),
             ),
           const SizedBox(height: 8),
@@ -241,11 +300,15 @@ class _VenueCard extends StatelessWidget {
   final NearbyVenue venue;
   final String distance;
   final VoidCallback onDirections;
+  final bool selected;
+  final VoidCallback onSelected;
 
   const _VenueCard({
     required this.venue,
     required this.distance,
     required this.onDirections,
+    required this.selected,
+    required this.onSelected,
   });
 
   IconData get _icon => switch (venue.category) {
@@ -263,9 +326,11 @@ class _VenueCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: const Color(0xFF292D38)),
         ),
-        child: Row(
+        child: Column(
           children: [
-            Container(
+            Row(
+              children: [
+                Container(
               width: 46,
               height: 46,
               decoration: BoxDecoration(
@@ -279,8 +344,8 @@ class _VenueCard extends StatelessWidget {
               ),
               child: Icon(_icon, color: const Color(0xFF42F5E9)),
             ),
-            const SizedBox(width: 12),
-            Expanded(
+                const SizedBox(width: 12),
+                Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -312,8 +377,8 @@ class _VenueCard extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(width: 6),
-            Column(
+                const SizedBox(width: 6),
+                Column(
               children: [
                 Text(
                   distance,
@@ -329,6 +394,34 @@ class _VenueCard extends StatelessWidget {
                   icon: const Icon(Icons.directions_rounded, size: 22),
                 ),
               ],
+                ),
+              ],
+            ),
+            const Divider(height: 12, color: Colors.white10),
+            InkWell(
+              onTap: onSelected,
+              borderRadius: BorderRadius.circular(10),
+              child: Row(
+                children: [
+                  Checkbox(
+                    value: selected,
+                    onChanged: (_) => onSelected(),
+                    activeColor: const Color(0xFF42F5E9),
+                    checkColor: Colors.black,
+                    visualDensity: VisualDensity.compact,
+                  ),
+                  Text(
+                    selected ? 'Rotaya eklendi' : 'Rotaya ekle',
+                    style: TextStyle(
+                      color: selected
+                          ? const Color(0xFF42F5E9)
+                          : Colors.white70,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         ),

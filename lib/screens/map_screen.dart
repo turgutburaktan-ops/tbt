@@ -26,6 +26,7 @@ class _MapScreenState extends State<MapScreen> {
   SocialEvent? _selectedEvent;
   List<PhotoSpot> _spots = List<PhotoSpot>.from(demoSpots);
   List<SocialEvent> _events = const [];
+  final List<PhotoSpot> _routeSpots = [];
   bool _loadingSpots = true;
   bool _locationPermissionGranted = false;
   bool _gettingLocation = false;
@@ -84,11 +85,19 @@ class _MapScreenState extends State<MapScreen> {
     final markers = <Marker>{};
     if (_filter != _MapContentFilter.events) {
       for (final spot in _spots) {
+        final inRoute = _routeSpots.any((item) => item.id == spot.id);
         markers.add(Marker(
           markerId: MarkerId('spot_${spot.id}'),
           position: LatLng(spot.latitude, spot.longitude),
+          icon: inRoute
+              ? BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen)
+              : BitmapDescriptor.defaultMarker,
           infoWindow: InfoWindow(
-              title: spot.name, snippet: '${spot.city} • ⭐ ${spot.rating}'),
+            title: spot.name,
+            snippet: inRoute
+                ? '${spot.city} • Rotaya eklendi'
+                : '${spot.city} • ⭐ ${spot.rating}',
+          ),
           onTap: () {
             setState(() {
               _selectedSpot = spot;
@@ -205,8 +214,26 @@ class _MapScreenState extends State<MapScreen> {
   void _openRoutePlanner() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => const RoutePlannerScreen()),
+      MaterialPageRoute(
+        builder: (_) => RoutePlannerScreen(
+          initialSpots: List<PhotoSpot>.from(_routeSpots),
+        ),
+      ),
     );
+  }
+
+  void _toggleRouteSpot(PhotoSpot spot) {
+    final index = _routeSpots.indexWhere((item) => item.id == spot.id);
+    setState(() {
+      if (index >= 0) {
+        _routeSpots.removeAt(index);
+      } else {
+        _routeSpots.add(spot);
+      }
+    });
+    _message(index >= 0
+        ? '${spot.name} rotadan çıkarıldı.'
+        : '${spot.name} rotaya eklendi.');
   }
 
   void _openEvents() {
@@ -280,10 +307,16 @@ class _MapScreenState extends State<MapScreen> {
                                   color: Colors.white54,
                                   fontWeight: FontWeight.w700)),
                         IconButton(
-                          tooltip: 'Rota oluştur',
+                          tooltip: _routeSpots.isEmpty
+                              ? 'Rota oluştur'
+                              : 'Rotayı aç (${_routeSpots.length})',
                           onPressed: _openRoutePlanner,
-                          icon: const Icon(Icons.route_rounded,
-                              color: Colors.white70),
+                          icon: Badge(
+                            isLabelVisible: _routeSpots.isNotEmpty,
+                            label: Text('${_routeSpots.length}'),
+                            child: const Icon(Icons.route_rounded,
+                                color: Colors.white70),
+                          ),
                         ),
                         IconButton(
                             onPressed: () {
@@ -360,8 +393,12 @@ class _MapScreenState extends State<MapScreen> {
                     bottom: 16,
                     child: _SpotCard(
                         spot: _selectedSpot!,
+                        inRoute: _routeSpots
+                            .any((item) => item.id == _selectedSpot!.id),
                         onClose: () => setState(() => _selectedSpot = null),
-                        onOpen: () => _openSpot(_selectedSpot!))),
+                        onOpen: () => _openSpot(_selectedSpot!),
+                        onToggleRoute: () =>
+                            _toggleRouteSpot(_selectedSpot!))),
               if (_selectedEvent != null)
                 Positioned(
                     left: 16,
@@ -472,10 +509,16 @@ class _EventCard extends StatelessWidget {
 
 class _SpotCard extends StatelessWidget {
   final PhotoSpot spot;
+  final bool inRoute;
   final VoidCallback onClose;
   final VoidCallback onOpen;
+  final VoidCallback onToggleRoute;
   const _SpotCard(
-      {required this.spot, required this.onClose, required this.onOpen});
+      {required this.spot,
+      required this.inRoute,
+      required this.onClose,
+      required this.onOpen,
+      required this.onToggleRoute});
   @override
   Widget build(BuildContext context) => Card(
         color: const Color(0xFF0F1113),
@@ -511,11 +554,28 @@ class _SpotCard extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
                             color: Color(0xFFB7BCC2), fontSize: 12)),
+                    const SizedBox(height: 5),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: TextButton.icon(
+                        onPressed: onToggleRoute,
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          visualDensity: VisualDensity.compact,
+                        ),
+                        icon: Icon(
+                          inRoute
+                              ? Icons.check_circle_rounded
+                              : Icons.add_location_alt_outlined,
+                          size: 19,
+                        ),
+                        label: Text(inRoute ? 'Rotada' : 'Rotaya Ekle'),
+                      ),
+                    ),
                   ])),
               IconButton(
                   onPressed: onClose,
                   icon: const Icon(Icons.close, color: Colors.white54)),
-              const Icon(Icons.chevron_right, color: Color(0xFFB7BCC2)),
             ]),
           ),
         ),

@@ -7,6 +7,7 @@ import '../services/social_event_service.dart';
 import '../services/social_service.dart';
 import '../widgets/content_engagement_bar.dart';
 import '../widgets/firebase_media_image.dart';
+import '../widgets/story_strip.dart';
 import 'social_events_screen.dart';
 import 'user_profile_screen.dart';
 
@@ -102,9 +103,12 @@ class FeedScreen extends StatelessWidget {
                         return d.year == now.year && d.month == now.month && d.day == now.day;
                       }).take(6).toList();
 
-                      if (docs.isEmpty && events.isEmpty) return _EmptyFeed(mode: mode);
-
-                      final feedItems = <Widget>[];
+                      final visibleStoryUsers = mode == FeedMode.following
+                          ? <String>{currentUser.uid, ...followingIds}
+                          : null;
+                      final feedItems = <Widget>[
+                        StoryStrip(visibleUserIds: visibleStoryUsers),
+                      ];
                       if (mode == FeedMode.forYou && tonight.isNotEmpty) {
                         feedItems.add(_TonightStrip(events: tonight, followingIds: followingIds));
                       }
@@ -131,6 +135,10 @@ class FeedScreen extends StatelessWidget {
 
                       while (eventIndex < events.length && feedItems.length < 10) {
                         feedItems.add(_EventFeedCard(event: events[eventIndex++], followingIds: followingIds));
+                      }
+
+                      if (docs.isEmpty && events.isEmpty) {
+                        feedItems.add(_EmptyFeed(mode: mode));
                       }
 
                       return RefreshIndicator(
@@ -299,17 +307,16 @@ class _EmptyFeed extends StatelessWidget {
   final FeedMode mode;
   const _EmptyFeed({required this.mode});
   @override
-  Widget build(BuildContext context) => ListView(
-        physics: const AlwaysScrollableScrollPhysics(),
+  Widget build(BuildContext context) => Padding(
         padding: const EdgeInsets.all(30),
-        children: [
-          const SizedBox(height: 70),
+        child: Column(children: [
+          const SizedBox(height: 36),
           Icon(mode == FeedMode.following ? Icons.people_outline_rounded : Icons.photo_library_outlined, size: 66, color: Colors.white30),
           const SizedBox(height: 16),
           Text(mode == FeedMode.following ? 'Takip akışın henüz sakin' : 'Henüz paylaşım yok', textAlign: TextAlign.center, style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w900)),
           const SizedBox(height: 8),
           Text(mode == FeedMode.following ? 'Yeni insanları takip ettikçe onların paylaşımları ve katıldıkları etkinlikler burada görünür.' : 'İlk fotoğraf ve etkinlik anıları geldikçe burası canlanacak.', textAlign: TextAlign.center, style: const TextStyle(color: Colors.white54, height: 1.4)),
-        ],
+        ]),
       );
 }
 

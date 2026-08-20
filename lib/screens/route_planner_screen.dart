@@ -33,8 +33,13 @@ extension RouteTravelModeX on RouteTravelMode {
 
 class RoutePlannerScreen extends StatefulWidget {
   final PhotoSpot? initialSpot;
+  final List<PhotoSpot> initialSpots;
 
-  const RoutePlannerScreen({super.key, this.initialSpot});
+  const RoutePlannerScreen({
+    super.key,
+    this.initialSpot,
+    this.initialSpots = const <PhotoSpot>[],
+  });
 
   @override
   State<RoutePlannerScreen> createState() => _RoutePlannerScreenState();
@@ -59,8 +64,13 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
   @override
   void initState() {
     super.initState();
+    final initialIds = <String>{};
+    for (final spot in widget.initialSpots) {
+      if (initialIds.add(spot.id)) _stops.add(spot);
+    }
     if (widget.initialSpot != null) {
-      _stops.add(widget.initialSpot!);
+      final spot = widget.initialSpot!;
+      if (initialIds.add(spot.id)) _stops.add(spot);
     }
     _load();
   }

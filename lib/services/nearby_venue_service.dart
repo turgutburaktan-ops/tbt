@@ -24,7 +24,7 @@ class NearbyVenueService {
     required NearbyVenueCategory category,
     required double latitude,
     required double longitude,
-    int radiusMeters = 8000,
+    int radiusMeters = 15000,
     bool forceRefresh = false,
   }) async {
     final prefs = await SharedPreferences.getInstance();
@@ -50,7 +50,7 @@ class NearbyVenueService {
                 ),
               },
             )
-            .timeout(const Duration(seconds: 14));
+            .timeout(const Duration(seconds: 24));
         if (response.statusCode != 200) {
           lastError = 'HTTP ${response.statusCode}';
           continue;
@@ -80,7 +80,7 @@ class NearbyVenueService {
   ) {
     final latCell = (latitude * 50).round();
     final lonCell = (longitude * 50).round();
-    return 'nearby_venues_v1_${category.name}_${latCell}_$lonCell';
+    return 'nearby_venues_v2_${category.name}_${latCell}_$lonCell';
   }
 
   _CachedVenues? _readCache(SharedPreferences prefs, String key) {
@@ -108,11 +108,14 @@ class NearbyVenueService {
     double longitude,
     int radiusMeters,
   ) {
-    final filter = category.osmFilter;
+    final filters = category.osmFilters
+        .map((filter) =>
+            '  nwr(around:$radiusMeters,$latitude,$longitude)$filter["name"];')
+        .join('\n');
     return '''
-[out:json][timeout:12];
+[out:json][timeout:18];
 (
-  nwr(around:$radiusMeters,$latitude,$longitude)$filter["name"];
+$filters
 );
 out center tags;
 ''';
@@ -169,7 +172,7 @@ out center tags;
               (tags['contact:website'] ?? tags['website'] ?? '').toString(),
         ),
       );
-      if (venues.length >= 80) break;
+      if (venues.length >= 180) break;
     }
     return venues;
   }

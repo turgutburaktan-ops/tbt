@@ -7,12 +7,18 @@ extension NearbyVenueCategoryX on NearbyVenueCategory {
         NearbyVenueCategory.hotel => 'Oteller',
       };
 
-  String get osmFilter => switch (this) {
-        NearbyVenueCategory.dining =>
-          '["amenity"~"^(restaurant|fast_food|food_court)\$"]',
-        NearbyVenueCategory.cafe => '["amenity"="cafe"]',
-        NearbyVenueCategory.hotel =>
-          '["tourism"~"^(hotel|hostel|guest_house|motel|apartment|chalet)\$"]',
+  List<String> get osmFilters => switch (this) {
+        NearbyVenueCategory.dining => const [
+            '["amenity"~"^(restaurant|fast_food|food_court|bar|pub|biergarten)\$"]',
+            '["shop"~"^(bakery|deli)\$"]',
+          ],
+        NearbyVenueCategory.cafe => const [
+            '["amenity"~"^(cafe|ice_cream)\$"]',
+            '["shop"~"^(coffee|pastry|confectionery)\$"]',
+          ],
+        NearbyVenueCategory.hotel => const [
+            '["tourism"~"^(hotel|hostel|guest_house|motel|apartment|chalet)\$"]',
+          ],
       };
 }
 
