@@ -10,6 +10,7 @@ import '../data/verified_travel_places_batch4.dart';
 import '../data/verified_travel_places_batch5.dart';
 import '../data/verified_travel_places_batch6.dart';
 import '../data/verified_travel_places_batch7.dart';
+import '../data/verified_travel_places_batch8.dart';
 import '../models/photo_spot.dart';
 
 /// Türkiye genelindeki kaynak adaylarını yalnızca kendilerine ait açıkça
@@ -45,7 +46,6 @@ class NationwideCandidateSpotResolver {
       final exactKey = _placeKey(candidate.city, candidate.name);
       if (resultByPlace.containsKey(exactKey)) continue;
 
-      // Yalnızca adayın kendi ID'sine ait açık koordinat kaydı kabul edilir.
       final explicit = turkiye81SpotCoordinates[candidate.id];
       if (explicit == null) continue;
 
@@ -57,8 +57,8 @@ class NationwideCandidateSpotResolver {
     }
 
     // Elle kaynak kontrolü tamamlanan gezilecek yer çekirdeği her zaman son
-    // sözü söyler. Aynı ID eski demo/otomatik katalogda başka ad veya pinle
-    // bulunuyorsa önce kaldırılır; böylece doğrulanmış koordinat ezilemez.
+    // sözü söyler. Aynı ID eski/demo/otomatik katalogda başka ad veya pinle
+    // bulunuyorsa doğrulanmış kayıt kazanır.
     for (final verified in <PhotoSpot>[
       ...verifiedTravelPlaces,
       ...verifiedTravelPlacesBatch2,
@@ -67,6 +67,7 @@ class NationwideCandidateSpotResolver {
       ...verifiedTravelPlacesBatch5,
       ...verifiedTravelPlacesBatch6,
       ...verifiedTravelPlacesBatch7,
+      ...verifiedTravelPlacesBatch8,
     ]) {
       resultByPlace.removeWhere((_, spot) => spot.id == verified.id);
       resultByPlace[_placeKey(verified.city, verified.name)] = verified;
