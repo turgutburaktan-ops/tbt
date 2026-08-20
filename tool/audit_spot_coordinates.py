@@ -15,10 +15,12 @@ VERIFIED_TRAVEL_FILES = [
     DATA_DIR / 'verified_travel_places_batch3.dart',
     DATA_DIR / 'verified_travel_places_batch4.dart',
     DATA_DIR / 'verified_travel_places_batch5.dart',
+    DATA_DIR / 'verified_travel_places_batch6.dart',
 ]
 EVIDENCE_FILES = [
     DATA_DIR / 'spot_coordinate_verification_registry.dart',
     DATA_DIR / 'spot_coordinate_verification_registry_batch5.dart',
+    DATA_DIR / 'spot_coordinate_verification_registry_batch6.dart',
 ]
 IMAGE_FILES = [
     DATA_DIR / 'verified_travel_image_registry.dart',
@@ -26,6 +28,7 @@ IMAGE_FILES = [
     DATA_DIR / 'verified_travel_image_registry_batch3.dart',
     DATA_DIR / 'verified_travel_image_registry_batch4.dart',
     DATA_DIR / 'verified_travel_image_registry_batch5.dart',
+    DATA_DIR / 'verified_travel_image_registry_batch6.dart',
     DATA_DIR / 'spot_image_registry.dart',
 ]
 
@@ -250,9 +253,6 @@ def main() -> None:
     print(json.dumps(report['summary'], ensure_ascii=False, indent=2))
     print(f'Audit report: {OUT_FILE}')
 
-    # Sınır dışı/sıfır koordinat kullanıcıyı yanlış yere götürür. Doğrulanmış
-    # çekirdekte kanıt/görsel eksikliği veya ID/koordinat çakışması da kalite
-    # kapısını düşürür.
     if (
         invalid_bounds
         or zero_coordinates
