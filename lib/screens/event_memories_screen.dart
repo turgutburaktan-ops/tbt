@@ -8,6 +8,7 @@ import 'package:image_picker/image_picker.dart';
 import '../models/social_event.dart';
 import '../services/post_service.dart';
 import '../widgets/content_engagement_bar.dart';
+import '../widgets/firebase_media_image.dart';
 
 class EventMemoriesScreen extends StatefulWidget {
   final SocialEvent event;
@@ -121,6 +122,7 @@ class _EventMemoriesScreenState extends State<EventMemoriesScreen> {
                 ...docs.map((doc) {
                   final d = doc.data();
                   final image = (d['imageUrl'] ?? '').toString();
+                  final storagePath = (d['storagePath'] ?? '').toString();
                   final caption = (d['caption'] ?? '').toString();
                   final name = (d['userName'] ?? 'Katılımcı').toString();
                   final uid = (d['userId'] ?? '').toString();
@@ -130,7 +132,18 @@ class _EventMemoriesScreenState extends State<EventMemoriesScreen> {
                     decoration: BoxDecoration(color: const Color(0xFF111315), borderRadius: BorderRadius.circular(20), border: Border.all(color: const Color(0xFF25292E))),
                     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                       Padding(padding: const EdgeInsets.all(12), child: Row(children: [const CircleAvatar(radius: 18, backgroundColor: Color(0xFF25292E), child: Icon(Icons.person_outline, size: 19)), const SizedBox(width: 9), Expanded(child: Text(name, style: const TextStyle(fontWeight: FontWeight.w900))), const Text('Etkinlik anısı', style: TextStyle(fontSize: 11, color: Colors.white54))])),
-                      if (image.isNotEmpty) AspectRatio(aspectRatio: 4 / 5, child: Image.network(image, fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Center(child: Icon(Icons.broken_image_outlined)))),
+                      if (image.isNotEmpty || storagePath.isNotEmpty)
+                        AspectRatio(
+                          aspectRatio: 4 / 5,
+                          child: FirebaseMediaImage(
+                            imageUrl: image,
+                            storagePath: storagePath,
+                            fit: BoxFit.cover,
+                            errorWidget: const Center(
+                              child: Icon(Icons.broken_image_outlined),
+                            ),
+                          ),
+                        ),
                       Padding(padding: const EdgeInsets.symmetric(horizontal: 7), child: ContentEngagementBar(collection: 'event_memories', contentId: doc.id, ownerId: uid, title: caption.isEmpty ? widget.event.title : caption, sourceType: 'event_memory')),
                       if (caption.isNotEmpty) Padding(padding: const EdgeInsets.fromLTRB(13, 0, 13, 13), child: Text.rich(TextSpan(children: [TextSpan(text: '$name ', style: const TextStyle(fontWeight: FontWeight.w900)), TextSpan(text: caption, style: const TextStyle(color: Colors.white70))]))),
                     ]),

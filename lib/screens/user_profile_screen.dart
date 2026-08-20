@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../services/chat_service.dart';
 import '../services/social_service.dart';
+import '../widgets/firebase_media_image.dart';
 import 'chat_screen.dart';
 import 'post_detail_screen.dart';
 
@@ -104,16 +105,25 @@ class UserProfileScreen extends StatelessWidget {
                                   border: Border.all(
                                       color: const Color(0xFF555B62)),
                                 ),
-                                child: CircleAvatar(
-                                  radius: 43,
-                                  backgroundColor: const Color(0xFF1A1D20),
-                                  backgroundImage: photoUrl.isEmpty
-                                      ? null
-                                      : NetworkImage(photoUrl),
-                                  child: photoUrl.isEmpty
-                                      ? const Icon(Icons.person,
-                                          size: 42, color: Colors.white54)
-                                      : null,
+                                child: SizedBox(
+                                  width: 86,
+                                  height: 86,
+                                  child: ClipOval(
+                                    child: FirebaseMediaImage(
+                                      imageUrl: photoUrl,
+                                      fallbackStoragePaths:
+                                          FirebaseMediaImage.avatarPaths(
+                                              userId),
+                                      errorWidget: const ColoredBox(
+                                        color: Color(0xFF1A1D20),
+                                        child: Center(
+                                          child: Icon(Icons.person,
+                                              size: 42,
+                                              color: Colors.white54),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
                                 ),
                               ),
                               const SizedBox(width: 20),
@@ -268,6 +278,8 @@ class UserProfileScreen extends StatelessWidget {
                             final post = {...doc.data(), 'id': doc.id};
                             final imageUrl =
                                 (post['imageUrl'] ?? '').toString();
+                            final storagePath =
+                                (post['storagePath'] ?? '').toString();
                             return GestureDetector(
                               onTap: () => Navigator.push(
                                 context,
@@ -277,16 +289,18 @@ class UserProfileScreen extends StatelessWidget {
                               ),
                               child: Container(
                                 color: const Color(0xFF121416),
-                                child: imageUrl.isEmpty
+                                child: imageUrl.isEmpty && storagePath.isEmpty
                                     ? const Icon(Icons.image_outlined,
                                         color: Colors.white24)
-                                    : Image.network(
-                                        imageUrl,
+                                    : FirebaseMediaImage(
+                                        imageUrl: imageUrl,
+                                        storagePath: storagePath,
                                         fit: BoxFit.cover,
-                                        errorBuilder: (_, __, ___) =>
-                                            const Icon(
-                                          Icons.broken_image_outlined,
-                                          color: Colors.white24,
+                                        errorWidget: const Center(
+                                          child: Icon(
+                                            Icons.broken_image_outlined,
+                                            color: Colors.white24,
+                                          ),
                                         ),
                                       ),
                               ),

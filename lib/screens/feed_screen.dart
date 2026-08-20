@@ -6,6 +6,7 @@ import '../models/social_event.dart';
 import '../services/social_event_service.dart';
 import '../services/social_service.dart';
 import '../widgets/content_engagement_bar.dart';
+import '../widgets/firebase_media_image.dart';
 import 'social_events_screen.dart';
 import 'user_profile_screen.dart';
 
@@ -109,6 +110,7 @@ class FeedScreen extends StatelessWidget {
                           userName: (data['userName'] ?? 'Topluluk üyesi').toString(),
                           userPhotoUrl: (data['userPhotoUrl'] ?? data['photoUrl'] ?? '').toString(),
                           imageUrl: (data['imageUrl'] ?? '').toString(),
+                          storagePath: (data['storagePath'] ?? '').toString(),
                           caption: (data['caption'] ?? '').toString(),
                           spotName: (data['spotName'] ?? '').toString(),
                           createdAt: data['createdAt'],
@@ -303,9 +305,26 @@ class _EmptyFeed extends StatelessWidget {
 }
 
 class _FeedPostCard extends StatelessWidget {
-  final String postId, userId, userName, userPhotoUrl, imageUrl, caption, spotName;
+  final String postId,
+      userId,
+      userName,
+      userPhotoUrl,
+      imageUrl,
+      storagePath,
+      caption,
+      spotName;
   final dynamic createdAt;
-  const _FeedPostCard({required this.postId, required this.userId, required this.userName, required this.userPhotoUrl, required this.imageUrl, required this.caption, required this.spotName, required this.createdAt});
+  const _FeedPostCard({
+    required this.postId,
+    required this.userId,
+    required this.userName,
+    required this.userPhotoUrl,
+    required this.imageUrl,
+    required this.storagePath,
+    required this.caption,
+    required this.spotName,
+    required this.createdAt,
+  });
 
   String _timeLabel() {
     if (createdAt is! Timestamp) return '';
@@ -329,7 +348,24 @@ class _FeedPostCard extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.fromLTRB(12, 11, 8, 10),
               child: Row(children: [
-                CircleAvatar(radius: 20, backgroundColor: const Color(0xFF22262A), backgroundImage: userPhotoUrl.isEmpty ? null : NetworkImage(userPhotoUrl), child: userPhotoUrl.isEmpty ? const Icon(Icons.person_outline, color: Colors.white60) : null),
+                SizedBox(
+                  width: 40,
+                  height: 40,
+                  child: ClipOval(
+                    child: FirebaseMediaImage(
+                      imageUrl: userPhotoUrl,
+                      fallbackStoragePaths:
+                          FirebaseMediaImage.avatarPaths(userId),
+                      errorWidget: const ColoredBox(
+                        color: Color(0xFF22262A),
+                        child: Center(
+                          child: Icon(Icons.person_outline,
+                              color: Colors.white60),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
                 const SizedBox(width: 10),
                 Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Text(userName, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15)),
@@ -342,7 +378,23 @@ class _FeedPostCard extends StatelessWidget {
               ]),
             ),
           ),
-          if (imageUrl.isNotEmpty) AspectRatio(aspectRatio: 4 / 5, child: Image.network(imageUrl, width: double.infinity, fit: BoxFit.cover, errorBuilder: (_, __, ___) => Container(color: const Color(0xFF1A1D20), alignment: Alignment.center, child: const Icon(Icons.broken_image_outlined, color: Colors.white30, size: 52)))),
+          if (imageUrl.isNotEmpty || storagePath.isNotEmpty)
+            AspectRatio(
+              aspectRatio: 4 / 5,
+              child: FirebaseMediaImage(
+                imageUrl: imageUrl,
+                storagePath: storagePath,
+                width: double.infinity,
+                fit: BoxFit.cover,
+                errorWidget: const ColoredBox(
+                  color: Color(0xFF1A1D20),
+                  child: Center(
+                    child: Icon(Icons.broken_image_outlined,
+                        color: Colors.white30, size: 52),
+                  ),
+                ),
+              ),
+            ),
           Padding(padding: const EdgeInsets.fromLTRB(8, 4, 8, 0), child: ContentEngagementBar(collection: 'posts', contentId: postId, ownerId: userId, title: caption.trim().isEmpty ? 'Fotoğraf paylaşımı' : caption, sourceType: 'post')),
           if (caption.trim().isNotEmpty) Padding(padding: const EdgeInsets.fromLTRB(13, 0, 13, 8), child: Text.rich(TextSpan(children: [TextSpan(text: '$userName ', style: const TextStyle(fontWeight: FontWeight.w900)), TextSpan(text: caption, style: const TextStyle(color: Colors.white70, height: 1.35))]))),
           if (spotName.isNotEmpty)

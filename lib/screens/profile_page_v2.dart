@@ -9,6 +9,7 @@ import 'package:image_picker/image_picker.dart';
 import '../services/auth_service.dart';
 import '../services/profile_service.dart';
 import '../services/social_service.dart';
+import '../widgets/firebase_media_image.dart';
 import 'create_post_screen.dart';
 import 'follow_list_screen.dart';
 import 'login_screen.dart';
@@ -77,7 +78,6 @@ class _ProfileBodyState extends State<_ProfileBody> {
   }
 
   void _openProfilePhoto(String url, String name) {
-    if (url.isEmpty) return;
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -92,7 +92,17 @@ class _ProfileBodyState extends State<_ProfileBody> {
             minScale: 1,
             maxScale: 5,
             clipBehavior: Clip.none,
-            child: Center(child: Image.network(url, fit: BoxFit.contain)),
+            child: Center(
+              child: FirebaseMediaImage(
+                imageUrl: url,
+                fallbackStoragePaths:
+                    FirebaseMediaImage.avatarPaths(widget.user.uid),
+                fit: BoxFit.contain,
+                errorWidget: const Center(
+                  child: Icon(Icons.person, size: 72, color: Colors.white38),
+                ),
+              ),
+            ),
           ),
         ),
       ),
@@ -110,8 +120,8 @@ class _ProfileBodyState extends State<_ProfileBody> {
           const SnackBar(content: Text('Profil adı panoya kopyalandı.')));
   }
 
-  void _showPostPreview(String imageUrl) {
-    if (imageUrl.isEmpty) return;
+  void _showPostPreview(String imageUrl, String storagePath) {
+    if (imageUrl.isEmpty && storagePath.isEmpty) return;
     showDialog<void>(
       context: context,
       barrierColor: Colors.black87,
@@ -124,10 +134,11 @@ class _ProfileBodyState extends State<_ProfileBody> {
               borderRadius: BorderRadius.circular(18),
               child: AspectRatio(
                 aspectRatio: 1,
-                child: Image.network(
-                  imageUrl,
+                child: FirebaseMediaImage(
+                  imageUrl: imageUrl,
+                  storagePath: storagePath,
                   fit: BoxFit.contain,
-                  errorBuilder: (_, __, ___) => const ColoredBox(
+                  errorWidget: const ColoredBox(
                     color: Color(0xFF121416),
                     child: Center(
                         child: Icon(Icons.broken_image_outlined, size: 48)),
@@ -233,17 +244,25 @@ class _ProfileBodyState extends State<_ProfileBody> {
                                     child: CircleAvatar(
                                       radius: 47,
                                       backgroundColor: const Color(0xFFB7BCC2),
-                                      child: CircleAvatar(
-                                        radius: 43,
-                                        backgroundColor:
-                                            const Color(0xFF121416),
-                                        backgroundImage: photoUrl.isEmpty
-                                            ? null
-                                            : NetworkImage(photoUrl),
-                                        child: photoUrl.isEmpty
-                                            ? const Icon(Icons.person,
-                                                size: 48, color: Colors.white54)
-                                            : null,
+                                      child: SizedBox(
+                                        width: 86,
+                                        height: 86,
+                                        child: ClipOval(
+                                          child: FirebaseMediaImage(
+                                            imageUrl: photoUrl,
+                                            fallbackStoragePaths:
+                                                FirebaseMediaImage.avatarPaths(
+                                                    widget.user.uid),
+                                            errorWidget: const ColoredBox(
+                                              color: Color(0xFF121416),
+                                              child: Center(
+                                                child: Icon(Icons.person,
+                                                    size: 48,
+                                                    color: Colors.white54),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -429,15 +448,19 @@ class _ProfileBodyState extends State<_ProfileBody> {
                             final data = posts[index].data();
                             final imageUrl =
                                 (data['imageUrl'] ?? '').toString();
+                            final storagePath =
+                                (data['storagePath'] ?? '').toString();
                             final caption =
                                 (data['caption'] ?? '').toString().trim();
                             final spotName =
                                 (data['spotName'] ?? '').toString().trim();
                             return _PostTile(
                               imageUrl: imageUrl,
+                              storagePath: storagePath,
                               caption: caption,
                               spotName: spotName,
-                              onLongPress: () => _showPostPreview(imageUrl),
+                              onLongPress: () =>
+                                  _showPostPreview(imageUrl, storagePath),
                               onTap: () => Navigator.push(
                                 context,
                                 MaterialPageRoute(
@@ -564,6 +587,7 @@ class _ProfileBodyState extends State<_ProfileBody> {
 
 class _PostTile extends StatelessWidget {
   final String imageUrl;
+  final String storagePath;
   final String caption;
   final String spotName;
   final VoidCallback onTap;
@@ -571,6 +595,7 @@ class _PostTile extends StatelessWidget {
 
   const _PostTile({
     required this.imageUrl,
+    required this.storagePath,
     required this.caption,
     required this.spotName,
     required this.onTap,
@@ -585,16 +610,17 @@ class _PostTile extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         onLongPress: onLongPress,
-        child: imageUrl.isEmpty
+        child: imageUrl.isEmpty && storagePath.isEmpty
             ? const Center(
                 child: Icon(Icons.image_outlined, color: Colors.white30))
-            : Image.network(
-                imageUrl,
+            : FirebaseMediaImage(
+                imageUrl: imageUrl,
+                storagePath: storagePath,
                 width: double.infinity,
                 height: double.infinity,
                 fit: BoxFit.cover,
                 filterQuality: FilterQuality.medium,
-                errorBuilder: (_, __, ___) => const Center(
+                errorWidget: const Center(
                   child:
                       Icon(Icons.broken_image_outlined, color: Colors.white30),
                 ),

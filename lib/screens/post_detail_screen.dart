@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../services/post_service.dart';
 import '../services/spot_repository.dart';
 import '../widgets/content_engagement_bar.dart';
+import '../widgets/firebase_media_image.dart';
 import '../widgets/mention_text.dart';
 import 'spot_detail_screen.dart';
 
@@ -244,6 +245,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final imageUrl = (_post['imageUrl'] ?? '').toString();
+    final storagePath = (_post['storagePath'] ?? '').toString();
     final caption = (_post['caption'] ?? '').toString().trim();
     final spot =
         (_post['spotName'] ?? _post['locationName'] ?? _post['location'] ?? '')
@@ -360,7 +362,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                     color: Colors.black,
                     child: AspectRatio(
                       aspectRatio: 1,
-                      child: imageUrl.isEmpty
+                      child: imageUrl.isEmpty && storagePath.isEmpty
                           ? const Center(
                               child: Icon(
                                 Icons.image_outlined,
@@ -374,10 +376,11 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                               panEnabled: true,
                               clipBehavior: Clip.hardEdge,
                               child: SizedBox.expand(
-                                child: Image.network(
-                                  imageUrl,
+                                child: FirebaseMediaImage(
+                                  imageUrl: imageUrl,
+                                  storagePath: storagePath,
                                   fit: BoxFit.contain,
-                                  errorBuilder: (_, __, ___) => const Center(
+                                  errorWidget: const Center(
                                     child: Icon(
                                       Icons.broken_image_outlined,
                                       size: 70,

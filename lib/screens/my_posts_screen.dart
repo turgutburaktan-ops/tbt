@@ -2,6 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import '../widgets/firebase_media_image.dart';
+
 class MyPostsScreen extends StatelessWidget {
   const MyPostsScreen({super.key});
 
@@ -128,6 +130,8 @@ class MyPostsScreen extends StatelessWidget {
                     final data = document.data() as Map<String, dynamic>;
 
                     final imageUrl = (data['imageUrl'] ?? '').toString();
+                    final storagePath =
+                        (data['storagePath'] ?? '').toString();
 
                     final title = (data['title'] ?? 'Çekim').toString();
 
@@ -147,20 +151,19 @@ class MyPostsScreen extends StatelessWidget {
                           Expanded(
                             child: SizedBox(
                               width: double.infinity,
-                              child: imageUrl.isNotEmpty
-                                  ? Image.network(
-                                      imageUrl,
+                              child:
+                                  imageUrl.isNotEmpty || storagePath.isNotEmpty
+                                  ? FirebaseMediaImage(
+                                      imageUrl: imageUrl,
+                                      storagePath: storagePath,
                                       fit: BoxFit.cover,
-                                      errorBuilder:
-                                          (context, error, stackTrace) {
-                                        return const Center(
-                                          child: Icon(
-                                            Icons.broken_image_outlined,
-                                            color: Colors.white38,
-                                            size: 45,
-                                          ),
-                                        );
-                                      },
+                                      errorWidget: const Center(
+                                        child: Icon(
+                                          Icons.broken_image_outlined,
+                                          color: Colors.white38,
+                                          size: 45,
+                                        ),
+                                      ),
                                     )
                                   : const Center(
                                       child: Icon(

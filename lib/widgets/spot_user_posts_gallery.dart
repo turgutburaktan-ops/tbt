@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import '../models/photo_spot.dart';
 import '../services/post_service.dart';
 import '../screens/post_detail_screen.dart';
+import 'firebase_media_image.dart';
 
 class SpotUserPostsGallery extends StatelessWidget {
   final PhotoSpot spot;
@@ -99,6 +100,7 @@ class SpotUserPostsGallery extends StatelessWidget {
               itemBuilder: (context, index) {
                 final data = top[index].data();
                 final url = (data['imageUrl'] ?? '').toString();
+                final storagePath = (data['storagePath'] ?? '').toString();
                 return GestureDetector(
                   onTap: () => Navigator.push(
                     context,
@@ -109,16 +111,18 @@ class SpotUserPostsGallery extends StatelessWidget {
                     tag: 'spot-post-${top[index].id}',
                     child: Container(
                       color: const Color(0xFF121416),
-                      child: url.isEmpty
+                      child: url.isEmpty && storagePath.isEmpty
                           ? const Icon(Icons.image_outlined,
                               color: Colors.white30)
-                          : Image.network(
-                              url,
+                          : FirebaseMediaImage(
+                              imageUrl: url,
+                              storagePath: storagePath,
                               fit: BoxFit.cover,
                               filterQuality: FilterQuality.low,
-                              errorBuilder: (_, __, ___) => const Icon(
-                                  Icons.broken_image_outlined,
-                                  color: Colors.white30),
+                              errorWidget: const Center(
+                                child: Icon(Icons.broken_image_outlined,
+                                    color: Colors.white30),
+                              ),
                             ),
                     ),
                   ),
