@@ -1,6 +1,6 @@
 Run 1100 verified travel spot pipeline from the default branch.
-Triggered: 2026-08-20T11:03:00+03:00
+Triggered: 2026-08-20T11:34:00+03:00
 PR trigger: ci/run-1100-verified-spots
-Rerun: v2 quality tools
+Rerun: strict generated images + legacy source-limit warnings
 Target branch: feature/verified-travel-batch-11
 Target total: 1100
