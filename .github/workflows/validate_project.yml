@@ -1,0 +1,64 @@
+name: Validate Project
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches:
+      - main
+      - 'stabilize/**'
+      - 'fix/**'
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Verify Dart compatibility
+        shell: bash
+        run: |
+          flutter --version
+          dart --version
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Analyze Dart code
+        run: flutter analyze --no-fatal-warnings --no-fatal-infos
+
+      - name: Run tests when present
+        shell: bash
+        run: |
+          if [ -d test ] && find test -type f -name '*_test.dart' | grep -q .; then
+            flutter test
+          else
+            echo 'No Flutter tests found yet.'
+          fi
+
+      - name: Block retired UI patch workflows
+        shell: bash
+        run: |
+          retired=(
+            .github/workflows/app_refresh_teal.yml
+            .github/workflows/apply_purple_ui.yml
+            .github/workflows/gray_social_refresh.yml
+            .github/workflows/fix_profile_photo_interaction.yml
+            .github/workflows/add_post_event_engagement.yml
+          )
+          for path in "${retired[@]}"; do
+            if [ -e "$path" ]; then
+              echo "Retired source-rewrite workflow returned: $path"
+              exit 1
+            fi
+          done

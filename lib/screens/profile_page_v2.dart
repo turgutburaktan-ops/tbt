@@ -6,10 +6,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../models/app_story.dart';
 import '../services/auth_service.dart';
 import '../services/profile_service.dart';
 import '../services/social_service.dart';
+import '../services/story_service.dart';
 import '../widgets/firebase_media_image.dart';
+import '../widgets/story_strip.dart';
 import 'create_post_screen.dart';
 import 'follow_list_screen.dart';
 import 'login_screen.dart';
@@ -109,6 +112,16 @@ class _ProfileBodyState extends State<_ProfileBody> {
     );
   }
 
+  void _openStories(List<AppStory> stories) {
+    if (stories.isEmpty) return;
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => StoryViewerScreen(stories: stories),
+      ),
+    );
+  }
+
   Future<void> _shareProfile(String displayName) async {
     final handle =
         displayName.trim().isEmpty ? 'Fotoğrafçı' : displayName.trim();
@@ -117,7 +130,8 @@ class _ProfileBodyState extends State<_ProfileBody> {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
-          const SnackBar(content: Text('Profil adı panoya kopyalandı.')));
+        const SnackBar(content: Text('Profil adı panoya kopyalandı.')),
+      );
   }
 
   Future<void> _handleProfileMenu(
@@ -127,7 +141,7 @@ class _ProfileBodyState extends State<_ProfileBody> {
   ) async {
     switch (value) {
       case 'edit':
-        _editProfile(displayName, bio);
+        await _editProfile(displayName, bio);
         return;
       case 'share':
         await _shareProfile(displayName);
@@ -174,7 +188,8 @@ class _ProfileBodyState extends State<_ProfileBody> {
                   errorWidget: const ColoredBox(
                     color: Color(0xFF121416),
                     child: Center(
-                        child: Icon(Icons.broken_image_outlined, size: 48)),
+                      child: Icon(Icons.broken_image_outlined, size: 48),
+                    ),
                   ),
                 ),
               ),
@@ -236,7 +251,9 @@ class _ProfileBodyState extends State<_ProfileBody> {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
-                                  fontSize: 21, fontWeight: FontWeight.w900),
+                                fontSize: 21,
+                                fontWeight: FontWeight.w900,
+                              ),
                             ),
                           ),
                           PopupMenuButton<String>(
@@ -306,33 +323,76 @@ class _ProfileBodyState extends State<_ProfileBody> {
                               Stack(
                                 clipBehavior: Clip.none,
                                 children: [
-                                  GestureDetector(
-                                    onTap: () => _openProfilePhoto(
-                                        photoUrl, displayName),
-                                    child: CircleAvatar(
-                                      radius: 47,
-                                      backgroundColor: const Color(0xFFB7BCC2),
-                                      child: SizedBox(
-                                        width: 86,
-                                        height: 86,
-                                        child: ClipOval(
-                                          child: FirebaseMediaImage(
-                                            imageUrl: photoUrl,
-                                            fallbackStoragePaths:
-                                                FirebaseMediaImage.avatarPaths(
-                                                    widget.user.uid),
-                                            errorWidget: const ColoredBox(
-                                              color: Color(0xFF121416),
-                                              child: Center(
-                                                child: Icon(Icons.person,
-                                                    size: 48,
-                                                    color: Colors.white54),
+                                  StreamBuilder<List<AppStory>>(
+                                    stream: StoryService.instance
+                                        .watchActiveForUser(widget.user.uid),
+                                    builder: (context, storySnapshot) {
+                                      final stories = storySnapshot.data ??
+                                          const <AppStory>[];
+                                      final hasStory = stories.isNotEmpty;
+                                      return GestureDetector(
+                                        onTap: () {
+                                          if (hasStory) {
+                                            _openStories(stories);
+                                          } else {
+                                            _openProfilePhoto(
+                                                photoUrl, displayName);
+                                          }
+                                        },
+                                        child: Container(
+                                          padding:
+                                              EdgeInsets.all(hasStory ? 3 : 0),
+                                          decoration: BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            gradient: hasStory
+                                                ? const LinearGradient(
+                                                    colors: [
+                                                      Color(0xFF42F5E9),
+                                                      Color(0xFF8B5CF6),
+                                                    ],
+                                                  )
+                                                : null,
+                                          ),
+                                          child: Container(
+                                            padding: EdgeInsets.all(
+                                                hasStory ? 2 : 0),
+                                            decoration: const BoxDecoration(
+                                              shape: BoxShape.circle,
+                                              color: Color(0xFF090A0C),
+                                            ),
+                                            child: CircleAvatar(
+                                              radius: 47,
+                                              backgroundColor:
+                                                  const Color(0xFFB7BCC2),
+                                              child: SizedBox(
+                                                width: 86,
+                                                height: 86,
+                                                child: ClipOval(
+                                                  child: FirebaseMediaImage(
+                                                    imageUrl: photoUrl,
+                                                    fallbackStoragePaths:
+                                                        FirebaseMediaImage
+                                                            .avatarPaths(
+                                                                widget.user.uid),
+                                                    errorWidget:
+                                                        const ColoredBox(
+                                                      color: Color(0xFF121416),
+                                                      child: Center(
+                                                        child: Icon(
+                                                          Icons.person,
+                                                          size: 48,
+                                                          color: Colors.white54,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
                                               ),
                                             ),
                                           ),
                                         ),
-                                      ),
-                                    ),
+                                      );
+                                    },
                                   ),
                                   Positioned(
                                     right: -2,
@@ -348,9 +408,10 @@ class _ProfileBodyState extends State<_ProfileBody> {
                                           shape: BoxShape.circle,
                                         ),
                                         child: const Icon(
-                                            Icons.add_a_photo_outlined,
-                                            size: 17,
-                                            color: Colors.black),
+                                          Icons.add_a_photo_outlined,
+                                          size: 17,
+                                          color: Colors.black,
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -387,9 +448,13 @@ class _ProfileBodyState extends State<_ProfileBody> {
                             ],
                           ),
                           const SizedBox(height: 14),
-                          Text(displayName,
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.w800, fontSize: 16)),
+                          Text(
+                            displayName,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w800,
+                              fontSize: 16,
+                            ),
+                          ),
                           const SizedBox(height: 5),
                           Text(
                             bio.trim().isEmpty
@@ -414,7 +479,8 @@ class _ProfileBodyState extends State<_ProfileBody> {
                                   borderRadius: BorderRadius.circular(11),
                                 ),
                               ),
-                              onPressed: () => _editProfile(displayName, bio),
+                              onPressed: () =>
+                                  _editProfile(displayName, bio),
                               child: const Text(
                                 'Profili Düzenle',
                                 style: TextStyle(fontWeight: FontWeight.w800),
@@ -429,8 +495,9 @@ class _ProfileBodyState extends State<_ProfileBody> {
                     child: Container(
                       height: 52,
                       decoration: const BoxDecoration(
-                        border:
-                            Border(bottom: BorderSide(color: Colors.white12)),
+                        border: Border(
+                          bottom: BorderSide(color: Colors.white12),
+                        ),
                       ),
                       child: const Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -444,10 +511,11 @@ class _ProfileBodyState extends State<_ProfileBody> {
                                     color: Colors.white, size: 23),
                                 SizedBox(height: 10),
                                 SizedBox(
-                                    height: 2,
-                                    width: 70,
-                                    child:
-                                        ColoredBox(color: Color(0xFFB7BCC2))),
+                                  height: 2,
+                                  width: 70,
+                                  child:
+                                      ColoredBox(color: Color(0xFFB7BCC2)),
+                                ),
                               ],
                             ),
                           ),
@@ -458,8 +526,9 @@ class _ProfileBodyState extends State<_ProfileBody> {
                   if (postSnapshot.connectionState == ConnectionState.waiting)
                     const SliverFillRemaining(
                       child: Center(
-                          child: CircularProgressIndicator(
-                              color: Color(0xFFB7BCC2))),
+                        child: CircularProgressIndicator(
+                            color: Color(0xFFB7BCC2)),
+                      ),
                     )
                   else if (posts.isEmpty)
                     SliverFillRemaining(
@@ -469,7 +538,8 @@ class _ProfileBodyState extends State<_ProfileBody> {
                           onPressed: () => Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (_) => const CreatePostScreen()),
+                              builder: (_) => const CreatePostScreen(),
+                            ),
                           ),
                           icon: const Icon(Icons.add_a_photo_outlined),
                           label: const Text('İlk Fotoğrafını Paylaş'),
@@ -517,8 +587,10 @@ class _ProfileBodyState extends State<_ProfileBody> {
                               onTap: () => Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                    builder: (_) =>
-                                        PostDetailScreen(post: data)),
+                                  builder: (_) => PostDetailScreen(
+                                    post: {...data, 'id': posts[index].id},
+                                  ),
+                                ),
                               ),
                             );
                           },
@@ -559,20 +631,27 @@ class _ProfileBodyState extends State<_ProfileBody> {
 
           return Padding(
             padding: EdgeInsets.fromLTRB(
-                20, 16, 20, MediaQuery.of(context).viewInsets.bottom + 24),
+              20,
+              16,
+              20,
+              MediaQuery.of(context).viewInsets.bottom + 24,
+            ),
             child: SingleChildScrollView(
               child: Column(
                 children: [
                   Row(
                     children: [
                       const Expanded(
-                        child: Text('Profili Düzenle',
-                            style: TextStyle(
-                                fontSize: 22, fontWeight: FontWeight.w900)),
+                        child: Text(
+                          'Profili Düzenle',
+                          style: TextStyle(
+                              fontSize: 22, fontWeight: FontWeight.w900),
+                        ),
                       ),
                       IconButton(
-                          onPressed: () => Navigator.pop(sheetContext),
-                          icon: const Icon(Icons.close)),
+                        onPressed: () => Navigator.pop(sheetContext),
+                        icon: const Icon(Icons.close),
+                      ),
                     ],
                   ),
                   GestureDetector(
@@ -586,8 +665,9 @@ class _ProfileBodyState extends State<_ProfileBody> {
                     ),
                   ),
                   TextButton(
-                      onPressed: pick,
-                      child: const Text('Profil fotoğrafı seç')),
+                    onPressed: pick,
+                    child: const Text('Profil fotoğrafı seç'),
+                  ),
                   TextField(
                     controller: nameController,
                     decoration:
@@ -616,8 +696,9 @@ class _ProfileBodyState extends State<_ProfileBody> {
                                   bio: bioController.text,
                                   photo: photo,
                                 );
-                                if (sheetContext.mounted)
+                                if (sheetContext.mounted) {
                                   Navigator.pop(sheetContext);
+                                }
                               } catch (_) {
                                 setSheetState(() => saving = false);
                               }
@@ -669,7 +750,8 @@ class _PostTile extends StatelessWidget {
                 storagePath.isEmpty &&
                 fallbackStoragePaths.isEmpty
             ? const Center(
-                child: Icon(Icons.image_outlined, color: Colors.white30))
+                child: Icon(Icons.image_outlined, color: Colors.white30),
+              )
             : FirebaseMediaImage(
                 imageUrl: imageUrl,
                 storagePath: storagePath,
@@ -679,8 +761,10 @@ class _PostTile extends StatelessWidget {
                 fit: BoxFit.cover,
                 filterQuality: FilterQuality.medium,
                 errorWidget: const Center(
-                  child:
-                      Icon(Icons.broken_image_outlined, color: Colors.white30),
+                  child: Icon(
+                    Icons.broken_image_outlined,
+                    color: Colors.white30,
+                  ),
                 ),
               ),
       ),
@@ -700,10 +784,14 @@ class _Stat extends StatelessWidget {
     final child = Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(value,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
-        Text(label,
-            style: const TextStyle(color: Colors.white60, fontSize: 12)),
+        Text(
+          value,
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
+        ),
+        Text(
+          label,
+          style: const TextStyle(color: Colors.white60, fontSize: 12),
+        ),
       ],
     );
     return onTap == null

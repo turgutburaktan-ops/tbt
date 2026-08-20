@@ -3,42 +3,262 @@ service cloud.firestore {
   match /databases/{database}/documents {
     function signedIn() { return request.auth != null; }
     function isAdmin() { return signedIn() && request.auth.token.admin == true; }
-    function eventVisible(data) { return !('visibility' in data) || data.visibility == 'public' || (signedIn() && (data.hostId == request.auth.uid || (('participantIds' in data) && data.participantIds.hasAny([request.auth.uid])) || (('allowedUserIds' in data) && data.allowedUserIds.hasAny([request.auth.uid])))); }
-    function memoryEventVisible(memoryData) { let eid = memoryData.eventId; return exists(/databases/$(database)/documents/social_events/$(eid)) && eventVisible(get(/databases/$(database)/documents/social_events/$(eid)).data); }
-    function validCommunityHostCreate() { let cid = request.resource.data.get('communityId', null); return cid == null || cid == '' || (signedIn() && exists(/databases/$(database)/documents/communities/$(cid)) && get(/databases/$(database)/documents/communities/$(cid)).data.adminIds.hasAny([request.auth.uid])); }
-    function protectedEventFieldsUnchanged() { return request.resource.data.hostId == resource.data.hostId && request.resource.data.get('communityId', null) == resource.data.get('communityId', null) && request.resource.data.get('communityName', null) == resource.data.get('communityName', null) && request.resource.data.accessType == resource.data.accessType && request.resource.data.ticketPriceMinor == resource.data.ticketPriceMinor && request.resource.data.currency == resource.data.currency && request.resource.data.trustStatus == resource.data.trustStatus && request.resource.data.salesStatus == resource.data.salesStatus && request.resource.data.riskLevel == resource.data.riskLevel && request.resource.data.reportCount == resource.data.reportCount && request.resource.data.paymentStatus == resource.data.paymentStatus && request.resource.data.paymentReleaseStatus == resource.data.paymentReleaseStatus && request.resource.data.paymentProvider == resource.data.paymentProvider && request.resource.data.externalProductId == resource.data.externalProductId; }
-    function validPaidCreate() { return request.resource.data.accessType != 'paid' || (request.resource.data.paymentStatus == 'comingSoon' && request.resource.data.trustStatus == 'pending_review' && request.resource.data.salesStatus == 'blocked' && request.resource.data.paymentReleaseStatus == 'held' && request.resource.data.reportCount == 0 && request.resource.data.riskLevel in ['low', 'medium'] && request.resource.data.ticketPriceMinor > 0); }
-    function validPrivacyCreate() { return !('visibility' in request.resource.data) || request.resource.data.visibility in ['public','followers','mutuals','closeFriends','selectedPeople','private']; }
-    function participantJoinOrLeaveOnly() { let oldList = resource.data.participantIds; let newList = request.resource.data.participantIds; let changed = request.resource.data.diff(resource.data).affectedKeys(); return changed.hasOnly(['participantIds','updatedAt']) && ((newList.size() == oldList.size() + 1 && newList.hasAll(oldList) && newList.hasAny([request.auth.uid])) || (oldList.size() == newList.size() + 1 && oldList.hasAll(newList) && oldList.hasAny([request.auth.uid]) && !newList.hasAny([request.auth.uid]))); }
-    function validEventMemoryPostCreate() { let eid = request.resource.data.get('eventId', null); return eid == null || eid == '' || (exists(/databases/$(database)/documents/social_events/$(eid)) && get(/databases/$(database)/documents/social_events/$(eid)).data.visibility == 'public' && get(/databases/$(database)/documents/social_events/$(eid)).data.participantIds.hasAny([request.auth.uid]) && get(/databases/$(database)/documents/social_events/$(eid)).data.startsAt <= request.time && get(/databases/$(database)/documents/social_events/$(eid)).data.status != 'cancelled'); }
-    function validMemoryCreate() { let eid = request.resource.data.eventId; return signedIn() && request.resource.data.userId == request.auth.uid && exists(/databases/$(database)/documents/social_events/$(eid)) && get(/databases/$(database)/documents/social_events/$(eid)).data.participantIds.hasAny([request.auth.uid]) && get(/databases/$(database)/documents/social_events/$(eid)).data.startsAt <= request.time && get(/databases/$(database)/documents/social_events/$(eid)).data.status != 'cancelled'; }
+    function isSelf(uid) { return signedIn() && request.auth.uid == uid; }
+    function eventVisible(d) {
+      return !('visibility' in d) || d.visibility == 'public' || (signedIn() && (
+        d.hostId == request.auth.uid ||
+        (('participantIds' in d) && d.participantIds.hasAny([request.auth.uid])) ||
+        (('allowedUserIds' in d) && d.allowedUserIds.hasAny([request.auth.uid]))
+      ));
+    }
+    function memoryVisible(d) {
+      let id = d.eventId;
+      return exists(/databases/$(database)/documents/social_events/$(id)) &&
+        eventVisible(get(/databases/$(database)/documents/social_events/$(id)).data);
+    }
+    function validCommunityHost() {
+      let id = request.resource.data.get('communityId', null);
+      return id == null || id == '' || (signedIn() &&
+        exists(/databases/$(database)/documents/communities/$(id)) &&
+        get(/databases/$(database)/documents/communities/$(id)).data.adminIds.hasAny([request.auth.uid]));
+    }
+    function paidCreateValid() {
+      return request.resource.data.accessType != 'paid' || (
+        request.resource.data.paymentStatus == 'comingSoon' &&
+        request.resource.data.trustStatus == 'pending_review' &&
+        request.resource.data.salesStatus == 'blocked' &&
+        request.resource.data.paymentReleaseStatus == 'held' &&
+        request.resource.data.reportCount == 0 &&
+        request.resource.data.riskLevel in ['low','medium'] &&
+        request.resource.data.ticketPriceMinor > 0
+      );
+    }
+    function privacyValid() {
+      return !('visibility' in request.resource.data) ||
+        request.resource.data.visibility in ['public','followers','mutuals','closeFriends','selectedPeople','private'];
+    }
+    function protectedEventFieldsSame() {
+      return request.resource.data.hostId == resource.data.hostId &&
+        request.resource.data.get('communityId', null) == resource.data.get('communityId', null) &&
+        request.resource.data.get('communityName', null) == resource.data.get('communityName', null) &&
+        request.resource.data.accessType == resource.data.accessType &&
+        request.resource.data.ticketPriceMinor == resource.data.ticketPriceMinor &&
+        request.resource.data.currency == resource.data.currency &&
+        request.resource.data.trustStatus == resource.data.trustStatus &&
+        request.resource.data.salesStatus == resource.data.salesStatus &&
+        request.resource.data.riskLevel == resource.data.riskLevel &&
+        request.resource.data.reportCount == resource.data.reportCount &&
+        request.resource.data.paymentStatus == resource.data.paymentStatus &&
+        request.resource.data.paymentReleaseStatus == resource.data.paymentReleaseStatus &&
+        request.resource.data.paymentProvider == resource.data.paymentProvider &&
+        request.resource.data.externalProductId == resource.data.externalProductId;
+    }
+    function participantOnlyChange() {
+      let old = resource.data.participantIds;
+      let next = request.resource.data.participantIds;
+      let changed = request.resource.data.diff(resource.data).affectedKeys();
+      return signedIn() && changed.hasOnly(['participantIds','updatedAt']) && (
+        (next.size() == old.size() + 1 && next.hasAll(old) && next.hasAny([request.auth.uid])) ||
+        (old.size() == next.size() + 1 && old.hasAll(next) && old.hasAny([request.auth.uid]) && !next.hasAny([request.auth.uid]))
+      );
+    }
+    function validMemoryCreate() {
+      let id = request.resource.data.eventId;
+      return signedIn() && request.resource.data.userId == request.auth.uid &&
+        exists(/databases/$(database)/documents/social_events/$(id)) &&
+        get(/databases/$(database)/documents/social_events/$(id)).data.participantIds.hasAny([request.auth.uid]) &&
+        get(/databases/$(database)/documents/social_events/$(id)).data.startsAt <= request.time &&
+        get(/databases/$(database)/documents/social_events/$(id)).data.status != 'cancelled';
+    }
+    function validEventMemoryPost() {
+      let id = request.resource.data.get('eventId', null);
+      return id == null || id == '' || (
+        exists(/databases/$(database)/documents/social_events/$(id)) &&
+        get(/databases/$(database)/documents/social_events/$(id)).data.visibility == 'public' &&
+        get(/databases/$(database)/documents/social_events/$(id)).data.participantIds.hasAny([request.auth.uid]) &&
+        get(/databases/$(database)/documents/social_events/$(id)).data.startsAt <= request.time &&
+        get(/databases/$(database)/documents/social_events/$(id)).data.status != 'cancelled'
+      );
+    }
+    function threadMember(id) {
+      return signedIn() && exists(/databases/$(database)/documents/chat_threads/$(id)) &&
+        get(/databases/$(database)/documents/chat_threads/$(id)).data.memberIds.hasAny([request.auth.uid]);
+    }
+
+    match /users/{uid} {
+      allow read: if true;
+      allow create: if isSelf(uid) && request.resource.data.uid == uid;
+      allow update: if isAdmin() || (isSelf(uid) && (!('uid' in request.resource.data) || request.resource.data.uid == uid));
+      allow delete: if isAdmin() || isSelf(uid);
+
+      match /following/{targetId} {
+        allow read: if signedIn();
+        allow create, update: if isSelf(uid) && request.resource.data.userId == targetId;
+        allow delete: if isSelf(uid);
+      }
+      match /followers/{followerId} {
+        allow read: if signedIn();
+        allow create, update: if signedIn() && followerId == request.auth.uid && request.resource.data.userId == request.auth.uid;
+        allow delete: if signedIn() && followerId == request.auth.uid;
+      }
+      match /blocked/{blockedId} {
+        allow read: if signedIn() && (uid == request.auth.uid || blockedId == request.auth.uid);
+        allow create, update, delete: if isSelf(uid);
+      }
+      match /close_friends/{friendId} {
+        allow read, create, update, delete: if isSelf(uid);
+      }
+      match /notifications/{notificationId} {
+        allow read, update, delete: if isSelf(uid);
+        allow create: if signedIn() &&
+          request.resource.data.type is string && request.resource.data.title is string && request.resource.data.body is string &&
+          request.resource.data.title.size() <= 160 && request.resource.data.body.size() <= 600 &&
+          (uid == request.auth.uid || request.resource.data.actorId == request.auth.uid);
+      }
+      match /push_tokens/{tokenId} {
+        allow read: if isAdmin() || isSelf(uid);
+        allow create, update, delete: if isSelf(uid);
+      }
+    }
+
+    match /chat_threads/{threadId} {
+      allow read: if signedIn() && resource.data.memberIds.hasAny([request.auth.uid]);
+      allow create: if signedIn() && request.resource.data.type == 'direct' &&
+        request.resource.data.memberIds.size() == 2 && request.resource.data.memberIds.hasAny([request.auth.uid]);
+      allow update: if signedIn() && resource.data.memberIds.hasAny([request.auth.uid]) &&
+        request.resource.data.memberIds == resource.data.memberIds && request.resource.data.type == resource.data.type;
+      allow delete: if false;
+      match /messages/{messageId} {
+        allow read: if threadMember(threadId);
+        allow create: if threadMember(threadId) && request.resource.data.senderId == request.auth.uid &&
+          request.resource.data.text is string && request.resource.data.text.size() > 0 &&
+          request.resource.data.text.size() <= 1500 && request.resource.data.deleted == false;
+        allow update, delete: if false;
+      }
+    }
+
+    match /stories/{storyId} {
+      allow read: if signedIn();
+      allow create: if signedIn() && request.resource.data.userId == request.auth.uid && request.resource.data.expiresAt > request.time;
+      allow update: if signedIn() && resource.data.userId == request.auth.uid && request.resource.data.userId == resource.data.userId;
+      allow delete: if signedIn() && resource.data.userId == request.auth.uid;
+      match /interactions/{uid} {
+        allow read: if signedIn() && (uid == request.auth.uid ||
+          get(/databases/$(database)/documents/stories/$(storyId)).data.userId == request.auth.uid);
+        allow create, update: if signedIn() && uid == request.auth.uid && request.resource.data.userId == request.auth.uid;
+        allow delete: if signedIn() && uid == request.auth.uid;
+      }
+    }
 
     match /social_events/{eventId} {
       allow read: if eventVisible(resource.data);
-      allow create: if signedIn() && request.resource.data.hostId == request.auth.uid && request.resource.data.status == 'open' && validPaidCreate() && validPrivacyCreate() && validCommunityHostCreate();
-      allow update: if isAdmin() || (signedIn() && eventVisible(resource.data) && protectedEventFieldsUnchanged() && (participantJoinOrLeaveOnly() || (resource.data.hostId == request.auth.uid && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','updatedAt']) && request.resource.data.status in ['open','cancelled'])));
+      allow create: if signedIn() && request.resource.data.hostId == request.auth.uid &&
+        request.resource.data.status == 'open' && paidCreateValid() && privacyValid() && validCommunityHost();
+      allow update: if isAdmin() || (signedIn() && eventVisible(resource.data) && protectedEventFieldsSame() && (
+        participantOnlyChange() ||
+        (resource.data.hostId == request.auth.uid && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','updatedAt']) &&
+          request.resource.data.status in ['open','cancelled'])
+      ));
       allow delete: if isAdmin();
-      match /reports/{reporterId} { allow read: if isAdmin(); allow create: if signedIn() && reporterId == request.auth.uid && request.resource.data.reporterId == request.auth.uid && request.resource.data.reason is string && request.resource.data.reason.size() >= 3; allow update, delete: if false; }
+      match /reports/{reporterId} {
+        allow read: if isAdmin();
+        allow create: if signedIn() && reporterId == request.auth.uid && request.resource.data.reporterId == request.auth.uid &&
+          request.resource.data.reason is string && request.resource.data.reason.size() >= 3;
+        allow update, delete: if false;
+      }
+      match /{sub}/{docId} {
+        allow read: if eventVisible(get(/databases/$(database)/documents/social_events/$(eventId)).data);
+        allow write: if signedIn() && eventVisible(get(/databases/$(database)/documents/social_events/$(eventId)).data);
+      }
     }
+
     match /event_memories/{memoryId} {
-      allow read: if memoryEventVisible(resource.data); allow create: if validMemoryCreate(); allow update, delete: if isAdmin() || (signedIn() && resource.data.userId == request.auth.uid);
-      match /{subcollection}/{document} { allow read: if memoryEventVisible(get(/databases/$(database)/documents/event_memories/$(memoryId)).data); allow write: if signedIn() && memoryEventVisible(get(/databases/$(database)/documents/event_memories/$(memoryId)).data); }
+      allow read: if memoryVisible(resource.data);
+      allow create: if validMemoryCreate();
+      allow update, delete: if isAdmin() || (signedIn() && resource.data.userId == request.auth.uid);
+      match /{sub}/{docId} {
+        allow read: if memoryVisible(get(/databases/$(database)/documents/event_memories/$(memoryId)).data);
+        allow write: if signedIn() && memoryVisible(get(/databases/$(database)/documents/event_memories/$(memoryId)).data);
+      }
     }
+
     match /posts/{postId} {
-      allow read: if true; allow create: if signedIn() && request.resource.data.userId == request.auth.uid && validEventMemoryPostCreate(); allow update, delete: if isAdmin() || (signedIn() && resource.data.userId == request.auth.uid);
-      match /{subcollection}/{document} { allow read: if true; allow write: if signedIn(); }
+      allow read: if true;
+      allow create: if signedIn() && request.resource.data.userId == request.auth.uid && validEventMemoryPost();
+      allow update, delete: if isAdmin() || (signedIn() && resource.data.userId == request.auth.uid);
+      match /{sub}/{docId} { allow read: if true; allow write: if signedIn(); }
     }
-    match /activity_demands/{demandId} { allow read: if true; allow create, update: if signedIn() && request.resource.data.userId == request.auth.uid; allow delete: if signedIn() && resource.data.userId == request.auth.uid; }
-    match /communities/{communityId} {
-      allow read: if true; allow create: if signedIn() && request.resource.data.ownerId == request.auth.uid && request.resource.data.verified == false && request.resource.data.verificationStatus == 'pending' && request.resource.data.adminIds.hasAny([request.auth.uid]);
-      allow update: if isAdmin() || (signedIn() && resource.data.ownerId == request.auth.uid && request.resource.data.ownerId == resource.data.ownerId && request.resource.data.verified == resource.data.verified && request.resource.data.verificationStatus == resource.data.verificationStatus); allow delete: if isAdmin();
-      match /followers/{userId} { allow read: if true; allow create, update: if signedIn() && userId == request.auth.uid && request.resource.data.userId == request.auth.uid; allow delete: if signedIn() && userId == request.auth.uid; }
+
+    match /spot_presence/{id} {
+      allow read: if signedIn();
+      allow create: if signedIn() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if signedIn() && resource.data.userId == request.auth.uid;
     }
-    match /users/{userId}/push_tokens/{tokenId} {
-      allow read: if isAdmin() || (signedIn() && userId == request.auth.uid);
-      allow create, update, delete: if signedIn() && userId == request.auth.uid;
+
+    match /spot_meetups/{id} {
+      allow read: if true;
+      allow create: if signedIn() && request.resource.data.hostId == request.auth.uid && request.resource.data.participantIds.hasAny([request.auth.uid]);
+      allow update: if signedIn() && (participantOnlyChange() ||
+        (resource.data.hostId == request.auth.uid && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','updatedAt']) &&
+          request.resource.data.status in ['open','cancelled']));
+      allow delete: if isAdmin();
     }
-    match /{collection}/{document} { allow read: if collection != 'social_events' && collection != 'event_memories'; allow write: if signedIn() && collection != 'social_events' && collection != 'event_memories' && collection != 'posts' && collection != 'activity_demands' && collection != 'communities'; }
-    match /{collection}/{document}/{rest=**} { allow read: if collection != 'social_events' && collection != 'event_memories' && collection != 'users'; allow write: if signedIn() && collection != 'social_events' && collection != 'event_memories' && collection != 'posts' && collection != 'activity_demands' && collection != 'communities' && collection != 'users'; }
+
+    match /event_tickets/{id} {
+      allow read: if signedIn() && (resource.data.userId == request.auth.uid ||
+        (exists(/databases/$(database)/documents/social_events/$(resource.data.eventId)) &&
+          get(/databases/$(database)/documents/social_events/$(resource.data.eventId)).data.hostId == request.auth.uid));
+      allow create: if signedIn() && request.resource.data.userId == request.auth.uid && request.resource.data.status in ['active','pendingPayment'];
+      allow update: if signedIn() && (
+        (resource.data.userId == request.auth.uid && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','updatedAt']) && request.resource.data.status == 'cancelled') ||
+        (exists(/databases/$(database)/documents/social_events/$(resource.data.eventId)) &&
+          get(/databases/$(database)/documents/social_events/$(resource.data.eventId)).data.hostId == request.auth.uid &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','usedAt','updatedAt']) && request.resource.data.status == 'used')
+      );
+      allow delete: if isAdmin();
+    }
+
+    match /user_reports/{id} {
+      allow read: if isAdmin();
+      allow create: if signedIn() && request.resource.data.reporterId == request.auth.uid &&
+        request.resource.data.reportedUserId is string && request.resource.data.reason is string;
+      allow update, delete: if isAdmin();
+    }
+
+    match /activity_demands/{id} {
+      allow read: if true;
+      allow create, update: if signedIn() && request.resource.data.userId == request.auth.uid;
+      allow delete: if signedIn() && resource.data.userId == request.auth.uid;
+    }
+
+    match /communities/{id} {
+      allow read: if true;
+      allow create: if signedIn() && request.resource.data.ownerId == request.auth.uid && request.resource.data.verified == false &&
+        request.resource.data.verificationStatus == 'pending' && request.resource.data.adminIds.hasAny([request.auth.uid]);
+      allow update: if isAdmin() || (signedIn() && resource.data.ownerId == request.auth.uid &&
+        request.resource.data.ownerId == resource.data.ownerId && request.resource.data.verified == resource.data.verified &&
+        request.resource.data.verificationStatus == resource.data.verificationStatus);
+      allow delete: if isAdmin();
+      match /followers/{uid} {
+        allow read: if true;
+        allow create, update: if signedIn() && uid == request.auth.uid && request.resource.data.userId == request.auth.uid;
+        allow delete: if signedIn() && uid == request.auth.uid;
+      }
+    }
+
+    match /{collection}/{document} {
+      allow read: if !(collection in ['social_events','event_memories']);
+      allow write: if signedIn() && !(collection in [
+        'users','chat_threads','stories','social_events','event_memories','posts','spot_presence','spot_meetups',
+        'event_tickets','user_reports','activity_demands','communities'
+      ]);
+    }
+    match /{collection}/{document}/{rest=**} {
+      allow read: if !(collection in ['users','chat_threads','stories','social_events','event_memories']);
+      allow write: if signedIn() && !(collection in [
+        'users','chat_threads','stories','social_events','event_memories','posts','spot_presence','spot_meetups',
+        'event_tickets','user_reports','activity_demands','communities'
+      ]);
+    }
   }
 }

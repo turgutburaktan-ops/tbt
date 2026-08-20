@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 
 import '../models/app_story.dart';
+import 'chat_service.dart';
 
 class StoryService {
   StoryService._();
@@ -29,6 +30,14 @@ class StoryService {
       stories.sort((a, b) => b.createdAt.compareTo(a.createdAt));
       return stories;
     });
+  }
+
+  Stream<List<AppStory>> watchActiveForUser(String userId) {
+    return watchActive().map(
+      (stories) => stories
+          .where((story) => story.userId == userId)
+          .toList(growable: false),
+    );
   }
 
   Future<void> createStory(File image) async {
@@ -67,6 +76,125 @@ class StoryService {
       'createdAt': FieldValue.serverTimestamp(),
       'expiresAt': Timestamp.fromDate(now.add(const Duration(hours: 24))),
     });
+  }
+
+  DocumentReference<Map<String, dynamic>> _interactionRef(
+    String storyId,
+    String userId,
+  ) {
+    return _firestore
+        .collection('stories')
+        .doc(storyId)
+        .collection('interactions')
+        .doc(userId);
+  }
+
+  Map<String, dynamic> _actorData(User user) => {
+        'userId': user.uid,
+        'userName': user.displayName?.trim().isNotEmpty == true
+            ? user.displayName!.trim()
+            : 'TBT kullanıcısı',
+        'userPhotoUrl': user.photoURL ?? '',
+      };
+
+  Future<void> recordView(AppStory story) async {
+    final user = _auth.currentUser;
+    if (user == null || user.uid == story.userId) return;
+    await _interactionRef(story.id, user.uid).set({
+      ..._actorData(user),
+      'viewedAt': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  }
+
+  Stream<Map<String, dynamic>> watchMyInteraction(String storyId) {
+    final user = _auth.currentUser;
+    if (user == null) return Stream.value(const <String, dynamic>{});
+    return _interactionRef(storyId, user.uid).snapshots().map(
+          (doc) => doc.data() ?? const <String, dynamic>{},
+        );
+  }
+
+  Stream<List<Map<String, dynamic>>> watchInteractions(AppStory story) {
+    final user = _auth.currentUser;
+    if (user == null || user.uid != story.userId) {
+      return Stream.value(const <Map<String, dynamic>>[]);
+    }
+    return _firestore
+        .collection('stories')
+        .doc(story.id)
+        .collection('interactions')
+        .snapshots()
+        .map((snapshot) {
+      final items = snapshot.docs.map((doc) {
+        final data = Map<String, dynamic>.from(doc.data());
+        data['id'] = doc.id;
+        return data;
+      }).toList();
+      items.sort((a, b) {
+        final at = a['updatedAt'];
+        final bt = b['updatedAt'];
+        if (at is Timestamp && bt is Timestamp) return bt.compareTo(at);
+        return 0;
+      });
+      return items;
+    });
+  }
+
+  Future<void> setLiked(AppStory story, bool liked) async {
+    final user = _auth.currentUser;
+    if (user == null) throw Exception('Story beğenmek için giriş yapmalısın.');
+    if (user.uid == story.userId) return;
+    await _interactionRef(story.id, user.uid).set({
+      ..._actorData(user),
+      'liked': liked,
+      'viewedAt': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  }
+
+  Future<void> setReaction(AppStory story, String emoji) async {
+    final user = _auth.currentUser;
+    if (user == null) throw Exception('Tepki göndermek için giriş yapmalısın.');
+    if (user.uid == story.userId) return;
+    final clean = emoji.trim();
+    if (clean.isEmpty || clean.length > 8) return;
+    await _interactionRef(story.id, user.uid).set({
+      ..._actorData(user),
+      'reaction': clean,
+      'viewedAt': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  }
+
+  Future<void> sendReply(AppStory story, String text) async {
+    final user = _auth.currentUser;
+    if (user == null) throw Exception('Mesaj göndermek için giriş yapmalısın.');
+    if (user.uid == story.userId) return;
+    final clean = text.trim();
+    if (clean.isEmpty) return;
+    if (clean.length > 500) {
+      throw Exception('Story mesajı en fazla 500 karakter olabilir.');
+    }
+
+    await _interactionRef(story.id, user.uid).set({
+      ..._actorData(user),
+      'message': clean,
+      'messageAt': FieldValue.serverTimestamp(),
+      'viewedAt': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+
+    final threadId = await ChatService.instance.ensureDirectThread(
+      story.userId,
+      sourceType: 'story',
+      sourceId: story.id,
+    );
+    await ChatService.instance.sendMessage(
+      threadId: threadId,
+      otherUserId: story.userId,
+      text: 'Story yanıtı: $clean',
+    );
   }
 
   Future<void> deleteStory(AppStory story) async {
