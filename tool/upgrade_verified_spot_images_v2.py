@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 """Rate-limit-safe high-resolution upgrade for hand-verified spot photos.
 
-Generated 1000+ entries remain network-backed. Only hand-verified assets that
-are below the requested display threshold are upgraded. Wikimedia Commons file
-metadata is resolved in batches and image bytes are downloaded from the direct
-upload host with retry/backoff. A low-resolution download never overwrites the
-existing asset.
+Generated 1000+ entries remain network-backed. Hand-verified local assets are
+upgraded from Wikimedia Commons where a larger real source exists. If Commons'
+original file itself is below the desired display threshold, that is a source
+limitation warning rather than a transport failure; no fake upscaling is done.
 """
 from __future__ import annotations
 
@@ -26,13 +25,12 @@ DATA = ROOT / 'lib/data'
 REGISTRIES = [
     DATA / 'spot_image_registry.dart',
     *[
-        p
-        for p in sorted(DATA.glob('verified_travel_image_registry*.dart'))
+        p for p in sorted(DATA.glob('verified_travel_image_registry*.dart'))
         if p.name != 'verified_travel_image_registry_generated.dart'
     ],
 ]
 COMMONS_API = 'https://commons.wikimedia.org/w/api.php'
-UA = 'BestPhotoSpotImageUpgrade/2.0 (https://github.com/turgutburaktan-ops/tbt)'
+UA = 'BestPhotoSpotImageUpgrade/2.1 (https://github.com/turgutburaktan-ops/tbt)'
 ENTRY_RE = re.compile(
     r"^\s*'([^']+)'\s*:\s*SpotImageInfo\((.*?)\n\s*\),",
     re.MULTILINE | re.DOTALL,
@@ -91,10 +89,7 @@ def get_json(params: dict[str, str], attempts: int = 7) -> dict:
     url = COMMONS_API + '?' + urllib.parse.urlencode(params)
     last: Exception | None = None
     for attempt in range(attempts):
-        request = urllib.request.Request(
-            url,
-            headers={'User-Agent': UA, 'Accept': 'application/json,*/*;q=0.8'},
-        )
+        request = urllib.request.Request(url, headers={'User-Agent': UA, 'Accept': 'application/json,*/*;q=0.8'})
         try:
             with urllib.request.urlopen(request, timeout=90) as response:
                 return json.loads(response.read().decode('utf-8'))
@@ -123,26 +118,19 @@ def resolve_high_res_urls(entries: list[dict], request_width: int) -> dict[str, 
     resolved: dict[str, dict] = {}
     keys = sorted(title_value)
     for offset in range(0, len(keys), 30):
-        batch_keys = keys[offset : offset + 30]
+        batch_keys = keys[offset:offset + 30]
         titles = [title_value[key] for key in batch_keys]
-        payload = get_json(
-            {
-                'action': 'query',
-                'format': 'json',
-                'formatversion': '2',
-                'prop': 'imageinfo',
-                'iiprop': 'url|size|mime',
-                'iiurlwidth': str(request_width),
-                'titles': '|'.join(titles),
-            }
-        )
+        payload = get_json({
+            'action': 'query', 'format': 'json', 'formatversion': '2',
+            'prop': 'imageinfo', 'iiprop': 'url|size|mime',
+            'iiurlwidth': str(request_width), 'titles': '|'.join(titles),
+        })
         for page in payload.get('query', {}).get('pages', []):
             infos = page.get('imageinfo') or []
             if not infos:
                 continue
             info = infos[0]
             key = title_key(page.get('title', ''))
-            # MediaWiki can normalize titles; fall back to filename matching.
             ids = title_to_ids.get(key, [])
             if not ids:
                 page_name = key.removeprefix('file:')
@@ -155,8 +143,6 @@ def resolve_high_res_urls(entries: list[dict], request_width: int) -> dict[str, 
                 'original_url': info.get('url') or '',
                 'width': int(info.get('width') or 0),
                 'height': int(info.get('height') or 0),
-                'thumbwidth': int(info.get('thumbwidth') or 0),
-                'thumbheight': int(info.get('thumbheight') or 0),
             }
             for sid in ids:
                 resolved[sid] = meta
@@ -167,10 +153,7 @@ def resolve_high_res_urls(entries: list[dict], request_width: int) -> dict[str, 
 def download_bytes(url: str, attempts: int = 7) -> bytes:
     last: Exception | None = None
     for attempt in range(attempts):
-        request = urllib.request.Request(
-            url,
-            headers={'User-Agent': UA, 'Accept': 'image/*,*/*;q=0.8'},
-        )
+        request = urllib.request.Request(url, headers={'User-Agent': UA, 'Accept': 'image/*,*/*;q=0.8'})
         try:
             with urllib.request.urlopen(request, timeout=120) as response:
                 data = response.read()
@@ -190,21 +173,17 @@ def download_bytes(url: str, attempts: int = 7) -> bytes:
 
 def verified_temp_size(data: bytes):
     with tempfile.NamedTemporaryFile(suffix='.img', delete=True) as tmp:
-        tmp.write(data)
-        tmp.flush()
-        return image_size(Path(tmp.name))
+        tmp.write(data); tmp.flush(); return image_size(Path(tmp.name))
 
 
 def collect_low_res(long_edge: int, short_edge: int) -> tuple[int, list[dict]]:
-    checked = 0
-    pending: list[dict] = []
+    checked = 0; pending = []
     for registry in REGISTRIES:
         if not registry.exists():
             continue
         text = registry.read_text(encoding='utf-8')
         for sid, body in ENTRY_RE.findall(text):
-            asset = field(body, 'assetPath')
-            network_url = field(body, 'networkUrl')
+            asset, network_url = field(body, 'assetPath'), field(body, 'networkUrl')
             source_page = field(body, 'sourcePage')
             if not asset or not network_url:
                 continue
@@ -213,16 +192,7 @@ def collect_low_res(long_edge: int, short_edge: int) -> tuple[int, list[dict]]:
             current = image_size(path) if path.exists() else None
             if good(current, long_edge, short_edge):
                 continue
-            pending.append(
-                {
-                    'id': sid,
-                    'asset': asset,
-                    'path': path,
-                    'networkUrl': network_url,
-                    'sourcePage': source_page,
-                    'current': current,
-                }
-            )
+            pending.append({'id': sid, 'asset': asset, 'path': path, 'networkUrl': network_url, 'sourcePage': source_page, 'current': current})
     return checked, pending
 
 
@@ -230,7 +200,7 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument('--long-edge', type=int, default=1600)
     parser.add_argument('--short-edge', type=int, default=900)
-    parser.add_argument('--request-width', type=int, default=1920)
+    parser.add_argument('--request-width', type=int, default=2560)
     parser.add_argument('--download-delay', type=float, default=1.15)
     args = parser.parse_args()
 
@@ -239,41 +209,46 @@ def main() -> int:
     if not pending:
         return 0
 
-    # Give Wikimedia a short cooldown after the generator's batched metadata pass.
-    time.sleep(8.0)
-    resolved = resolve_high_res_urls(pending, args.request_width)
+    time.sleep(5.0)
+    try:
+        resolved = resolve_high_res_urls(pending, args.request_width)
+    except Exception as exc:
+        print(f'Fatal Commons metadata error: {exc}')
+        return 2
 
     upgraded = 0
-    failures: list[str] = []
+    limitations: list[str] = []
+    hard_failures: list[str] = []
     for entry in pending:
         sid = entry['id']
         meta = resolved.get(sid)
         if not meta or not meta.get('url'):
-            failures.append(f'{sid}: no Commons high-resolution URL resolved')
+            hard_failures.append(f'{sid}: no Commons high-resolution URL resolved')
             continue
         source_size = (meta.get('width', 0), meta.get('height', 0))
         if not good(source_size, args.long_edge, args.short_edge):
-            failures.append(
-                f'{sid}: Commons original itself is too small: {source_size}'
-            )
+            limitations.append(f'{sid}: Commons original itself is too small: {source_size}')
             continue
         try:
             print(f"Upgrading {sid}: {entry['current']} -> {meta['url']}")
             data = download_bytes(meta['url'])
             fresh = verified_temp_size(data)
             if not good(fresh, args.long_edge, args.short_edge):
-                raise RuntimeError(f'downloaded image still below threshold: {fresh}')
+                limitations.append(f'{sid}: downloaded image remains source/aspect limited: {fresh}')
+                continue
             entry['path'].parent.mkdir(parents=True, exist_ok=True)
             entry['path'].write_bytes(data)
             upgraded += 1
             time.sleep(args.download_delay)
         except Exception as exc:
-            failures.append(f'{sid}: {exc}')
+            hard_failures.append(f'{sid}: {exc}')
 
-    print(f'Checked {checked}; upgraded {upgraded}; failures {len(failures)}')
-    for failure in failures:
-        print(f'- {failure}')
-    return 2 if failures else 0
+    print(f'Checked {checked}; upgraded {upgraded}; source-limit warnings {len(limitations)}; hard failures {len(hard_failures)}')
+    for item in limitations:
+        print(f'WARN - {item}')
+    for item in hard_failures:
+        print(f'ERROR - {item}')
+    return 2 if hard_failures else 0
 
 
 if __name__ == '__main__':
