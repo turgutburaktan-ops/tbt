@@ -24,6 +24,7 @@ REGISTRIES = [
     ROOT / "lib/data/verified_travel_image_registry_batch3.dart",
     ROOT / "lib/data/verified_travel_image_registry_batch4.dart",
     ROOT / "lib/data/verified_travel_image_registry_batch5.dart",
+    ROOT / "lib/data/verified_travel_image_registry_batch6.dart",
 ]
 ASSET_DIR = ROOT / "assets/spots"
 ATTRIBUTION = ASSET_DIR / "ATTRIBUTION.md"
