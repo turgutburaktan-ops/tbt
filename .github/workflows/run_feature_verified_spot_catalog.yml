@@ -1,6 +1,10 @@
 name: Run Feature 1000+ Verified Spot Catalog
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/spot-catalog-main-trigger.txt'
   pull_request:
     branches: [main]
     paths:
