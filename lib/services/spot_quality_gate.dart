@@ -3,6 +3,7 @@ import '../data/spot_coordinate_verification_registry_batch5.dart';
 import '../data/spot_coordinate_verification_registry_batch6.dart';
 import '../data/spot_coordinate_verification_registry_batch7.dart';
 import '../data/spot_coordinate_verification_registry_batch8.dart';
+import '../data/spot_coordinate_verification_registry_batch9.dart';
 import '../models/photo_spot.dart';
 
 /// Son savunma hattı: katalog kaynaklarından bağımsız olarak haritaya çıkmadan
@@ -59,7 +60,8 @@ class SpotQualityGate {
       isSpotCoordinateIndependentlyVerifiedBatch5(spotId) ||
       isSpotCoordinateIndependentlyVerifiedBatch6(spotId) ||
       isSpotCoordinateIndependentlyVerifiedBatch7(spotId) ||
-      isSpotCoordinateIndependentlyVerifiedBatch8(spotId);
+      isSpotCoordinateIndependentlyVerifiedBatch8(spotId) ||
+      isSpotCoordinateIndependentlyVerifiedBatch9(spotId);
 
   static bool _basicCoordinateCheck(PhotoSpot spot) {
     if (blockedSpotIds.contains(spot.id)) return false;
