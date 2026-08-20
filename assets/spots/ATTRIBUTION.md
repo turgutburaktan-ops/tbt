@@ -491,3 +491,99 @@ metadata is retained here so bundling the images does not lose attribution.
 - Author: Nevit Dilmen
 - License: CC BY-SA 3.0
 - Source page: https://commons.wikimedia.org/wiki/File:Dara_P1030851_20080424091200.JPG
+
+### `edirne-selimiye`
+- Registry: `lib/data/verified_travel_image_registry_batch5.dart`
+- Local asset: `assets/spots/edirne-selimiye.jpg`
+- Source: Wikimedia Commons
+- Author: Nevit Dilmen
+- License: CC BY-SA 3.0
+- Source page: https://commons.wikimedia.org/wiki/File:Edirne_7333_Nevit.JPG
+
+### `bursa-ulu-camii`
+- Registry: `lib/data/verified_travel_image_registry_batch5.dart`
+- Local asset: `assets/spots/bursa-ulu-camii.jpg`
+- Source: Wikimedia Commons
+- Author: Beñat Irasuegi
+- License: CC BY-SA 4.0
+- Source page: https://commons.wikimedia.org/wiki/File:71_Bursa_la_Grande_Moschea_%28Edited%29.jpg
+
+### `cumalikizik`
+- Registry: `lib/data/verified_travel_image_registry_batch5.dart`
+- Local asset: `assets/spots/cumalikizik.jpg`
+- Source: Wikimedia Commons
+- Author: Darwinek
+- License: CC BY-SA 3.0
+- Source page: https://commons.wikimedia.org/wiki/File:Cumal%C4%B1k%C4%B1z%C4%B1k_7121.jpg
+
+### `divrigi-ulu-camii`
+- Registry: `lib/data/verified_travel_image_registry_batch5.dart`
+- Local asset: `assets/spots/divrigi-ulu-camii.jpg`
+- Source: Wikimedia Commons
+- Author: R Prazeres
+- License: CC BY-SA 4.0
+- Source page: https://commons.wikimedia.org/wiki/File:Divrigi_complex_DSCF3028.jpg
+
+### `varda-koprusu`
+- Registry: `lib/data/verified_travel_image_registry_batch5.dart`
+- Local asset: `assets/spots/varda-koprusu.jpg`
+- Source: Wikimedia Commons
+- Author: MUSTAFA TOR
+- License: CC BY-SA 2.5
+- Source page: https://commons.wikimedia.org/wiki/File:Varda_Demiryolu_Koprusu.jpg
+
+### `malabadi-koprusu`
+- Registry: `lib/data/verified_travel_image_registry_batch5.dart`
+- Local asset: `assets/spots/malabadi-koprusu.jpg`
+- Source: Wikimedia Commons
+- Author: Dyrt
+- License: CC BY-SA 4.0
+- Source page: https://commons.wikimedia.org/wiki/File:Malabadibridge.jpg
+
+### `amasya-kral-kaya-mezarlari`
+- Registry: `lib/data/verified_travel_image_registry_batch5.dart`
+- Local asset: `assets/spots/amasya-kral-kaya-mezarlari.jpg`
+- Source: Wikimedia Commons
+- Author: Cobija
+- License: CC BY-SA 4.0
+- Source page: https://commons.wikimedia.org/wiki/File:Kral_Kaya_Mezarlar%C4%B1_%28Amasya%29.jpg
+
+### `sinop-tarihi-cezaevi`
+- Registry: `lib/data/verified_travel_image_registry_batch5.dart`
+- Local asset: `assets/spots/sinop-tarihi-cezaevi.jpg`
+- Source: Wikimedia Commons
+- Author: Basak
+- License: CC BY-SA 4.0
+- Source page: https://commons.wikimedia.org/wiki/File:Sinop_Tarihi_Cezaevi_1.JPG
+
+### `izmir-saat`
+- Registry: `lib/data/verified_travel_image_registry_batch5.dart`
+- Local asset: `assets/spots/izmir-saat.jpg`
+- Source: Wikimedia Commons
+- Author: Sailko
+- License: CC BY-SA 3.0
+- Source page: https://commons.wikimedia.org/wiki/File:Izmir_square_clock_tower.jpg
+
+### `canakkale-sehitler-abidesi`
+- Registry: `lib/data/verified_travel_image_registry_batch5.dart`
+- Local asset: `assets/spots/canakkale-sehitler-abidesi.jpg`
+- Source: Wikimedia Commons
+- Author: Onder Kokturk
+- License: CC BY-SA 4.0
+- Source page: https://commons.wikimedia.org/wiki/File:Onderkokturk-canakkale01.jpg
+
+### `bozcaada-kalesi`
+- Registry: `lib/data/verified_travel_image_registry_batch5.dart`
+- Local asset: `assets/spots/bozcaada-kalesi.jpg`
+- Source: Wikimedia Commons
+- Author: Filanca
+- License: CC BY-SA 3.0
+- Source page: https://commons.wikimedia.org/wiki/File:Bozcaada.jpg
+
+### `diyarbakir-ulu-camii`
+- Registry: `lib/data/verified_travel_image_registry_batch5.dart`
+- Local asset: `assets/spots/diyarbakir-ulu-camii.jpg`
+- Source: Wikimedia Commons
+- Author: Kaya Elifnur 72
+- License: CC BY-SA 4.0
+- Source page: https://commons.wikimedia.org/wiki/File:Diyarbakir_Ulu_Cami_2022.jpg
