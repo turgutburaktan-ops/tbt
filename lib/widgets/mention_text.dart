@@ -119,10 +119,7 @@ class _MentionTextState extends State<MentionText> {
         );
 
     final spans = <TextSpan>[];
-    final regex = RegExp(
-      r'@[\p{L}\p{N}_.]+',
-      unicode: true,
-    );
+    final regex = RegExp(r'@[A-Za-z0-9_.ÇĞİÖŞÜçğıöşü]+');
     var cursor = 0;
     for (final match in regex.allMatches(widget.text)) {
       if (match.start > cursor) {
