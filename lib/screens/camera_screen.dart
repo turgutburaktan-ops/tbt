@@ -3,9 +3,28 @@ import 'dart:math' as math;
 
 import 'package:camerawesome/camerawesome_plugin.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../services/native_photo_pipeline.dart';
 import 'pro_filter_editor_screen.dart';
+
+class _CameraPreviewLook {
+  final String name;
+  final AwesomeFilter filter;
+
+  const _CameraPreviewLook(this.name, this.filter);
+}
+
+final List<_CameraPreviewLook> _cameraPreviewLooks = <_CameraPreviewLook>[
+  _CameraPreviewLook('Doğal', AwesomeFilter.None),
+  _CameraPreviewLook('HDR Detay', AwesomeFilter.Clarendon),
+  _CameraPreviewLook('Portre Pro', AwesomeFilter.Perpetua),
+  _CameraPreviewLook('Gece Temiz', AwesomeFilter.Hefe),
+  _CameraPreviewLook('Soft Glow', AwesomeFilter.Reyes),
+  _CameraPreviewLook('Cine Teal', AwesomeFilter.Ludwig),
+  _CameraPreviewLook('Analog Film', AwesomeFilter.Gingham),
+  _CameraPreviewLook('Mono Grain', AwesomeFilter.Inkwell),
+];
 
 class CameraScreen extends StatefulWidget {
   const CameraScreen({super.key});
@@ -15,8 +34,64 @@ class CameraScreen extends StatefulWidget {
 }
 
 class _CameraScreenState extends State<CameraScreen> {
+  static const MethodChannel _cameraControls =
+      MethodChannel('tbt/camera_controls');
+
   bool _openingEditor = false;
   bool _capturing = false;
+  bool _hardwareShutterPending = false;
+  int _selectedLookIndex = 0;
+  int _capturedLookIndex = 0;
+  CameraState? _activeCameraState;
+
+  @override
+  void initState() {
+    super.initState();
+    _cameraControls.setMethodCallHandler(_handleCameraControl);
+    unawaited(
+      _cameraControls.invokeMethod<void>(
+        'setActive',
+        const <String, Object>{'active': true},
+      ).catchError((Object error) {
+        debugPrint('camera controls activation: $error');
+      }),
+    );
+  }
+
+  Future<Object?> _handleCameraControl(MethodCall call) async {
+    if (call.method == 'volumeShutter') {
+      await _takePhotoFromHardwareButton();
+    }
+    return null;
+  }
+
+  Future<void> _takePhotoFromHardwareButton() async {
+    if (_capturing || _openingEditor || _hardwareShutterPending) return;
+    final state = _activeCameraState;
+    if (state is! PhotoCameraState) return;
+    _hardwareShutterPending = true;
+    try {
+      await state.takePhoto();
+    } catch (error) {
+      debugPrint('volume shutter: $error');
+    } finally {
+      _hardwareShutterPending = false;
+    }
+  }
+
+  void _rememberCameraState(CameraState state) {
+    _activeCameraState = state;
+  }
+
+  Future<void> _selectLiveFilter(CameraState state, int index) async {
+    if (state is! PhotoCameraState || _capturing || _openingEditor) return;
+    setState(() => _selectedLookIndex = index);
+    try {
+      await state.setFilter(_cameraPreviewLooks[index].filter);
+    } catch (error) {
+      debugPrint('live camera filter: $error');
+    }
+  }
 
   Future<void> _openEditor(String imagePath) async {
     if (!mounted || _openingEditor || imagePath.isEmpty) return;
@@ -30,7 +105,10 @@ class _CameraScreenState extends State<CameraScreen> {
       setState(() => _capturing = false);
       await Navigator.of(context).push(
         MaterialPageRoute(
-          builder: (_) => ProFilterEditorScreen(imagePath: preparedPath),
+          builder: (_) => ProFilterEditorScreen(
+            imagePath: preparedPath,
+            initialLookIndex: _capturedLookIndex,
+          ),
         ),
       );
     } catch (error) {
@@ -49,7 +127,8 @@ class _CameraScreenState extends State<CameraScreen> {
   void _onCapture(MediaCapture event) {
     if (!event.isPicture) return;
     if (event.status == MediaCaptureStatus.capturing) {
-      if (mounted) setState(() => _capturing = true);
+      _capturedLookIndex = _selectedLookIndex;
+      if (mounted && !_capturing) setState(() => _capturing = true);
       return;
     }
     if (event.status == MediaCaptureStatus.success) {
@@ -86,6 +165,7 @@ class _CameraScreenState extends State<CameraScreen> {
   }
 
   Widget _topActions(CameraState state) {
+    _rememberCameraState(state);
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 10, 12, 4),
       child: Row(
@@ -108,7 +188,7 @@ class _CameraScreenState extends State<CameraScreen> {
               border: Border.all(color: Colors.white24),
             ),
             child: const Text(
-              '4:5  •  1440×1800',
+              '4:5  •  2160×2700',
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 12,
@@ -120,6 +200,44 @@ class _CameraScreenState extends State<CameraScreen> {
         ],
       ),
     );
+  }
+
+  Widget _middleContent(CameraState state) {
+    _rememberCameraState(state);
+    return Column(
+      children: [
+        const Spacer(),
+        _LiveFilterStrip(
+          state: state,
+          selectedIndex: _selectedLookIndex,
+          onSelected: (index) => _selectLiveFilter(state, index),
+        ),
+        const SizedBox(height: 8),
+        _ContinuousZoomControl(state: state),
+        const SizedBox(height: 12),
+      ],
+    );
+  }
+
+  Widget _previewOverlay(CameraState state, AnalysisPreview preview) {
+    _rememberCameraState(state);
+    return IgnorePointer(
+      child: _LiveFilterOverlay(lookIndex: _selectedLookIndex),
+    );
+  }
+
+  @override
+  void dispose() {
+    _cameraControls.setMethodCallHandler(null);
+    unawaited(
+      _cameraControls.invokeMethod<void>(
+        'setActive',
+        const <String, Object>{'active': false},
+      ).catchError((Object error) {
+        debugPrint('camera controls deactivation: $error');
+      }),
+    );
+    super.dispose();
   }
 
   @override
@@ -136,8 +254,11 @@ class _CameraScreenState extends State<CameraScreen> {
         children: [
           CameraAwesomeBuilder.awesome(
             saveConfig: SaveConfig.photo(),
-            enablePhysicalButton: true,
-            availableFilters: const [],
+            // Volume keys are handled by MainActivity directly. CamerAwesome's
+            // media-session workaround is unreliable on several Android ROMs.
+            enablePhysicalButton: false,
+            availableFilters:
+                _cameraPreviewLooks.map((look) => look.filter).toList(),
             previewFit: CameraPreviewFit.cover,
             previewPadding: EdgeInsets.symmetric(
               vertical: verticalPreviewPadding,
@@ -153,18 +274,13 @@ class _CameraScreenState extends State<CameraScreen> {
               flashMode: FlashMode.auto,
             ),
             topActionsBuilder: _topActions,
-            middleContentBuilder: (state) => Column(
-              children: [
-                const Spacer(),
-                _ContinuousZoomControl(state: state),
-                const SizedBox(height: 14),
-              ],
-            ),
+            middleContentBuilder: _middleContent,
+            previewDecoratorBuilder: _previewOverlay,
             onMediaCaptureEvent: _onCapture,
           ),
           if (_capturing)
             Positioned.fill(
-              child: IgnorePointer(
+              child: AbsorbPointer(
                 child: ColoredBox(
                   color: const Color(0x66000000),
                   child: Center(
@@ -208,6 +324,151 @@ class _CameraScreenState extends State<CameraScreen> {
       ),
     );
   }
+}
+
+class _LiveFilterStrip extends StatelessWidget {
+  final CameraState state;
+  final int selectedIndex;
+  final ValueChanged<int> onSelected;
+
+  const _LiveFilterStrip({
+    required this.state,
+    required this.selectedIndex,
+    required this.onSelected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final enabled = state is PhotoCameraState;
+    return SizedBox(
+      height: 66,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 14),
+        itemCount: _cameraPreviewLooks.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 7),
+        itemBuilder: (context, index) {
+          final selected = index == selectedIndex;
+          return GestureDetector(
+            onTap: enabled ? () => onSelected(index) : null,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 160),
+              constraints: const BoxConstraints(minWidth: 78),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: selected
+                    ? const Color(0xE62B2D36)
+                    : const Color(0xC9131418),
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(
+                  color: selected
+                      ? const Color(0xFF54E6D8)
+                      : Colors.white24,
+                  width: selected ? 2 : 1,
+                ),
+                boxShadow: selected
+                    ? const [
+                        BoxShadow(
+                          color: Color(0x4054E6D8),
+                          blurRadius: 12,
+                        ),
+                      ]
+                    : null,
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    index == 0
+                        ? Icons.filter_none_rounded
+                        : Icons.auto_awesome_rounded,
+                    color: selected ? const Color(0xFF54E6D8) : Colors.white70,
+                    size: 16,
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    _cameraPreviewLooks[index].name,
+                    maxLines: 1,
+                    style: TextStyle(
+                      color: selected ? Colors.white : Colors.white70,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _LiveFilterOverlay extends StatelessWidget {
+  final int lookIndex;
+
+  const _LiveFilterOverlay({required this.lookIndex});
+
+  @override
+  Widget build(BuildContext context) {
+    final vignette = lookIndex == 1 || lookIndex == 3 || lookIndex == 5;
+    final glow = lookIndex == 2 || lookIndex == 4;
+    final grain = lookIndex == 6 || lookIndex == 7;
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        if (glow)
+          const DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: RadialGradient(
+                radius: .9,
+                colors: [Color(0x18FFFFFF), Color(0x00FFFFFF)],
+              ),
+            ),
+          ),
+        if (vignette)
+          const DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: RadialGradient(
+                radius: .82,
+                colors: [
+                  Color(0x00000000),
+                  Color(0x00000000),
+                  Color(0x52000000),
+                ],
+                stops: [.0, .58, 1],
+              ),
+            ),
+          ),
+        if (grain)
+          const RepaintBoundary(
+            child: CustomPaint(painter: _PreviewGrainPainter()),
+          ),
+      ],
+    );
+  }
+}
+
+class _PreviewGrainPainter extends CustomPainter {
+  const _PreviewGrainPainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final random = math.Random(7319);
+    final light = Paint()..color = const Color(0x16FFFFFF);
+    final dark = Paint()..color = const Color(0x12000000);
+    for (var i = 0; i < 220; i++) {
+      final point = Offset(
+        random.nextDouble() * size.width,
+        random.nextDouble() * size.height,
+      );
+      canvas.drawCircle(point, .55, i.isEven ? light : dark);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 class _ContinuousZoomControl extends StatefulWidget {

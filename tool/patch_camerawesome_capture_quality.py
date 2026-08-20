@@ -26,16 +26,16 @@ text = path.read_text(encoding="utf-8")
 marker = "val imageCapture = ImageCapture.Builder()\n"
 quality = (
     "val imageCapture = ImageCapture.Builder()\n"
-    "                    .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)\n"
+    "                    .setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY)\n"
     "                    .setJpegQuality(100)\n"
 )
 
 text = text.replace(
-    ".setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY)",
     ".setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)",
+    ".setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY)",
 )
 
-if "CAPTURE_MODE_MINIMIZE_LATENCY" not in text:
+if "CAPTURE_MODE_MAXIMIZE_QUALITY" not in text:
     count = text.count(marker)
     if count != 2:
         raise SystemExit(f"Expected two ImageCapture builders, found {count}")
@@ -53,11 +53,20 @@ preview_marker = (
 preview_balanced = (
     "Preview.Builder()\n"
     "                            .setTargetResolution(\n"
+    "                                if (aspectRatio == AspectRatio.RATIO_16_9) Size(1920, 1080)\n"
+    "                                else Size(1920, 1440)\n"
+    "                            )\n"
+    "                            .build()"
+)
+old_preview_balanced = (
+    "Preview.Builder()\n"
+    "                            .setTargetResolution(\n"
     "                                if (aspectRatio == AspectRatio.RATIO_16_9) Size(1280, 720)\n"
     "                                else Size(1280, 960)\n"
     "                            )\n"
     "                            .build()"
 )
+text = text.replace(old_preview_balanced, preview_balanced)
 if preview_balanced not in text:
     count = text.count(preview_marker)
     if count != 1:
@@ -65,4 +74,4 @@ if preview_balanced not in text:
     text = text.replace(preview_marker, preview_balanced)
 
 path.write_text(text, encoding="utf-8")
-print(f"CamerAwesome low-latency, full-JPEG-quality capture applied to {path}")
+print(f"CamerAwesome maximum-quality JPEG and high-resolution preview applied to {path}")

@@ -33,6 +33,7 @@ def patch_main_activity() -> None:
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Matrix
+import android.view.KeyEvent
 import androidx.exifinterface.media.ExifInterface
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -45,9 +46,25 @@ import kotlin.math.roundToInt
 
 class MainActivity : FlutterActivity() {
     private val photoExecutor = Executors.newSingleThreadExecutor()
+    private var cameraControlsChannel: MethodChannel? = null
+    private var cameraShutterActive = false
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        cameraControlsChannel = MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            "tbt/camera_controls"
+        ).also { channel ->
+            channel.setMethodCallHandler { call, result ->
+                if (call.method == "setActive") {
+                    cameraShutterActive = call.argument<Boolean>("active") == true
+                    result.success(null)
+                } else {
+                    result.notImplemented()
+                }
+            }
+        }
+
         MethodChannel(
             flutterEngine.dartExecutor.binaryMessenger,
             "tbt/photo_pipeline"
@@ -59,9 +76,9 @@ class MainActivity : FlutterActivity() {
 
             val inputPath = call.argument<String>("inputPath")
             val outputPath = call.argument<String>("outputPath")
-            val portraitWidth = call.argument<Int>("portraitWidth") ?: 1440
-            val portraitHeight = call.argument<Int>("portraitHeight") ?: 1800
-            val quality = call.argument<Int>("quality") ?: 96
+            val portraitWidth = call.argument<Int>("portraitWidth") ?: 2160
+            val portraitHeight = call.argument<Int>("portraitHeight") ?: 2700
+            val quality = call.argument<Int>("quality") ?: 98
             if (inputPath.isNullOrBlank() || outputPath.isNullOrBlank()) {
                 result.error("bad_arguments", "Photo paths are required", null)
                 return@setMethodCallHandler
@@ -90,6 +107,18 @@ class MainActivity : FlutterActivity() {
         }
     }
 
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        val isVolumeKey = event.keyCode == KeyEvent.KEYCODE_VOLUME_UP ||
+            event.keyCode == KeyEvent.KEYCODE_VOLUME_DOWN
+        if (cameraShutterActive && isVolumeKey) {
+            if (event.action == KeyEvent.ACTION_DOWN && event.repeatCount == 0) {
+                cameraControlsChannel?.invokeMethod("volumeShutter", null)
+            }
+            return true
+        }
+        return super.dispatchKeyEvent(event)
+    }
+
     private fun prepareSharePhoto(
         inputPath: String,
         outputPath: String,
@@ -105,7 +134,9 @@ class MainActivity : FlutterActivity() {
 
         var sampleSize = 1
         val longest = max(bounds.outWidth, bounds.outHeight)
-        while (longest / sampleSize > 3200) sampleSize *= 2
+        // Keep a normal 12/16 MP sensor frame at native resolution. Very large
+        // 48/64 MP binned sources are sampled only enough to stay memory-safe.
+        while (longest / sampleSize > 4600) sampleSize *= 2
 
         val options = BitmapFactory.Options().apply {
             inSampleSize = sampleSize
@@ -184,6 +215,9 @@ class MainActivity : FlutterActivity() {
     }
 
     override fun onDestroy() {
+        cameraShutterActive = false
+        cameraControlsChannel?.setMethodCallHandler(null)
+        cameraControlsChannel = null
         photoExecutor.shutdown()
         super.onDestroy()
     }

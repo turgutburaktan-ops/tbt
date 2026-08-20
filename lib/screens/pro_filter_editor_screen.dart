@@ -159,11 +159,13 @@ Uint8List _renderLocalEffect(Map<String, Object> job) {
 class ProFilterEditorScreen extends StatefulWidget {
   final String imagePath;
   final String? captureMode;
+  final int initialLookIndex;
 
   const ProFilterEditorScreen({
     super.key,
     required this.imagePath,
     this.captureMode,
+    this.initialLookIndex = 0,
   });
 
   @override
@@ -326,6 +328,8 @@ class _ProFilterEditorScreenState extends State<ProFilterEditorScreen> {
   @override
   void initState() {
     super.initState();
+    _selectedLook =
+        widget.initialLookIndex.clamp(0, _looks.length - 1).toInt();
     _load();
   }
 
@@ -349,6 +353,7 @@ class _ProFilterEditorScreenState extends State<ProFilterEditorScreen> {
         _configuration = _buildConfiguration(_looks[_selectedLook]);
         _loading = false;
       });
+      if (_selectedLook != 0) _selectLook(_selectedLook);
     } catch (e) {
       if (!mounted) return;
       setState(() {

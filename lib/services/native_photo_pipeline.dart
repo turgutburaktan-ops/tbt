@@ -20,9 +20,9 @@ class NativePhotoPipeline {
       <String, Object>{
         'inputPath': inputPath,
         'outputPath': outputPath,
-        'portraitWidth': 1440,
-        'portraitHeight': 1800,
-        'quality': 96,
+        'portraitWidth': 2160,
+        'portraitHeight': 2700,
+        'quality': 98,
       },
     );
     if (result == null || result.isEmpty || !await File(result).exists()) {
