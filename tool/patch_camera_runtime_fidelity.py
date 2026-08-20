@@ -93,6 +93,17 @@ lock_replacement = r'''  Future<void> _longPressLock(
     if (mounted) setState(() => _tip = 'AF-L • odak kilitli');
   }
 
+  void _scheduleFocusIndicatorHide() {
+    _focusIndicatorTimer?.cancel();
+    _focusIndicatorTimer = Timer(const Duration(milliseconds: 1400), () {
+      if (!mounted || _locked) return;
+      setState(() {
+        _focusPoint = null;
+        _tip = _profile.hint;
+      });
+    });
+  }
+
   Future<void> _unlock'''
 text, count = lock_pattern.subn(lock_replacement, text, count=1)
 if count != 1:
