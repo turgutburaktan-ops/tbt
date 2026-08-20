@@ -52,6 +52,7 @@ const verifiedTravelImageRegistryBatch7 = <String, SpotImageInfo>{
     sourcePage: 'https://commons.wikimedia.org/wiki/File:Amasya_Kalesi_01.jpg',
   ),
   'gordion': SpotImageInfo(
+    assetPath: 'assets/spots/gordion.jpg',
     networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Gordion_Midas_Citadel_Gate_complex_in_2012_0935.jpg?width=1280',
     sourceName: 'Wikimedia Commons',
     author: 'Dosseman',
@@ -91,6 +92,7 @@ const verifiedTravelImageRegistryBatch7 = <String, SpotImageInfo>{
     sourcePage: 'https://commons.wikimedia.org/wiki/File:Ayazini_Metropolis_Multi_Storey_Settlement%2C_2024_6.jpg',
   ),
   'catalhoyuk': SpotImageInfo(
+    assetPath: 'assets/spots/catalhoyuk.jpg',
     networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/%C3%87atalh%C3%B6y%C3%BCk%2C_7400_BC%2C_Konya%2C_Turkey_-_UNESCO_World_Heritage_Site%2C_13.jpg?width=1280',
     sourceName: 'Wikimedia Commons',
     author: 'Murat Özsoy 1958',
