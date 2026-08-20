@@ -51,13 +51,12 @@ const verifiedTravelImageRegistryBatch7 = <String, SpotImageInfo>{
     license: 'CC BY-SA 4.0',
     sourcePage: 'https://commons.wikimedia.org/wiki/File:Amasya_Kalesi_01.jpg',
   ),
-  'amasya-kral-kaya-mezarlari': SpotImageInfo(
-    assetPath: 'assets/spots/amasya-kral-kaya-mezarlari.jpg',
-    networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Tombs_of_the_kings_of_Pontus_at_night_in_Amsaya%2C_Turkey.JPG?width=1280',
+  'gordion': SpotImageInfo(
+    networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Gordion_Midas_Citadel_Gate_complex_in_2012_0935.jpg?width=1280',
     sourceName: 'Wikimedia Commons',
-    author: 'Babbsack',
-    license: 'CC BY-SA 3.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Tombs_of_the_kings_of_Pontus_at_night_in_Amsaya%2C_Turkey.JPG',
+    author: 'Dosseman',
+    license: 'CC BY-SA 4.0',
+    sourcePage: 'https://commons.wikimedia.org/wiki/File:Gordion_Midas_Citadel_Gate_complex_in_2012_0935.jpg',
   ),
   'ballica-magarasi': SpotImageInfo(
     assetPath: 'assets/spots/ballica-magarasi.jpg',
@@ -91,12 +90,11 @@ const verifiedTravelImageRegistryBatch7 = <String, SpotImageInfo>{
     license: 'CC BY-SA 4.0',
     sourcePage: 'https://commons.wikimedia.org/wiki/File:Ayazini_Metropolis_Multi_Storey_Settlement%2C_2024_6.jpg',
   ),
-  'divrigi-ulu-camii': SpotImageInfo(
-    assetPath: 'assets/spots/divrigi-ulu-camii.jpg',
-    networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Divri%C4%9Fi_Great_Mosque_and_Hospital.jpg?width=1280',
+  'catalhoyuk': SpotImageInfo(
+    networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/%C3%87atalh%C3%B6y%C3%BCk%2C_7400_BC%2C_Konya%2C_Turkey_-_UNESCO_World_Heritage_Site%2C_13.jpg?width=1280',
     sourceName: 'Wikimedia Commons',
-    author: 'Dosseman',
+    author: 'Murat Özsoy 1958',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Divri%C4%9Fi_Great_Mosque_and_Hospital.jpg',
+    sourcePage: 'https://commons.wikimedia.org/wiki/File:%C3%87atalh%C3%B6y%C3%BCk%2C_7400_BC%2C_Konya%2C_Turkey_-_UNESCO_World_Heritage_Site%2C_13.jpg',
   ),
 };
