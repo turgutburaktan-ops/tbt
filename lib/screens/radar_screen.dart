@@ -478,7 +478,7 @@ class _RadarScreenState extends State<RadarScreen> {
         ),
         Text(
           label,
-          style: const TextStyle(color: Colors.white45, fontSize: 11),
+          style: const TextStyle(color: Color(0x73FFFFFF), fontSize: 11),
         ),
       ],
     );
@@ -516,7 +516,7 @@ class _RadarScreenState extends State<RadarScreen> {
                 const SizedBox(height: 1),
                 Text(
                   subtitle,
-                  style: const TextStyle(color: Colors.white45, fontSize: 11),
+                  style: const TextStyle(color: Color(0x73FFFFFF), fontSize: 11),
                 ),
               ],
             ),
@@ -607,7 +607,7 @@ class _RadarScreenState extends State<RadarScreen> {
                   '${demand.city} • ${_windowLabel(demand.window)}',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: Colors.white45, fontSize: 10),
+                  style: const TextStyle(color: Color(0x73FFFFFF), fontSize: 10),
                 ),
               ],
             ),
@@ -725,7 +725,7 @@ class _RadarScreenState extends State<RadarScreen> {
                       Text(
                         _eventMonth(event),
                         style: const TextStyle(
-                          color: Colors.white45,
+                          color: Color(0x73FFFFFF),
                           fontSize: 9,
                           fontWeight: FontWeight.w800,
                         ),
@@ -760,7 +760,7 @@ class _RadarScreenState extends State<RadarScreen> {
                           community,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(color: Colors.white45, fontSize: 10),
+                          style: const TextStyle(color: Color(0x73FFFFFF), fontSize: 10),
                         ),
                       ],
                       const SizedBox(height: 9),
@@ -945,7 +945,7 @@ class _RadarScreenState extends State<RadarScreen> {
                         '${spot.city} • ${spot.category}',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(color: Colors.white45, fontSize: 10),
+                        style: const TextStyle(color: Color(0x73FFFFFF), fontSize: 10),
                       ),
                       const SizedBox(height: 5),
                       Row(
