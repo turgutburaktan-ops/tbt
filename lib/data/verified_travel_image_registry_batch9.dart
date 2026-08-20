@@ -1,0 +1,90 @@
+import 'spot_image_registry.dart';
+
+/// Dokuzuncu doğrulanmış gezi grubunun elle seçilmiş gerçek fotoğrafları.
+/// Kaynak, fotoğrafçı ve lisans bilgileri dosyayla birlikte tutulur.
+const verifiedTravelImageRegistryBatch9 = <String, SpotImageInfo>{
+  'dolmabahce-sarayi': SpotImageInfo(
+    networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Dolmabahce_palace.jpg?width=1280',
+    sourceName: 'Wikimedia Commons',
+    author: 'Tcyagizefem',
+    license: 'CC BY-SA 4.0',
+    sourcePage: 'https://commons.wikimedia.org/wiki/File:Dolmabahce_palace.jpg',
+  ),
+  'rumeli-hisari': SpotImageInfo(
+    networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Rumeli_hisari.jpg?width=1280',
+    sourceName: 'Wikimedia Commons',
+    author: 'KeRR',
+    license: 'CC BY 2.5',
+    sourcePage: 'https://commons.wikimedia.org/wiki/File:Rumeli_hisari.jpg',
+  ),
+  'iznik-ayasofya': SpotImageInfo(
+    networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Iznik_Hagia_Sophia_Mosque_8100.jpg?width=1280',
+    sourceName: 'Wikimedia Commons',
+    author: 'Dosseman',
+    license: 'CC BY-SA 4.0',
+    sourcePage: 'https://commons.wikimedia.org/wiki/File:Iznik_Hagia_Sophia_Mosque_8100.jpg',
+  ),
+  'golyazi': SpotImageInfo(
+    networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/G%C3%B6lyaz%C4%B1_Evleri.jpg?width=1280',
+    sourceName: 'Wikimedia Commons',
+    author: 'Arif miletli',
+    license: 'CC BY-SA 4.0',
+    sourcePage: 'https://commons.wikimedia.org/wiki/File:G%C3%B6lyaz%C4%B1_Evleri.jpg',
+  ),
+  'dupnisa-magarasi': SpotImageInfo(
+    networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Dupnisa_Cave.jpg?width=1280',
+    sourceName: 'Wikimedia Commons',
+    author: 'Mrsevinc',
+    license: 'CC BY-SA 4.0',
+    sourcePage: 'https://commons.wikimedia.org/wiki/File:Dupnisa_Cave.jpg',
+  ),
+  'kilitbahir-kalesi': SpotImageInfo(
+    networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Kilitbahir_Kalesi.jpg?width=1280',
+    sourceName: 'Wikimedia Commons',
+    author: 'Kcperspectives',
+    license: 'CC BY-SA 4.0',
+    sourcePage: 'https://commons.wikimedia.org/wiki/File:Kilitbahir_Kalesi.jpg',
+  ),
+  'cunda-taksiyarhis': SpotImageInfo(
+    networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Taksiyarhis_Kilisesi.JPG?width=1280',
+    sourceName: 'Wikimedia Commons',
+    author: 'Ollios',
+    license: 'CC BY-SA 3.0',
+    sourcePage: 'https://commons.wikimedia.org/wiki/File:Taksiyarhis_Kilisesi.JPG',
+  ),
+  'acarlar-longozu': SpotImageInfo(
+    networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Acarlar_longozu.jpg?width=1280',
+    sourceName: 'Wikimedia Commons',
+    author: 'Mustafa Akça',
+    license: 'CC BY-SA 4.0',
+    sourcePage: 'https://commons.wikimedia.org/wiki/File:Acarlar_longozu.jpg',
+  ),
+  'horma-kanyonu': SpotImageInfo(
+    networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Horma_Canyon-Turkey.jpg?width=1280',
+    sourceName: 'Wikimedia Commons',
+    author: 'Buse Şabançelebi',
+    license: 'CC BY-SA 4.0',
+    sourcePage: 'https://commons.wikimedia.org/wiki/File:Horma_Canyon-Turkey.jpg',
+  ),
+  'valla-kanyonu': SpotImageInfo(
+    networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Valla_Canyon.jpg?width=1280',
+    sourceName: 'Wikimedia Commons',
+    author: 'KCCan00',
+    license: 'CC BY-SA 4.0',
+    sourcePage: 'https://commons.wikimedia.org/wiki/File:Valla_Canyon.jpg',
+  ),
+  'cehennemagzi-magaralari': SpotImageInfo(
+    networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Zonguldak_Cehennem_A%C4%9Fz%C4%B1_Ma%C4%9Faralar%C4%B1.jpg?width=1280',
+    sourceName: 'Wikimedia Commons',
+    author: 'Oğuz67',
+    license: 'CC BY-SA 4.0',
+    sourcePage: 'https://commons.wikimedia.org/wiki/File:Zonguldak_Cehennem_A%C4%9Fz%C4%B1_Ma%C4%9Faralar%C4%B1.jpg',
+  ),
+  'gokgol-magarasi': SpotImageInfo(
+    networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/G%C3%B6kg%C3%B6l_ma%C4%9Faras%C4%B1.jpg?width=1280',
+    sourceName: 'Wikimedia Commons',
+    author: 'Acar54',
+    license: 'CC BY-SA 4.0',
+    sourcePage: 'https://commons.wikimedia.org/wiki/File:G%C3%B6kg%C3%B6l_ma%C4%9Faras%C4%B1.jpg',
+  ),
+};
