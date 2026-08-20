@@ -176,9 +176,10 @@ def patch_controller(root: Path) -> None:
         }
 '''
 
-    if old_bind_head not in text:
+    if old_bind_head in text:
+        text = text.replace(old_bind_head, new_bind_head, 1)
+    elif 'val physicalMarker = "::physical::"' not in text:
         raise SystemExit('bindUseCases lens selector block not found')
-    text = text.replace(old_bind_head, new_bind_head, 1)
 
     interop_marker = '''        val previewInterop = Camera2Interop.Extender(previewBuilder)
         val captureInterop = Camera2Interop.Extender(captureBuilder)
@@ -190,9 +191,10 @@ def patch_controller(root: Path) -> None:
             analysisInterop.setPhysicalCameraId(physicalLensId)
         }
 '''
-    if interop_marker not in text:
-        raise SystemExit('Camera2 interop marker not found')
-    text = text.replace(interop_marker, interop_replacement, 1)
+    if 'previewInterop.setPhysicalCameraId(physicalLensId)' not in text:
+        if interop_marker not in text:
+            raise SystemExit('Camera2 interop marker not found')
+        text = text.replace(interop_marker, interop_replacement, 1)
 
     old_video = '''        val qualitySelector = qualitySelectorForPreset(resolutionPreset)
         recorder = Recorder.Builder().setQualitySelector(qualitySelector).build()
@@ -210,9 +212,10 @@ def patch_controller(root: Path) -> None:
             videoCapture = null
         }
 '''
-    if old_video not in text:
+    if old_video in text:
+        text = text.replace(old_video, new_video, 1)
+    elif 'if (physicalLensId == null)' not in text:
         raise SystemExit('video setup block not found')
-    text = text.replace(old_video, new_video, 1)
 
     path.write_text(text, encoding='utf-8')
 
