@@ -8,11 +8,6 @@ const verifiedSpotCoordinateEvidenceBatch11 =
     sourceRef: 'Q28806346',
     verifiedAt: '2026-08-20',
   ),
-  'malabadi-koprusu': SpotCoordinateVerificationEvidence(
-    sourceName: 'Wikidata',
-    sourceRef: 'Q3397053',
-    verifiedAt: '2026-08-20',
-  ),
   'karahantepe': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata',
     sourceRef: 'Q104000481',
