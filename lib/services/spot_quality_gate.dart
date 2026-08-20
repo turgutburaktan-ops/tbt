@@ -1,4 +1,5 @@
 import '../data/spot_coordinate_verification_registry.dart';
+import '../data/spot_coordinate_verification_registry_batch5.dart';
 import '../models/photo_spot.dart';
 
 /// Son savunma hattı: katalog kaynaklarından bağımsız olarak haritaya çıkmadan
@@ -36,7 +37,7 @@ class SpotQualityGate {
       if (group.length < 2) continue;
 
       final verified = group
-          .where((spot) => isSpotCoordinateIndependentlyVerified(spot.id))
+          .where((spot) => _isIndependentlyVerified(spot.id))
           .toList(growable: false);
       if (verified.length == 1) {
         final winner = verified.single.id;
@@ -58,6 +59,10 @@ class SpotQualityGate {
             !blockedSpotIds.contains(spot.id) && !suspiciousIds.contains(spot.id))
         .toList(growable: false);
   }
+
+  static bool _isIndependentlyVerified(String spotId) =>
+      isSpotCoordinateIndependentlyVerified(spotId) ||
+      isSpotCoordinateIndependentlyVerifiedBatch5(spotId);
 
   static bool _basicCoordinateCheck(PhotoSpot spot) {
     if (blockedSpotIds.contains(spot.id)) return false;
