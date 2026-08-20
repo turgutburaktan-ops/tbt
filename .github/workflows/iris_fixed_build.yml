@@ -46,7 +46,7 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Maximize CamerAwesome still quality
+      - name: Balance CamerAwesome capture speed and quality
         run: python3 tool/patch_camerawesome_capture_quality.py
 
       - name: Patch Iris Android capture

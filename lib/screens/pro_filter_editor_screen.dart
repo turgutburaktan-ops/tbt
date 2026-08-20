@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
 import 'dart:typed_data';
-import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -13,19 +12,26 @@ import 'create_post_screen.dart';
 
 enum _LocalEffect { none, clarity, portrait, nightClean, softGlow, filmGrain }
 
-List<Uint8List> _prepareEditorTextures(Uint8List bytes) {
+bool _needsOrientationBake(img.Image image) =>
+    image.exif.imageIfd.hasOrientation && image.exif.imageIfd.orientation != 1;
+
+List<Uint8List> _prepareEditorTextures(String imagePath) {
+  final bytes = File(imagePath).readAsBytesSync();
   final decoded = img.decodeImage(bytes);
   if (decoded == null) throw Exception('Fotoğraf çözülemedi.');
-  final oriented = img.bakeOrientation(decoded);
-  final longEdge = math.max(oriented.width, oriented.height);
-  final preview = longEdge > 1440
+  final longEdge = math.max(decoded.width, decoded.height);
+  final resized = longEdge > 1440
       ? img.copyResize(
-          oriented,
-          width: oriented.width >= oriented.height ? 1440 : null,
-          height: oriented.height > oriented.width ? 1440 : null,
+          decoded,
+          width: decoded.width >= decoded.height ? 1440 : null,
+          height: decoded.height > decoded.width ? 1440 : null,
           interpolation: img.Interpolation.cubic,
         )
-      : img.Image.from(oriented);
+      : decoded;
+  // Rotate after downscaling so EXIF-oriented phone photos never create a
+  // second sensor-sized bitmap just for the editor preview.
+  final preview =
+      _needsOrientationBake(resized) ? img.bakeOrientation(resized) : resized;
   final thumb = img.copyResize(
     preview,
     width: preview.width >= preview.height ? 260 : null,
@@ -45,15 +51,20 @@ Uint8List _renderLocalEffect(Map<String, Object> job) {
   final quality = job['quality']! as int;
   final decoded = img.decodeImage(bytes);
   if (decoded == null) throw Exception('Efekt için fotoğraf çözülemedi.');
-  var output = img.bakeOrientation(decoded);
-  final longEdge = math.max(output.width, output.height);
+  var output = decoded;
+  final longEdge = math.max(decoded.width, decoded.height);
   if (maxDimension > 0 && longEdge > maxDimension) {
     output = img.copyResize(
-      output,
-      width: output.width >= output.height ? maxDimension : null,
-      height: output.height > output.width ? maxDimension : null,
+      decoded,
+      width: decoded.width >= decoded.height ? maxDimension : null,
+      height: decoded.height > decoded.width ? maxDimension : null,
       interpolation: img.Interpolation.cubic,
     );
+  }
+  // Bake orientation only after an optional resize. This is the main memory
+  // guard for 48/64/108 MP camera sensors.
+  if (_needsOrientationBake(output)) {
+    output = img.bakeOrientation(output);
   }
 
   const sharpen = <num>[0, -1, 0, -1, 5, -1, 0, -1, 0];
@@ -93,6 +104,53 @@ Uint8List _renderLocalEffect(Map<String, Object> job) {
         random: math.Random(42),
       );
       output = img.vignette(output, start: .52, end: .95, amount: .28);
+  }
+
+  if (job['applyTone'] == true) {
+    final exposure = (job['exposure']! as num).toDouble();
+    final contrast = (job['contrast']! as num).toDouble();
+    final saturation = (job['saturation']! as num).toDouble();
+    final vibrance = (job['vibrance']! as num).toDouble();
+    final temperature = (job['temperature']! as num).toDouble();
+    final tint = (job['tint']! as num).toDouble();
+    final combinedSaturation =
+        (saturation + vibrance * .22).clamp(0.0, 2.0).toDouble();
+
+    output = img.adjustColor(
+      output,
+      brightness: math.pow(2, exposure),
+      contrast: contrast,
+      saturation: combinedSaturation,
+    );
+
+    // A restrained white-balance pass keeps the exported JPEG close to the
+    // GPU preview without allocating another full-resolution image.
+    final temperatureShift = ((temperature - 5000) / 3200).clamp(-1.0, 1.0);
+    final tintShift = (tint / 100).clamp(-1.0, 1.0);
+    if (temperatureShift.abs() > .001 || tintShift.abs() > .001) {
+      for (final pixel in output) {
+        final maxValue = pixel.maxChannelValue;
+        pixel
+          ..r = (pixel.r * (1 + temperatureShift * .08 - tintShift * .02))
+              .clamp(0, maxValue)
+          ..g = (pixel.g * (1 + tintShift * .05)).clamp(0, maxValue)
+          ..b = (pixel.b * (1 - temperatureShift * .08 - tintShift * .02))
+              .clamp(0, maxValue);
+      }
+    }
+
+    if (job['monochrome'] == true) {
+      output = img.grayscale(output);
+    }
+    final vignetteEnd = (job['vignetteEnd']! as num).toDouble();
+    if (vignetteEnd < 1.0) {
+      output = img.vignette(
+        output,
+        start: (job['vignetteStart']! as num).toDouble(),
+        end: vignetteEnd,
+        amount: .30,
+      );
+    }
   }
 
   return Uint8List.fromList(img.encodeJpg(output, quality: quality));
@@ -246,6 +304,7 @@ class _ProFilterEditorScreenState extends State<ProFilterEditorScreen> {
   TextureSource? _thumbTexture;
   GroupShaderConfiguration? _configuration;
   Uint8List? _sourceBytes;
+  Uint8List? _previewBytes;
   bool _loading = true;
   bool _exporting = false;
   bool _processingEffect = false;
@@ -253,6 +312,10 @@ class _ProFilterEditorScreenState extends State<ProFilterEditorScreen> {
   String _exportStage = 'İşleniyor';
   int _selectedLook = 0;
   int _effectRevision = 0;
+  Timer? _effectDebounce;
+  bool _effectRenderRunning = false;
+  _LocalEffect? _pendingEffect;
+  int? _pendingEffectRevision;
 
   double _exposure = 0;
   double _contrast = 0;
@@ -269,41 +332,29 @@ class _ProFilterEditorScreenState extends State<ProFilterEditorScreen> {
   Future<void> _load() async {
     try {
       final file = File(widget.imagePath);
-      final bytesFuture = file.readAsBytes();
-      final textureFuture = TextureSource.fromFile(file);
-      final bytes = await bytesFuture;
-      final texture = await textureFuture;
+      final prepared = await compute(_prepareEditorTextures, widget.imagePath);
+      final preview = await TextureSource.fromMemory(prepared[0]);
+      final thumb = await TextureSource.fromMemory(prepared[1]);
+      final bytes = await file.readAsBytes();
 
       if (!mounted) return;
       setState(() {
-        _texture = texture;
-        _thumbTexture = texture;
+        // Only the lightweight preview enters GPU memory. The original JPEG
+        // stays compressed until the user explicitly exports an edit.
+        _texture = preview;
+        _basePreviewTexture = preview;
+        _thumbTexture = thumb;
         _sourceBytes = bytes;
+        _previewBytes = prepared[0];
         _configuration = _buildConfiguration(_looks[_selectedLook]);
         _loading = false;
       });
-      unawaited(_prepareLightweightTextures(bytes));
     } catch (e) {
       if (!mounted) return;
       setState(() {
         _loading = false;
         _error = e.toString();
       });
-    }
-  }
-
-  Future<void> _prepareLightweightTextures(Uint8List bytes) async {
-    try {
-      final prepared = await compute(_prepareEditorTextures, bytes);
-      final preview = await TextureSource.fromMemory(prepared[0]);
-      final thumb = await TextureSource.fromMemory(prepared[1]);
-      if (!mounted) return;
-      setState(() {
-        _basePreviewTexture = preview;
-        _thumbTexture = thumb;
-      });
-    } catch (e) {
-      debugPrint('editor preview preparation: $e');
     }
   }
 
@@ -359,6 +410,9 @@ class _ProFilterEditorScreenState extends State<ProFilterEditorScreen> {
   }
 
   void _selectLook(int index) {
+    _effectDebounce?.cancel();
+    _pendingEffect = null;
+    _pendingEffectRevision = null;
     _selectedLook = index;
     _exposure = 0;
     _contrast = 0;
@@ -373,12 +427,35 @@ class _ProFilterEditorScreenState extends State<ProFilterEditorScreen> {
     });
     _rebuildConfiguration();
     if (effect != _LocalEffect.none) {
-      unawaited(_loadLookEffect(effect, revision));
+      _effectDebounce = Timer(const Duration(milliseconds: 180), () {
+        if (!mounted || revision != _effectRevision) return;
+        _pendingEffect = effect;
+        _pendingEffectRevision = revision;
+        unawaited(_drainEffectQueue());
+      });
+    }
+  }
+
+  Future<void> _drainEffectQueue() async {
+    if (_effectRenderRunning) return;
+    _effectRenderRunning = true;
+    try {
+      while (mounted && _pendingEffect != null) {
+        final effect = _pendingEffect!;
+        final revision = _pendingEffectRevision!;
+        _pendingEffect = null;
+        _pendingEffectRevision = null;
+        await _loadLookEffect(effect, revision);
+      }
+    } finally {
+      _effectRenderRunning = false;
     }
   }
 
   Future<void> _loadLookEffect(_LocalEffect effect, int revision) async {
-    final bytes = _sourceBytes;
+    // Structural filter previews work from the already-downscaled JPEG. They
+    // must never decode the sensor-sized original on every preset tap.
+    final bytes = _previewBytes;
     if (bytes == null) return;
     try {
       final rendered = await compute(
@@ -386,7 +463,7 @@ class _ProFilterEditorScreenState extends State<ProFilterEditorScreen> {
         <String, Object>{
           'bytes': bytes,
           'effect': effect.index,
-          'maxDimension': 1440,
+          'maxDimension': 0,
           'quality': 96,
         },
       );
@@ -405,7 +482,12 @@ class _ProFilterEditorScreenState extends State<ProFilterEditorScreen> {
   }
 
   Future<void> _exportAndContinue() async {
-    if (_exporting || _texture == null || _configuration == null) return;
+    if (_exporting ||
+        _processingEffect ||
+        _texture == null ||
+        _configuration == null) {
+      return;
+    }
     final untouchedOriginal = _selectedLook == 0 &&
         _exposure == 0 &&
         _contrast == 0 &&
@@ -427,18 +509,32 @@ class _ProFilterEditorScreenState extends State<ProFilterEditorScreen> {
       _exportStage = 'Tam kalite işleniyor';
     });
     try {
-      final rendered = await _configuration!.export(_texture!, _texture!.size);
-      final data = await rendered.toByteData(format: ui.ImageByteFormat.png);
-      if (data == null) throw Exception('GPU çıktısı oluşturulamadı.');
-      final pngBytes = data.buffer.asUint8List();
-      if (mounted) setState(() => _exportStage = 'Efekt uygulanıyor');
+      final sourceBytes = _sourceBytes;
+      if (sourceBytes == null) throw Exception('Orijinal fotoğraf bulunamadı.');
+      final look = _looks[_selectedLook];
+      final heavyEffect = look.effect == _LocalEffect.portrait ||
+          look.effect == _LocalEffect.nightClean ||
+          look.effect == _LocalEffect.softGlow;
       final outputBytes = await compute(
         _renderLocalEffect,
         <String, Object>{
-          'bytes': pngBytes,
-          'effect': _looks[_selectedLook].effect.index,
-          'maxDimension': 0,
+          'bytes': sourceBytes,
+          'effect': look.effect.index,
+          // 12 MP-class output for lightweight effects; memory-heavy blur
+          // effects are bounded to roughly 8 MP to prevent Android OOM kills.
+          'maxDimension': heavyEffect ? 3200 : 4096,
           'quality': 100,
+          'applyTone': true,
+          'exposure': (look.exposure + _exposure).clamp(-2.5, 2.5),
+          'contrast': (look.contrast + _contrast).clamp(.45, 2.2),
+          'saturation': (look.saturation + _saturation).clamp(0.0, 2.0),
+          'vibrance': (look.vibrance + _vibrance).clamp(-1.0, 1.0),
+          'temperature':
+              (look.temperature + _temperature).clamp(2800, 8200),
+          'tint': look.tint,
+          'monochrome': look.monochrome,
+          'vignetteStart': look.vignetteStart,
+          'vignetteEnd': look.vignetteEnd,
         },
       );
       final output = File(
@@ -470,6 +566,7 @@ class _ProFilterEditorScreenState extends State<ProFilterEditorScreen> {
 
   @override
   void dispose() {
+    _effectDebounce?.cancel();
     _configuration?.dispose();
     super.dispose();
   }
@@ -504,6 +601,7 @@ class _ProFilterEditorScreenState extends State<ProFilterEditorScreen> {
           File(widget.imagePath),
           fit: BoxFit.contain,
           filterQuality: FilterQuality.high,
+          cacheWidth: 1080,
           gaplessPlayback: true,
           errorBuilder: (_, __, ___) => const SizedBox.shrink(),
         ),
@@ -871,7 +969,8 @@ class _ProFilterEditorScreenState extends State<ProFilterEditorScreen> {
           const SizedBox(width: 10),
           Expanded(
             child: FilledButton.icon(
-              onPressed: _exporting ? null : _exportAndContinue,
+              onPressed:
+                  _exporting || _processingEffect ? null : _exportAndContinue,
               style: FilledButton.styleFrom(
                 backgroundColor: Colors.white,
                 foregroundColor: Colors.black,

@@ -96,6 +96,10 @@ class _CameraScreenState extends State<CameraScreen> {
         children: [
           CameraAwesomeBuilder.awesome(
             saveConfig: SaveConfig.photo(),
+            // Let either hardware volume key act as a shutter button. The
+            // plugin routes both keys through the same camera state as the
+            // on-screen shutter.
+            enablePhysicalButton: true,
             // CamerAwesome's color-matrix filters decode and re-encode the
             // full JPEG on Android. Keep capture lossless and apply the richer
             // local effects in Studio instead.
