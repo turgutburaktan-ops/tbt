@@ -308,14 +308,6 @@ metadata is retained here so bundling the images does not lose attribution.
 - License: CC BY-SA 4.0
 - Source page: https://commons.wikimedia.org/wiki/File:Zerzevan_Kalesi_%28havadan%2C_2016%29.jpg
 
-### `malabadi-koprusu`
-- Registry: `lib/data/verified_travel_image_registry_batch11.dart`
-- Local asset: `assets/spots/malabadi-koprusu.jpg`
-- Source: Wikimedia Commons
-- Author: Dyrt
-- License: CC BY-SA 4.0
-- Source page: https://commons.wikimedia.org/wiki/File:Malabadibridge.jpg
-
 ### `karahantepe`
 - Registry: `lib/data/verified_travel_image_registry_batch11.dart`
 - Local asset: `assets/spots/karahantepe.jpg`
