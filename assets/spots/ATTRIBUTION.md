@@ -587,3 +587,99 @@ metadata is retained here so bundling the images does not lose attribution.
 - Author: Kaya Elifnur 72
 - License: CC BY-SA 4.0
 - Source page: https://commons.wikimedia.org/wiki/File:Diyarbakir_Ulu_Cami_2022.jpg
+
+### `zilkale`
+- Registry: `lib/data/verified_travel_image_registry_batch6.dart`
+- Local asset: `assets/spots/zilkale.jpg`
+- Source: Wikimedia Commons
+- Author: Hamdigumus
+- License: CC0 1.0
+- Source page: https://commons.wikimedia.org/wiki/File:Zilkale%2C_%C3%87aml%C4%B1hem%C5%9Fin_%28cropped%29.jpg
+
+### `giresun-kalesi`
+- Registry: `lib/data/verified_travel_image_registry_batch6.dart`
+- Local asset: `assets/spots/giresun-kalesi.jpg`
+- Source: Wikimedia Commons
+- Author: Girtab2828
+- License: CC BY-SA 4.0
+- Source page: https://commons.wikimedia.org/wiki/File:G%C4%B0RESUN_KALES%C4%B0.jpg
+
+### `trabzon-ataturk-kosku`
+- Registry: `lib/data/verified_travel_image_registry_batch6.dart`
+- Local asset: `assets/spots/trabzon-ataturk-kosku.jpg`
+- Source: Wikimedia Commons
+- Author: Aleksasfi
+- License: Public domain
+- Source page: https://commons.wikimedia.org/wiki/File:Atatiurko_namas.jpg
+
+### `erzurum-cifte-minareli-medrese`
+- Registry: `lib/data/verified_travel_image_registry_batch6.dart`
+- Local asset: `assets/spots/erzurum-cifte-minareli-medrese.jpg`
+- Source: Wikimedia Commons
+- Author: Dosseman
+- License: CC BY-SA 4.0
+- Source page: https://commons.wikimedia.org/wiki/File:%C3%87ifte_Minareli_Medrese_%28Erzurum%29_Exterior_front_side_in_2006_3278_straightened.jpg
+
+### `van-kalesi`
+- Registry: `lib/data/verified_travel_image_registry_batch6.dart`
+- Local asset: `assets/spots/van-kalesi.jpg`
+- Source: Wikimedia Commons
+- Author: Dosseman
+- License: CC BY-SA 4.0
+- Source page: https://commons.wikimedia.org/wiki/File:Van_fortress_eastern_walls_014.jpg
+
+### `arslantepe`
+- Registry: `lib/data/verified_travel_image_registry_batch6.dart`
+- Local asset: `assets/spots/arslantepe.jpg`
+- Source: Wikimedia Commons
+- Author: Klaus-Peter Simon
+- License: CC BY-SA 3.0
+- Source page: https://commons.wikimedia.org/wiki/File:Arslantepe1.jpg
+
+### `mor-gabriel-manastiri`
+- Registry: `lib/data/verified_travel_image_registry_batch6.dart`
+- Local asset: `assets/spots/mor-gabriel-manastiri.jpg`
+- Source: Wikimedia Commons
+- Author: Christian Koehn
+- License: CC BY-SA 2.0 DE
+- Source page: https://commons.wikimedia.org/wiki/File:Monastery_Mor_Gabriel_Turkey.jpg
+
+### `girlevik-selalesi`
+- Registry: `lib/data/verified_travel_image_registry_batch6.dart`
+- Local asset: `assets/spots/girlevik-selalesi.jpg`
+- Source: Wikimedia Commons
+- Author: Medgeorgia
+- License: CC BY-SA 4.0
+- Source page: https://commons.wikimedia.org/wiki/File:Girlevik_Waterfall%2C_Erzincan%2C_Turkey.jpg
+
+### `rumkale`
+- Registry: `lib/data/verified_travel_image_registry_batch6.dart`
+- Local asset: `assets/spots/rumkale.jpg`
+- Source: Wikimedia Commons
+- Author: Ferrus
+- License: Public domain
+- Source page: https://commons.wikimedia.org/wiki/File:Hromkla_Halfeti.jpg
+
+### `cavustepe-kalesi`
+- Registry: `lib/data/verified_travel_image_registry_batch6.dart`
+- Local asset: `assets/spots/cavustepe-kalesi.jpg`
+- Source: Wikimedia Commons
+- Author: Martijn Munneke
+- License: CC BY 2.0
+- Source page: https://commons.wikimedia.org/wiki/File:Urartian_fort_in_%C3%87avu%C5%9Ftepe.jpg
+
+### `tortum-selalesi`
+- Registry: `lib/data/verified_travel_image_registry_batch6.dart`
+- Local asset: `assets/spots/tortum-selalesi.jpg`
+- Source: Wikimedia Commons
+- Author: Jaba1977
+- License: CC BY-SA 4.0
+- Source page: https://commons.wikimedia.org/wiki/File:Tortum_Waterfall_%282%29.jpg
+
+### `karanlik-kanyon`
+- Registry: `lib/data/verified_travel_image_registry_batch6.dart`
+- Local asset: `assets/spots/karanlik-kanyon.jpg`
+- Source: Wikimedia Commons
+- Author: Engin Asil
+- License: CC BY-SA 3.0
+- Source page: https://commons.wikimedia.org/wiki/File:Canyone_2_%2832828345%29.jpeg
