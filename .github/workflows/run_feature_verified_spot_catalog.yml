@@ -55,7 +55,7 @@ jobs:
         if: steps.generate.outputs.exit_code == '0'
         run: |
           set +e
-          python3 tool/upgrade_verified_spot_images_v2.py --long-edge 1600 --short-edge 900 --request-width 1920 2>&1 | tee build/spot_import/image_upgrade.log
+          python3 tool/upgrade_verified_spot_images_v2.py --long-edge 1600 --short-edge 900 --request-width 2560 2>&1 | tee build/spot_import/image_upgrade.log
           code=${PIPESTATUS[0]}
           echo "exit_code=$code" >> "$GITHUB_OUTPUT"
           exit 0
@@ -80,6 +80,8 @@ jobs:
           MIN_VERIFIED_SPOTS: '1100'
           MIN_IMAGE_LONG_EDGE: '1600'
           MIN_IMAGE_SHORT_EDGE: '900'
+          MIN_LEGACY_IMAGE_LONG_EDGE: '700'
+          MIN_LEGACY_IMAGE_SHORT_EDGE: '450'
         run: |
           mkdir -p build/spot_quality
           set +e
@@ -116,6 +118,7 @@ jobs:
               'generation_report': load('build/spot_import/wikidata_verified_catalog_report.json'),
               'coordinate_summary': load('build/spot_quality/coordinate_audit.json').get('summary', {}),
               'catalog_audit_summary': load('build/spot_quality/verified_catalog_audit.json').get('summary', {}),
+              'legacy_image_warnings': load('build/spot_quality/legacy_image_warnings.json'),
               'generator_log_tail': tail('build/spot_import/generator.log'),
               'image_upgrade_log_tail': tail('build/spot_import/image_upgrade.log', 80),
               'catalog_audit_log_tail': tail('build/spot_quality/verified_catalog_audit.log', 80),
