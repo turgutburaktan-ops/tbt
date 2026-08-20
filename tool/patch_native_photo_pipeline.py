@@ -79,6 +79,7 @@ class MainActivity : FlutterActivity() {
             val portraitWidth = call.argument<Int>("portraitWidth") ?: 2160
             val portraitHeight = call.argument<Int>("portraitHeight") ?: 2700
             val quality = call.argument<Int>("quality") ?: 98
+            val maxDecodeDimension = call.argument<Int>("maxDecodeDimension") ?: 4600
             if (inputPath.isNullOrBlank() || outputPath.isNullOrBlank()) {
                 result.error("bad_arguments", "Photo paths are required", null)
                 return@setMethodCallHandler
@@ -92,6 +93,7 @@ class MainActivity : FlutterActivity() {
                         portraitWidth,
                         portraitHeight,
                         quality,
+                        maxDecodeDimension,
                     )
                     runOnUiThread { result.success(prepared) }
                 } catch (error: Throwable) {
@@ -125,6 +127,7 @@ class MainActivity : FlutterActivity() {
         portraitWidth: Int,
         portraitHeight: Int,
         quality: Int,
+        maxDecodeDimension: Int,
     ): String {
         val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
         BitmapFactory.decodeFile(inputPath, bounds)
@@ -136,7 +139,7 @@ class MainActivity : FlutterActivity() {
         val longest = max(bounds.outWidth, bounds.outHeight)
         // Keep a normal 12/16 MP sensor frame at native resolution. Very large
         // 48/64 MP binned sources are sampled only enough to stay memory-safe.
-        while (longest / sampleSize > 4600) sampleSize *= 2
+        while (longest / sampleSize > maxDecodeDimension) sampleSize *= 2
 
         val options = BitmapFactory.Options().apply {
             inSampleSize = sampleSize
@@ -174,7 +177,8 @@ class MainActivity : FlutterActivity() {
         }
 
         val portrait = oriented.height >= oriented.width
-        val desiredAspect = if (portrait) 4f / 5f else 5f / 4f
+        val portraitAspect = portraitWidth.toFloat() / portraitHeight.toFloat()
+        val desiredAspect = if (portrait) portraitAspect else 1f / portraitAspect
         var cropWidth = oriented.width
         var cropHeight = (cropWidth / desiredAspect).roundToInt()
         if (cropHeight > oriented.height) {

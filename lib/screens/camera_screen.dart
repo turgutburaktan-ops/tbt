@@ -97,16 +97,21 @@ class _CameraScreenState extends State<CameraScreen> {
     if (!mounted || _openingEditor || imagePath.isEmpty) return;
     _openingEditor = true;
     try {
-      // Crop, rotate and resize off the Flutter UI thread. Studio receives a
-      // ready-to-share 4:5 JPEG instead of a 12/48 MP sensor bitmap.
-      final preparedPath =
-          await NativePhotoPipeline.prepareSharePhoto(imagePath);
+      // Keep the sensor JPEG untouched. Native code only creates a lightweight
+      // editor preview so the original image is never resized or re-encoded.
+      String? previewPath;
+      try {
+        previewPath = await NativePhotoPipeline.prepareEditorPreview(imagePath);
+      } catch (error) {
+        debugPrint('native editor preview: $error');
+      }
       if (!mounted) return;
       setState(() => _capturing = false);
       await Navigator.of(context).push(
         MaterialPageRoute(
           builder: (_) => ProFilterEditorScreen(
-            imagePath: preparedPath,
+            imagePath: imagePath,
+            previewImagePath: previewPath,
             initialLookIndex: _capturedLookIndex,
           ),
         ),
@@ -188,7 +193,7 @@ class _CameraScreenState extends State<CameraScreen> {
               border: Border.all(color: Colors.white24),
             ),
             child: const Text(
-              '4:5  •  2160×2700',
+              '4:3  •  ORİJİNAL',
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 12,
@@ -243,7 +248,7 @@ class _CameraScreenState extends State<CameraScreen> {
   @override
   Widget build(BuildContext context) {
     final screen = MediaQuery.sizeOf(context);
-    final shareFrameHeight = math.min(screen.height, screen.width * 5 / 4);
+    final shareFrameHeight = math.min(screen.height, screen.width * 4 / 3);
     final verticalPreviewPadding =
         math.max(0.0, (screen.height - shareFrameHeight) / 2);
 
@@ -268,8 +273,7 @@ class _CameraScreenState extends State<CameraScreen> {
             ),
             sensorConfig: SensorConfig.single(
               sensor: Sensor.position(SensorPosition.back),
-              // CameraX captures its high-quality 4:3 sensor image. The native
-              // pipeline center-crops it to the fixed 4:5 frame shown here.
+              // Preserve the camera sensor's native 4:3 still-photo frame.
               aspectRatio: CameraAspectRatios.ratio_4_3,
               flashMode: FlashMode.auto,
             ),
@@ -307,7 +311,7 @@ class _CameraScreenState extends State<CameraScreen> {
                           ),
                           SizedBox(width: 12),
                           Text(
-                            '4:5 fotoğraf hazırlanıyor',
+                            'Orijinal fotoğraf hazırlanıyor',
                             style: TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.w800,
@@ -341,7 +345,7 @@ class _LiveFilterStrip extends StatelessWidget {
   Widget build(BuildContext context) {
     final enabled = state is PhotoCameraState;
     return SizedBox(
-      height: 66,
+      height: 54,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 14),
@@ -354,7 +358,7 @@ class _LiveFilterStrip extends StatelessWidget {
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 160),
               constraints: const BoxConstraints(minWidth: 78),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 5),
               decoration: BoxDecoration(
                 color: selected
                     ? const Color(0xE62B2D36)
@@ -487,6 +491,7 @@ class _ContinuousZoomControlState extends State<_ContinuousZoomControl> {
   double? _localZoom;
   double? _pendingZoom;
   Timer? _zoomThrottle;
+  bool _initialZoomApplied = false;
 
   @override
   void initState() {
@@ -506,10 +511,45 @@ class _ContinuousZoomControlState extends State<_ContinuousZoomControl> {
       CamerawesomePlugin.getMaxZoom(),
     ]);
     if (!mounted) return;
+    final minZoom = values[0] ?? 1;
+    final maxZoom = math.max(minZoom, values[1] ?? minZoom);
+    final initialZoom = _normalizedForRatio(1, minZoom, maxZoom);
+    final shouldApplyInitialZoom = !_initialZoomApplied;
     setState(() {
-      _minZoom = values[0] ?? 1;
-      _maxZoom = math.max(_minZoom, values[1] ?? _minZoom);
+      _minZoom = minZoom;
+      _maxZoom = maxZoom;
+      if (shouldApplyInitialZoom) _localZoom = initialZoom;
     });
+    if (shouldApplyInitialZoom) {
+      _initialZoomApplied = true;
+      try {
+        await widget.state.sensorConfig.setZoom(initialZoom);
+      } catch (error) {
+        debugPrint('initial 1x zoom: $error');
+      }
+      if (mounted) setState(() => _localZoom = null);
+    }
+  }
+
+  double _normalizedForRatio(
+    double ratio, [
+    double? minimum,
+    double? maximum,
+  ]) {
+    final minZoom = minimum ?? _minZoom;
+    final maxZoom = maximum ?? _maxZoom;
+    if (maxZoom <= minZoom) return 0;
+    return ((ratio.clamp(minZoom, maxZoom) - minZoom) /
+            (maxZoom - minZoom))
+        .clamp(0.0, 1.0)
+        .toDouble();
+  }
+
+  void _selectRatio(double ratio) {
+    if (!_zoomAllowed) return;
+    final normalized = _normalizedForRatio(ratio);
+    _queueZoom(normalized);
+    _finishZoom(normalized);
   }
 
   void _queueZoom(double value) {
@@ -569,12 +609,36 @@ class _ContinuousZoomControlState extends State<_ContinuousZoomControl> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                '${displayZoom.toStringAsFixed(1)}×',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w900,
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _ZoomPresetButton(
+                    label: '0.6×',
+                    selected: (displayZoom - .6).abs() < .08,
+                    enabled: _zoomAllowed && _minZoom <= .65,
+                    onTap: () => _selectRatio(.6),
+                  ),
+                  const SizedBox(width: 14),
+                  SizedBox(
+                    width: 62,
+                    child: Text(
+                      '${displayZoom.toStringAsFixed(1)}×',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 18,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  _ZoomPresetButton(
+                    label: '1×',
+                    selected: (displayZoom - 1).abs() < .08,
+                    enabled: _zoomAllowed,
+                    onTap: () => _selectRatio(1),
+                  ),
+                ],
               ),
               SliderTheme(
                 data: SliderTheme.of(context).copyWith(
@@ -592,22 +656,9 @@ class _ContinuousZoomControlState extends State<_ContinuousZoomControl> {
                   onChangeEnd: _zoomAllowed ? _finishZoom : null,
                 ),
               ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    '${_minZoom.toStringAsFixed(1)}×',
-                    style: const TextStyle(color: Colors.white54, fontSize: 10),
-                  ),
-                  const Text(
-                    'Kaydır veya iki parmakla yakınlaştır',
-                    style: TextStyle(color: Colors.white54, fontSize: 10),
-                  ),
-                  Text(
-                    '${_maxZoom.toStringAsFixed(1)}×',
-                    style: const TextStyle(color: Colors.white54, fontSize: 10),
-                  ),
-                ],
+              Text(
+                '1× başlangıç  •  kaydırarak ${_maxZoom.toStringAsFixed(1)}×',
+                style: const TextStyle(color: Colors.white54, fontSize: 10),
               ),
             ],
           ),
@@ -617,4 +668,50 @@ class _ContinuousZoomControlState extends State<_ContinuousZoomControl> {
   }
 
   bool get _zoomAllowed => widget.state is PhotoCameraState;
+}
+
+class _ZoomPresetButton extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final bool enabled;
+  final VoidCallback onTap;
+
+  const _ZoomPresetButton({
+    required this.label,
+    required this.selected,
+    required this.enabled,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: enabled ? onTap : null,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 140),
+        width: 52,
+        height: 34,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: selected ? const Color(0xFF54E6D8) : Colors.white12,
+          borderRadius: BorderRadius.circular(17),
+          border: Border.all(
+            color: selected ? const Color(0xFF54E6D8) : Colors.white24,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: !enabled
+                ? Colors.white24
+                : selected
+                    ? Colors.black
+                    : Colors.white,
+            fontSize: 12,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+      ),
+    );
+  }
 }

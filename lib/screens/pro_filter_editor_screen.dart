@@ -158,12 +158,14 @@ Uint8List _renderLocalEffect(Map<String, Object> job) {
 
 class ProFilterEditorScreen extends StatefulWidget {
   final String imagePath;
+  final String? previewImagePath;
   final String? captureMode;
   final int initialLookIndex;
 
   const ProFilterEditorScreen({
     super.key,
     required this.imagePath,
+    this.previewImagePath,
     this.captureMode,
     this.initialLookIndex = 0,
   });
@@ -336,7 +338,10 @@ class _ProFilterEditorScreenState extends State<ProFilterEditorScreen> {
   Future<void> _load() async {
     try {
       final file = File(widget.imagePath);
-      final prepared = await compute(_prepareEditorTextures, widget.imagePath);
+      final prepared = await compute(
+        _prepareEditorTextures,
+        widget.previewImagePath ?? widget.imagePath,
+      );
       final preview = await TextureSource.fromMemory(prepared[0]);
       final thumb = await TextureSource.fromMemory(prepared[1]);
       final bytes = await file.readAsBytes();
@@ -603,7 +608,7 @@ class _ProFilterEditorScreenState extends State<ProFilterEditorScreen> {
       fit: StackFit.expand,
       children: [
         Image.file(
-          File(widget.imagePath),
+          File(widget.previewImagePath ?? widget.imagePath),
           fit: BoxFit.contain,
           filterQuality: FilterQuality.high,
           cacheWidth: 1080,
