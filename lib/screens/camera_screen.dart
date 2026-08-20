@@ -13,21 +13,38 @@ class CameraScreen extends StatefulWidget {
   State<CameraScreen> createState() => _CameraScreenState();
 }
 
-class _CameraScreenState extends State<CameraScreen> {
+class _CameraScreenState extends State<CameraScreen>
+    with WidgetsBindingObserver {
   final ImagePicker _picker = ImagePicker();
   bool _opening = false;
+  bool _returningFromCamera = false;
   String? _error;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) => _openSystemCamera());
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && _opening && mounted) {
+      setState(() => _returningFromCamera = true);
+    }
   }
 
   Future<void> _openSystemCamera() async {
     if (_opening) return;
     setState(() {
       _opening = true;
+      _returningFromCamera = false;
       _error = null;
     });
 
@@ -51,6 +68,7 @@ class _CameraScreenState extends State<CameraScreen> {
       if (!mounted) return;
       setState(() {
         _opening = false;
+        _returningFromCamera = false;
         _error = 'Telefon kamerası açılamadı: $error';
       });
     }
@@ -69,15 +87,30 @@ class _CameraScreenState extends State<CameraScreen> {
         child: Padding(
           padding: const EdgeInsets.all(28),
           child: _error == null
-              ? const Column(
+              ? Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    CircularProgressIndicator(color: Colors.white),
-                    SizedBox(height: 18),
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 180),
+                      child: _returningFromCamera
+                          ? const Icon(
+                              Icons.check_circle_rounded,
+                              key: ValueKey('captured'),
+                              size: 58,
+                              color: Color(0xFF42F5E9),
+                            )
+                          : const CircularProgressIndicator(
+                              key: ValueKey('opening'),
+                              color: Colors.white,
+                            ),
+                    ),
+                    const SizedBox(height: 18),
                     Text(
-                      'Telefonun orijinal kamerası açılıyor…',
+                      _returningFromCamera
+                          ? 'Fotoğraf çekildi\nÖnizleme hazırlanıyor…'
+                          : 'Telefonun orijinal kamerası açılıyor…',
                       textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.white70),
+                      style: const TextStyle(color: Colors.white70),
                     ),
                   ],
                 )

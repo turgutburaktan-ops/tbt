@@ -354,12 +354,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                         ),
                       ],
                     )
-                  : Image.file(
-                      _image!,
-                      width: double.infinity,
-                      height: double.infinity,
-                      fit: BoxFit.cover,
-                    ),
+                  : _FastPhotoPreview(image: _image!),
             ),
           ),
           if (_image != null) ...[
@@ -525,6 +520,64 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _FastPhotoPreview extends StatelessWidget {
+  final File image;
+
+  const _FastPhotoPreview({required this.image});
+
+  @override
+  Widget build(BuildContext context) {
+    final logicalWidth = MediaQuery.sizeOf(context).width;
+    final pixelRatio = MediaQuery.devicePixelRatioOf(context);
+    final cacheWidth =
+        (logicalWidth * pixelRatio).round().clamp(720, 1600).toInt();
+    return Image.file(
+      image,
+      width: double.infinity,
+      height: double.infinity,
+      fit: BoxFit.cover,
+      cacheWidth: cacheWidth,
+      filterQuality: FilterQuality.medium,
+      gaplessPlayback: true,
+      frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
+        if (wasSynchronouslyLoaded || frame != null) return child;
+        return const ColoredBox(
+          color: Color(0xFF121416),
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.check_circle_rounded,
+                  color: Color(0xFF42F5E9),
+                  size: 48,
+                ),
+                SizedBox(height: 12),
+                Text(
+                  'Fotoğraf çekildi',
+                  style: TextStyle(fontWeight: FontWeight.w800),
+                ),
+                SizedBox(height: 5),
+                Text(
+                  'Önizleme hazırlanıyor…',
+                  style: TextStyle(color: Colors.white54, fontSize: 12),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+      errorBuilder: (_, __, ___) => const ColoredBox(
+        color: Color(0xFF121416),
+        child: Center(
+          child: Icon(Icons.broken_image_outlined,
+              size: 48, color: Colors.white38),
+        ),
       ),
     );
   }
