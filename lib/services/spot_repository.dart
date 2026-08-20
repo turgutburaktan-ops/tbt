@@ -1,16 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-import '../data/curated_photo_spots.dart';
-import '../data/curated_photo_spots_extra.dart';
-import '../data/curated_photo_spots_cities.dart';
-import '../data/curated_photo_spots_regions.dart';
-import '../data/curated_photo_spots_official_routes.dart';
-import '../data/curated_photo_spots_official_bulk.dart';
-import '../data/curated_photo_spots_verified_expansion.dart';
-import '../data/curated_photo_spots_official_complete.dart';
-import '../data/curated_photo_spots_nationwide_expansion_v2.dart';
-import '../data/curated_photo_spots_nationwide_expansion_v3.dart';
 import '../models/photo_spot.dart';
 import 'nationwide_candidate_spot_resolver.dart';
 import 'spot_quality_gate.dart';
@@ -63,9 +53,11 @@ class SpotRepository {
       remote = snapshot.docs.map(_fromDocument).whereType<PhotoSpot>().toList();
     } catch (_) {}
 
-    final curated = _mergeWithCurated(remote);
-    final nationwide = NationwideCandidateSpotResolver.mergeInto(curated);
-    final safe = SpotQualityGate.filterSafe(nationwide);
+    // Yerel eski curated/demo listeler artık kullanıcı kataloğuna doğrudan
+    // karıştırılmaz. Resolver, doğrulanmış gezi çekirdeğini bu güvenilir uzak
+    // kayıtların üzerine ekler.
+    final verified = NationwideCandidateSpotResolver.mergeInto(remote);
+    final safe = SpotQualityGate.filterSafe(verified);
     return _filterLocal(safe, city: city, category: category);
   }
 
@@ -115,34 +107,12 @@ class SpotRepository {
       .map((snapshot) {
         final remote =
             snapshot.docs.map(_fromDocument).whereType<PhotoSpot>().toList();
-        final merged = NationwideCandidateSpotResolver.mergeInto(
-          _mergeWithCurated(remote),
-        );
+        final merged = NationwideCandidateSpotResolver.mergeInto(remote);
         return SpotQualityGate.filterSafe(merged);
       });
 
   Future<List<PhotoSpot>> search(String input, {int limit = 2000}) =>
       discover(query: SpotDiscoveryQuery(text: input, limit: limit));
-
-  List<PhotoSpot> _mergeWithCurated(List<PhotoSpot> remote) {
-    final byId = <String, PhotoSpot>{
-      for (final spot in demoSpots) spot.id: spot,
-      for (final spot in curatedPhotoSpots) spot.id: spot,
-      for (final spot in curatedPhotoSpotsExtra) spot.id: spot,
-      for (final spot in curatedPhotoSpotsCities) spot.id: spot,
-      for (final spot in curatedPhotoSpotsRegions) spot.id: spot,
-      for (final spot in curatedPhotoSpotsOfficialRoutes) spot.id: spot,
-      for (final spot in curatedPhotoSpotsOfficialBulk) spot.id: spot,
-      for (final spot in curatedPhotoSpotsVerifiedExpansion) spot.id: spot,
-      for (final spot in curatedPhotoSpotsOfficialComplete) spot.id: spot,
-      for (final spot in curatedPhotoSpotsNationwideExpansionV2) spot.id: spot,
-      for (final spot in curatedPhotoSpotsNationwideExpansionV3) spot.id: spot,
-    };
-    for (final spot in remote) {
-      byId[spot.id] = spot;
-    }
-    return byId.values.toList();
-  }
 
   Future<String> submitCandidate({
     required String name,
@@ -159,10 +129,10 @@ class SpotRepository {
   }) async {
     final user = _auth.currentUser;
     if (user == null) {
-      throw Exception('Yeni çekim noktası önermek için giriş yapmalısın.');
+      throw Exception('Yeni gezilecek yer önermek için giriş yapmalısın.');
     }
     if (name.trim().length < 3 || city.trim().length < 2) {
-      throw Exception('Nokta adı ve şehir bilgisi eksik.');
+      throw Exception('Yer adı ve şehir bilgisi eksik.');
     }
     if (latitude < -90 ||
         latitude > 90 ||
@@ -235,7 +205,14 @@ class SpotRepository {
 
   PhotoSpot? _fromDocument(DocumentSnapshot<Map<String, dynamic>> doc) {
     final data = doc.data();
-    if (data == null || data['coordinateVerified'] != true) return null;
+    // Kullanıcı kataloğuna uzak kayıt ancak hem koordinatı hem görseli manuel
+    // olarak doğrulanmışsa girebilir. Eksik görsel doğrulaması olan kayıt review
+    // havuzunda kalır, otomatik image-search ile kullanıcıya sunulmaz.
+    if (data == null ||
+        data['coordinateVerified'] != true ||
+        data['imageVerified'] != true) {
+      return null;
+    }
 
     final latitude = _asDouble(data['latitude']);
     final longitude = _asDouble(data['longitude']);
@@ -245,6 +222,7 @@ class SpotRepository {
     final city = (data['city'] ?? '').toString().trim();
     if (name.isEmpty || city.isEmpty) return null;
 
+    final sourceTags = _stringList(data['tags']);
     return PhotoSpot(
       id: (data['id'] ?? doc.id).toString(),
       name: name,
@@ -259,7 +237,7 @@ class SpotRepository {
       description: (data['description'] ?? '').toString(),
       recommendedLens: (data['recommendedLens'] ?? '24-70mm').toString(),
       difficulty: (data['difficulty'] ?? 'Kolay').toString(),
-      tags: _stringList(data['tags']),
+      tags: <String>{'FirestoreDoğrulanmış', ...sourceTags}.toList(),
     );
   }
 
