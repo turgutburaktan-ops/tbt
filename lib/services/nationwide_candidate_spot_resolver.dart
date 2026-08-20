@@ -10,11 +10,14 @@ import '../data/verified_travel_places_batch9.dart';
 import '../data/verified_travel_places_batch10.dart';
 import '../data/verified_travel_places_batch11.dart';
 import '../data/verified_travel_places_batch12.dart';
+import '../data/verified_travel_places_generated.dart';
 import '../models/photo_spot.dart';
 
-/// Kullanıcıya açık katalog yalnızca iki güvenilir kaynağı kabul eder:
+/// Kullanıcıya açık katalog yalnızca güvenilir kaynakları kabul eder:
 /// 1) Elle kaynak kontrolü tamamlanmış doğrulanmış gezi çekirdeği.
-/// 2) Firestore'da koordinat + görsel doğrulaması tamamlanarak yayınlanmış yerler.
+/// 2) Doğrudan P625 + P18 + Commons lisans/çözünürlük kapısından geçmiş
+///    kaynak-doğrulanmış üretim kataloğu.
+/// 3) Firestore'da koordinat + görsel doğrulaması tamamlanmış kayıtlar.
 class NationwideCandidateSpotResolver {
   NationwideCandidateSpotResolver._();
 
@@ -39,6 +42,7 @@ class NationwideCandidateSpotResolver {
       ...verifiedTravelPlacesBatch10,
       ...verifiedTravelPlacesBatch11,
       ...verifiedTravelPlacesBatch12,
+      ...verifiedTravelPlacesGenerated,
     ]) {
       resultByPlace.removeWhere((_, spot) => spot.id == verified.id);
       resultByPlace[_placeKey(verified.city, verified.name)] = verified;
