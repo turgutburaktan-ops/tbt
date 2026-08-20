@@ -2,7 +2,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../services/app_notification_service.dart';
-import 'activity_demand_screen.dart';
 import 'camera_screen.dart';
 import 'events_hub_screen.dart';
 import 'feed_screen.dart';
@@ -47,11 +46,30 @@ class _HomeScreenState extends State<HomeScreen> {
       _FeedHub(),
       _ExploreHub(),
       SizedBox.shrink(),
+      _NearbyHub(),
       _ProfileGate(),
     ];
     return Scaffold(
       backgroundColor: _Neon.bg,
       body: IndexedStack(index: _selectedIndex, children: pages),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      floatingActionButton: Container(
+        padding: const EdgeInsets.all(3),
+        decoration: const BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: LinearGradient(colors: [_Neon.cyan, _Neon.violet]),
+        ),
+        child: FloatingActionButton(
+          heroTag: 'main-camera',
+          tooltip: 'Kamera',
+          elevation: 0,
+          backgroundColor: _Neon.panel,
+          foregroundColor: Colors.white,
+          shape: const CircleBorder(),
+          onPressed: () => _selectDestination(2),
+          child: const Icon(Icons.photo_camera_rounded, size: 27),
+        ),
+      ),
       bottomNavigationBar: _SimpleNavigationBar(
         selectedIndex: _selectedIndex,
         onSelected: _selectDestination,
@@ -73,23 +91,39 @@ class _SimpleNavigationBar extends StatelessWidget {
   Widget build(BuildContext context) {
     const items = [
       (Icons.home_outlined, Icons.home_rounded, 'Ana Sayfa'),
-      (Icons.explore_outlined, Icons.explore_rounded, 'Keşfet'),
-      (Icons.photo_camera_outlined, Icons.photo_camera_rounded, 'Kamera'),
+      (Icons.place_outlined, Icons.place_rounded, 'Mekanlar'),
+      (Icons.circle_outlined, Icons.circle, 'Kamera'),
+      (Icons.near_me_outlined, Icons.near_me_rounded, 'Çevrende'),
       (Icons.person_outline_rounded, Icons.person_rounded, 'Profil'),
     ];
     return SafeArea(
       top: false,
-      child: Container(
-        height: 66,
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-        decoration: const BoxDecoration(
-          color: Color(0xFF0C0E13),
-          border: Border(top: BorderSide(color: _Neon.border)),
-        ),
+      child: BottomAppBar(
+        height: 68,
+        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
+        color: const Color(0xFF0C0E13),
+        elevation: 0,
+        shape: const CircularNotchedRectangle(),
+        notchMargin: 8,
         child: Row(
           children: List.generate(items.length, (index) {
             final item = items[index];
             final selected = index == selectedIndex;
+            if (index == 2) {
+              return const Expanded(
+                child: Align(
+                  alignment: Alignment.bottomCenter,
+                  child: Text(
+                    'Kamera',
+                    style: TextStyle(
+                      color: Colors.white54,
+                      fontSize: 9.5,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              );
+            }
             return Expanded(
               child: InkWell(
                 onTap: () => onSelected(index),
@@ -101,7 +135,7 @@ class _SimpleNavigationBar extends StatelessWidget {
                     children: [
                       _GradientIcon(
                         icon: selected ? item.$2 : item.$1,
-                        active: selected || index == 2,
+                        active: selected,
                       ),
                       const SizedBox(height: 2),
                       Text(
@@ -145,6 +179,99 @@ class _ProfileGate extends StatelessWidget {
               : const ProfilePage();
         },
       );
+}
+
+class _NearbyHub extends StatefulWidget {
+  const _NearbyHub();
+
+  @override
+  State<_NearbyHub> createState() => _NearbyHubState();
+}
+
+class _NearbyHubState extends State<_NearbyHub> {
+  int _section = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    return ColoredBox(
+      color: _Neon.bg,
+      child: SafeArea(
+        bottom: false,
+        child: Column(
+          children: [
+            const Padding(
+              padding: EdgeInsets.fromLTRB(16, 12, 16, 8),
+              child: Row(
+                children: [
+                  _GradientIcon(icon: Icons.near_me_rounded, size: 25),
+                  SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Çevrende',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                        Text(
+                          'Yakındaki hareketleri ve etkinlikleri gör.',
+                          style: TextStyle(
+                            color: Colors.white54,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+              child: Container(
+                padding: const EdgeInsets.all(3),
+                decoration: BoxDecoration(
+                  color: _Neon.panel,
+                  borderRadius: BorderRadius.circular(15),
+                  border: Border.all(color: _Neon.border),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _FeedTab(
+                        label: 'Radar',
+                        selected: _section == 0,
+                        onTap: () => setState(() => _section = 0),
+                      ),
+                    ),
+                    Expanded(
+                      child: _FeedTab(
+                        label: 'Etkinlikler',
+                        selected: _section == 1,
+                        onTap: () => setState(() => _section = 1),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Expanded(
+              child: IndexedStack(
+                index: _section,
+                children: const [
+                  RadarScreen(embedded: true),
+                  EventsHubScreen(),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class _AuthAwareFeed extends StatelessWidget {
@@ -286,14 +413,17 @@ class _HomeHeader extends StatelessWidget {
       );
 }
 
-class _ExploreHub extends StatelessWidget {
+class _ExploreHub extends StatefulWidget {
   const _ExploreHub();
 
-  void _openDestination(
-    BuildContext context,
-    String title,
-    Widget screen,
-  ) {
+  @override
+  State<_ExploreHub> createState() => _ExploreHubState();
+}
+
+class _ExploreHubState extends State<_ExploreHub> {
+  String _category = 'Gezilecek Yerler';
+
+  void _openMap(BuildContext context) {
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -301,27 +431,21 @@ class _ExploreHub extends StatelessWidget {
           backgroundColor: _Neon.bg,
           appBar: AppBar(
             backgroundColor: _Neon.bg,
-            title: Text(title),
+            title: const Text('Harita'),
           ),
-          body: screen,
+          body: const MapScreen(),
         ),
       ),
     );
   }
 
-  void _open(BuildContext context, Widget screen) {
-    Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
-  }
-
   @override
   Widget build(BuildContext context) {
-    const activities = <(IconData, String)>[
-      (Icons.photo_camera_outlined, 'Fotoğraf'),
-      (Icons.local_cafe_outlined, 'Kahve'),
-      (Icons.directions_walk_rounded, 'Yürüyüş'),
-      (Icons.terrain_outlined, 'Kamp'),
-      (Icons.sports_basketball_outlined, 'Spor'),
-      (Icons.sports_esports_outlined, 'Oyun'),
+    const categories = <(IconData, String)>[
+      (Icons.restaurant_outlined, 'Yeme-İçme'),
+      (Icons.local_cafe_outlined, 'Kafeler'),
+      (Icons.hotel_outlined, 'Oteller'),
+      (Icons.landscape_outlined, 'Gezilecek Yerler'),
     ];
     return ColoredBox(
       color: _Neon.bg,
@@ -330,60 +454,30 @@ class _ExploreHub extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Padding(
-              padding: EdgeInsets.fromLTRB(18, 14, 18, 4),
-              child: Text(
-                'Keşfet',
-                style: TextStyle(fontSize: 25, fontWeight: FontWeight.w900),
-              ),
-            ),
-            const Padding(
-              padding: EdgeInsets.fromLTRB(18, 0, 18, 12),
-              child: Text(
-                'Yerleri, etkinlikleri ve çevrendeki insanları bul.',
-                style: TextStyle(color: Colors.white54, fontSize: 12.5),
-              ),
-            ),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 14),
+              padding: const EdgeInsets.fromLTRB(18, 12, 10, 4),
               child: Row(
                 children: [
-                  Expanded(
-                    child: _ExploreAction(
-                      icon: Icons.map_outlined,
-                      label: 'Harita',
-                      onTap: () => _openDestination(
-                        context,
-                        'Harita',
-                        const MapScreen(),
-                      ),
+                  const Expanded(
+                    child: Text(
+                      'Mekanlar',
+                      style:
+                          TextStyle(fontSize: 25, fontWeight: FontWeight.w900),
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _ExploreAction(
-                      icon: Icons.radar_rounded,
-                      label: 'Radar',
-                      onTap: () => _openDestination(
-                        context,
-                        'Radar',
-                        const RadarScreen(),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _ExploreAction(
-                      icon: Icons.event_outlined,
-                      label: 'Etkinlik',
-                      onTap: () => _openDestination(
-                        context,
-                        'Etkinlikler',
-                        const EventsHubScreen(),
-                      ),
-                    ),
+                  IconButton(
+                    tooltip: 'Haritayı aç',
+                    onPressed: () => _openMap(context),
+                    icon: const Icon(Icons.map_outlined),
                   ),
                 ],
+              ),
+            ),
+            const Padding(
+              padding: EdgeInsets.fromLTRB(18, 0, 18, 6),
+              child: Text(
+                'Yeme-içme, kahve, konaklama ve gezilecek yerler.',
+                style: TextStyle(color: Colors.white54, fontSize: 12.5),
               ),
             ),
             SizedBox(
@@ -391,27 +485,75 @@ class _ExploreHub extends StatelessWidget {
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.fromLTRB(14, 11, 14, 7),
-                itemCount: activities.length,
+                itemCount: categories.length,
                 separatorBuilder: (_, __) => const SizedBox(width: 7),
                 itemBuilder: (context, index) {
-                  final activity = activities[index];
+                  final category = categories[index];
                   return _ActivityChip(
-                    icon: activity.$1,
-                    label: activity.$2,
-                    onTap: () => _open(
-                      context,
-                      ActivityDemandScreen(initialActivity: activity.$2),
-                    ),
+                    icon: category.$1,
+                    label: category.$2,
+                    selected: _category == category.$2,
+                    onTap: () => setState(() => _category = category.$2),
                   );
                 },
               ),
             ),
-            const Expanded(child: SpotExploreScreen(embedded: true)),
+            Expanded(
+              child: _category == 'Gezilecek Yerler'
+                  ? const SpotExploreScreen(embedded: true)
+                  : _VenueCategoryPlaceholder(
+                      category: _category,
+                      onOpenMap: () => _openMap(context),
+                    ),
+            ),
           ],
         ),
       ),
     );
   }
+}
+
+class _VenueCategoryPlaceholder extends StatelessWidget {
+  final String category;
+  final VoidCallback onOpenMap;
+
+  const _VenueCategoryPlaceholder({
+    required this.category,
+    required this.onOpenMap,
+  });
+
+  @override
+  Widget build(BuildContext context) => Center(
+        child: Padding(
+          padding: const EdgeInsets.all(28),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const _GradientIcon(icon: Icons.map_outlined, size: 42),
+              const SizedBox(height: 14),
+              Text(
+                category,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              const SizedBox(height: 7),
+              const Text(
+                'Bu kategori gerçek mekan verisiyle haritaya eklenecek.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.white54, height: 1.4),
+              ),
+              const SizedBox(height: 16),
+              OutlinedButton.icon(
+                onPressed: onOpenMap,
+                icon: const Icon(Icons.map_rounded),
+                label: const Text('Haritayı Aç'),
+              ),
+            ],
+          ),
+        ),
+      );
 }
 
 class _HeaderAction extends StatelessWidget {
@@ -481,67 +623,22 @@ class _FeedTab extends StatelessWidget {
       );
 }
 
-class _ExploreAction extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-
-  const _ExploreAction({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) => Material(
-        color: _Neon.panel,
-        borderRadius: BorderRadius.circular(14),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(14),
-          child: Container(
-            height: 54,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: _Neon.border),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _GradientIcon(icon: icon, size: 20),
-                const SizedBox(width: 7),
-                Flexible(
-                  child: Text(
-                    label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-}
-
 class _ActivityChip extends StatelessWidget {
   final IconData icon;
   final String label;
+  final bool selected;
   final VoidCallback onTap;
 
   const _ActivityChip({
     required this.icon,
     required this.label,
+    this.selected = false,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) => Material(
-        color: _Neon.panel,
+        color: selected ? const Color(0xFF20242A) : _Neon.panel,
         borderRadius: BorderRadius.circular(20),
         child: InkWell(
           onTap: onTap,
@@ -550,17 +647,24 @@ class _ActivityChip extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 12),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: _Neon.border),
+              border: Border.all(
+                color: selected ? _Neon.cyan.withValues(alpha: .55) : _Neon.border,
+              ),
             ),
             child: Row(
               children: [
-                Icon(icon, size: 17, color: Colors.white60),
+                Icon(
+                  icon,
+                  size: 17,
+                  color: selected ? _Neon.cyan : Colors.white60,
+                ),
                 const SizedBox(width: 6),
                 Text(
                   label,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
+                    color: selected ? Colors.white : Colors.white70,
                   ),
                 ),
               ],

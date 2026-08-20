@@ -15,7 +15,9 @@ import 'route_planner_screen.dart';
 import 'spot_detail_screen.dart';
 
 class RadarScreen extends StatefulWidget {
-  const RadarScreen({super.key});
+  final bool embedded;
+
+  const RadarScreen({super.key, this.embedded = false});
 
   @override
   State<RadarScreen> createState() => _RadarScreenState();
@@ -211,18 +213,16 @@ class _RadarScreenState extends State<RadarScreen> {
                 final events = (eventSnapshot.data ?? const <SocialEvent>[])
                     .where((e) => _sameCity(e.city) && _eventInPeriod(e))
                     .toList();
-                final personalEvents = events
-                    .where((e) => (e.communityName ?? '').trim().isEmpty)
-                    .toList();
-                final communityEvents = events
-                    .where((e) => (e.communityName ?? '').trim().isNotEmpty)
-                    .toList();
-
                 return RefreshIndicator(
                   onRefresh: _load,
                   child: ListView(
                     physics: const AlwaysScrollableScrollPhysics(),
-                    padding: const EdgeInsets.fromLTRB(14, 8, 14, 112),
+                    padding: EdgeInsets.fromLTRB(
+                      14,
+                      8,
+                      14,
+                      widget.embedded ? 24 : 112,
+                    ),
                     children: [
                       _header(),
                       const SizedBox(height: 14),
@@ -235,24 +235,6 @@ class _RadarScreenState extends State<RadarScreen> {
                       ),
                       const SizedBox(height: 11),
                       _demandSection(demands),
-                      const SizedBox(height: 26),
-                      _sectionTitle(
-                        'Yaklaşan etkinlikler',
-                        'Katılabileceğin planlar',
-                        Icons.event_available_outlined,
-                      ),
-                      const SizedBox(height: 11),
-                      _eventSection(personalEvents),
-                      if (communityEvents.isNotEmpty) ...[
-                        const SizedBox(height: 26),
-                        _sectionTitle(
-                          'Kampüs & topluluk',
-                          'Toplulukların düzenlediği hareketler',
-                          Icons.school_outlined,
-                        ),
-                        const SizedBox(height: 11),
-                        _communityEventSection(communityEvents),
-                      ],
                       const SizedBox(height: 26),
                       _sectionTitle(
                         'Çekim fırsatları',
@@ -278,43 +260,48 @@ class _RadarScreenState extends State<RadarScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: _surfaceStrong,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: _border),
+        if (!widget.embedded) ...[
+          Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: _surfaceStrong,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: _border),
+                ),
+                child:
+                    const Icon(Icons.radar_rounded, color: _accent, size: 24),
               ),
-              child: const Icon(Icons.radar_rounded, color: _accent, size: 24),
-            ),
-            const SizedBox(width: 11),
-            const Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Radar',
-                    style: TextStyle(fontSize: 27, fontWeight: FontWeight.w900),
-                  ),
-                  SizedBox(height: 1),
-                  Text(
-                    'Çevrende ne oluyor?',
-                    style: TextStyle(color: Colors.white54, fontSize: 12),
-                  ),
-                ],
+              const SizedBox(width: 11),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Radar',
+                      style:
+                          TextStyle(fontSize: 27, fontWeight: FontWeight.w900),
+                    ),
+                    SizedBox(height: 1),
+                    Text(
+                      'Çevrende ne oluyor?',
+                      style: TextStyle(color: Colors.white54, fontSize: 12),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            IconButton.filledTonal(
-              tooltip: 'Bildirimler',
-              onPressed: () => Navigator.pushNamed(context, '/notifications'),
-              icon: const Icon(Icons.notifications_none_rounded, size: 21),
-            ),
-          ],
-        ),
-        const SizedBox(height: 15),
+              IconButton.filledTonal(
+                tooltip: 'Bildirimler',
+                onPressed: () =>
+                    Navigator.pushNamed(context, '/notifications'),
+                icon: const Icon(Icons.notifications_none_rounded, size: 21),
+              ),
+            ],
+          ),
+          const SizedBox(height: 15),
+        ],
         SearchableSelectionField(
           controller: _cityController,
           options: turkeyCities,
