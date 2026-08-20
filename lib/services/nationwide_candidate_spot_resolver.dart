@@ -6,6 +6,7 @@ import '../data/verified_travel_places_batch5.dart';
 import '../data/verified_travel_places_batch6.dart';
 import '../data/verified_travel_places_batch7.dart';
 import '../data/verified_travel_places_batch8.dart';
+import '../data/verified_travel_places_batch9.dart';
 import '../models/photo_spot.dart';
 
 /// Kullanıcıya açık katalog yalnızca iki güvenilir kaynağı kabul eder:
@@ -35,8 +36,8 @@ class NationwideCandidateSpotResolver {
       ...verifiedTravelPlacesBatch6,
       ...verifiedTravelPlacesBatch7,
       ...verifiedTravelPlacesBatch8,
+      ...verifiedTravelPlacesBatch9,
     ]) {
-      // Aynı ID eski isimle veya uzak kaynaktan gelmişse doğrulanmış yer kazanır.
       resultByPlace.removeWhere((_, spot) => spot.id == verified.id);
       resultByPlace[_placeKey(verified.city, verified.name)] = verified;
     }
