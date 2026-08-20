@@ -13,12 +13,14 @@ VERIFIED_TRAVEL_FILES = [
     DATA_DIR / 'verified_travel_places.dart',
     DATA_DIR / 'verified_travel_places_batch2.dart',
     DATA_DIR / 'verified_travel_places_batch3.dart',
+    DATA_DIR / 'verified_travel_places_batch4.dart',
 ]
 EVIDENCE_FILE = DATA_DIR / 'spot_coordinate_verification_registry.dart'
 IMAGE_FILES = [
     DATA_DIR / 'verified_travel_image_registry.dart',
     DATA_DIR / 'verified_travel_image_registry_batch2.dart',
     DATA_DIR / 'verified_travel_image_registry_batch3.dart',
+    DATA_DIR / 'verified_travel_image_registry_batch4.dart',
     DATA_DIR / 'spot_image_registry.dart',
 ]
 
