@@ -16,6 +16,11 @@ on:
       - 'tool/audit_verified_spot_catalog.py'
       - 'tool/upgrade_verified_spot_images.py'
       - '.github/workflows/build_1000_verified_spots.yml'
+  pull_request:
+    branches:
+      - feature/verified-travel-batch-11
+    paths:
+      - 'docs/spot-catalog-trigger.txt'
   schedule:
     - cron: '17 3 * * 1'
 
@@ -23,18 +28,20 @@ permissions:
   contents: write
 
 concurrency:
-  group: verified-photo-spots-${{ github.ref }}
+  group: verified-photo-spots-${{ github.event.pull_request.base.ref || github.ref }}
   cancel-in-progress: true
 
 jobs:
   build-catalog:
     runs-on: ubuntu-latest
     timeout-minutes: 120
+    env:
+      TARGET_BRANCH: ${{ github.event.pull_request.base.ref || github.ref_name }}
     steps:
-      - name: Checkout
+      - name: Checkout target catalog branch
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.ref_name }}
+          ref: ${{ github.event.pull_request.base.ref || github.ref_name }}
           fetch-depth: 0
 
       - name: Set up Python
@@ -75,6 +82,7 @@ jobs:
           MIN_IMAGE_LONG_EDGE: '1600'
           MIN_IMAGE_SHORT_EDGE: '900'
         run: |
+          mkdir -p build/spot_quality
           set +e
           python3 tool/audit_verified_spot_catalog.py 2>&1 | tee build/spot_quality/verified_catalog_audit.log
           code=${PIPESTATUS[0]}
@@ -124,7 +132,7 @@ jobs:
           git add docs/verified_spot_pipeline_status.json
           if ! git diff --cached --quiet; then
             git commit -m 'chore: record verified spot pipeline status'
-            git push origin HEAD:${GITHUB_REF_NAME}
+            git push origin HEAD:"${TARGET_BRANCH}"
           fi
 
       - name: Fail if generator did not reach target
@@ -155,7 +163,7 @@ jobs:
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git pull --rebase origin "${GITHUB_REF_NAME}"
+          git pull --rebase origin "${TARGET_BRANCH}"
           git add \
             lib/data/verified_travel_places_generated.dart \
             lib/data/spot_coordinate_verification_registry_generated.dart \
@@ -167,4 +175,4 @@ jobs:
             exit 0
           fi
           git commit -m 'data: refresh 1000+ verified photo spot catalog'
-          git push origin HEAD:${GITHUB_REF_NAME}
+          git push origin HEAD:"${TARGET_BRANCH}"
