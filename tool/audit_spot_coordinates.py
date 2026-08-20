@@ -9,7 +9,6 @@ DATA_DIR = Path('lib/data')
 OUT_DIR = Path('build/spot_quality')
 OUT_FILE = OUT_DIR / 'coordinate_audit.json'
 
-# Yeni doğrulanmış batch dosyaları eklendikçe audit'e elle bağlama gerekmez.
 VERIFIED_TRAVEL_FILES = sorted(DATA_DIR.glob('verified_travel_places*.dart'))
 EVIDENCE_FILES = [
     DATA_DIR / 'spot_coordinate_verification_registry.dart',
@@ -121,14 +120,28 @@ def coord_key(item: dict, digits: int = 5) -> str:
     return f"{item['latitude']:.{digits}f}|{item['longitude']:.{digits}f}"
 
 
+def coordinate_issues(records: list[dict]) -> tuple[list[dict], list[dict]]:
+    invalid_bounds: list[dict] = []
+    zero_coordinates: list[dict] = []
+    for item in records:
+        lat = item['latitude']
+        lng = item['longitude']
+        if lat == 0 or lng == 0:
+            zero_coordinates.append(item)
+        if not (MIN_LAT <= lat <= MAX_LAT and MIN_LNG <= lng <= MAX_LNG):
+            invalid_bounds.append(item)
+    return invalid_bounds, zero_coordinates
+
+
 def main() -> None:
     records: list[dict] = []
     per_file: dict[str, int] = {}
     for path in sorted(DATA_DIR.glob('*.dart')):
-        if path.name == 'turkiye81_spot_coordinates.dart':
-            parsed = parse_coordinate_map(path)
-        else:
-            parsed = parse_photo_spots(path)
+        parsed = (
+            parse_coordinate_map(path)
+            if path.name == 'turkiye81_spot_coordinates.dart'
+            else parse_photo_spots(path)
+        )
         if parsed:
             per_file[str(path)] = len(parsed)
             records.extend(parsed)
@@ -138,25 +151,18 @@ def main() -> None:
     if not VERIFIED_TRAVEL_FILES:
         raise SystemExit('No verified travel data files found.')
 
-    invalid_bounds = []
-    zero_coordinates = []
-    for item in records:
-        lat = item['latitude']
-        lng = item['longitude']
-        if lat == 0 or lng == 0:
-            zero_coordinates.append(item)
-        if not (MIN_LAT <= lat <= MAX_LAT and MIN_LNG <= lng <= MAX_LNG):
-            invalid_bounds.append(item)
+    # Eski/arşiv katalog da raporlanır, fakat kullanıcıya artık çıkmadığı için
+    # yalnız doğrulanmış çekirdekteki koordinat kusurları fatal kabul edilir.
+    invalid_bounds, zero_coordinates = coordinate_issues(records)
 
     by_exact = defaultdict(list)
     for item in records:
         by_exact[coord_key(item)].append(item)
-
-    duplicate_coordinates = []
-    for key, group in sorted(by_exact.items()):
-        unique_ids = {item['id'] for item in group}
-        if len(unique_ids) > 1:
-            duplicate_coordinates.append({'coordinate': key, 'records': group})
+    duplicate_coordinates = [
+        {'coordinate': key, 'records': group}
+        for key, group in sorted(by_exact.items())
+        if len({item['id'] for item in group}) > 1
+    ]
 
     by_id = defaultdict(list)
     for item in records:
@@ -169,8 +175,6 @@ def main() -> None:
 
     verified_travel: list[dict] = []
     for path in VERIFIED_TRAVEL_FILES:
-        if not path.exists():
-            raise SystemExit(f'Missing verified travel data file: {path}')
         verified_travel.extend(parse_photo_spots(path))
 
     verified_ids = {item['id'] for item in verified_travel}
@@ -188,6 +192,9 @@ def main() -> None:
 
     missing_evidence = sorted(verified_ids - evidence_ids)
     missing_images = sorted(verified_ids - image_ids)
+    verified_invalid_bounds, verified_zero_coordinates = coordinate_issues(
+        verified_travel
+    )
 
     verified_by_coord = defaultdict(list)
     for item in verified_travel:
@@ -215,10 +222,12 @@ def main() -> None:
             'verified_evidence_files': len(EVIDENCE_FILES),
             'verified_image_files': len(IMAGE_FILES),
             'verified_travel_places': len(verified_travel),
-            'invalid_bounds': len(invalid_bounds),
-            'zero_coordinates': len(zero_coordinates),
-            'duplicate_coordinate_groups': len(duplicate_coordinates),
-            'duplicate_id_groups': len(duplicate_ids),
+            'legacy_and_all_invalid_bounds': len(invalid_bounds),
+            'legacy_and_all_zero_coordinates': len(zero_coordinates),
+            'legacy_and_all_duplicate_coordinate_groups': len(duplicate_coordinates),
+            'legacy_and_all_duplicate_id_groups': len(duplicate_ids),
+            'verified_travel_invalid_bounds': len(verified_invalid_bounds),
+            'verified_travel_zero_coordinates': len(verified_zero_coordinates),
             'verified_travel_missing_evidence': len(missing_evidence),
             'verified_travel_missing_images': len(missing_images),
             'verified_travel_duplicate_coordinate_groups': len(
@@ -227,12 +236,16 @@ def main() -> None:
             'verified_travel_duplicate_id_groups': len(verified_duplicate_ids),
         },
         'records_per_file': per_file,
-        'invalid_bounds': invalid_bounds,
-        'zero_coordinates': zero_coordinates,
-        'duplicate_coordinates': duplicate_coordinates,
-        'duplicate_ids': duplicate_ids,
+        'legacy_and_all': {
+            'invalid_bounds': invalid_bounds,
+            'zero_coordinates': zero_coordinates,
+            'duplicate_coordinates': duplicate_coordinates,
+            'duplicate_ids': duplicate_ids,
+        },
         'verified_travel': {
             'records': verified_travel,
+            'invalid_bounds': verified_invalid_bounds,
+            'zero_coordinates': verified_zero_coordinates,
             'missing_evidence_ids': missing_evidence,
             'missing_image_ids': missing_images,
             'duplicate_coordinates': verified_duplicate_coordinates,
@@ -247,8 +260,8 @@ def main() -> None:
     print(f'Audit report: {OUT_FILE}')
 
     if (
-        invalid_bounds
-        or zero_coordinates
+        verified_invalid_bounds
+        or verified_zero_coordinates
         or missing_evidence
         or missing_images
         or verified_duplicate_coordinates
