@@ -28,6 +28,16 @@ service cloud.firestore {
       allow read: if true; allow create: if signedIn() && request.resource.data.userId == request.auth.uid && validEventMemoryPostCreate(); allow update, delete: if isAdmin() || (signedIn() && resource.data.userId == request.auth.uid);
       match /{subcollection}/{document} { allow read: if true; allow write: if signedIn(); }
     }
+    match /stories/{storyId} {
+      allow read: if true;
+      allow create: if signedIn() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAdmin() || (signedIn() && resource.data.userId == request.auth.uid);
+      match /interactions/{userId} {
+        allow read: if signedIn() && (userId == request.auth.uid || get(/databases/$(database)/documents/stories/$(storyId)).data.userId == request.auth.uid);
+        allow create, update: if signedIn() && userId == request.auth.uid && request.resource.data.userId == request.auth.uid;
+        allow delete: if signedIn() && userId == request.auth.uid;
+      }
+    }
     match /activity_demands/{demandId} { allow read: if true; allow create, update: if signedIn() && request.resource.data.userId == request.auth.uid; allow delete: if signedIn() && resource.data.userId == request.auth.uid; }
     match /communities/{communityId} {
       allow read: if true; allow create: if signedIn() && request.resource.data.ownerId == request.auth.uid && request.resource.data.verified == false && request.resource.data.verificationStatus == 'pending' && request.resource.data.adminIds.hasAny([request.auth.uid]);
@@ -38,7 +48,7 @@ service cloud.firestore {
       allow read: if isAdmin() || (signedIn() && userId == request.auth.uid);
       allow create, update, delete: if signedIn() && userId == request.auth.uid;
     }
-    match /{collection}/{document} { allow read: if collection != 'social_events' && collection != 'event_memories'; allow write: if signedIn() && collection != 'social_events' && collection != 'event_memories' && collection != 'posts' && collection != 'activity_demands' && collection != 'communities'; }
-    match /{collection}/{document}/{rest=**} { allow read: if collection != 'social_events' && collection != 'event_memories' && collection != 'users'; allow write: if signedIn() && collection != 'social_events' && collection != 'event_memories' && collection != 'posts' && collection != 'activity_demands' && collection != 'communities' && collection != 'users'; }
+    match /{collection}/{document} { allow read: if collection != 'social_events' && collection != 'event_memories'; allow write: if signedIn() && collection != 'social_events' && collection != 'event_memories' && collection != 'posts' && collection != 'stories' && collection != 'activity_demands' && collection != 'communities'; }
+    match /{collection}/{document}/{rest=**} { allow read: if collection != 'social_events' && collection != 'event_memories' && collection != 'users' && collection != 'stories'; allow write: if signedIn() && collection != 'social_events' && collection != 'event_memories' && collection != 'posts' && collection != 'stories' && collection != 'activity_demands' && collection != 'communities' && collection != 'users'; }
   }
 }
