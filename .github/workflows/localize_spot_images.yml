@@ -49,6 +49,7 @@ jobs:
             lib/data/verified_travel_image_registry_batch2.dart \
             lib/data/verified_travel_image_registry_batch3.dart \
             lib/data/verified_travel_image_registry_batch4.dart \
-            lib/data/verified_travel_image_registry_batch5.dart
+            lib/data/verified_travel_image_registry_batch5.dart \
+            lib/data/verified_travel_image_registry_batch6.dart
           git commit -m 'Localize verified real travel photos'
           git push
