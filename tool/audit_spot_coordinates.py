@@ -14,13 +14,18 @@ VERIFIED_TRAVEL_FILES = [
     DATA_DIR / 'verified_travel_places_batch2.dart',
     DATA_DIR / 'verified_travel_places_batch3.dart',
     DATA_DIR / 'verified_travel_places_batch4.dart',
+    DATA_DIR / 'verified_travel_places_batch5.dart',
 ]
-EVIDENCE_FILE = DATA_DIR / 'spot_coordinate_verification_registry.dart'
+EVIDENCE_FILES = [
+    DATA_DIR / 'spot_coordinate_verification_registry.dart',
+    DATA_DIR / 'spot_coordinate_verification_registry_batch5.dart',
+]
 IMAGE_FILES = [
     DATA_DIR / 'verified_travel_image_registry.dart',
     DATA_DIR / 'verified_travel_image_registry_batch2.dart',
     DATA_DIR / 'verified_travel_image_registry_batch3.dart',
     DATA_DIR / 'verified_travel_image_registry_batch4.dart',
+    DATA_DIR / 'verified_travel_image_registry_batch5.dart',
     DATA_DIR / 'spot_image_registry.dart',
 ]
 
@@ -176,9 +181,16 @@ def main() -> None:
         verified_travel.extend(parse_photo_spots(path))
 
     verified_ids = {item['id'] for item in verified_travel}
-    evidence_ids = parse_registry_ids(EVIDENCE_FILE, EVIDENCE_ID_RE)
+    evidence_ids: set[str] = set()
+    for path in EVIDENCE_FILES:
+        if not path.exists():
+            raise SystemExit(f'Missing coordinate evidence file: {path}')
+        evidence_ids.update(parse_registry_ids(path, EVIDENCE_ID_RE))
+
     image_ids: set[str] = set()
     for path in IMAGE_FILES:
+        if not path.exists():
+            raise SystemExit(f'Missing verified image file: {path}')
         image_ids.update(parse_registry_ids(path, IMAGE_ID_RE))
 
     missing_evidence = sorted(verified_ids - evidence_ids)
@@ -206,11 +218,11 @@ def main() -> None:
         'summary': {
             'parsed_records': len(records),
             'parsed_files': len(per_file),
+            'verified_travel_places': len(verified_travel),
             'invalid_bounds': len(invalid_bounds),
             'zero_coordinates': len(zero_coordinates),
             'duplicate_coordinate_groups': len(duplicate_coordinates),
             'duplicate_id_groups': len(duplicate_ids),
-            'verified_travel_places': len(verified_travel),
             'verified_travel_missing_evidence': len(missing_evidence),
             'verified_travel_missing_images': len(missing_images),
             'verified_travel_duplicate_coordinate_groups': len(
