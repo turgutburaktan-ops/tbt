@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_image_filters/flutter_image_filters.dart';
 import 'package:image/image.dart' as img;
 
-import 'ai_edit_screen.dart';
 import 'create_post_screen.dart';
 
 class ProFilterEditorScreen extends StatefulWidget {
@@ -286,7 +285,7 @@ class _ProFilterEditorScreenState extends State<ProFilterEditorScreen> {
     _rebuildConfiguration();
   }
 
-  Future<void> _exportAndContinue({bool openAi = false}) async {
+  Future<void> _exportAndContinue() async {
     if (_exporting || _texture == null || _configuration == null) return;
     setState(() => _exporting = true);
     try {
@@ -320,12 +319,7 @@ class _ProFilterEditorScreenState extends State<ProFilterEditorScreen> {
       await Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => openAi
-              ? AiEditScreen(
-                  originalImagePath: output.path,
-                  captureMode: widget.captureMode,
-                )
-              : CreatePostScreen(initialImagePath: output.path),
+          builder: (_) => CreatePostScreen(initialImagePath: output.path),
         ),
       );
     } catch (e) {
@@ -637,24 +631,17 @@ class _ProFilterEditorScreenState extends State<ProFilterEditorScreen> {
       color: Colors.black,
       child: Row(
         children: [
-          IconButton.outlined(
-            tooltip: 'Tekrar çek',
-            onPressed: _exporting ? null : () => Navigator.pop(context),
-            icon: const Icon(Icons.camera_alt_outlined),
-          ),
-          const SizedBox(width: 10),
           Expanded(
             child: OutlinedButton.icon(
-              onPressed:
-                  _exporting ? null : () => _exportAndContinue(openAi: true),
-              icon: const Icon(Icons.auto_awesome_rounded),
-              label: const Text('AI Düzenle'),
+              onPressed: _exporting ? null : () => Navigator.pop(context),
+              icon: const Icon(Icons.camera_alt_outlined),
+              label: const Text('Tekrar Çek'),
             ),
           ),
           const SizedBox(width: 10),
           Expanded(
             child: FilledButton.icon(
-              onPressed: _exporting ? null : () => _exportAndContinue(),
+              onPressed: _exporting ? null : _exportAndContinue,
               style: FilledButton.styleFrom(
                 backgroundColor: Colors.white,
                 foregroundColor: Colors.black,

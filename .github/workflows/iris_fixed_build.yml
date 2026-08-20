@@ -90,14 +90,7 @@ jobs:
           retention-days: 7
 
       - name: Build release APK
-        env:
-          TBT_AI_PRIMARY_URL: ${{ secrets.TBT_AI_PRIMARY_URL }}
-        run: |
-          AI_ARGS=()
-          if [ -n "$TBT_AI_PRIMARY_URL" ]; then
-            AI_ARGS+=("--dart-define=TBT_AI_PRIMARY_URL=$TBT_AI_PRIMARY_URL")
-          fi
-          flutter build apk --release --split-per-abi "${AI_ARGS[@]}"
+        run: flutter build apk --release --split-per-abi
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
