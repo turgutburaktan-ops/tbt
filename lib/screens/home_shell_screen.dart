@@ -1,7 +1,9 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import '../models/nearby_venue.dart';
 import '../services/app_notification_service.dart';
+import '../widgets/nearby_places_view.dart';
 import 'camera_screen.dart';
 import 'events_hub_screen.dart';
 import 'feed_screen.dart';
@@ -442,10 +444,10 @@ class _ExploreHubState extends State<_ExploreHub> {
   @override
   Widget build(BuildContext context) {
     const categories = <(IconData, String)>[
+      (Icons.landscape_outlined, 'Gezilecek Yerler'),
       (Icons.restaurant_outlined, 'Yeme-İçme'),
       (Icons.local_cafe_outlined, 'Kafeler'),
       (Icons.hotel_outlined, 'Oteller'),
-      (Icons.landscape_outlined, 'Gezilecek Yerler'),
     ];
     return ColoredBox(
       color: _Neon.bg,
@@ -465,11 +467,12 @@ class _ExploreHubState extends State<_ExploreHub> {
                           TextStyle(fontSize: 25, fontWeight: FontWeight.w900),
                     ),
                   ),
-                  IconButton(
-                    tooltip: 'Haritayı aç',
-                    onPressed: () => _openMap(context),
-                    icon: const Icon(Icons.map_outlined),
-                  ),
+                  if (_category == 'Gezilecek Yerler')
+                    IconButton(
+                      tooltip: 'Haritayı aç',
+                      onPressed: () => _openMap(context),
+                      icon: const Icon(Icons.map_outlined),
+                    ),
                 ],
               ),
             ),
@@ -501,9 +504,13 @@ class _ExploreHubState extends State<_ExploreHub> {
             Expanded(
               child: _category == 'Gezilecek Yerler'
                   ? const SpotExploreScreen(embedded: true)
-                  : _VenueCategoryPlaceholder(
-                      category: _category,
-                      onOpenMap: () => _openMap(context),
+                  : NearbyPlacesView(
+                      key: ValueKey(_category),
+                      category: switch (_category) {
+                        'Kafeler' => NearbyVenueCategory.cafe,
+                        'Oteller' => NearbyVenueCategory.hotel,
+                        _ => NearbyVenueCategory.dining,
+                      },
                     ),
             ),
           ],
@@ -511,49 +518,6 @@ class _ExploreHubState extends State<_ExploreHub> {
       ),
     );
   }
-}
-
-class _VenueCategoryPlaceholder extends StatelessWidget {
-  final String category;
-  final VoidCallback onOpenMap;
-
-  const _VenueCategoryPlaceholder({
-    required this.category,
-    required this.onOpenMap,
-  });
-
-  @override
-  Widget build(BuildContext context) => Center(
-        child: Padding(
-          padding: const EdgeInsets.all(28),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const _GradientIcon(icon: Icons.map_outlined, size: 42),
-              const SizedBox(height: 14),
-              Text(
-                category,
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-              const SizedBox(height: 7),
-              const Text(
-                'Bu kategori gerçek mekan verisiyle haritaya eklenecek.',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.white54, height: 1.4),
-              ),
-              const SizedBox(height: 16),
-              OutlinedButton.icon(
-                onPressed: onOpenMap,
-                icon: const Icon(Icons.map_rounded),
-                label: const Text('Haritayı Aç'),
-              ),
-            ],
-          ),
-        ),
-      );
 }
 
 class _HeaderAction extends StatelessWidget {
