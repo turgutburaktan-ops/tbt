@@ -2,9 +2,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import '../models/app_story.dart';
 import '../services/chat_service.dart';
 import '../services/social_service.dart';
+import '../services/story_service.dart';
 import '../widgets/firebase_media_image.dart';
+import '../widgets/story_strip.dart';
 import 'chat_screen.dart';
 import 'post_detail_screen.dart';
 
@@ -38,6 +41,16 @@ class UserProfileScreen extends StatelessWidget {
         SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
       );
     }
+  }
+
+  void _openStories(BuildContext context, List<AppStory> stories) {
+    if (stories.isEmpty) return;
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => StoryViewerScreen(stories: stories),
+      ),
+    );
   }
 
   @override
@@ -98,33 +111,67 @@ class UserProfileScreen extends StatelessWidget {
                         children: [
                           Row(
                             children: [
-                              Container(
-                                padding: const EdgeInsets.all(2),
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                      color: const Color(0xFF555B62)),
-                                ),
-                                child: SizedBox(
-                                  width: 86,
-                                  height: 86,
-                                  child: ClipOval(
-                                    child: FirebaseMediaImage(
-                                      imageUrl: photoUrl,
-                                      fallbackStoragePaths:
-                                          FirebaseMediaImage.avatarPaths(
-                                              userId),
-                                      errorWidget: const ColoredBox(
-                                        color: Color(0xFF1A1D20),
-                                        child: Center(
-                                          child: Icon(Icons.person,
-                                              size: 42,
-                                              color: Colors.white54),
+                              StreamBuilder<List<AppStory>>(
+                                stream: StoryService.instance
+                                    .watchActiveForUser(userId),
+                                builder: (context, storySnapshot) {
+                                  final stories = storySnapshot.data ??
+                                      const <AppStory>[];
+                                  final hasStory = stories.isNotEmpty;
+                                  return GestureDetector(
+                                    onTap: hasStory
+                                        ? () => _openStories(context, stories)
+                                        : null,
+                                    child: Container(
+                                      padding:
+                                          EdgeInsets.all(hasStory ? 3 : 2),
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        gradient: hasStory
+                                            ? const LinearGradient(
+                                                colors: [
+                                                  Color(0xFF42F5E9),
+                                                  Color(0xFF8B5CF6),
+                                                ],
+                                              )
+                                            : null,
+                                        border: hasStory
+                                            ? null
+                                            : Border.all(
+                                                color: const Color(0xFF555B62)),
+                                              ),
+                                      ),
+                                      child: Container(
+                                        padding:
+                                            EdgeInsets.all(hasStory ? 2 : 0),
+                                        decoration: const BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: Color(0xFF090A0C),
+                                        ),
+                                        child: SizedBox(
+                                          width: 86,
+                                          height: 86,
+                                          child: ClipOval(
+                                            child: FirebaseMediaImage(
+                                              imageUrl: photoUrl,
+                                              fallbackStoragePaths:
+                                                  FirebaseMediaImage.avatarPaths(
+                                                      userId),
+                                              errorWidget: const ColoredBox(
+                                                color: Color(0xFF1A1D20),
+                                                child: Center(
+                                                  child: Icon(Icons.person,
+                                                      size: 42,
+                                                      color: Colors.white54),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
                                         ),
                                       ),
                                     ),
-                                  ),
-                                ),
+                                  );
+                                },
                               ),
                               const SizedBox(width: 20),
                               Expanded(
