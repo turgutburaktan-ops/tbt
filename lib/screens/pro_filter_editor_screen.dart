@@ -696,17 +696,54 @@ class _ProFilterEditorScreenState extends State<ProFilterEditorScreen> {
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(12),
-            child: FittedBox(
-              fit: BoxFit.contain,
-              child: SizedBox(
-                width: texture.width.toDouble(),
-                height: texture.height.toDouble(),
-                child: PipelineImageShaderPreview(
-                  key: ValueKey(
-                    'main-$_selectedLook-$_exposure-$_contrast-$_saturation-$_temperature-$_vibrance-${_effectTexture != null}',
+            child: InteractiveViewer(
+              minScale: 1,
+              maxScale: 8,
+              panEnabled: true,
+              scaleEnabled: true,
+              clipBehavior: Clip.hardEdge,
+              child: FittedBox(
+                fit: BoxFit.contain,
+                child: SizedBox(
+                  width: texture.width.toDouble(),
+                  height: texture.height.toDouble(),
+                  child: PipelineImageShaderPreview(
+                    key: ValueKey(
+                      'main-$_selectedLook-$_exposure-$_contrast-$_saturation-$_temperature-$_vibrance-${_effectTexture != null}',
+                    ),
+                    texture: texture,
+                    configuration: configuration,
                   ),
-                  texture: texture,
-                  configuration: configuration,
+                ),
+              ),
+            ),
+          ),
+          const Align(
+            alignment: Alignment.topLeft,
+            child: Padding(
+              padding: EdgeInsets.all(12),
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: Color(0xA8000000),
+                  borderRadius: BorderRadius.all(Radius.circular(14)),
+                ),
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.zoom_in_rounded, color: Colors.white70, size: 14),
+                      SizedBox(width: 5),
+                      Text(
+                        '1×–8×',
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
