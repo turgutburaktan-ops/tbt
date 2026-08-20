@@ -7,6 +7,7 @@ import '../data/verified_travel_places.dart';
 import '../data/verified_travel_places_batch2.dart';
 import '../data/verified_travel_places_batch3.dart';
 import '../data/verified_travel_places_batch4.dart';
+import '../data/verified_travel_places_batch5.dart';
 import '../models/photo_spot.dart';
 
 /// Türkiye genelindeki kaynak adaylarını yalnızca kendilerine ait açıkça
@@ -61,6 +62,7 @@ class NationwideCandidateSpotResolver {
       ...verifiedTravelPlacesBatch2,
       ...verifiedTravelPlacesBatch3,
       ...verifiedTravelPlacesBatch4,
+      ...verifiedTravelPlacesBatch5,
     ]) {
       resultByPlace.removeWhere((_, spot) => spot.id == verified.id);
       resultByPlace[_placeKey(verified.city, verified.name)] = verified;
