@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import '../data/spot_image_auto_registry.dart';
@@ -24,6 +25,7 @@ class SpotImage extends StatelessWidget {
   final double? height;
   final BoxFit fit;
   final BorderRadius? borderRadius;
+  final bool highResolution;
 
   const SpotImage({
     super.key,
@@ -32,6 +34,7 @@ class SpotImage extends StatelessWidget {
     this.height,
     this.fit = BoxFit.cover,
     this.borderRadius,
+    this.highResolution = false,
   });
 
   @override
@@ -51,16 +54,22 @@ class SpotImage extends StatelessWidget {
         verifiedTravelImageRegistry[spot.id] ??
         spotImageRegistry[spot.id] ??
         spotImageAutoRegistry[spot.id];
-    final hasVerifiedAsset =
-        verified != null && verified.assetPath.trim().isNotEmpty;
+    final previewAsset = _previewAssetPath(verified?.assetPath ?? '');
+    final hasVerifiedAsset = previewAsset.isNotEmpty;
     final hasVerifiedUrl =
         verified != null && verified.networkUrl.trim().isNotEmpty;
     final hasLegacyUrl = spot.imageUrl.trim().isNotEmpty;
 
     Widget child;
-    if (hasVerifiedAsset) {
+    if (highResolution && (hasVerifiedUrl || hasLegacyUrl)) {
+      child = _networkOrSearch(
+        verified,
+        preview: false,
+        placeholderAsset: previewAsset,
+      );
+    } else if (hasVerifiedAsset) {
       child = Image.asset(
-        verified.assetPath,
+        previewAsset,
         width: width,
         height: height,
         fit: fit,
@@ -76,31 +85,90 @@ class SpotImage extends StatelessWidget {
     return ClipRRect(borderRadius: borderRadius!, child: child);
   }
 
-  Widget _networkOrSearch(SpotImageInfo? verified) {
+  Widget _networkOrSearch(
+    SpotImageInfo? verified, {
+    bool preview = true,
+    String placeholderAsset = '',
+  }) {
     final verifiedUrl = verified?.networkUrl.trim() ?? '';
     if (verifiedUrl.isNotEmpty) {
-      return Image.network(
-        verifiedUrl,
-        width: width,
-        height: height,
-        fit: fit,
-        errorBuilder: (_, __, ___) => _legacyOrSearch(),
+      return _cachedImage(
+        preview ? _previewUrl(verifiedUrl) : verifiedUrl,
+        placeholderAsset: placeholderAsset,
+        onError: () => _legacyOrSearch(preview: preview),
       );
     }
-    return _legacyOrSearch();
+    return _legacyOrSearch(preview: preview);
   }
 
-  Widget _legacyOrSearch() {
-    if (spot.imageUrl.trim().isNotEmpty) {
-      return Image.network(
-        spot.imageUrl,
+  Widget _cachedImage(
+    String url, {
+    required Widget Function() onError,
+    String placeholderAsset = '',
+  }) {
+    return CachedNetworkImage(
+      imageUrl: url,
+      width: width,
+      height: height,
+      fit: fit,
+      placeholder: (_, __) {
+        if (placeholderAsset.isNotEmpty) {
+          return Image.asset(
+            placeholderAsset,
+            width: width,
+            height: height,
+            fit: fit,
+            errorBuilder: (_, __, ___) => _loadingPlaceholder(),
+          );
+        }
+        return _loadingPlaceholder();
+      },
+      errorWidget: (_, __, ___) => onError(),
+    );
+  }
+
+  Widget _loadingPlaceholder() => Container(
         width: width,
         height: height,
-        fit: fit,
-        errorBuilder: (_, __, ___) => _searchedImage(),
+        color: const Color(0xFF1A1D20),
+        alignment: Alignment.center,
+        child: const SizedBox(
+          width: 22,
+          height: 22,
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            color: Color(0xFFB7BCC2),
+          ),
+        ),
+      );
+
+  Widget _legacyOrSearch({bool preview = true}) {
+    if (spot.imageUrl.trim().isNotEmpty) {
+      final url = preview ? _previewUrl(spot.imageUrl) : spot.imageUrl;
+      return _cachedImage(
+        url,
+        onError: _searchedImage,
       );
     }
     return _searchedImage();
+  }
+
+  String _previewAssetPath(String sourcePath) {
+    final trimmed = sourcePath.trim();
+    if (trimmed.isEmpty) return '';
+    final slash = trimmed.lastIndexOf('/');
+    final filename = slash >= 0 ? trimmed.substring(slash + 1) : trimmed;
+    final dot = filename.lastIndexOf('.');
+    final stem = dot > 0 ? filename.substring(0, dot) : filename;
+    return 'assets/spot_thumbnails/$stem.webp';
+  }
+
+  String _previewUrl(String sourceUrl) {
+    return sourceUrl
+        .replaceFirst(RegExp(r'/2560px-'), '/480px-')
+        .replaceFirst(RegExp(r'/1920px-'), '/480px-')
+        .replaceFirst(RegExp(r'/1280px-'), '/480px-')
+        .replaceFirst(RegExp(r'([?&])width=(2560|1920|1280)'), r'$1width=480');
   }
 
   Widget _searchedImage() => FutureBuilder<String?>(
@@ -108,32 +176,16 @@ class SpotImage extends StatelessWidget {
         builder: (context, snapshot) {
           final url = snapshot.data?.trim() ?? '';
           if (url.isNotEmpty) {
-            return Image.network(
-              url,
-              width: width,
-              height: height,
-              fit: fit,
-              errorBuilder: (_, __, ___) {
+            return _cachedImage(
+              highResolution ? url : _previewUrl(url),
+              onError: () {
                 SpotImageSearchService.instance.invalidate(spot, url);
                 return _fallback();
               },
             );
           }
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Container(
-              width: width,
-              height: height,
-              color: const Color(0xFF1A1D20),
-              alignment: Alignment.center,
-              child: const SizedBox(
-                width: 22,
-                height: 22,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: Color(0xFFB7BCC2),
-                ),
-              ),
-            );
+            return _loadingPlaceholder();
           }
           return _fallback();
         },

@@ -35,6 +35,7 @@ class SpotDetailScreen extends StatelessWidget {
                 spot: spot,
                 width: double.infinity,
                 fit: BoxFit.contain,
+                highResolution: true,
               ),
             ),
           ),
@@ -75,7 +76,11 @@ class SpotDetailScreen extends StatelessWidget {
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
-                    SpotImage(spot: spot, fit: BoxFit.cover),
+                    SpotImage(
+                      spot: spot,
+                      fit: BoxFit.cover,
+                      highResolution: true,
+                    ),
                     const DecoratedBox(
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
