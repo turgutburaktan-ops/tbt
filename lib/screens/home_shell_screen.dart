@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../models/nearby_venue.dart';
 import '../services/app_notification_service.dart';
@@ -30,6 +31,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
+  DateTime? _lastBackPressedAt;
 
   Future<void> _selectDestination(int index) async {
     if (index == 2) {
@@ -42,6 +44,36 @@ class _HomeScreenState extends State<HomeScreen> {
     if (mounted) setState(() => _selectedIndex = index);
   }
 
+  void _handleSystemBack(bool keyboardOpen) {
+    if (keyboardOpen) {
+      FocusManager.instance.primaryFocus?.unfocus();
+      return;
+    }
+
+    if (_selectedIndex != 0) {
+      setState(() => _selectedIndex = 0);
+      return;
+    }
+
+    final now = DateTime.now();
+    final pressedRecently = _lastBackPressedAt != null &&
+        now.difference(_lastBackPressedAt!) <= const Duration(seconds: 2);
+    if (pressedRecently) {
+      SystemNavigator.pop();
+      return;
+    }
+
+    _lastBackPressedAt = now;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        const SnackBar(
+          duration: Duration(seconds: 2),
+          content: Text('Uygulamadan çıkmak için geri tuşuna tekrar bas.'),
+        ),
+      );
+  }
+
   @override
   Widget build(BuildContext context) {
     const pages = <Widget>[
@@ -51,30 +83,43 @@ class _HomeScreenState extends State<HomeScreen> {
       _NearbyHub(),
       _ProfileGate(),
     ];
-    return Scaffold(
-      backgroundColor: _Neon.bg,
-      body: IndexedStack(index: _selectedIndex, children: pages),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      floatingActionButton: Container(
-        padding: const EdgeInsets.all(3),
-        decoration: const BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: LinearGradient(colors: [_Neon.cyan, _Neon.violet]),
-        ),
-        child: FloatingActionButton(
-          heroTag: 'main-camera',
-          tooltip: 'Kamera',
-          elevation: 0,
-          backgroundColor: _Neon.panel,
-          foregroundColor: Colors.white,
-          shape: const CircleBorder(),
-          onPressed: () => _selectDestination(2),
-          child: const Icon(Icons.photo_camera_rounded, size: 27),
-        ),
-      ),
-      bottomNavigationBar: _SimpleNavigationBar(
-        selectedIndex: _selectedIndex,
-        onSelected: _selectDestination,
+    final keyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
+
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (didPop) {
+        if (!didPop) _handleSystemBack(keyboardOpen);
+      },
+      child: Scaffold(
+        backgroundColor: _Neon.bg,
+        body: IndexedStack(index: _selectedIndex, children: pages),
+        floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+        floatingActionButton: keyboardOpen
+            ? null
+            : Container(
+                padding: const EdgeInsets.all(3),
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient:
+                      LinearGradient(colors: [_Neon.cyan, _Neon.violet]),
+                ),
+                child: FloatingActionButton(
+                  heroTag: 'main-camera',
+                  tooltip: 'Kamera',
+                  elevation: 0,
+                  backgroundColor: _Neon.panel,
+                  foregroundColor: Colors.white,
+                  shape: const CircleBorder(),
+                  onPressed: () => _selectDestination(2),
+                  child: const Icon(Icons.photo_camera_rounded, size: 27),
+                ),
+              ),
+        bottomNavigationBar: keyboardOpen
+            ? null
+            : _SimpleNavigationBar(
+                selectedIndex: _selectedIndex,
+                onSelected: _selectDestination,
+              ),
       ),
     );
   }
@@ -612,7 +657,9 @@ class _ActivityChip extends StatelessWidget {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: selected ? _Neon.cyan.withValues(alpha: .55) : _Neon.border,
+                color: selected
+                    ? _Neon.cyan.withValues(alpha: .55)
+                    : _Neon.border,
               ),
             ),
             child: Row(
