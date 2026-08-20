@@ -9,27 +9,15 @@ DATA_DIR = Path('lib/data')
 OUT_DIR = Path('build/spot_quality')
 OUT_FILE = OUT_DIR / 'coordinate_audit.json'
 
-VERIFIED_TRAVEL_FILES = [
-    DATA_DIR / 'verified_travel_places.dart',
-    DATA_DIR / 'verified_travel_places_batch2.dart',
-    DATA_DIR / 'verified_travel_places_batch3.dart',
-    DATA_DIR / 'verified_travel_places_batch4.dart',
-    DATA_DIR / 'verified_travel_places_batch5.dart',
-    DATA_DIR / 'verified_travel_places_batch6.dart',
-]
+# Yeni doğrulanmış batch dosyaları eklendikçe audit'e elle bağlama gerekmez.
+VERIFIED_TRAVEL_FILES = sorted(DATA_DIR.glob('verified_travel_places*.dart'))
 EVIDENCE_FILES = [
     DATA_DIR / 'spot_coordinate_verification_registry.dart',
-    DATA_DIR / 'spot_coordinate_verification_registry_batch5.dart',
-    DATA_DIR / 'spot_coordinate_verification_registry_batch6.dart',
+    *sorted(DATA_DIR.glob('spot_coordinate_verification_registry_batch*.dart')),
 ]
 IMAGE_FILES = [
-    DATA_DIR / 'verified_travel_image_registry.dart',
-    DATA_DIR / 'verified_travel_image_registry_batch2.dart',
-    DATA_DIR / 'verified_travel_image_registry_batch3.dart',
-    DATA_DIR / 'verified_travel_image_registry_batch4.dart',
-    DATA_DIR / 'verified_travel_image_registry_batch5.dart',
-    DATA_DIR / 'verified_travel_image_registry_batch6.dart',
     DATA_DIR / 'spot_image_registry.dart',
+    *sorted(DATA_DIR.glob('verified_travel_image_registry*.dart')),
 ]
 
 MIN_LAT, MAX_LAT = 35.4, 42.3
@@ -147,6 +135,8 @@ def main() -> None:
 
     if not records:
         raise SystemExit('Coordinate audit parsed zero records; parser/data format must be fixed.')
+    if not VERIFIED_TRAVEL_FILES:
+        raise SystemExit('No verified travel data files found.')
 
     invalid_bounds = []
     zero_coordinates = []
@@ -221,6 +211,9 @@ def main() -> None:
         'summary': {
             'parsed_records': len(records),
             'parsed_files': len(per_file),
+            'verified_travel_files': len(VERIFIED_TRAVEL_FILES),
+            'verified_evidence_files': len(EVIDENCE_FILES),
+            'verified_image_files': len(IMAGE_FILES),
             'verified_travel_places': len(verified_travel),
             'invalid_bounds': len(invalid_bounds),
             'zero_coordinates': len(zero_coordinates),
