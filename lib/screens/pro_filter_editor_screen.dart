@@ -1,12 +1,102 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
+import 'dart:typed_data';
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_image_filters/flutter_image_filters.dart';
 import 'package:image/image.dart' as img;
 
 import 'create_post_screen.dart';
+
+enum _LocalEffect { none, clarity, portrait, nightClean, softGlow, filmGrain }
+
+List<Uint8List> _prepareEditorTextures(Uint8List bytes) {
+  final decoded = img.decodeImage(bytes);
+  if (decoded == null) throw Exception('Fotoğraf çözülemedi.');
+  final oriented = img.bakeOrientation(decoded);
+  final longEdge = math.max(oriented.width, oriented.height);
+  final preview = longEdge > 1440
+      ? img.copyResize(
+          oriented,
+          width: oriented.width >= oriented.height ? 1440 : null,
+          height: oriented.height > oriented.width ? 1440 : null,
+          interpolation: img.Interpolation.cubic,
+        )
+      : img.Image.from(oriented);
+  final thumb = img.copyResize(
+    preview,
+    width: preview.width >= preview.height ? 260 : null,
+    height: preview.height > preview.width ? 260 : null,
+    interpolation: img.Interpolation.cubic,
+  );
+  return [
+    Uint8List.fromList(img.encodeJpg(preview, quality: 96)),
+    Uint8List.fromList(img.encodeJpg(thumb, quality: 90)),
+  ];
+}
+
+Uint8List _renderLocalEffect(Map<String, Object> job) {
+  final bytes = job['bytes']! as Uint8List;
+  final effect = _LocalEffect.values[job['effect']! as int];
+  final maxDimension = job['maxDimension']! as int;
+  final quality = job['quality']! as int;
+  final decoded = img.decodeImage(bytes);
+  if (decoded == null) throw Exception('Efekt için fotoğraf çözülemedi.');
+  var output = img.bakeOrientation(decoded);
+  final longEdge = math.max(output.width, output.height);
+  if (maxDimension > 0 && longEdge > maxDimension) {
+    output = img.copyResize(
+      output,
+      width: output.width >= output.height ? maxDimension : null,
+      height: output.height > output.width ? maxDimension : null,
+      interpolation: img.Interpolation.cubic,
+    );
+  }
+
+  const sharpen = <num>[0, -1, 0, -1, 5, -1, 0, -1, 0];
+  switch (effect) {
+    case _LocalEffect.none:
+      break;
+    case _LocalEffect.clarity:
+      output = img.convolution(output, filter: sharpen, amount: .38);
+    case _LocalEffect.portrait:
+      output = img.smooth(output, weight: 18);
+      output = img.convolution(output, filter: sharpen, amount: .08);
+    case _LocalEffect.nightClean:
+      output = img.gaussianBlur(output, radius: 1);
+      output = img.convolution(output, filter: sharpen, amount: .24);
+      output = img.adjustColor(output, gamma: .94, saturation: 1.04);
+    case _LocalEffect.softGlow:
+      final soft = img.gaussianBlur(img.Image.from(output), radius: 5);
+      for (final pixel in output) {
+        final glow = soft.getPixel(pixel.x, pixel.y);
+        final maxValue = pixel.maxChannelValue;
+        final screenR = maxValue -
+            ((maxValue - pixel.r) * (maxValue - glow.r) / maxValue);
+        final screenG = maxValue -
+            ((maxValue - pixel.g) * (maxValue - glow.g) / maxValue);
+        final screenB = maxValue -
+            ((maxValue - pixel.b) * (maxValue - glow.b) / maxValue);
+        pixel
+          ..r = pixel.r * .84 + screenR * .16
+          ..g = pixel.g * .84 + screenG * .16
+          ..b = pixel.b * .84 + screenB * .16;
+      }
+    case _LocalEffect.filmGrain:
+      output = img.noise(
+        output,
+        4.2,
+        type: img.NoiseType.gaussian,
+        random: math.Random(42),
+      );
+      output = img.vignette(output, start: .52, end: .95, amount: .28);
+  }
+
+  return Uint8List.fromList(img.encodeJpg(output, quality: quality));
+}
 
 class ProFilterEditorScreen extends StatefulWidget {
   final String imagePath;
@@ -24,6 +114,8 @@ class ProFilterEditorScreen extends StatefulWidget {
 
 class _PhotoLook {
   final String name;
+  final String effectLabel;
+  final _LocalEffect effect;
   final double exposure;
   final double contrast;
   final double saturation;
@@ -38,6 +130,8 @@ class _PhotoLook {
 
   const _PhotoLook({
     required this.name,
+    this.effectLabel = 'Ton',
+    this.effect = _LocalEffect.none,
     this.exposure = 0,
     this.contrast = 1,
     this.saturation = 1,
@@ -53,128 +147,112 @@ class _PhotoLook {
 }
 
 const _looks = <_PhotoLook>[
-  _PhotoLook(name: 'Natural'),
+  _PhotoLook(name: 'Doğal', effectLabel: 'Orijinal'),
   _PhotoLook(
-    name: 'Clean Pro',
-    exposure: .10,
-    contrast: 1.10,
-    saturation: .96,
-    vibrance: .10,
-    shadows: .10,
-    highlights: .94,
-  ),
-  _PhotoLook(
-    name: 'Warm Street',
-    exposure: -.05,
-    contrast: 1.25,
-    saturation: .92,
-    vibrance: .18,
-    temperature: 6100,
-    tint: 4,
-    shadows: .08,
-    highlights: .88,
-    vignetteStart: .42,
-    vignetteEnd: .86,
-  ),
-  _PhotoLook(
-    name: 'Golden Hour',
-    exposure: .12,
-    contrast: 1.16,
-    saturation: 1.08,
-    vibrance: .22,
-    temperature: 6900,
-    tint: 5,
-    shadows: .12,
-    highlights: .90,
-    vignetteStart: .48,
-    vignetteEnd: .92,
-  ),
-  _PhotoLook(
-    name: 'Cine Teal',
-    exposure: -.14,
-    contrast: 1.32,
-    saturation: .78,
-    vibrance: .20,
-    temperature: 4300,
-    tint: -8,
-    shadows: .15,
-    highlights: .82,
-    vignetteStart: .38,
-    vignetteEnd: .82,
-  ),
-  _PhotoLook(
-    name: 'Night Neon',
-    exposure: .08,
-    contrast: 1.36,
-    saturation: 1.14,
-    vibrance: .30,
-    temperature: 3900,
-    tint: -6,
-    shadows: .18,
-    highlights: .80,
-    vignetteStart: .38,
-    vignetteEnd: .80,
-  ),
-  _PhotoLook(
-    name: 'Forest Deep',
-    exposure: -.10,
-    contrast: 1.22,
+    name: 'HDR Detay',
+    effectLabel: 'Netlik + Detay',
+    effect: _LocalEffect.clarity,
+    exposure: .06,
+    contrast: 1.08,
     saturation: .98,
-    vibrance: .24,
-    temperature: 4750,
-    tint: -4,
-    shadows: .14,
-    highlights: .87,
-    vignetteStart: .42,
-    vignetteEnd: .86,
-  ),
-  _PhotoLook(
-    name: 'Matte Film',
-    exposure: .04,
-    contrast: .86,
-    saturation: .80,
-    vibrance: -.04,
-    temperature: 5750,
-    tint: 3,
-    shadows: .26,
-    highlights: .91,
-    vignetteStart: .50,
-    vignetteEnd: .91,
-  ),
-  _PhotoLook(
-    name: 'Portrait Soft',
-    exposure: .16,
-    contrast: 1.03,
-    saturation: .91,
     vibrance: .08,
-    temperature: 5900,
-    tint: 6,
-    shadows: .15,
-    highlights: .95,
-    vignetteStart: .56,
+    shadows: .16,
+    highlights: .90,
+  ),
+  _PhotoLook(
+    name: 'Portre Pro',
+    effectLabel: 'Cilt Yumuşatma',
+    effect: _LocalEffect.portrait,
+    exposure: .12,
+    contrast: 1.02,
+    saturation: .94,
+    vibrance: .06,
+    temperature: 5850,
+    tint: 5,
+    shadows: .14,
+    highlights: .96,
+    vignetteStart: .58,
     vignetteEnd: .98,
   ),
   _PhotoLook(
-    name: 'Mono 400',
+    name: 'Gece Temiz',
+    effectLabel: 'Kumlanma Azaltma',
+    effect: _LocalEffect.nightClean,
+    exposure: .10,
+    contrast: 1.12,
+    saturation: 1.02,
+    vibrance: .14,
+    temperature: 4550,
+    tint: -3,
+    shadows: .20,
+    highlights: .84,
+  ),
+  _PhotoLook(
+    name: 'Soft Glow',
+    effectLabel: 'Işık Parlaması',
+    effect: _LocalEffect.softGlow,
+    exposure: .05,
+    contrast: .98,
+    saturation: .96,
+    temperature: 6100,
+    tint: 4,
+    shadows: .12,
+    highlights: .92,
+  ),
+  _PhotoLook(
+    name: 'Cine Teal',
+    effectLabel: 'Sinema Detayı',
+    effect: _LocalEffect.clarity,
+    exposure: -.10,
+    contrast: 1.24,
+    saturation: .80,
+    vibrance: .18,
+    temperature: 4350,
+    tint: -7,
+    shadows: .15,
+    highlights: .84,
+    vignetteStart: .38,
+    vignetteEnd: .84,
+  ),
+  _PhotoLook(
+    name: 'Analog Film',
+    effectLabel: 'Gerçek Gren',
+    effect: _LocalEffect.filmGrain,
+    exposure: .02,
+    contrast: .90,
+    saturation: .82,
+    temperature: 5650,
+    tint: 3,
+    shadows: .22,
+    highlights: .90,
+  ),
+  _PhotoLook(
+    name: 'Mono Grain',
+    effectLabel: 'S/B + Gren',
+    effect: _LocalEffect.filmGrain,
     exposure: -.03,
-    contrast: 1.34,
+    contrast: 1.25,
     saturation: 0,
     shadows: .16,
-    highlights: .86,
-    vignetteStart: .40,
-    vignetteEnd: .82,
+    highlights: .88,
     monochrome: true,
   ),
 ];
 
 class _ProFilterEditorScreenState extends State<ProFilterEditorScreen> {
   TextureSource? _texture;
+  TextureSource? _basePreviewTexture;
+  TextureSource? _effectTexture;
   TextureSource? _thumbTexture;
   GroupShaderConfiguration? _configuration;
+  Uint8List? _sourceBytes;
   bool _loading = true;
   bool _exporting = false;
+  bool _processingEffect = false;
   String? _error;
+  String _exportStage = 'İşleniyor';
   int _selectedLook = 0;
+  int _effectRevision = 0;
 
   double _exposure = 0;
   double _contrast = 0;
@@ -191,36 +269,41 @@ class _ProFilterEditorScreenState extends State<ProFilterEditorScreen> {
   Future<void> _load() async {
     try {
       final file = File(widget.imagePath);
-      final texture = await TextureSource.fromFile(file);
-
-      TextureSource thumbTexture = texture;
-      try {
-        final bytes = await file.readAsBytes();
-        final decoded = img.decodeImage(bytes);
-        if (decoded != null) {
-          final resized = img.copyResize(
-            decoded,
-            width: decoded.width > decoded.height ? 220 : null,
-            height: decoded.height >= decoded.width ? 220 : null,
-          );
-          final thumbBytes = img.encodeJpg(resized, quality: 82);
-          thumbTexture = await TextureSource.fromMemory(thumbBytes);
-        }
-      } catch (_) {}
+      final bytesFuture = file.readAsBytes();
+      final textureFuture = TextureSource.fromFile(file);
+      final bytes = await bytesFuture;
+      final texture = await textureFuture;
 
       if (!mounted) return;
       setState(() {
         _texture = texture;
-        _thumbTexture = thumbTexture;
+        _thumbTexture = texture;
+        _sourceBytes = bytes;
         _configuration = _buildConfiguration(_looks[_selectedLook]);
         _loading = false;
       });
+      unawaited(_prepareLightweightTextures(bytes));
     } catch (e) {
       if (!mounted) return;
       setState(() {
         _loading = false;
         _error = e.toString();
       });
+    }
+  }
+
+  Future<void> _prepareLightweightTextures(Uint8List bytes) async {
+    try {
+      final prepared = await compute(_prepareEditorTextures, bytes);
+      final preview = await TextureSource.fromMemory(prepared[0]);
+      final thumb = await TextureSource.fromMemory(prepared[1]);
+      if (!mounted) return;
+      setState(() {
+        _basePreviewTexture = preview;
+        _thumbTexture = thumb;
+      });
+    } catch (e) {
+      debugPrint('editor preview preparation: $e');
     }
   }
 
@@ -282,37 +365,84 @@ class _ProFilterEditorScreenState extends State<ProFilterEditorScreen> {
     _saturation = 0;
     _temperature = 0;
     _vibrance = 0;
+    final revision = ++_effectRevision;
+    final effect = _looks[index].effect;
+    setState(() {
+      _effectTexture = null;
+      _processingEffect = effect != _LocalEffect.none;
+    });
     _rebuildConfiguration();
+    if (effect != _LocalEffect.none) {
+      unawaited(_loadLookEffect(effect, revision));
+    }
+  }
+
+  Future<void> _loadLookEffect(_LocalEffect effect, int revision) async {
+    final bytes = _sourceBytes;
+    if (bytes == null) return;
+    try {
+      final rendered = await compute(
+        _renderLocalEffect,
+        <String, Object>{
+          'bytes': bytes,
+          'effect': effect.index,
+          'maxDimension': 1440,
+          'quality': 96,
+        },
+      );
+      final texture = await TextureSource.fromMemory(rendered);
+      if (!mounted || revision != _effectRevision) return;
+      setState(() {
+        _effectTexture = texture;
+        _processingEffect = false;
+      });
+    } catch (e) {
+      debugPrint('studio local effect: $e');
+      if (mounted && revision == _effectRevision) {
+        setState(() => _processingEffect = false);
+      }
+    }
   }
 
   Future<void> _exportAndContinue() async {
     if (_exporting || _texture == null || _configuration == null) return;
-    setState(() => _exporting = true);
+    final untouchedOriginal = _selectedLook == 0 &&
+        _exposure == 0 &&
+        _contrast == 0 &&
+        _saturation == 0 &&
+        _temperature == 0 &&
+        _vibrance == 0;
+    if (untouchedOriginal) {
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => CreatePostScreen(initialImagePath: widget.imagePath),
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _exporting = true;
+      _exportStage = 'Tam kalite işleniyor';
+    });
     try {
       final rendered = await _configuration!.export(_texture!, _texture!.size);
       final data = await rendered.toByteData(format: ui.ImageByteFormat.png);
       if (data == null) throw Exception('GPU çıktısı oluşturulamadı.');
       final pngBytes = data.buffer.asUint8List();
-      List<int> outputBytes = pngBytes;
-      var extension = 'png';
-      try {
-        final decoded = img.decodeImage(pngBytes);
-        if (decoded != null) {
-          final prepared = decoded.width > 4096 || decoded.height > 4096
-              ? img.copyResize(
-                  decoded,
-                  width: decoded.width >= decoded.height ? 4096 : null,
-                  height: decoded.height > decoded.width ? 4096 : null,
-                )
-              : decoded;
-          outputBytes = img.encodeJpg(prepared, quality: 96);
-          extension = 'jpg';
-        }
-      } catch (_) {
-        // PNG remains a lossless fallback if local JPEG preparation fails.
-      }
+      if (mounted) setState(() => _exportStage = 'Efekt uygulanıyor');
+      final outputBytes = await compute(
+        _renderLocalEffect,
+        <String, Object>{
+          'bytes': pngBytes,
+          'effect': _looks[_selectedLook].effect.index,
+          'maxDimension': 0,
+          'quality': 100,
+        },
+      );
       final output = File(
-        '${Directory.systemTemp.path}/tbt_gpu_${DateTime.now().microsecondsSinceEpoch}.$extension',
+        '${Directory.systemTemp.path}/tbt_pro_${DateTime.now().microsecondsSinceEpoch}.jpg',
       );
       await output.writeAsBytes(outputBytes, flush: true);
       if (!mounted) return;
@@ -329,7 +459,12 @@ class _ProFilterEditorScreenState extends State<ProFilterEditorScreen> {
         );
       }
     } finally {
-      if (mounted) setState(() => _exporting = false);
+      if (mounted) {
+        setState(() {
+          _exporting = false;
+          _exportStage = 'İşleniyor';
+        });
+      }
     }
   }
 
@@ -345,7 +480,7 @@ class _ProFilterEditorScreenState extends State<ProFilterEditorScreen> {
       backgroundColor: Colors.black,
       body: SafeArea(
         child: _loading
-            ? const Center(child: CircularProgressIndicator())
+            ? _loadingView()
             : _error != null
                 ? _errorView()
                 : Column(
@@ -358,6 +493,54 @@ class _ProFilterEditorScreenState extends State<ProFilterEditorScreen> {
                     ],
                   ),
       ),
+    );
+  }
+
+  Widget _loadingView() {
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Image.file(
+          File(widget.imagePath),
+          fit: BoxFit.contain,
+          filterQuality: FilterQuality.high,
+          gaplessPlayback: true,
+          errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+        ),
+        const ColoredBox(color: Color(0x42000000)),
+        const Center(
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: Color(0xD916171B),
+              borderRadius: BorderRadius.all(Radius.circular(18)),
+            ),
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.4,
+                      color: Colors.white,
+                    ),
+                  ),
+                  SizedBox(width: 12),
+                  Text(
+                    'Stüdyo hazırlanıyor',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -395,15 +578,7 @@ class _ProFilterEditorScreenState extends State<ProFilterEditorScreen> {
             ),
           ),
           TextButton(
-            onPressed: () {
-              _selectedLook = 0;
-              _exposure = 0;
-              _contrast = 0;
-              _saturation = 0;
-              _temperature = 0;
-              _vibrance = 0;
-              _rebuildConfiguration();
-            },
+            onPressed: () => _selectLook(0),
             child: const Text('Sıfırla'),
           ),
         ],
@@ -412,28 +587,71 @@ class _ProFilterEditorScreenState extends State<ProFilterEditorScreen> {
   }
 
   Widget _mainPreview() {
-    final texture = _texture!;
+    final texture = _effectTexture ?? _basePreviewTexture ?? _texture!;
     final configuration = _configuration!;
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 8),
       color: const Color(0xFF090909),
       alignment: Alignment.center,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
-        child: FittedBox(
-          fit: BoxFit.contain,
-          child: SizedBox(
-            width: texture.width.toDouble(),
-            height: texture.height.toDouble(),
-            child: PipelineImageShaderPreview(
-              key: ValueKey(
-                'main-$_selectedLook-$_exposure-$_contrast-$_saturation-$_temperature-$_vibrance',
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: FittedBox(
+              fit: BoxFit.contain,
+              child: SizedBox(
+                width: texture.width.toDouble(),
+                height: texture.height.toDouble(),
+                child: PipelineImageShaderPreview(
+                  key: ValueKey(
+                    'main-$_selectedLook-$_exposure-$_contrast-$_saturation-$_temperature-$_vibrance-${_effectTexture != null}',
+                  ),
+                  texture: texture,
+                  configuration: configuration,
+                ),
               ),
-              texture: texture,
-              configuration: configuration,
             ),
           ),
-        ),
+          if (_processingEffect)
+            const Align(
+              alignment: Alignment.topRight,
+              child: Padding(
+                padding: EdgeInsets.all(12),
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: Color(0xB8000000),
+                    borderRadius: BorderRadius.all(Radius.circular(14)),
+                  ),
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SizedBox(
+                          width: 13,
+                          height: 13,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        ),
+                        SizedBox(width: 7),
+                        Text(
+                          'Efekt hazırlanıyor',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -441,7 +659,7 @@ class _ProFilterEditorScreenState extends State<ProFilterEditorScreen> {
   Widget _lookStrip() {
     final texture = _thumbTexture!;
     return SizedBox(
-      height: 106,
+      height: 122,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
@@ -488,9 +706,21 @@ class _ProFilterEditorScreenState extends State<ProFilterEditorScreen> {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      color: selected ? Colors.white : Colors.white60,
+                      color: selected ? Colors.white : Colors.white70,
                       fontSize: 10,
-                      fontWeight: selected ? FontWeight.w800 : FontWeight.w500,
+                      fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+                    ),
+                  ),
+                  Text(
+                    look.effectLabel,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: selected
+                          ? const Color(0xFF54E6D8)
+                          : Colors.white38,
+                      fontSize: 8,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ],
@@ -657,7 +887,7 @@ class _ProFilterEditorScreenState extends State<ProFilterEditorScreen> {
                     )
                   : const Icon(Icons.arrow_forward_rounded),
               label: Text(
-                _exporting ? 'İşleniyor' : 'Devam Et',
+                _exporting ? _exportStage : 'Devam Et',
                 style: const TextStyle(fontWeight: FontWeight.w900),
               ),
             ),

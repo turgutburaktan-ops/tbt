@@ -21,6 +21,7 @@ class CameraScreen extends StatefulWidget {
 class _CameraScreenState extends State<CameraScreen> {
   bool _openingEditor = false;
   bool _switchingToFallback = false;
+  bool _capturing = false;
 
   Future<void> _openEditor(String imagePath) async {
     if (!mounted || _openingEditor || imagePath.isEmpty) return;
@@ -52,31 +53,37 @@ class _CameraScreenState extends State<CameraScreen> {
   }
 
   void _onCapture(MediaCapture event) {
-    switch ((event.status, event.isPicture, event.isVideo)) {
-      case (MediaCaptureStatus.success, true, false):
-        event.captureRequest.when(
-          single: (single) {
-            final path = single.file?.path;
-            if (path != null) unawaited(_openEditor(path));
-          },
-          multiple: (multiple) {
-            for (final file in multiple.fileBySensor.values) {
-              final path = file?.path;
-              if (path != null) {
-                unawaited(_openEditor(path));
-                break;
-              }
+    if (!event.isPicture) return;
+    if (event.status == MediaCaptureStatus.capturing) {
+      if (mounted) setState(() => _capturing = true);
+      return;
+    }
+    if (event.status == MediaCaptureStatus.success) {
+      if (mounted) setState(() => _capturing = false);
+      event.captureRequest.when(
+        single: (single) {
+          final path = single.file?.path;
+          if (path != null) unawaited(_openEditor(path));
+        },
+        multiple: (multiple) {
+          for (final file in multiple.fileBySensor.values) {
+            final path = file?.path;
+            if (path != null) {
+              unawaited(_openEditor(path));
+              break;
             }
-          },
-        );
-      case (MediaCaptureStatus.failure, true, false):
-        unawaited(
-          _useFallback(
-            reason: 'Yeni kamera bu cihazda çekim yapamadı. Yedek kamera açılıyor.',
-          ),
-        );
-      default:
-        break;
+          }
+        },
+      );
+      return;
+    }
+    if (event.status == MediaCaptureStatus.failure) {
+      if (mounted) setState(() => _capturing = false);
+      unawaited(
+        _useFallback(
+          reason: 'Yeni kamera bu cihazda çekim yapamadı. Yedek kamera açılıyor.',
+        ),
+      );
     }
   }
 
@@ -89,6 +96,13 @@ class _CameraScreenState extends State<CameraScreen> {
         children: [
           CameraAwesomeBuilder.awesome(
             saveConfig: SaveConfig.photo(),
+            // CamerAwesome's color-matrix filters decode and re-encode the
+            // full JPEG on Android. Keep capture lossless and apply the richer
+            // local effects in Studio instead.
+            availableFilters: const [],
+            progressIndicator: const Center(
+              child: CircularProgressIndicator(color: Colors.white),
+            ),
             sensorConfig: SensorConfig.single(
               sensor: Sensor.position(SensorPosition.back),
               aspectRatio: CameraAspectRatios.ratio_4_3,
@@ -96,6 +110,48 @@ class _CameraScreenState extends State<CameraScreen> {
             ),
             onMediaCaptureEvent: _onCapture,
           ),
+          if (_capturing)
+            Positioned.fill(
+              child: IgnorePointer(
+                child: ColoredBox(
+                  color: const Color(0x8A000000),
+                  child: Center(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 18,
+                        vertical: 14,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xD916171B),
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(color: Colors.white24),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.4,
+                              color: Colors.white,
+                            ),
+                          ),
+                          SizedBox(width: 12),
+                          Text(
+                            'Tam kalite hazırlanıyor',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
           Positioned(
             left: 8,
             top: 0,
