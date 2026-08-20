@@ -7,6 +7,7 @@ import '../data/verified_travel_image_registry_batch2.dart';
 import '../data/verified_travel_image_registry_batch3.dart';
 import '../data/verified_travel_image_registry_batch4.dart';
 import '../data/verified_travel_image_registry_batch5.dart';
+import '../data/verified_travel_image_registry_batch6.dart';
 import '../models/photo_spot.dart';
 import '../services/spot_image_search_service.dart';
 
@@ -28,11 +29,8 @@ class SpotImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Gezilecek yer çekirdeği için elle doğrulanan fotoğraf her şeyden önce
-    // gelir. Ardından eski elle doğrulanmış kayıt, build kataloğu ve en son
-    // arama fallback'i kullanılır. Böylece ikonik yerlerde yanlış görselin
-    // otomatik aramadan içeri sızması engellenir.
-    final verified = verifiedTravelImageRegistryBatch5[spot.id] ??
+    final verified = verifiedTravelImageRegistryBatch6[spot.id] ??
+        verifiedTravelImageRegistryBatch5[spot.id] ??
         verifiedTravelImageRegistryBatch4[spot.id] ??
         verifiedTravelImageRegistryBatch3[spot.id] ??
         verifiedTravelImageRegistryBatch2[spot.id] ??
