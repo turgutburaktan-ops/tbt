@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../models/route_place.dart';
 import '../services/route_selection_service.dart';
 
 class RouteSelectionButton extends StatelessWidget {
@@ -12,7 +13,7 @@ class RouteSelectionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<Map<String, dynamic>>(
+    return ValueListenableBuilder<Map<String, RoutePlace>>(
       valueListenable: RouteSelectionService.instance.selected,
       builder: (context, selected, _) {
         if (selected.isEmpty) return const SizedBox.shrink();
