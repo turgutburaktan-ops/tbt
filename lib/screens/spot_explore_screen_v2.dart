@@ -166,6 +166,13 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
     if (mounted) setState(() => _loading = false);
   }
 
+  void _openSpot(PhotoSpot spot) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => SpotDetailScreen(spot: spot)),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return RefreshIndicator(
@@ -183,8 +190,10 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
                   children: [
                     const Text(
                       'Gezilecek Yerler',
-                      style:
-                          TextStyle(fontSize: 26, fontWeight: FontWeight.w800),
+                      style: TextStyle(
+                        fontSize: 26,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
@@ -259,163 +268,195 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
               itemCount: _visible.length,
               itemBuilder: (context, index) {
                 final spot = _visible[index];
-                final verified = spot.tags.contains('Doğrulanmış');
                 final selected =
                     RouteSelectionService.instance.contains(_routeId(spot));
-                return Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-                  child: Card(
-                    color: const Color(0xFF121416),
-                    clipBehavior: Clip.antiAlias,
-                    child: Padding(
-                      padding: const EdgeInsets.all(10),
-                      child: Row(
-                        children: [
-                          InkWell(
-                            onTap: () => Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => SpotDetailScreen(spot: spot),
-                              ),
-                            ),
-                            child: SpotImage(
-                              spot: spot,
-                              width: 96,
-                              height: 96,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: InkWell(
-                              onTap: () => Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => SpotDetailScreen(spot: spot),
-                                ),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        child: Text(
-                                          spot.name,
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.w800,
-                                            fontSize: 16,
-                                          ),
-                                        ),
-                                      ),
-                                      if (_distanceLabel(spot).isNotEmpty)
-                                        Text(
-                                          _distanceLabel(spot),
-                                          style: const TextStyle(
-                                            color: Color(0xFFB7BCC2),
-                                            fontWeight: FontWeight.w800,
-                                            fontSize: 12,
-                                          ),
-                                        ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    '${spot.city} • ${spot.category}',
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
-                                      color: Colors.white60,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                  if (spot.description.trim().isNotEmpty) ...[
-                                    const SizedBox(height: 6),
-                                    Text(
-                                      spot.description,
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
-                                        color: Colors.white54,
-                                        fontSize: 11,
-                                        height: 1.35,
-                                      ),
-                                    ),
-                                  ],
-                                  const SizedBox(height: 7),
-                                  Row(
-                                    children: [
-                                      const Icon(
-                                        Icons.star_rounded,
-                                        size: 16,
-                                        color: Color(0xFFB7BCC2),
-                                      ),
-                                      const SizedBox(width: 3),
-                                      Text(spot.rating.toStringAsFixed(1)),
-                                      if (verified) ...[
-                                        const SizedBox(width: 9),
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 7,
-                                            vertical: 3,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: const Color(0xFF262A2E),
-                                            borderRadius:
-                                                BorderRadius.circular(20),
-                                          ),
-                                          child: const Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              Icon(
-                                                Icons.verified_outlined,
-                                                size: 13,
-                                                color: Color(0xFFB7BCC2),
-                                              ),
-                                              SizedBox(width: 4),
-                                              Text(
-                                                'Doğrulanmış',
-                                                style: TextStyle(
-                                                  fontSize: 10,
-                                                  fontWeight: FontWeight.w800,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          IconButton(
-                            tooltip:
-                                selected ? 'Rotadan çıkar' : 'Rotaya ekle',
-                            onPressed: () => _toggleRoute(spot),
-                            icon: Icon(
-                              selected
-                                  ? Icons.check_circle_rounded
-                                  : Icons.add_circle_outline_rounded,
-                              color: selected
-                                  ? const Color(0xFF42F5E9)
-                                  : Colors.white54,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+                return _SpotVenueCard(
+                  spot: spot,
+                  selected: selected,
+                  distanceLabel: _distanceLabel(spot),
+                  onOpen: () => _openSpot(spot),
+                  onToggleRoute: () => _toggleRoute(spot),
                 );
               },
             ),
             const SliverToBoxAdapter(child: SizedBox(height: 100)),
           ],
         ],
+      ),
+    );
+  }
+}
+
+class _SpotVenueCard extends StatelessWidget {
+  final PhotoSpot spot;
+  final bool selected;
+  final String distanceLabel;
+  final VoidCallback onOpen;
+  final VoidCallback onToggleRoute;
+
+  const _SpotVenueCard({
+    required this.spot,
+    required this.selected,
+    required this.distanceLabel,
+    required this.onOpen,
+    required this.onToggleRoute,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final verified = spot.tags.contains('Doğrulanmış');
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+      child: Card(
+        color: const Color(0xFF121416),
+        clipBehavior: Clip.antiAlias,
+        child: Padding(
+          padding: const EdgeInsets.all(10),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              InkWell(
+                onTap: onOpen,
+                borderRadius: BorderRadius.circular(12),
+                child: SpotImage(
+                  spot: spot,
+                  width: 88,
+                  height: 88,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: InkWell(
+                  onTap: onOpen,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              spot.name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w800,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ),
+                          if (distanceLabel.isNotEmpty) ...[
+                            const SizedBox(width: 6),
+                            Text(
+                              distanceLabel,
+                              maxLines: 1,
+                              style: const TextStyle(
+                                color: Color(0xFFB7BCC2),
+                                fontWeight: FontWeight.w800,
+                                fontSize: 11.5,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '${spot.city} • ${spot.category}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Colors.white60,
+                          fontSize: 12,
+                        ),
+                      ),
+                      if (spot.description.trim().isNotEmpty) ...[
+                        const SizedBox(height: 5),
+                        Text(
+                          spot.description,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: Colors.white54,
+                            fontSize: 11,
+                            height: 1.25,
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.star_rounded,
+                            size: 16,
+                            color: Color(0xFFB7BCC2),
+                          ),
+                          const SizedBox(width: 3),
+                          Text(spot.rating.toStringAsFixed(1)),
+                          if (verified) ...[
+                            const SizedBox(width: 7),
+                            Expanded(
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 7,
+                                  vertical: 3,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF262A2E),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: const Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.verified_outlined,
+                                      size: 13,
+                                      color: Color(0xFFB7BCC2),
+                                    ),
+                                    SizedBox(width: 4),
+                                    Expanded(
+                                      child: Text(
+                                        'Doğrulanmış',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w800,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 2),
+              SizedBox(
+                width: 42,
+                child: IconButton(
+                  tooltip: selected ? 'Rotadan çıkar' : 'Rotaya ekle',
+                  padding: EdgeInsets.zero,
+                  visualDensity: VisualDensity.compact,
+                  onPressed: onToggleRoute,
+                  icon: Icon(
+                    selected
+                        ? Icons.check_circle_rounded
+                        : Icons.add_circle_outline_rounded,
+                    color: selected
+                        ? const Color(0xFF42F5E9)
+                        : Colors.white54,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
