@@ -1,0 +1,183 @@
+name: Finish Event Attendance V2
+
+on:
+  push:
+    branches: [feature/video-v1]
+
+permissions:
+  contents: write
+
+jobs:
+  finish:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/video-v1
+      - name: Patch service and UI
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          def once(s, old, new, label):
+              if old not in s:
+                  raise SystemExit(f'Missing {label}')
+              return s.replace(old, new, 1)
+
+          p=Path('lib/services/social_event_service.dart'); s=p.read_text()
+          if "'interestedCount': 0," not in s:
+              s=once(s,"      'participantIds': [user.uid],\n","      'participantIds': [user.uid],\n      'interestedCount': 0,\n      'privateParticipantCount': 0,\n",'create counters')
+
+          if 'Stream<String?> watchMyAttendance' not in s:
+              anchor="  Future<void> join(String eventId) async {\n"
+              block=r'''  Stream<String?> watchMyAttendance(String eventId) {
+    final user = _auth.currentUser;
+    if (user == null) return const Stream.empty();
+    return _firestore.collection(collection).doc(eventId).collection('attendance').doc(user.uid).snapshots().map(
+      (doc) => doc.exists ? (doc.data()?['status'] ?? '').toString() : null,
+    );
+  }
+
+  Future<void> setAttendance(String eventId, String status) async {
+    const valid = <String>{'going', 'interested', 'private', 'none'};
+    if (!valid.contains(status)) throw Exception('Geçersiz katılım seçimi.');
+    final user = _auth.currentUser;
+    if (user == null) throw Exception('Etkinlik işlemi için giriş yapmalısın.');
+    final eventRef = _firestore.collection(collection).doc(eventId);
+    final attendanceRef = eventRef.collection('attendance').doc(user.uid);
+    final ticketRef = _firestore.collection(EventTicketService.collection).doc(EventTicketService.instance.ticketIdFor(eventId, user.uid));
+    final qrToken = EventTicketService.instance.createSecureQrToken();
+
+    final result = await _firestore.runTransaction<Map<String, String>>((tx) async {
+      final eventSnap = await tx.get(eventRef);
+      if (!eventSnap.exists) throw Exception('Etkinlik artık mevcut değil.');
+      final data = eventSnap.data() ?? const <String, dynamic>{};
+      final hostId = (data['hostId'] ?? '').toString();
+      if (hostId == user.uid) throw Exception('Etkinlik sahibi katılım durumunu değiştiremez.');
+      if ((data['status'] ?? 'open') != 'open') throw Exception('Bu etkinlik katılıma kapalı.');
+      final visibility = (data['visibility'] ?? 'public').toString();
+      final allowed = (data['allowedUserIds'] as List? ?? const []).map((e)=>e.toString()).toList();
+      if (visibility != EventVisibility.public.name && !allowed.contains(user.uid)) throw Exception('Bu etkinlik sadece davet edilen kullanıcılar için.');
+      final accessType = (data['accessType'] ?? EventAccessType.free.name).toString();
+      final paymentStatus = (data['paymentStatus'] ?? EventPaymentStatus.notRequired.name).toString();
+      final trustStatus = (data['trustStatus'] ?? 'new_host').toString();
+      final salesStatus = (data['salesStatus'] ?? 'blocked').toString();
+      if ((status=='going'||status=='private') && accessType==EventAccessType.paid.name && (paymentStatus!=EventPaymentStatus.enabled.name||trustStatus!='approved'||salesStatus!='open')) throw Exception('Bu ücretli etkinlik güvenlik onayı tamamlanmadan bilet satışına açılamaz.');
+
+      final attSnap = await tx.get(attendanceRef);
+      final prev = attSnap.exists ? (attSnap.data()?['status'] ?? '').toString() : '';
+      final participants=(data['participantIds'] as List? ?? const []).map((e)=>e.toString()).toList();
+      var interested=((data['interestedCount'] as num?)?.toInt() ?? 0).clamp(0,2147483647);
+      var privateCount=((data['privateParticipantCount'] as num?)?.toInt() ?? 0).clamp(0,2147483647);
+      participants.remove(user.uid);
+      if(prev=='interested'&&interested>0) interested--;
+      if(prev=='private'&&privateCount>0) privateCount--;
+      final capacity=((data['capacity'] as num?)?.toInt() ?? 1).clamp(1,2147483647);
+      if((status=='going'||status=='private') && participants.length+privateCount>=capacity) throw Exception('Bu etkinlikte boş yer kalmadı.');
+      if(status=='going') participants.add(user.uid);
+      if(status=='private') privateCount++;
+      if(status=='interested') interested++;
+      tx.update(eventRef, {'participantIds':participants,'interestedCount':interested,'privateParticipantCount':privateCount,'updatedAt':FieldValue.serverTimestamp()});
+      if(status=='none') { if(attSnap.exists) tx.delete(attendanceRef); }
+      else tx.set(attendanceRef, {'userId':user.uid,'userName':(user.displayName??'').trim().isEmpty?'Katılımcı':user.displayName!.trim(),'status':status,'updatedAt':FieldValue.serverTimestamp()}, SetOptions(merge:true));
+
+      final ticket=await tx.get(ticketRef);
+      if(status=='going'||status=='private') {
+        final paid=accessType==EventAccessType.paid.name;
+        tx.set(ticketRef, {'id':ticketRef.id,'eventId':eventId,'eventTitle':(data['title']??'Etkinlik').toString(),'userId':user.uid,'userName':(user.displayName??'').trim().isEmpty?'Katılımcı':user.displayName!.trim(),'status':paid?EventTicketStatus.pendingPayment.name:EventTicketStatus.active.name,'isPaidEvent':paid,'priceMinor':((data['ticketPriceMinor'] as num?)?.toInt()??0),'currency':(data['currency']??'TRY').toString(),'qrToken':ticket.exists&&(ticket.data()?['qrToken']??'').toString().isNotEmpty?ticket.data()!['qrToken']:qrToken,'issuedAt':ticket.exists?(ticket.data()?['issuedAt']??FieldValue.serverTimestamp()):FieldValue.serverTimestamp(),'usedAt':null,'updatedAt':FieldValue.serverTimestamp()}, SetOptions(merge:true));
+      } else if(ticket.exists) tx.update(ticketRef, {'status':EventTicketStatus.cancelled.name,'updatedAt':FieldValue.serverTimestamp()});
+      return {'hostId':hostId,'title':(data['title']??'Etkinlik').toString()};
+    });
+
+    final hostId=result['hostId']??'';
+    if(hostId.isNotEmpty && (status=='going'||status=='private')) {
+      try { await ChatService.instance.ensureDirectThread(hostId, sourceType:'social_event', sourceId:eventId); } catch(_) {}
+      try { await AppNotificationService.instance.notifyUser(userId:hostId,type:'event_join',title:status=='private'?'Bir kullanıcı etkinliğine gizli katıldı':'${user.displayName ?? 'Bir kullanıcı'} etkinliğine katıldı',body:result['title']??'Etkinlik',sourceId:eventId,actorId:status=='private'?null:user.uid); } catch(_) {}
+    }
+  }
+
+'''
+              s=once(s,anchor,block+anchor,'join anchor')
+
+          # Make legacy join delegate to the new state system.
+          s,n=re.subn(r"  Future<void> join\(String eventId\) async \{.*?\n  \}\n\n  Future<void> leave", "  Future<void> join(String eventId) => setAttendance(eventId, 'going');\n\n  Future<void> leave", s, count=1, flags=re.S)
+          if n!=1: raise SystemExit('join replacement failed')
+          old="  Future<void> leave(String eventId) async {\n    final user = _auth.currentUser;\n    if (user == null) return;\n    final ref = _firestore.collection(collection).doc(eventId);\n"
+          new="  Future<void> leave(String eventId) async {\n    final user = _auth.currentUser;\n    if (user == null) return;\n    final ref = _firestore.collection(collection).doc(eventId);\n    final existing = await ref.get();\n    if ((existing.data()?['hostId'] ?? '').toString() != user.uid) { await setAttendance(eventId, 'none'); return; }\n"
+          s=once(s,old,new,'leave gate')
+          p.write_text(s)
+
+          p=Path('lib/screens/social_events_screen.dart'); s=p.read_text()
+          s,n=re.subn(r"  Future<void> _toggleJoin\(SocialEvent event\) async \{.*?\n  \}\n\n  Future<void> _openCreate", r'''  Future<void> _chooseAttendance(SocialEvent event, String? currentStatus) async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) { _showMessage('Katılmak için giriş yapmalısın.'); return; }
+    if (event.hostId == uid) { try { await SocialEventService.instance.leave(event.id); _showMessage('Etkinlik iptal edildi.'); } catch (e) { _showMessage(_friendlyError(e)); } return; }
+    final selected = await showModalBottomSheet<String>(
+      context: context, useSafeArea: true, backgroundColor: const Color(0xFF0D0F11),
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (sheetContext) => Padding(
+        padding: const EdgeInsets.fromLTRB(16,14,16,24),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          Container(width:42,height:4,decoration:BoxDecoration(color:Colors.white24,borderRadius:BorderRadius.circular(99))),
+          const SizedBox(height:16), const Text('Etkinlik durumun',style:TextStyle(fontSize:20,fontWeight:FontWeight.w900)),
+          const SizedBox(height:4), const Text('Nasıl katılmak istediğini seç.',style:TextStyle(color:Colors.white60)), const SizedBox(height:16),
+          _AttendanceOption(icon:Icons.check_circle_outline_rounded,title:'Katılıyorum',subtitle:'Katılımcı listesinde görünürsün.',selected:currentStatus=='going',onTap:()=>Navigator.pop(sheetContext,'going')),
+          _AttendanceOption(icon:Icons.star_border_rounded,title:'İlgileniyorum',subtitle:'Yer ayırmaz; etkinliği takip edersin.',selected:currentStatus=='interested',onTap:()=>Navigator.pop(sheetContext,'interested')),
+          _AttendanceOption(icon:Icons.visibility_off_outlined,title:'Gizli katıl',subtitle:'Yer ayrılır ama adın diğer katılımcılara gösterilmez.',selected:currentStatus=='private',onTap:()=>Navigator.pop(sheetContext,'private')),
+          if(currentStatus!=null&&currentStatus!.isNotEmpty) TextButton.icon(onPressed:()=>Navigator.pop(sheetContext,'none'),icon:const Icon(Icons.close_rounded),label:const Text('Katılım durumunu kaldır')),
+        ]),
+      ),
+    );
+    if(selected==null) return;
+    try { await SocialEventService.instance.setAttendance(event.id,selected); _showMessage(switch(selected){'going'=>'Etkinliğe katılıyorsun.','interested'=>'Etkinlikle ilgileniyorsun.','private'=>'Etkinliğe gizli katıldın.',_=>'Katılım durumun kaldırıldı.'}); }
+    catch(e){ _showMessage(_friendlyError(e)); }
+  }
+
+  Future<void> _openCreate''', s, count=1, flags=re.S)
+          if n!=1: raise SystemExit('toggle replacement failed')
+          s=s.replace("FilledButton.icon(onPressed: _openCreate, icon: const Icon(Icons.add, size: 19), label: const Text('Oluştur'))", "FilledButton.icon(style: FilledButton.styleFrom(backgroundColor: const Color(0xFF39E6E0), foregroundColor: const Color(0xFF08090D)), onPressed: _openCreate, icon: const Icon(Icons.add_rounded, size: 19), label: const Text('Etkinlik Oluştur', style: TextStyle(fontWeight: FontWeight.w900)))")
+          s=s.replace("if (events.isEmpty) return const Center(child: Text('Yaklaşan etkinlik yok.'));", "if (events.isEmpty) return _EmptyEvents(onCreate: _openCreate);")
+          s=s.replace("Text('${event.participantCount}/${event.capacity}', style: const TextStyle(fontWeight: FontWeight.w800)),", "Column(crossAxisAlignment: CrossAxisAlignment.end, children: [Text('${event.participantCount}/${event.capacity}', style: const TextStyle(fontWeight: FontWeight.w900)), if (event.interestedCount > 0) Text('${event.interestedCount} ilgili', style: const TextStyle(color: Colors.white54, fontSize: 10))]),")
+          old=re.compile(r"                        FilledButton\(\n                          onPressed: event\.isFull && !joined && !isHost \? null : \(\) => _toggleJoin\(event\),\n                          child: Text\(isHost \? 'İptal Et' : joined \? 'Ayrıl' : event\.isFull \? 'Dolu' : event\.isPaid \? 'Bilet Al' : 'Katıl'\),\n                        \),")
+          new=r'''                        StreamBuilder<String?>(
+                          stream: isHost ? const Stream<String?>.empty() : SocialEventService.instance.watchMyAttendance(event.id),
+                          builder: (_, attendanceSnap) {
+                            final status=attendanceSnap.data; final active=status!=null&&status.isNotEmpty;
+                            final label=isHost?'İptal Et':status=='going'?'Katılıyorum':status=='interested'?'İlgileniyorum':status=='private'?'Gizli katılım':event.isFull?'Dolu':event.isPaid?'Bilet / Katılım':'Katıl';
+                            return FilledButton.icon(
+                              style:FilledButton.styleFrom(backgroundColor:isHost?Colors.redAccent.withValues(alpha:.18):active?const Color(0xFF22262C):const Color(0xFF39E6E0),foregroundColor:isHost?Colors.redAccent:active?Colors.white:const Color(0xFF08090D)),
+                              onPressed:event.isFull&&!active&&!isHost?null:()=>_chooseAttendance(event,status),
+                              icon:Icon(isHost?Icons.delete_outline_rounded:active?Icons.tune_rounded:Icons.add_circle_outline_rounded,size:18),
+                              label:Text(label,style:const TextStyle(fontWeight:FontWeight.w900)),
+                            );
+                          },
+                        ),'''
+          s,n=old.subn(new,s,count=1)
+          if n!=1: raise SystemExit('action button replacement failed')
+          if 'class _AttendanceOption' not in s:
+              s += r'''
+
+class _AttendanceOption extends StatelessWidget {
+  final IconData icon; final String title; final String subtitle; final bool selected; final VoidCallback onTap;
+  const _AttendanceOption({required this.icon,required this.title,required this.subtitle,required this.selected,required this.onTap});
+  @override Widget build(BuildContext context)=>Padding(padding:const EdgeInsets.only(bottom:8),child:ListTile(onTap:onTap,tileColor:selected?const Color(0xFF20272A):const Color(0xFF15181B),shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(15),side:BorderSide(color:selected?const Color(0xFF39E6E0):Colors.white10)),leading:Icon(icon,color:selected?const Color(0xFF39E6E0):Colors.white70),title:Text(title,style:const TextStyle(fontWeight:FontWeight.w900)),subtitle:Text(subtitle,style:const TextStyle(color:Colors.white54,fontSize:11.5)),trailing:selected?const Icon(Icons.check_rounded,color:Color(0xFF39E6E0)):const Icon(Icons.chevron_right_rounded)));
+}
+class _EmptyEvents extends StatelessWidget {
+  final VoidCallback onCreate; const _EmptyEvents({required this.onCreate});
+  @override Widget build(BuildContext context)=>Center(child:Padding(padding:const EdgeInsets.all(24),child:Container(width:double.infinity,padding:const EdgeInsets.all(22),decoration:BoxDecoration(color:const Color(0xFF121416),borderRadius:BorderRadius.circular(22),border:Border.all(color:Colors.white10)),child:Column(mainAxisSize:MainAxisSize.min,children:[const CircleAvatar(radius:30,backgroundColor:Color(0xFF20252A),child:Icon(Icons.celebration_outlined,size:30,color:Color(0xFF39E6E0))),const SizedBox(height:14),const Text('Yakınında henüz etkinlik yok',textAlign:TextAlign.center,style:TextStyle(fontSize:19,fontWeight:FontWeight.w900)),const SizedBox(height:7),const Text('Fotoğraf yürüyüşü, kahve buluşması, gezi veya başka bir etkinliği ilk sen başlat.',textAlign:TextAlign.center,style:TextStyle(color:Colors.white60,height:1.4)),const SizedBox(height:16),SizedBox(width:double.infinity,height:48,child:FilledButton.icon(onPressed:onCreate,icon:const Icon(Icons.add_rounded),label:const Text('İlk Etkinliği Oluştur',style:TextStyle(fontWeight:FontWeight.w900))))]))));
+}
+'''
+          p.write_text(s)
+          PY
+      - name: Format
+        run: dart format lib/services/social_event_service.dart lib/screens/social_events_screen.dart
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add lib/services/social_event_service.dart lib/screens/social_events_screen.dart
+          git commit -m "Finish event attendance choices and CTA polish" || exit 0
+          git push origin feature/video-v1
