@@ -48,10 +48,19 @@ jobs:
           cp /tmp/tbt-AndroidManifest.xml android/app/src/main/AndroidManifest.xml
           python3 - <<'PY'
           from pathlib import Path
-          path = Path('android/app/src/main/AndroidManifest.xml')
-          text = path.read_text()
+
+          manifest = Path('android/app/src/main/AndroidManifest.xml')
+          text = manifest.read_text()
           text = text.replace('${MAPS_API_KEY}', 'ci-placeholder-maps-key')
-          path.write_text(text)
+          manifest.write_text(text)
+
+          gradle = Path('android/app/build.gradle.kts')
+          gradle_text = gradle.read_text()
+          gradle_text = gradle_text.replace(
+              'minSdk = flutter.minSdkVersion',
+              'minSdk = 26',
+          )
+          gradle.write_text(gradle_text)
           PY
 
       - name: Build debug APK
