@@ -43,9 +43,7 @@ class ProfileService {
       final ref = _storage.ref().child('users/${user.uid}/profile/avatar.$ext');
       final task = await ref.putFile(
         photo,
-        SettableMetadata(
-          contentType: ext == 'png' ? 'image/png' : 'image/jpeg',
-        ),
+        SettableMetadata(contentType: ext == 'png' ? 'image/png' : 'image/jpeg'),
       );
       photoUrl = await task.ref.getDownloadURL();
     }
@@ -57,6 +55,27 @@ class ProfileService {
       'displayName': cleanName,
       'bio': cleanBio,
       'photoUrl': photoUrl,
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  }
+
+  Future<void> updateStudentStatus({required String status}) async {
+    final user = _auth.currentUser;
+    if (user == null) {
+      throw Exception('Öğrenci durumunu değiştirmek için giriş yapmalısın.');
+    }
+    if (status != 'student' && status != 'non_student') {
+      throw Exception('Geçersiz öğrenci durumu.');
+    }
+
+    await _firestore.collection('users').doc(user.uid).set({
+      'studentStatus': status,
+      if (status == 'non_student') ...{
+        'campusEligible': false,
+        'campusProfileCompleted': false,
+        'newStudent2026': false,
+        'classYear': '',
+      },
       'updatedAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
   }
