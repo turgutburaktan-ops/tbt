@@ -4,8 +4,10 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../models/nearby_venue.dart';
+import '../models/route_place.dart';
 import '../services/location_service.dart';
 import '../services/nearby_venue_service.dart';
+import '../services/route_selection_service.dart';
 
 class NearbyPlacesView extends StatefulWidget {
   final NearbyVenueCategory category;
@@ -21,7 +23,6 @@ class NearbyPlacesView extends StatefulWidget {
 
 class _NearbyPlacesViewState extends State<NearbyPlacesView> {
   static const _cyan = Color(0xFF42F5E9);
-  static const _violet = Color(0xFF8B5CF6);
   static const _panel = Color(0xFF101218);
   static const _border = Color(0xFF292D38);
 
@@ -32,10 +33,22 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
   bool _loading = true;
   String? _error;
 
+  String _routeId(NearbyVenue venue) =>
+      'venue:${venue.category.name}:${venue.id}';
+
   @override
   void initState() {
     super.initState();
     _load();
+  }
+
+  @override
+  void didUpdateWidget(covariant NearbyPlacesView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.category != widget.category) {
+      _searchController.clear();
+      _load();
+    }
   }
 
   @override
@@ -53,9 +66,7 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
     }
     try {
       final position = await LocationService.getCurrentPosition();
-      if (position == null) {
-        throw const _LocationUnavailable();
-      }
+      if (position == null) throw const _LocationUnavailable();
       final venues = await NearbyVenueService.instance.nearby(
         category: widget.category,
         latitude: position.latitude,
@@ -69,6 +80,14 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
       setState(() {
         _position = position;
         _venues = venues;
+        _selectedIds
+          ..clear()
+          ..addAll(
+            venues
+                .where((venue) =>
+                    RouteSelectionService.instance.contains(_routeId(venue)))
+                .map(_routeId),
+          );
         _loading = false;
       });
     } on _LocationUnavailable {
@@ -124,46 +143,19 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
   }
 
   void _toggleSelection(NearbyVenue venue) {
+    final id = _routeId(venue);
+    RouteSelectionService.instance.toggle(
+      RoutePlace(
+        id: id,
+        name: venue.name,
+        category: venue.category.label,
+        latitude: venue.latitude,
+        longitude: venue.longitude,
+      ),
+    );
     setState(() {
-      if (!_selectedIds.add(venue.id)) _selectedIds.remove(venue.id);
+      if (!_selectedIds.add(id)) _selectedIds.remove(id);
     });
-  }
-
-  Future<void> _openSelectedRoute() async {
-    var selected = _venues
-        .where((venue) => _selectedIds.contains(venue.id))
-        .toList();
-    if (selected.isEmpty) return;
-    if (selected.length > 10) {
-      selected = selected.take(10).toList();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Google Maps sınırı nedeniyle en yakın 10 mekan açıldı.'),
-        ),
-      );
-    }
-    final destination = selected.last;
-    final params = <String, String>{
-      'api': '1',
-      'destination': '${destination.latitude},${destination.longitude}',
-      'travelmode': 'driving',
-    };
-    final position = _position;
-    if (position != null) {
-      params['origin'] = '${position.latitude},${position.longitude}';
-    }
-    if (selected.length > 1) {
-      params['waypoints'] = selected
-          .take(selected.length - 1)
-          .map((venue) => '${venue.latitude},${venue.longitude}')
-          .join('|');
-    }
-    final uri = Uri.https('www.google.com', '/maps/dir/', params);
-    if (!await launchUrl(uri, mode: LaunchMode.externalApplication) && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Google Maps açılamadı.')),
-      );
-    }
   }
 
   void _openMap() {
@@ -243,17 +235,6 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
               ),
             ],
           ),
-          if (_selectedIds.isNotEmpty) ...[
-            const SizedBox(height: 9),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton.icon(
-                onPressed: _openSelectedRoute,
-                icon: const Icon(Icons.route_rounded),
-                label: Text('Rotaya Git (${_selectedIds.length})'),
-              ),
-            ),
-          ],
           Padding(
             padding: const EdgeInsets.fromLTRB(3, 12, 3, 8),
             child: Text(
@@ -275,7 +256,7 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
                 venue: venue,
                 distance: _distanceLabel(venue),
                 onDirections: () => _openDirections(venue),
-                selected: _selectedIds.contains(venue.id),
+                selected: _selectedIds.contains(_routeId(venue)),
                 onSelected: () => _toggleSelection(venue),
               ),
             ),
@@ -331,69 +312,77 @@ class _VenueCard extends StatelessWidget {
             Row(
               children: [
                 Container(
-              width: 46,
-              height: 46,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(14),
-                gradient: LinearGradient(
-                  colors: [
-                    const Color(0xFF42F5E9).withValues(alpha: .22),
-                    const Color(0xFF8B5CF6).withValues(alpha: .22),
-                  ],
+                  width: 46,
+                  height: 46,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(14),
+                    gradient: LinearGradient(
+                      colors: [
+                        const Color(0xFF42F5E9).withValues(alpha: .22),
+                        const Color(0xFF8B5CF6).withValues(alpha: .22),
+                      ],
+                    ),
+                  ),
+                  child: Icon(_icon, color: const Color(0xFF42F5E9)),
                 ),
-              ),
-              child: Icon(_icon, color: const Color(0xFF42F5E9)),
-            ),
                 const SizedBox(width: 12),
                 Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    venue.name,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w800,
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        venue.name,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        venue.address.isEmpty
+                            ? 'Adres bilgisi yok'
+                            : venue.address,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Colors.white54,
+                          fontSize: 11.5,
+                        ),
+                      ),
+                      if (venue.openingHours.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          venue.openingHours,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: Colors.white38,
+                            fontSize: 10.5,
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    venue.address.isEmpty ? 'Adres bilgisi yok' : venue.address,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(color: Colors.white54, fontSize: 11.5),
-                  ),
-                  if (venue.openingHours.isNotEmpty) ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      venue.openingHours,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(color: Colors.white38, fontSize: 10.5),
-                    ),
-                  ],
-                ],
-              ),
-            ),
+                ),
                 const SizedBox(width: 6),
                 Column(
-              children: [
-                Text(
-                  distance,
-                  style: const TextStyle(
-                    color: Color(0xFF42F5E9),
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                IconButton(
-                  tooltip: 'Yol tarifi',
-                  onPressed: onDirections,
-                  icon: const Icon(Icons.directions_rounded, size: 22),
-                ),
-              ],
+                  children: [
+                    Text(
+                      distance,
+                      style: const TextStyle(
+                        color: Color(0xFF42F5E9),
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: 'Yol tarifi',
+                      onPressed: onDirections,
+                      icon: const Icon(Icons.directions_rounded, size: 22),
+                    ),
+                  ],
                 ),
               ],
             ),
