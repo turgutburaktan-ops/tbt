@@ -67,6 +67,13 @@ class _ProfileBodyState extends State<_ProfileBody> {
     SocialService.instance.ensureUserProfile();
   }
 
+  bool _campusEligible(Map<String, dynamic> profile) {
+    const activeYears = <String>{'Hazırlık', '1', '2', '3', '4', '5', '6'};
+    final university = (profile['university'] ?? '').toString().trim();
+    final classYear = (profile['classYear'] ?? '').toString().trim();
+    return university.isNotEmpty && activeYears.contains(classYear);
+  }
+
   void _openFollowList(bool followers) {
     Navigator.push(
       context,
@@ -266,7 +273,7 @@ class _ProfileBodyState extends State<_ProfileBody> {
                               displayName,
                               bio,
                             ),
-                            itemBuilder: (_) => const [
+                            itemBuilder: (_) => [
                               PopupMenuItem(
                                 value: 'edit',
                                 child: ListTile(
@@ -292,14 +299,15 @@ class _ProfileBodyState extends State<_ProfileBody> {
                                   title: Text('Mesajlar'),
                                 ),
                               ),
-                              PopupMenuItem(
-                                value: 'campus',
-                                child: ListTile(
-                                  dense: true,
-                                  leading: Icon(Icons.school_outlined),
-                                  title: Text('Kampüs'),
+                              if (_campusEligible(profile))
+                                const PopupMenuItem(
+                                  value: 'campus',
+                                  child: ListTile(
+                                    dense: true,
+                                    leading: Icon(Icons.school_outlined),
+                                    title: Text('Kampüs'),
+                                  ),
                                 ),
-                              ),
                               PopupMenuDivider(),
                               PopupMenuItem(
                                 value: 'logout',
