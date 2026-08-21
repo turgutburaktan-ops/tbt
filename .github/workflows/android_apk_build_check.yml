@@ -65,7 +65,10 @@ jobs:
           cp /tmp/AndroidManifest.xml android/app/src/main/AndroidManifest.xml
           sed -i 's/${MAPS_API_KEY}/CI_DUMMY_MAPS_KEY/g' android/app/src/main/AndroidManifest.xml
           sed -i 's/minSdk = flutter.minSdkVersion/minSdk = 26/' android/app/build.gradle.kts
-          grep -n 'minSdk' android/app/build.gradle.kts
+          sed -i 's/com.tbt.best_photo_spot/com.example.tbt/g' android/app/build.gradle.kts
+          main_activity=$(find android/app/src/main/kotlin -name MainActivity.kt -print -quit)
+          sed -i 's/package com.tbt.best_photo_spot/package com.example.tbt/' "$main_activity"
+          grep -n 'minSdk\|applicationId\|namespace' android/app/build.gradle.kts
 
       - name: Verify generated Android host stays local to runner
         shell: bash
