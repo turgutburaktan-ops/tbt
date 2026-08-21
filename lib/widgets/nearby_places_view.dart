@@ -13,6 +13,7 @@ import '../services/route_selection_service.dart';
 import '../services/venue_rating_service.dart';
 import '../theme/app_theme.dart';
 import 'route_selection_button.dart';
+import 'venue_reviews_section.dart';
 
 enum _VenueSort { nearest, rating, popular }
 
@@ -84,7 +85,9 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
         _venues = venues;
         _selectedIds
           ..clear()
-          ..addAll(venues.where((v) => RouteSelectionService.instance.contains(_routeId(v))).map(_routeId));
+          ..addAll(venues
+              .where((v) => RouteSelectionService.instance.contains(_routeId(v)))
+              .map(_routeId));
         _loading = false;
       });
       _loadRatings(venues);
@@ -116,7 +119,8 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
     }
   }
 
-  double _distance(Position position, NearbyVenue venue) => Geolocator.distanceBetween(
+  double _distance(Position position, NearbyVenue venue) =>
+      Geolocator.distanceBetween(
         position.latitude,
         position.longitude,
         venue.latitude,
@@ -171,68 +175,57 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
     }
   }
 
-  Future<void> _rateVenue(NearbyVenue venue) async {
-    final current = _ratings[_ratingKey(venue)]?.mine;
-    int selected = current ?? 0;
-    final value = await showModalBottomSheet<int>(
+  Future<void> _openReviews(NearbyVenue venue) async {
+    await showModalBottomSheet<void>(
       context: context,
-      backgroundColor: AppColors.surface,
+      isScrollControlled: true,
       useSafeArea: true,
-      builder: (sheetContext) => StatefulBuilder(
-        builder: (_, setSheetState) => Padding(
-          padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(venue.name, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
-              const SizedBox(height: 5),
-              const Text('Bu mekana kaç yıldız verirsin?', style: TextStyle(color: Colors.white60)),
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(5, (index) {
-                  final star = index + 1;
-                  return IconButton(
-                    onPressed: () => setSheetState(() => selected = star),
-                    iconSize: 36,
-                    icon: Icon(
-                      star <= selected ? Icons.star_rounded : Icons.star_border_rounded,
-                      color: const Color(0xFFFFC857),
+      backgroundColor: AppColors.background,
+      builder: (sheetContext) => FractionallySizedBox(
+        heightFactor: .9,
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 10, 8, 4),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      venue.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
                     ),
-                  );
-                }),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.pop(sheetContext),
+                    icon: const Icon(Icons.close_rounded),
+                  ),
+                ],
               ),
-              const SizedBox(height: 14),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton(
-                  onPressed: selected == 0 ? null : () => Navigator.pop(sheetContext, selected),
-                  child: Text(current == null ? 'Puanı Gönder' : 'Puanımı Güncelle'),
+            ),
+            const Divider(height: 1),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(16, 14, 16, 28),
+                child: VenueReviewsSection(
+                  category: venue.category.name,
+                  venueId: venue.id,
+                  venueName: venue.name,
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
-    if (value == null || !mounted) return;
     try {
-      await VenueRatingService.instance.rate(
-        category: venue.category.name,
-        venueId: venue.id,
-        venueName: venue.name,
-        rating: value,
+      final summary = await VenueRatingService.instance.summary(
+        venue.category.name,
+        venue.id,
       );
-      final summary = await VenueRatingService.instance.summary(venue.category.name, venue.id);
-      if (!mounted) return;
-      setState(() => _ratings[_ratingKey(venue)] = summary);
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Puanın kaydedildi.')));
-    } catch (error) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error.toString().replaceFirst('Exception: ', ''))),
-      );
-    }
+      if (mounted) setState(() => _ratings[_ratingKey(venue)] = summary);
+    } catch (_) {}
   }
 
   void _toggleSelection(NearbyVenue venue) {
@@ -252,11 +245,16 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
   void _openMap() {
     final position = _position;
     if (position == null || _venues.isEmpty) return;
-    Navigator.push(context, MaterialPageRoute(builder: (_) => _NearbyVenueMapScreen(
-      category: widget.category,
-      position: position,
-      venues: _venues,
-    )));
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => _NearbyVenueMapScreen(
+          category: widget.category,
+          position: position,
+          venues: _venues,
+        ),
+      ),
+    );
   }
 
   @override
@@ -280,18 +278,25 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
         padding: const EdgeInsets.fromLTRB(14, 6, 14, 20),
         children: [
           Row(children: [
-            Expanded(child: TextField(
-              controller: _searchController,
-              onChanged: (_) => setState(() {}),
-              decoration: InputDecoration(
-                hintText: '${widget.category.label} içinde ara',
-                prefixIcon: const Icon(Icons.search_rounded, size: 20),
-                suffixIcon: _searchController.text.isEmpty ? null : IconButton(
-                  onPressed: () { _searchController.clear(); setState(() {}); },
-                  icon: const Icon(Icons.close_rounded, size: 18),
+            Expanded(
+              child: TextField(
+                controller: _searchController,
+                onChanged: (_) => setState(() {}),
+                decoration: InputDecoration(
+                  hintText: '${widget.category.label} içinde ara',
+                  prefixIcon: const Icon(Icons.search_rounded, size: 20),
+                  suffixIcon: _searchController.text.isEmpty
+                      ? null
+                      : IconButton(
+                          onPressed: () {
+                            _searchController.clear();
+                            setState(() {});
+                          },
+                          icon: const Icon(Icons.close_rounded, size: 18),
+                        ),
                 ),
               ),
-            )),
+            ),
             const SizedBox(width: 7),
             IconButton(
               tooltip: 'Haritada göster',
@@ -326,7 +331,10 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
           if (venues.isEmpty)
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 48),
-              child: _MessageState(icon: Icons.place_outlined, message: 'Bu bölgede eşleşen mekan bulunamadı.'),
+              child: _MessageState(
+                icon: Icons.place_outlined,
+                message: 'Bu bölgede eşleşen mekan bulunamadı.',
+              ),
             )
           else
             ...venues.map((venue) {
@@ -336,15 +344,21 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
                 rating: rating,
                 distance: _distanceLabel(venue),
                 onDirections: () => _openDirections(venue),
-                onRate: () => _rateVenue(venue),
+                onReviews: () => _openReviews(venue),
                 selected: _selectedIds.contains(_routeId(venue)),
                 onSelected: () => _toggleSelection(venue),
               );
             }),
           const SizedBox(height: 4),
           TextButton(
-            onPressed: () => launchUrl(Uri.parse('https://www.openstreetmap.org/copyright'), mode: LaunchMode.externalApplication),
-            child: const Text('Mekan verisi © OpenStreetMap katkıda bulunanlar', style: TextStyle(color: Color(0x52FFFFFF), fontSize: 10.5)),
+            onPressed: () => launchUrl(
+              Uri.parse('https://www.openstreetmap.org/copyright'),
+              mode: LaunchMode.externalApplication,
+            ),
+            child: const Text(
+              'Mekan verisi © OpenStreetMap katkıda bulunanlar',
+              style: TextStyle(color: Color(0x52FFFFFF), fontSize: 10.5),
+            ),
           ),
         ],
       ),
@@ -357,7 +371,7 @@ class _VenueCard extends StatelessWidget {
   final VenueRatingSummary rating;
   final String distance;
   final VoidCallback onDirections;
-  final VoidCallback onRate;
+  final VoidCallback onReviews;
   final bool selected;
   final VoidCallback onSelected;
 
@@ -366,7 +380,7 @@ class _VenueCard extends StatelessWidget {
     required this.rating,
     required this.distance,
     required this.onDirections,
-    required this.onRate,
+    required this.onReviews,
     required this.selected,
     required this.onSelected,
   });
@@ -384,68 +398,143 @@ class _VenueCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(15),
-          border: Border.all(color: selected ? AppColors.cyan.withValues(alpha: .40) : AppColors.border),
+          border: Border.all(
+            color: selected
+                ? AppColors.cyan.withValues(alpha: .40)
+                : AppColors.border,
+          ),
         ),
         child: Row(children: [
           Container(
             width: 42,
             height: 42,
-            decoration: BoxDecoration(color: AppColors.surfaceStrong, borderRadius: BorderRadius.circular(12)),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceStrong,
+              borderRadius: BorderRadius.circular(12),
+            ),
             child: Icon(_icon, size: 21, color: AppColors.cyan),
           ),
           const SizedBox(width: 11),
-          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Row(children: [
-              Expanded(child: Text(venue.name, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 14.5, fontWeight: FontWeight.w900, height: 1.15))),
-              const SizedBox(width: 8),
-              Text(distance, style: const TextStyle(color: AppColors.cyan, fontSize: 10.5, fontWeight: FontWeight.w900)),
-            ]),
-            const SizedBox(height: 4),
-            InkWell(
-              onTap: onRate,
-              borderRadius: BorderRadius.circular(8),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 3),
-                child: Row(mainAxisSize: MainAxisSize.min, children: [
-                  const Icon(Icons.star_rounded, size: 17, color: Color(0xFFFFC857)),
-                  const SizedBox(width: 4),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(children: [
+                  Expanded(
+                    child: Text(
+                      venue.name,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 14.5,
+                        fontWeight: FontWeight.w900,
+                        height: 1.15,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
                   Text(
-                    rating.count == 0 ? 'İlk puanı sen ver' : '${rating.average.toStringAsFixed(1)} · ${rating.count} değerlendirme',
-                    style: const TextStyle(color: Colors.white70, fontSize: 10.5, fontWeight: FontWeight.w800),
+                    distance,
+                    style: const TextStyle(
+                      color: AppColors.cyan,
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w900,
+                    ),
                   ),
                 ]),
-              ),
+                const SizedBox(height: 4),
+                InkWell(
+                  onTap: onReviews,
+                  borderRadius: BorderRadius.circular(8),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 3),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.star_rounded,
+                          size: 17,
+                          color: Color(0xFFFFC857),
+                        ),
+                        const SizedBox(width: 4),
+                        Flexible(
+                          child: Text(
+                            rating.count == 0
+                                ? 'İlk puanı ve yorumu sen ver'
+                                : '${rating.average.toStringAsFixed(1)} · ${rating.count} değerlendirme',
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                Text(
+                  venue.address.isEmpty
+                      ? venue.category.label
+                      : '${venue.category.label}  •  ${venue.address}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(color: Color(0x75FFFFFF), fontSize: 11),
+                ),
+                if (venue.openingHours.isNotEmpty) ...[
+                  const SizedBox(height: 3),
+                  Text(
+                    venue.openingHours,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Color(0x52FFFFFF),
+                      fontSize: 10,
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 3),
+                TextButton.icon(
+                  onPressed: onReviews,
+                  style: TextButton.styleFrom(
+                    visualDensity: VisualDensity.compact,
+                    padding: EdgeInsets.zero,
+                  ),
+                  icon: const Icon(Icons.rate_review_outlined, size: 16),
+                  label: const Text('Yorumları gör / yorum yap'),
+                ),
+              ],
             ),
-            Text(
-              venue.address.isEmpty ? venue.category.label : '${venue.category.label}  •  ${venue.address}',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(color: Color(0x75FFFFFF), fontSize: 11),
-            ),
-            if (venue.openingHours.isNotEmpty) ...[
-              const SizedBox(height: 3),
-              Text(venue.openingHours, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Color(0x52FFFFFF), fontSize: 10)),
-            ],
-          ])),
+          ),
           const SizedBox(width: 6),
-          Column(mainAxisSize: MainAxisSize.min, children: [
-            IconButton(
-              tooltip: selected ? 'Rotadan çıkar' : 'Rotaya ekle',
-              onPressed: onSelected,
-              style: IconButton.styleFrom(
-                minimumSize: const Size(38, 38),
-                backgroundColor: selected ? AppColors.cyan : AppColors.surfaceStrong,
-                foregroundColor: selected ? const Color(0xFF041311) : Colors.white70,
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                tooltip: selected ? 'Rotadan çıkar' : 'Rotaya ekle',
+                onPressed: onSelected,
+                style: IconButton.styleFrom(
+                  minimumSize: const Size(38, 38),
+                  backgroundColor: selected ? AppColors.cyan : AppColors.surfaceStrong,
+                  foregroundColor:
+                      selected ? const Color(0xFF041311) : Colors.white70,
+                ),
+                icon: Icon(
+                  selected ? Icons.check_rounded : Icons.add_rounded,
+                  size: 20,
+                ),
               ),
-              icon: Icon(selected ? Icons.check_rounded : Icons.add_rounded, size: 20),
-            ),
-            IconButton(
-              tooltip: 'Yol tarifi',
-              onPressed: onDirections,
-              style: IconButton.styleFrom(minimumSize: const Size(38, 38), foregroundColor: const Color(0x75FFFFFF)),
-              icon: const Icon(Icons.directions_rounded, size: 19),
-            ),
-          ]),
+              IconButton(
+                tooltip: 'Yol tarifi',
+                onPressed: onDirections,
+                style: IconButton.styleFrom(
+                  minimumSize: const Size(38, 38),
+                  foregroundColor: const Color(0x75FFFFFF),
+                ),
+                icon: const Icon(Icons.directions_rounded, size: 19),
+              ),
+            ],
+          ),
         ]),
       );
 }
@@ -456,26 +545,42 @@ class _MessageState extends StatelessWidget {
   final String? actionLabel;
   final VoidCallback? onAction;
 
-  const _MessageState({required this.icon, required this.message, this.actionLabel, this.onAction});
+  const _MessageState({
+    required this.icon,
+    required this.message,
+    this.actionLabel,
+    this.onAction,
+  });
 
   @override
   Widget build(BuildContext context) => Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
-          child: Column(mainAxisSize: MainAxisSize.min, children: [
-            Container(
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(color: AppColors.surface, shape: BoxShape.circle, border: Border.all(color: AppColors.border)),
-              child: Icon(icon, size: 26, color: Colors.white38),
-            ),
-            const SizedBox(height: 12),
-            Text(message, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white60, height: 1.4)),
-            if (actionLabel != null && onAction != null) ...[
-              const SizedBox(height: 14),
-              OutlinedButton(onPressed: onAction, child: Text(actionLabel!)),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: Icon(icon, size: 26, color: Colors.white38),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                message,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.white60, height: 1.4),
+              ),
+              if (actionLabel != null && onAction != null) ...[
+                const SizedBox(height: 14),
+                OutlinedButton(onPressed: onAction, child: Text(actionLabel!)),
+              ],
             ],
-          ]),
+          ),
         ),
       );
 }
@@ -485,19 +590,33 @@ class _NearbyVenueMapScreen extends StatelessWidget {
   final Position position;
   final List<NearbyVenue> venues;
 
-  const _NearbyVenueMapScreen({required this.category, required this.position, required this.venues});
+  const _NearbyVenueMapScreen({
+    required this.category,
+    required this.position,
+    required this.venues,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final markers = venues.map((venue) => Marker(
-      markerId: MarkerId('venue-${venue.id}'),
-      position: LatLng(venue.latitude, venue.longitude),
-      infoWindow: InfoWindow(title: venue.name, snippet: venue.address.isEmpty ? category.label : venue.address),
-    )).toSet();
+    final markers = venues
+        .map(
+          (venue) => Marker(
+            markerId: MarkerId('venue-${venue.id}'),
+            position: LatLng(venue.latitude, venue.longitude),
+            infoWindow: InfoWindow(
+              title: venue.name,
+              snippet: venue.address.isEmpty ? category.label : venue.address,
+            ),
+          ),
+        )
+        .toSet();
     return Scaffold(
       appBar: AppBar(title: Text('${category.label} Haritası')),
       body: GoogleMap(
-        initialCameraPosition: CameraPosition(target: LatLng(position.latitude, position.longitude), zoom: 13),
+        initialCameraPosition: CameraPosition(
+          target: LatLng(position.latitude, position.longitude),
+          zoom: 13,
+        ),
         markers: markers,
         myLocationEnabled: true,
         myLocationButtonEnabled: true,
