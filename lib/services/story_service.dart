@@ -28,7 +28,7 @@ class StoryService {
           .map(AppStory.fromDocument)
           .where((story) => story.userId.isNotEmpty && story.isActive)
           .toList();
-      stories.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      stories.sort((a, b) => a.createdAt.compareTo(b.createdAt));
       return stories;
     });
   }
