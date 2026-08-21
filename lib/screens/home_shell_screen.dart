@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -7,6 +8,7 @@ import '../services/app_notification_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/nearby_places_view.dart';
 import 'camera_screen.dart';
+import 'campus_home_screen.dart';
 import 'events_hub_screen.dart';
 import 'feed_screen.dart';
 import 'login_screen.dart';
@@ -156,7 +158,7 @@ class _SimpleNavigationBar extends StatelessWidget {
                   child: Text(
                     'Kamera',
                     style: TextStyle(
-                      color: const Color(0x75FFFFFF),
+                      color: Color(0x75FFFFFF),
                       fontSize: 9,
                       fontWeight: FontWeight.w700,
                     ),
@@ -232,8 +234,54 @@ class _NearbyHub extends StatefulWidget {
 class _NearbyHubState extends State<_NearbyHub> {
   int _section = 0;
 
+  bool _campusEligible(Map<String, dynamic> data) {
+    const activeYears = <String>{
+      'Hazırlık',
+      '1',
+      '2',
+      '3',
+      '4',
+      '5',
+      '6',
+    };
+    final university = (data['university'] ?? '').toString().trim();
+    final classYear = (data['classYear'] ?? '').toString().trim();
+    return university.isNotEmpty && activeYears.contains(classYear);
+  }
+
   @override
   Widget build(BuildContext context) {
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      initialData: FirebaseAuth.instance.currentUser,
+      builder: (context, authSnapshot) {
+        final user = authSnapshot.data;
+        if (user == null) return _buildHub(false);
+        return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+          stream: FirebaseFirestore.instance
+              .collection('users')
+              .doc(user.uid)
+              .snapshots(),
+          builder: (context, profileSnapshot) {
+            final data = profileSnapshot.data?.data() ?? <String, dynamic>{};
+            return _buildHub(_campusEligible(data));
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildHub(bool campusEligible) {
+    final labels = campusEligible
+        ? const ['Radar', 'Etkinlikler', 'Kampüs']
+        : const ['Radar', 'Etkinlikler'];
+    final effectiveSection = _section >= labels.length ? 0 : _section;
+    final pages = <Widget>[
+      const RadarScreen(embedded: true),
+      const EventsHubScreen(),
+      if (campusEligible) const CampusHomeScreen(),
+    ];
+
     return ColoredBox(
       color: AppColors.background,
       child: SafeArea(
@@ -259,9 +307,9 @@ class _NearbyHubState extends State<_NearbyHub> {
                           ),
                         ),
                         Text(
-                          'Yakındaki hareketleri ve etkinlikleri gör.',
+                          'Radar, etkinlikler ve öğrencilere özel kampüs.',
                           style: TextStyle(
-                            color: const Color(0x75FFFFFF),
+                            color: Color(0x75FFFFFF),
                             fontSize: 11.5,
                           ),
                         ),
@@ -273,20 +321,16 @@ class _NearbyHubState extends State<_NearbyHub> {
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(14, 0, 14, 7),
-              child: _CompactTabs(
-                firstLabel: 'Radar',
-                secondLabel: 'Etkinlikler',
-                selected: _section,
+              child: _NearbyTabs(
+                labels: labels,
+                selected: effectiveSection,
                 onChanged: (value) => setState(() => _section = value),
               ),
             ),
             Expanded(
               child: IndexedStack(
-                index: _section,
-                children: const [
-                  RadarScreen(embedded: true),
-                  EventsHubScreen(),
-                ],
+                index: effectiveSection,
+                children: pages,
               ),
             ),
           ],
@@ -294,6 +338,62 @@ class _NearbyHubState extends State<_NearbyHub> {
       ),
     );
   }
+}
+
+class _NearbyTabs extends StatelessWidget {
+  final List<String> labels;
+  final int selected;
+  final ValueChanged<int> onChanged;
+
+  const _NearbyTabs({
+    required this.labels,
+    required this.selected,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.all(3),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(13),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Row(
+          children: List.generate(labels.length, (index) {
+            final active = selected == index;
+            return Expanded(
+              child: InkWell(
+                onTap: () => onChanged(index),
+                borderRadius: BorderRadius.circular(10),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 160),
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  decoration: BoxDecoration(
+                    color: active ? AppColors.surfaceStrong : Colors.transparent,
+                    borderRadius: BorderRadius.circular(10),
+                    border: active && labels[index] == 'Kampüs'
+                        ? Border.all(
+                            color: AppColors.cyan.withValues(alpha: .45),
+                          )
+                        : null,
+                  ),
+                  child: Text(
+                    labels[index],
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color:
+                          active ? Colors.white : const Color(0x75FFFFFF),
+                      fontSize: 11.5,
+                      fontWeight: active ? FontWeight.w900 : FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }),
+        ),
+      );
 }
 
 class _AuthAwareFeed extends StatelessWidget {
@@ -487,7 +587,7 @@ class _ExploreHubState extends State<_ExploreHub> {
               padding: EdgeInsets.fromLTRB(14, 0, 14, 8),
               child: Text(
                 'Yeme-içme, kahve, konaklama ve gezilecek yerler.',
-                style: TextStyle(color: const Color(0x75FFFFFF), fontSize: 11.5),
+                style: TextStyle(color: Color(0x75FFFFFF), fontSize: 11.5),
               ),
             ),
             Padding(
@@ -702,7 +802,7 @@ class _GradientIcon extends StatelessWidget {
         shaderCallback: (bounds) => LinearGradient(
           colors: active
               ? const [AppColors.cyan, AppColors.violet]
-              : const [const Color(0x75FFFFFF), const Color(0x75FFFFFF)],
+              : const [Color(0x75FFFFFF), Color(0x75FFFFFF)],
         ).createShader(bounds),
         child: Icon(icon, size: size),
       );
