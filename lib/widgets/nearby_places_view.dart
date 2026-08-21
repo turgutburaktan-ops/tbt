@@ -8,14 +8,12 @@ import '../models/route_place.dart';
 import '../services/location_service.dart';
 import '../services/nearby_venue_service.dart';
 import '../services/route_selection_service.dart';
+import 'route_selection_button.dart';
 
 class NearbyPlacesView extends StatefulWidget {
   final NearbyVenueCategory category;
 
-  const NearbyPlacesView({
-    super.key,
-    required this.category,
-  });
+  const NearbyPlacesView({super.key, required this.category});
 
   @override
   State<NearbyPlacesView> createState() => _NearbyPlacesViewState();
@@ -234,6 +232,9 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
                 icon: const Icon(Icons.map_outlined),
               ),
             ],
+          ),
+          const RouteSelectionButton(
+            padding: EdgeInsets.fromLTRB(0, 9, 0, 0),
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(3, 12, 3, 8),
