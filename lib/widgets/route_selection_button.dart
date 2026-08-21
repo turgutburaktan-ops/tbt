@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/route_place.dart';
+import '../screens/selected_route_map_screen.dart';
 import '../services/route_selection_service.dart';
 
 class RouteSelectionButton extends StatelessWidget {
@@ -23,12 +24,14 @@ class RouteSelectionButton extends StatelessWidget {
             children: [
               Expanded(
                 child: FilledButton.icon(
-                  onPressed: () async {
-                    final opened =
-                        await RouteSelectionService.instance.openSelectedRoute();
-                    if (!context.mounted || opened) return;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Harita uygulaması açılamadı.')),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => SelectedRouteMapScreen(
+                          places: selected.values.toList(growable: false),
+                        ),
+                      ),
                     );
                   },
                   icon: const Icon(Icons.route_rounded),
