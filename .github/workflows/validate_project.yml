@@ -55,6 +55,13 @@ jobs:
             .github/workflows/gray_social_refresh.yml
             .github/workflows/fix_profile_photo_interaction.yml
             .github/workflows/add_post_event_engagement.yml
+            .github/workflows/patch_tappable_mentions.yml
+            .github/workflows/patch_event_location_flow.yml
+            .github/workflows/patch_instagram_profile_layout.yml
+            .github/workflows/patch_route_nearby_map.yml
+            .github/workflows/paid_event_trust_patch.yml
+            .github/workflows/restore_nonzoom_profile_preview.yml
+            .github/workflows/wire_route_planner.yml
           )
           for path in "${retired[@]}"; do
             if [ -e "$path" ]; then
