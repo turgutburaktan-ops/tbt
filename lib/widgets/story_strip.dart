@@ -20,11 +20,11 @@ class StoryStrip extends StatefulWidget {
 }
 
 class _StoryStripState extends State<StoryStrip> {
-  bool _uploading = false;
+  bool _openingCamera = false;
 
   Future<void> _addStory() async {
-    if (_uploading) return;
-    setState(() => _uploading = true);
+    if (_openingCamera) return;
+    setState(() => _openingCamera = true);
     try {
       final shared = await Navigator.push<bool>(
         context,
@@ -39,21 +39,20 @@ class _StoryStripState extends State<StoryStrip> {
           const SnackBar(content: Text('Story 24 saatliğine paylaşıldı.')),
         );
     } finally {
-      if (mounted) setState(() => _uploading = false);
+      if (mounted) setState(() => _openingCamera = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final currentUser = FirebaseAuth.instance.currentUser;
+    final me = FirebaseAuth.instance.currentUser;
     return StreamBuilder<List<AppStory>>(
       stream: StoryService.instance.watchActive(),
       builder: (context, snapshot) {
-        final visible = snapshot.data?.where((story) {
-              final ids = widget.visibleUserIds;
-              return ids == null || ids.contains(story.userId);
-            }).toList() ??
-            const <AppStory>[];
+        final visible = (snapshot.data ?? const <AppStory>[])
+            .where((story) => widget.visibleUserIds == null ||
+                widget.visibleUserIds!.contains(story.userId))
+            .toList();
 
         final grouped = LinkedHashMap<String, List<AppStory>>();
         for (final story in visible) {
@@ -74,15 +73,15 @@ class _StoryStripState extends State<StoryStrip> {
             padding: const EdgeInsets.fromLTRB(12, 9, 12, 8),
             children: [
               _AddStoryCircle(
-                userId: currentUser?.uid ?? '',
-                photoUrl: currentUser?.photoURL ?? '',
-                uploading: _uploading,
+                userId: me?.uid ?? '',
+                photoUrl: me?.photoURL ?? '',
+                loading: _openingCamera,
                 onTap: _addStory,
               ),
               ...grouped.values.map(
                 (stories) => _StoryCircle(
                   stories: stories,
-                  isMine: stories.first.userId == currentUser?.uid,
+                  isMine: stories.first.userId == me?.uid,
                   onTap: () => Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -102,13 +101,13 @@ class _StoryStripState extends State<StoryStrip> {
 class _AddStoryCircle extends StatelessWidget {
   final String userId;
   final String photoUrl;
-  final bool uploading;
+  final bool loading;
   final VoidCallback onTap;
 
   const _AddStoryCircle({
     required this.userId,
     required this.photoUrl,
-    required this.uploading,
+    required this.loading,
     required this.onTap,
   });
 
@@ -116,21 +115,16 @@ class _AddStoryCircle extends StatelessWidget {
   Widget build(BuildContext context) => SizedBox(
         width: 76,
         child: InkWell(
-          onTap: uploading ? null : onTap,
+          onTap: loading ? null : onTap,
           borderRadius: BorderRadius.circular(40),
           child: Column(
             children: [
               Stack(
                 clipBehavior: Clip.none,
                 children: [
-                  Container(
+                  SizedBox(
                     width: 66,
                     height: 66,
-                    padding: const EdgeInsets.all(2),
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Color(0xFF2A2E35),
-                    ),
                     child: ClipOval(
                       child: FirebaseMediaImage(
                         imageUrl: photoUrl,
@@ -157,7 +151,7 @@ class _AddStoryCircle extends StatelessWidget {
                           width: 2,
                         ),
                       ),
-                      child: uploading
+                      child: loading
                           ? const Padding(
                               padding: EdgeInsets.all(5),
                               child: CircularProgressIndicator(
@@ -245,7 +239,7 @@ class _StoryCircle extends StatelessWidget {
                     top: 3,
                     child: CircleAvatar(
                       radius: 10,
-                      backgroundColor: Colors.black66,
+                      backgroundColor: Color(0xA8000000),
                       child: Icon(Icons.videocam_rounded,
                           size: 13, color: Colors.white),
                     ),
@@ -278,7 +272,7 @@ class StoryViewerScreen extends StatefulWidget {
 class _StoryViewerScreenState extends State<StoryViewerScreen> {
   late final PageController _controller;
   late final List<AppStory> _stories;
-  final TextEditingController _replyController = TextEditingController();
+  final _replyController = TextEditingController();
   Timer? _timer;
   int _index = 0;
   bool _sending = false;
@@ -306,15 +300,12 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> {
 
   void _restartTimer() {
     _timer?.cancel();
-    final story = _current;
-    final duration = story.isVideo
-        ? Duration(
-            milliseconds: story.durationMs > 0
-                ? story.durationMs.clamp(1000, 15000).toInt()
-                : 15000,
-          )
-        : const Duration(seconds: 7);
-    _timer = Timer(duration, _next);
+    final ms = _current.isVideo
+        ? (_current.durationMs > 0
+            ? _current.durationMs.clamp(1000, 15000).toInt()
+            : 15000)
+        : 7000;
+    _timer = Timer(Duration(milliseconds: ms), _next);
   }
 
   void _pauseTimer() => _timer?.cancel();
@@ -332,7 +323,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> {
   }
 
   void _previous() {
-    if (_index <= 0) return;
+    if (_index == 0) return;
     _controller.previousPage(
       duration: const Duration(milliseconds: 220),
       curve: Curves.easeOut,
@@ -348,9 +339,9 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> {
     return '${diff.inHours.clamp(1, 24)} sa';
   }
 
-  Future<void> _delete(AppStory story) async {
+  Future<void> _delete() async {
     _pauseTimer();
-    await StoryService.instance.deleteStory(story);
+    await StoryService.instance.deleteStory(_current);
     if (mounted) Navigator.pop(context);
   }
 
@@ -382,10 +373,11 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> {
         ..hideCurrentSnackBar()
         ..showSnackBar(const SnackBar(content: Text('Story mesajı gönderildi.')));
     } catch (error) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error.toString().replaceFirst('Exception: ', ''))),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(error.toString().replaceFirst('Exception: ', ''))),
+        );
+      }
     } finally {
       if (mounted) {
         setState(() => _sending = false);
@@ -394,7 +386,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> {
     }
   }
 
-  void _showViewers(AppStory story) {
+  void _showViewers() {
     _pauseTimer();
     showModalBottomSheet<void>(
       context: context,
@@ -404,7 +396,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> {
         child: SizedBox(
           height: MediaQuery.sizeOf(sheetContext).height * .62,
           child: StreamBuilder<List<Map<String, dynamic>>>(
-            stream: StoryService.instance.watchInteractions(story),
+            stream: StoryService.instance.watchInteractions(_current),
             builder: (context, snapshot) {
               final items = snapshot.data ?? const <Map<String, dynamic>>[];
               return Column(
@@ -506,7 +498,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> {
     });
   }
 
-  Widget _storyMedia(AppStory story) {
+  Widget _media(AppStory story) {
     if (story.isVideo && story.videoUrl.isNotEmpty) {
       return AppVideoPlayer.network(
         key: ValueKey(story.id),
@@ -550,7 +542,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> {
                   _markViewed();
                   _restartTimer();
                 },
-                itemBuilder: (context, index) => _storyMedia(_stories[index]),
+                itemBuilder: (_, index) => _media(_stories[index]),
               ),
             ),
             Positioned.fill(
@@ -621,7 +613,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> {
                       if (_mine)
                         IconButton(
                           tooltip: 'Story’yi sil',
-                          onPressed: () => _delete(current),
+                          onPressed: _delete,
                           icon: const Icon(Icons.delete_outline_rounded),
                         ),
                       IconButton(
@@ -646,7 +638,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> {
                         return Align(
                           alignment: Alignment.centerLeft,
                           child: FilledButton.tonalIcon(
-                            onPressed: () => _showViewers(current),
+                            onPressed: _showViewers,
                             icon: const Icon(Icons.visibility_outlined),
                             label: Text('${items.length} izleyen'),
                           ),
