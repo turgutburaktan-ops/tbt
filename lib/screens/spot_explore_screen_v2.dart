@@ -16,6 +16,7 @@ import '../models/route_place.dart';
 import '../services/nationwide_candidate_spot_resolver.dart';
 import '../services/route_selection_service.dart';
 import '../services/spot_repository.dart';
+import '../widgets/route_selection_button.dart';
 import '../widgets/spot_image.dart';
 import 'spot_detail_screen.dart';
 
@@ -222,6 +223,11 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
                   ),
                 ),
               ),
+            ),
+          ),
+          const SliverToBoxAdapter(
+            child: RouteSelectionButton(
+              padding: EdgeInsets.fromLTRB(20, 0, 20, 10),
             ),
           ),
           if (_loading && _visible.isEmpty)
