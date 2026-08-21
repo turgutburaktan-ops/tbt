@@ -1,8 +1,9 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:latlong2/latlong.dart';
 
 import '../models/route_place.dart';
 import '../services/route_selection_service.dart';
@@ -20,7 +21,7 @@ class SelectedRouteMapScreen extends StatefulWidget {
 }
 
 class _SelectedRouteMapScreenState extends State<SelectedRouteMapScreen> {
-  GoogleMapController? _mapController;
+  final MapController _mapController = MapController();
   Position? _position;
   bool _gettingLocation = false;
 
@@ -49,7 +50,7 @@ class _SelectedRouteMapScreenState extends State<SelectedRouteMapScreen> {
       );
       if (!mounted) return;
       setState(() => _position = position);
-      await _fitAll();
+      WidgetsBinding.instance.addPostFrameCallback((_) => _fitAll());
     } catch (_) {
       // The selected route still works without current location.
     } finally {
@@ -57,42 +58,7 @@ class _SelectedRouteMapScreenState extends State<SelectedRouteMapScreen> {
     }
   }
 
-  Set<Marker> get _markers {
-    final markers = <Marker>{};
-    for (var i = 0; i < widget.places.length; i++) {
-      final place = widget.places[i];
-      markers.add(
-        Marker(
-          markerId: MarkerId('selected_route_${place.id}'),
-          position: LatLng(place.latitude, place.longitude),
-          infoWindow: InfoWindow(
-            title: '${i + 1}. ${place.name}',
-            snippet: place.category,
-          ),
-          icon: BitmapDescriptor.defaultMarkerWithHue(
-            i == widget.places.length - 1
-                ? BitmapDescriptor.hueGreen
-                : BitmapDescriptor.hueViolet,
-          ),
-        ),
-      );
-    }
-    final position = _position;
-    if (position != null) {
-      markers.add(
-        Marker(
-          markerId: const MarkerId('selected_route_origin'),
-          position: LatLng(position.latitude, position.longitude),
-          infoWindow: const InfoWindow(title: 'Konumum'),
-          icon:
-              BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
-        ),
-      );
-    }
-    return markers;
-  }
-
-  Set<Polyline> get _polylines {
+  List<LatLng> get _routePoints {
     final points = <LatLng>[];
     final position = _position;
     if (position != null) {
@@ -101,45 +67,98 @@ class _SelectedRouteMapScreenState extends State<SelectedRouteMapScreen> {
     points.addAll(
       widget.places.map((place) => LatLng(place.latitude, place.longitude)),
     );
-    if (points.length < 2) return const <Polyline>{};
-    return {
-      Polyline(
-        polylineId: const PolylineId('selected_route_line'),
-        points: points,
-        width: 5,
-        color: const Color(0xFF42F5E9),
-      ),
-    };
+    return points;
   }
 
-  Future<void> _fitAll() async {
-    final controller = _mapController;
-    if (controller == null || widget.places.isEmpty) return;
+  LatLng _centerOf(List<LatLng> points) {
+    if (points.isEmpty) return const LatLng(39.0, 35.0);
+    final lat = points.map((p) => p.latitude).reduce((a, b) => a + b) /
+        points.length;
+    final lng = points.map((p) => p.longitude).reduce((a, b) => a + b) /
+        points.length;
+    return LatLng(lat, lng);
+  }
 
-    final lats = <double>[
-      ...widget.places.map((place) => place.latitude),
-      if (_position != null) _position!.latitude,
-    ];
-    final lngs = <double>[
-      ...widget.places.map((place) => place.longitude),
-      if (_position != null) _position!.longitude,
-    ];
+  double _zoomFor(List<LatLng> points) {
+    if (points.length <= 1) return 14;
+    final minLat = points.map((p) => p.latitude).reduce(math.min);
+    final maxLat = points.map((p) => p.latitude).reduce(math.max);
+    final minLng = points.map((p) => p.longitude).reduce(math.min);
+    final maxLng = points.map((p) => p.longitude).reduce(math.max);
+    final span = math.max(maxLat - minLat, maxLng - minLng).abs();
+    if (span < .01) return 14;
+    if (span < .03) return 12.8;
+    if (span < .08) return 11.5;
+    if (span < .2) return 10;
+    if (span < .5) return 8.7;
+    if (span < 1.2) return 7.5;
+    return 6.2;
+  }
 
-    if (lats.length == 1) {
-      await controller.animateCamera(
-        CameraUpdate.newLatLngZoom(LatLng(lats.first, lngs.first), 14),
+  void _fitAll() {
+    final points = _routePoints;
+    if (points.isEmpty) return;
+    _mapController.move(_centerOf(points), _zoomFor(points));
+  }
+
+  List<Marker> get _markers {
+    final markers = <Marker>[];
+    for (var i = 0; i < widget.places.length; i++) {
+      final place = widget.places[i];
+      markers.add(
+        Marker(
+          point: LatLng(place.latitude, place.longitude),
+          width: 48,
+          height: 48,
+          child: Tooltip(
+            message: '${i + 1}. ${place.name} • ${place.category}',
+            child: Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: i == widget.places.length - 1
+                    ? const Color(0xFF42F5E9)
+                    : const Color(0xFF8B5CF6),
+                border: Border.all(color: Colors.white, width: 3),
+                boxShadow: const [
+                  BoxShadow(color: Colors.black45, blurRadius: 8),
+                ],
+              ),
+              alignment: Alignment.center,
+              child: Text(
+                '${i + 1}',
+                style: const TextStyle(
+                  color: Colors.black,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ),
+          ),
+        ),
       );
-      return;
     }
-
-    final southWest = LatLng(lats.reduce(math.min), lngs.reduce(math.min));
-    final northEast = LatLng(lats.reduce(math.max), lngs.reduce(math.max));
-    await controller.animateCamera(
-      CameraUpdate.newLatLngBounds(
-        LatLngBounds(southwest: southWest, northeast: northEast),
-        64,
-      ),
-    );
+    final position = _position;
+    if (position != null) {
+      markers.add(
+        Marker(
+          point: LatLng(position.latitude, position.longitude),
+          width: 34,
+          height: 34,
+          child: Container(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: const Color(0xFF2196F3),
+              border: Border.all(color: Colors.white, width: 3),
+              boxShadow: const [
+                BoxShadow(color: Colors.black38, blurRadius: 6),
+              ],
+            ),
+            child: const Icon(Icons.my_location_rounded,
+                size: 17, color: Colors.white),
+          ),
+        ),
+      );
+    }
+    return markers;
   }
 
   Future<void> _openGoogleMaps() async {
@@ -152,7 +171,10 @@ class _SelectedRouteMapScreenState extends State<SelectedRouteMapScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final first = widget.places.first;
+    final points = _routePoints;
+    final initialCenter = _centerOf(points);
+    final initialZoom = _zoomFor(points);
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Rotam (${widget.places.length})'),
@@ -167,22 +189,38 @@ class _SelectedRouteMapScreenState extends State<SelectedRouteMapScreen> {
       body: Column(
         children: [
           Expanded(
-            child: GoogleMap(
-              initialCameraPosition: CameraPosition(
-                target: LatLng(first.latitude, first.longitude),
-                zoom: 12,
+            child: FlutterMap(
+              mapController: _mapController,
+              options: MapOptions(
+                initialCenter: initialCenter,
+                initialZoom: initialZoom,
+                interactionOptions: const InteractionOptions(
+                  flags: InteractiveFlag.all,
+                ),
               ),
-              markers: _markers,
-              polylines: _polylines,
-              myLocationEnabled: _position != null,
-              myLocationButtonEnabled: false,
-              mapToolbarEnabled: false,
-              zoomControlsEnabled: false,
-              onMapCreated: (controller) async {
-                _mapController = controller;
-                await Future<void>.delayed(const Duration(milliseconds: 120));
-                await _fitAll();
-              },
+              children: [
+                TileLayer(
+                  urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                  userAgentPackageName: 'com.example.tbt',
+                  maxZoom: 19,
+                ),
+                if (points.length >= 2)
+                  PolylineLayer(
+                    polylines: [
+                      Polyline(
+                        points: points,
+                        strokeWidth: 5,
+                        color: const Color(0xFF42F5E9),
+                      ),
+                    ],
+                  ),
+                MarkerLayer(markers: _markers),
+                const RichAttributionWidget(
+                  attributions: [
+                    TextSourceAttribution('OpenStreetMap contributors'),
+                  ],
+                ),
+              ],
             ),
           ),
           SafeArea(
@@ -193,7 +231,9 @@ class _SelectedRouteMapScreenState extends State<SelectedRouteMapScreen> {
                 children: [
                   Expanded(
                     child: Text(
-                      'Seçilen ${widget.places.length} mekan uygulama içindeki haritada gösteriliyor.',
+                      _position == null
+                          ? 'Seçilen ${widget.places.length} mekan uygulama içindeki haritada gösteriliyor.'
+                          : 'Konumun ve seçilen ${widget.places.length} mekan aynı rota üzerinde gösteriliyor.',
                       style: const TextStyle(color: Colors.white70),
                     ),
                   ),
