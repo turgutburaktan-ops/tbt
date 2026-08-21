@@ -4,9 +4,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 import '../models/photo_spot.dart';
-import '../services/post_service.dart';
 import '../screens/post_detail_screen.dart';
+import '../services/post_service.dart';
 import 'firebase_media_image.dart';
+import 'venue_reviews_section.dart';
 
 class SpotUserPostsGallery extends StatelessWidget {
   final PhotoSpot spot;
@@ -14,124 +15,160 @@ class SpotUserPostsGallery extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-      stream: PostService.instance.allPosts(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const _Shell(
-            child: SizedBox(
-              height: 92,
-              child: Center(
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: Color(0xFFB7BCC2),
-                ),
-              ),
-            ),
-          );
-        }
-
-        final docs = snapshot.data?.docs ?? const [];
-        final matches = docs.where((doc) => _matches(doc.data(), spot)).toList()
-          ..sort((a, b) =>
-              _score(b.data(), spot).compareTo(_score(a.data(), spot)));
-        final top = matches.take(9).toList(growable: false);
-
-        if (top.isEmpty) {
-          return _Shell(
-            child: Row(
-              children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFB7BCC2).withOpacity(.12),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: const Icon(Icons.add_photo_alternate_outlined,
-                      color: Color(0xFFB7BCC2)),
-                ),
-                const SizedBox(width: 12),
-                const Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Henüz paylaşım yok',
-                          style: TextStyle(fontWeight: FontWeight.w800)),
-                      SizedBox(height: 3),
-                      Text(
-                        'Bu noktadan yapılan kullanıcı paylaşımları burada görünecek.',
-                        style: TextStyle(
-                            color: Colors.white54, fontSize: 12, height: 1.3),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          );
-        }
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Row(
-              children: [
-                Icon(Icons.photo_library_outlined,
-                    size: 21, color: Color(0xFFB7BCC2)),
-                SizedBox(width: 8),
-                Expanded(
-                  child: Text('Bu Noktadan Paylaşımlar',
-                      style:
-                          TextStyle(fontSize: 19, fontWeight: FontWeight.bold)),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: top.length,
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                crossAxisSpacing: 3,
-                mainAxisSpacing: 3,
-              ),
-              itemBuilder: (context, index) {
-                final data = top[index].data();
-                final url = (data['imageUrl'] ?? '').toString();
-                final storagePath = (data['storagePath'] ?? '').toString();
-                return GestureDetector(
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (_) => PostDetailScreen(post: data)),
-                  ),
-                  child: Hero(
-                    tag: 'spot-post-${top[index].id}',
-                    child: Container(
-                      color: const Color(0xFF121416),
-                      child: url.isEmpty && storagePath.isEmpty
-                          ? const Icon(Icons.image_outlined,
-                              color: Colors.white30)
-                          : FirebaseMediaImage(
-                              imageUrl: url,
-                              storagePath: storagePath,
-                              fit: BoxFit.cover,
-                              filterQuality: FilterQuality.low,
-                              errorWidget: const Center(
-                                child: Icon(Icons.broken_image_outlined,
-                                    color: Colors.white30),
-                              ),
-                            ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+          stream: PostService.instance.allPosts(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const _Shell(
+                child: SizedBox(
+                  height: 92,
+                  child: Center(
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Color(0xFFB7BCC2),
                     ),
                   ),
-                );
-              },
+                ),
+              );
+            }
+
+            final docs = snapshot.data?.docs ?? const [];
+            final matches = docs.where((doc) => _matches(doc.data(), spot)).toList()
+              ..sort((a, b) => _score(b.data(), spot).compareTo(_score(a.data(), spot)));
+            final top = matches.take(9).toList(growable: false);
+
+            if (top.isEmpty) {
+              return _Shell(
+                child: Row(
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFB7BCC2).withValues(alpha: .12),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: const Icon(
+                        Icons.add_photo_alternate_outlined,
+                        color: Color(0xFFB7BCC2),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Henüz paylaşım yok',
+                            style: TextStyle(fontWeight: FontWeight.w800),
+                          ),
+                          SizedBox(height: 3),
+                          Text(
+                            'Bu noktadan yapılan kullanıcı paylaşımları burada görünecek.',
+                            style: TextStyle(
+                              color: Colors.white54,
+                              fontSize: 12,
+                              height: 1.3,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Row(
+                  children: [
+                    Icon(
+                      Icons.photo_library_outlined,
+                      size: 21,
+                      color: Color(0xFFB7BCC2),
+                    ),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Bu Noktadan Paylaşımlar',
+                        style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: top.length,
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 3,
+                    crossAxisSpacing: 3,
+                    mainAxisSpacing: 3,
+                  ),
+                  itemBuilder: (context, index) {
+                    final data = top[index].data();
+                    final url = (data['imageUrl'] ?? '').toString();
+                    final storagePath = (data['storagePath'] ?? '').toString();
+                    return GestureDetector(
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => PostDetailScreen(post: data),
+                        ),
+                      ),
+                      child: Hero(
+                        tag: 'spot-post-${top[index].id}',
+                        child: Container(
+                          color: const Color(0xFF121416),
+                          child: url.isEmpty && storagePath.isEmpty
+                              ? const Icon(Icons.image_outlined, color: Colors.white30)
+                              : FirebaseMediaImage(
+                                  imageUrl: url,
+                                  storagePath: storagePath,
+                                  fit: BoxFit.cover,
+                                  filterQuality: FilterQuality.low,
+                                  errorWidget: const Center(
+                                    child: Icon(
+                                      Icons.broken_image_outlined,
+                                      color: Colors.white30,
+                                    ),
+                                  ),
+                                ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ],
+            );
+          },
+        ),
+        const SizedBox(height: 28),
+        const Row(
+          children: [
+            Icon(Icons.rate_review_outlined, size: 21, color: Color(0xFFB7BCC2)),
+            SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Puanlar ve Yorumlar',
+                style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold),
+              ),
             ),
           ],
-        );
-      },
+        ),
+        const SizedBox(height: 10),
+        VenueReviewsSection(
+          category: 'spot',
+          venueId: spot.id,
+          venueName: spot.name,
+        ),
+      ],
     );
   }
 
@@ -139,20 +176,16 @@ class SpotUserPostsGallery extends StatelessWidget {
     final likes = (post['likesCount'] as num?)?.toDouble() ?? 0;
     final comments = (post['commentsCount'] as num?)?.toDouble() ?? 0;
     final createdAt = post['createdAt'];
-
     var score = likes * 3.0 + comments * 5.0;
 
-    // Yeni paylaşımlara küçük bir avantaj veriyoruz; eski ve çok etkileşimli
-    // içerikler yine rahatça önde kalabilir.
     if (createdAt is Timestamp) {
-      final ageDays =
-          DateTime.now().difference(createdAt.toDate()).inHours / 24.0;
+      final ageDays = DateTime.now().difference(createdAt.toDate()).inHours / 24.0;
       score += 12.0 / (1.0 + (ageDays / 14.0));
     }
 
     final postName = _normalize(
-        (post['spotName'] ?? post['locationName'] ?? post['location'] ?? '')
-            .toString());
+      (post['spotName'] ?? post['locationName'] ?? post['location'] ?? '').toString(),
+    );
     final spotName = _normalize(spot.name);
     if (postName == spotName && postName.isNotEmpty) {
       score += 20;
@@ -174,14 +207,13 @@ class SpotUserPostsGallery extends StatelessWidget {
         score += 6;
       }
     }
-
     return score;
   }
 
   static bool _matches(Map<String, dynamic> post, PhotoSpot spot) {
     final postName = _normalize(
-        (post['spotName'] ?? post['locationName'] ?? post['location'] ?? '')
-            .toString());
+      (post['spotName'] ?? post['locationName'] ?? post['location'] ?? '').toString(),
+    );
     final spotName = _normalize(spot.name);
 
     if (postName.isNotEmpty && spotName.isNotEmpty) {
@@ -192,8 +224,9 @@ class SpotUserPostsGallery extends StatelessWidget {
       }
       final postTokens = postName.split(' ').where((e) => e.length > 2).toSet();
       final spotTokens = spotName.split(' ').where((e) => e.length > 2).toSet();
-      if (postTokens.intersection(spotTokens).length >=
-          math.min(2, spotTokens.length)) return true;
+      if (postTokens.intersection(spotTokens).length >= math.min(2, spotTokens.length)) {
+        return true;
+      }
     }
 
     final lat = (post['latitude'] as num?)?.toDouble();
@@ -215,7 +248,11 @@ class SpotUserPostsGallery extends StatelessWidget {
       .trim();
 
   static double _distanceMeters(
-      double lat1, double lon1, double lat2, double lon2) {
+    double lat1,
+    double lon1,
+    double lat2,
+    double lon2,
+  ) {
     const r = 6371000.0;
     final dLat = _rad(lat2 - lat1);
     final dLon = _rad(lon2 - lon1);
