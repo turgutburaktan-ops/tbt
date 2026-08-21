@@ -7,6 +7,7 @@ import '../services/story_service.dart';
 import '../theme/app_theme.dart';
 import 'camera_video_post_screen.dart';
 import 'create_post_screen.dart';
+import 'story_photo_editor_screen.dart';
 
 class CameraScreen extends StatefulWidget {
   final bool storyMode;
@@ -135,6 +136,7 @@ class _CameraScreenState extends State<CameraScreen>
       ),
     );
     if (type == null || !mounted) return;
+
     _startOpening(type == 'video' ? 'Video' : 'Fotoğraf');
     try {
       if (type == 'video') {
@@ -193,16 +195,25 @@ class _CameraScreenState extends State<CameraScreen>
 
   Future<void> _handlePhoto(File photo) async {
     if (widget.storyMode) {
-      try {
-        setState(() => _returningFromCamera = true);
-        await StoryService.instance.createStory(photo);
-        if (!mounted) return;
+      if (!mounted) return;
+      setState(() {
+        _opening = false;
+        _returningFromCamera = false;
+      });
+      final shared = await Navigator.push<bool>(
+        context,
+        MaterialPageRoute(
+          fullscreenDialog: true,
+          builder: (_) => StoryPhotoEditorScreen(photo: photo),
+        ),
+      );
+      if (!mounted) return;
+      if (shared == true) {
         Navigator.pop(context, true);
-      } catch (error) {
-        _showError(error.toString().replaceFirst('Exception: ', ''));
       }
       return;
     }
+
     if (!mounted) return;
     await Navigator.of(context).pushReplacement(
       MaterialPageRoute(
@@ -223,6 +234,7 @@ class _CameraScreenState extends State<CameraScreen>
       }
       return;
     }
+
     if (!mounted) return;
     await Navigator.of(context).pushReplacement(
       MaterialPageRoute(
@@ -233,14 +245,219 @@ class _CameraScreenState extends State<CameraScreen>
 
   @override
   Widget build(BuildContext context) {
-    final title = widget.storyMode ? 'Story Kamerası' : 'Kamera';
+    if (widget.storyMode) {
+      return Scaffold(
+        backgroundColor: Colors.black,
+        body: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 180),
+          child: _opening ? _buildStoryProgress() : _buildStoryLauncher(),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: Text(title)),
+      appBar: AppBar(title: const Text('Kamera')),
       body: SafeArea(
         child: AnimatedSwitcher(
           duration: const Duration(milliseconds: 180),
           child: _opening ? _buildProgress() : _buildLauncher(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStoryLauncher() {
+    return Stack(
+      key: const ValueKey('story_launcher'),
+      fit: StackFit.expand,
+      children: [
+        const ColoredBox(color: Colors.black),
+        Positioned.fill(
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: RadialGradient(
+                radius: 1.1,
+                center: const Alignment(0, -.15),
+                colors: [
+                  const Color(0xFF252A31),
+                  Colors.black.withValues(alpha: .96),
+                ],
+              ),
+            ),
+          ),
+        ),
+        SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(14, 10, 14, 18),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    _StoryTopButton(
+                      icon: Icons.close_rounded,
+                      onTap: () => Navigator.pop(context, false),
+                    ),
+                    const Spacer(),
+                    const Text(
+                      'Story',
+                      style: TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const Spacer(),
+                    _StoryTopButton(
+                      icon: Icons.photo_library_outlined,
+                      onTap: _openGallery,
+                    ),
+                  ],
+                ),
+                const Spacer(),
+                Container(
+                  width: 88,
+                  height: 88,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white.withValues(alpha: .08),
+                    border: Border.all(color: Colors.white24),
+                  ),
+                  child: const Icon(
+                    Icons.camera_alt_rounded,
+                    color: Colors.white54,
+                    size: 38,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Fotoğraf veya video çek',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                const Text(
+                  'Fotoğrafı çektikten sonra yazı, font ve emoji ekleyebilirsin.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.white54,
+                    fontSize: 12.5,
+                    height: 1.35,
+                  ),
+                ),
+                if (_error != null) ...[
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 9,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.redAccent.withValues(alpha: .12),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: Colors.redAccent.withValues(alpha: .30),
+                      ),
+                    ),
+                    child: Text(
+                      _error!,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                ],
+                const Spacer(),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _StoryModeButton(
+                      icon: Icons.videocam_rounded,
+                      label: 'Video',
+                      onTap: _captureVideo,
+                    ),
+                    const SizedBox(width: 28),
+                    GestureDetector(
+                      onTap: _capturePhoto,
+                      child: Container(
+                        width: 82,
+                        height: 82,
+                        padding: const EdgeInsets.all(5),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 3),
+                        ),
+                        child: const DecoratedBox(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 28),
+                    _StoryModeButton(
+                      icon: Icons.photo_library_outlined,
+                      label: 'Galeri',
+                      onTap: _openGallery,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                const Text(
+                  'Fotoğraf',
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStoryProgress() {
+    final preparing = _returningFromCamera;
+    final action = _currentAction.isEmpty ? 'Medya' : _currentAction;
+    return ColoredBox(
+      key: const ValueKey('story_progress'),
+      color: Colors.black,
+      child: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const CircularProgressIndicator(color: Colors.white),
+                const SizedBox(height: 18),
+                Text(
+                  preparing
+                      ? '$action hazırlanıyor…'
+                      : 'Kamera tam ekran açılıyor…',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                if (preparing && _currentAction == 'Fotoğraf') ...[
+                  const SizedBox(height: 7),
+                  const Text(
+                    'Birazdan Story düzenleme ekranı açılacak.',
+                    style: TextStyle(color: Colors.white54, fontSize: 12),
+                  ),
+                ],
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -285,12 +502,10 @@ class _CameraScreenState extends State<CameraScreen>
             ),
             if (preparing) ...[
               const SizedBox(height: 8),
-              Text(
-                widget.storyMode
-                    ? 'Hazır olur olmaz Story paylaşılacak.'
-                    : 'Hazır olur olmaz paylaşım ekranı açılacak.',
+              const Text(
+                'Hazır olur olmaz paylaşım ekranı açılacak.',
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.white38, fontSize: 12),
+                style: TextStyle(color: Colors.white38, fontSize: 12),
               ),
             ],
           ],
@@ -323,22 +538,20 @@ class _CameraScreenState extends State<CameraScreen>
                 ),
               ),
               const SizedBox(height: 14),
-              Text(
-                widget.storyMode ? 'Story oluştur' : 'Ne çekmek istiyorsun?',
+              const Text(
+                'Ne çekmek istiyorsun?',
                 textAlign: TextAlign.center,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 23,
                   fontWeight: FontWeight.w900,
                   letterSpacing: -.4,
                 ),
               ),
               const SizedBox(height: 7),
-              Text(
-                widget.storyMode
-                    ? 'Fotoğraf veya en fazla 15 saniyelik video çek. İstersen galeriden yükle.'
-                    : 'Telefonunun kendi kamerasıyla fotoğraf veya en fazla 30 saniyelik video çek.',
+              const Text(
+                'Telefonunun kendi kamerasıyla fotoğraf veya en fazla 30 saniyelik video çek.',
                 textAlign: TextAlign.center,
-                style: const TextStyle(
+                style: TextStyle(
                   color: Colors.white54,
                   height: 1.4,
                   fontSize: 13,
@@ -358,7 +571,10 @@ class _CameraScreenState extends State<CameraScreen>
                   child: Text(
                     _error!,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(color: Colors.white70, fontSize: 12.5),
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 12.5,
+                    ),
                   ),
                 ),
               ],
@@ -399,6 +615,72 @@ class _CameraScreenState extends State<CameraScreen>
       ),
     );
   }
+}
+
+class _StoryTopButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+
+  const _StoryTopButton({required this.icon, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) => Material(
+        color: Colors.black45,
+        shape: const CircleBorder(),
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          onTap: onTap,
+          child: SizedBox(
+            width: 44,
+            height: 44,
+            child: Icon(icon, color: Colors.white),
+          ),
+        ),
+      );
+}
+
+class _StoryModeButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  const _StoryModeButton({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) => InkWell(
+        borderRadius: BorderRadius.circular(18),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 7),
+          child: Column(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.black45,
+                  border: Border.all(color: Colors.white24),
+                ),
+                child: Icon(icon, color: Colors.white),
+              ),
+              const SizedBox(height: 5),
+              Text(
+                label,
+                style: const TextStyle(
+                  color: Colors.white70,
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
 }
 
 class _CaptureButton extends StatelessWidget {
@@ -450,7 +732,7 @@ class _CaptureButton extends StatelessWidget {
                 Text(
                   subtitle,
                   style: const TextStyle(
-                    color: const Color(0x75FFFFFF),
+                    color: Color(0x75FFFFFF),
                     fontSize: 10.5,
                   ),
                 ),
