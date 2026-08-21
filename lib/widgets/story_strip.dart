@@ -8,6 +8,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../models/app_story.dart';
 import '../services/story_service.dart';
+import 'app_video_player.dart';
 import 'firebase_media_image.dart';
 
 class StoryStrip extends StatefulWidget {
@@ -20,11 +21,12 @@ class StoryStrip extends StatefulWidget {
 }
 
 class _StoryStripState extends State<StoryStrip> {
+  final ImagePicker _picker = ImagePicker();
   bool _uploading = false;
 
   Future<void> _addStory() async {
     if (_uploading) return;
-    final source = await showModalBottomSheet<ImageSource>(
+    final choice = await showModalBottomSheet<String>(
       context: context,
       backgroundColor: const Color(0xFF15181D),
       builder: (context) => SafeArea(
@@ -33,47 +35,80 @@ class _StoryStripState extends State<StoryStrip> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
-                'Story ekle',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
-              ),
+              const Text('Story ekle',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
               const SizedBox(height: 10),
               ListTile(
                 leading: const Icon(Icons.photo_camera_outlined),
-                title: const Text('Kamerayla çek'),
-                onTap: () => Navigator.pop(context, ImageSource.camera),
+                title: const Text('Fotoğraf çek'),
+                onTap: () => Navigator.pop(context, 'photo_camera'),
               ),
               ListTile(
                 leading: const Icon(Icons.photo_library_outlined),
-                title: const Text('Galeriden seç'),
-                onTap: () => Navigator.pop(context, ImageSource.gallery),
+                title: const Text('Galeriden fotoğraf seç'),
+                onTap: () => Navigator.pop(context, 'photo_gallery'),
+              ),
+              const Divider(),
+              ListTile(
+                leading: const Icon(Icons.videocam_outlined),
+                title: const Text('15 sn video çek'),
+                subtitle: const Text('Story videosu en fazla 15 saniye'),
+                onTap: () => Navigator.pop(context, 'video_camera'),
+              ),
+              ListTile(
+                leading: const Icon(Icons.video_library_outlined),
+                title: const Text('Galeriden video seç'),
+                subtitle: const Text('15 saniyeye kadar'),
+                onTap: () => Navigator.pop(context, 'video_gallery'),
               ),
             ],
           ),
         ),
       ),
     );
-    if (source == null || !mounted) return;
+    if (choice == null || !mounted) return;
 
-    final picked = await ImagePicker().pickImage(
-      source: source,
-      imageQuality: 100,
-      requestFullMetadata: false,
-    );
-    if (picked == null || !mounted) return;
-    setState(() => _uploading = true);
+    XFile? picked;
+    final isVideo = choice.startsWith('video');
     try {
-      await StoryService.instance.createStory(File(picked.path));
+      if (isVideo) {
+        picked = await _picker.pickVideo(
+          source: choice == 'video_camera'
+              ? ImageSource.camera
+              : ImageSource.gallery,
+          maxDuration: const Duration(seconds: 15),
+        );
+      } else {
+        picked = await _picker.pickImage(
+          source: choice == 'photo_camera'
+              ? ImageSource.camera
+              : ImageSource.gallery,
+          imageQuality: 100,
+          requestFullMetadata: false,
+        );
+      }
+      if (picked == null || !mounted) return;
+
+      setState(() => _uploading = true);
+      if (isVideo) {
+        await StoryService.instance.createVideoStory(File(picked.path));
+      } else {
+        await StoryService.instance.createStory(File(picked.path));
+      }
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Story 24 saatliğine paylaşıldı.')),
+        SnackBar(
+          content: Text(
+            isVideo
+                ? 'Video Story 24 saatliğine paylaşıldı.'
+                : 'Story 24 saatliğine paylaşıldı.',
+          ),
+        ),
       );
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(error.toString().replaceFirst('Exception: ', '')),
-        ),
+        SnackBar(content: Text(error.toString().replaceFirst('Exception: ', ''))),
       );
     } finally {
       if (mounted) setState(() => _uploading = false);
@@ -161,9 +196,7 @@ class _AddStoryCircle extends StatelessWidget {
                     height: 66,
                     padding: const EdgeInsets.all(2),
                     decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Color(0xFF2A2E35),
-                    ),
+                        shape: BoxShape.circle, color: Color(0xFF2A2E35)),
                     child: ClipOval(
                       child: FirebaseMediaImage(
                         imageUrl: photoUrl,
@@ -192,9 +225,7 @@ class _AddStoryCircle extends StatelessWidget {
                           ? const Padding(
                               padding: EdgeInsets.all(5),
                               child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.black,
-                              ),
+                                  strokeWidth: 2, color: Colors.black),
                             )
                           : const Icon(Icons.add_rounded,
                               size: 18, color: Colors.black),
@@ -203,11 +234,9 @@ class _AddStoryCircle extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 5),
-              const Text(
-                'Story ekle',
-                maxLines: 1,
-                style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700),
-              ),
+              const Text('Story ekle',
+                  maxLines: 1,
+                  style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700)),
             ],
           ),
         ),
@@ -235,34 +264,43 @@ class _StoryCircle extends StatelessWidget {
         borderRadius: BorderRadius.circular(40),
         child: Column(
           children: [
-            Container(
-              width: 66,
-              height: 66,
-              padding: const EdgeInsets.all(3),
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  colors: [Color(0xFF42F5E9), Color(0xFF8B5CF6)],
-                ),
-              ),
-              child: Container(
-                padding: const EdgeInsets.all(2),
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Color(0xFF090A0D),
-                ),
-                child: ClipOval(
-                  child: FirebaseMediaImage(
-                    imageUrl: story.userPhotoUrl,
-                    fallbackStoragePaths:
-                        FirebaseMediaImage.avatarPaths(story.userId),
-                    errorWidget: FirebaseMediaImage(
-                      imageUrl: story.imageUrl,
-                      storagePath: story.storagePath,
+            Stack(
+              alignment: Alignment.center,
+              children: [
+                Container(
+                  width: 66,
+                  height: 66,
+                  padding: const EdgeInsets.all(3),
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: LinearGradient(
+                        colors: [Color(0xFF42F5E9), Color(0xFF8B5CF6)]),
+                  ),
+                  child: Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: const BoxDecoration(
+                        shape: BoxShape.circle, color: Color(0xFF090A0D)),
+                    child: ClipOval(
+                      child: FirebaseMediaImage(
+                        imageUrl: story.userPhotoUrl,
+                        fallbackStoragePaths:
+                            FirebaseMediaImage.avatarPaths(story.userId),
+                        errorWidget: FirebaseMediaImage(
+                          imageUrl: story.previewUrl,
+                          storagePath: story.previewStoragePath,
+                        ),
+                      ),
                     ),
                   ),
                 ),
-              ),
+                if (story.isVideo)
+                  const Positioned(
+                    right: 4,
+                    bottom: 4,
+                    child: Icon(Icons.videocam_rounded,
+                        size: 18, color: Colors.white),
+                  ),
+              ],
             ),
             const SizedBox(height: 5),
             Text(
@@ -295,8 +333,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> {
   bool _sending = false;
 
   AppStory get _current => widget.stories[_index];
-  bool get _mine =>
-      _current.userId == FirebaseAuth.instance.currentUser?.uid;
+  bool get _mine => _current.userId == FirebaseAuth.instance.currentUser?.uid;
 
   @override
   void initState() {
@@ -316,7 +353,15 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> {
 
   void _restartTimer() {
     _timer?.cancel();
-    _timer = Timer(const Duration(seconds: 7), _next);
+    final story = _current;
+    final duration = story.isVideo
+        ? Duration(
+            milliseconds: story.durationMs > 0
+                ? story.durationMs.clamp(1000, 15000)
+                : 15000,
+          )
+        : const Duration(seconds: 7);
+    _timer = Timer(duration, _next);
   }
 
   void _pauseTimer() => _timer?.cancel();
@@ -408,16 +453,13 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> {
                     child: Row(
                       children: [
                         Expanded(
-                          child: Text(
-                            '${items.length} görüntüleme',
-                            style: const TextStyle(
-                                fontSize: 18, fontWeight: FontWeight.w900),
-                          ),
+                          child: Text('${items.length} görüntüleme',
+                              style: const TextStyle(
+                                  fontSize: 18, fontWeight: FontWeight.w900)),
                         ),
                         IconButton(
-                          onPressed: () => Navigator.pop(sheetContext),
-                          icon: const Icon(Icons.close_rounded),
-                        ),
+                            onPressed: () => Navigator.pop(sheetContext),
+                            icon: const Icon(Icons.close_rounded)),
                       ],
                     ),
                   ),
@@ -426,8 +468,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> {
                     child: items.isEmpty
                         ? const Center(
                             child: Text('Henüz kimse bu Story’yi izlemedi.',
-                                style: TextStyle(color: Colors.white54)),
-                          )
+                                style: TextStyle(color: Colors.white54)))
                         : ListView.separated(
                             padding: const EdgeInsets.symmetric(vertical: 8),
                             itemCount: items.length,
@@ -435,10 +476,14 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> {
                                 const Divider(height: 1, indent: 70),
                             itemBuilder: (_, index) {
                               final item = items[index];
-                              final name = (item['userName'] ?? 'Kullanıcı').toString();
-                              final photo = (item['userPhotoUrl'] ?? '').toString();
-                              final reaction = (item['reaction'] ?? '').toString();
-                              final message = (item['message'] ?? '').toString();
+                              final name =
+                                  (item['userName'] ?? 'Kullanıcı').toString();
+                              final photo =
+                                  (item['userPhotoUrl'] ?? '').toString();
+                              final reaction =
+                                  (item['reaction'] ?? '').toString();
+                              final message =
+                                  (item['message'] ?? '').toString();
                               final liked = item['liked'] == true;
                               return ListTile(
                                 leading: SizedBox(
@@ -494,6 +539,34 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> {
     });
   }
 
+  Widget _media(AppStory story) {
+    if (story.isVideo) {
+      return AppVideoPlayer.network(
+        url: story.videoUrl,
+        autoplay: true,
+        muted: false,
+        loop: false,
+        showControls: true,
+        fit: BoxFit.contain,
+        loading: FirebaseMediaImage(
+          imageUrl: story.previewUrl,
+          storagePath: story.previewStoragePath,
+          fit: BoxFit.contain,
+        ),
+      );
+    }
+    return FirebaseMediaImage(
+      imageUrl: story.imageUrl,
+      storagePath: story.storagePath,
+      width: double.infinity,
+      height: double.infinity,
+      fit: BoxFit.contain,
+      errorWidget: const Center(
+        child: Icon(Icons.broken_image_outlined, size: 52, color: Colors.white38),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final current = _current;
@@ -513,20 +586,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> {
                   _markViewed();
                   _restartTimer();
                 },
-                itemBuilder: (context, index) {
-                  final story = widget.stories[index];
-                  return FirebaseMediaImage(
-                    imageUrl: story.imageUrl,
-                    storagePath: story.storagePath,
-                    width: double.infinity,
-                    height: double.infinity,
-                    fit: BoxFit.contain,
-                    errorWidget: const Center(
-                      child: Icon(Icons.broken_image_outlined,
-                          size: 52, color: Colors.white38),
-                    ),
-                  );
-                },
+                itemBuilder: (context, index) => _media(widget.stories[index]),
               ),
             ),
             Positioned(
@@ -570,11 +630,16 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> {
                       ),
                       const SizedBox(width: 9),
                       Expanded(
-                        child: Text(
-                          '${current.userName}  ${_time(current)}',
-                          style: const TextStyle(fontWeight: FontWeight.w800),
-                        ),
+                        child: Text('${current.userName}  ${_time(current)}',
+                            style:
+                                const TextStyle(fontWeight: FontWeight.w800)),
                       ),
+                      if (current.isVideo)
+                        const Padding(
+                          padding: EdgeInsets.only(right: 4),
+                          child: Icon(Icons.videocam_rounded,
+                              size: 18, color: Colors.white70),
+                        ),
                       if (_mine)
                         IconButton(
                           tooltip: 'Story’yi sil',
@@ -598,7 +663,8 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> {
                   ? StreamBuilder<List<Map<String, dynamic>>>(
                       stream: StoryService.instance.watchInteractions(current),
                       builder: (context, snapshot) {
-                        final items = snapshot.data ?? const <Map<String, dynamic>>[];
+                        final items =
+                            snapshot.data ?? const <Map<String, dynamic>>[];
                         return Align(
                           alignment: Alignment.centerLeft,
                           child: FilledButton.tonalIcon(
@@ -610,7 +676,8 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> {
                       },
                     )
                   : StreamBuilder<Map<String, dynamic>>(
-                      stream: StoryService.instance.watchMyInteraction(current.id),
+                      stream:
+                          StoryService.instance.watchMyInteraction(current.id),
                       builder: (context, snapshot) {
                         final interaction =
                             snapshot.data ?? const <String, dynamic>{};
@@ -621,18 +688,16 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: ['❤️', '🔥', '😍', '👏', '😂']
-                                  .map(
-                                    (emoji) => InkWell(
-                                      onTap: () => _react(emoji),
-                                      borderRadius: BorderRadius.circular(24),
-                                      child: Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 8, vertical: 7),
-                                        child: Text(emoji,
-                                            style: const TextStyle(fontSize: 23)),
-                                      ),
-                                    ),
-                                  )
+                                  .map((emoji) => InkWell(
+                                        onTap: () => _react(emoji),
+                                        borderRadius: BorderRadius.circular(24),
+                                        child: Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 8, vertical: 7),
+                                          child: Text(emoji,
+                                              style: const TextStyle(fontSize: 23)),
+                                        ),
+                                      ))
                                   .toList(),
                             ),
                             const SizedBox(height: 4),
@@ -656,7 +721,11 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> {
                                     minLines: 1,
                                     maxLines: 3,
                                     maxLength: 500,
-                                    buildCounter: (_, {required currentLength, required isFocused, maxLength}) => null,
+                                    buildCounter: (_,
+                                            {required currentLength,
+                                            required isFocused,
+                                            maxLength}) =>
+                                        null,
                                     onTap: _pauseTimer,
                                     onSubmitted: (_) => _sendReply(),
                                     textInputAction: TextInputAction.send,
