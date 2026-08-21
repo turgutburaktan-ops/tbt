@@ -8,6 +8,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../services/content_engagement_service.dart';
 import '../services/post_service.dart';
+import '../widgets/app_video_player.dart';
 
 class CreatePostScreen extends StatefulWidget {
   final String? initialImagePath;
@@ -25,14 +26,17 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   final ImagePicker _picker = ImagePicker();
   final TextEditingController _captionController = TextEditingController();
   final TextEditingController _spotController = TextEditingController();
-
   final List<Map<String, String>> _taggedUsers = <Map<String, String>>[];
 
   File? _image;
+  File? _video;
   double? _latitude;
   double? _longitude;
   bool _loading = false;
   bool _gettingLocation = false;
+
+  bool get _hasMedia => _image != null || _video != null;
+  bool get _isVideo => _video != null;
 
   @override
   void initState() {
@@ -40,18 +44,25 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     if (widget.initialImagePath != null) {
       _image = File(widget.initialImagePath!);
     }
+    _captionController.addListener(_refreshCaptionCounter);
+  }
+
+  void _refreshCaptionCounter() {
+    if (mounted) setState(() {});
   }
 
   @override
   void dispose() {
-    _captionController.dispose();
+    _captionController
+      ..removeListener(_refreshCaptionCounter)
+      ..dispose();
     _spotController.dispose();
     super.dispose();
   }
 
   Future<void> _chooseSource() async {
     if (_loading) return;
-    await showModalBottomSheet<void>(
+    final choice = await showModalBottomSheet<String>(
       context: context,
       backgroundColor: const Color(0xFF121416),
       shape: const RoundedRectangleBorder(
@@ -63,45 +74,77 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              const Text(
+                'Fotoğraf veya video ekle',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
+              ),
+              const SizedBox(height: 10),
               ListTile(
-                leading: const Icon(
-                  Icons.camera_alt,
-                  color: Color(0xFFB7BCC2),
-                ),
-                title: const Text('Kamera ile çek'),
-                onTap: () {
-                  Navigator.pop(sheetContext);
-                  _pickImage(ImageSource.camera);
-                },
+                leading: const Icon(Icons.camera_alt_outlined),
+                title: const Text('Fotoğraf çek'),
+                onTap: () => Navigator.pop(sheetContext, 'photo_camera'),
               ),
               ListTile(
-                leading: const Icon(
-                  Icons.photo_library_outlined,
-                  color: Color(0xFFB7BCC2),
-                ),
-                title: const Text('Galeriden seç'),
-                onTap: () {
-                  Navigator.pop(sheetContext);
-                  _pickImage(ImageSource.gallery);
-                },
+                leading: const Icon(Icons.photo_library_outlined),
+                title: const Text('Galeriden fotoğraf seç'),
+                onTap: () => Navigator.pop(sheetContext, 'photo_gallery'),
+              ),
+              const Divider(),
+              ListTile(
+                leading: const Icon(Icons.videocam_outlined),
+                title: const Text('30 sn video çek'),
+                subtitle: const Text('Paylaşım videosu en fazla 30 saniye'),
+                onTap: () => Navigator.pop(sheetContext, 'video_camera'),
+              ),
+              ListTile(
+                leading: const Icon(Icons.video_library_outlined),
+                title: const Text('Galeriden video seç'),
+                subtitle: const Text('30 saniyeye kadar'),
+                onTap: () => Navigator.pop(sheetContext, 'video_gallery'),
               ),
             ],
           ),
         ),
       ),
     );
+    if (choice == null || !mounted) return;
+    if (choice.startsWith('video')) {
+      await _pickVideo(
+        choice == 'video_camera' ? ImageSource.camera : ImageSource.gallery,
+      );
+    } else {
+      await _pickImage(
+        choice == 'photo_camera' ? ImageSource.camera : ImageSource.gallery,
+      );
+    }
   }
 
   Future<void> _pickImage(ImageSource source) async {
     try {
-      final selected = await _picker.pickImage(
+      final selected = await _picker.pickImage(source: source);
+      if (selected == null || !mounted) return;
+      setState(() {
+        _image = File(selected.path);
+        _video = null;
+      });
+    } catch (e) {
+      if (mounted) _message('Fotoğraf seçilemedi: $e');
+    }
+  }
+
+  Future<void> _pickVideo(ImageSource source) async {
+    try {
+      final selected = await _picker.pickVideo(
         source: source,
+        maxDuration: const Duration(seconds: 30),
       );
       if (selected == null || !mounted) return;
-      setState(() => _image = File(selected.path));
+      setState(() {
+        _video = File(selected.path);
+        _image = null;
+      });
     } catch (e) {
-      if (!mounted) return;
-      _message('Fotoğraf seçilemedi: $e');
+      if (mounted) _message('Video seçilemedi: $e');
     }
   }
 
@@ -111,7 +154,6 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     try {
       final enabled = await Geolocator.isLocationServiceEnabled();
       if (!enabled) throw Exception('Telefonun konum servisini aç.');
-
       var permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
@@ -120,7 +162,6 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
           permission == LocationPermission.deniedForever) {
         throw Exception('Konum izni verilmedi.');
       }
-
       final position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
       );
@@ -131,8 +172,9 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       });
       _message('Konum eklendi.');
     } catch (e) {
-      if (!mounted) return;
-      _message(e.toString().replaceFirst('Exception: ', ''));
+      if (mounted) {
+        _message(e.toString().replaceFirst('Exception: ', ''));
+      }
     } finally {
       if (mounted) setState(() => _gettingLocation = false);
     }
@@ -156,11 +198,9 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
               child: Row(
                 children: [
                   const Expanded(
-                    child: Text(
-                      'Açıklamaya kişi etiketle',
-                      style:
-                          TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
-                    ),
+                    child: Text('Açıklamaya kişi etiketle',
+                        style: TextStyle(
+                            fontSize: 20, fontWeight: FontWeight.w900)),
                   ),
                   IconButton(
                     onPressed: () => Navigator.pop(sheetContext),
@@ -176,10 +216,8 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                 builder: (_, snapshot) {
                   if (snapshot.hasError) {
                     return Center(
-                      child: Text(
-                        'Kullanıcılar yüklenemedi.\n${snapshot.error}',
-                        textAlign: TextAlign.center,
-                      ),
+                      child: Text('Kullanıcılar yüklenemedi.\n${snapshot.error}',
+                          textAlign: TextAlign.center),
                     );
                   }
                   if (!snapshot.hasData) {
@@ -192,24 +230,35 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                     itemBuilder: (_, index) {
                       final doc = users[index];
                       final data = doc.data();
-                      final name =
+                      final displayName =
                           (data['displayName'] ?? data['email'] ?? 'Kullanıcı')
                               .toString()
                               .trim();
+                      final username =
+                          (data['username'] ?? data['usernameNormalized'] ?? '')
+                              .toString()
+                              .trim();
+                      final mentionName =
+                          username.isNotEmpty ? username : displayName.replaceAll(' ', '');
                       final photo = (data['photoUrl'] ?? '').toString();
                       return ListTile(
                         leading: CircleAvatar(
                           backgroundColor: const Color(0xFF1A1D20),
                           backgroundImage:
                               photo.isEmpty ? null : NetworkImage(photo),
-                          child: photo.isEmpty
-                              ? const Icon(Icons.person_outline)
-                              : null,
+                          child:
+                              photo.isEmpty ? const Icon(Icons.person_outline) : null,
                         ),
-                        title: Text(name),
+                        title: Text(displayName),
+                        subtitle:
+                            username.isEmpty ? null : Text('@$username'),
                         onTap: () => Navigator.pop(
                           sheetContext,
-                          {'id': doc.id, 'name': name},
+                          {
+                            'id': doc.id,
+                            'name': displayName,
+                            'mention': mentionName,
+                          },
                         ),
                       );
                     },
@@ -224,40 +273,35 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
 
     if (selected == null || !mounted) return;
     final id = selected['id'] ?? '';
-    final name = selected['name'] ?? 'Kullanıcı';
     if (id.isEmpty || _taggedUsers.any((u) => u['id'] == id)) return;
-
     setState(() {
       _taggedUsers.add(selected);
-      final mention = '@${name.replaceAll(' ', '')}';
+      final mention = '@${selected['mention'] ?? selected['name'] ?? 'kullanici'}';
       final current = _captionController.text.trimRight();
       _captionController.text = current.isEmpty ? mention : '$current $mention';
-      _captionController.selection = TextSelection.collapsed(
-        offset: _captionController.text.length,
-      );
+      _captionController.selection =
+          TextSelection.collapsed(offset: _captionController.text.length);
     });
   }
 
   void _removeTag(Map<String, String> user) {
     setState(() {
       _taggedUsers.removeWhere((u) => u['id'] == user['id']);
-      final name = user['name'] ?? '';
-      if (name.isNotEmpty) {
-        final mention = '@${name.replaceAll(' ', '')}';
+      final mentionValue = user['mention'] ?? user['name'] ?? '';
+      if (mentionValue.isNotEmpty) {
         _captionController.text = _captionController.text
-            .replaceAll(mention, '')
+            .replaceAll('@$mentionValue', '')
             .replaceAll(RegExp(r'\s{2,}'), ' ')
             .trim();
-        _captionController.selection = TextSelection.collapsed(
-          offset: _captionController.text.length,
-        );
+        _captionController.selection =
+            TextSelection.collapsed(offset: _captionController.text.length);
       }
     });
   }
 
   Future<void> _share() async {
-    if (_image == null) {
-      _message('Önce bir fotoğraf seç veya çek.');
+    if (!_hasMedia) {
+      _message('Önce bir fotoğraf veya video seç.');
       return;
     }
     if (_spotController.text.trim().isEmpty) {
@@ -271,30 +315,46 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
 
     setState(() => _loading = true);
     try {
-      await PostService.instance.createPost(
-        image: _image!,
-        caption: _captionController.text,
-        spotName: _spotController.text,
-        latitude: _latitude,
-        longitude: _longitude,
-        taggedUserIds: _taggedUsers
-            .map((u) => u['id'] ?? '')
-            .where((e) => e.isNotEmpty)
-            .toList(),
-        taggedUserNames: _taggedUsers
-            .map((u) => u['name'] ?? '')
-            .where((e) => e.isNotEmpty)
-            .toList(),
-      );
-
+      final ids = _taggedUsers
+          .map((u) => u['id'] ?? '')
+          .where((e) => e.isNotEmpty)
+          .toList();
+      final names = _taggedUsers
+          .map((u) => u['name'] ?? '')
+          .where((e) => e.isNotEmpty)
+          .toList();
+      if (_isVideo) {
+        await PostService.instance.createVideoPost(
+          video: _video!,
+          caption: _captionController.text,
+          spotName: _spotController.text,
+          latitude: _latitude,
+          longitude: _longitude,
+          taggedUserIds: ids,
+          taggedUserNames: names,
+        );
+      } else {
+        await PostService.instance.createPost(
+          image: _image!,
+          caption: _captionController.text,
+          spotName: _spotController.text,
+          latitude: _latitude,
+          longitude: _longitude,
+          taggedUserIds: ids,
+          taggedUserNames: names,
+        );
+      }
       if (!mounted) return;
-      _message('Fotoğraf başarıyla paylaşıldı! 📸');
+      _message(_isVideo
+          ? 'Video başarıyla paylaşıldı! 🎬'
+          : 'Fotoğraf başarıyla paylaşıldı! 📸');
       Navigator.pop(context, true);
     } catch (e) {
-      if (!mounted) return;
-      _message(
-        'Paylaşım başarısız: ${e.toString().replaceFirst('Exception: ', '')}',
-      );
+      if (mounted) {
+        _message(
+          'Paylaşım başarısız: ${e.toString().replaceFirst('Exception: ', '')}',
+        );
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -306,16 +366,50 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       ..showSnackBar(SnackBar(content: Text(message)));
   }
 
+  Widget _mediaPreview() {
+    if (_video != null) {
+      return AppVideoPlayer.file(
+        file: _video!,
+        autoplay: true,
+        muted: true,
+        loop: true,
+        fit: BoxFit.cover,
+      );
+    }
+    if (_image != null) {
+      return Image.file(
+        _image!,
+        width: double.infinity,
+        height: double.infinity,
+        fit: BoxFit.cover,
+        gaplessPlayback: true,
+        filterQuality: FilterQuality.low,
+      );
+    }
+    return const Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(Icons.add_to_photos_outlined,
+            color: Color(0xFFB7BCC2), size: 68),
+        SizedBox(height: 14),
+        Text('Fotoğraf veya video ekle',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        SizedBox(height: 6),
+        Text('Video en fazla 30 saniye',
+            style: TextStyle(color: Colors.white54)),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    const purple = Color(0xFFB7BCC2);
-
+    const accent = Color(0xFFB7BCC2);
     return Scaffold(
       backgroundColor: const Color(0xFF090A0C),
       appBar: AppBar(
         backgroundColor: const Color(0xFF090A0C),
         foregroundColor: Colors.white,
-        title: const Text('Fotoğraf Paylaş'),
+        title: const Text('Paylaş'),
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(18, 16, 18, 40),
@@ -330,42 +424,28 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                 border: Border.all(color: const Color(0x334B5158)),
               ),
               clipBehavior: Clip.antiAlias,
-              child: _image == null
-                  ? const Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.add_photo_alternate_outlined,
-                          color: purple,
-                          size: 68,
-                        ),
-                        SizedBox(height: 14),
-                        Text(
-                          'Fotoğraf ekle',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        SizedBox(height: 6),
-                        Text(
-                          'Kamera veya galeri',
-                          style: TextStyle(color: Colors.white54),
-                        ),
-                      ],
-                    )
-                  : _FastPhotoPreview(image: _image!),
+              child: _mediaPreview(),
             ),
           ),
-          if (_image != null) ...[
+          if (_hasMedia) ...[
             const SizedBox(height: 8),
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton.icon(
-                onPressed: _chooseSource,
-                icon: const Icon(Icons.edit),
-                label: const Text('Fotoğrafı değiştir'),
-              ),
+            Row(
+              children: [
+                if (_isVideo)
+                  const Expanded(
+                    child: Text(
+                      'Video paylaşılırken 720p hazırlanacak.',
+                      style: TextStyle(color: Colors.white38, fontSize: 12),
+                    ),
+                  )
+                else
+                  const Spacer(),
+                TextButton.icon(
+                  onPressed: _loading ? null : _chooseSource,
+                  icon: const Icon(Icons.edit),
+                  label: Text(_isVideo ? 'Videoyu değiştir' : 'Fotoğrafı değiştir'),
+                ),
+              ],
             ),
           ],
           const SizedBox(height: 16),
@@ -375,7 +455,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
             decoration: InputDecoration(
               labelText: 'Çekim noktası adı',
               hintText: 'Örn. Galata Köprüsü',
-              prefixIcon: const Icon(Icons.place_outlined, color: purple),
+              prefixIcon: const Icon(Icons.place_outlined, color: accent),
               filled: true,
               fillColor: const Color(0xFF121416),
               border: OutlineInputBorder(
@@ -389,22 +469,27 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
             decoration: BoxDecoration(
               color: const Color(0xFF121416),
               borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: const Color(0x228B5CF6)),
+              border: Border.all(color: const Color(0x334B5158)),
             ),
             child: Column(
               children: [
                 TextField(
                   controller: _captionController,
                   maxLines: 4,
+                  maxLength: 500,
+                  buildCounter: (_,
+                          {required currentLength,
+                          required isFocused,
+                          maxLength}) =>
+                      null,
                   style: const TextStyle(color: Colors.white),
                   decoration: const InputDecoration(
                     labelText: 'Açıklama',
-                    hintText: 'Fotoğrafı anlat, istersen arkadaşını etiketle…',
+                    hintText: 'Paylaşımını anlat, istersen arkadaşını etiketle…',
                     prefixIcon: Padding(
                       padding: EdgeInsets.only(bottom: 70),
-                      child: Icon(Icons.notes, color: purple),
+                      child: Icon(Icons.notes, color: accent),
                     ),
-                    filled: false,
                     border: InputBorder.none,
                   ),
                 ),
@@ -413,26 +498,14 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                   child: Row(
                     children: [
                       OutlinedButton.icon(
-                        onPressed: _addTag,
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: const Color(0xFFBFC4CA),
-                          side: const BorderSide(color: Color(0x558B5CF6)),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(99),
-                          ),
-                        ),
-                        icon:
-                            const Icon(Icons.alternate_email_rounded, size: 18),
+                        onPressed: _loading ? null : _addTag,
+                        icon: const Icon(Icons.alternate_email_rounded, size: 18),
                         label: const Text('Kişi etiketle'),
                       ),
                       const Spacer(),
-                      Text(
-                        '${_captionController.text.length}/500',
-                        style: const TextStyle(
-                          color: Colors.white30,
-                          fontSize: 11,
-                        ),
-                      ),
+                      Text('${_captionController.text.length}/500',
+                          style: const TextStyle(
+                              color: Colors.white30, fontSize: 11)),
                     ],
                   ),
                 ),
@@ -445,16 +518,12 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
               spacing: 8,
               runSpacing: 8,
               children: _taggedUsers
-                  .map(
-                    (user) => InputChip(
-                      avatar:
-                          const Icon(Icons.alternate_email_rounded, size: 16),
-                      label: Text(user['name'] ?? 'Kullanıcı'),
-                      onDeleted: () => _removeTag(user),
-                      backgroundColor: const Color(0xFF1B1430),
-                      side: const BorderSide(color: Color(0x448B5CF6)),
-                    ),
-                  )
+                  .map((user) => InputChip(
+                        avatar: const Icon(Icons.alternate_email_rounded,
+                            size: 16),
+                        label: Text(user['name'] ?? 'Kullanıcı'),
+                        onDeleted: _loading ? null : () => _removeTag(user),
+                      ))
                   .toList(),
             ),
           ],
@@ -462,122 +531,41 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
           SizedBox(
             height: 54,
             child: OutlinedButton.icon(
-              onPressed: _gettingLocation ? null : _getLocation,
+              onPressed: _gettingLocation || _loading ? null : _getLocation,
               icon: _gettingLocation
                   ? const SizedBox(
                       width: 20,
                       height: 20,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : Icon(
-                      _latitude != null
-                          ? Icons.location_on
-                          : Icons.location_on_outlined,
-                    ),
+                  : Icon(_latitude != null
+                      ? Icons.location_on
+                      : Icons.location_on_outlined),
               label: Text(
-                _latitude == null ? 'Konumumu Ekle' : 'Konum Eklendi ✓',
-              ),
+                  _latitude == null ? 'Konumumu Ekle' : 'Konum Eklendi ✓'),
             ),
           ),
-          if (_latitude != null && _longitude != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Text(
-                '${_latitude!.toStringAsFixed(5)}, ${_longitude!.toStringAsFixed(5)}',
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.white38, fontSize: 12),
-              ),
-            ),
           const SizedBox(height: 26),
           SizedBox(
             height: 58,
             child: FilledButton.icon(
-              style: FilledButton.styleFrom(
-                backgroundColor: purple,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(18),
-                ),
-              ),
               onPressed: _loading ? null : _share,
               icon: _loading
                   ? const SizedBox(
                       width: 22,
                       height: 22,
                       child: CircularProgressIndicator(
-                        strokeWidth: 3,
-                        color: Colors.white,
-                      ),
+                          strokeWidth: 2, color: Colors.black),
                     )
-                  : const Icon(Icons.send_rounded),
-              label: Text(
-                _loading ? 'Yükleniyor...' : 'Paylaş',
-                style: const TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+                  : Icon(_isVideo
+                      ? Icons.video_call_rounded
+                      : Icons.send_rounded),
+              label: Text(_loading
+                  ? (_isVideo ? 'Video hazırlanıyor…' : 'Paylaşılıyor…')
+                  : 'Paylaş'),
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _FastPhotoPreview extends StatelessWidget {
-  final File image;
-
-  const _FastPhotoPreview({required this.image});
-
-  @override
-  Widget build(BuildContext context) {
-    final logicalWidth = MediaQuery.sizeOf(context).width;
-    final pixelRatio = MediaQuery.devicePixelRatioOf(context);
-    final cacheWidth =
-        (logicalWidth * pixelRatio).round().clamp(720, 1600).toInt();
-    return Image.file(
-      image,
-      width: double.infinity,
-      height: double.infinity,
-      fit: BoxFit.cover,
-      cacheWidth: cacheWidth,
-      filterQuality: FilterQuality.medium,
-      gaplessPlayback: true,
-      frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
-        if (wasSynchronouslyLoaded || frame != null) return child;
-        return const ColoredBox(
-          color: Color(0xFF121416),
-          child: Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.check_circle_rounded,
-                  color: Color(0xFF42F5E9),
-                  size: 48,
-                ),
-                SizedBox(height: 12),
-                Text(
-                  'Fotoğraf çekildi',
-                  style: TextStyle(fontWeight: FontWeight.w800),
-                ),
-                SizedBox(height: 5),
-                Text(
-                  'Önizleme hazırlanıyor…',
-                  style: TextStyle(color: Colors.white54, fontSize: 12),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-      errorBuilder: (_, __, ___) => const ColoredBox(
-        color: Color(0xFF121416),
-        child: Center(
-          child: Icon(Icons.broken_image_outlined,
-              size: 48, color: Colors.white38),
-        ),
       ),
     );
   }
