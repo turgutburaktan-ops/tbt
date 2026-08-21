@@ -200,9 +200,12 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
                     const SizedBox(height: 3),
                     Text(
                       _position == null
-                          ? 'Gerçek gezi noktalarını keşfet; fotoğraf önerilerini detayda gör.'
+                          ? 'Gerçek gezi noktalarını keşfet; fotoğraf önerilerini karttan aç.'
                           : 'Yakınındaki gezilecek yerlerden başlayarak sıralandı.',
-                      style: const TextStyle(color: const Color(0x75FFFFFF), fontSize: 12),
+                      style: const TextStyle(
+                        color: Color(0x75FFFFFF),
+                        fontSize: 12,
+                      ),
                     ),
                   ],
                 ),
@@ -252,7 +255,7 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
                 child: Text(
                   '${_visible.length} gezilecek yer',
                   style: const TextStyle(
-                    color: const Color(0x75FFFFFF),
+                    color: Color(0x75FFFFFF),
                     fontSize: 11.5,
                     fontWeight: FontWeight.w700,
                   ),
@@ -297,6 +300,71 @@ class _SpotVenueCard extends StatelessWidget {
     required this.onToggleRoute,
   });
 
+  void _showShootingGuide(BuildContext context) {
+    final angle = spot.angle.trim().isEmpty
+        ? 'Mekânın ana çizgilerini kadraja alıp birkaç farklı açı dene.'
+        : spot.angle.trim();
+    showModalBottomSheet<void>(
+      context: context,
+      useSafeArea: true,
+      showDragHandle: true,
+      backgroundColor: const Color(0xFF0D0F12),
+      builder: (sheetContext) => Padding(
+        padding: const EdgeInsets.fromLTRB(18, 4, 18, 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              spot.name,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+            const SizedBox(height: 4),
+            const Text(
+              'Burada fotoğrafı nasıl çekersin?',
+              style: TextStyle(color: AppColors.cyan, fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: 16),
+            _GuideRow(
+              icon: Icons.schedule_rounded,
+              title: 'En iyi zaman',
+              text: spot.bestTime,
+            ),
+            const SizedBox(height: 12),
+            _GuideRow(
+              icon: Icons.camera_alt_outlined,
+              title: 'Lens / kamera',
+              text: spot.recommendedLens,
+            ),
+            const SizedBox(height: 12),
+            _GuideRow(
+              icon: Icons.crop_free_rounded,
+              title: 'Açı ve kadraj',
+              text: angle,
+            ),
+            const SizedBox(height: 18),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () {
+                  Navigator.pop(sheetContext);
+                  onOpen();
+                },
+                icon: const Icon(Icons.open_in_new_rounded),
+                label: const Text('Mekânın tüm detaylarını aç'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final verified = spot.tags.contains('Doğrulanmış');
@@ -323,8 +391,8 @@ class _SpotVenueCard extends StatelessWidget {
               children: [
                 SpotImage(
                   spot: spot,
-                  width: 78,
-                  height: 78,
+                  width: 82,
+                  height: 96,
                   borderRadius: BorderRadius.circular(11),
                 ),
                 const SizedBox(width: 10),
@@ -352,7 +420,7 @@ class _SpotVenueCard extends StatelessWidget {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
-                                color: const Color(0x75FFFFFF),
+                                color: Color(0x75FFFFFF),
                                 fontSize: 10.8,
                               ),
                             ),
@@ -370,7 +438,7 @@ class _SpotVenueCard extends StatelessWidget {
                           ],
                         ],
                       ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: 5),
                       Row(
                         children: [
                           const Icon(
@@ -409,6 +477,33 @@ class _SpotVenueCard extends StatelessWidget {
                           ],
                         ],
                       ),
+                      const SizedBox(height: 4),
+                      InkWell(
+                        onTap: () => _showShootingGuide(context),
+                        borderRadius: BorderRadius.circular(9),
+                        child: const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 4),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.photo_camera_outlined,
+                                size: 14,
+                                color: AppColors.cyan,
+                              ),
+                              SizedBox(width: 4),
+                              Text(
+                                'Nasıl çekilir?',
+                                style: TextStyle(
+                                  color: AppColors.cyan,
+                                  fontSize: 10.5,
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -435,4 +530,57 @@ class _SpotVenueCard extends StatelessWidget {
       ),
     );
   }
+}
+
+class _GuideRow extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String text;
+
+  const _GuideRow({
+    required this.icon,
+    required this.title,
+    required this.text,
+  });
+
+  @override
+  Widget build(BuildContext context) => Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: AppColors.surfaceStrong,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, size: 18, color: AppColors.cyan),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  text.trim().isEmpty ? 'Öneri hazırlanıyor.' : text,
+                  style: const TextStyle(
+                    color: Colors.white60,
+                    height: 1.35,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      );
 }
