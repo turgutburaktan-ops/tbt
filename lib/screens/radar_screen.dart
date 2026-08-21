@@ -334,7 +334,7 @@ class _RadarScreenState extends State<RadarScreen> {
             label,
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: selected ? Colors.white : Colors.white46,
+              color: selected ? Colors.white : const Color(0x75FFFFFF),
               fontSize: 11.5,
               fontWeight: selected ? FontWeight.w900 : FontWeight.w700,
             ),
@@ -489,7 +489,7 @@ class _RadarScreenState extends State<RadarScreen> {
       children: [
         const Text(
           'Şu an sakin. İlk hareketi sen başlat.',
-          style: TextStyle(color: Colors.white46, fontSize: 11.5),
+          style: TextStyle(color: const Color(0x75FFFFFF), fontSize: 11.5),
         ),
         const SizedBox(height: 8),
         Wrap(
@@ -678,7 +678,7 @@ class _RadarScreenState extends State<RadarScreen> {
             Expanded(
               child: Text(
                 text,
-                style: const TextStyle(color: Colors.white46, height: 1.35),
+                style: const TextStyle(color: const Color(0x75FFFFFF), height: 1.35),
               ),
             ),
           ],
@@ -740,7 +740,7 @@ class _SpotModeButton extends StatelessWidget {
             child: Text(
               label,
               style: TextStyle(
-                color: selected ? Colors.white : Colors.white46,
+                color: selected ? Colors.white : const Color(0x75FFFFFF),
                 fontSize: 9.8,
                 fontWeight: selected ? FontWeight.w900 : FontWeight.w700,
               ),

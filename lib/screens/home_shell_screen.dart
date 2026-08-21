@@ -156,7 +156,7 @@ class _SimpleNavigationBar extends StatelessWidget {
                   child: Text(
                     'Kamera',
                     style: TextStyle(
-                      color: Colors.white46,
+                      color: const Color(0x75FFFFFF),
                       fontSize: 9,
                       fontWeight: FontWeight.w700,
                     ),
@@ -183,7 +183,7 @@ class _SimpleNavigationBar extends StatelessWidget {
                         item.$3,
                         maxLines: 1,
                         style: TextStyle(
-                          color: selected ? Colors.white : Colors.white46,
+                          color: selected ? Colors.white : const Color(0x75FFFFFF),
                           fontSize: 9.5,
                           fontWeight:
                               selected ? FontWeight.w900 : FontWeight.w600,
@@ -261,7 +261,7 @@ class _NearbyHubState extends State<_NearbyHub> {
                         Text(
                           'Yakındaki hareketleri ve etkinlikleri gör.',
                           style: TextStyle(
-                            color: Colors.white46,
+                            color: const Color(0x75FFFFFF),
                             fontSize: 11.5,
                           ),
                         ),
@@ -487,7 +487,7 @@ class _ExploreHubState extends State<_ExploreHub> {
               padding: EdgeInsets.fromLTRB(14, 0, 14, 8),
               child: Text(
                 'Yeme-içme, kahve, konaklama ve gezilecek yerler.',
-                style: TextStyle(color: Colors.white46, fontSize: 11.5),
+                style: TextStyle(color: const Color(0x75FFFFFF), fontSize: 11.5),
               ),
             ),
             Padding(
@@ -621,7 +621,7 @@ class _FeedTab extends StatelessWidget {
               label,
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: selected ? Colors.white : Colors.white46,
+                color: selected ? Colors.white : const Color(0x75FFFFFF),
                 fontSize: 11.8,
                 fontWeight: selected ? FontWeight.w900 : FontWeight.w700,
               ),
@@ -702,7 +702,7 @@ class _GradientIcon extends StatelessWidget {
         shaderCallback: (bounds) => LinearGradient(
           colors: active
               ? const [AppColors.cyan, AppColors.violet]
-              : const [Colors.white46, Colors.white46],
+              : const [const Color(0x75FFFFFF), const Color(0x75FFFFFF)],
         ).createShader(bounds),
         child: Icon(icon, size: size),
       );

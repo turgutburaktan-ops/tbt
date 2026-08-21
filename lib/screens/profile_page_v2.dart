@@ -381,7 +381,7 @@ class _ProfileBodyState extends State<_ProfileBody> {
                                                         child: Icon(
                                                           Icons.person,
                                                           size: 42,
-                                                          color: Colors.white46,
+                                                          color: const Color(0x75FFFFFF),
                                                         ),
                                                       ),
                                                     ),
@@ -468,7 +468,7 @@ class _ProfileBodyState extends State<_ProfileBody> {
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                               color: bio.trim().isEmpty
-                                  ? Colors.white32
+                                  ? const Color(0x52FFFFFF)
                                   : Colors.white60,
                               fontSize: 12,
                               height: 1.35,
@@ -824,7 +824,7 @@ class _Stat extends StatelessWidget {
         const SizedBox(height: 1),
         Text(
           label,
-          style: const TextStyle(color: Colors.white46, fontSize: 10.8),
+          style: const TextStyle(color: const Color(0x75FFFFFF), fontSize: 10.8),
         ),
       ],
     );

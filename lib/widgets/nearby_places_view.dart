@@ -231,7 +231,7 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
             padding: const EdgeInsets.fromLTRB(2, 10, 2, 7),
             child: Text(
               '${venues.length} mekan  •  yakından uzağa',
-              style: const TextStyle(color: Colors.white46, fontSize: 11.5),
+              style: const TextStyle(color: const Color(0x75FFFFFF), fontSize: 11.5),
             ),
           ),
           if (venues.isEmpty)
@@ -260,7 +260,7 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
             ),
             child: const Text(
               'Mekan verisi © OpenStreetMap katkıda bulunanlar',
-              style: TextStyle(color: Colors.white32, fontSize: 10.5),
+              style: TextStyle(color: const Color(0x52FFFFFF), fontSize: 10.5),
             ),
           ),
         ],
@@ -350,7 +350,7 @@ class _VenueCard extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                      color: Colors.white46,
+                      color: const Color(0x75FFFFFF),
                       fontSize: 11,
                     ),
                   ),
@@ -361,7 +361,7 @@ class _VenueCard extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        color: Colors.white32,
+                        color: const Color(0x52FFFFFF),
                         fontSize: 10,
                       ),
                     ),
@@ -395,7 +395,7 @@ class _VenueCard extends StatelessWidget {
                   onPressed: onDirections,
                   style: IconButton.styleFrom(
                     minimumSize: const Size(38, 38),
-                    foregroundColor: Colors.white46,
+                    foregroundColor: const Color(0x75FFFFFF),
                   ),
                   icon: const Icon(Icons.directions_rounded, size: 19),
                 ),

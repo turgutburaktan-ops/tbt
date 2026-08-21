@@ -450,7 +450,7 @@ class _CaptureButton extends StatelessWidget {
                 Text(
                   subtitle,
                   style: const TextStyle(
-                    color: Colors.white46,
+                    color: const Color(0x75FFFFFF),
                     fontSize: 10.5,
                   ),
                 ),

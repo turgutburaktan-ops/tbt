@@ -202,7 +202,7 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
                       _position == null
                           ? 'Gerçek gezi noktalarını keşfet; fotoğraf önerilerini detayda gör.'
                           : 'Yakınındaki gezilecek yerlerden başlayarak sıralandı.',
-                      style: const TextStyle(color: Colors.white46, fontSize: 12),
+                      style: const TextStyle(color: const Color(0x75FFFFFF), fontSize: 12),
                     ),
                   ],
                 ),
@@ -252,7 +252,7 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
                 child: Text(
                   '${_visible.length} gezilecek yer',
                   style: const TextStyle(
-                    color: Colors.white46,
+                    color: const Color(0x75FFFFFF),
                     fontSize: 11.5,
                     fontWeight: FontWeight.w700,
                   ),
@@ -352,7 +352,7 @@ class _SpotVenueCard extends StatelessWidget {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
-                                color: Colors.white46,
+                                color: const Color(0x75FFFFFF),
                                 fontSize: 10.8,
                               ),
                             ),
