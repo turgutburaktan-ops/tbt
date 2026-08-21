@@ -3,6 +3,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 import '../screens/mention_profile_screen.dart';
+import '../services/username_service.dart';
 
 class MentionText extends StatefulWidget {
   final String text;
@@ -42,27 +43,22 @@ class _MentionTextState extends State<MentionText> {
     _recognizers.clear();
   }
 
-  String _normalize(String value) => value
-      .trim()
-      .replaceFirst(RegExp(r'^@'), '')
-      .replaceAll(' ', '')
-      .toLowerCase()
-      .replaceAll('ı', 'i')
-      .replaceAll('İ', 'i');
+  String _normalize(String value) => UsernameService.instance.normalize(value);
 
-  Future<QueryDocumentSnapshot<Map<String, dynamic>>?> _findUser(
-    String wanted,
-  ) async {
+  Future<String?> _findUserId(String wanted) async {
+    final reservedUid = await UsernameService.instance.ownerUid(wanted);
+    if (reservedUid != null) return reservedUid;
+
+    // Legacy fallback for profiles created before unique username reservations.
     final users = FirebaseFirestore.instance.collection('users');
-
     try {
       final exact = await users
           .where('usernameNormalized', isEqualTo: wanted)
           .limit(1)
           .get();
-      if (exact.docs.isNotEmpty) return exact.docs.first;
+      if (exact.docs.isNotEmpty) return exact.docs.first.id;
     } catch (_) {
-      // Eski kullanıcı kayıtlarında usernameNormalized bulunmayabilir.
+      // Old projects may not have an index for this field yet.
     }
 
     final snapshot = await users.limit(300).get();
@@ -74,7 +70,7 @@ class _MentionTextState extends State<MentionText> {
         (data['name'] ?? '').toString(),
       ];
       if (candidates.any((value) => _normalize(value) == wanted)) {
-        return doc;
+        return doc.id;
       }
     }
     return null;
@@ -85,9 +81,9 @@ class _MentionTextState extends State<MentionText> {
     if (wanted.isEmpty) return;
 
     try {
-      final match = await _findUser(wanted);
+      final userId = await _findUserId(wanted);
       if (!mounted) return;
-      if (match == null) {
+      if (userId == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('$mention kullanıcısı bulunamadı.')),
         );
@@ -97,7 +93,7 @@ class _MentionTextState extends State<MentionText> {
       await Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => MentionProfileScreen(userId: match.id),
+          builder: (_) => MentionProfileScreen(userId: userId),
         ),
       );
     } catch (e) {

@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../services/auth_service.dart';
+import '../services/username_service.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -30,13 +31,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   Future<void> _register() async {
-    final name = _nameController.text.trim();
+    final username = _nameController.text.trim();
     final email = _emailController.text.trim();
     final password = _passwordController.text;
     final passwordAgain = _passwordAgainController.text;
 
-    if (name.isEmpty || email.isEmpty || password.isEmpty || passwordAgain.isEmpty) {
+    if (username.isEmpty ||
+        email.isEmpty ||
+        password.isEmpty ||
+        passwordAgain.isEmpty) {
       _showMessage('Tüm alanları doldur.');
+      return;
+    }
+
+    final usernameError = UsernameService.instance.validate(username);
+    if (usernameError != null) {
+      _showMessage(usernameError);
       return;
     }
     if (password.length < 6) {
@@ -49,26 +59,46 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
 
     setState(() => _loading = true);
+    var accountCreated = false;
     try {
+      final available = await UsernameService.instance.isAvailable(username);
+      if (!available) throw Exception('Bu kullanıcı adı zaten alınmış.');
+
       await AuthService.instance.register(email: email, password: password);
-      await AuthService.instance.updateDisplayName(name);
+      accountCreated = true;
+      await AuthService.instance.updateDisplayName(username);
 
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
         await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
           'uid': user.uid,
-          'displayName': name,
+          'displayName': username,
           'email': email,
           'onboardingRequired': true,
           'onboardingCompleted': false,
           'createdAt': FieldValue.serverTimestamp(),
           'updatedAt': FieldValue.serverTimestamp(),
         }, SetOptions(merge: true));
+        await UsernameService.instance.reserveForCurrentUser(username);
       }
 
       if (!mounted) return;
       Navigator.popUntil(context, (route) => route.isFirst);
     } catch (e) {
+      if (accountCreated) {
+        final user = FirebaseAuth.instance.currentUser;
+        if (user != null) {
+          try {
+            await FirebaseFirestore.instance
+                .collection('users')
+                .doc(user.uid)
+                .delete();
+          } catch (_) {}
+          try {
+            await user.delete();
+          } catch (_) {}
+        }
+      }
       if (!mounted) return;
       _showMessage(e.toString().replaceFirst('Exception: ', ''));
     } finally {
@@ -97,15 +127,37 @@ class _RegisterScreenState extends State<RegisterScreen> {
           child: Column(
             children: [
               const SizedBox(height: 12),
-              const Icon(Icons.person_add_alt_1_rounded, size: 66, color: yellow),
+              const Icon(Icons.person_add_alt_1_rounded,
+                  size: 66, color: yellow),
               const SizedBox(height: 18),
-              const Text('Topluluğa Katıl', style: TextStyle(fontSize: 27, fontWeight: FontWeight.w800)),
+              const Text('Topluluğa Katıl',
+                  style: TextStyle(fontSize: 27, fontWeight: FontWeight.w800)),
               const SizedBox(height: 8),
-              const Text('Çekim noktalarını keşfet ve fotoğraflarını paylaş.', textAlign: TextAlign.center, style: TextStyle(color: Colors.white54)),
+              const Text(
+                'Çekim noktalarını keşfet ve fotoğraflarını paylaş.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.white54),
+              ),
               const SizedBox(height: 34),
-              TextField(controller: _nameController, style: const TextStyle(color: Colors.white), decoration: _decoration(label: 'Kullanıcı adı', icon: Icons.person_outline)),
+              TextField(
+                controller: _nameController,
+                autocorrect: false,
+                enableSuggestions: false,
+                textCapitalization: TextCapitalization.none,
+                style: const TextStyle(color: Colors.white),
+                decoration: _decoration(
+                  label: 'Kullanıcı adı (@kullanici)',
+                  icon: Icons.alternate_email_rounded,
+                ),
+              ),
               const SizedBox(height: 16),
-              TextField(controller: _emailController, keyboardType: TextInputType.emailAddress, style: const TextStyle(color: Colors.white), decoration: _decoration(label: 'E-posta', icon: Icons.email_outlined)),
+              TextField(
+                controller: _emailController,
+                keyboardType: TextInputType.emailAddress,
+                style: const TextStyle(color: Colors.white),
+                decoration:
+                    _decoration(label: 'E-posta', icon: Icons.email_outlined),
+              ),
               const SizedBox(height: 16),
               TextField(
                 controller: _passwordController,
@@ -115,23 +167,40 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   label: 'Şifre',
                   icon: Icons.lock_outline,
                   suffix: IconButton(
-                    icon: Icon(_hidePassword ? Icons.visibility_off : Icons.visibility),
-                    onPressed: () => setState(() => _hidePassword = !_hidePassword),
+                    icon: Icon(_hidePassword
+                        ? Icons.visibility_off
+                        : Icons.visibility),
+                    onPressed: () =>
+                        setState(() => _hidePassword = !_hidePassword),
                   ),
                 ),
               ),
               const SizedBox(height: 16),
-              TextField(controller: _passwordAgainController, obscureText: _hidePassword, style: const TextStyle(color: Colors.white), decoration: _decoration(label: 'Şifre tekrar', icon: Icons.lock_reset_outlined)),
+              TextField(
+                controller: _passwordAgainController,
+                obscureText: _hidePassword,
+                style: const TextStyle(color: Colors.white),
+                decoration: _decoration(
+                    label: 'Şifre tekrar', icon: Icons.lock_reset_outlined),
+              ),
               const SizedBox(height: 26),
               SizedBox(
                 width: double.infinity,
                 height: 56,
                 child: FilledButton(
-                  style: FilledButton.styleFrom(backgroundColor: yellow, foregroundColor: Colors.black),
+                  style: FilledButton.styleFrom(
+                      backgroundColor: yellow, foregroundColor: Colors.black),
                   onPressed: _loading ? null : _register,
                   child: _loading
-                      ? const SizedBox(width: 23, height: 23, child: CircularProgressIndicator(strokeWidth: 3, color: Colors.black))
-                      : const Text('Hesap Oluştur', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
+                      ? const SizedBox(
+                          width: 23,
+                          height: 23,
+                          child: CircularProgressIndicator(
+                              strokeWidth: 3, color: Colors.black),
+                        )
+                      : const Text('Hesap Oluştur',
+                          style: TextStyle(
+                              fontSize: 17, fontWeight: FontWeight.bold)),
                 ),
               ),
             ],
@@ -141,16 +210,29 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  InputDecoration _decoration({required String label, required IconData icon, Widget? suffix}) {
+  InputDecoration _decoration({
+    required String label,
+    required IconData icon,
+    Widget? suffix,
+  }) {
     return InputDecoration(
       labelText: label,
       prefixIcon: Icon(icon, color: const Color(0xFFB7BCC2)),
       suffixIcon: suffix,
       filled: true,
       fillColor: const Color(0xFF121416),
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(18), borderSide: BorderSide.none),
-      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(18), borderSide: const BorderSide(color: Colors.white12)),
-      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(18), borderSide: const BorderSide(color: Color(0xFFB7BCC2))),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(18),
+        borderSide: BorderSide.none,
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(18),
+        borderSide: const BorderSide(color: Colors.white12),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(18),
+        borderSide: const BorderSide(color: Color(0xFFB7BCC2)),
+      ),
     );
   }
 }
