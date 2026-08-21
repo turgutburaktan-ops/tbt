@@ -1,0 +1,49 @@
+import 'package:flutter/material.dart';
+
+import '../services/route_selection_service.dart';
+
+class RouteSelectionButton extends StatelessWidget {
+  final EdgeInsetsGeometry padding;
+
+  const RouteSelectionButton({
+    super.key,
+    this.padding = const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<Map<String, dynamic>>(
+      valueListenable: RouteSelectionService.instance.selected,
+      builder: (context, selected, _) {
+        if (selected.isEmpty) return const SizedBox.shrink();
+        return Padding(
+          padding: padding,
+          child: Row(
+            children: [
+              Expanded(
+                child: FilledButton.icon(
+                  onPressed: () async {
+                    final opened =
+                        await RouteSelectionService.instance.openSelectedRoute();
+                    if (!context.mounted || opened) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Harita uygulaması açılamadı.')),
+                    );
+                  },
+                  icon: const Icon(Icons.route_rounded),
+                  label: Text('Rotaya Git (${selected.length})'),
+                ),
+              ),
+              const SizedBox(width: 8),
+              IconButton.filledTonal(
+                tooltip: 'Rota seçimlerini temizle',
+                onPressed: RouteSelectionService.instance.clear,
+                icon: const Icon(Icons.close_rounded),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
