@@ -32,22 +32,32 @@ class VenueRatingService {
     String venueId,
   ) => _firestore.collection('venue_ratings').doc(venueKey(category, venueId));
 
+  Future<VenueRatingSummary> summary(
+    String category,
+    String venueId,
+  ) async {
+    final ref = _venueRef(category, venueId);
+    final doc = await ref.get();
+    final data = doc.data() ?? const <String, dynamic>{};
+    final count = ((data['ratingCount'] as num?)?.toInt() ?? 0).clamp(0, 1 << 31);
+    final average = ((data['ratingAverage'] as num?)?.toDouble() ?? 0)
+        .clamp(0, 5)
+        .toDouble();
+    int? mine;
+    final uid = _auth.currentUser?.uid;
+    if (uid != null) {
+      final mineDoc = await ref.collection('ratings').doc(uid).get();
+      mine = (mineDoc.data()?['rating'] as num?)?.toInt();
+    }
+    return VenueRatingSummary(average: average, count: count, mine: mine);
+  }
+
   Stream<VenueRatingSummary> watchSummary(
     String category,
     String venueId,
   ) {
-    final uid = _auth.currentUser?.uid;
-    final ref = _venueRef(category, venueId);
-    return ref.snapshots().asyncMap((doc) async {
-      final data = doc.data() ?? const <String, dynamic>{};
-      final count = ((data['ratingCount'] as num?)?.toInt() ?? 0).clamp(0, 1 << 31);
-      final average = ((data['ratingAverage'] as num?)?.toDouble() ?? 0).clamp(0, 5).toDouble();
-      int? mine;
-      if (uid != null) {
-        final mineDoc = await ref.collection('ratings').doc(uid).get();
-        mine = (mineDoc.data()?['rating'] as num?)?.toInt();
-      }
-      return VenueRatingSummary(average: average, count: count, mine: mine);
+    return _venueRef(category, venueId).snapshots().asyncMap((_) {
+      return summary(category, venueId);
     });
   }
 
