@@ -132,7 +132,6 @@ class _CameraScreenState extends State<CameraScreen>
       ),
     );
     if (type == null || !mounted) return;
-
     _startOpening(type == 'video' ? 'Video' : 'Fotoğraf');
     try {
       if (type == 'video') {
@@ -201,7 +200,6 @@ class _CameraScreenState extends State<CameraScreen>
       }
       return;
     }
-
     if (!mounted) return;
     await Navigator.of(context).pushReplacement(
       MaterialPageRoute(
@@ -222,7 +220,6 @@ class _CameraScreenState extends State<CameraScreen>
       }
       return;
     }
-
     if (!mounted) return;
     await Navigator.of(context).pushReplacement(
       MaterialPageRoute(
@@ -323,7 +320,9 @@ class _CameraScreenState extends State<CameraScreen>
             decoration: BoxDecoration(
               color: Colors.redAccent.withValues(alpha: .12),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.redAccent.withValues(alpha: .35)),
+              border: Border.all(
+                color: Colors.redAccent.withValues(alpha: .35),
+              ),
             ),
             child: Text(
               _error!,
@@ -394,13 +393,21 @@ class _CaptureButton extends StatelessWidget {
               children: [
                 Icon(icon, size: 38, color: Colors.white),
                 const SizedBox(height: 10),
-                Text(title,
-                    style: const TextStyle(
-                        fontSize: 17, fontWeight: FontWeight.w900)),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
                 const SizedBox(height: 3),
-                Text(subtitle,
-                    style: const TextStyle(
-                        color: Colors.white46, fontSize: 11)),
+                Text(
+                  subtitle,
+                  style: const TextStyle(
+                    color: Color(0x75FFFFFF),
+                    fontSize: 11,
+                  ),
+                ),
               ],
             ),
           ),
