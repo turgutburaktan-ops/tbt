@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
+import 'firebase_options.dart';
 import 'screens/app_entry_gate.dart';
 import 'screens/campus_home_screen.dart';
 import 'screens/campus_profile_screen.dart';
@@ -14,9 +17,84 @@ import 'theme/app_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
-  await FavoritesService.initialize();
-  runApp(const BestPhotoSpotApp());
+
+  Object? bootstrapError;
+  try {
+    await Firebase.initializeApp(
+      options: AppFirebaseOptions.currentPlatform,
+    ).timeout(const Duration(seconds: 15));
+    await FavoritesService.initialize();
+  } catch (error, stackTrace) {
+    bootstrapError = error;
+    debugPrint('Application bootstrap failed: $error');
+    debugPrintStack(stackTrace: stackTrace);
+  }
+
+  runApp(
+    bootstrapError == null
+        ? const BestPhotoSpotApp()
+        : BootstrapFailureApp(error: bootstrapError.toString()),
+  );
+}
+
+class BootstrapFailureApp extends StatelessWidget {
+  final String error;
+
+  const BootstrapFailureApp({super.key, required this.error});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.dark,
+      home: Scaffold(
+        backgroundColor: const Color(0xFF090A0C),
+        body: SafeArea(
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(28),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.error_outline_rounded,
+                    size: 54,
+                    color: Colors.white70,
+                  ),
+                  const SizedBox(height: 18),
+                  const Text(
+                    'Uygulama başlatılamadı',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  const Text(
+                    'Başlangıç bağlantısı kurulamadı. İnternet bağlantını kontrol edip uygulamayı yeniden aç.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.white60, height: 1.4),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    error,
+                    maxLines: 5,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Colors.white38,
+                      fontSize: 11,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class BestPhotoSpotApp extends StatefulWidget {
