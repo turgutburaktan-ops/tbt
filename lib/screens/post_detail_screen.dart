@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../services/post_service.dart';
 import '../services/spot_repository.dart';
+import '../widgets/app_video_player.dart';
 import '../widgets/content_engagement_bar.dart';
 import '../widgets/firebase_media_image.dart';
 import '../widgets/mention_text.dart';
@@ -28,35 +29,38 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     _post = Map<String, dynamic>.from(widget.post);
   }
 
+  bool get _isMine {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    return uid != null && uid == _post['userId']?.toString();
+  }
+
+  bool get _isVideo {
+    final type = (_post['mediaType'] ?? '').toString();
+    final url = (_post['videoUrl'] ?? '').toString();
+    return type == 'video' || url.isNotEmpty;
+  }
+
   String _dateLabel(dynamic value) {
     if (value is! Timestamp) return '';
     final d = value.toDate().toLocal();
     return '${d.day.toString().padLeft(2, '0')}.${d.month.toString().padLeft(2, '0')}.${d.year}';
   }
 
-  bool get _isMine {
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    return uid != null && uid == _post['userId']?.toString();
-  }
-
   Future<void> _openSpot(String spotName) async {
     if (_openingSpot || spotName.trim().isEmpty) return;
     setState(() => _openingSpot = true);
     try {
-      final results =
-          await SpotRepository.instance.search(spotName, limit: 2000);
+      final results = await SpotRepository.instance.search(spotName, limit: 2000);
       if (!mounted) return;
       if (results.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Bu çekim noktası kartı henüz bulunamadı.'),
-          ),
+          const SnackBar(content: Text('Bu çekim noktası kartı henüz bulunamadı.')),
         );
         return;
       }
+      final normalized = spotName.trim().toLowerCase();
       final exact = results.where(
-        (spot) =>
-            spot.name.trim().toLowerCase() == spotName.trim().toLowerCase(),
+        (spot) => spot.name.trim().toLowerCase() == normalized,
       );
       final spot = exact.isNotEmpty ? exact.first : results.first;
       await Navigator.push(
@@ -75,7 +79,6 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     final spotController = TextEditingController(
       text: (_post['spotName'] ?? '').toString(),
     );
-
     final save = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
@@ -96,38 +99,29 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Gönderiyi Düzenle',
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900),
-              ),
+              const Text('Gönderiyi Düzenle',
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900)),
               const SizedBox(height: 16),
               TextField(
                 controller: captionController,
                 minLines: 3,
                 maxLines: 6,
+                maxLength: 500,
                 decoration: const InputDecoration(labelText: 'Açıklama'),
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: spotController,
-                decoration: const InputDecoration(
-                  labelText: 'Konum / çekim noktası',
-                ),
+                decoration:
+                    const InputDecoration(labelText: 'Konum / çekim noktası'),
               ),
               const SizedBox(height: 18),
               SizedBox(
                 width: double.infinity,
                 height: 50,
                 child: FilledButton(
-                  style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFFB7BCC2),
-                    foregroundColor: Colors.white,
-                  ),
                   onPressed: () => Navigator.pop(sheetContext, true),
-                  child: const Text(
-                    'Kaydet',
-                    style: TextStyle(fontWeight: FontWeight.w800),
-                  ),
+                  child: const Text('Kaydet'),
                 ),
               ),
             ],
@@ -143,22 +137,20 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
           caption: captionController.text,
           spotName: spotController.text,
         );
-        if (!mounted) return;
-        setState(() {
-          _post['caption'] = captionController.text.trim();
-          _post['spotName'] = spotController.text.trim();
-        });
+        if (mounted) {
+          setState(() {
+            _post['caption'] = captionController.text.trim();
+            _post['spotName'] = spotController.text.trim();
+          });
+        }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(e.toString().replaceFirst('Exception: ', '')),
-            ),
+            SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
           );
         }
       }
     }
-
     captionController.dispose();
     spotController.dispose();
   }
@@ -177,10 +169,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text(
-              'Sil',
-              style: TextStyle(color: Colors.redAccent),
-            ),
+            child: const Text('Sil', style: TextStyle(color: Colors.redAccent)),
           ),
         ],
       ),
@@ -191,6 +180,9 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
       await PostService.instance.deletePost(
         postId: (_post['id'] ?? '').toString(),
         storagePath: (_post['storagePath'] ?? '').toString(),
+        videoStoragePath: (_post['videoStoragePath'] ?? '').toString(),
+        thumbnailStoragePath:
+            (_post['thumbnailStoragePath'] ?? '').toString(),
       );
       if (mounted) Navigator.pop(context, true);
     } catch (e) {
@@ -214,10 +206,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: const Icon(
-                Icons.edit_outlined,
-                color: Color(0xFFB7BCC2),
-              ),
+              leading: const Icon(Icons.edit_outlined),
               title: const Text('Düzenle'),
               onTap: () {
                 Navigator.pop(sheetContext);
@@ -227,10 +216,8 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
             ListTile(
               leading:
                   const Icon(Icons.delete_outline, color: Colors.redAccent),
-              title: const Text(
-                'Sil',
-                style: TextStyle(color: Colors.redAccent),
-              ),
+              title:
+                  const Text('Sil', style: TextStyle(color: Colors.redAccent)),
               onTap: () {
                 Navigator.pop(sheetContext);
                 _delete();
@@ -242,14 +229,56 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
+  Widget _media() {
     final imageUrl = (_post['imageUrl'] ?? '').toString();
     final storagePath = (_post['storagePath'] ?? '').toString();
+    final videoUrl = (_post['videoUrl'] ?? '').toString();
+    final thumbnailUrl = (_post['thumbnailUrl'] ?? imageUrl).toString();
+    final thumbnailStoragePath =
+        (_post['thumbnailStoragePath'] ?? storagePath).toString();
     final fallbackStoragePaths = FirebaseMediaImage.postPaths(
       (_post['userId'] ?? '').toString(),
       (_post['id'] ?? '').toString(),
     );
+
+    if (_isVideo && videoUrl.isNotEmpty) {
+      return AppVideoPlayer.network(
+        url: videoUrl,
+        autoplay: false,
+        muted: false,
+        loop: true,
+        showControls: true,
+        fit: BoxFit.contain,
+        loading: FirebaseMediaImage(
+          imageUrl: thumbnailUrl,
+          storagePath: thumbnailStoragePath,
+          fit: BoxFit.contain,
+        ),
+      );
+    }
+
+    return InteractiveViewer(
+      minScale: 1,
+      maxScale: 5,
+      panEnabled: true,
+      clipBehavior: Clip.hardEdge,
+      child: SizedBox.expand(
+        child: FirebaseMediaImage(
+          imageUrl: imageUrl,
+          storagePath: storagePath,
+          fallbackStoragePaths: fallbackStoragePaths,
+          fit: BoxFit.contain,
+          errorWidget: const Center(
+            child: Icon(Icons.broken_image_outlined,
+                size: 70, color: Colors.white30),
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final caption = (_post['caption'] ?? '').toString().trim();
     final spot =
         (_post['spotName'] ?? _post['locationName'] ?? _post['location'] ?? '')
@@ -263,7 +292,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
       appBar: AppBar(
         backgroundColor: const Color(0xFF090A0C),
         foregroundColor: Colors.white,
-        title: const Text('Paylaşım'),
+        title: Text(_isVideo ? 'Video' : 'Paylaşım'),
         actions: [
           if (_isMine)
             IconButton(
@@ -279,128 +308,78 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
           Container(
             margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
             decoration: BoxDecoration(
+              color: const Color(0xFF0F1113),
               borderRadius: BorderRadius.circular(22),
               border: Border.all(color: const Color(0xFF34383D)),
             ),
-            child: Container(
-              decoration: BoxDecoration(
-                color: const Color(0xFF0F1113),
-                borderRadius: BorderRadius.circular(21),
-              ),
-              clipBehavior: Clip.antiAlias,
-              child: Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 14, 14, 12),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 38,
-                          height: 38,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF1A1D20),
-                            shape: BoxShape.circle,
-                            border: Border.all(color: const Color(0xFF454A50)),
-                          ),
-                          child: const Icon(
-                            Icons.person_outline_rounded,
-                            size: 21,
-                            color: Colors.white70,
-                          ),
-                        ),
-                        const SizedBox(width: 11),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                userName,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w900,
-                                  letterSpacing: .1,
+            clipBehavior: Clip.antiAlias,
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 14, 14, 12),
+                  child: Row(
+                    children: [
+                      const CircleAvatar(
+                        radius: 19,
+                        backgroundColor: Color(0xFF1A1D20),
+                        child: Icon(Icons.person_outline_rounded,
+                            color: Colors.white70),
+                      ),
+                      const SizedBox(width: 11),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Flexible(
+                                  child: Text(userName,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w900)),
                                 ),
-                              ),
-                              if (spot.isNotEmpty) ...[
-                                const SizedBox(height: 3),
-                                InkWell(
-                                  onTap: _openingSpot
-                                      ? null
-                                      : () => _openSpot(spot),
-                                  borderRadius: BorderRadius.circular(8),
+                                if (_isVideo) ...[
+                                  const SizedBox(width: 6),
+                                  const Icon(Icons.videocam_rounded,
+                                      size: 17, color: Colors.white54),
+                                ],
+                              ],
+                            ),
+                            if (spot.isNotEmpty)
+                              InkWell(
+                                onTap: _openingSpot ? null : () => _openSpot(spot),
+                                child: Padding(
+                                  padding: const EdgeInsets.only(top: 3),
                                   child: Row(
-                                    mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      const Icon(
-                                        Icons.location_on_rounded,
-                                        size: 14,
-                                        color: Color(0xFFBFC4CA),
-                                      ),
+                                      const Icon(Icons.location_on_rounded,
+                                          size: 14, color: Colors.white54),
                                       const SizedBox(width: 3),
                                       Flexible(
-                                        child: Text(
-                                          spot,
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: const TextStyle(
-                                            color: Color(0xFFB8BDC4),
-                                            fontSize: 11.5,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
+                                        child: Text(spot,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: const TextStyle(
+                                                color: Colors.white54,
+                                                fontSize: 11.5)),
                                       ),
                                     ],
                                   ),
                                 ),
-                              ],
-                            ],
-                          ),
+                              ),
+                          ],
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                  Container(
-                    color: Colors.black,
-                    child: AspectRatio(
-                      aspectRatio: 1,
-                      child: imageUrl.isEmpty &&
-                              storagePath.isEmpty &&
-                              fallbackStoragePaths.isEmpty
-                          ? const Center(
-                              child: Icon(
-                                Icons.image_outlined,
-                                size: 70,
-                                color: Colors.white30,
-                              ),
-                            )
-                          : InteractiveViewer(
-                              minScale: 1,
-                              maxScale: 5,
-                              panEnabled: true,
-                              clipBehavior: Clip.hardEdge,
-                              child: SizedBox.expand(
-                                child: FirebaseMediaImage(
-                                  imageUrl: imageUrl,
-                                  storagePath: storagePath,
-                                  fallbackStoragePaths: fallbackStoragePaths,
-                                  fit: BoxFit.contain,
-                                  errorWidget: const Center(
-                                    child: Icon(
-                                      Icons.broken_image_outlined,
-                                      size: 70,
-                                      color: Colors.white30,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                    ),
-                  ),
-                ],
-              ),
+                ),
+                ColoredBox(
+                  color: Colors.black,
+                  child: AspectRatio(aspectRatio: 1, child: _media()),
+                ),
+              ],
             ),
           ),
           Padding(
@@ -409,44 +388,40 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
               collection: 'posts',
               contentId: (_post['id'] ?? '').toString(),
               ownerId: (_post['userId'] ?? '').toString(),
-              title: caption.isEmpty ? 'Fotoğraf paylaşımı' : caption,
+              title: caption.isEmpty
+                  ? (_isVideo ? 'Video paylaşımı' : 'Fotoğraf paylaşımı')
+                  : caption,
               sourceType: 'post',
               showTagAction: false,
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (caption.isNotEmpty)
-                  MentionText(
-                    text: caption,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      height: 1.5,
-                      fontSize: 14.5,
+          if (caption.isNotEmpty || date.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (caption.isNotEmpty)
+                    MentionText(
+                      text: caption,
+                      style: const TextStyle(
+                          color: Colors.white, height: 1.5, fontSize: 14.5),
+                      mentionStyle: const TextStyle(
+                        color: Color(0xFFD7DADF),
+                        height: 1.5,
+                        fontSize: 14.5,
+                        fontWeight: FontWeight.w900,
+                      ),
                     ),
-                    mentionStyle: const TextStyle(
-                      color: Color(0xFFD7DADF),
-                      height: 1.5,
-                      fontSize: 14.5,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                if (date.isNotEmpty) ...[
-                  const SizedBox(height: 10),
-                  Text(
-                    date,
-                    style: const TextStyle(
-                      color: Colors.white38,
-                      fontSize: 11,
-                    ),
-                  ),
+                  if (date.isNotEmpty) ...[
+                    const SizedBox(height: 10),
+                    Text(date,
+                        style: const TextStyle(
+                            color: Colors.white38, fontSize: 11)),
+                  ],
                 ],
-              ],
+              ),
             ),
-          ),
         ],
       ),
     );
