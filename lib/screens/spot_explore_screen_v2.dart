@@ -123,6 +123,15 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
     } catch (_) {}
   }
 
+  bool _isAnitkabir(PhotoSpot spot) {
+    final normalized = spot.name
+        .trim()
+        .toLowerCase()
+        .replaceAll('ı', 'i')
+        .replaceAll('â', 'a');
+    return normalized == 'anitkabir' || normalized.startsWith('anitkabir ');
+  }
+
   void _applyFilter() {
     final key = _search.trim().toLowerCase();
     final next = _all.where((spot) {
@@ -132,11 +141,21 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
               .toLowerCase();
       return haystack.contains(key);
     }).toList();
-    if (_position != null) {
-      next.sort((a, b) => _distance(a).compareTo(_distance(b)));
-    } else {
-      next.sort((a, b) => b.rating.compareTo(a.rating));
-    }
+
+    next.sort((a, b) {
+      final aPinned = _isAnitkabir(a);
+      final bPinned = _isAnitkabir(b);
+      if (aPinned != bPinned) return aPinned ? -1 : 1;
+
+      if (_position != null) {
+        final distanceOrder = _distance(a).compareTo(_distance(b));
+        if (distanceOrder != 0) return distanceOrder;
+      } else {
+        final ratingOrder = b.rating.compareTo(a.rating);
+        if (ratingOrder != 0) return ratingOrder;
+      }
+      return a.name.compareTo(b.name);
+    });
     _visible = next;
   }
 
@@ -189,92 +208,36 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Gezilecek Yerler',
-                      style: TextStyle(
-                        fontSize: 23,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: -.4,
-                      ),
-                    ),
+                    const Text('Gezilecek Yerler', style: TextStyle(fontSize: 23, fontWeight: FontWeight.w900, letterSpacing: -.4)),
                     const SizedBox(height: 3),
-                    Text(
-                      _position == null
-                          ? 'Gerçek gezi noktalarını keşfet; fotoğraf önerilerini karttan aç.'
-                          : 'Yakınındaki gezilecek yerlerden başlayarak sıralandı.',
-                      style: const TextStyle(
-                        color: Color(0x75FFFFFF),
-                        fontSize: 12,
-                      ),
-                    ),
+                    Text(_position == null ? 'Gerçek gezi noktalarını keşfet; fotoğraf önerilerini karttan aç.' : 'Anıtkabir sabit; diğer yerler sana en yakından uzağa sıralandı.', style: const TextStyle(color: Color(0x75FFFFFF), fontSize: 12)),
                   ],
                 ),
               ),
             ),
           SliverToBoxAdapter(
             child: Padding(
-              padding: EdgeInsets.fromLTRB(
-                14,
-                widget.embedded ? 4 : 0,
-                14,
-                8,
-              ),
+              padding: EdgeInsets.fromLTRB(14, widget.embedded ? 4 : 0, 14, 8),
               child: TextField(
                 controller: _searchController,
-                onChanged: (value) {
-                  _search = value;
-                  _applyFilter();
-                  setState(() {});
-                },
-                decoration: const InputDecoration(
-                  hintText: 'Yer, şehir veya kategori ara',
-                  prefixIcon: Icon(Icons.search_rounded, size: 20),
-                ),
+                onChanged: (value) { _search = value; _applyFilter(); setState(() {}); },
+                decoration: const InputDecoration(hintText: 'Yer, şehir veya kategori ara', prefixIcon: Icon(Icons.search_rounded, size: 20)),
               ),
             ),
           ),
-          const SliverToBoxAdapter(
-            child: RouteSelectionButton(
-              padding: EdgeInsets.fromLTRB(14, 0, 14, 7),
-            ),
-          ),
+          const SliverToBoxAdapter(child: RouteSelectionButton(padding: EdgeInsets.fromLTRB(14, 0, 14, 7))),
           if (_loading && _visible.isEmpty)
-            const SliverFillRemaining(
-              hasScrollBody: false,
-              child: Center(child: CircularProgressIndicator()),
-            )
+            const SliverFillRemaining(hasScrollBody: false, child: Center(child: CircularProgressIndicator()))
           else if (_visible.isEmpty)
-            const SliverFillRemaining(
-              hasScrollBody: false,
-              child: Center(child: Text('Gezilecek yer bulunamadı.')),
-            )
+            const SliverFillRemaining(hasScrollBody: false, child: Center(child: Text('Gezilecek yer bulunamadı.')))
           else ...[
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 2, 16, 7),
-                child: Text(
-                  '${_visible.length} gezilecek yer',
-                  style: const TextStyle(
-                    color: Color(0x75FFFFFF),
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ),
+            SliverToBoxAdapter(child: Padding(padding: const EdgeInsets.fromLTRB(16, 2, 16, 7), child: Text('${_visible.length} gezilecek yer', style: const TextStyle(color: Color(0x75FFFFFF), fontSize: 11.5, fontWeight: FontWeight.w700)))),
             SliverList.builder(
               itemCount: _visible.length,
               itemBuilder: (context, index) {
                 final spot = _visible[index];
-                final selected =
-                    RouteSelectionService.instance.contains(_routeId(spot));
-                return _SpotVenueCard(
-                  spot: spot,
-                  selected: selected,
-                  distanceLabel: _distanceLabel(spot),
-                  onOpen: () => _openSpot(spot),
-                  onToggleRoute: () => _toggleRoute(spot),
-                );
+                final selected = RouteSelectionService.instance.contains(_routeId(spot));
+                return _SpotVenueCard(spot: spot, selected: selected, distanceLabel: _distanceLabel(spot), onOpen: () => _openSpot(spot), onToggleRoute: () => _toggleRoute(spot));
               },
             ),
             const SliverToBoxAdapter(child: SizedBox(height: 92)),
@@ -291,76 +254,27 @@ class _SpotVenueCard extends StatelessWidget {
   final String distanceLabel;
   final VoidCallback onOpen;
   final VoidCallback onToggleRoute;
-
-  const _SpotVenueCard({
-    required this.spot,
-    required this.selected,
-    required this.distanceLabel,
-    required this.onOpen,
-    required this.onToggleRoute,
-  });
+  const _SpotVenueCard({required this.spot, required this.selected, required this.distanceLabel, required this.onOpen, required this.onToggleRoute});
 
   void _showShootingGuide(BuildContext context) {
-    final angle = spot.angle.trim().isEmpty
-        ? 'Mekânın ana çizgilerini kadraja alıp birkaç farklı açı dene.'
-        : spot.angle.trim();
+    final angle = spot.angle.trim().isEmpty ? 'Mekânın ana çizgilerini kadraja alıp birkaç farklı açı dene.' : spot.angle.trim();
     showModalBottomSheet<void>(
-      context: context,
-      useSafeArea: true,
-      showDragHandle: true,
-      backgroundColor: const Color(0xFF0D0F12),
+      context: context, useSafeArea: true, showDragHandle: true, backgroundColor: const Color(0xFF0D0F12),
       builder: (sheetContext) => Padding(
         padding: const EdgeInsets.fromLTRB(18, 4, 18, 24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              spot.name,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-            const SizedBox(height: 4),
-            const Text(
-              'Burada fotoğrafı nasıl çekersin?',
-              style: TextStyle(color: AppColors.cyan, fontWeight: FontWeight.w800),
-            ),
-            const SizedBox(height: 16),
-            _GuideRow(
-              icon: Icons.schedule_rounded,
-              title: 'En iyi zaman',
-              text: spot.bestTime,
-            ),
-            const SizedBox(height: 12),
-            _GuideRow(
-              icon: Icons.camera_alt_outlined,
-              title: 'Lens / kamera',
-              text: spot.recommendedLens,
-            ),
-            const SizedBox(height: 12),
-            _GuideRow(
-              icon: Icons.crop_free_rounded,
-              title: 'Açı ve kadraj',
-              text: angle,
-            ),
-            const SizedBox(height: 18),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: () {
-                  Navigator.pop(sheetContext);
-                  onOpen();
-                },
-                icon: const Icon(Icons.open_in_new_rounded),
-                label: const Text('Mekânın tüm detaylarını aç'),
-              ),
-            ),
-          ],
-        ),
+        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(spot.name, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900)),
+          const SizedBox(height: 4),
+          const Text('Burada fotoğrafı nasıl çekersin?', style: TextStyle(color: AppColors.cyan, fontWeight: FontWeight.w800)),
+          const SizedBox(height: 16),
+          _GuideRow(icon: Icons.schedule_rounded, title: 'En iyi zaman', text: spot.bestTime),
+          const SizedBox(height: 12),
+          _GuideRow(icon: Icons.camera_alt_outlined, title: 'Lens / kamera', text: spot.recommendedLens),
+          const SizedBox(height: 12),
+          _GuideRow(icon: Icons.crop_free_rounded, title: 'Açı ve kadraj', text: angle),
+          const SizedBox(height: 18),
+          SizedBox(width: double.infinity, child: OutlinedButton.icon(onPressed: () { Navigator.pop(sheetContext); onOpen(); }, icon: const Icon(Icons.open_in_new_rounded), label: const Text('Mekânın tüm detaylarını aç'))),
+        ]),
       ),
     );
   }
@@ -371,160 +285,27 @@ class _SpotVenueCard extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(14, 0, 14, 8),
       child: Material(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(15),
+        color: AppColors.surface, borderRadius: BorderRadius.circular(15),
         child: InkWell(
-          onTap: onOpen,
-          borderRadius: BorderRadius.circular(15),
+          onTap: onOpen, borderRadius: BorderRadius.circular(15),
           child: Container(
             padding: const EdgeInsets.all(9),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(15),
-              border: Border.all(
-                color: selected
-                    ? AppColors.cyan.withValues(alpha: .38)
-                    : AppColors.border,
-              ),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                SpotImage(
-                  spot: spot,
-                  width: 82,
-                  height: 96,
-                  borderRadius: BorderRadius.circular(11),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        spot.name,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w900,
-                          fontSize: 14.5,
-                          height: 1.12,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              '${spot.city}  •  ${spot.category}',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                color: Color(0x75FFFFFF),
-                                fontSize: 10.8,
-                              ),
-                            ),
-                          ),
-                          if (distanceLabel.isNotEmpty) ...[
-                            const SizedBox(width: 6),
-                            Text(
-                              distanceLabel,
-                              style: const TextStyle(
-                                color: AppColors.cyan,
-                                fontWeight: FontWeight.w900,
-                                fontSize: 10.3,
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                      const SizedBox(height: 5),
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.star_rounded,
-                            size: 14,
-                            color: AppColors.cyan,
-                          ),
-                          const SizedBox(width: 3),
-                          Text(
-                            spot.rating.toStringAsFixed(1),
-                            style: const TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                          if (verified) ...[
-                            const SizedBox(width: 7),
-                            const Icon(
-                              Icons.verified_rounded,
-                              size: 13,
-                              color: Colors.white38,
-                            ),
-                            const SizedBox(width: 3),
-                            const Flexible(
-                              child: Text(
-                                'Doğrulanmış',
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  color: Colors.white38,
-                                  fontSize: 9.8,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      InkWell(
-                        onTap: () => _showShootingGuide(context),
-                        borderRadius: BorderRadius.circular(9),
-                        child: const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 4),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.photo_camera_outlined,
-                                size: 14,
-                                color: AppColors.cyan,
-                              ),
-                              SizedBox(width: 4),
-                              Text(
-                                'Nasıl çekilir?',
-                                style: TextStyle(
-                                  color: AppColors.cyan,
-                                  fontSize: 10.5,
-                                  fontWeight: FontWeight.w900,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 6),
-                IconButton(
-                  tooltip: selected ? 'Rotadan çıkar' : 'Rotaya ekle',
-                  onPressed: onToggleRoute,
-                  style: IconButton.styleFrom(
-                    minimumSize: const Size(38, 38),
-                    backgroundColor:
-                        selected ? AppColors.cyan : AppColors.surfaceStrong,
-                    foregroundColor:
-                        selected ? const Color(0xFF041311) : Colors.white70,
-                  ),
-                  icon: Icon(
-                    selected ? Icons.check_rounded : Icons.add_rounded,
-                    size: 20,
-                  ),
-                ),
-              ],
-            ),
+            decoration: BoxDecoration(borderRadius: BorderRadius.circular(15), border: Border.all(color: selected ? AppColors.cyan.withValues(alpha: .38) : AppColors.border)),
+            child: Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
+              SpotImage(spot: spot, width: 82, height: 96, borderRadius: BorderRadius.circular(11)),
+              const SizedBox(width: 10),
+              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+                Text(spot.name, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 14.5, height: 1.12)),
+                const SizedBox(height: 4),
+                Row(children: [Expanded(child: Text('${spot.city}  •  ${spot.category}', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Color(0x75FFFFFF), fontSize: 10.8))), if (distanceLabel.isNotEmpty) ...[const SizedBox(width: 6), Text(distanceLabel, style: const TextStyle(color: AppColors.cyan, fontWeight: FontWeight.w900, fontSize: 10.3))]]),
+                const SizedBox(height: 5),
+                Row(children: [const Icon(Icons.star_rounded, size: 14, color: AppColors.cyan), const SizedBox(width: 3), Text(spot.rating.toStringAsFixed(1), style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800)), if (verified) ...[const SizedBox(width: 7), const Icon(Icons.verified_rounded, size: 13, color: Colors.white38), const SizedBox(width: 3), const Flexible(child: Text('Doğrulanmış', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: Colors.white38, fontSize: 9.8, fontWeight: FontWeight.w700)))]]),
+                const SizedBox(height: 4),
+                InkWell(onTap: () => _showShootingGuide(context), borderRadius: BorderRadius.circular(9), child: const Padding(padding: EdgeInsets.symmetric(vertical: 4), child: Row(mainAxisSize: MainAxisSize.min, children: [Icon(Icons.photo_camera_outlined, size: 14, color: AppColors.cyan), SizedBox(width: 4), Text('Nasıl çekilir?', style: TextStyle(color: AppColors.cyan, fontSize: 10.5, fontWeight: FontWeight.w900))]))),
+              ])),
+              const SizedBox(width: 6),
+              IconButton(tooltip: selected ? 'Rotadan çıkar' : 'Rotaya ekle', onPressed: onToggleRoute, style: IconButton.styleFrom(minimumSize: const Size(38, 38), backgroundColor: selected ? AppColors.cyan : AppColors.surfaceStrong, foregroundColor: selected ? const Color(0xFF041311) : Colors.white70), icon: Icon(selected ? Icons.check_rounded : Icons.add_rounded, size: 20)),
+            ]),
           ),
         ),
       ),
@@ -536,51 +317,11 @@ class _GuideRow extends StatelessWidget {
   final IconData icon;
   final String title;
   final String text;
-
-  const _GuideRow({
-    required this.icon,
-    required this.title,
-    required this.text,
-  });
-
+  const _GuideRow({required this.icon, required this.title, required this.text});
   @override
-  Widget build(BuildContext context) => Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 36,
-            height: 36,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: AppColors.surfaceStrong,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, size: 18, color: AppColors.cyan),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  text.trim().isEmpty ? 'Öneri hazırlanıyor.' : text,
-                  style: const TextStyle(
-                    color: Colors.white60,
-                    height: 1.35,
-                    fontSize: 12,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      );
+  Widget build(BuildContext context) => Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+    Container(width: 36, height: 36, decoration: BoxDecoration(color: AppColors.surfaceStrong, borderRadius: BorderRadius.circular(10)), child: Icon(icon, size: 18, color: AppColors.cyan)),
+    const SizedBox(width: 10),
+    Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(title, style: const TextStyle(fontSize: 11, color: Colors.white54, fontWeight: FontWeight.w700)), const SizedBox(height: 2), Text(text.trim().isEmpty ? 'Bilgi hazırlanıyor.' : text.trim(), style: const TextStyle(fontSize: 13, height: 1.35, fontWeight: FontWeight.w700))])),
+  ]);
 }
