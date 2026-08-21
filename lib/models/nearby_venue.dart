@@ -9,15 +9,16 @@ extension NearbyVenueCategoryX on NearbyVenueCategory {
 
   List<String> get osmFilters => switch (this) {
         NearbyVenueCategory.dining => const [
-            '["amenity"~"^(restaurant|fast_food|food_court|bar|pub|biergarten)\$"]',
-            '["shop"~"^(bakery|deli)\$"]',
+            '["amenity"~"^(restaurant|fast_food|food_court|bar|pub|biergarten|bbq)\$"]',
+            '["shop"~"^(bakery|deli|butcher|seafood|cheese|pasta|convenience)\$"]',
+            '["cuisine"]',
           ],
         NearbyVenueCategory.cafe => const [
-            '["amenity"~"^(cafe|ice_cream)\$"]',
-            '["shop"~"^(coffee|pastry|confectionery)\$"]',
+            '["amenity"~"^(cafe|ice_cream|juice_bar)\$"]',
+            '["shop"~"^(coffee|pastry|confectionery|tea|chocolate)\$"]',
           ],
         NearbyVenueCategory.hotel => const [
-            '["tourism"~"^(hotel|hostel|guest_house|motel|apartment|chalet)\$"]',
+            '["tourism"~"^(hotel|hostel|guest_house|motel|apartment|chalet|resort|camp_site|caravan_site)\$"]',
           ],
       };
 }
