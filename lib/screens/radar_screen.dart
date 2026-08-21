@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../data/turkey_selection_data.dart';
@@ -7,10 +8,10 @@ import '../models/social_event.dart';
 import '../services/activity_demand_service.dart';
 import '../services/social_event_service.dart';
 import '../services/spot_repository.dart';
+import '../theme/app_theme.dart';
 import '../widgets/searchable_selection_field.dart';
 import '../widgets/spot_image.dart';
 import 'activity_demand_screen.dart';
-import 'event_deep_link_screen.dart';
 import 'route_planner_screen.dart';
 import 'spot_detail_screen.dart';
 
@@ -24,17 +25,13 @@ class RadarScreen extends StatefulWidget {
 }
 
 class _RadarScreenState extends State<RadarScreen> {
-  static const _background = Color(0xFF090A0C);
-  static const _surface = Color(0xFF121416);
-  static const _surfaceAlt = Color(0xFF191C20);
-  static const _surfaceStrong = Color(0xFF20242A);
-  static const _border = Color(0xFF292D32);
-  static const _accent = Color(0xFFB7BCC2);
   static const _cityPrefKey = 'radar_city';
 
   final _cityController = TextEditingController();
   String _period = 'now';
+  int _spotMode = 0;
   List<PhotoSpot> _spots = const [];
+  Position? _position;
   bool _loadingSpots = true;
 
   static const _quickActivities = <String>[
@@ -48,6 +45,13 @@ class _RadarScreenState extends State<RadarScreen> {
   void initState() {
     super.initState();
     _load();
+    _readLocation();
+  }
+
+  @override
+  void dispose() {
+    _cityController.dispose();
+    super.dispose();
   }
 
   Future<void> _load() async {
@@ -66,10 +70,24 @@ class _RadarScreenState extends State<RadarScreen> {
     }
   }
 
-  @override
-  void dispose() {
-    _cityController.dispose();
-    super.dispose();
+  Future<void> _readLocation() async {
+    try {
+      if (!await Geolocator.isLocationServiceEnabled()) return;
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        return;
+      }
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings:
+            const LocationSettings(accuracy: LocationAccuracy.medium),
+      );
+      if (!mounted) return;
+      setState(() => _position = position);
+    } catch (_) {}
   }
 
   String _normalize(String value) => value
@@ -119,57 +137,34 @@ class _RadarScreenState extends State<RadarScreen> {
     return true;
   }
 
+  double _distance(PhotoSpot spot) {
+    final p = _position;
+    if (p == null) return double.infinity;
+    return Geolocator.distanceBetween(
+      p.latitude,
+      p.longitude,
+      spot.latitude,
+      spot.longitude,
+    );
+  }
+
+  String _distanceLabel(PhotoSpot spot) {
+    final meters = _distance(spot);
+    if (!meters.isFinite) return '';
+    if (meters < 1000) return '${meters.round()} m';
+    final km = meters / 1000;
+    return km < 10 ? '${km.toStringAsFixed(1)} km' : '${km.round()} km';
+  }
+
   List<PhotoSpot> get _visibleSpots {
     final result = _spots.where((spot) => _sameCity(spot.city)).toList();
-    result.sort((a, b) => b.rating.compareTo(a.rating));
-    return result.take(6).toList();
-  }
-
-  String _eventTime(SocialEvent event) {
-    final now = DateTime.now();
-    final d = event.startsAt.toLocal();
-    final sameDay =
-        d.year == now.year && d.month == now.month && d.day == now.day;
-    final tomorrow = DateTime(now.year, now.month, now.day + 1);
-    final isTomorrow = d.year == tomorrow.year &&
-        d.month == tomorrow.month &&
-        d.day == tomorrow.day;
-    final time =
-        '${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
-    if (sameDay) return 'Bugün • $time';
-    if (isTomorrow) return 'Yarın • $time';
-    return '${d.day.toString().padLeft(2, '0')}.${d.month.toString().padLeft(2, '0')} • $time';
-  }
-
-  String _eventDay(SocialEvent event) {
-    final now = DateTime.now();
-    final d = event.startsAt.toLocal();
-    if (d.year == now.year && d.month == now.month && d.day == now.day) {
-      return 'BUGÜN';
+    if (_spotMode == 0 && _position != null) {
+      result.sort((a, b) => _distance(a).compareTo(_distance(b)));
+    } else {
+      result.sort((a, b) => b.rating.compareTo(a.rating));
     }
-    final tomorrow = DateTime(now.year, now.month, now.day + 1);
-    if (d.year == tomorrow.year &&
-        d.month == tomorrow.month &&
-        d.day == tomorrow.day) {
-      return 'YARIN';
-    }
-    return d.day.toString().padLeft(2, '0');
+    return result.take(8).toList();
   }
-
-  String _eventMonth(SocialEvent event) {
-    final d = event.startsAt.toLocal();
-    const months = <String>[
-      'OCA', 'ŞUB', 'MAR', 'NİS', 'MAY', 'HAZ',
-      'TEM', 'AĞU', 'EYL', 'EKİ', 'KAS', 'ARA',
-    ];
-    return months[d.month - 1];
-  }
-
-  String _windowLabel(String window) => switch (window) {
-        'tomorrow' => 'Yarın',
-        'weekend' => 'Hafta sonu',
-        _ => 'Bugün',
-      };
 
   IconData _activityIcon(String activity) => switch (_normalize(activity)) {
         'fotograf' => Icons.photo_camera_outlined,
@@ -183,14 +178,19 @@ class _RadarScreenState extends State<RadarScreen> {
         _ => Icons.bolt_rounded,
       };
 
+  String _windowLabel(String window) => switch (window) {
+        'tomorrow' => 'Yarın',
+        'weekend' => 'Hafta sonu',
+        _ => 'Bugün',
+      };
+
   void _openActivity(String activity, {String? city}) {
-    final selectedCity = (city ?? _cityController.text).trim();
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (_) => ActivityDemandScreen(
           initialActivity: activity,
-          initialCity: selectedCity,
+          initialCity: (city ?? _cityController.text).trim(),
         ),
       ),
     );
@@ -199,7 +199,7 @@ class _RadarScreenState extends State<RadarScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _background,
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: StreamBuilder<List<ActivityDemand>>(
           stream: ActivityDemandService.instance.watchActive(),
@@ -214,36 +214,50 @@ class _RadarScreenState extends State<RadarScreen> {
                     .where((e) => _sameCity(e.city) && _eventInPeriod(e))
                     .toList();
                 return RefreshIndicator(
+                  color: AppColors.cyan,
                   onRefresh: _load,
                   child: ListView(
                     physics: const AlwaysScrollableScrollPhysics(),
                     padding: EdgeInsets.fromLTRB(
                       14,
-                      8,
+                      6,
                       14,
-                      widget.embedded ? 24 : 112,
+                      widget.embedded ? 22 : 92,
                     ),
                     children: [
                       _header(),
-                      const SizedBox(height: 14),
-                      _summaryCard(demands, events),
-                      const SizedBox(height: 25),
+                      const SizedBox(height: 9),
+                      _summaryStrip(demands, events),
+                      const SizedBox(height: 18),
                       _sectionTitle(
                         'Şu an hareketli',
                         'İnsanların yapmak istediği şeyler',
-                        Icons.bolt_rounded,
                       ),
-                      const SizedBox(height: 11),
+                      const SizedBox(height: 9),
                       _demandSection(demands),
-                      const SizedBox(height: 26),
-                      _sectionTitle(
-                        'Çekim fırsatları',
-                        _cityController.text.trim().isEmpty
-                            ? 'Türkiye genelinden güçlü noktalar'
-                            : '${_cityController.text.trim()} için güçlü noktalar',
-                        Icons.photo_camera_outlined,
+                      const SizedBox(height: 20),
+                      Row(
+                        children: [
+                          const Expanded(
+                            child: _SectionHeading(
+                              title: 'Çekim fırsatları',
+                              subtitle: 'Doğru noktayı hızlı bul',
+                            ),
+                          ),
+                          _SpotModeButton(
+                            label: 'Yakındakiler',
+                            selected: _spotMode == 0,
+                            onTap: () => setState(() => _spotMode = 0),
+                          ),
+                          const SizedBox(width: 5),
+                          _SpotModeButton(
+                            label: 'Popüler',
+                            selected: _spotMode == 1,
+                            onTap: () => setState(() => _spotMode = 1),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 11),
+                      const SizedBox(height: 9),
                       _spotSection(),
                     ],
                   ),
@@ -261,46 +275,21 @@ class _RadarScreenState extends State<RadarScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (!widget.embedded) ...[
-          Row(
+          const Row(
             children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: _surfaceStrong,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: _border),
+              Icon(Icons.radar_rounded, color: AppColors.cyan, size: 22),
+              SizedBox(width: 8),
+              Text(
+                'Radar',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: -.35,
                 ),
-                child:
-                    const Icon(Icons.radar_rounded, color: _accent, size: 24),
-              ),
-              const SizedBox(width: 11),
-              const Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Radar',
-                      style:
-                          TextStyle(fontSize: 27, fontWeight: FontWeight.w900),
-                    ),
-                    SizedBox(height: 1),
-                    Text(
-                      'Çevrende ne oluyor?',
-                      style: TextStyle(color: Colors.white54, fontSize: 12),
-                    ),
-                  ],
-                ),
-              ),
-              IconButton.filledTonal(
-                tooltip: 'Bildirimler',
-                onPressed: () =>
-                    Navigator.pushNamed(context, '/notifications'),
-                icon: const Icon(Icons.notifications_none_rounded, size: 21),
               ),
             ],
           ),
-          const SizedBox(height: 15),
+          const SizedBox(height: 10),
         ],
         SearchableSelectionField(
           controller: _cityController,
@@ -311,13 +300,13 @@ class _RadarScreenState extends State<RadarScreen> {
           onChanged: _setCity,
           maxSuggestions: 7,
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 8),
         Container(
-          padding: const EdgeInsets.all(4),
+          padding: const EdgeInsets.all(3),
           decoration: BoxDecoration(
-            color: _surface,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: _border),
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(13),
+            border: Border.all(color: AppColors.border),
           ),
           child: Row(
             children: [
@@ -334,18 +323,19 @@ class _RadarScreenState extends State<RadarScreen> {
   Widget _periodButton(String label, String value) {
     final selected = _period == value;
     return Material(
-      color: selected ? const Color(0xFF34383D) : Colors.transparent,
-      borderRadius: BorderRadius.circular(13),
+      color: selected ? AppColors.surfaceStrong : Colors.transparent,
+      borderRadius: BorderRadius.circular(10),
       child: InkWell(
-        borderRadius: BorderRadius.circular(13),
+        borderRadius: BorderRadius.circular(10),
         onTap: () => setState(() => _period = value),
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 11),
+          padding: const EdgeInsets.symmetric(vertical: 8),
           child: Text(
             label,
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: selected ? Colors.white : Colors.white54,
+              color: selected ? Colors.white : Colors.white46,
+              fontSize: 11.5,
               fontWeight: selected ? FontWeight.w900 : FontWeight.w700,
             ),
           ),
@@ -354,162 +344,53 @@ class _RadarScreenState extends State<RadarScreen> {
     );
   }
 
-  Widget _summaryCard(List<ActivityDemand> demands, List<SocialEvent> events) {
+  Widget _summaryStrip(List<ActivityDemand> demands, List<SocialEvent> events) {
     final people = demands.map((d) => d.userId).toSet().length;
     final spots = _visibleSpots.length;
-    final score = people + events.length * 2 + spots;
-    final title = score >= 20
-        ? 'Çevrende hareket var'
-        : score >= 8
-            ? 'Radar hareketleniyor'
-            : 'Radar hazır';
-    final subtitle = _cityController.text.trim().isEmpty
-        ? 'Türkiye genelindeki güncel hareketler'
-        : '${_cityController.text.trim()} • canlı görünüm';
-
     return Container(
-      padding: const EdgeInsets.fromLTRB(17, 16, 17, 17),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [_surfaceStrong, _surface],
-        ),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: const Color(0xFF34393F)),
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.border),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: .08),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _LiveDot(),
-                    SizedBox(width: 6),
-                    Text(
-                      'CANLI',
-                      style: TextStyle(
-                        fontSize: 10,
-                        letterSpacing: 1,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const Spacer(),
-              const Icon(Icons.radar_rounded, color: Colors.white24, size: 30),
-            ],
+          const _LiveDot(),
+          const SizedBox(width: 7),
+          const Text(
+            'Radar hazır',
+            style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w900),
           ),
-          const SizedBox(height: 14),
-          Text(
-            title,
-            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
-          ),
-          const SizedBox(height: 4),
-          Text(subtitle, style: const TextStyle(color: Colors.white54)),
-          const SizedBox(height: 18),
-          Row(
-            children: [
-              Expanded(
-                child: _metricBlock(
-                  value: '$people',
-                  label: 'kişi',
-                  icon: Icons.groups_2_outlined,
-                ),
-              ),
-              _metricDivider(),
-              Expanded(
-                child: _metricBlock(
-                  value: '${events.length}',
-                  label: 'etkinlik',
-                  icon: Icons.event_outlined,
-                ),
-              ),
-              _metricDivider(),
-              Expanded(
-                child: _metricBlock(
-                  value: '$spots',
-                  label: 'çekim',
-                  icon: Icons.photo_camera_outlined,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _metricBlock({
-    required String value,
-    required String label,
-    required IconData icon,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(icon, size: 17, color: _accent),
-        const SizedBox(height: 8),
-        Text(
-          value,
-          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900),
-        ),
-        Text(
-          label,
-          style: const TextStyle(color: Color(0x73FFFFFF), fontSize: 11),
-        ),
-      ],
-    );
-  }
-
-  Widget _metricDivider() => Container(
-        width: 1,
-        height: 52,
-        margin: const EdgeInsets.symmetric(horizontal: 9),
-        color: Colors.white10,
-      );
-
-  Widget _sectionTitle(String title, String subtitle, IconData icon) => Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Container(
-            width: 37,
-            height: 37,
-            decoration: BoxDecoration(
-              color: _surfaceAlt,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: _border),
-            ),
-            child: Icon(icon, size: 19, color: _accent),
-          ),
+          const Spacer(),
+          _compactMetric(Icons.groups_2_outlined, '$people kişi'),
           const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
-                ),
-                const SizedBox(height: 1),
-                Text(
-                  subtitle,
-                  style: const TextStyle(color: Color(0x73FFFFFF), fontSize: 11),
-                ),
-              ],
+          _compactMetric(Icons.event_outlined, '${events.length} etkinlik'),
+          const SizedBox(width: 10),
+          _compactMetric(Icons.photo_camera_outlined, '$spots çekim'),
+        ],
+      ),
+    );
+  }
+
+  Widget _compactMetric(IconData icon, String text) => Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: Colors.white38),
+          const SizedBox(width: 4),
+          Text(
+            text,
+            style: const TextStyle(
+              color: Colors.white54,
+              fontSize: 10.5,
+              fontWeight: FontWeight.w700,
             ),
           ),
         ],
       );
+
+  Widget _sectionTitle(String title, String subtitle) =>
+      _SectionHeading(title: title, subtitle: subtitle);
 
   Widget _demandSection(List<ActivityDemand> demands) {
     final grouped = <String, List<ActivityDemand>>{};
@@ -523,15 +404,14 @@ class _RadarScreenState extends State<RadarScreen> {
     if (groups.isEmpty) return _quickStartStrip();
 
     return SizedBox(
-      height: 148,
+      height: 104,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: groups.take(6).length,
-        separatorBuilder: (_, __) => const SizedBox(width: 9),
+        separatorBuilder: (_, __) => const SizedBox(width: 7),
         itemBuilder: (context, index) {
           final items = groups[index];
-          final first = items.first;
-          return _demandCard(first, items.length);
+          return _demandCard(items.first, items.length);
         },
       ),
     );
@@ -539,62 +419,61 @@ class _RadarScreenState extends State<RadarScreen> {
 
   Widget _demandCard(ActivityDemand demand, int count) {
     return SizedBox(
-      width: 164,
+      width: 142,
       child: Material(
-        color: _surface,
-        borderRadius: BorderRadius.circular(18),
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(14),
         child: InkWell(
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(14),
           onTap: () => _openActivity(demand.activity, city: demand.city),
           child: Container(
-            padding: const EdgeInsets.all(14),
+            padding: const EdgeInsets.all(11),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: _border),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: AppColors.border),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Row(
               children: [
-                Row(
-                  children: [
-                    Container(
-                      width: 34,
-                      height: 34,
-                      decoration: BoxDecoration(
-                        color: _surfaceAlt,
-                        borderRadius: BorderRadius.circular(11),
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceStrong,
+                    borderRadius: BorderRadius.circular(11),
+                  ),
+                  child: Icon(
+                    _activityIcon(demand.activity),
+                    size: 18,
+                    color: AppColors.cyan,
+                  ),
+                ),
+                const SizedBox(width: 9),
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        demand.activity,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w900,
+                        ),
                       ),
-                      child: Icon(
-                        _activityIcon(demand.activity),
-                        size: 18,
-                        color: _accent,
+                      const SizedBox(height: 3),
+                      Text(
+                        '$count kişi • ${_windowLabel(demand.window)}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Colors.white38,
+                          fontSize: 9.8,
+                        ),
                       ),
-                    ),
-                    const Spacer(),
-                    const Icon(
-                      Icons.arrow_outward_rounded,
-                      size: 17,
-                      color: Colors.white30,
-                    ),
-                  ],
-                ),
-                const Spacer(),
-                Text(
-                  '$count',
-                  style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w900),
-                ),
-                Text(
-                  demand.activity,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontWeight: FontWeight.w900),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  '${demand.city} • ${_windowLabel(demand.window)}',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: Color(0x73FFFFFF), fontSize: 10),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -608,213 +487,25 @@ class _RadarScreenState extends State<RadarScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
-          decoration: BoxDecoration(
-            color: _surface,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: _border),
-          ),
-          child: const Row(
-            children: [
-              Icon(Icons.add_circle_outline_rounded, size: 19, color: _accent),
-              SizedBox(width: 9),
-              Expanded(
-                child: Text(
-                  'Şu an sakin. İlk hareketi sen başlat.',
-                  style: TextStyle(fontWeight: FontWeight.w800),
-                ),
-              ),
-            ],
-          ),
+        const Text(
+          'Şu an sakin. İlk hareketi sen başlat.',
+          style: TextStyle(color: Colors.white46, fontSize: 11.5),
         ),
-        const SizedBox(height: 9),
-        SizedBox(
-          height: 48,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            itemCount: _quickActivities.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 8),
-            itemBuilder: (_, index) {
-              final activity = _quickActivities[index];
-              return ActionChip(
-                avatar: Icon(_activityIcon(activity), size: 17),
-                label: Text(activity),
-                onPressed: () => _openActivity(activity),
-              );
-            },
-          ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 7,
+          runSpacing: 7,
+          children: _quickActivities.map((activity) {
+            return ActionChip(
+              avatar: Icon(_activityIcon(activity), size: 16),
+              label: Text(activity),
+              onPressed: () => _openActivity(activity),
+            );
+          }).toList(),
         ),
       ],
     );
   }
-
-  Widget _eventSection(List<SocialEvent> events) {
-    if (events.isEmpty) {
-      return _emptyCard(
-        'Bu filtrede yaklaşan etkinlik yok. Radar yenilendikçe burada görünecek.',
-        Icons.event_busy_outlined,
-      );
-    }
-    return Column(children: events.take(4).map(_eventCard).toList());
-  }
-
-  Widget _communityEventSection(List<SocialEvent> events) {
-    return Column(children: events.take(3).map(_eventCard).toList());
-  }
-
-  Widget _eventCard(SocialEvent event) {
-    final capacity = event.capacity <= 0 ? 1 : event.capacity;
-    final occupancy = (event.participantCount / capacity).clamp(0.0, 1.0);
-    final community = (event.communityName ?? '').trim();
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 9),
-      child: Material(
-        color: _surface,
-        borderRadius: BorderRadius.circular(18),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(18),
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => EventDeepLinkScreen(eventId: event.id),
-            ),
-          ),
-          child: Container(
-            padding: const EdgeInsets.all(13),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: _border),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: 54,
-                  height: 62,
-                  decoration: BoxDecoration(
-                    color: _surfaceStrong,
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        _eventDay(event),
-                        style: TextStyle(
-                          fontSize: _eventDay(event).length > 2 ? 10 : 20,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                      const SizedBox(height: 1),
-                      Text(
-                        _eventMonth(event),
-                        style: const TextStyle(
-                          color: Color(0x73FFFFFF),
-                          fontSize: 9,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        event.title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '${_eventTime(event)} • ${event.city.isEmpty ? 'Konum detayda' : event.city}',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(color: Colors.white54, fontSize: 11),
-                      ),
-                      if (community.isNotEmpty) ...[
-                        const SizedBox(height: 3),
-                        Text(
-                          community,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(color: Color(0x73FFFFFF), fontSize: 10),
-                        ),
-                      ],
-                      const SizedBox(height: 9),
-                      Row(
-                        children: [
-                          _tinyBadge(
-                            Icons.groups_2_outlined,
-                            '${event.participantCount}/${event.capacity}',
-                          ),
-                          const SizedBox(width: 6),
-                          _tinyBadge(
-                            event.isPaid
-                                ? Icons.payments_outlined
-                                : Icons.confirmation_number_outlined,
-                            event.isPaid
-                                ? '${event.ticketPrice.toStringAsFixed(0)} TL'
-                                : 'Ücretsiz',
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 9),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(20),
-                        child: LinearProgressIndicator(
-                          value: occupancy,
-                          minHeight: 3,
-                          backgroundColor: Colors.white10,
-                          valueColor: const AlwaysStoppedAnimation<Color>(_accent),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 7),
-                const Padding(
-                  padding: EdgeInsets.only(top: 20),
-                  child: Icon(
-                    Icons.chevron_right_rounded,
-                    color: Colors.white30,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _tinyBadge(IconData icon, String text) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 5),
-        decoration: BoxDecoration(
-          color: _surfaceAlt,
-          borderRadius: BorderRadius.circular(9),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 13, color: Colors.white54),
-            const SizedBox(width: 4),
-            Text(
-              text,
-              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800),
-            ),
-          ],
-        ),
-      );
 
   Widget _spotSection() {
     if (_loadingSpots) {
@@ -832,11 +523,11 @@ class _RadarScreenState extends State<RadarScreen> {
     }
 
     return SizedBox(
-      height: 250,
+      height: 224,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: spots.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 10),
+        separatorBuilder: (_, __) => const SizedBox(width: 9),
         itemBuilder: (context, index) => _spotCard(spots[index]),
       ),
     );
@@ -844,10 +535,10 @@ class _RadarScreenState extends State<RadarScreen> {
 
   Widget _spotCard(PhotoSpot spot) {
     return SizedBox(
-      width: 240,
+      width: 214,
       child: Material(
-        color: _surface,
-        borderRadius: BorderRadius.circular(19),
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: () => Navigator.push(
@@ -856,8 +547,8 @@ class _RadarScreenState extends State<RadarScreen> {
           ),
           child: Container(
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(19),
-              border: Border.all(color: _border),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.border),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -866,55 +557,79 @@ class _RadarScreenState extends State<RadarScreen> {
                   children: [
                     SpotImage(
                       spot: spot,
-                      width: 240,
-                      height: 142,
+                      width: 214,
+                      height: 130,
                       borderRadius: const BorderRadius.vertical(
-                        top: Radius.circular(18),
+                        top: Radius.circular(15),
                       ),
                     ),
                     Positioned(
-                      top: 9,
-                      left: 9,
+                      top: 8,
+                      left: 8,
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 5,
+                          horizontal: 7,
+                          vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: .62),
-                          borderRadius: BorderRadius.circular(9),
+                          color: Colors.black.withValues(alpha: .66),
+                          borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
-                          '★ ${spot.rating}',
+                          '★ ${spot.rating.toStringAsFixed(1)}',
                           style: const TextStyle(
-                            fontSize: 10,
+                            fontSize: 9.8,
                             fontWeight: FontWeight.w900,
                           ),
                         ),
                       ),
                     ),
-                    Positioned(
-                      right: 8,
-                      bottom: 8,
-                      child: IconButton.filled(
-                        tooltip: 'Rota oluştur',
-                        style: IconButton.styleFrom(
-                          backgroundColor: Colors.black.withValues(alpha: .68),
-                          foregroundColor: Colors.white,
+                    if (_spotMode == 0 && _position != null)
+                      Positioned(
+                        right: 8,
+                        top: 8,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 7,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: .66),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            _distanceLabel(spot),
+                            style: const TextStyle(
+                              color: AppColors.cyan,
+                              fontSize: 9.5,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
                         ),
+                      ),
+                    Positioned(
+                      right: 7,
+                      bottom: 7,
+                      child: IconButton(
+                        tooltip: 'Rota oluştur',
                         onPressed: () => Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (_) => RoutePlannerScreen(initialSpot: spot),
                           ),
                         ),
-                        icon: const Icon(Icons.route_outlined, size: 18),
+                        style: IconButton.styleFrom(
+                          minimumSize: const Size(36, 36),
+                          backgroundColor: Colors.black.withValues(alpha: .70),
+                          foregroundColor: Colors.white,
+                        ),
+                        icon: const Icon(Icons.route_outlined, size: 17),
                       ),
                     ),
                   ],
                 ),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 11, 12, 10),
+                  padding: const EdgeInsets.fromLTRB(10, 9, 10, 8),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -923,38 +638,19 @@ class _RadarScreenState extends State<RadarScreen> {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
-                          fontSize: 15,
+                          fontSize: 13.5,
                           fontWeight: FontWeight.w900,
                         ),
                       ),
-                      const SizedBox(height: 5),
+                      const SizedBox(height: 4),
                       Text(
-                        '${spot.city} • ${spot.category}',
+                        '${spot.city}  •  ${spot.bestTime}',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(color: Color(0x73FFFFFF), fontSize: 10),
-                      ),
-                      const SizedBox(height: 5),
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.schedule_rounded,
-                            size: 13,
-                            color: Colors.white38,
-                          ),
-                          const SizedBox(width: 4),
-                          Expanded(
-                            child: Text(
-                              spot.bestTime,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                color: Colors.white54,
-                                fontSize: 10,
-                              ),
-                            ),
-                          ),
-                        ],
+                        style: const TextStyle(
+                          color: Colors.white38,
+                          fontSize: 9.8,
+                        ),
                       ),
                     ],
                   ),
@@ -969,31 +665,87 @@ class _RadarScreenState extends State<RadarScreen> {
 
   Widget _emptyCard(String text, IconData icon) => Container(
         width: double.infinity,
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: _surface,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: _border),
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AppColors.border),
         ),
         child: Row(
           children: [
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: _surfaceAlt,
-                borderRadius: BorderRadius.circular(11),
-              ),
-              child: Icon(icon, color: Colors.white30, size: 18),
-            ),
-            const SizedBox(width: 11),
+            Icon(icon, color: Colors.white30, size: 20),
+            const SizedBox(width: 10),
             Expanded(
               child: Text(
                 text,
-                style: const TextStyle(color: Colors.white54, height: 1.35),
+                style: const TextStyle(color: Colors.white46, height: 1.35),
               ),
             ),
           ],
+        ),
+      );
+}
+
+class _SectionHeading extends StatelessWidget {
+  final String title;
+  final String subtitle;
+
+  const _SectionHeading({required this.title, required this.subtitle});
+
+  @override
+  Widget build(BuildContext context) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900),
+          ),
+          const SizedBox(height: 1),
+          Text(
+            subtitle,
+            style: const TextStyle(color: Colors.white38, fontSize: 10.5),
+          ),
+        ],
+      );
+}
+
+class _SpotModeButton extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _SpotModeButton({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) => Material(
+        color: selected ? AppColors.surfaceStrong : AppColors.surface,
+        borderRadius: BorderRadius.circular(10),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(10),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 7),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: selected
+                    ? AppColors.cyan.withValues(alpha: .48)
+                    : AppColors.border,
+              ),
+            ),
+            child: Text(
+              label,
+              style: TextStyle(
+                color: selected ? Colors.white : Colors.white46,
+                fontSize: 9.8,
+                fontWeight: selected ? FontWeight.w900 : FontWeight.w700,
+              ),
+            ),
+          ),
         ),
       );
 }
@@ -1032,7 +784,7 @@ class _LiveDotState extends State<_LiveDot>
         width: 7,
         height: 7,
         decoration: const BoxDecoration(
-          color: Color(0xFFD6DBE0),
+          color: AppColors.cyan,
           shape: BoxShape.circle,
         ),
       ),
