@@ -34,7 +34,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
@@ -64,6 +64,8 @@ jobs:
           flutter create --platforms=android --org com.tbt --project-name best_photo_spot .
           cp /tmp/AndroidManifest.xml android/app/src/main/AndroidManifest.xml
           sed -i 's/${MAPS_API_KEY}/CI_DUMMY_MAPS_KEY/g' android/app/src/main/AndroidManifest.xml
+          sed -i 's/minSdk = flutter.minSdkVersion/minSdk = 26/' android/app/build.gradle.kts
+          grep -n 'minSdk' android/app/build.gradle.kts
 
       - name: Verify generated Android host stays local to runner
         shell: bash
