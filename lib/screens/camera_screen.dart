@@ -90,28 +90,37 @@ class _CameraScreenState extends State<CameraScreen>
               ? Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 180),
-                      child: _returningFromCamera
-                          ? const Icon(
-                              Icons.check_circle_rounded,
-                              key: ValueKey('captured'),
-                              size: 58,
-                              color: Color(0xFF42F5E9),
-                            )
-                          : const CircularProgressIndicator(
-                              key: ValueKey('opening'),
-                              color: Colors.white,
-                            ),
+                    const SizedBox(
+                      width: 48,
+                      height: 48,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 4,
+                        color: Colors.white,
+                      ),
                     ),
                     const SizedBox(height: 18),
                     Text(
                       _returningFromCamera
-                          ? 'Fotoğraf çekildi\nÖnizleme hazırlanıyor…'
+                          ? 'Fotoğraf hazırlanıyor…\nLütfen bekleyin.'
                           : 'Telefonun orijinal kamerası açılıyor…',
                       textAlign: TextAlign.center,
-                      style: const TextStyle(color: Colors.white70),
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 16,
+                        height: 1.35,
+                      ),
                     ),
+                    if (_returningFromCamera) ...[
+                      const SizedBox(height: 10),
+                      const Text(
+                        'Fotoğraf hazır olur olmaz paylaşım ekranı açılacak.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.white38,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
                   ],
                 )
               : Column(
