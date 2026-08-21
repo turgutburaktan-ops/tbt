@@ -1,19 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../data/turkey_selection_data.dart';
-import '../models/photo_spot.dart';
 import '../models/social_event.dart';
 import '../services/activity_demand_service.dart';
 import '../services/social_event_service.dart';
-import '../services/spot_repository.dart';
 import '../theme/app_theme.dart';
 import '../widgets/searchable_selection_field.dart';
-import '../widgets/spot_image.dart';
 import 'activity_demand_screen.dart';
-import 'route_planner_screen.dart';
-import 'spot_detail_screen.dart';
 
 class RadarScreen extends StatefulWidget {
   final bool embedded;
@@ -29,10 +23,6 @@ class _RadarScreenState extends State<RadarScreen> {
 
   final _cityController = TextEditingController();
   String _period = 'now';
-  int _spotMode = 0;
-  List<PhotoSpot> _spots = const [];
-  Position? _position;
-  bool _loadingSpots = true;
 
   static const _quickActivities = <String>[
     'Fotoğraf',
@@ -45,7 +35,6 @@ class _RadarScreenState extends State<RadarScreen> {
   void initState() {
     super.initState();
     _load();
-    _readLocation();
   }
 
   @override
@@ -58,35 +47,8 @@ class _RadarScreenState extends State<RadarScreen> {
     try {
       final prefs = await SharedPreferences.getInstance();
       final savedCity = prefs.getString(_cityPrefKey)?.trim() ?? '';
-      final spots = await SpotRepository.instance.loadSpots();
       if (!mounted) return;
-      setState(() {
-        _cityController.text = savedCity;
-        _spots = spots;
-        _loadingSpots = false;
-      });
-    } catch (_) {
-      if (mounted) setState(() => _loadingSpots = false);
-    }
-  }
-
-  Future<void> _readLocation() async {
-    try {
-      if (!await Geolocator.isLocationServiceEnabled()) return;
-      var permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-      }
-      if (permission == LocationPermission.denied ||
-          permission == LocationPermission.deniedForever) {
-        return;
-      }
-      final position = await Geolocator.getCurrentPosition(
-        locationSettings:
-            const LocationSettings(accuracy: LocationAccuracy.medium),
-      );
-      if (!mounted) return;
-      setState(() => _position = position);
+      setState(() => _cityController.text = savedCity);
     } catch (_) {}
   }
 
@@ -135,35 +97,6 @@ class _RadarScreenState extends State<RadarScreen> {
       return demand.window == 'today' || demand.window == 'tomorrow';
     }
     return true;
-  }
-
-  double _distance(PhotoSpot spot) {
-    final p = _position;
-    if (p == null) return double.infinity;
-    return Geolocator.distanceBetween(
-      p.latitude,
-      p.longitude,
-      spot.latitude,
-      spot.longitude,
-    );
-  }
-
-  String _distanceLabel(PhotoSpot spot) {
-    final meters = _distance(spot);
-    if (!meters.isFinite) return '';
-    if (meters < 1000) return '${meters.round()} m';
-    final km = meters / 1000;
-    return km < 10 ? '${km.toStringAsFixed(1)} km' : '${km.round()} km';
-  }
-
-  List<PhotoSpot> get _visibleSpots {
-    final result = _spots.where((spot) => _sameCity(spot.city)).toList();
-    if (_spotMode == 0 && _position != null) {
-      result.sort((a, b) => _distance(a).compareTo(_distance(b)));
-    } else {
-      result.sort((a, b) => b.rating.compareTo(a.rating));
-    }
-    return result.take(8).toList();
   }
 
   IconData _activityIcon(String activity) => switch (_normalize(activity)) {
@@ -235,30 +168,6 @@ class _RadarScreenState extends State<RadarScreen> {
                       ),
                       const SizedBox(height: 9),
                       _demandSection(demands),
-                      const SizedBox(height: 20),
-                      Row(
-                        children: [
-                          const Expanded(
-                            child: _SectionHeading(
-                              title: 'Çekim fırsatları',
-                              subtitle: 'Doğru noktayı hızlı bul',
-                            ),
-                          ),
-                          _SpotModeButton(
-                            label: 'Yakındakiler',
-                            selected: _spotMode == 0,
-                            onTap: () => setState(() => _spotMode = 0),
-                          ),
-                          const SizedBox(width: 5),
-                          _SpotModeButton(
-                            label: 'Popüler',
-                            selected: _spotMode == 1,
-                            onTap: () => setState(() => _spotMode = 1),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 9),
-                      _spotSection(),
                     ],
                   ),
                 );
@@ -346,7 +255,6 @@ class _RadarScreenState extends State<RadarScreen> {
 
   Widget _summaryStrip(List<ActivityDemand> demands, List<SocialEvent> events) {
     final people = demands.map((d) => d.userId).toSet().length;
-    final spots = _visibleSpots.length;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
@@ -366,8 +274,6 @@ class _RadarScreenState extends State<RadarScreen> {
           _compactMetric(Icons.groups_2_outlined, '$people kişi'),
           const SizedBox(width: 10),
           _compactMetric(Icons.event_outlined, '${events.length} etkinlik'),
-          const SizedBox(width: 10),
-          _compactMetric(Icons.photo_camera_outlined, '$spots çekim'),
         ],
       ),
     );
@@ -489,7 +395,7 @@ class _RadarScreenState extends State<RadarScreen> {
       children: [
         const Text(
           'Şu an sakin. İlk hareketi sen başlat.',
-          style: TextStyle(color: const Color(0x75FFFFFF), fontSize: 11.5),
+          style: TextStyle(color: Color(0x75FFFFFF), fontSize: 11.5),
         ),
         const SizedBox(height: 8),
         Wrap(
@@ -506,184 +412,6 @@ class _RadarScreenState extends State<RadarScreen> {
       ],
     );
   }
-
-  Widget _spotSection() {
-    if (_loadingSpots) {
-      return const SizedBox(
-        height: 210,
-        child: Center(child: CircularProgressIndicator()),
-      );
-    }
-    final spots = _visibleSpots;
-    if (spots.isEmpty) {
-      return _emptyCard(
-        'Bu şehir için uygun çekim noktası bulunamadı.',
-        Icons.photo_camera_back_outlined,
-      );
-    }
-
-    return SizedBox(
-      height: 224,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: spots.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 9),
-        itemBuilder: (context, index) => _spotCard(spots[index]),
-      ),
-    );
-  }
-
-  Widget _spotCard(PhotoSpot spot) {
-    return SizedBox(
-      width: 214,
-      child: Material(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => SpotDetailScreen(spot: spot)),
-          ),
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.border),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Stack(
-                  children: [
-                    SpotImage(
-                      spot: spot,
-                      width: 214,
-                      height: 130,
-                      borderRadius: const BorderRadius.vertical(
-                        top: Radius.circular(15),
-                      ),
-                    ),
-                    Positioned(
-                      top: 8,
-                      left: 8,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 7,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: .66),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          '★ ${spot.rating.toStringAsFixed(1)}',
-                          style: const TextStyle(
-                            fontSize: 9.8,
-                            fontWeight: FontWeight.w900,
-                          ),
-                        ),
-                      ),
-                    ),
-                    if (_spotMode == 0 && _position != null)
-                      Positioned(
-                        right: 8,
-                        top: 8,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 7,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: .66),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            _distanceLabel(spot),
-                            style: const TextStyle(
-                              color: AppColors.cyan,
-                              fontSize: 9.5,
-                              fontWeight: FontWeight.w900,
-                            ),
-                          ),
-                        ),
-                      ),
-                    Positioned(
-                      right: 7,
-                      bottom: 7,
-                      child: IconButton(
-                        tooltip: 'Rota oluştur',
-                        onPressed: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => RoutePlannerScreen(initialSpot: spot),
-                          ),
-                        ),
-                        style: IconButton.styleFrom(
-                          minimumSize: const Size(36, 36),
-                          backgroundColor: Colors.black.withValues(alpha: .70),
-                          foregroundColor: Colors.white,
-                        ),
-                        icon: const Icon(Icons.route_outlined, size: 17),
-                      ),
-                    ),
-                  ],
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(10, 9, 10, 8),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        spot.name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 13.5,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '${spot.city}  •  ${spot.bestTime}',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: Colors.white38,
-                          fontSize: 9.8,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _emptyCard(String text, IconData icon) => Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: AppColors.border),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, color: Colors.white30, size: 20),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                text,
-                style: const TextStyle(color: const Color(0x75FFFFFF), height: 1.35),
-              ),
-            ),
-          ],
-        ),
-      );
 }
 
 class _SectionHeading extends StatelessWidget {
@@ -706,47 +434,6 @@ class _SectionHeading extends StatelessWidget {
             style: const TextStyle(color: Colors.white38, fontSize: 10.5),
           ),
         ],
-      );
-}
-
-class _SpotModeButton extends StatelessWidget {
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  const _SpotModeButton({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) => Material(
-        color: selected ? AppColors.surfaceStrong : AppColors.surface,
-        borderRadius: BorderRadius.circular(10),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(10),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 7),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(
-                color: selected
-                    ? AppColors.cyan.withValues(alpha: .48)
-                    : AppColors.border,
-              ),
-            ),
-            child: Text(
-              label,
-              style: TextStyle(
-                color: selected ? Colors.white : const Color(0x75FFFFFF),
-                fontSize: 9.8,
-                fontWeight: selected ? FontWeight.w900 : FontWeight.w700,
-              ),
-            ),
-          ),
-        ),
       );
 }
 
