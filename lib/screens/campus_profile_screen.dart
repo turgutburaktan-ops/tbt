@@ -15,11 +15,32 @@ class _CampusProfileScreenState extends State<CampusProfileScreen> {
   final _university = TextEditingController();
   final _faculty = TextEditingController();
   final _department = TextEditingController();
-  final _classYear = TextEditingController();
+  String? _classYear;
+
+  static const _classYears = <String>[
+    'Hazırlık',
+    '1',
+    '2',
+    '3',
+    '4',
+    '5',
+    '6',
+    'Mezun',
+  ];
 
   static const _allInterests = <String>[
-    'Fotoğraf', 'Kamp', 'Yürüyüş', 'Kahve', 'Gezi', 'Spor',
-    'Oyun', 'Müzik', 'Sanat', 'Yemek', 'Teknoloji', 'Sinema',
+    'Fotoğraf',
+    'Kamp',
+    'Yürüyüş',
+    'Kahve',
+    'Gezi',
+    'Spor',
+    'Oyun',
+    'Müzik',
+    'Sanat',
+    'Yemek',
+    'Teknoloji',
+    'Sinema',
   ];
 
   final Set<String> _interests = {};
@@ -32,13 +53,16 @@ class _CampusProfileScreenState extends State<CampusProfileScreen> {
     _university.dispose();
     _faculty.dispose();
     _department.dispose();
-    _classYear.dispose();
     super.dispose();
   }
 
   Future<void> _save() async {
     if (_university.text.trim().isEmpty || _department.text.trim().isEmpty) {
       _message('Üniversite ve bölüm bilgisi gerekli.');
+      return;
+    }
+    if (_classYear == null || _classYear!.isEmpty) {
+      _message('Sınıfını seçmelisin.');
       return;
     }
     if (_interests.length < 3) {
@@ -51,13 +75,15 @@ class _CampusProfileScreenState extends State<CampusProfileScreen> {
         university: _university.text,
         faculty: _faculty.text,
         department: _department.text,
-        classYear: _classYear.text,
+        classYear: _classYear ?? '',
         interests: _interests.toList(),
         newStudent2026: _newStudent2026,
         showEducationOnProfile: _showEducation,
       );
       if (!mounted) return;
-      _message('Kampüs profilin kaydedildi.');
+      _message(_classYear == 'Mezun'
+          ? 'Eğitim bilgin kaydedildi. Mezun hesaplarda Kampüs kapalıdır.'
+          : 'Kampüs profilin kaydedildi.');
       Navigator.pop(context, true);
     } catch (e) {
       _message(e.toString().replaceFirst('Exception: ', ''));
@@ -73,8 +99,14 @@ class _CampusProfileScreenState extends State<CampusProfileScreen> {
       ..showSnackBar(SnackBar(content: Text(text)));
   }
 
+  String _classLabel(String value) {
+    if (value == 'Hazırlık' || value == 'Mezun') return value;
+    return '$value. Sınıf';
+  }
+
   @override
   Widget build(BuildContext context) {
+    final graduate = _classYear == 'Mezun';
     return Scaffold(
       backgroundColor: const Color(0xFF090A0C),
       appBar: AppBar(
@@ -83,7 +115,9 @@ class _CampusProfileScreenState extends State<CampusProfileScreen> {
         actions: [
           IconButton(
             tooltip: 'Topluluklar',
-            onPressed: () => Navigator.pushNamed(context, '/communities'),
+            onPressed: graduate
+                ? null
+                : () => Navigator.pushNamed(context, '/communities'),
             icon: const Icon(Icons.groups_2_outlined),
           ),
         ],
@@ -94,12 +128,6 @@ class _CampusProfileScreenState extends State<CampusProfileScreen> {
           const Text(
             'Üniversitendeki toplulukları, etkinlikleri ve sana uygun keşifleri gösterebilmemiz için birkaç bilgi ekle.',
             style: TextStyle(color: Colors.white60, height: 1.45),
-          ),
-          const SizedBox(height: 12),
-          OutlinedButton.icon(
-            onPressed: () => Navigator.pushNamed(context, '/communities'),
-            icon: const Icon(Icons.groups_2_outlined),
-            label: const Text('Üniversite Topluluklarını Keşfet'),
           ),
           const SizedBox(height: 20),
           SearchableSelectionField(
@@ -118,13 +146,63 @@ class _CampusProfileScreenState extends State<CampusProfileScreen> {
             prefixIcon: Icons.account_balance_outlined,
           ),
           const SizedBox(height: 12),
-          TextField(controller: _department, decoration: const InputDecoration(labelText: 'Bölüm', hintText: 'Örn. Yazılım Mühendisliği', prefixIcon: Icon(Icons.menu_book_outlined))),
+          TextField(
+            controller: _department,
+            decoration: const InputDecoration(
+              labelText: 'Bölüm',
+              hintText: 'Örn. Yazılım Mühendisliği',
+              prefixIcon: Icon(Icons.menu_book_outlined),
+            ),
+          ),
           const SizedBox(height: 12),
-          TextField(controller: _classYear, decoration: const InputDecoration(labelText: 'Sınıf', hintText: 'Hazırlık, 1, 2, 3, 4…', prefixIcon: Icon(Icons.badge_outlined))),
+          DropdownButtonFormField<String>(
+            initialValue: _classYear,
+            decoration: const InputDecoration(
+              labelText: 'Sınıf',
+              hintText: 'Sınıfını seç',
+              prefixIcon: Icon(Icons.badge_outlined),
+            ),
+            items: _classYears
+                .map((value) => DropdownMenuItem(
+                      value: value,
+                      child: Text(_classLabel(value)),
+                    ))
+                .toList(),
+            onChanged: (value) => setState(() => _classYear = value),
+          ),
+          if (graduate) ...[
+            const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFF121416),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: Colors.white10),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.lock_outline_rounded, color: Colors.white54),
+                  SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'Mezun hesaplarda Kampüs sekmesi görünmez ve Kampüs alanı kapalı kalır.',
+                      style: TextStyle(color: Colors.white60, height: 1.35),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
           const SizedBox(height: 22),
-          const Text('Nelerden hoşlanıyorsun?', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
+          const Text(
+            'Nelerden hoşlanıyorsun?',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
+          ),
           const SizedBox(height: 6),
-          const Text('En az 3 seçim yap.', style: TextStyle(color: Colors.white54, fontSize: 12)),
+          const Text(
+            'En az 3 seçim yap.',
+            style: TextStyle(color: Colors.white54, fontSize: 12),
+          ),
           const SizedBox(height: 12),
           Wrap(
             spacing: 8,
@@ -148,9 +226,13 @@ class _CampusProfileScreenState extends State<CampusProfileScreen> {
           SwitchListTile.adaptive(
             contentPadding: EdgeInsets.zero,
             value: _newStudent2026,
-            onChanged: (v) => setState(() => _newStudent2026 = v),
+            onChanged: graduate
+                ? null
+                : (v) => setState(() => _newStudent2026 = v),
             title: const Text('2026 yeni öğrencisiyim'),
-            subtitle: const Text('Yeni öğrenci etkinlikleri ve kampüs rehberi önceliklensin.'),
+            subtitle: const Text(
+              'Yeni öğrenci etkinlikleri ve kampüs rehberi önceliklensin.',
+            ),
           ),
           SwitchListTile.adaptive(
             contentPadding: EdgeInsets.zero,
@@ -164,7 +246,11 @@ class _CampusProfileScreenState extends State<CampusProfileScreen> {
             child: FilledButton.icon(
               onPressed: _saving ? null : _save,
               icon: _saving
-                  ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
                   : const Icon(Icons.check_circle_outline),
               label: Text(_saving ? 'Kaydediliyor…' : 'Kaydet ve Devam Et'),
             ),
