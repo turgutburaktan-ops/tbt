@@ -29,15 +29,24 @@ class ProfileService {
     }
     final cleanName = displayName.trim();
     final cleanBio = bio.trim();
-    if (cleanName.length < 2) throw Exception('Kullanıcı adı en az 2 karakter olmalı.');
-    if (cleanBio.length > 160) throw Exception('Açıklama en fazla 160 karakter olabilir.');
+    if (cleanName.length < 2) {
+      throw Exception('Kullanıcı adı en az 2 karakter olmalı.');
+    }
+    if (cleanBio.length > 160) {
+      throw Exception('Açıklama en fazla 160 karakter olabilir.');
+    }
 
     String photoUrl = user.photoURL ?? '';
     if (photo != null) {
       final lower = photo.path.toLowerCase();
       final ext = lower.endsWith('.png') ? 'png' : 'jpg';
       final ref = _storage.ref().child('users/${user.uid}/profile/avatar.$ext');
-      final task = await ref.putFile(photo, SettableMetadata(contentType: ext == 'png' ? 'image/png' : 'image/jpeg'));
+      final task = await ref.putFile(
+        photo,
+        SettableMetadata(
+          contentType: ext == 'png' ? 'image/png' : 'image/jpeg',
+        ),
+      );
       photoUrl = await task.ref.getDownloadURL();
     }
 
@@ -62,7 +71,9 @@ class ProfileService {
     bool showEducationOnProfile = true,
   }) async {
     final user = _auth.currentUser;
-    if (user == null) throw Exception('Kampüs profilini düzenlemek için giriş yapmalısın.');
+    if (user == null) {
+      throw Exception('Kampüs profilini düzenlemek için giriş yapmalısın.');
+    }
 
     final cleanInterests = interests
         .map((item) => item.trim())
@@ -70,16 +81,34 @@ class ProfileService {
         .toSet()
         .take(12)
         .toList();
+    final cleanClassYear = classYear.trim();
+    const activeStudentYears = <String>{
+      'Hazırlık',
+      '1',
+      '2',
+      '3',
+      '4',
+      '5',
+      '6',
+    };
+    final campusEligible = university.trim().isNotEmpty &&
+        activeStudentYears.contains(cleanClassYear);
 
     await _firestore.collection('users').doc(user.uid).set({
       'university': university.trim(),
       'faculty': faculty.trim(),
       'department': department.trim(),
-      'classYear': classYear.trim(),
+      'classYear': cleanClassYear,
       'interests': cleanInterests,
-      'newStudent2026': newStudent2026,
+      'newStudent2026': campusEligible ? newStudent2026 : false,
       'showEducationOnProfile': showEducationOnProfile,
-      'campusProfileCompleted': university.trim().isNotEmpty && department.trim().isNotEmpty && cleanInterests.length >= 3,
+      'campusProfileCompleted': university.trim().isNotEmpty &&
+          department.trim().isNotEmpty &&
+          cleanInterests.length >= 3,
+      'campusEligible': campusEligible,
+      'studentStatus': campusEligible
+          ? 'student'
+          : (cleanClassYear == 'Mezun' ? 'graduate' : 'unknown'),
       'updatedAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
   }
