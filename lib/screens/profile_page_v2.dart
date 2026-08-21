@@ -11,6 +11,7 @@ import '../services/auth_service.dart';
 import '../services/profile_service.dart';
 import '../services/social_service.dart';
 import '../services/story_service.dart';
+import '../theme/app_theme.dart';
 import '../widgets/firebase_media_image.dart';
 import '../widgets/story_strip.dart';
 import 'create_post_screen.dart';
@@ -28,9 +29,7 @@ class ProfilePage extends StatelessWidget {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const SafeArea(
-            child: Center(
-              child: CircularProgressIndicator(color: Color(0xFFB7BCC2)),
-            ),
+            child: Center(child: CircularProgressIndicator()),
           );
         }
         final user = snapshot.data;
@@ -116,9 +115,7 @@ class _ProfileBodyState extends State<_ProfileBody> {
     if (stories.isEmpty) return;
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (_) => StoryViewerScreen(stories: stories),
-      ),
+      MaterialPageRoute(builder: (_) => StoryViewerScreen(stories: stories)),
     );
   }
 
@@ -186,7 +183,7 @@ class _ProfileBodyState extends State<_ProfileBody> {
                   fallbackStoragePaths: fallbackStoragePaths,
                   fit: BoxFit.contain,
                   errorWidget: const ColoredBox(
-                    color: Color(0xFF121416),
+                    color: AppColors.surface,
                     child: Center(
                       child: Icon(Icons.broken_image_outlined, size: 48),
                     ),
@@ -242,7 +239,7 @@ class _ProfileBodyState extends State<_ProfileBody> {
                 slivers: [
                   SliverToBoxAdapter(
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+                      padding: const EdgeInsets.fromLTRB(14, 8, 8, 6),
                       child: Row(
                         children: [
                           Expanded(
@@ -251,8 +248,9 @@ class _ProfileBodyState extends State<_ProfileBody> {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
-                                fontSize: 21,
+                                fontSize: 20,
                                 fontWeight: FontWeight.w900,
+                                letterSpacing: -.35,
                               ),
                             ),
                           ),
@@ -262,7 +260,7 @@ class _ProfileBodyState extends State<_ProfileBody> {
                               Icons.more_horiz_rounded,
                               color: Colors.white70,
                             ),
-                            color: const Color(0xFF17191C),
+                            color: AppColors.surfaceAlt,
                             onSelected: (value) => _handleProfileMenu(
                               value,
                               displayName,
@@ -272,6 +270,7 @@ class _ProfileBodyState extends State<_ProfileBody> {
                               PopupMenuItem(
                                 value: 'edit',
                                 child: ListTile(
+                                  dense: true,
                                   leading: Icon(Icons.edit_outlined),
                                   title: Text('Profili düzenle'),
                                 ),
@@ -279,6 +278,7 @@ class _ProfileBodyState extends State<_ProfileBody> {
                               PopupMenuItem(
                                 value: 'share',
                                 child: ListTile(
+                                  dense: true,
                                   leading: Icon(Icons.share_outlined),
                                   title: Text('Profili paylaş'),
                                 ),
@@ -286,6 +286,7 @@ class _ProfileBodyState extends State<_ProfileBody> {
                               PopupMenuItem(
                                 value: 'messages',
                                 child: ListTile(
+                                  dense: true,
                                   leading:
                                       Icon(Icons.chat_bubble_outline_rounded),
                                   title: Text('Mesajlar'),
@@ -294,6 +295,7 @@ class _ProfileBodyState extends State<_ProfileBody> {
                               PopupMenuItem(
                                 value: 'campus',
                                 child: ListTile(
+                                  dense: true,
                                   leading: Icon(Icons.school_outlined),
                                   title: Text('Kampüs'),
                                 ),
@@ -302,6 +304,7 @@ class _ProfileBodyState extends State<_ProfileBody> {
                               PopupMenuItem(
                                 value: 'logout',
                                 child: ListTile(
+                                  dense: true,
                                   leading: Icon(Icons.logout_rounded),
                                   title: Text('Çıkış yap'),
                                 ),
@@ -314,7 +317,7 @@ class _ProfileBodyState extends State<_ProfileBody> {
                   ),
                   SliverToBoxAdapter(
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(18, 4, 18, 18),
+                      padding: const EdgeInsets.fromLTRB(16, 2, 16, 14),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -336,21 +339,18 @@ class _ProfileBodyState extends State<_ProfileBody> {
                                             _openStories(stories);
                                           } else {
                                             _openProfilePhoto(
-                                                photoUrl, displayName);
+                                              photoUrl,
+                                              displayName,
+                                            );
                                           }
                                         },
                                         child: Container(
                                           padding:
-                                              EdgeInsets.all(hasStory ? 3 : 0),
+                                              EdgeInsets.all(hasStory ? 2.5 : 0),
                                           decoration: BoxDecoration(
                                             shape: BoxShape.circle,
                                             gradient: hasStory
-                                                ? const LinearGradient(
-                                                    colors: [
-                                                      Color(0xFF42F5E9),
-                                                      Color(0xFF8B5CF6),
-                                                    ],
-                                                  )
+                                                ? AppColors.accentGradient
                                                 : null,
                                           ),
                                           child: Container(
@@ -358,15 +358,15 @@ class _ProfileBodyState extends State<_ProfileBody> {
                                                 hasStory ? 2 : 0),
                                             decoration: const BoxDecoration(
                                               shape: BoxShape.circle,
-                                              color: Color(0xFF090A0C),
+                                              color: AppColors.background,
                                             ),
                                             child: CircleAvatar(
-                                              radius: 47,
+                                              radius: 41,
                                               backgroundColor:
-                                                  const Color(0xFFB7BCC2),
+                                                  AppColors.surfaceStrong,
                                               child: SizedBox(
-                                                width: 86,
-                                                height: 86,
+                                                width: 76,
+                                                height: 76,
                                                 child: ClipOval(
                                                   child: FirebaseMediaImage(
                                                     imageUrl: photoUrl,
@@ -376,12 +376,12 @@ class _ProfileBodyState extends State<_ProfileBody> {
                                                                 widget.user.uid),
                                                     errorWidget:
                                                         const ColoredBox(
-                                                      color: Color(0xFF121416),
+                                                      color: AppColors.surface,
                                                       child: Center(
                                                         child: Icon(
                                                           Icons.person,
-                                                          size: 48,
-                                                          color: Colors.white54,
+                                                          size: 42,
+                                                          color: Colors.white46,
                                                         ),
                                                       ),
                                                     ),
@@ -395,29 +395,33 @@ class _ProfileBodyState extends State<_ProfileBody> {
                                     },
                                   ),
                                   Positioned(
-                                    right: -2,
+                                    right: -1,
                                     bottom: 0,
                                     child: GestureDetector(
                                       onTap: () =>
                                           _editProfile(displayName, bio),
                                       child: Container(
-                                        width: 29,
-                                        height: 29,
-                                        decoration: const BoxDecoration(
-                                          color: Color(0xFFB7BCC2),
+                                        width: 26,
+                                        height: 26,
+                                        decoration: BoxDecoration(
+                                          color: AppColors.surfaceStrong,
                                           shape: BoxShape.circle,
+                                          border: Border.all(
+                                            color: AppColors.cyan,
+                                            width: 1.2,
+                                          ),
                                         ),
                                         child: const Icon(
                                           Icons.add_a_photo_outlined,
-                                          size: 17,
-                                          color: Colors.black,
+                                          size: 14,
+                                          color: AppColors.cyan,
                                         ),
                                       ),
                                     ),
                                   ),
                                 ],
                               ),
-                              const SizedBox(width: 18),
+                              const SizedBox(width: 16),
                               Expanded(
                                 child: Row(
                                   mainAxisAlignment:
@@ -447,44 +451,37 @@ class _ProfileBodyState extends State<_ProfileBody> {
                               ),
                             ],
                           ),
-                          const SizedBox(height: 14),
+                          const SizedBox(height: 12),
                           Text(
                             displayName,
                             style: const TextStyle(
-                              fontWeight: FontWeight.w800,
-                              fontSize: 16,
+                              fontWeight: FontWeight.w900,
+                              fontSize: 15,
                             ),
                           ),
-                          const SizedBox(height: 5),
+                          const SizedBox(height: 4),
                           Text(
                             bio.trim().isEmpty
                                 ? 'Profiline bir açıklama ekle'
                                 : bio,
+                            maxLines: 3,
+                            overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                               color: bio.trim().isEmpty
-                                  ? Colors.white38
-                                  : Colors.white70,
-                              height: 1.4,
+                                  ? Colors.white32
+                                  : Colors.white60,
+                              fontSize: 12,
+                              height: 1.35,
                             ),
                           ),
-                          const SizedBox(height: 14),
+                          const SizedBox(height: 10),
                           SizedBox(
                             width: double.infinity,
-                            height: 42,
-                            child: FilledButton(
-                              style: FilledButton.styleFrom(
-                                backgroundColor: const Color(0xFF17191C),
-                                foregroundColor: Colors.white,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(11),
-                                ),
-                              ),
+                            child: OutlinedButton.icon(
                               onPressed: () =>
                                   _editProfile(displayName, bio),
-                              child: const Text(
-                                'Profili Düzenle',
-                                style: TextStyle(fontWeight: FontWeight.w800),
-                              ),
+                              icon: const Icon(Icons.edit_outlined, size: 17),
+                              label: const Text('Profili Düzenle'),
                             ),
                           ),
                         ],
@@ -493,62 +490,89 @@ class _ProfileBodyState extends State<_ProfileBody> {
                   ),
                   SliverToBoxAdapter(
                     child: Container(
-                      height: 52,
+                      height: 44,
                       decoration: const BoxDecoration(
                         border: Border(
-                          bottom: BorderSide(color: Colors.white12),
+                          bottom: BorderSide(color: AppColors.border),
                         ),
                       ),
-                      child: const Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          SizedBox(
-                            width: 110,
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.grid_on_rounded,
-                                    color: Colors.white, size: 23),
-                                SizedBox(height: 10),
-                                SizedBox(
-                                  height: 2,
-                                  width: 70,
-                                  child:
-                                      ColoredBox(color: Color(0xFFB7BCC2)),
-                                ),
-                              ],
-                            ),
+                      child: const Center(
+                        child: SizedBox(
+                          width: 84,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.grid_on_rounded,
+                                color: Colors.white,
+                                size: 20,
+                              ),
+                              SizedBox(height: 7),
+                              SizedBox(
+                                height: 2,
+                                width: 50,
+                                child: ColoredBox(color: AppColors.cyan),
+                              ),
+                            ],
                           ),
-                        ],
+                        ),
                       ),
                     ),
                   ),
                   if (postSnapshot.connectionState == ConnectionState.waiting)
                     const SliverFillRemaining(
-                      child: Center(
-                        child: CircularProgressIndicator(
-                            color: Color(0xFFB7BCC2)),
-                      ),
+                      child: Center(child: CircularProgressIndicator()),
                     )
                   else if (posts.isEmpty)
                     SliverFillRemaining(
                       hasScrollBody: false,
                       child: Center(
-                        child: FilledButton.icon(
-                          onPressed: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const CreatePostScreen(),
-                            ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(24),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.photo_library_outlined,
+                                size: 34,
+                                color: Colors.white30,
+                              ),
+                              const SizedBox(height: 10),
+                              const Text(
+                                'Henüz gönderin yok',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w900,
+                                  fontSize: 15,
+                                ),
+                              ),
+                              const SizedBox(height: 5),
+                              const Text(
+                                'İlk fotoğrafını paylaşarak profilini doldur.',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: Colors.white38,
+                                  fontSize: 11.5,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              FilledButton.icon(
+                                onPressed: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => const CreatePostScreen(),
+                                  ),
+                                ),
+                                icon: const Icon(Icons.add_a_photo_outlined),
+                                label: const Text('İlk Fotoğrafını Paylaş'),
+                              ),
+                            ],
                           ),
-                          icon: const Icon(Icons.add_a_photo_outlined),
-                          label: const Text('İlk Fotoğrafını Paylaş'),
                         ),
                       ),
                     )
                   else
                     SliverPadding(
-                      padding: const EdgeInsets.fromLTRB(1, 2, 1, 100),
+                      padding: const EdgeInsets.fromLTRB(2, 2, 2, 92),
                       sliver: SliverGrid(
                         gridDelegate:
                             const SliverGridDelegateWithFixedCrossAxisCount(
@@ -617,7 +641,10 @@ class _ProfileBodyState extends State<_ProfileBody> {
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
-      backgroundColor: const Color(0xFF090A0C),
+      backgroundColor: AppColors.background,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+      ),
       builder: (sheetContext) => StatefulBuilder(
         builder: (context, setSheetState) {
           Future<void> pick() async {
@@ -631,10 +658,10 @@ class _ProfileBodyState extends State<_ProfileBody> {
 
           return Padding(
             padding: EdgeInsets.fromLTRB(
-              20,
-              16,
-              20,
-              MediaQuery.of(context).viewInsets.bottom + 24,
+              18,
+              12,
+              18,
+              MediaQuery.of(context).viewInsets.bottom + 20,
             ),
             child: SingleChildScrollView(
               child: Column(
@@ -645,7 +672,9 @@ class _ProfileBodyState extends State<_ProfileBody> {
                         child: Text(
                           'Profili Düzenle',
                           style: TextStyle(
-                              fontSize: 22, fontWeight: FontWeight.w900),
+                            fontSize: 20,
+                            fontWeight: FontWeight.w900,
+                          ),
                         ),
                       ),
                       IconButton(
@@ -654,13 +683,18 @@ class _ProfileBodyState extends State<_ProfileBody> {
                       ),
                     ],
                   ),
+                  const SizedBox(height: 8),
                   GestureDetector(
                     onTap: pick,
                     child: CircleAvatar(
-                      radius: 48,
+                      radius: 42,
+                      backgroundColor: AppColors.surfaceStrong,
                       backgroundImage: photo == null ? null : FileImage(photo!),
                       child: photo == null
-                          ? const Icon(Icons.add_a_photo_outlined)
+                          ? const Icon(
+                              Icons.add_a_photo_outlined,
+                              color: AppColors.cyan,
+                            )
                           : null,
                     ),
                   ),
@@ -673,7 +707,7 @@ class _ProfileBodyState extends State<_ProfileBody> {
                     decoration:
                         const InputDecoration(labelText: 'Ad / kullanıcı adı'),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 10),
                   TextField(
                     controller: bioController,
                     maxLength: 160,
@@ -681,10 +715,9 @@ class _ProfileBodyState extends State<_ProfileBody> {
                     maxLines: 5,
                     decoration: const InputDecoration(labelText: 'Açıklama'),
                   ),
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 12),
                   SizedBox(
                     width: double.infinity,
-                    height: 52,
                     child: FilledButton(
                       onPressed: saving
                           ? null
@@ -741,7 +774,7 @@ class _PostTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: const Color(0xFF0F0B18),
+      color: AppColors.surface,
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
@@ -786,11 +819,12 @@ class _Stat extends StatelessWidget {
       children: [
         Text(
           value,
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
+          style: const TextStyle(fontSize: 16.5, fontWeight: FontWeight.w900),
         ),
+        const SizedBox(height: 1),
         Text(
           label,
-          style: const TextStyle(color: Colors.white60, fontSize: 12),
+          style: const TextStyle(color: Colors.white46, fontSize: 10.8),
         ),
       ],
     );
@@ -799,7 +833,7 @@ class _Stat extends StatelessWidget {
         : InkWell(
             onTap: onTap,
             borderRadius: BorderRadius.circular(10),
-            child: Padding(padding: const EdgeInsets.all(6), child: child),
+            child: Padding(padding: const EdgeInsets.all(5), child: child),
           );
   }
 }
