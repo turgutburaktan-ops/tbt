@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../services/story_service.dart';
+import '../theme/app_theme.dart';
 import 'camera_video_post_screen.dart';
 import 'create_post_screen.dart';
 
@@ -91,18 +92,18 @@ class _CameraScreenState extends State<CameraScreen>
     if (_opening) return;
     final type = await showModalBottomSheet<String>(
       context: context,
-      backgroundColor: const Color(0xFF111317),
+      backgroundColor: AppColors.surface,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
       ),
       builder: (sheetContext) => SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 18),
+          padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                width: 40,
+                width: 36,
                 height: 4,
                 decoration: BoxDecoration(
                   color: Colors.white24,
@@ -112,15 +113,17 @@ class _CameraScreenState extends State<CameraScreen>
               const SizedBox(height: 12),
               const Text(
                 'Galeriden yükle',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
+                style: TextStyle(fontSize: 17, fontWeight: FontWeight.w900),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 6),
               ListTile(
+                dense: true,
                 leading: const Icon(Icons.photo_library_outlined),
                 title: const Text('Fotoğraf seç'),
                 onTap: () => Navigator.pop(sheetContext, 'photo'),
               ),
               ListTile(
+                dense: true,
                 leading: const Icon(Icons.video_library_outlined),
                 title: const Text('Video seç'),
                 subtitle: Text('En fazla $_videoLimitSeconds saniye'),
@@ -232,12 +235,8 @@ class _CameraScreenState extends State<CameraScreen>
   Widget build(BuildContext context) {
     final title = widget.storyMode ? 'Story Kamerası' : 'Kamera';
     return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        foregroundColor: Colors.white,
-        title: Text(title),
-      ),
+      backgroundColor: AppColors.background,
+      appBar: AppBar(title: Text(title)),
       body: SafeArea(
         child: AnimatedSwitcher(
           duration: const Duration(milliseconds: 180),
@@ -253,19 +252,25 @@ class _CameraScreenState extends State<CameraScreen>
     return Center(
       key: const ValueKey('progress'),
       child: Padding(
-        padding: const EdgeInsets.all(28),
+        padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const SizedBox(
-              width: 48,
-              height: 48,
-              child: CircularProgressIndicator(
-                strokeWidth: 4,
-                color: Colors.white,
+            Container(
+              width: 56,
+              height: 56,
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                shape: BoxShape.circle,
+                border: Border.all(color: AppColors.border),
+              ),
+              child: const CircularProgressIndicator(
+                strokeWidth: 3,
+                color: AppColors.cyan,
               ),
             ),
-            const SizedBox(height: 18),
+            const SizedBox(height: 16),
             Text(
               preparing
                   ? '$action hazırlanıyor…\nLütfen bekleyin.'
@@ -273,18 +278,19 @@ class _CameraScreenState extends State<CameraScreen>
               textAlign: TextAlign.center,
               style: const TextStyle(
                 color: Colors.white70,
-                fontSize: 16,
+                fontSize: 15,
                 height: 1.35,
+                fontWeight: FontWeight.w700,
               ),
             ),
             if (preparing) ...[
-              const SizedBox(height: 10),
+              const SizedBox(height: 8),
               Text(
                 widget.storyMode
                     ? 'Hazır olur olmaz Story paylaşılacak.'
                     : 'Hazır olur olmaz paylaşım ekranı açılacak.',
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.white38, fontSize: 13),
+                style: const TextStyle(color: Colors.white38, fontSize: 12),
               ),
             ],
           ],
@@ -294,75 +300,103 @@ class _CameraScreenState extends State<CameraScreen>
   }
 
   Widget _buildLauncher() {
-    return ListView(
+    return Center(
       key: const ValueKey('launcher'),
-      padding: const EdgeInsets.fromLTRB(20, 28, 20, 28),
-      children: [
-        const Icon(Icons.camera_rounded, size: 74, color: Colors.white),
-        const SizedBox(height: 14),
-        Text(
-          widget.storyMode ? 'Story oluştur' : 'Ne çekmek istiyorsun?',
-          textAlign: TextAlign.center,
-          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          widget.storyMode
-              ? 'Fotoğraf veya en fazla 15 saniyelik video çek. İstersen galeriden yükle.'
-              : 'Telefonunun kendi kamerasıyla fotoğraf veya en fazla 30 saniyelik video çek.',
-          textAlign: TextAlign.center,
-          style: const TextStyle(color: Colors.white54, height: 1.4),
-        ),
-        if (_error != null) ...[
-          const SizedBox(height: 18),
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: Colors.redAccent.withValues(alpha: .12),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: Colors.redAccent.withValues(alpha: .35),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 520),
+          child: Column(
+            children: [
+              Container(
+                width: 62,
+                height: 62,
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: const Icon(
+                  Icons.camera_rounded,
+                  size: 29,
+                  color: AppColors.cyan,
+                ),
               ),
-            ),
-            child: Text(
-              _error!,
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.white70),
-            ),
+              const SizedBox(height: 14),
+              Text(
+                widget.storyMode ? 'Story oluştur' : 'Ne çekmek istiyorsun?',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 23,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: -.4,
+                ),
+              ),
+              const SizedBox(height: 7),
+              Text(
+                widget.storyMode
+                    ? 'Fotoğraf veya en fazla 15 saniyelik video çek. İstersen galeriden yükle.'
+                    : 'Telefonunun kendi kamerasıyla fotoğraf veya en fazla 30 saniyelik video çek.',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.white54,
+                  height: 1.4,
+                  fontSize: 13,
+                ),
+              ),
+              if (_error != null) ...[
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.liked.withValues(alpha: .10),
+                    borderRadius: BorderRadius.circular(13),
+                    border: Border.all(
+                      color: AppColors.liked.withValues(alpha: .30),
+                    ),
+                  ),
+                  child: Text(
+                    _error!,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: Colors.white70, fontSize: 12.5),
+                  ),
+                ),
+              ],
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: _CaptureButton(
+                      icon: Icons.photo_camera_rounded,
+                      title: 'Fotoğraf',
+                      subtitle: 'Telefon kamerası',
+                      onTap: _capturePhoto,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _CaptureButton(
+                      icon: Icons.videocam_rounded,
+                      title: 'Video',
+                      subtitle: '$_videoLimitSeconds sn',
+                      onTap: _captureVideo,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: _openGallery,
+                  icon: const Icon(Icons.photo_library_outlined, size: 19),
+                  label: const Text('Galeriden Yükle'),
+                ),
+              ),
+            ],
           ),
-        ],
-        const SizedBox(height: 30),
-        Row(
-          children: [
-            Expanded(
-              child: _CaptureButton(
-                icon: Icons.photo_camera_rounded,
-                title: 'Fotoğraf',
-                subtitle: 'Telefon kamerası',
-                onTap: _capturePhoto,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _CaptureButton(
-                icon: Icons.videocam_rounded,
-                title: 'Video',
-                subtitle: '$_videoLimitSeconds sn',
-                onTap: _captureVideo,
-              ),
-            ),
-          ],
         ),
-        const SizedBox(height: 12),
-        SizedBox(
-          height: 58,
-          child: OutlinedButton.icon(
-            onPressed: _openGallery,
-            icon: const Icon(Icons.photo_library_outlined),
-            label: const Text('Galeriden Yükle'),
-          ),
-        ),
-      ],
+      ),
     );
   }
 }
@@ -382,30 +416,42 @@ class _CaptureButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Material(
-        color: const Color(0xFF13161A),
-        borderRadius: BorderRadius.circular(22),
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(22),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 22, horizontal: 10),
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 10),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.border),
+            ),
             child: Column(
               children: [
-                Icon(icon, size: 38, color: Colors.white),
-                const SizedBox(height: 10),
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceStrong,
+                    borderRadius: BorderRadius.circular(13),
+                  ),
+                  child: Icon(icon, size: 23, color: AppColors.cyan),
+                ),
+                const SizedBox(height: 9),
                 Text(
                   title,
                   style: const TextStyle(
-                    fontSize: 17,
+                    fontSize: 15.5,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
-                const SizedBox(height: 3),
+                const SizedBox(height: 2),
                 Text(
                   subtitle,
                   style: const TextStyle(
-                    color: Color(0x75FFFFFF),
-                    fontSize: 11,
+                    color: const Color(0x75FFFFFF),
+                    fontSize: 10.5,
                   ),
                 ),
               ],

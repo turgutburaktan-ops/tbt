@@ -8,6 +8,7 @@ import '../models/route_place.dart';
 import '../services/location_service.dart';
 import '../services/nearby_venue_service.dart';
 import '../services/route_selection_service.dart';
+import '../theme/app_theme.dart';
 import 'route_selection_button.dart';
 
 class NearbyPlacesView extends StatefulWidget {
@@ -20,10 +21,6 @@ class NearbyPlacesView extends StatefulWidget {
 }
 
 class _NearbyPlacesViewState extends State<NearbyPlacesView> {
-  static const _cyan = Color(0xFF42F5E9);
-  static const _panel = Color(0xFF101218);
-  static const _border = Color(0xFF292D38);
-
   final _searchController = TextEditingController();
   Position? _position;
   List<NearbyVenue> _venues = const [];
@@ -174,7 +171,7 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
   @override
   Widget build(BuildContext context) {
     if (_loading) {
-      return const Center(child: CircularProgressIndicator(color: _cyan));
+      return const Center(child: CircularProgressIndicator());
     }
     if (_error != null) {
       return _MessageState(
@@ -187,11 +184,11 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
 
     final venues = _visibleVenues;
     return RefreshIndicator(
-      color: _cyan,
+      color: AppColors.cyan,
       onRefresh: () => _load(forceRefresh: true),
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(14, 8, 14, 22),
+        padding: const EdgeInsets.fromLTRB(14, 6, 14, 20),
         children: [
           Row(
             children: [
@@ -201,7 +198,7 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
                   onChanged: (_) => setState(() {}),
                   decoration: InputDecoration(
                     hintText: '${widget.category.label} içinde ara',
-                    prefixIcon: const Icon(Icons.search_rounded, size: 21),
+                    prefixIcon: const Icon(Icons.search_rounded, size: 20),
                     suffixIcon: _searchController.text.isEmpty
                         ? null
                         : IconButton(
@@ -209,43 +206,37 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
                               _searchController.clear();
                               setState(() {});
                             },
-                            icon: const Icon(Icons.close_rounded, size: 19),
+                            icon: const Icon(Icons.close_rounded, size: 18),
                           ),
-                    filled: true,
-                    fillColor: _panel,
-                    isDense: true,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(14),
-                      borderSide: const BorderSide(color: _border),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(14),
-                      borderSide: const BorderSide(color: _border),
-                    ),
                   ),
                 ),
               ),
-              const SizedBox(width: 8),
-              IconButton.filledTonal(
+              const SizedBox(width: 7),
+              IconButton(
                 tooltip: 'Haritada göster',
                 onPressed: _venues.isEmpty ? null : _openMap,
-                icon: const Icon(Icons.map_outlined),
+                style: IconButton.styleFrom(
+                  minimumSize: const Size(44, 44),
+                  backgroundColor: AppColors.surfaceAlt,
+                  side: const BorderSide(color: AppColors.border),
+                ),
+                icon: const Icon(Icons.map_outlined, size: 20),
               ),
             ],
           ),
           const RouteSelectionButton(
-            padding: EdgeInsets.fromLTRB(0, 9, 0, 0),
+            padding: EdgeInsets.fromLTRB(0, 8, 0, 0),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(3, 12, 3, 8),
+            padding: const EdgeInsets.fromLTRB(2, 10, 2, 7),
             child: Text(
-              '${venues.length} mekan • yakından uzağa',
-              style: const TextStyle(color: Colors.white54, fontSize: 12),
+              '${venues.length} mekan  •  yakından uzağa',
+              style: const TextStyle(color: const Color(0x75FFFFFF), fontSize: 11.5),
             ),
           ),
           if (venues.isEmpty)
             const Padding(
-              padding: EdgeInsets.symmetric(vertical: 56),
+              padding: EdgeInsets.symmetric(vertical: 48),
               child: _MessageState(
                 icon: Icons.place_outlined,
                 message: 'Bu bölgede eşleşen mekan bulunamadı.',
@@ -261,7 +252,7 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
                 onSelected: () => _toggleSelection(venue),
               ),
             ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 4),
           TextButton(
             onPressed: () => launchUrl(
               Uri.parse('https://www.openstreetmap.org/copyright'),
@@ -269,7 +260,7 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
             ),
             child: const Text(
               'Mekan verisi © OpenStreetMap katkıda bulunanlar',
-              style: TextStyle(color: Colors.white38, fontSize: 11),
+              style: TextStyle(color: const Color(0x52FFFFFF), fontSize: 10.5),
             ),
           ),
         ],
@@ -301,117 +292,114 @@ class _VenueCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        margin: const EdgeInsets.only(bottom: 9),
-        padding: const EdgeInsets.all(12),
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.fromLTRB(12, 11, 8, 11),
         decoration: BoxDecoration(
-          color: const Color(0xFF101218),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFF292D38)),
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(15),
+          border: Border.all(
+            color: selected ? AppColors.cyan.withValues(alpha: .40) : AppColors.border,
+          ),
         ),
-        child: Column(
+        child: Row(
           children: [
-            Row(
-              children: [
-                Container(
-                  width: 46,
-                  height: 46,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(14),
-                    gradient: LinearGradient(
-                      colors: [
-                        const Color(0xFF42F5E9).withValues(alpha: .22),
-                        const Color(0xFF8B5CF6).withValues(alpha: .22),
-                      ],
-                    ),
-                  ),
-                  child: Icon(_icon, color: const Color(0xFF42F5E9)),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+            Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                color: AppColors.surfaceStrong,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(_icon, size: 21, color: AppColors.cyan),
+            ),
+            const SizedBox(width: 11),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
                     children: [
-                      Text(
-                        venue.name,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        venue.address.isEmpty
-                            ? 'Adres bilgisi yok'
-                            : venue.address,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: Colors.white54,
-                          fontSize: 11.5,
-                        ),
-                      ),
-                      if (venue.openingHours.isNotEmpty) ...[
-                        const SizedBox(height: 4),
-                        Text(
-                          venue.openingHours,
-                          maxLines: 1,
+                      Expanded(
+                        child: Text(
+                          venue.name,
+                          maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
-                            color: Colors.white38,
-                            fontSize: 10.5,
+                            fontSize: 14.5,
+                            fontWeight: FontWeight.w900,
+                            height: 1.15,
                           ),
                         ),
-                      ],
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        distance,
+                        style: const TextStyle(
+                          color: AppColors.cyan,
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
                     ],
                   ),
-                ),
-                const SizedBox(width: 6),
-                Column(
-                  children: [
+                  const SizedBox(height: 4),
+                  Text(
+                    venue.address.isEmpty
+                        ? venue.category.label
+                        : '${venue.category.label}  •  ${venue.address}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: const Color(0x75FFFFFF),
+                      fontSize: 11,
+                    ),
+                  ),
+                  if (venue.openingHours.isNotEmpty) ...[
+                    const SizedBox(height: 3),
                     Text(
-                      distance,
+                      venue.openingHours,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        color: Color(0xFF42F5E9),
-                        fontSize: 11,
-                        fontWeight: FontWeight.w800,
+                        color: const Color(0x52FFFFFF),
+                        fontSize: 10,
                       ),
                     ),
-                    IconButton(
-                      tooltip: 'Yol tarifi',
-                      onPressed: onDirections,
-                      icon: const Icon(Icons.directions_rounded, size: 22),
-                    ),
                   ],
-                ),
-              ],
-            ),
-            const Divider(height: 12, color: Colors.white10),
-            InkWell(
-              onTap: onSelected,
-              borderRadius: BorderRadius.circular(10),
-              child: Row(
-                children: [
-                  Checkbox(
-                    value: selected,
-                    onChanged: (_) => onSelected(),
-                    activeColor: const Color(0xFF42F5E9),
-                    checkColor: Colors.black,
-                    visualDensity: VisualDensity.compact,
-                  ),
-                  Text(
-                    selected ? 'Rotaya eklendi' : 'Rotaya ekle',
-                    style: TextStyle(
-                      color: selected
-                          ? const Color(0xFF42F5E9)
-                          : Colors.white70,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
                 ],
               ),
+            ),
+            const SizedBox(width: 6),
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  tooltip: selected ? 'Rotadan çıkar' : 'Rotaya ekle',
+                  onPressed: onSelected,
+                  style: IconButton.styleFrom(
+                    minimumSize: const Size(38, 38),
+                    backgroundColor: selected
+                        ? AppColors.cyan
+                        : AppColors.surfaceStrong,
+                    foregroundColor: selected
+                        ? const Color(0xFF041311)
+                        : Colors.white70,
+                  ),
+                  icon: Icon(
+                    selected ? Icons.check_rounded : Icons.add_rounded,
+                    size: 20,
+                  ),
+                ),
+                IconButton(
+                  tooltip: 'Yol tarifi',
+                  onPressed: onDirections,
+                  style: IconButton.styleFrom(
+                    minimumSize: const Size(38, 38),
+                    foregroundColor: const Color(0x75FFFFFF),
+                  ),
+                  icon: const Icon(Icons.directions_rounded, size: 19),
+                ),
+              ],
             ),
           ],
         ),
@@ -434,11 +422,20 @@ class _MessageState extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Center(
         child: Padding(
-          padding: const EdgeInsets.all(28),
+          padding: const EdgeInsets.all(24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, size: 42, color: Colors.white38),
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: Icon(icon, size: 26, color: Colors.white38),
+              ),
               const SizedBox(height: 12),
               Text(
                 message,

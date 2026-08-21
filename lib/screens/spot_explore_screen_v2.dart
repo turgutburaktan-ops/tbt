@@ -16,6 +16,7 @@ import '../models/route_place.dart';
 import '../services/nationwide_candidate_spot_resolver.dart';
 import '../services/route_selection_service.dart';
 import '../services/spot_repository.dart';
+import '../theme/app_theme.dart';
 import '../widgets/route_selection_button.dart';
 import '../widgets/spot_image.dart';
 import 'spot_detail_screen.dart';
@@ -177,30 +178,31 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
   Widget build(BuildContext context) {
     return RefreshIndicator(
       onRefresh: _reload,
-      color: const Color(0xFFB7BCC2),
+      color: AppColors.cyan,
       child: CustomScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
           if (!widget.embedded)
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 18, 20, 12),
+                padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
                       'Gezilecek Yerler',
                       style: TextStyle(
-                        fontSize: 26,
-                        fontWeight: FontWeight.w800,
+                        fontSize: 23,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: -.4,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 3),
                     Text(
                       _position == null
-                          ? 'Gerçek gezi noktalarını keşfet; fotoğraf önerilerini yer detayında gör.'
+                          ? 'Gerçek gezi noktalarını keşfet; fotoğraf önerilerini detayda gör.'
                           : 'Yakınındaki gezilecek yerlerden başlayarak sıralandı.',
-                      style: const TextStyle(color: Colors.white60),
+                      style: const TextStyle(color: const Color(0x75FFFFFF), fontSize: 12),
                     ),
                   ],
                 ),
@@ -209,10 +211,10 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
           SliverToBoxAdapter(
             child: Padding(
               padding: EdgeInsets.fromLTRB(
-                20,
-                widget.embedded ? 6 : 0,
-                20,
                 14,
+                widget.embedded ? 4 : 0,
+                14,
+                8,
               ),
               child: TextField(
                 controller: _searchController,
@@ -221,30 +223,22 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
                   _applyFilter();
                   setState(() {});
                 },
-                decoration: InputDecoration(
-                  hintText: 'Yer, şehir veya kategori ara...',
-                  prefixIcon: const Icon(Icons.search_rounded),
-                  filled: true,
-                  fillColor: const Color(0xFF121416),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide.none,
-                  ),
+                decoration: const InputDecoration(
+                  hintText: 'Yer, şehir veya kategori ara',
+                  prefixIcon: Icon(Icons.search_rounded, size: 20),
                 ),
               ),
             ),
           ),
           const SliverToBoxAdapter(
             child: RouteSelectionButton(
-              padding: EdgeInsets.fromLTRB(20, 0, 20, 10),
+              padding: EdgeInsets.fromLTRB(14, 0, 14, 7),
             ),
           ),
           if (_loading && _visible.isEmpty)
             const SliverFillRemaining(
               hasScrollBody: false,
-              child: Center(
-                child: CircularProgressIndicator(color: Color(0xFFB7BCC2)),
-              ),
+              child: Center(child: CircularProgressIndicator()),
             )
           else if (_visible.isEmpty)
             const SliverFillRemaining(
@@ -254,11 +248,12 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
           else ...[
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 2, 20, 10),
+                padding: const EdgeInsets.fromLTRB(16, 2, 16, 7),
                 child: Text(
                   '${_visible.length} gezilecek yer',
                   style: const TextStyle(
-                    color: Colors.white54,
+                    color: const Color(0x75FFFFFF),
+                    fontSize: 11.5,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -279,7 +274,7 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
                 );
               },
             ),
-            const SliverToBoxAdapter(child: SizedBox(height: 100)),
+            const SliverToBoxAdapter(child: SizedBox(height: 92)),
           ],
         ],
       ),
@@ -306,43 +301,59 @@ class _SpotVenueCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final verified = spot.tags.contains('Doğrulanmış');
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-      child: Card(
-        color: const Color(0xFF121416),
-        clipBehavior: Clip.antiAlias,
-        child: Padding(
-          padding: const EdgeInsets.all(10),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              InkWell(
-                onTap: onOpen,
-                borderRadius: BorderRadius.circular(12),
-                child: SpotImage(
-                  spot: spot,
-                  width: 88,
-                  height: 88,
-                  borderRadius: BorderRadius.circular(12),
-                ),
+      padding: const EdgeInsets.fromLTRB(14, 0, 14, 8),
+      child: Material(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(15),
+        child: InkWell(
+          onTap: onOpen,
+          borderRadius: BorderRadius.circular(15),
+          child: Container(
+            padding: const EdgeInsets.all(9),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(15),
+              border: Border.all(
+                color: selected
+                    ? AppColors.cyan.withValues(alpha: .38)
+                    : AppColors.border,
               ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: InkWell(
-                  onTap: onOpen,
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                SpotImage(
+                  spot: spot,
+                  width: 78,
+                  height: 78,
+                  borderRadius: BorderRadius.circular(11),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                      Text(
+                        spot.name,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w900,
+                          fontSize: 14.5,
+                          height: 1.12,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
                       Row(
                         children: [
                           Expanded(
                             child: Text(
-                              spot.name,
+                              '${spot.city}  •  ${spot.category}',
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
-                                fontWeight: FontWeight.w800,
-                                fontSize: 16,
+                                color: const Color(0x75FFFFFF),
+                                fontSize: 10.8,
                               ),
                             ),
                           ),
@@ -350,82 +361,48 @@ class _SpotVenueCard extends StatelessWidget {
                             const SizedBox(width: 6),
                             Text(
                               distanceLabel,
-                              maxLines: 1,
                               style: const TextStyle(
-                                color: Color(0xFFB7BCC2),
-                                fontWeight: FontWeight.w800,
-                                fontSize: 11.5,
+                                color: AppColors.cyan,
+                                fontWeight: FontWeight.w900,
+                                fontSize: 10.3,
                               ),
                             ),
                           ],
                         ],
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '${spot.city} • ${spot.category}',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: Colors.white60,
-                          fontSize: 12,
-                        ),
-                      ),
-                      if (spot.description.trim().isNotEmpty) ...[
-                        const SizedBox(height: 5),
-                        Text(
-                          spot.description,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: Colors.white54,
-                            fontSize: 11,
-                            height: 1.25,
-                          ),
-                        ),
-                      ],
                       const SizedBox(height: 6),
                       Row(
                         children: [
                           const Icon(
                             Icons.star_rounded,
-                            size: 16,
-                            color: Color(0xFFB7BCC2),
+                            size: 14,
+                            color: AppColors.cyan,
                           ),
                           const SizedBox(width: 3),
-                          Text(spot.rating.toStringAsFixed(1)),
+                          Text(
+                            spot.rating.toStringAsFixed(1),
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
                           if (verified) ...[
                             const SizedBox(width: 7),
-                            Expanded(
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 7,
-                                  vertical: 3,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFF262A2E),
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: const Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(
-                                      Icons.verified_outlined,
-                                      size: 13,
-                                      color: Color(0xFFB7BCC2),
-                                    ),
-                                    SizedBox(width: 4),
-                                    Expanded(
-                                      child: Text(
-                                        'Doğrulanmış',
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: TextStyle(
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.w800,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
+                            const Icon(
+                              Icons.verified_rounded,
+                              size: 13,
+                              color: Colors.white38,
+                            ),
+                            const SizedBox(width: 3),
+                            const Flexible(
+                              child: Text(
+                                'Doğrulanmış',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  color: Colors.white38,
+                                  fontSize: 9.8,
+                                  fontWeight: FontWeight.w700,
                                 ),
                               ),
                             ),
@@ -435,26 +412,24 @@ class _SpotVenueCard extends StatelessWidget {
                     ],
                   ),
                 ),
-              ),
-              const SizedBox(width: 2),
-              SizedBox(
-                width: 42,
-                child: IconButton(
+                const SizedBox(width: 6),
+                IconButton(
                   tooltip: selected ? 'Rotadan çıkar' : 'Rotaya ekle',
-                  padding: EdgeInsets.zero,
-                  visualDensity: VisualDensity.compact,
                   onPressed: onToggleRoute,
+                  style: IconButton.styleFrom(
+                    minimumSize: const Size(38, 38),
+                    backgroundColor:
+                        selected ? AppColors.cyan : AppColors.surfaceStrong,
+                    foregroundColor:
+                        selected ? const Color(0xFF041311) : Colors.white70,
+                  ),
                   icon: Icon(
-                    selected
-                        ? Icons.check_circle_rounded
-                        : Icons.add_circle_outline_rounded,
-                    color: selected
-                        ? const Color(0xFF42F5E9)
-                        : Colors.white54,
+                    selected ? Icons.check_rounded : Icons.add_rounded,
+                    size: 20,
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
