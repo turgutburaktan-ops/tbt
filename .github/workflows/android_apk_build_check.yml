@@ -1,0 +1,92 @@
+name: Android APK Build Check
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'lib/**'
+      - 'assets/**'
+      - 'pubspec.yaml'
+      - 'pubspec.lock'
+      - 'android/app/src/main/AndroidManifest.xml'
+      - '.github/workflows/android_apk_build_check.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'lib/**'
+      - 'assets/**'
+      - 'pubspec.yaml'
+      - 'pubspec.lock'
+      - 'android/app/src/main/AndroidManifest.xml'
+      - '.github/workflows/android_apk_build_check.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  build-android-apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Show toolchain
+        run: |
+          flutter --version
+          dart --version
+          java -version
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Preserve app manifest
+        run: cp android/app/src/main/AndroidManifest.xml /tmp/AndroidManifest.xml
+
+      - name: Generate disposable Android host project
+        shell: bash
+        run: |
+          rm -rf android
+          flutter create --platforms=android --org com.tbt --project-name best_photo_spot .
+          cp /tmp/AndroidManifest.xml android/app/src/main/AndroidManifest.xml
+          sed -i 's/${MAPS_API_KEY}/CI_DUMMY_MAPS_KEY/g' android/app/src/main/AndroidManifest.xml
+
+      - name: Verify generated Android host stays local to runner
+        shell: bash
+        run: |
+          git status --short
+          git diff --exit-code -- lib pubspec.yaml || {
+            echo 'Application source or pubspec changed during Android host generation.'
+            exit 1
+          }
+
+      - name: Build debug APK
+        run: flutter build apk --debug --no-pub
+
+      - name: Verify APK artifact
+        shell: bash
+        run: |
+          test -s build/app/outputs/flutter-apk/app-debug.apk
+          ls -lh build/app/outputs/flutter-apk/app-debug.apk
+
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: best-photo-spot-debug-apk
+          path: build/app/outputs/flutter-apk/app-debug.apk
+          if-no-files-found: error
+          retention-days: 7
