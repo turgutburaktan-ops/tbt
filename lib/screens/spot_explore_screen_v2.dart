@@ -12,7 +12,9 @@ import '../data/curated_photo_spots_official_routes.dart';
 import '../data/curated_photo_spots_regions.dart';
 import '../data/curated_photo_spots_verified_expansion.dart';
 import '../models/photo_spot.dart';
+import '../models/route_place.dart';
 import '../services/nationwide_candidate_spot_resolver.dart';
+import '../services/route_selection_service.dart';
 import '../services/spot_repository.dart';
 import '../widgets/spot_image.dart';
 import 'spot_detail_screen.dart';
@@ -34,6 +36,8 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
   Position? _position;
   String _search = '';
 
+  String _routeId(PhotoSpot spot) => 'spot:${spot.id}';
+
   @override
   void initState() {
     super.initState();
@@ -46,6 +50,19 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }
+
+  void _toggleRoute(PhotoSpot spot) {
+    RouteSelectionService.instance.toggle(
+      RoutePlace(
+        id: _routeId(spot),
+        name: spot.name,
+        category: 'Gezilecek Yerler',
+        latitude: spot.latitude,
+        longitude: spot.longitude,
+      ),
+    );
+    setState(() {});
   }
 
   void _loadLocalImmediately() {
@@ -79,9 +96,7 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
       _all = remote;
       _applyFilter();
       setState(() {});
-    } catch (_) {
-      // Yerel katalog zaten ekranda; uzak kaynak başarısız olsa da kullanıcı beklemez.
-    }
+    } catch (_) {}
   }
 
   Future<void> _prepareLocation() async {
@@ -96,7 +111,8 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
         return;
       }
       final position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.medium,
+        locationSettings:
+            const LocationSettings(accuracy: LocationAccuracy.medium),
       ).timeout(const Duration(seconds: 4));
       if (!mounted) return;
       _position = position;
@@ -227,7 +243,9 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
                 child: Text(
                   '${_visible.length} gezilecek yer',
                   style: const TextStyle(
-                      color: Colors.white54, fontWeight: FontWeight.w700),
+                    color: Colors.white54,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
             ),
@@ -236,29 +254,40 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
               itemBuilder: (context, index) {
                 final spot = _visible[index];
                 final verified = spot.tags.contains('Doğrulanmış');
+                final selected =
+                    RouteSelectionService.instance.contains(_routeId(spot));
                 return Padding(
                   padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
                   child: Card(
                     color: const Color(0xFF121416),
                     clipBehavior: Clip.antiAlias,
-                    child: InkWell(
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (_) => SpotDetailScreen(spot: spot)),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(10),
-                        child: Row(
-                          children: [
-                            SpotImage(
+                    child: Padding(
+                      padding: const EdgeInsets.all(10),
+                      child: Row(
+                        children: [
+                          InkWell(
+                            onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => SpotDetailScreen(spot: spot),
+                              ),
+                            ),
+                            child: SpotImage(
                               spot: spot,
                               width: 96,
                               height: 96,
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            const SizedBox(width: 12),
-                            Expanded(
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: InkWell(
+                              onTap: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => SpotDetailScreen(spot: spot),
+                                ),
+                              ),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
@@ -292,7 +321,9 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                     style: const TextStyle(
-                                        color: Colors.white60, fontSize: 12),
+                                      color: Colors.white60,
+                                      fontSize: 12,
+                                    ),
                                   ),
                                   if (spot.description.trim().isNotEmpty) ...[
                                     const SizedBox(height: 6),
@@ -301,38 +332,50 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
                                       maxLines: 2,
                                       overflow: TextOverflow.ellipsis,
                                       style: const TextStyle(
-                                          color: Colors.white54,
-                                          fontSize: 11,
-                                          height: 1.35),
+                                        color: Colors.white54,
+                                        fontSize: 11,
+                                        height: 1.35,
+                                      ),
                                     ),
                                   ],
                                   const SizedBox(height: 7),
                                   Row(
                                     children: [
-                                      const Icon(Icons.star_rounded,
-                                          size: 16, color: Color(0xFFB7BCC2)),
+                                      const Icon(
+                                        Icons.star_rounded,
+                                        size: 16,
+                                        color: Color(0xFFB7BCC2),
+                                      ),
                                       const SizedBox(width: 3),
                                       Text(spot.rating.toStringAsFixed(1)),
                                       if (verified) ...[
                                         const SizedBox(width: 9),
                                         Container(
                                           padding: const EdgeInsets.symmetric(
-                                              horizontal: 7, vertical: 3),
+                                            horizontal: 7,
+                                            vertical: 3,
+                                          ),
                                           decoration: BoxDecoration(
                                             color: const Color(0xFF262A2E),
-                                            borderRadius: BorderRadius.circular(20),
+                                            borderRadius:
+                                                BorderRadius.circular(20),
                                           ),
                                           child: const Row(
                                             mainAxisSize: MainAxisSize.min,
                                             children: [
-                                              Icon(Icons.verified_outlined,
-                                                  size: 13,
-                                                  color: Color(0xFFB7BCC2)),
+                                              Icon(
+                                                Icons.verified_outlined,
+                                                size: 13,
+                                                color: Color(0xFFB7BCC2),
+                                              ),
                                               SizedBox(width: 4),
-                                              Text('Doğrulanmış',
-                                                  style: TextStyle(
-                                                      fontSize: 10,
-                                                      fontWeight: FontWeight.w800)),
+                                              Text(
+                                                'Doğrulanmış',
+                                                style: TextStyle(
+                                                  fontSize: 10,
+                                                  fontWeight: FontWeight.w800,
+                                                ),
+                                              ),
                                             ],
                                           ),
                                         ),
@@ -342,10 +385,22 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
                                 ],
                               ),
                             ),
-                            const Icon(Icons.chevron_right_rounded,
-                                color: Colors.white38),
-                          ],
-                        ),
+                          ),
+                          const SizedBox(width: 6),
+                          IconButton(
+                            tooltip:
+                                selected ? 'Rotadan çıkar' : 'Rotaya ekle',
+                            onPressed: () => _toggleRoute(spot),
+                            icon: Icon(
+                              selected
+                                  ? Icons.check_circle_rounded
+                                  : Icons.add_circle_outline_rounded,
+                              color: selected
+                                  ? const Color(0xFF42F5E9)
+                                  : Colors.white54,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
