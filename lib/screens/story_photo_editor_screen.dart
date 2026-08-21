@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
@@ -20,28 +21,62 @@ class StoryPhotoEditorScreen extends StatefulWidget {
 
 class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
   final GlobalKey _canvasKey = GlobalKey();
-  final List<_StoryOverlay> _overlays = [];
   final TextEditingController _textController = TextEditingController();
   final FocusNode _textFocus = FocusNode();
 
+  final List<_StoryOverlay> _overlays = <_StoryOverlay>[];
+  final List<_DrawStroke> _strokes = <_DrawStroke>[];
+
   int? _selectedIndex;
   bool _sharing = false;
-  _EditorPanel _panel = _EditorPanel.none;
+  bool _editingText = false;
+  bool _emojiInput = false;
+  bool _drawing = false;
+  bool _movingOverlay = false;
+  bool _overTrash = false;
+  Size? _sourceSize;
+  _DrawStroke? _activeStroke;
+
   _FontOption _font = _fonts.first;
   Color _textColor = Colors.white;
+  Color _drawColor = Colors.white;
 
   static const _fonts = <_FontOption>[
     _FontOption('Modern', 'sans-serif'),
     _FontOption('Klasik', 'serif'),
     _FontOption('Daktilo', 'monospace'),
     _FontOption('Yuvarlak', 'sans-serif-medium'),
+    _FontOption('İnce', 'sans-serif-light'),
   ];
 
-  static const _emojiChoices = <String>[
-    '❤️', '😍', '🔥', '✨', '😂', '🥰', '👏', '🎉',
-    '📸', '🌅', '🌙', '⭐', '☕', '🎵', '✈️', '📍',
-    '😎', '🤍', '💜', '💫', '🌊', '🏕️', '🌿', '🎂',
+  static const _colors = <Color>[
+    Colors.white,
+    Colors.black,
+    Color(0xFFFFE25C),
+    Color(0xFFFF5C8A),
+    Color(0xFF74E7FF),
+    Color(0xFFC79AFF),
+    Color(0xFF8EFFB5),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _readSourceSize();
+  }
+
+  Future<void> _readSourceSize() async {
+    try {
+      final bytes = await widget.photo.readAsBytes();
+      final image = await decodeImageFromList(bytes);
+      if (!mounted) {
+        image.dispose();
+        return;
+      }
+      setState(() => _sourceSize = Size(image.width.toDouble(), image.height.toDouble()));
+      image.dispose();
+    } catch (_) {}
+  }
 
   @override
   void dispose() {
@@ -50,10 +85,12 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
     super.dispose();
   }
 
-  void _openTextPanel() {
+  void _openText({bool emoji = false}) {
     if (_sharing) return;
     setState(() {
-      _panel = _EditorPanel.text;
+      _editingText = true;
+      _emojiInput = emoji;
+      _drawing = false;
       _selectedIndex = null;
       _textController.clear();
       _font = _fonts.first;
@@ -64,52 +101,50 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
     });
   }
 
-  void _openEmojiPanel() {
-    if (_sharing) return;
+  void _cancelText() {
     _textFocus.unfocus();
     setState(() {
-      _panel = _EditorPanel.emoji;
-      _selectedIndex = null;
+      _editingText = false;
+      _emojiInput = false;
+      _textController.clear();
     });
   }
 
-  void _closePanel() {
-    _textFocus.unfocus();
-    setState(() => _panel = _EditorPanel.none);
-  }
-
   void _commitText() {
-    final text = _textController.text.trim();
-    if (text.isEmpty) return;
+    final value = _textController.text.trim();
+    if (value.isEmpty) return;
     final size = MediaQuery.sizeOf(context);
     setState(() {
       _overlays.add(
-        _StoryOverlay.text(
-          text: text,
+        _StoryOverlay(
+          text: value,
+          isEmoji: _emojiInput,
           fontFamily: _font.family,
           color: _textColor,
-          position: Offset(size.width * .18, size.height * .38),
+          position: Offset(size.width * .5, size.height * .43),
         ),
       );
       _selectedIndex = _overlays.length - 1;
-      _panel = _EditorPanel.none;
+      _editingText = false;
+      _emojiInput = false;
       _textController.clear();
     });
     _textFocus.unfocus();
   }
 
-  void _addEmoji(String emoji) {
-    final size = MediaQuery.sizeOf(context);
+  void _toggleDraw() {
+    if (_sharing) return;
+    _textFocus.unfocus();
     setState(() {
-      _overlays.add(
-        _StoryOverlay.emoji(
-          text: emoji,
-          position: Offset(size.width * .38, size.height * .42),
-        ),
-      );
-      _selectedIndex = _overlays.length - 1;
-      _panel = _EditorPanel.none;
+      _drawing = !_drawing;
+      _editingText = false;
+      _selectedIndex = null;
     });
+  }
+
+  void _undoDraw() {
+    if (_strokes.isEmpty) return;
+    setState(() => _strokes.removeLast());
   }
 
   void _removeSelected() {
@@ -118,14 +153,38 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
     setState(() {
       _overlays.removeAt(index);
       _selectedIndex = null;
+      _overTrash = false;
+      _movingOverlay = false;
     });
+  }
+
+  double _renderPixelRatio(RenderRepaintBoundary boundary) {
+    final source = _sourceSize;
+    final canvas = boundary.size;
+    final deviceRatio = MediaQuery.devicePixelRatioOf(context);
+    if (source == null || source.width <= 0 || source.height <= 0 ||
+        canvas.width <= 0 || canvas.height <= 0) {
+      return math.max(3.0, deviceRatio);
+    }
+
+    // Image.file uses BoxFit.cover. This reproduces the source-pixel density
+    // of the visible crop so Story export is not limited to screen resolution.
+    final coverScale = math.max(
+      canvas.width / source.width,
+      canvas.height / source.height,
+    );
+    final sourcePixelRatio = 1 / coverScale;
+    return math.max(deviceRatio, sourcePixelRatio);
   }
 
   Future<File> _renderStory() async {
     if (!mounted) throw Exception('Story ekranı kapandı.');
     setState(() {
       _selectedIndex = null;
-      _panel = _EditorPanel.none;
+      _editingText = false;
+      _drawing = false;
+      _movingOverlay = false;
+      _overTrash = false;
     });
     _textFocus.unfocus();
     await WidgetsBinding.instance.endOfFrame;
@@ -136,16 +195,16 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
       throw Exception('Story görüntüsü hazırlanamadı.');
     }
 
-    final pixelRatio = MediaQuery.devicePixelRatioOf(context).clamp(1.5, 3.0);
-    final ui.Image image = await renderObject.toImage(pixelRatio: pixelRatio);
-    final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+    final ratio = _renderPixelRatio(renderObject);
+    final image = await renderObject.toImage(pixelRatio: ratio);
+    final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
     image.dispose();
-    if (byteData == null) throw Exception('Story görüntüsü oluşturulamadı.');
+    if (bytes == null) throw Exception('Story görüntüsü oluşturulamadı.');
 
     final file = File(
       '${Directory.systemTemp.path}/tbt_story_${DateTime.now().microsecondsSinceEpoch}.png',
     );
-    await file.writeAsBytes(byteData.buffer.asUint8List(), flush: true);
+    await file.writeAsBytes(bytes.buffer.asUint8List(), flush: true);
     return file;
   }
 
@@ -160,19 +219,15 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
       Navigator.of(context).pop(true);
     } catch (error) {
       if (!mounted) return;
+      setState(() => _sharing = false);
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
         ..showSnackBar(
-          SnackBar(
-            content: Text(error.toString().replaceFirst('Exception: ', '')),
-          ),
+          SnackBar(content: Text(error.toString().replaceFirst('Exception: ', ''))),
         );
-      setState(() => _sharing = false);
     } finally {
       try {
-        if (rendered != null && await rendered.exists()) {
-          await rendered.delete();
-        }
+        if (rendered != null && await rendered.exists()) await rendered.delete();
       } catch (_) {}
     }
   }
@@ -189,250 +244,321 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
             Positioned.fill(
               child: RepaintBoundary(
                 key: _canvasKey,
-                child: ColoredBox(
-                  color: Colors.black,
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      Image.file(widget.photo, fit: BoxFit.cover),
-                      ...List.generate(
-                        _overlays.length,
-                        (index) => _buildOverlay(index),
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    Image.file(
+                      widget.photo,
+                      fit: BoxFit.cover,
+                      filterQuality: FilterQuality.high,
+                      gaplessPlayback: true,
+                    ),
+                    CustomPaint(
+                      painter: _DrawingPainter(
+                        strokes: _strokes,
+                        activeStroke: _activeStroke,
                       ),
-                    ],
-                  ),
+                    ),
+                    ...List.generate(_overlays.length, _buildOverlay),
+                  ],
                 ),
               ),
             ),
-            Positioned.fill(
-              child: SafeArea(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
-                  child: Column(
-                    children: [
-                      Row(
-                        children: [
-                          _RoundAction(
-                            icon: Icons.close_rounded,
-                            onTap: _sharing
-                                ? null
-                                : () => Navigator.of(context).pop(false),
-                          ),
-                          const Spacer(),
-                          _RoundAction(
-                            icon: Icons.text_fields_rounded,
-                            onTap: _sharing ? null : _openTextPanel,
-                          ),
-                          const SizedBox(width: 9),
-                          _RoundAction(
-                            icon: Icons.emoji_emotions_outlined,
-                            onTap: _sharing ? null : _openEmojiPanel,
-                          ),
-                          if (_selectedIndex != null) ...[
-                            const SizedBox(width: 9),
-                            _RoundAction(
-                              icon: Icons.delete_outline_rounded,
-                              onTap: _sharing ? null : _removeSelected,
+            if (_drawing)
+              Positioned.fill(
+                child: GestureDetector(
+                  behavior: HitTestBehavior.translucent,
+                  onPanStart: (details) {
+                    setState(() {
+                      _activeStroke = _DrawStroke(
+                        color: _drawColor,
+                        width: 5.5,
+                        points: <Offset>[details.localPosition],
+                      );
+                    });
+                  },
+                  onPanUpdate: (details) {
+                    setState(() => _activeStroke?.points.add(details.localPosition));
+                  },
+                  onPanEnd: (_) {
+                    final stroke = _activeStroke;
+                    setState(() {
+                      if (stroke != null && stroke.points.length > 1) {
+                        _strokes.add(stroke);
+                      }
+                      _activeStroke = null;
+                    });
+                  },
+                ),
+              ),
+            if (!_editingText) _buildChrome(),
+            if (_editingText) _buildTextComposer(),
+            if (_movingOverlay) _buildTrashTarget(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildChrome() {
+    return Positioned.fill(
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(10, 8, 10, 12),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  _CircleButton(
+                    icon: Icons.close_rounded,
+                    onTap: _sharing ? null : () => Navigator.of(context).pop(false),
+                  ),
+                  const Spacer(),
+                  _CircleButton(
+                    icon: Icons.text_fields_rounded,
+                    onTap: _sharing ? null : () => _openText(),
+                  ),
+                  const SizedBox(width: 8),
+                  _CircleButton(
+                    icon: Icons.emoji_emotions_outlined,
+                    onTap: _sharing ? null : () => _openText(emoji: true),
+                  ),
+                  const SizedBox(width: 8),
+                  _CircleButton(
+                    icon: _drawing ? Icons.check_rounded : Icons.draw_outlined,
+                    onTap: _sharing ? null : _toggleDraw,
+                  ),
+                ],
+              ),
+              if (_drawing) ...[
+                const SizedBox(height: 10),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    for (final color in _colors)
+                      GestureDetector(
+                        onTap: () => setState(() => _drawColor = color),
+                        child: Container(
+                          width: 29,
+                          height: 29,
+                          margin: const EdgeInsets.symmetric(horizontal: 4),
+                          decoration: BoxDecoration(
+                            color: color,
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: _drawColor == color ? Colors.white : Colors.white38,
+                              width: _drawColor == color ? 3 : 1,
                             ),
-                          ],
-                        ],
+                          ),
+                        ),
+                      ),
+                    const SizedBox(width: 5),
+                    _CircleButton(
+                      icon: Icons.undo_rounded,
+                      compact: true,
+                      onTap: _strokes.isEmpty ? null : _undoDraw,
+                    ),
+                  ],
+                ),
+              ],
+              const Spacer(),
+              if (!_drawing)
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: _sharing ? null : _share,
+                        style: OutlinedButton.styleFrom(
+                          minimumSize: const Size.fromHeight(52),
+                          backgroundColor: Colors.black54,
+                          side: const BorderSide(color: Colors.white30),
+                        ),
+                        icon: const Icon(Icons.account_circle_outlined),
+                        label: Text(_sharing ? 'Paylaşılıyor…' : 'Story’n'),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    FilledButton(
+                      onPressed: _sharing ? null : _share,
+                      style: FilledButton.styleFrom(
+                        minimumSize: const Size(58, 52),
+                        backgroundColor: Colors.white,
+                        foregroundColor: Colors.black,
+                        shape: const CircleBorder(),
+                      ),
+                      child: _sharing
+                          ? const SizedBox(
+                              width: 19,
+                              height: 19,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.arrow_forward_rounded),
+                    ),
+                  ],
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTextComposer() {
+    final keyboard = MediaQuery.viewInsetsOf(context).bottom;
+    return Positioned.fill(
+      child: Stack(
+        children: [
+          Container(color: Colors.black.withValues(alpha: .18)),
+          SafeArea(
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(10, 8, 10, 0),
+                  child: Row(
+                    children: [
+                      TextButton(
+                        onPressed: _cancelText,
+                        child: const Text('Vazgeç', style: TextStyle(color: Colors.white)),
                       ),
                       const Spacer(),
-                      if (_selectedIndex != null && _panel == _EditorPanel.none)
-                        Container(
-                          margin: const EdgeInsets.only(bottom: 10),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 7,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.black54,
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: const Text(
-                            'Sürükle • İki parmakla büyüt/küçült',
-                            style: TextStyle(
-                              color: Colors.white70,
-                              fontSize: 11.5,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
+                      TextButton(
+                        onPressed: _commitText,
+                        child: const Text(
+                          'Bitti',
+                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900),
                         ),
-                      if (_panel == _EditorPanel.none)
-                        SizedBox(
-                          width: double.infinity,
-                          height: 50,
-                          child: FilledButton.icon(
-                            onPressed: _sharing ? null : _share,
-                            icon: _sharing
-                                ? const SizedBox(
-                                    width: 18,
-                                    height: 18,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: Colors.black,
-                                    ),
-                                  )
-                                : const Icon(Icons.send_rounded),
-                            label: Text(
-                              _sharing ? 'Paylaşılıyor…' : 'Story’de Paylaş',
-                            ),
-                          ),
-                        ),
+                      ),
                     ],
                   ),
                 ),
-              ),
-            ),
-            if (_panel != _EditorPanel.none) _buildEditorPanel(),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildEditorPanel() {
-    final keyboard = MediaQuery.viewInsetsOf(context).bottom;
-    return Positioned(
-      left: 0,
-      right: 0,
-      bottom: keyboard,
-      child: Material(
-        color: const Color(0xF2111318),
-        child: SafeArea(
-          top: false,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
-            child: _panel == _EditorPanel.text
-                ? _buildTextPanel()
-                : _buildEmojiPanel(),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTextPanel() {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Row(
-          children: [
-            const Text(
-              'Yazı ekle',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
-            ),
-            const Spacer(),
-            IconButton(onPressed: _closePanel, icon: const Icon(Icons.close)),
-          ],
-        ),
-        TextField(
-          controller: _textController,
-          focusNode: _textFocus,
-          maxLength: 180,
-          minLines: 1,
-          maxLines: 3,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontFamily: _font.family,
-            color: _textColor,
-            fontSize: 26,
-            fontWeight: FontWeight.w800,
-          ),
-          decoration: const InputDecoration(
-            hintText: 'Bir şey yaz…',
-            counterText: '',
-          ),
-        ),
-        const SizedBox(height: 10),
-        SizedBox(
-          height: 42,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            itemCount: _fonts.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 8),
-            itemBuilder: (_, index) {
-              final item = _fonts[index];
-              return ChoiceChip(
-                selected: item.family == _font.family,
-                label: Text(item.label, style: TextStyle(fontFamily: item.family)),
-                onSelected: (_) => setState(() => _font = item),
-              );
-            },
-          ),
-        ),
-        const SizedBox(height: 10),
-        Row(
-          children: [
-            for (final item in const [
-              Colors.white,
-              Colors.black,
-              Color(0xFFFFE25C),
-              Color(0xFFFF5C8A),
-              Color(0xFF7FE8FF),
-              Color(0xFFC49BFF),
-            ])
-              Padding(
-                padding: const EdgeInsets.only(right: 9),
-                child: InkWell(
-                  onTap: () => setState(() => _textColor = item),
-                  child: Container(
-                    width: 30,
-                    height: 30,
-                    decoration: BoxDecoration(
-                      color: item,
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: _textColor == item ? Colors.white : Colors.white24,
-                        width: _textColor == item ? 3 : 1,
-                      ),
+                const Spacer(),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: TextField(
+                    controller: _textController,
+                    focusNode: _textFocus,
+                    autofocus: true,
+                    maxLength: 180,
+                    minLines: 1,
+                    maxLines: 5,
+                    textAlign: TextAlign.center,
+                    keyboardType: TextInputType.multiline,
+                    style: TextStyle(
+                      fontFamily: _emojiInput ? null : _font.family,
+                      color: _textColor,
+                      fontSize: _emojiInput ? 54 : 34,
+                      fontWeight: FontWeight.w900,
+                      height: 1.05,
+                      shadows: const [
+                        Shadow(color: Colors.black54, blurRadius: 5, offset: Offset(0, 1)),
+                      ],
+                    ),
+                    decoration: InputDecoration(
+                      border: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                      counterText: '',
+                      hintText: _emojiInput
+                          ? 'Emoji klavyeni aç ve emojini seç'
+                          : 'Yazmaya başla…',
+                      hintStyle: const TextStyle(color: Colors.white54),
                     ),
                   ),
                 ),
-              ),
-            const Spacer(),
-            FilledButton(onPressed: _commitText, child: const Text('Ekle')),
-          ],
-        ),
-      ],
+                const Spacer(),
+                if (!_emojiInput)
+                  Padding(
+                    padding: EdgeInsets.only(bottom: keyboard > 0 ? 8 : 18),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SizedBox(
+                          height: 40,
+                          child: ListView.separated(
+                            padding: const EdgeInsets.symmetric(horizontal: 14),
+                            scrollDirection: Axis.horizontal,
+                            itemCount: _fonts.length,
+                            separatorBuilder: (_, __) => const SizedBox(width: 8),
+                            itemBuilder: (_, index) {
+                              final item = _fonts[index];
+                              final selected = item.family == _font.family;
+                              return GestureDetector(
+                                onTap: () => setState(() => _font = item),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 13),
+                                  alignment: Alignment.center,
+                                  decoration: BoxDecoration(
+                                    color: selected ? Colors.white : Colors.black54,
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: Text(
+                                    item.label,
+                                    style: TextStyle(
+                                      fontFamily: item.family,
+                                      color: selected ? Colors.black : Colors.white,
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            for (final color in _colors)
+                              GestureDetector(
+                                onTap: () => setState(() => _textColor = color),
+                                child: Container(
+                                  width: 28,
+                                  height: 28,
+                                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                                  decoration: BoxDecoration(
+                                    color: color,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: _textColor == color ? Colors.white : Colors.white38,
+                                      width: _textColor == color ? 3 : 1,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _buildEmojiPanel() {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Row(
-          children: [
-            const Text(
-              'Emoji ekle',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
+  Widget _buildTrashTarget() {
+    return Positioned(
+      left: 0,
+      right: 0,
+      bottom: 18,
+      child: SafeArea(
+        top: false,
+        child: Center(
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 120),
+            width: _overTrash ? 64 : 54,
+            height: _overTrash ? 64 : 54,
+            decoration: BoxDecoration(
+              color: _overTrash ? Colors.redAccent : Colors.black87,
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white30),
             ),
-            const Spacer(),
-            IconButton(onPressed: _closePanel, icon: const Icon(Icons.close)),
-          ],
-        ),
-        GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 8,
-            mainAxisSpacing: 8,
-            crossAxisSpacing: 8,
-          ),
-          itemCount: _emojiChoices.length,
-          itemBuilder: (_, index) => InkWell(
-            borderRadius: BorderRadius.circular(12),
-            onTap: () => _addEmoji(_emojiChoices[index]),
-            child: Center(
-              child: Text(
-                _emojiChoices[index],
-                style: const TextStyle(fontSize: 27),
-              ),
-            ),
+            child: const Icon(Icons.delete_outline_rounded, color: Colors.white),
           ),
         ),
-      ],
+      ),
     );
   }
 
@@ -442,50 +568,73 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
     return Positioned(
       left: item.position.dx,
       top: item.position.dy,
-      child: GestureDetector(
-        behavior: HitTestBehavior.translucent,
-        onTap: () => setState(() => _selectedIndex = index),
-        onScaleStart: (_) {
-          item.gestureStartScale = item.scale;
-          setState(() => _selectedIndex = index);
-        },
-        onScaleUpdate: (details) {
-          setState(() {
-            item.position += details.focalPointDelta;
-            item.scale =
-                (item.gestureStartScale * details.scale).clamp(.45, 4.5);
-          });
-        },
-        child: Transform.scale(
-          alignment: Alignment.center,
-          scale: item.scale,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-            decoration: selected
-                ? BoxDecoration(
-                    border: Border.all(color: Colors.white70),
-                    borderRadius: BorderRadius.circular(8),
-                  )
-                : null,
-            child: Text(
-              item.text,
-              textAlign: TextAlign.center,
-              style: item.isEmoji
-                  ? const TextStyle(fontSize: 54)
-                  : TextStyle(
-                      color: item.color,
-                      fontFamily: item.fontFamily,
-                      fontSize: 31,
-                      height: 1.05,
-                      fontWeight: FontWeight.w900,
-                      shadows: const [
-                        Shadow(
-                          color: Colors.black54,
-                          blurRadius: 5,
-                          offset: Offset(0, 1),
+      child: FractionalTranslation(
+        translation: const Offset(-.5, -.5),
+        child: GestureDetector(
+          behavior: HitTestBehavior.translucent,
+          onTap: _drawing ? null : () => setState(() => _selectedIndex = index),
+          onScaleStart: _drawing
+              ? null
+              : (_) {
+                  item.gestureStartScale = item.scale;
+                  item.gestureStartRotation = item.rotation;
+                  setState(() {
+                    _selectedIndex = index;
+                    _movingOverlay = true;
+                  });
+                },
+          onScaleUpdate: _drawing
+              ? null
+              : (details) {
+                  final screenHeight = MediaQuery.sizeOf(context).height;
+                  setState(() {
+                    item.position += details.focalPointDelta;
+                    item.scale = (item.gestureStartScale * details.scale).clamp(.35, 5.5);
+                    item.rotation = item.gestureStartRotation + details.rotation;
+                    _overTrash = details.focalPoint.dy > screenHeight - 125;
+                  });
+                },
+          onScaleEnd: _drawing
+              ? null
+              : (_) {
+                  if (_overTrash) {
+                    _removeSelected();
+                  } else {
+                    setState(() {
+                      _movingOverlay = false;
+                      _overTrash = false;
+                    });
+                  }
+                },
+          child: Transform.rotate(
+            angle: item.rotation,
+            child: Transform.scale(
+              scale: item.scale,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+                decoration: selected && !_movingOverlay
+                    ? BoxDecoration(
+                        border: Border.all(color: Colors.white70),
+                        borderRadius: BorderRadius.circular(8),
+                      )
+                    : null,
+                child: Text(
+                  item.text,
+                  textAlign: TextAlign.center,
+                  style: item.isEmoji
+                      ? const TextStyle(fontSize: 58)
+                      : TextStyle(
+                          color: item.color,
+                          fontFamily: item.fontFamily,
+                          fontSize: 34,
+                          height: 1.05,
+                          fontWeight: FontWeight.w900,
+                          shadows: const [
+                            Shadow(color: Colors.black54, blurRadius: 5, offset: Offset(0, 1)),
+                          ],
                         ),
-                      ],
-                    ),
+                ),
+              ),
             ),
           ),
         ),
@@ -494,8 +643,6 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
   }
 }
 
-enum _EditorPanel { none, text, emoji }
-
 class _StoryOverlay {
   final String text;
   final bool isEmoji;
@@ -503,43 +650,21 @@ class _StoryOverlay {
   final Color color;
   Offset position;
   double scale;
+  double rotation;
   double gestureStartScale;
+  double gestureStartRotation;
 
-  _StoryOverlay._({
+  _StoryOverlay({
     required this.text,
     required this.isEmoji,
     required this.fontFamily,
     required this.color,
     required this.position,
     this.scale = 1,
+    this.rotation = 0,
     this.gestureStartScale = 1,
+    this.gestureStartRotation = 0,
   });
-
-  factory _StoryOverlay.text({
-    required String text,
-    required String fontFamily,
-    required Color color,
-    required Offset position,
-  }) =>
-      _StoryOverlay._(
-        text: text,
-        isEmoji: false,
-        fontFamily: fontFamily,
-        color: color,
-        position: position,
-      );
-
-  factory _StoryOverlay.emoji({
-    required String text,
-    required Offset position,
-  }) =>
-      _StoryOverlay._(
-        text: text,
-        isEmoji: true,
-        fontFamily: null,
-        color: Colors.white,
-        position: position,
-      );
 }
 
 class _FontOption {
@@ -548,30 +673,80 @@ class _FontOption {
   const _FontOption(this.label, this.family);
 }
 
-class _RoundAction extends StatelessWidget {
-  final IconData icon;
-  final VoidCallback? onTap;
+class _DrawStroke {
+  final Color color;
+  final double width;
+  final List<Offset> points;
 
-  const _RoundAction({
-    required this.icon,
-    required this.onTap,
+  _DrawStroke({
+    required this.color,
+    required this.width,
+    required this.points,
+  });
+}
+
+class _DrawingPainter extends CustomPainter {
+  final List<_DrawStroke> strokes;
+  final _DrawStroke? activeStroke;
+
+  const _DrawingPainter({
+    required this.strokes,
+    required this.activeStroke,
   });
 
   @override
-  Widget build(BuildContext context) => Material(
-        color: Colors.black54,
-        shape: const CircleBorder(),
-        child: InkWell(
-          customBorder: const CircleBorder(),
-          onTap: onTap,
-          child: SizedBox(
-            width: 46,
-            height: 46,
-            child: Icon(
-              icon,
-              color: onTap == null ? Colors.white30 : Colors.white,
-            ),
+  void paint(Canvas canvas, Size size) {
+    for (final stroke in <_DrawStroke>[...strokes, if (activeStroke != null) activeStroke!]) {
+      if (stroke.points.length < 2) continue;
+      final paint = Paint()
+        ..color = stroke.color
+        ..strokeWidth = stroke.width
+        ..strokeCap = StrokeCap.round
+        ..strokeJoin = StrokeJoin.round
+        ..style = PaintingStyle.stroke
+        ..isAntiAlias = true;
+      final path = Path()..moveTo(stroke.points.first.dx, stroke.points.first.dy);
+      for (var i = 1; i < stroke.points.length; i++) {
+        path.lineTo(stroke.points[i].dx, stroke.points[i].dy);
+      }
+      canvas.drawPath(path, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _DrawingPainter oldDelegate) => true;
+}
+
+class _CircleButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback? onTap;
+  final bool compact;
+
+  const _CircleButton({
+    required this.icon,
+    required this.onTap,
+    this.compact = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final size = compact ? 38.0 : 44.0;
+    return Material(
+      color: Colors.black54,
+      shape: const CircleBorder(),
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: onTap,
+        child: SizedBox(
+          width: size,
+          height: size,
+          child: Icon(
+            icon,
+            size: compact ? 19 : 22,
+            color: onTap == null ? Colors.white30 : Colors.white,
           ),
         ),
-      );
+      ),
+    );
+  }
 }
