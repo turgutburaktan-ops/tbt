@@ -6,6 +6,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 
 import '../models/app_story.dart';
 import 'chat_service.dart';
+import 'video_media_service.dart';
 
 class StoryService {
   StoryService._();
@@ -40,6 +41,20 @@ class StoryService {
     );
   }
 
+  Map<String, dynamic> _baseStoryData(User user, String storyId) {
+    final now = DateTime.now();
+    return {
+      'id': storyId,
+      'userId': user.uid,
+      'userName': user.displayName?.trim().isNotEmpty == true
+          ? user.displayName
+          : 'TBT kullanıcısı',
+      'userPhotoUrl': user.photoURL ?? '',
+      'createdAt': FieldValue.serverTimestamp(),
+      'expiresAt': Timestamp.fromDate(now.add(const Duration(hours: 24))),
+    };
+  }
+
   Future<void> createStory(File image) async {
     final user = _auth.currentUser;
     if (user == null) throw Exception('Story paylaşmak için giriş yapmalısın.');
@@ -63,18 +78,65 @@ class StoryService {
       throw Exception('Story fotoğrafı yüklenemedi.');
     }
     final imageUrl = await upload.ref.getDownloadURL();
-    final now = DateTime.now();
     await storyRef.set({
-      'id': storyRef.id,
-      'userId': user.uid,
-      'userName': user.displayName?.trim().isNotEmpty == true
-          ? user.displayName
-          : 'TBT kullanıcısı',
-      'userPhotoUrl': user.photoURL ?? '',
+      ..._baseStoryData(user, storyRef.id),
+      'mediaType': 'image',
       'imageUrl': imageUrl,
       'storagePath': storageRef.fullPath,
-      'createdAt': FieldValue.serverTimestamp(),
-      'expiresAt': Timestamp.fromDate(now.add(const Duration(hours: 24))),
+      'videoUrl': '',
+      'videoStoragePath': '',
+      'thumbnailUrl': '',
+      'thumbnailStoragePath': '',
+      'durationMs': 0,
+    });
+  }
+
+  Future<void> createVideoStory(File sourceVideo) async {
+    final user = _auth.currentUser;
+    if (user == null) throw Exception('Story paylaşmak için giriş yapmalısın.');
+
+    final prepared = await VideoMediaService.instance.prepare(
+      sourceVideo,
+      maxDuration: const Duration(seconds: 15),
+    );
+    final storyRef = _firestore.collection('stories').doc();
+    final videoRef = _storage
+        .ref()
+        .child('users/${user.uid}/stories/${storyRef.id}.mp4');
+    final thumbRef = _storage
+        .ref()
+        .child('users/${user.uid}/stories/${storyRef.id}_thumb.jpg');
+
+    final videoUpload = await videoRef.putFile(
+      prepared.video,
+      SettableMetadata(contentType: 'video/mp4'),
+    );
+    if (videoUpload.bytesTransferred <= 0) {
+      throw Exception('Story videosu yüklenemedi.');
+    }
+    final thumbUpload = await thumbRef.putFile(
+      prepared.thumbnail,
+      SettableMetadata(contentType: 'image/jpeg'),
+    );
+    if (thumbUpload.bytesTransferred <= 0) {
+      try {
+        await videoRef.delete();
+      } catch (_) {}
+      throw Exception('Story video önizlemesi yüklenemedi.');
+    }
+
+    final videoUrl = await videoUpload.ref.getDownloadURL();
+    final thumbnailUrl = await thumbUpload.ref.getDownloadURL();
+    await storyRef.set({
+      ..._baseStoryData(user, storyRef.id),
+      'mediaType': 'video',
+      'imageUrl': thumbnailUrl,
+      'storagePath': thumbRef.fullPath,
+      'videoUrl': videoUrl,
+      'videoStoragePath': videoRef.fullPath,
+      'thumbnailUrl': thumbnailUrl,
+      'thumbnailStoragePath': thumbRef.fullPath,
+      'durationMs': prepared.durationMs,
     });
   }
 
@@ -201,9 +263,14 @@ class StoryService {
     final user = _auth.currentUser;
     if (user == null || story.userId != user.uid) return;
     await _firestore.collection('stories').doc(story.id).delete();
-    if (story.storagePath.isNotEmpty) {
+    final paths = <String>{
+      story.storagePath,
+      story.videoStoragePath,
+      story.thumbnailStoragePath,
+    }..removeWhere((path) => path.trim().isEmpty);
+    for (final path in paths) {
       try {
-        await _storage.ref().child(story.storagePath).delete();
+        await _storage.ref().child(path).delete();
       } catch (_) {}
     }
   }
