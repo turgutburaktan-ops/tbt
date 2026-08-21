@@ -126,6 +126,10 @@ class SocialEvent {
       ? customTypeLabel.trim()
       : type.label;
 
+  bool isAttending(String uid) => participantIds.contains(uid);
+  bool isInterested(String uid) => false;
+  bool isHidden(String uid) => false;
+
   factory SocialEvent.fromDocument(DocumentSnapshot<Map<String, dynamic>> doc) {
     final d = doc.data() ?? const <String, dynamic>{};
     DateTime date(dynamic v) => v is Timestamp
