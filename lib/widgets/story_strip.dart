@@ -1,13 +1,13 @@
 import 'dart:async';
 import 'dart:collection';
-import 'dart:io';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 
 import '../models/app_story.dart';
+import '../screens/camera_screen.dart';
 import '../services/story_service.dart';
+import 'app_video_player.dart';
 import 'firebase_media_image.dart';
 
 class StoryStrip extends StatefulWidget {
@@ -20,80 +20,46 @@ class StoryStrip extends StatefulWidget {
 }
 
 class _StoryStripState extends State<StoryStrip> {
-  bool _uploading = false;
+  bool _openingCamera = false;
 
   Future<void> _addStory() async {
-    if (_uploading) return;
-    final source = await showModalBottomSheet<ImageSource>(
-      context: context,
-      backgroundColor: const Color(0xFF15181D),
-      builder: (context) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(14, 12, 14, 18),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                'Story ekle',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
-              ),
-              const SizedBox(height: 10),
-              ListTile(
-                leading: const Icon(Icons.photo_camera_outlined),
-                title: const Text('Kamerayla çek'),
-                onTap: () => Navigator.pop(context, ImageSource.camera),
-              ),
-              ListTile(
-                leading: const Icon(Icons.photo_library_outlined),
-                title: const Text('Galeriden seç'),
-                onTap: () => Navigator.pop(context, ImageSource.gallery),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-    if (source == null || !mounted) return;
-
-    final picked = await ImagePicker().pickImage(
-      source: source,
-      imageQuality: 100,
-      requestFullMetadata: false,
-    );
-    if (picked == null || !mounted) return;
-    setState(() => _uploading = true);
+    if (_openingCamera) return;
+    setState(() => _openingCamera = true);
     try {
-      await StoryService.instance.createStory(File(picked.path));
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Story 24 saatliğine paylaşıldı.')),
-      );
-    } catch (error) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(error.toString().replaceFirst('Exception: ', '')),
+      final shared = await Navigator.push<bool>(
+        context,
+        MaterialPageRoute(
+          builder: (_) => const CameraScreen(storyMode: true),
         ),
       );
+      if (!mounted || shared != true) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(content: Text('Story 24 saatliğine paylaşıldı.')),
+        );
     } finally {
-      if (mounted) setState(() => _uploading = false);
+      if (mounted) setState(() => _openingCamera = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final currentUser = FirebaseAuth.instance.currentUser;
+    final me = FirebaseAuth.instance.currentUser;
     return StreamBuilder<List<AppStory>>(
       stream: StoryService.instance.watchActive(),
       builder: (context, snapshot) {
-        final visible = snapshot.data?.where((story) {
-              final ids = widget.visibleUserIds;
-              return ids == null || ids.contains(story.userId);
-            }).toList() ??
-            const <AppStory>[];
+        final visible = (snapshot.data ?? const <AppStory>[])
+            .where((story) => widget.visibleUserIds == null ||
+                widget.visibleUserIds!.contains(story.userId))
+            .toList();
+
         final grouped = LinkedHashMap<String, List<AppStory>>();
         for (final story in visible) {
           grouped.putIfAbsent(story.userId, () => <AppStory>[]).add(story);
+        }
+        for (final stories in grouped.values) {
+          stories.sort((a, b) => a.createdAt.compareTo(b.createdAt));
         }
 
         return Container(
@@ -107,15 +73,15 @@ class _StoryStripState extends State<StoryStrip> {
             padding: const EdgeInsets.fromLTRB(12, 9, 12, 8),
             children: [
               _AddStoryCircle(
-                userId: currentUser?.uid ?? '',
-                photoUrl: currentUser?.photoURL ?? '',
-                uploading: _uploading,
+                userId: me?.uid ?? '',
+                photoUrl: me?.photoURL ?? '',
+                loading: _openingCamera,
                 onTap: _addStory,
               ),
               ...grouped.values.map(
                 (stories) => _StoryCircle(
                   stories: stories,
-                  isMine: stories.first.userId == currentUser?.uid,
+                  isMine: stories.first.userId == me?.uid,
                   onTap: () => Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -135,13 +101,13 @@ class _StoryStripState extends State<StoryStrip> {
 class _AddStoryCircle extends StatelessWidget {
   final String userId;
   final String photoUrl;
-  final bool uploading;
+  final bool loading;
   final VoidCallback onTap;
 
   const _AddStoryCircle({
     required this.userId,
     required this.photoUrl,
-    required this.uploading,
+    required this.loading,
     required this.onTap,
   });
 
@@ -149,21 +115,16 @@ class _AddStoryCircle extends StatelessWidget {
   Widget build(BuildContext context) => SizedBox(
         width: 76,
         child: InkWell(
-          onTap: uploading ? null : onTap,
+          onTap: loading ? null : onTap,
           borderRadius: BorderRadius.circular(40),
           child: Column(
             children: [
               Stack(
                 clipBehavior: Clip.none,
                 children: [
-                  Container(
+                  SizedBox(
                     width: 66,
                     height: 66,
-                    padding: const EdgeInsets.all(2),
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Color(0xFF2A2E35),
-                    ),
                     child: ClipOval(
                       child: FirebaseMediaImage(
                         imageUrl: photoUrl,
@@ -184,11 +145,13 @@ class _AddStoryCircle extends StatelessWidget {
                       height: 24,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: const Color(0xFF42F5E9),
+                        color: const Color(0xFFB7BCC2),
                         border: Border.all(
-                            color: const Color(0xFF090A0D), width: 2),
+                          color: const Color(0xFF090A0D),
+                          width: 2,
+                        ),
                       ),
-                      child: uploading
+                      child: loading
                           ? const Padding(
                               padding: EdgeInsets.all(5),
                               child: CircularProgressIndicator(
@@ -235,34 +198,53 @@ class _StoryCircle extends StatelessWidget {
         borderRadius: BorderRadius.circular(40),
         child: Column(
           children: [
-            Container(
-              width: 66,
-              height: 66,
-              padding: const EdgeInsets.all(3),
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  colors: [Color(0xFF42F5E9), Color(0xFF8B5CF6)],
-                ),
-              ),
-              child: Container(
-                padding: const EdgeInsets.all(2),
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Color(0xFF090A0D),
-                ),
-                child: ClipOval(
-                  child: FirebaseMediaImage(
-                    imageUrl: story.userPhotoUrl,
-                    fallbackStoragePaths:
-                        FirebaseMediaImage.avatarPaths(story.userId),
-                    errorWidget: FirebaseMediaImage(
-                      imageUrl: story.imageUrl,
-                      storagePath: story.storagePath,
+            Stack(
+              children: [
+                Container(
+                  width: 66,
+                  height: 66,
+                  padding: const EdgeInsets.all(3),
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: LinearGradient(
+                      colors: [Color(0xFFB7BCC2), Color(0xFF555B63)],
+                    ),
+                  ),
+                  child: Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Color(0xFF090A0D),
+                    ),
+                    child: ClipOval(
+                      child: FirebaseMediaImage(
+                        imageUrl: story.userPhotoUrl,
+                        fallbackStoragePaths:
+                            FirebaseMediaImage.avatarPaths(story.userId),
+                        errorWidget: FirebaseMediaImage(
+                          imageUrl: story.thumbnailUrl.isNotEmpty
+                              ? story.thumbnailUrl
+                              : story.imageUrl,
+                          storagePath: story.thumbnailStoragePath.isNotEmpty
+                              ? story.thumbnailStoragePath
+                              : story.storagePath,
+                        ),
+                      ),
                     ),
                   ),
                 ),
-              ),
+                if (story.isVideo)
+                  const Positioned(
+                    right: 3,
+                    top: 3,
+                    child: CircleAvatar(
+                      radius: 10,
+                      backgroundColor: Color(0xA8000000),
+                      child: Icon(Icons.videocam_rounded,
+                          size: 13, color: Colors.white),
+                    ),
+                  ),
+              ],
             ),
             const SizedBox(height: 5),
             Text(
@@ -289,18 +271,20 @@ class StoryViewerScreen extends StatefulWidget {
 
 class _StoryViewerScreenState extends State<StoryViewerScreen> {
   late final PageController _controller;
-  final TextEditingController _replyController = TextEditingController();
+  late final List<AppStory> _stories;
+  final _replyController = TextEditingController();
   Timer? _timer;
   int _index = 0;
   bool _sending = false;
 
-  AppStory get _current => widget.stories[_index];
-  bool get _mine =>
-      _current.userId == FirebaseAuth.instance.currentUser?.uid;
+  AppStory get _current => _stories[_index];
+  bool get _mine => _current.userId == FirebaseAuth.instance.currentUser?.uid;
 
   @override
   void initState() {
     super.initState();
+    _stories = [...widget.stories]
+      ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
     _controller = PageController();
     WidgetsBinding.instance.addPostFrameCallback((_) => _markViewed());
     _restartTimer();
@@ -316,18 +300,31 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> {
 
   void _restartTimer() {
     _timer?.cancel();
-    _timer = Timer(const Duration(seconds: 7), _next);
+    final ms = _current.isVideo
+        ? (_current.durationMs > 0
+            ? _current.durationMs.clamp(1000, 15000).toInt()
+            : 15000)
+        : 7000;
+    _timer = Timer(Duration(milliseconds: ms), _next);
   }
 
   void _pauseTimer() => _timer?.cancel();
 
   void _next() {
     if (!mounted) return;
-    if (_index + 1 >= widget.stories.length) {
+    if (_index + 1 >= _stories.length) {
       Navigator.pop(context);
       return;
     }
     _controller.nextPage(
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOut,
+    );
+  }
+
+  void _previous() {
+    if (_index == 0) return;
+    _controller.previousPage(
       duration: const Duration(milliseconds: 220),
       curve: Curves.easeOut,
     );
@@ -342,9 +339,9 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> {
     return '${diff.inHours.clamp(1, 24)} sa';
   }
 
-  Future<void> _delete(AppStory story) async {
+  Future<void> _delete() async {
     _pauseTimer();
-    await StoryService.instance.deleteStory(story);
+    await StoryService.instance.deleteStory(_current);
     if (mounted) Navigator.pop(context);
   }
 
@@ -376,10 +373,11 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> {
         ..hideCurrentSnackBar()
         ..showSnackBar(const SnackBar(content: Text('Story mesajı gönderildi.')));
     } catch (error) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error.toString().replaceFirst('Exception: ', ''))),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(error.toString().replaceFirst('Exception: ', ''))),
+        );
+      }
     } finally {
       if (mounted) {
         setState(() => _sending = false);
@@ -388,7 +386,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> {
     }
   }
 
-  void _showViewers(AppStory story) {
+  void _showViewers() {
     _pauseTimer();
     showModalBottomSheet<void>(
       context: context,
@@ -398,7 +396,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> {
         child: SizedBox(
           height: MediaQuery.sizeOf(sheetContext).height * .62,
           child: StreamBuilder<List<Map<String, dynamic>>>(
-            stream: StoryService.instance.watchInteractions(story),
+            stream: StoryService.instance.watchInteractions(_current),
             builder: (context, snapshot) {
               final items = snapshot.data ?? const <Map<String, dynamic>>[];
               return Column(
@@ -425,20 +423,25 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> {
                   Expanded(
                     child: items.isEmpty
                         ? const Center(
-                            child: Text('Henüz kimse bu Story’yi izlemedi.',
-                                style: TextStyle(color: Colors.white54)),
+                            child: Text(
+                              'Henüz kimse bu Story’yi izlemedi.',
+                              style: TextStyle(color: Colors.white54),
+                            ),
                           )
                         : ListView.separated(
-                            padding: const EdgeInsets.symmetric(vertical: 8),
                             itemCount: items.length,
                             separatorBuilder: (_, __) =>
                                 const Divider(height: 1, indent: 70),
                             itemBuilder: (_, index) {
                               final item = items[index];
-                              final name = (item['userName'] ?? 'Kullanıcı').toString();
-                              final photo = (item['userPhotoUrl'] ?? '').toString();
-                              final reaction = (item['reaction'] ?? '').toString();
-                              final message = (item['message'] ?? '').toString();
+                              final name =
+                                  (item['userName'] ?? 'Kullanıcı').toString();
+                              final photo =
+                                  (item['userPhotoUrl'] ?? '').toString();
+                              final reaction =
+                                  (item['reaction'] ?? '').toString();
+                              final message =
+                                  (item['message'] ?? '').toString();
                               final liked = item['liked'] == true;
                               return ListTile(
                                 leading: SizedBox(
@@ -449,8 +452,9 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> {
                                       imageUrl: photo,
                                       fallbackStoragePaths:
                                           FirebaseMediaImage.avatarPaths(
-                                              (item['userId'] ?? item['id'] ?? '')
-                                                  .toString()),
+                                        (item['userId'] ?? item['id'] ?? '')
+                                            .toString(),
+                                      ),
                                       errorWidget: const ColoredBox(
                                         color: Color(0xFF22252A),
                                         child: Icon(Icons.person_outline),
@@ -494,6 +498,31 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> {
     });
   }
 
+  Widget _media(AppStory story) {
+    if (story.isVideo && story.videoUrl.isNotEmpty) {
+      return AppVideoPlayer.network(
+        key: ValueKey(story.id),
+        url: story.videoUrl,
+        autoplay: true,
+        muted: false,
+        loop: false,
+        showControls: false,
+        fit: BoxFit.contain,
+      );
+    }
+    return FirebaseMediaImage(
+      imageUrl: story.imageUrl,
+      storagePath: story.storagePath,
+      width: double.infinity,
+      height: double.infinity,
+      fit: BoxFit.contain,
+      errorWidget: const Center(
+        child: Icon(Icons.broken_image_outlined,
+            size: 52, color: Colors.white38),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final current = _current;
@@ -506,27 +535,32 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> {
             Positioned.fill(
               child: PageView.builder(
                 controller: _controller,
-                itemCount: widget.stories.length,
+                itemCount: _stories.length,
                 onPageChanged: (value) {
                   setState(() => _index = value);
                   _replyController.clear();
                   _markViewed();
                   _restartTimer();
                 },
-                itemBuilder: (context, index) {
-                  final story = widget.stories[index];
-                  return FirebaseMediaImage(
-                    imageUrl: story.imageUrl,
-                    storagePath: story.storagePath,
-                    width: double.infinity,
-                    height: double.infinity,
-                    fit: BoxFit.contain,
-                    errorWidget: const Center(
-                      child: Icon(Icons.broken_image_outlined,
-                          size: 52, color: Colors.white38),
+                itemBuilder: (_, index) => _media(_stories[index]),
+              ),
+            ),
+            Positioned.fill(
+              child: Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.translucent,
+                      onTap: _previous,
                     ),
-                  );
-                },
+                  ),
+                  Expanded(
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.translucent,
+                      onTap: _next,
+                    ),
+                  ),
+                ],
               ),
             ),
             Positioned(
@@ -537,13 +571,14 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> {
                 children: [
                   Row(
                     children: List.generate(
-                      widget.stories.length,
+                      _stories.length,
                       (index) => Expanded(
                         child: Container(
                           height: 3,
                           margin: const EdgeInsets.symmetric(horizontal: 2),
                           decoration: BoxDecoration(
-                            color: index <= _index ? Colors.white : Colors.white30,
+                            color:
+                                index <= _index ? Colors.white : Colors.white30,
                             borderRadius: BorderRadius.circular(3),
                           ),
                         ),
@@ -578,7 +613,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> {
                       if (_mine)
                         IconButton(
                           tooltip: 'Story’yi sil',
-                          onPressed: () => _delete(current),
+                          onPressed: _delete,
                           icon: const Icon(Icons.delete_outline_rounded),
                         ),
                       IconButton(
@@ -598,11 +633,12 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> {
                   ? StreamBuilder<List<Map<String, dynamic>>>(
                       stream: StoryService.instance.watchInteractions(current),
                       builder: (context, snapshot) {
-                        final items = snapshot.data ?? const <Map<String, dynamic>>[];
+                        final items = snapshot.data ??
+                            const <Map<String, dynamic>>[];
                         return Align(
                           alignment: Alignment.centerLeft,
                           child: FilledButton.tonalIcon(
-                            onPressed: () => _showViewers(current),
+                            onPressed: _showViewers,
                             icon: const Icon(Icons.visibility_outlined),
                             label: Text('${items.length} izleyen'),
                           ),
@@ -610,7 +646,8 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> {
                       },
                     )
                   : StreamBuilder<Map<String, dynamic>>(
-                      stream: StoryService.instance.watchMyInteraction(current.id),
+                      stream:
+                          StoryService.instance.watchMyInteraction(current.id),
                       builder: (context, snapshot) {
                         final interaction =
                             snapshot.data ?? const <String, dynamic>{};
@@ -629,7 +666,8 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> {
                                         padding: const EdgeInsets.symmetric(
                                             horizontal: 8, vertical: 7),
                                         child: Text(emoji,
-                                            style: const TextStyle(fontSize: 23)),
+                                            style:
+                                                const TextStyle(fontSize: 23)),
                                       ),
                                     ),
                                   )
@@ -639,14 +677,17 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> {
                             Row(
                               children: [
                                 IconButton.filledTonal(
-                                  tooltip: liked ? 'Beğeniyi kaldır' : 'Beğen',
+                                  tooltip:
+                                      liked ? 'Beğeniyi kaldır' : 'Beğen',
                                   onPressed: () => StoryService.instance
                                       .setLiked(current, !liked),
                                   icon: Icon(
                                     liked
                                         ? Icons.favorite_rounded
                                         : Icons.favorite_border_rounded,
-                                    color: liked ? Colors.redAccent : Colors.white,
+                                    color: liked
+                                        ? Colors.redAccent
+                                        : Colors.white,
                                   ),
                                 ),
                                 const SizedBox(width: 8),
@@ -656,7 +697,11 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> {
                                     minLines: 1,
                                     maxLines: 3,
                                     maxLength: 500,
-                                    buildCounter: (_, {required currentLength, required isFocused, maxLength}) => null,
+                                    buildCounter: (_,
+                                            {required currentLength,
+                                            required isFocused,
+                                            maxLength}) =>
+                                        null,
                                     onTap: _pauseTimer,
                                     onSubmitted: (_) => _sendReply(),
                                     textInputAction: TextInputAction.send,
@@ -664,8 +709,9 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> {
                                       hintText: 'Story’ye mesaj yaz…',
                                       filled: true,
                                       fillColor: Colors.black54,
-                                      contentPadding: const EdgeInsets.symmetric(
-                                          horizontal: 16, vertical: 12),
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                              horizontal: 16, vertical: 12),
                                       border: OutlineInputBorder(
                                         borderRadius: BorderRadius.circular(24),
                                         borderSide: const BorderSide(

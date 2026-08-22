@@ -1,11 +1,14 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../models/nearby_venue.dart';
 import '../services/app_notification_service.dart';
+import '../theme/app_theme.dart';
 import '../widgets/nearby_places_view.dart';
 import 'camera_screen.dart';
+import 'campus_home_screen.dart';
 import 'events_hub_screen.dart';
 import 'feed_screen.dart';
 import 'login_screen.dart';
@@ -13,14 +16,6 @@ import 'map_screen.dart';
 import 'profile_page_v2.dart';
 import 'radar_screen.dart';
 import 'spot_explore_screen_v2.dart';
-
-class _Neon {
-  static const bg = Color(0xFF06070B);
-  static const panel = Color(0xFF101218);
-  static const cyan = Color(0xFF42F5E9);
-  static const violet = Color(0xFF8B5CF6);
-  static const border = Color(0xFF292D38);
-}
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -49,7 +44,6 @@ class _HomeScreenState extends State<HomeScreen> {
       FocusManager.instance.primaryFocus?.unfocus();
       return;
     }
-
     if (_selectedIndex != 0) {
       setState(() => _selectedIndex = 0);
       return;
@@ -91,27 +85,28 @@ class _HomeScreenState extends State<HomeScreen> {
         if (!didPop) _handleSystemBack(keyboardOpen);
       },
       child: Scaffold(
-        backgroundColor: _Neon.bg,
+        backgroundColor: AppColors.background,
         body: IndexedStack(index: _selectedIndex, children: pages),
         floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
         floatingActionButton: keyboardOpen
             ? null
             : Container(
-                padding: const EdgeInsets.all(3),
+                width: 54,
+                height: 54,
+                padding: const EdgeInsets.all(2.5),
                 decoration: const BoxDecoration(
                   shape: BoxShape.circle,
-                  gradient:
-                      LinearGradient(colors: [_Neon.cyan, _Neon.violet]),
+                  gradient: AppColors.accentGradient,
                 ),
                 child: FloatingActionButton(
                   heroTag: 'main-camera',
                   tooltip: 'Kamera',
                   elevation: 0,
-                  backgroundColor: _Neon.panel,
+                  backgroundColor: AppColors.surface,
                   foregroundColor: Colors.white,
                   shape: const CircleBorder(),
                   onPressed: () => _selectDestination(2),
-                  child: const Icon(Icons.photo_camera_rounded, size: 27),
+                  child: const Icon(Icons.photo_camera_rounded, size: 24),
                 ),
               ),
         bottomNavigationBar: keyboardOpen
@@ -146,12 +141,12 @@ class _SimpleNavigationBar extends StatelessWidget {
     return SafeArea(
       top: false,
       child: BottomAppBar(
-        height: 68,
-        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
-        color: const Color(0xFF0C0E13),
+        height: 64,
+        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 4),
+        color: const Color(0xFF0B0D12),
         elevation: 0,
         shape: const CircularNotchedRectangle(),
-        notchMargin: 8,
+        notchMargin: 7,
         child: Row(
           children: List.generate(items.length, (index) {
             final item = items[index];
@@ -163,9 +158,9 @@ class _SimpleNavigationBar extends StatelessWidget {
                   child: Text(
                     'Kamera',
                     style: TextStyle(
-                      color: Colors.white54,
-                      fontSize: 9.5,
-                      fontWeight: FontWeight.w600,
+                      color: Color(0x75FFFFFF),
+                      fontSize: 9,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),
@@ -174,25 +169,26 @@ class _SimpleNavigationBar extends StatelessWidget {
             return Expanded(
               child: InkWell(
                 onTap: () => onSelected(index),
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(12),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  padding: const EdgeInsets.symmetric(vertical: 3),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       _GradientIcon(
                         icon: selected ? item.$2 : item.$1,
                         active: selected,
+                        size: 21,
                       ),
                       const SizedBox(height: 2),
                       Text(
                         item.$3,
                         maxLines: 1,
                         style: TextStyle(
-                          color: selected ? Colors.white : Colors.white54,
-                          fontSize: 10,
+                          color: selected ? Colors.white : const Color(0x75FFFFFF),
+                          fontSize: 9.5,
                           fontWeight:
-                              selected ? FontWeight.w800 : FontWeight.w600,
+                              selected ? FontWeight.w900 : FontWeight.w600,
                         ),
                       ),
                     ],
@@ -238,20 +234,66 @@ class _NearbyHub extends StatefulWidget {
 class _NearbyHubState extends State<_NearbyHub> {
   int _section = 0;
 
+  bool _campusEligible(Map<String, dynamic> data) {
+    const activeYears = <String>{
+      'Hazırlık',
+      '1',
+      '2',
+      '3',
+      '4',
+      '5',
+      '6',
+    };
+    final university = (data['university'] ?? '').toString().trim();
+    final classYear = (data['classYear'] ?? '').toString().trim();
+    return university.isNotEmpty && activeYears.contains(classYear);
+  }
+
   @override
   Widget build(BuildContext context) {
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      initialData: FirebaseAuth.instance.currentUser,
+      builder: (context, authSnapshot) {
+        final user = authSnapshot.data;
+        if (user == null) return _buildHub(false);
+        return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+          stream: FirebaseFirestore.instance
+              .collection('users')
+              .doc(user.uid)
+              .snapshots(),
+          builder: (context, profileSnapshot) {
+            final data = profileSnapshot.data?.data() ?? <String, dynamic>{};
+            return _buildHub(_campusEligible(data));
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildHub(bool campusEligible) {
+    final labels = campusEligible
+        ? const ['Radar', 'Etkinlikler', 'Kampüs']
+        : const ['Radar', 'Etkinlikler'];
+    final effectiveSection = _section >= labels.length ? 0 : _section;
+    final pages = <Widget>[
+      const RadarScreen(embedded: true),
+      const EventsHubScreen(),
+      if (campusEligible) const CampusHomeScreen(),
+    ];
+
     return ColoredBox(
-      color: _Neon.bg,
+      color: AppColors.background,
       child: SafeArea(
         bottom: false,
         child: Column(
           children: [
             const Padding(
-              padding: EdgeInsets.fromLTRB(16, 12, 16, 8),
+              padding: EdgeInsets.fromLTRB(14, 10, 14, 7),
               child: Row(
                 children: [
-                  _GradientIcon(icon: Icons.near_me_rounded, size: 25),
-                  SizedBox(width: 10),
+                  _GradientIcon(icon: Icons.near_me_rounded, size: 22),
+                  SizedBox(width: 9),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -259,15 +301,16 @@ class _NearbyHubState extends State<_NearbyHub> {
                         Text(
                           'Çevrende',
                           style: TextStyle(
-                            fontSize: 24,
+                            fontSize: 22,
                             fontWeight: FontWeight.w900,
+                            letterSpacing: -.35,
                           ),
                         ),
                         Text(
-                          'Yakındaki hareketleri ve etkinlikleri gör.',
+                          'Radar, etkinlikler ve öğrencilere özel kampüs.',
                           style: TextStyle(
-                            color: Colors.white54,
-                            fontSize: 12,
+                            color: Color(0x75FFFFFF),
+                            fontSize: 11.5,
                           ),
                         ),
                       ],
@@ -277,41 +320,17 @@ class _NearbyHubState extends State<_NearbyHub> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-              child: Container(
-                padding: const EdgeInsets.all(3),
-                decoration: BoxDecoration(
-                  color: _Neon.panel,
-                  borderRadius: BorderRadius.circular(15),
-                  border: Border.all(color: _Neon.border),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: _FeedTab(
-                        label: 'Radar',
-                        selected: _section == 0,
-                        onTap: () => setState(() => _section = 0),
-                      ),
-                    ),
-                    Expanded(
-                      child: _FeedTab(
-                        label: 'Etkinlikler',
-                        selected: _section == 1,
-                        onTap: () => setState(() => _section = 1),
-                      ),
-                    ),
-                  ],
-                ),
+              padding: const EdgeInsets.fromLTRB(14, 0, 14, 7),
+              child: _NearbyTabs(
+                labels: labels,
+                selected: effectiveSection,
+                onChanged: (value) => setState(() => _section = value),
               ),
             ),
             Expanded(
               child: IndexedStack(
-                index: _section,
-                children: const [
-                  RadarScreen(embedded: true),
-                  EventsHubScreen(),
-                ],
+                index: effectiveSection,
+                children: pages,
               ),
             ),
           ],
@@ -319,6 +338,62 @@ class _NearbyHubState extends State<_NearbyHub> {
       ),
     );
   }
+}
+
+class _NearbyTabs extends StatelessWidget {
+  final List<String> labels;
+  final int selected;
+  final ValueChanged<int> onChanged;
+
+  const _NearbyTabs({
+    required this.labels,
+    required this.selected,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.all(3),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(13),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Row(
+          children: List.generate(labels.length, (index) {
+            final active = selected == index;
+            return Expanded(
+              child: InkWell(
+                onTap: () => onChanged(index),
+                borderRadius: BorderRadius.circular(10),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 160),
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  decoration: BoxDecoration(
+                    color: active ? AppColors.surfaceStrong : Colors.transparent,
+                    borderRadius: BorderRadius.circular(10),
+                    border: active && labels[index] == 'Kampüs'
+                        ? Border.all(
+                            color: AppColors.cyan.withValues(alpha: .45),
+                          )
+                        : null,
+                  ),
+                  child: Text(
+                    labels[index],
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color:
+                          active ? Colors.white : const Color(0x75FFFFFF),
+                      fontSize: 11.5,
+                      fontWeight: active ? FontWeight.w900 : FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }),
+        ),
+      );
 }
 
 class _AuthAwareFeed extends StatelessWidget {
@@ -352,39 +427,19 @@ class _FeedHubState extends State<_FeedHub> {
   @override
   Widget build(BuildContext context) {
     return ColoredBox(
-      color: _Neon.bg,
+      color: AppColors.background,
       child: SafeArea(
         bottom: false,
         child: Column(
           children: [
             const _HomeHeader(),
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 4, 16, 10),
-              child: Container(
-                padding: const EdgeInsets.all(3),
-                decoration: BoxDecoration(
-                  color: _Neon.panel,
-                  borderRadius: BorderRadius.circular(15),
-                  border: Border.all(color: _Neon.border),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: _FeedTab(
-                        label: 'Sana Özel',
-                        selected: _section == 0,
-                        onTap: () => setState(() => _section = 0),
-                      ),
-                    ),
-                    Expanded(
-                      child: _FeedTab(
-                        label: 'Takip',
-                        selected: _section == 1,
-                        onTap: () => setState(() => _section = 1),
-                      ),
-                    ),
-                  ],
-                ),
+              padding: const EdgeInsets.fromLTRB(14, 2, 14, 8),
+              child: _CompactTabs(
+                firstLabel: 'Sana Özel',
+                secondLabel: 'Takip',
+                selected: _section,
+                onChanged: (value) => setState(() => _section = value),
               ),
             ),
             Expanded(
@@ -408,33 +463,35 @@ class _HomeHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.fromLTRB(16, 10, 10, 8),
+        padding: const EdgeInsets.fromLTRB(14, 9, 8, 7),
         child: Row(
           children: [
             Container(
-              width: 38,
-              height: 38,
+              width: 34,
+              height: 34,
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                gradient: const LinearGradient(
-                  colors: [_Neon.cyan, _Neon.violet],
-                ),
+                borderRadius: BorderRadius.circular(11),
+                gradient: AppColors.accentGradient,
               ),
               child: const Text(
                 'TBT',
                 style: TextStyle(
                   color: Color(0xFF08090D),
-                  fontSize: 12,
+                  fontSize: 11,
                   fontWeight: FontWeight.w900,
                 ),
               ),
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: 9),
             const Expanded(
               child: Text(
                 'TBT',
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900),
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: -.35,
+                ),
               ),
             ),
             StreamBuilder<int>(
@@ -475,11 +532,8 @@ class _ExploreHubState extends State<_ExploreHub> {
       context,
       MaterialPageRoute(
         builder: (_) => Scaffold(
-          backgroundColor: _Neon.bg,
-          appBar: AppBar(
-            backgroundColor: _Neon.bg,
-            title: const Text('Harita'),
-          ),
+          backgroundColor: AppColors.background,
+          appBar: AppBar(title: const Text('Harita')),
           body: const MapScreen(),
         ),
       ),
@@ -495,55 +549,60 @@ class _ExploreHubState extends State<_ExploreHub> {
       (Icons.hotel_outlined, 'Oteller'),
     ];
     return ColoredBox(
-      color: _Neon.bg,
+      color: AppColors.background,
       child: SafeArea(
         bottom: false,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(18, 12, 10, 4),
+              padding: const EdgeInsets.fromLTRB(14, 10, 8, 2),
               child: Row(
                 children: [
                   const Expanded(
                     child: Text(
                       'Mekanlar',
-                      style:
-                          TextStyle(fontSize: 25, fontWeight: FontWeight.w900),
+                      style: TextStyle(
+                        fontSize: 23,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: -.4,
+                      ),
                     ),
                   ),
                   if (_category == 'Gezilecek Yerler')
                     IconButton(
                       tooltip: 'Haritayı aç',
                       onPressed: () => _openMap(context),
-                      icon: const Icon(Icons.map_outlined),
+                      style: IconButton.styleFrom(
+                        minimumSize: const Size(40, 40),
+                        backgroundColor: AppColors.surface,
+                        side: const BorderSide(color: AppColors.border),
+                      ),
+                      icon: const Icon(Icons.map_outlined, size: 19),
                     ),
                 ],
               ),
             ),
             const Padding(
-              padding: EdgeInsets.fromLTRB(18, 0, 18, 6),
+              padding: EdgeInsets.fromLTRB(14, 0, 14, 8),
               child: Text(
                 'Yeme-içme, kahve, konaklama ve gezilecek yerler.',
-                style: TextStyle(color: Colors.white54, fontSize: 12.5),
+                style: TextStyle(color: Color(0x75FFFFFF), fontSize: 11.5),
               ),
             ),
-            SizedBox(
-              height: 58,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.fromLTRB(14, 11, 14, 7),
-                itemCount: categories.length,
-                separatorBuilder: (_, __) => const SizedBox(width: 7),
-                itemBuilder: (context, index) {
-                  final category = categories[index];
+            Padding(
+              padding: const EdgeInsets.fromLTRB(14, 0, 14, 8),
+              child: Wrap(
+                spacing: 7,
+                runSpacing: 7,
+                children: categories.map((category) {
                   return _ActivityChip(
                     icon: category.$1,
                     label: category.$2,
                     selected: _category == category.$2,
                     onTap: () => setState(() => _category = category.$2),
                   );
-                },
+                }).toList(),
               ),
             ),
             Expanded(
@@ -565,6 +624,48 @@ class _ExploreHubState extends State<_ExploreHub> {
   }
 }
 
+class _CompactTabs extends StatelessWidget {
+  final String firstLabel;
+  final String secondLabel;
+  final int selected;
+  final ValueChanged<int> onChanged;
+
+  const _CompactTabs({
+    required this.firstLabel,
+    required this.secondLabel,
+    required this.selected,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.all(3),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(13),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: _FeedTab(
+                label: firstLabel,
+                selected: selected == 0,
+                onTap: () => onChanged(0),
+              ),
+            ),
+            Expanded(
+              child: _FeedTab(
+                label: secondLabel,
+                selected: selected == 1,
+                onTap: () => onChanged(1),
+              ),
+            ),
+          ],
+        ),
+      );
+}
+
 class _HeaderAction extends StatelessWidget {
   final String tooltip;
   final IconData icon;
@@ -579,17 +680,15 @@ class _HeaderAction extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.only(left: 4),
-        child: IconButton(
-          tooltip: tooltip,
-          onPressed: onTap,
-          icon: Badge(
-            isLabelVisible: count > 0,
-            backgroundColor: _Neon.violet,
-            label: Text(count > 99 ? '99+' : '$count'),
-            child: Icon(icon, color: Colors.white70),
-          ),
+  Widget build(BuildContext context) => IconButton(
+        tooltip: tooltip,
+        onPressed: onTap,
+        style: IconButton.styleFrom(minimumSize: const Size(39, 39)),
+        icon: Badge(
+          isLabelVisible: count > 0,
+          backgroundColor: AppColors.violet,
+          label: Text(count > 99 ? '99+' : '$count'),
+          child: Icon(icon, color: Colors.white70, size: 21),
         ),
       );
 }
@@ -609,22 +708,22 @@ class _FeedTab extends StatelessWidget {
   Widget build(BuildContext context) => Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(10),
           onTap: onTap,
           child: AnimatedContainer(
-            duration: const Duration(milliseconds: 180),
-            padding: const EdgeInsets.symmetric(vertical: 9),
+            duration: const Duration(milliseconds: 160),
+            padding: const EdgeInsets.symmetric(vertical: 8),
             decoration: BoxDecoration(
-              color: selected ? const Color(0xFF1C2027) : Colors.transparent,
-              borderRadius: BorderRadius.circular(12),
+              color: selected ? AppColors.surfaceStrong : Colors.transparent,
+              borderRadius: BorderRadius.circular(10),
             ),
             child: Text(
               label,
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: selected ? Colors.white : Colors.white54,
-                fontSize: 12,
-                fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+                color: selected ? Colors.white : const Color(0x75FFFFFF),
+                fontSize: 11.8,
+                fontWeight: selected ? FontWeight.w900 : FontWeight.w700,
               ),
             ),
           ),
@@ -647,34 +746,35 @@ class _ActivityChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Material(
-        color: selected ? const Color(0xFF20242A) : _Neon.panel,
-        borderRadius: BorderRadius.circular(20),
+        color: selected ? AppColors.surfaceStrong : AppColors.surface,
+        borderRadius: BorderRadius.circular(12),
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(12),
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(12),
               border: Border.all(
                 color: selected
-                    ? _Neon.cyan.withValues(alpha: .55)
-                    : _Neon.border,
+                    ? AppColors.cyan.withValues(alpha: .50)
+                    : AppColors.border,
               ),
             ),
             child: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
                   icon,
-                  size: 17,
-                  color: selected ? _Neon.cyan : Colors.white60,
+                  size: 16,
+                  color: selected ? AppColors.cyan : Colors.white54,
                 ),
                 const SizedBox(width: 6),
                 Text(
                   label,
                   style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
+                    fontSize: 10.8,
+                    fontWeight: FontWeight.w800,
                     color: selected ? Colors.white : Colors.white70,
                   ),
                 ),
@@ -701,8 +801,8 @@ class _GradientIcon extends StatelessWidget {
         blendMode: BlendMode.srcIn,
         shaderCallback: (bounds) => LinearGradient(
           colors: active
-              ? const [_Neon.cyan, _Neon.violet]
-              : const [Colors.white54, Colors.white54],
+              ? const [AppColors.cyan, AppColors.violet]
+              : const [Color(0x75FFFFFF), Color(0x75FFFFFF)],
         ).createShader(bounds),
         child: Icon(icon, size: size),
       );

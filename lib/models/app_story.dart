@@ -5,8 +5,14 @@ class AppStory {
   final String userId;
   final String userName;
   final String userPhotoUrl;
+  final String mediaType;
   final String imageUrl;
   final String storagePath;
+  final String videoUrl;
+  final String videoStoragePath;
+  final String thumbnailUrl;
+  final String thumbnailStoragePath;
+  final int durationMs;
   final DateTime createdAt;
   final DateTime expiresAt;
 
@@ -15,29 +21,52 @@ class AppStory {
     required this.userId,
     required this.userName,
     required this.userPhotoUrl,
+    required this.mediaType,
     required this.imageUrl,
     required this.storagePath,
+    required this.videoUrl,
+    required this.videoStoragePath,
+    required this.thumbnailUrl,
+    required this.thumbnailStoragePath,
+    required this.durationMs,
     required this.createdAt,
     required this.expiresAt,
   });
 
   bool get isActive => expiresAt.isAfter(DateTime.now());
+  bool get isVideo => mediaType == 'video' && videoUrl.isNotEmpty;
+  String get previewUrl => thumbnailUrl.isNotEmpty ? thumbnailUrl : imageUrl;
+  String get previewStoragePath =>
+      thumbnailStoragePath.isNotEmpty ? thumbnailStoragePath : storagePath;
 
   factory AppStory.fromDocument(
     DocumentSnapshot<Map<String, dynamic>> document,
   ) {
     final data = document.data() ?? const <String, dynamic>{};
+    final videoUrl = (data['videoUrl'] ?? '').toString();
+    final mediaType = (data['mediaType'] ?? '').toString();
     return AppStory(
       id: document.id,
       userId: (data['userId'] ?? '').toString(),
       userName: (data['userName'] ?? 'TBT kullanıcısı').toString(),
       userPhotoUrl: (data['userPhotoUrl'] ?? '').toString(),
+      mediaType: mediaType == 'video' || videoUrl.isNotEmpty ? 'video' : 'image',
       imageUrl: (data['imageUrl'] ?? '').toString(),
       storagePath: (data['storagePath'] ?? '').toString(),
+      videoUrl: videoUrl,
+      videoStoragePath: (data['videoStoragePath'] ?? '').toString(),
+      thumbnailUrl: (data['thumbnailUrl'] ?? '').toString(),
+      thumbnailStoragePath: (data['thumbnailStoragePath'] ?? '').toString(),
+      durationMs: _int(data['durationMs']),
       createdAt: _date(data['createdAt']) ?? DateTime.now(),
       expiresAt: _date(data['expiresAt']) ??
           DateTime.now().add(const Duration(hours: 24)),
     );
+  }
+
+  static int _int(dynamic value) {
+    if (value is num) return value.round();
+    return int.tryParse(value?.toString() ?? '') ?? 0;
   }
 
   static DateTime? _date(dynamic value) {
