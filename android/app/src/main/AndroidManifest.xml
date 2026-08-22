@@ -11,7 +11,10 @@
     <application
         android:label="En İyi Çekim Noktası"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:allowBackup="false"
+        android:fullBackupContent="false"
+        android:usesCleartextTraffic="false">
 
         <meta-data
             android:name="com.google.android.geo.API_KEY"
@@ -39,11 +42,22 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
+            <!-- Backward-compatible in-app links. Input is also validated in Dart. -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="tbt" />
+                <data android:scheme="tbt" android:host="event" />
+                <data android:scheme="tbt" android:host="community" />
+            </intent-filter>
+
+            <!-- Verified HTTPS links are preferred for production sharing. -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="en-iyi-cekim-noktasi.web.app" />
+                <data android:scheme="https" android:host="en-iyi-cekim-noktasi.firebaseapp.com" />
             </intent-filter>
         </activity>
 
