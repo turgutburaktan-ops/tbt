@@ -56,25 +56,42 @@ class VenueRatingService {
     String venueId,
   ) => _firestore.collection('venue_ratings').doc(venueKey(category, venueId));
 
-  Future<VenueRatingSummary> summary(String category, String venueId) async {
-    final ref = _venueRef(category, venueId);
-    final doc = await ref.get();
-    final data = doc.data() ?? const <String, dynamic>{};
-    final count = ((data['ratingCount'] as num?)?.toInt() ?? 0).clamp(0, 1 << 31);
-    final average = ((data['ratingAverage'] as num?)?.toDouble() ?? 0)
-        .clamp(0, 5)
-        .toDouble();
+  CollectionReference<Map<String, dynamic>> _ratings(
+    String category,
+    String venueId,
+  ) => _venueRef(category, venueId).collection('ratings');
+
+  VenueRatingSummary _summaryFromDocs(
+    Iterable<QueryDocumentSnapshot<Map<String, dynamic>>> docs,
+  ) {
+    var total = 0;
+    var count = 0;
     int? mine;
     final uid = _auth.currentUser?.uid;
-    if (uid != null) {
-      final mineDoc = await ref.collection('ratings').doc(uid).get();
-      mine = (mineDoc.data()?['rating'] as num?)?.toInt();
+    for (final doc in docs) {
+      final rating = (doc.data()['rating'] as num?)?.toInt();
+      if (rating == null || rating < 1 || rating > 5) continue;
+      total += rating;
+      count += 1;
+      if (uid != null && doc.id == uid) mine = rating;
     }
-    return VenueRatingSummary(average: average, count: count, mine: mine);
+    return VenueRatingSummary(
+      average: count == 0 ? 0 : total / count,
+      count: count,
+      mine: mine,
+    );
+  }
+
+  Future<VenueRatingSummary> summary(String category, String venueId) async {
+    final snapshot = await _ratings(category, venueId).limit(1000).get();
+    return _summaryFromDocs(snapshot.docs);
   }
 
   Stream<VenueRatingSummary> watchSummary(String category, String venueId) =>
-      _venueRef(category, venueId).snapshots().asyncMap((_) => summary(category, venueId));
+      _ratings(category, venueId)
+          .limit(1000)
+          .snapshots()
+          .map((snapshot) => _summaryFromDocs(snapshot.docs));
 
   Stream<List<VenueReview>> watchReviews(
     String category,
@@ -82,8 +99,7 @@ class VenueRatingService {
     int limit = 80,
   }) {
     final uid = _auth.currentUser?.uid;
-    return _venueRef(category, venueId)
-        .collection('ratings')
+    return _ratings(category, venueId)
         .orderBy('updatedAt', descending: true)
         .limit(limit)
         .snapshots()
@@ -93,9 +109,11 @@ class VenueRatingService {
         final data = doc.data();
         final comment = (data['comment'] ?? '').toString().trim();
         if (comment.isEmpty) continue;
+        final helpfulCollection = doc.reference.collection('helpful');
         final helpfulByMe = uid == null
             ? false
-            : (await doc.reference.collection('helpful').doc(uid).get()).exists;
+            : (await helpfulCollection.doc(uid).get()).exists;
+        final helpfulAggregate = await helpfulCollection.count().get();
         result.add(VenueReview(
           userId: doc.id,
           userName: (data['userName'] ?? '').toString().trim().isEmpty
@@ -103,7 +121,7 @@ class VenueRatingService {
               : (data['userName'] ?? '').toString(),
           rating: ((data['rating'] as num?)?.toInt() ?? 1).clamp(1, 5),
           comment: comment,
-          helpfulCount: ((data['helpfulCount'] as num?)?.toInt() ?? 0).clamp(0, 1 << 31),
+          helpfulCount: helpfulAggregate.count ?? 0,
           mine: uid != null && doc.id == uid,
           helpfulByMe: helpfulByMe,
           updatedAt: (data['updatedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
@@ -138,7 +156,9 @@ class VenueRatingService {
       throw Exception('Puan 1 ile 5 arasında olmalı.');
     }
     final user = _auth.currentUser;
-    if (user == null) throw Exception('Değerlendirme yapmak için giriş yapmalısın.');
+    if (user == null) {
+      throw Exception('Değerlendirme yapmak için giriş yapmalısın.');
+    }
 
     final cleanComment = comment?.trim();
     if (cleanComment != null) {
@@ -148,54 +168,27 @@ class VenueRatingService {
       ContentModerationService.instance.enforce(cleanComment);
     }
 
-    final venueRef = _venueRef(category, venueId);
-    final ratingRef = venueRef.collection('ratings').doc(user.uid);
-
-    await _firestore.runTransaction((tx) async {
-      final venueSnap = await tx.get(venueRef);
-      final ratingSnap = await tx.get(ratingRef);
-      final venueData = venueSnap.data() ?? const <String, dynamic>{};
-      final ratingData = ratingSnap.data() ?? const <String, dynamic>{};
-      var count = ((venueData['ratingCount'] as num?)?.toInt() ?? 0).clamp(0, 1 << 31);
-      var total = ((venueData['ratingTotal'] as num?)?.toInt() ?? 0).clamp(0, 1 << 31);
-      final previous = (ratingData['rating'] as num?)?.toInt();
-
-      if (previous == null) {
-        count += 1;
-        total += rating;
-      } else {
-        total = (total - previous + rating).clamp(0, 1 << 31);
-      }
-      final average = count == 0 ? 0.0 : total / count;
-
-      tx.set(venueRef, {
-        'venueId': venueId,
-        'venueName': venueName,
-        'category': category,
-        'ratingCount': count,
-        'ratingTotal': total,
-        'ratingAverage': average,
-        'updatedAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
-
-      final payload = <String, dynamic>{
-        'userId': user.uid,
-        'userName': user.displayName ?? '',
-        'rating': rating,
-        'updatedAt': FieldValue.serverTimestamp(),
-      };
-      if (cleanComment != null) {
-        payload['comment'] = cleanComment;
-        payload['moderationStatus'] = 'published';
-      } else if (!preserveExistingComment) {
-        payload['comment'] = '';
-      }
-      if (!ratingSnap.exists) {
-        payload['createdAt'] = FieldValue.serverTimestamp();
-        payload['helpfulCount'] = 0;
-      }
-      tx.set(ratingRef, payload, SetOptions(merge: true));
-    });
+    final ratingRef = _ratings(category, venueId).doc(user.uid);
+    final existing = await ratingRef.get();
+    final payload = <String, dynamic>{
+      'userId': user.uid,
+      'userName': user.displayName ?? '',
+      'venueId': venueId,
+      'venueName': venueName,
+      'category': category,
+      'rating': rating,
+      'updatedAt': FieldValue.serverTimestamp(),
+    };
+    if (!existing.exists) {
+      payload['createdAt'] = FieldValue.serverTimestamp();
+    }
+    if (cleanComment != null) {
+      payload['comment'] = cleanComment;
+      payload['moderationStatus'] = 'published';
+    } else if (!preserveExistingComment) {
+      payload['comment'] = '';
+    }
+    await ratingRef.set(payload, SetOptions(merge: true));
   }
 
   Future<void> deleteMyReview({
@@ -204,26 +197,7 @@ class VenueRatingService {
   }) async {
     final user = _auth.currentUser;
     if (user == null) throw Exception('Giriş yapmalısın.');
-    final venueRef = _venueRef(category, venueId);
-    final ratingRef = venueRef.collection('ratings').doc(user.uid);
-    await _firestore.runTransaction((tx) async {
-      final venueSnap = await tx.get(venueRef);
-      final ratingSnap = await tx.get(ratingRef);
-      if (!ratingSnap.exists) return;
-      final venueData = venueSnap.data() ?? const <String, dynamic>{};
-      final oldRating = (ratingSnap.data()?['rating'] as num?)?.toInt() ?? 0;
-      var count = ((venueData['ratingCount'] as num?)?.toInt() ?? 0) - 1;
-      var total = ((venueData['ratingTotal'] as num?)?.toInt() ?? 0) - oldRating;
-      count = count.clamp(0, 1 << 31);
-      total = total.clamp(0, 1 << 31);
-      tx.set(venueRef, {
-        'ratingCount': count,
-        'ratingTotal': total,
-        'ratingAverage': count == 0 ? 0.0 : total / count,
-        'updatedAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
-      tx.delete(ratingRef);
-    });
+    await _ratings(category, venueId).doc(user.uid).delete();
   }
 
   Future<void> toggleHelpful({
@@ -233,26 +207,22 @@ class VenueRatingService {
   }) async {
     final user = _auth.currentUser;
     if (user == null) throw Exception('Faydalı oyu için giriş yapmalısın.');
-    if (reviewUserId == user.uid) throw Exception('Kendi yorumuna oy veremezsin.');
-    final reviewRef = _venueRef(category, venueId).collection('ratings').doc(reviewUserId);
+    if (reviewUserId == user.uid) {
+      throw Exception('Kendi yorumuna oy veremezsin.');
+    }
+    final reviewRef = _ratings(category, venueId).doc(reviewUserId);
+    final review = await reviewRef.get();
+    if (!review.exists) return;
     final helpfulRef = reviewRef.collection('helpful').doc(user.uid);
-    await _firestore.runTransaction((tx) async {
-      final reviewSnap = await tx.get(reviewRef);
-      final helpfulSnap = await tx.get(helpfulRef);
-      if (!reviewSnap.exists) return;
-      var count = ((reviewSnap.data()?['helpfulCount'] as num?)?.toInt() ?? 0).clamp(0, 1 << 31);
-      if (helpfulSnap.exists) {
-        count = (count - 1).clamp(0, 1 << 31);
-        tx.delete(helpfulRef);
-      } else {
-        count += 1;
-        tx.set(helpfulRef, {
-          'userId': user.uid,
-          'createdAt': FieldValue.serverTimestamp(),
-        });
-      }
-      tx.update(reviewRef, {'helpfulCount': count});
-    });
+    final existing = await helpfulRef.get();
+    if (existing.exists) {
+      await helpfulRef.delete();
+    } else {
+      await helpfulRef.set({
+        'userId': user.uid,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+    }
   }
 
   Future<void> reportReview({
@@ -263,22 +233,26 @@ class VenueRatingService {
   }) async {
     final user = _auth.currentUser;
     if (user == null) throw Exception('Şikâyet etmek için giriş yapmalısın.');
-    if (reviewUserId == user.uid) throw Exception('Kendi yorumunu şikâyet edemezsin.');
-    final reviewRef = _venueRef(category, venueId).collection('ratings').doc(reviewUserId);
-    await reviewRef.collection('reports').doc(user.uid).set({
-      'reporterId': user.uid,
-      'reason': reason,
-      'createdAt': FieldValue.serverTimestamp(),
-    });
-    await _firestore.collection('review_reports').add({
+    if (reviewUserId == user.uid) {
+      throw Exception('Kendi yorumunu şikâyet edemezsin.');
+    }
+    final reviewRef = _ratings(category, venueId).doc(reviewUserId);
+    final review = await reviewRef.get();
+    if (!review.exists) throw Exception('Yorum artık mevcut değil.');
+    final cleanReason = reason.trim();
+    if (cleanReason.length < 3 || cleanReason.length > 120) {
+      throw Exception('Geçerli bir şikâyet nedeni seç.');
+    }
+    final reportId = '${venueKey(category, venueId)}_${reviewUserId}_${user.uid}';
+    await _firestore.collection('review_reports').doc(reportId).set({
       'venueKey': venueKey(category, venueId),
       'category': category,
       'venueId': venueId,
       'reviewUserId': reviewUserId,
       'reporterId': user.uid,
-      'reason': reason,
+      'reason': cleanReason,
       'status': 'pending',
       'createdAt': FieldValue.serverTimestamp(),
-    });
+    }, SetOptions(merge: false));
   }
 }
