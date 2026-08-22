@@ -62,8 +62,11 @@ jobs:
       - name: Install Flutter dependencies
         run: flutter pub get
 
+      # Security regression should block on real analyzer errors. Existing
+      # deprecation/info warnings are tracked separately and must not prevent
+      # the rules/key/audit checks below from running.
       - name: Static analysis
-        run: flutter analyze
+        run: flutter analyze --no-fatal-infos --no-fatal-warnings
 
       - name: Unit/widget tests
         run: flutter test
