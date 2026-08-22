@@ -1,6 +1,9 @@
 import 'dart:async';
+import 'dart:ui';
 
+import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'firebase_options.dart';
@@ -18,29 +21,73 @@ import 'theme/app_theme.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  Object? bootstrapError;
-  try {
-    await Firebase.initializeApp(
-      options: AppFirebaseOptions.currentPlatform,
-    ).timeout(const Duration(seconds: 15));
-    await FavoritesService.initialize();
-  } catch (error, stackTrace) {
-    bootstrapError = error;
-    debugPrint('Application bootstrap failed: $error');
-    debugPrintStack(stackTrace: stackTrace);
-  }
+  FlutterError.onError = (details) {
+    FlutterError.presentError(details);
+    if (kDebugMode) {
+      debugPrint('Flutter error: ${details.exceptionAsString()}');
+    }
+  };
 
-  runApp(
-    bootstrapError == null
-        ? const BestPhotoSpotApp()
-        : BootstrapFailureApp(error: bootstrapError.toString()),
-  );
+  PlatformDispatcher.instance.onError = (error, stack) {
+    if (kDebugMode) {
+      debugPrint('Unhandled platform error: $error');
+      debugPrintStack(stackTrace: stack);
+    }
+    return true;
+  };
+
+  await runZonedGuarded(() async {
+    Object? bootstrapError;
+    try {
+      await Firebase.initializeApp(
+        options: AppFirebaseOptions.currentPlatform,
+      ).timeout(const Duration(seconds: 15));
+
+      try {
+        await FirebaseAppCheck.instance.activate(
+          androidProvider:
+              kDebugMode ? AndroidProvider.debug : AndroidProvider.playIntegrity,
+          appleProvider: kDebugMode
+              ? AppleProvider.debug
+              : AppleProvider.appAttestWithDeviceCheckFallback,
+        );
+      } catch (error, stackTrace) {
+        // App Check is defense-in-depth. A temporary provider/config problem
+        // must not make the entire app unusable during rollout.
+        if (kDebugMode) {
+          debugPrint('App Check activation failed: $error');
+          debugPrintStack(stackTrace: stackTrace);
+        }
+      }
+
+      await FavoritesService.initialize();
+    } catch (error, stackTrace) {
+      bootstrapError = error;
+      if (kDebugMode) {
+        debugPrint('Application bootstrap failed: $error');
+        debugPrintStack(stackTrace: stackTrace);
+      }
+    }
+
+    runApp(
+      bootstrapError == null
+          ? const BestPhotoSpotApp()
+          : BootstrapFailureApp(
+              debugError: kDebugMode ? bootstrapError.toString() : null,
+            ),
+    );
+  }, (error, stack) {
+    if (kDebugMode) {
+      debugPrint('Uncaught zone error: $error');
+      debugPrintStack(stackTrace: stack);
+    }
+  });
 }
 
 class BootstrapFailureApp extends StatelessWidget {
-  final String error;
+  final String? debugError;
 
-  const BootstrapFailureApp({super.key, required this.error});
+  const BootstrapFailureApp({super.key, this.debugError});
 
   @override
   Widget build(BuildContext context) {
@@ -76,17 +123,19 @@ class BootstrapFailureApp extends StatelessWidget {
                     textAlign: TextAlign.center,
                     style: TextStyle(color: Colors.white60, height: 1.4),
                   ),
-                  const SizedBox(height: 16),
-                  Text(
-                    error,
-                    maxLines: 5,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Colors.white38,
-                      fontSize: 11,
+                  if (debugError != null) ...[
+                    const SizedBox(height: 16),
+                    Text(
+                      debugError!,
+                      maxLines: 5,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: Colors.white38,
+                        fontSize: 11,
+                      ),
                     ),
-                  ),
+                  ],
                 ],
               ),
             ),
