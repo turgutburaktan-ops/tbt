@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
@@ -7,6 +8,7 @@ class AuthService {
   static final AuthService instance = AuthService._();
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn();
 
   User? get currentUser => _auth.currentUser;
@@ -54,7 +56,9 @@ class AuthService {
         accessToken: authentication.accessToken,
         idToken: authentication.idToken,
       );
-      return await _auth.signInWithCredential(credential);
+      final result = await _auth.signInWithCredential(credential);
+      await _ensureSocialProfile(result.user, provider: 'google');
+      return result;
     } on FirebaseAuthException catch (e) {
       throw Exception(_messageFromCode(e.code));
     } catch (_) {
@@ -67,12 +71,36 @@ class AuthService {
       final provider = AppleAuthProvider()
         ..addScope('email')
         ..addScope('name');
-      return await _auth.signInWithProvider(provider);
+      final result = await _auth.signInWithProvider(provider);
+      await _ensureSocialProfile(result.user, provider: 'apple');
+      return result;
     } on FirebaseAuthException catch (e) {
       throw Exception(_messageFromCode(e.code));
     } catch (_) {
       throw Exception('Apple ile giriş tamamlanamadı.');
     }
+  }
+
+  Future<void> _ensureSocialProfile(User? user, {required String provider}) async {
+    if (user == null) return;
+    final ref = _firestore.collection('users').doc(user.uid);
+    final existing = await ref.get();
+    final data = existing.data();
+
+    final fallbackName = (user.displayName ?? '').trim();
+    await ref.set({
+      'uid': user.uid,
+      'email': user.email ?? data?['email'] ?? '',
+      'phoneNumber': user.phoneNumber ?? data?['phoneNumber'] ?? '',
+      'displayName': fallbackName.isNotEmpty
+          ? fallbackName
+          : (data?['displayName'] ?? '').toString(),
+      'authProvider': provider,
+      'onboardingRequired': data == null ? true : (data['onboardingRequired'] ?? false),
+      'onboardingCompleted': data == null ? false : (data['onboardingCompleted'] ?? false),
+      if (data == null) 'createdAt': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
   }
 
   Future<void> verifyPhoneNumber({
@@ -86,6 +114,7 @@ class AuthService {
       verificationCompleted: (credential) async {
         try {
           final result = await _auth.signInWithCredential(credential);
+          await _ensureSocialProfile(result.user, provider: 'phone');
           autoVerified?.call(result);
         } on FirebaseAuthException catch (e) {
           failed(_messageFromCode(e.code));
@@ -107,7 +136,9 @@ class AuthService {
         verificationId: verificationId,
         smsCode: smsCode.trim(),
       );
-      return await _auth.signInWithCredential(credential);
+      final result = await _auth.signInWithCredential(credential);
+      await _ensureSocialProfile(result.user, provider: 'phone');
+      return result;
     } on FirebaseAuthException catch (e) {
       throw Exception(_messageFromCode(e.code));
     }
