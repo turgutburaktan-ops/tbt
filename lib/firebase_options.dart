@@ -6,7 +6,7 @@ class AppFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyBDoKy5YMP5-6UJqotfuUA7a74H-x-5miQ',
-    appId: '1:330568532415:android:425699d143ec3eb041a10a',
+    appId: '1:330568532415:android:bf2ffa0b4d9210ed41a10a',
     messagingSenderId: '330568532415',
     projectId: 'en-iyi-cekim-noktasi',
     storageBucket: 'en-iyi-cekim-noktasi.firebasestorage.app',
@@ -23,7 +23,7 @@ class AppFirebaseOptions {
     storageBucket: 'en-iyi-cekim-noktasi.firebasestorage.app',
     iosBundleId: String.fromEnvironment(
       'IOS_BUNDLE_ID',
-      defaultValue: 'com.tbt.bestPhotoSpot',
+      defaultValue: 'com.tbt.social',
     ),
   );
 
