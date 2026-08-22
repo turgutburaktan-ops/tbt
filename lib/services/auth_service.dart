@@ -62,6 +62,19 @@ class AuthService {
     }
   }
 
+  Future<UserCredential> signInWithApple() async {
+    try {
+      final provider = AppleAuthProvider()
+        ..addScope('email')
+        ..addScope('name');
+      return await _auth.signInWithProvider(provider);
+    } on FirebaseAuthException catch (e) {
+      throw Exception(_messageFromCode(e.code));
+    } catch (_) {
+      throw Exception('Apple ile giriş tamamlanamadı.');
+    }
+  }
+
   Future<void> verifyPhoneNumber({
     required String phoneNumber,
     required void Function(String verificationId) codeSent,
@@ -156,6 +169,11 @@ class AuthService {
         return 'Bu işlem için yeniden giriş yapmanız gerekiyor.';
       case 'account-exists-with-different-credential':
         return 'Bu e-posta farklı bir giriş yöntemiyle kayıtlı.';
+      case 'operation-not-allowed':
+        return 'Bu giriş yöntemi Firebase tarafında henüz etkin değil.';
+      case 'web-context-cancelled':
+      case 'canceled-popup-request':
+        return 'Giriş işlemi iptal edildi.';
       default:
         return 'Giriş işlemi tamamlanamadı: $code';
     }
