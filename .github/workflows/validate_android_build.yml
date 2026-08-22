@@ -44,7 +44,7 @@ jobs:
           set -euo pipefail
           cp android/app/src/main/AndroidManifest.xml /tmp/tbt-AndroidManifest.xml
           rm -rf android
-          flutter create --platforms=android --project-name best_photo_spot .
+          flutter create --platforms=android --org com.tbt --project-name best_photo_spot .
           cp /tmp/tbt-AndroidManifest.xml android/app/src/main/AndroidManifest.xml
           python3 - <<'PY'
           from pathlib import Path
@@ -60,8 +60,26 @@ jobs:
               'minSdk = flutter.minSdkVersion',
               'minSdk = 26',
           )
+          gradle_text = gradle_text.replace(
+              'com.tbt.best_photo_spot',
+              'com.tbt.social',
+          )
           gradle.write_text(gradle_text)
+
+          for activity in Path('android/app/src/main/kotlin').rglob('MainActivity.kt'):
+              activity.write_text(activity.read_text().replace(
+                  'package com.tbt.best_photo_spot',
+                  'package com.tbt.social',
+              ))
           PY
+
+      - name: Verify package identity
+        shell: bash
+        run: |
+          grep -q 'applicationId = "com.tbt.social"' android/app/build.gradle.kts
+          grep -q 'namespace = "com.tbt.social"' android/app/build.gradle.kts
+          main_activity=$(find android/app/src/main/kotlin -name MainActivity.kt -print -quit)
+          grep -q '^package com.tbt.social$' "$main_activity"
 
       - name: Build debug APK
         run: flutter build apk --debug
