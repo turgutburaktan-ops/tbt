@@ -21,6 +21,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _loading = false;
   bool _hidePassword = true;
 
+  bool get _hasLength => _passwordController.text.length >= 10;
+  bool get _hasUpper => RegExp(r'[A-ZÇĞİÖŞÜ]').hasMatch(_passwordController.text);
+  bool get _hasLower => RegExp(r'[a-zçğıöşü]').hasMatch(_passwordController.text);
+  bool get _hasDigit => RegExp(r'\d').hasMatch(_passwordController.text);
+  bool get _hasSymbol => RegExp(r'[^A-Za-z0-9çÇğĞıİöÖşŞüÜ]').hasMatch(_passwordController.text);
+  bool get _passwordStrong => _hasLength && _hasUpper && _hasLower && _hasDigit && _hasSymbol;
+
   @override
   void dispose() {
     _nameController.dispose();
@@ -36,21 +43,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final password = _passwordController.text;
     final passwordAgain = _passwordAgainController.text;
 
-    if (username.isEmpty ||
-        email.isEmpty ||
-        password.isEmpty ||
-        passwordAgain.isEmpty) {
+    if (username.isEmpty || email.isEmpty || password.isEmpty || passwordAgain.isEmpty) {
       _showMessage('Tüm alanları doldur.');
       return;
     }
-
     final usernameError = UsernameService.instance.validate(username);
     if (usernameError != null) {
       _showMessage(usernameError);
       return;
     }
-    if (password.length < 6) {
-      _showMessage('Şifre en az 6 karakter olmalı.');
+    if (!_passwordStrong) {
+      _showMessage('Şifre güvenlik koşullarının tamamını karşılamalı.');
       return;
     }
     if (password != passwordAgain) {
@@ -89,30 +92,30 @@ class _RegisterScreenState extends State<RegisterScreen> {
         final user = FirebaseAuth.instance.currentUser;
         if (user != null) {
           try {
-            await FirebaseFirestore.instance
-                .collection('users')
-                .doc(user.uid)
-                .delete();
+            await FirebaseFirestore.instance.collection('users').doc(user.uid).delete();
           } catch (_) {}
           try {
             await user.delete();
           } catch (_) {}
         }
       }
-      if (!mounted) return;
-      _showMessage(e.toString().replaceFirst('Exception: ', ''));
+      if (mounted) _showMessage(e.toString().replaceFirst('Exception: ', ''));
     } finally {
       if (mounted) setState(() => _loading = false);
     }
   }
 
   void _showMessage(String text) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(text)));
   }
 
   @override
   Widget build(BuildContext context) {
-    const yellow = Color(0xFFB7BCC2);
+    const accent = Color(0xFFB7BCC2);
+    final passwordMatch = _passwordAgainController.text.isEmpty ||
+        _passwordController.text == _passwordAgainController.text;
 
     return Scaffold(
       backgroundColor: const Color(0xFF090A0C),
@@ -123,86 +126,98 @@ class _RegisterScreenState extends State<RegisterScreen> {
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
+          padding: EdgeInsets.fromLTRB(24, 24, 24, MediaQuery.viewInsetsOf(context).bottom + 24),
           child: Column(
             children: [
-              const SizedBox(height: 12),
-              const Icon(Icons.person_add_alt_1_rounded,
-                  size: 66, color: yellow),
-              const SizedBox(height: 18),
-              const Text('Topluluğa Katıl',
-                  style: TextStyle(fontSize: 27, fontWeight: FontWeight.w800)),
-              const SizedBox(height: 8),
-              const Text(
-                'Çekim noktalarını keşfet ve fotoğraflarını paylaş.',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.white54),
-              ),
-              const SizedBox(height: 34),
+              const Icon(Icons.person_add_alt_1_rounded, size: 60, color: accent),
+              const SizedBox(height: 16),
+              const Text('Topluluğa Katıl', style: TextStyle(fontSize: 27, fontWeight: FontWeight.w900)),
+              const SizedBox(height: 7),
+              const Text('Güvenli hesabını oluştur ve keşfetmeye başla.', textAlign: TextAlign.center, style: TextStyle(color: Colors.white54)),
+              const SizedBox(height: 30),
               TextField(
                 controller: _nameController,
                 autocorrect: false,
                 enableSuggestions: false,
                 textCapitalization: TextCapitalization.none,
                 style: const TextStyle(color: Colors.white),
-                decoration: _decoration(
-                  label: 'Kullanıcı adı (@kullanici)',
-                  icon: Icons.alternate_email_rounded,
-                ),
+                decoration: _decoration(label: 'Kullanıcı adı (@kullanici)', icon: Icons.alternate_email_rounded),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 14),
               TextField(
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
+                autofillHints: const [AutofillHints.newUsername, AutofillHints.email],
                 style: const TextStyle(color: Colors.white),
-                decoration:
-                    _decoration(label: 'E-posta', icon: Icons.email_outlined),
+                decoration: _decoration(label: 'E-posta', icon: Icons.email_outlined),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 14),
               TextField(
                 controller: _passwordController,
                 obscureText: _hidePassword,
+                autofillHints: const [AutofillHints.newPassword],
+                onChanged: (_) => setState(() {}),
                 style: const TextStyle(color: Colors.white),
                 decoration: _decoration(
                   label: 'Şifre',
                   icon: Icons.lock_outline,
                   suffix: IconButton(
-                    icon: Icon(_hidePassword
-                        ? Icons.visibility_off
-                        : Icons.visibility),
-                    onPressed: () =>
-                        setState(() => _hidePassword = !_hidePassword),
+                    tooltip: _hidePassword ? 'Şifreyi göster' : 'Şifreyi gizle',
+                    icon: Icon(_hidePassword ? Icons.visibility_off : Icons.visibility),
+                    onPressed: () => setState(() => _hidePassword = !_hidePassword),
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 10),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF121416),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: Colors.white10),
+                ),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Row(children: [
+                    const Text('Şifre gücü', style: TextStyle(fontWeight: FontWeight.w800)),
+                    const Spacer(),
+                    Text(_passwordStrong ? 'Güçlü' : 'Geliştir', style: TextStyle(color: _passwordStrong ? const Color(0xFF69E6A6) : Colors.white54, fontSize: 12, fontWeight: FontWeight.w800)),
+                  ]),
+                  const SizedBox(height: 8),
+                  _Requirement(ok: _hasLength, text: 'En az 10 karakter'),
+                  _Requirement(ok: _hasUpper, text: 'En az 1 büyük harf'),
+                  _Requirement(ok: _hasLower, text: 'En az 1 küçük harf'),
+                  _Requirement(ok: _hasDigit, text: 'En az 1 rakam'),
+                  _Requirement(ok: _hasSymbol, text: 'En az 1 özel karakter'),
+                ]),
+              ),
+              const SizedBox(height: 14),
               TextField(
                 controller: _passwordAgainController,
                 obscureText: _hidePassword,
+                autofillHints: const [AutofillHints.newPassword],
+                onChanged: (_) => setState(() {}),
                 style: const TextStyle(color: Colors.white),
                 decoration: _decoration(
-                    label: 'Şifre tekrar', icon: Icons.lock_reset_outlined),
+                  label: 'Şifre tekrar',
+                  icon: passwordMatch ? Icons.lock_reset_outlined : Icons.error_outline_rounded,
+                  errorText: passwordMatch ? null : 'Şifreler eşleşmiyor',
+                ),
               ),
-              const SizedBox(height: 26),
+              const SizedBox(height: 24),
               SizedBox(
                 width: double.infinity,
                 height: 56,
                 child: FilledButton(
-                  style: FilledButton.styleFrom(
-                      backgroundColor: yellow, foregroundColor: Colors.black),
+                  style: FilledButton.styleFrom(backgroundColor: accent, foregroundColor: Colors.black),
                   onPressed: _loading ? null : _register,
                   child: _loading
-                      ? const SizedBox(
-                          width: 23,
-                          height: 23,
-                          child: CircularProgressIndicator(
-                              strokeWidth: 3, color: Colors.black),
-                        )
-                      : const Text('Hesap Oluştur',
-                          style: TextStyle(
-                              fontSize: 17, fontWeight: FontWeight.bold)),
+                      ? const SizedBox(width: 23, height: 23, child: CircularProgressIndicator(strokeWidth: 3, color: Colors.black))
+                      : const Text('Hesap Oluştur', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w900)),
                 ),
               ),
+              const SizedBox(height: 10),
+              const Text('Devam ederek topluluk kurallarını ve hesap güvenliği koşullarını kabul etmiş olursun.', textAlign: TextAlign.center, style: TextStyle(color: Colors.white38, fontSize: 11, height: 1.4)),
             ],
           ),
         ),
@@ -210,29 +225,31 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  InputDecoration _decoration({
-    required String label,
-    required IconData icon,
-    Widget? suffix,
-  }) {
-    return InputDecoration(
-      labelText: label,
-      prefixIcon: Icon(icon, color: const Color(0xFFB7BCC2)),
-      suffixIcon: suffix,
-      filled: true,
-      fillColor: const Color(0xFF121416),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(18),
-        borderSide: BorderSide.none,
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(18),
-        borderSide: const BorderSide(color: Colors.white12),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(18),
-        borderSide: const BorderSide(color: Color(0xFFB7BCC2)),
-      ),
-    );
-  }
+  InputDecoration _decoration({required String label, required IconData icon, Widget? suffix, String? errorText}) => InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon, color: const Color(0xFFB7BCC2)),
+        suffixIcon: suffix,
+        errorText: errorText,
+        filled: true,
+        fillColor: const Color(0xFF121416),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(18), borderSide: BorderSide.none),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(18), borderSide: const BorderSide(color: Colors.white12)),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(18), borderSide: const BorderSide(color: Color(0xFFB7BCC2))),
+      );
+}
+
+class _Requirement extends StatelessWidget {
+  final bool ok;
+  final String text;
+  const _Requirement({required this.ok, required this.text});
+
+  @override
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.symmetric(vertical: 2),
+        child: Row(children: [
+          Icon(ok ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded, size: 16, color: ok ? const Color(0xFF69E6A6) : Colors.white30),
+          const SizedBox(width: 7),
+          Text(text, style: TextStyle(color: ok ? Colors.white70 : Colors.white38, fontSize: 12)),
+        ]),
+      );
 }
