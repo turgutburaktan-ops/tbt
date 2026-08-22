@@ -19,6 +19,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   bool _loading = false;
   bool _googleLoading = false;
+  bool _appleLoading = false;
   bool _hidePassword = true;
 
   @override
@@ -27,6 +28,8 @@ class _LoginScreenState extends State<LoginScreen> {
     _passwordController.dispose();
     super.dispose();
   }
+
+  bool get _busy => _loading || _googleLoading || _appleLoading;
 
   Future<void> _login() async {
     final email = _emailController.text.trim();
@@ -48,7 +51,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _googleLogin() async {
-    if (_googleLoading) return;
+    if (_busy) return;
     setState(() => _googleLoading = true);
     try {
       final credential = await AuthService.instance.signInWithGoogle();
@@ -58,6 +61,20 @@ class _LoginScreenState extends State<LoginScreen> {
       if (mounted) _showMessage(e.toString().replaceFirst('Exception: ', ''));
     } finally {
       if (mounted) setState(() => _googleLoading = false);
+    }
+  }
+
+  Future<void> _appleLogin() async {
+    if (_busy) return;
+    setState(() => _appleLoading = true);
+    try {
+      await AuthService.instance.signInWithApple();
+      if (!mounted) return;
+      if (!widget.embedded) Navigator.pop(context);
+    } catch (e) {
+      if (mounted) _showMessage(e.toString().replaceFirst('Exception: ', ''));
+    } finally {
+      if (mounted) setState(() => _appleLoading = false);
     }
   }
 
@@ -124,7 +141,6 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     const accent = Color(0xFFB7BCC2);
-    final busy = _loading || _googleLoading;
 
     final body = SafeArea(
       child: SingleChildScrollView(
@@ -164,7 +180,7 @@ class _LoginScreenState extends State<LoginScreen> {
               width: double.infinity,
               height: 52,
               child: OutlinedButton.icon(
-                onPressed: busy ? null : _googleLogin,
+                onPressed: _busy ? null : _googleLogin,
                 icon: _googleLoading
                     ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
                     : const Text('G', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900)),
@@ -176,7 +192,19 @@ class _LoginScreenState extends State<LoginScreen> {
               width: double.infinity,
               height: 52,
               child: OutlinedButton.icon(
-                onPressed: busy ? null : _phoneLogin,
+                onPressed: _busy ? null : _appleLogin,
+                icon: _appleLoading
+                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Icon(Icons.apple_rounded, size: 24),
+                label: const Text('Apple ile devam et', style: TextStyle(fontWeight: FontWeight.w900)),
+              ),
+            ),
+            const SizedBox(height: 10),
+            SizedBox(
+              width: double.infinity,
+              height: 52,
+              child: OutlinedButton.icon(
+                onPressed: _busy ? null : _phoneLogin,
                 icon: const Icon(Icons.phone_android_rounded),
                 label: const Text('Telefon ile devam et', style: TextStyle(fontWeight: FontWeight.w900)),
               ),
@@ -204,7 +232,7 @@ class _LoginScreenState extends State<LoginScreen> {
               controller: _passwordController,
               obscureText: _hidePassword,
               autofillHints: const [AutofillHints.password],
-              onSubmitted: (_) => busy ? null : _login(),
+              onSubmitted: (_) => _busy ? null : _login(),
               style: const TextStyle(color: Colors.white),
               decoration: _decoration(
                 label: 'Şifre',
@@ -219,7 +247,7 @@ class _LoginScreenState extends State<LoginScreen> {
             Align(
               alignment: Alignment.centerRight,
               child: TextButton(
-                onPressed: busy ? null : _forgotPassword,
+                onPressed: _busy ? null : _forgotPassword,
                 child: const Text('Şifremi unuttum'),
               ),
             ),
@@ -229,7 +257,7 @@ class _LoginScreenState extends State<LoginScreen> {
               height: 56,
               child: FilledButton(
                 style: FilledButton.styleFrom(backgroundColor: accent, foregroundColor: Colors.black),
-                onPressed: busy ? null : _login,
+                onPressed: _busy ? null : _login,
                 child: _loading
                     ? const SizedBox(width: 23, height: 23, child: CircularProgressIndicator(strokeWidth: 3, color: Colors.black))
                     : const Text('E-posta ile Giriş Yap', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900)),
@@ -241,7 +269,7 @@ class _LoginScreenState extends State<LoginScreen> {
               children: [
                 const Text('Hesabın yok mu?', style: TextStyle(color: Colors.white54)),
                 TextButton(
-                  onPressed: busy
+                  onPressed: _busy
                       ? null
                       : () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RegisterScreen())),
                   child: const Text('Kayıt Ol', style: TextStyle(fontWeight: FontWeight.bold)),
