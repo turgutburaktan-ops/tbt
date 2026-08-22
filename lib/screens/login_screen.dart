@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../services/auth_service.dart';
+import 'phone_login_screen.dart';
 import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -17,6 +18,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
 
   bool _loading = false;
+  bool _googleLoading = false;
   bool _hidePassword = true;
 
   @override
@@ -29,146 +31,220 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _login() async {
     final email = _emailController.text.trim();
     final password = _passwordController.text;
-
     if (email.isEmpty || password.isEmpty) {
       _showMessage('E-posta ve şifre alanlarını doldur.');
       return;
     }
-
     setState(() => _loading = true);
-
     try {
       await AuthService.instance.login(email: email, password: password);
       if (!mounted) return;
-
-      // Profil sekmesine gömülü kullanıldığında auth stream ekranı doğrudan
-      // profil içeriğine çevirir. Ayrı route olarak açıldığında eski davranış
-      // korunur ve giriş ekranı kapanır.
-      if (!widget.embedded) {
-        Navigator.pop(context);
-      }
+      if (!widget.embedded) Navigator.pop(context);
     } catch (e) {
-      if (!mounted) return;
-      _showMessage(e.toString().replaceFirst('Exception: ', ''));
+      if (mounted) _showMessage(e.toString().replaceFirst('Exception: ', ''));
     } finally {
       if (mounted) setState(() => _loading = false);
     }
   }
 
-  Future<void> _forgotPassword() async {
-    final email = _emailController.text.trim();
-
-    if (email.isEmpty) {
-      _showMessage('Önce e-posta adresini yaz.');
-      return;
-    }
-
+  Future<void> _googleLogin() async {
+    if (_googleLoading) return;
+    setState(() => _googleLoading = true);
     try {
-      await AuthService.instance.sendPasswordResetEmail(email);
-      if (!mounted) return;
-      _showMessage('Şifre sıfırlama bağlantısı gönderildi.');
+      final credential = await AuthService.instance.signInWithGoogle();
+      if (!mounted || credential == null) return;
+      if (!widget.embedded) Navigator.pop(context);
     } catch (e) {
-      if (!mounted) return;
-      _showMessage(e.toString().replaceFirst('Exception: ', ''));
+      if (mounted) _showMessage(e.toString().replaceFirst('Exception: ', ''));
+    } finally {
+      if (mounted) setState(() => _googleLoading = false);
     }
   }
 
+  Future<void> _forgotPassword() async {
+    final controller = TextEditingController(text: _emailController.text.trim());
+    final email = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Şifreni sıfırla'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Hesabına bağlı e-posta adresini yaz. Sıfırlama bağlantısı göndereceğiz.'),
+            const SizedBox(height: 14),
+            TextField(
+              controller: controller,
+              autofocus: true,
+              keyboardType: TextInputType.emailAddress,
+              decoration: const InputDecoration(
+                labelText: 'E-posta',
+                prefixIcon: Icon(Icons.email_outlined),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Vazgeç')),
+          FilledButton(
+            onPressed: () {
+              final value = controller.text.trim();
+              if (value.isNotEmpty) Navigator.pop(dialogContext, value);
+            },
+            child: const Text('Bağlantı Gönder'),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (email == null || !mounted) return;
+    try {
+      await AuthService.instance.sendPasswordResetEmail(email);
+      if (mounted) _showMessage('Şifre sıfırlama bağlantısı gönderildi.');
+    } catch (e) {
+      if (mounted) _showMessage(e.toString().replaceFirst('Exception: ', ''));
+    }
+  }
+
+  Future<void> _phoneLogin() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const PhoneLoginScreen()),
+    );
+    if (!mounted) return;
+    if (AuthService.instance.isLoggedIn && !widget.embedded) Navigator.pop(context);
+  }
+
   void _showMessage(String text) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(text)));
   }
 
   @override
   Widget build(BuildContext context) {
-    const yellow = Color(0xFFB7BCC2);
+    const accent = Color(0xFFB7BCC2);
+    final busy = _loading || _googleLoading;
 
     final body = SafeArea(
       child: SingleChildScrollView(
         padding: EdgeInsets.fromLTRB(
-            24, 24, 24, MediaQuery.of(context).viewInsets.bottom + 24),
+          24,
+          24,
+          24,
+          MediaQuery.of(context).viewInsets.bottom + 24,
+        ),
         child: Column(
           children: [
-            SizedBox(height: widget.embedded ? 42 : 20),
-            const Icon(Icons.camera_alt_rounded, size: 72, color: yellow),
-            const SizedBox(height: 20),
-            const Text(
-              'En İyi Çekim Noktası',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 27, fontWeight: FontWeight.w800),
+            SizedBox(height: widget.embedded ? 34 : 14),
+            Container(
+              width: 72,
+              height: 72,
+              decoration: BoxDecoration(
+                color: const Color(0xFF121416),
+                borderRadius: BorderRadius.circular(22),
+                border: Border.all(color: Colors.white12),
+              ),
+              child: const Icon(Icons.camera_alt_rounded, size: 36, color: accent),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 18),
             const Text(
-              'Fotoğraf topluluğuna giriş yap.',
+              'TBT’ye hoş geldin',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 27, fontWeight: FontWeight.w900),
+            ),
+            const SizedBox(height: 7),
+            const Text(
+              'Keşfet, paylaş ve topluluğa katıl.',
               textAlign: TextAlign.center,
               style: TextStyle(color: Colors.white54),
             ),
-            const SizedBox(height: 38),
+            const SizedBox(height: 28),
+            SizedBox(
+              width: double.infinity,
+              height: 52,
+              child: OutlinedButton.icon(
+                onPressed: busy ? null : _googleLogin,
+                icon: _googleLoading
+                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Text('G', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900)),
+                label: const Text('Google ile devam et', style: TextStyle(fontWeight: FontWeight.w900)),
+              ),
+            ),
+            const SizedBox(height: 10),
+            SizedBox(
+              width: double.infinity,
+              height: 52,
+              child: OutlinedButton.icon(
+                onPressed: busy ? null : _phoneLogin,
+                icon: const Icon(Icons.phone_android_rounded),
+                label: const Text('Telefon ile devam et', style: TextStyle(fontWeight: FontWeight.w900)),
+              ),
+            ),
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 20),
+              child: Row(children: [
+                Expanded(child: Divider(color: Colors.white12)),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 12),
+                  child: Text('veya e-posta', style: TextStyle(color: Colors.white38, fontSize: 12)),
+                ),
+                Expanded(child: Divider(color: Colors.white12)),
+              ]),
+            ),
             TextField(
               controller: _emailController,
               keyboardType: TextInputType.emailAddress,
+              autofillHints: const [AutofillHints.email],
               style: const TextStyle(color: Colors.white),
-              decoration:
-                  _decoration(label: 'E-posta', icon: Icons.email_outlined),
+              decoration: _decoration(label: 'E-posta', icon: Icons.email_outlined),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 14),
             TextField(
               controller: _passwordController,
               obscureText: _hidePassword,
+              autofillHints: const [AutofillHints.password],
+              onSubmitted: (_) => busy ? null : _login(),
               style: const TextStyle(color: Colors.white),
               decoration: _decoration(
                 label: 'Şifre',
                 icon: Icons.lock_outline,
                 suffix: IconButton(
-                  icon: Icon(
-                      _hidePassword ? Icons.visibility_off : Icons.visibility),
-                  onPressed: () =>
-                      setState(() => _hidePassword = !_hidePassword),
+                  tooltip: _hidePassword ? 'Şifreyi göster' : 'Şifreyi gizle',
+                  icon: Icon(_hidePassword ? Icons.visibility_off : Icons.visibility),
+                  onPressed: () => setState(() => _hidePassword = !_hidePassword),
                 ),
               ),
             ),
             Align(
               alignment: Alignment.centerRight,
               child: TextButton(
-                onPressed: _loading ? null : _forgotPassword,
+                onPressed: busy ? null : _forgotPassword,
                 child: const Text('Şifremi unuttum'),
               ),
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 8),
             SizedBox(
               width: double.infinity,
               height: 56,
               child: FilledButton(
-                style: FilledButton.styleFrom(
-                    backgroundColor: yellow, foregroundColor: Colors.black),
-                onPressed: _loading ? null : _login,
+                style: FilledButton.styleFrom(backgroundColor: accent, foregroundColor: Colors.black),
+                onPressed: busy ? null : _login,
                 child: _loading
-                    ? const SizedBox(
-                        width: 23,
-                        height: 23,
-                        child: CircularProgressIndicator(
-                            strokeWidth: 3, color: Colors.black),
-                      )
-                    : const Text(
-                        'Giriş Yap',
-                        style: TextStyle(
-                            fontSize: 17, fontWeight: FontWeight.bold),
-                      ),
+                    ? const SizedBox(width: 23, height: 23, child: CircularProgressIndicator(strokeWidth: 3, color: Colors.black))
+                    : const Text('E-posta ile Giriş Yap', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900)),
               ),
             ),
-            const SizedBox(height: 22),
+            const SizedBox(height: 18),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text('Hesabın yok mu?',
-                    style: TextStyle(color: Colors.white54)),
+                const Text('Hesabın yok mu?', style: TextStyle(color: Colors.white54)),
                 TextButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const RegisterScreen()),
-                    );
-                  },
-                  child: const Text('Kayıt Ol',
-                      style: TextStyle(fontWeight: FontWeight.bold)),
+                  onPressed: busy
+                      ? null
+                      : () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RegisterScreen())),
+                  child: const Text('Kayıt Ol', style: TextStyle(fontWeight: FontWeight.bold)),
                 ),
               ],
             ),
@@ -177,10 +253,7 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
 
-    if (widget.embedded) {
-      return ColoredBox(color: const Color(0xFF090A0C), child: body);
-    }
-
+    if (widget.embedded) return ColoredBox(color: const Color(0xFF090A0C), child: body);
     return Scaffold(
       backgroundColor: const Color(0xFF090A0C),
       appBar: AppBar(
@@ -196,25 +269,14 @@ class _LoginScreenState extends State<LoginScreen> {
     required String label,
     required IconData icon,
     Widget? suffix,
-  }) {
-    return InputDecoration(
-      labelText: label,
-      prefixIcon: Icon(icon, color: const Color(0xFFB7BCC2)),
-      suffixIcon: suffix,
-      filled: true,
-      fillColor: const Color(0xFF121416),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(18),
-        borderSide: BorderSide.none,
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(18),
-        borderSide: const BorderSide(color: Colors.white12),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(18),
-        borderSide: const BorderSide(color: Color(0xFFB7BCC2)),
-      ),
-    );
-  }
+  }) => InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon, color: const Color(0xFFB7BCC2)),
+        suffixIcon: suffix,
+        filled: true,
+        fillColor: const Color(0xFF121416),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(18), borderSide: BorderSide.none),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(18), borderSide: const BorderSide(color: Colors.white12)),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(18), borderSide: const BorderSide(color: Color(0xFFB7BCC2))),
+      );
 }
