@@ -1,0 +1,164 @@
+name: Generate iOS Host
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feature/video-v1
+    paths:
+      - '.github/workflows/generate_ios_host.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  generate-ios-host:
+    runs-on: macos-latest
+    timeout-minutes: 35
+
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: feature/video-v1
+          fetch-depth: 0
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Generate iOS host
+        shell: bash
+        run: |
+          if [ ! -d ios/Runner.xcodeproj ]; then
+            flutter create --platforms=ios --org com.tbt --project-name best_photo_spot .
+          fi
+
+      - name: Add production iOS permissions and capabilities
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import plistlib
+          from pathlib import Path
+
+          info_path = Path('ios/Runner/Info.plist')
+          with info_path.open('rb') as f:
+              info = plistlib.load(f)
+
+          info['NSCameraUsageDescription'] = 'Fotoğraf ve video çekmek için kameraya erişim gerekir.'
+          info['NSMicrophoneUsageDescription'] = 'Video kaydında ses kullanmak için mikrofona erişim gerekir.'
+          info['NSLocationWhenInUseUsageDescription'] = 'Yakındaki mekanları, etkinlikleri ve rota mesafelerini göstermek için konum kullanılır.'
+          info['NSPhotoLibraryUsageDescription'] = 'Story ve paylaşım için galerinden fotoğraf veya video seçebilmek için erişim gerekir.'
+          info['NSPhotoLibraryAddUsageDescription'] = 'Düzenlediğin içerikleri fotoğraf arşivine kaydedebilmek için izin gerekir.'
+          info['UIBackgroundModes'] = ['fetch', 'remote-notification']
+          info['GMSApiKey'] = ''
+
+          existing = info.get('CFBundleURLTypes', [])
+          if not any('tbt' in item.get('CFBundleURLSchemes', []) for item in existing):
+              existing.append({
+                  'CFBundleTypeRole': 'Editor',
+                  'CFBundleURLName': 'com.tbt.bestPhotoSpot',
+                  'CFBundleURLSchemes': ['tbt'],
+              })
+          info['CFBundleURLTypes'] = existing
+
+          with info_path.open('wb') as f:
+              plistlib.dump(info, f, sort_keys=False)
+
+          entitlements = {
+              'com.apple.developer.applesignin': ['Default'],
+              'com.apple.developer.associated-domains': [
+                  'applinks:en-iyi-cekim-noktasi.web.app',
+                  'applinks:en-iyi-cekim-noktasi.firebaseapp.com',
+              ],
+          }
+          entitlements_path = Path('ios/Runner/Runner.entitlements')
+          with entitlements_path.open('wb') as f:
+              plistlib.dump(entitlements, f, sort_keys=False)
+          PY
+
+      - name: Configure Xcode project
+        shell: bash
+        run: |
+          sudo gem install xcodeproj -N
+          ruby <<'RUBY'
+          require 'xcodeproj'
+          project_path = 'ios/Runner.xcodeproj'
+          project = Xcodeproj::Project.open(project_path)
+          target = project.targets.find { |t| t.name == 'Runner' }
+          abort('Runner target missing') unless target
+          target.build_configurations.each do |config|
+            config.build_settings['CODE_SIGN_ENTITLEMENTS'] = 'Runner/Runner.entitlements'
+            config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'
+            config.build_settings['PRODUCT_BUNDLE_IDENTIFIER'] = 'com.tbt.bestPhotoSpot'
+          end
+          project.save
+          RUBY
+
+          if [ -f ios/Podfile ]; then
+            python3 - <<'PY'
+          from pathlib import Path
+          import re
+          p = Path('ios/Podfile')
+          s = p.read_text()
+          if 'platform :ios' in s:
+              s = re.sub(r"platform :ios,\s*'[^']+'", "platform :ios, '14.0'", s)
+          else:
+              s = "platform :ios, '14.0'\n" + s
+          p.write_text(s)
+          PY
+          fi
+
+      - name: Add Maps bootstrap
+        shell: bash
+        run: |
+          cat > ios/Runner/AppDelegate.swift <<'SWIFT'
+          import Flutter
+          import UIKit
+          #if canImport(GoogleMaps)
+          import GoogleMaps
+          #endif
+
+          @main
+          @objc class AppDelegate: FlutterAppDelegate {
+            override func application(
+              _ application: UIApplication,
+              didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
+            ) -> Bool {
+              #if canImport(GoogleMaps)
+              if let key = Bundle.main.object(forInfoDictionaryKey: "GMSApiKey") as? String,
+                 !key.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                GMSServices.provideAPIKey(key)
+              }
+              #endif
+              GeneratedPluginRegistrant.register(with: self)
+              return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+            }
+          }
+          SWIFT
+
+      - name: Validate generated iOS host
+        run: |
+          flutter pub get
+          flutter build ios --debug --no-codesign --no-pub \
+            --dart-define=FIREBASE_IOS_API_KEY=ci-placeholder \
+            --dart-define=FIREBASE_IOS_APP_ID=1:330568532415:ios:ci-placeholder \
+            --dart-define=IOS_BUNDLE_ID=com.tbt.bestPhotoSpot
+
+      - name: Commit iOS host to branch
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add ios
+          if git diff --cached --quiet; then
+            echo 'iOS host already up to date.'
+            exit 0
+          fi
+          git commit -m 'ios: add generated iOS host project'
+          git push origin HEAD:feature/video-v1
