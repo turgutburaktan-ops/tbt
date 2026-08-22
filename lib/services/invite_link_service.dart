@@ -14,34 +14,59 @@ class InviteLinkService {
   static const String scheme = 'tbt';
   static const String webHost = 'en-iyi-cekim-noktasi.web.app';
   static const String firebaseHost = 'en-iyi-cekim-noktasi.firebaseapp.com';
+  static final RegExp _safeId = RegExp(r'^[A-Za-z0-9_-]{1,128}$');
 
   Uri communityUri(String communityId) =>
-      Uri.https(webHost, '/community/$communityId');
+      Uri.https(webHost, '/community/${_safeOutgoingId(communityId)}');
 
-  Uri eventUri(String eventId) => Uri.https(webHost, '/event/$eventId');
+  Uri eventUri(String eventId) =>
+      Uri.https(webHost, '/event/${_safeOutgoingId(eventId)}');
 
-  Uri communityAppUri(String communityId) =>
-      Uri(scheme: scheme, host: 'community', pathSegments: [communityId]);
+  Uri communityAppUri(String communityId) => Uri(
+        scheme: scheme,
+        host: 'community',
+        pathSegments: [_safeOutgoingId(communityId)],
+      );
 
-  Uri eventAppUri(String eventId) =>
-      Uri(scheme: scheme, host: 'event', pathSegments: [eventId]);
+  Uri eventAppUri(String eventId) => Uri(
+        scheme: scheme,
+        host: 'event',
+        pathSegments: [_safeOutgoingId(eventId)],
+      );
+
+  String _safeOutgoingId(String value) {
+    final id = value.trim();
+    if (!_safeId.hasMatch(id)) {
+      throw ArgumentError.value(value, 'id', 'Geçersiz paylaşım kimliği');
+    }
+    return id;
+  }
 
   InviteLinkTarget? parse(Uri uri) {
-    if (uri.scheme == scheme) {
-      final id = uri.pathSegments.isEmpty ? '' : uri.pathSegments.first.trim();
-      final type = uri.host.trim();
-      if (id.isEmpty || (type != 'event' && type != 'community')) return null;
+    final incomingScheme = uri.scheme.toLowerCase();
+    final incomingHost = uri.host.toLowerCase();
+
+    if (incomingScheme == scheme) {
+      if (uri.pathSegments.length != 1) return null;
+      final id = uri.pathSegments.first.trim();
+      final type = incomingHost.trim();
+      if (!_validTarget(type, id)) return null;
       return InviteLinkTarget(type: type, id: id);
     }
 
-    final isWebInvite = uri.scheme == 'https' &&
-        (uri.host == webHost || uri.host == firebaseHost);
-    if (!isWebInvite || uri.pathSegments.length < 2) return null;
+    final isWebInvite = incomingScheme == 'https' &&
+        (incomingHost == webHost || incomingHost == firebaseHost);
+    if (!isWebInvite || uri.pathSegments.length != 2) return null;
 
-    final type = uri.pathSegments[0].trim();
+    final type = uri.pathSegments[0].trim().toLowerCase();
     final id = uri.pathSegments[1].trim();
-    if (id.isEmpty || (type != 'event' && type != 'community')) return null;
+    if (!_validTarget(type, id)) return null;
     return InviteLinkTarget(type: type, id: id);
+  }
+
+  bool _validTarget(String type, String id) {
+    if (type != 'event' && type != 'community') return false;
+    return _safeId.hasMatch(id);
   }
 
   Future<void> shareCommunity({
