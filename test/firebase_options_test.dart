@@ -7,7 +7,7 @@ void main() {
     expect(AppFirebaseOptions.android.messagingSenderId, '330568532415');
     expect(
       AppFirebaseOptions.android.appId,
-      '1:330568532415:android:425699d143ec3eb041a10a',
+      '1:330568532415:android:bf2ffa0b4d9210ed41a10a',
     );
   });
 }
