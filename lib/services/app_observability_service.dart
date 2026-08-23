@@ -21,9 +21,9 @@ class AppObservabilityService {
   Future<void> refreshFlags() async {
     try {
       final doc = await _db.collection('app_config').doc('public').get();
-      _flags = doc.data()?['featureFlags'] is Map
-          ? Map<String, dynamic>.from(doc.data()!['featureFlags'] as Map)
-          : const {};
+      final data = doc.data();
+      final flags = data?['featureFlags'];
+      _flags = flags is Map ? Map<String, dynamic>.from(flags) : const {};
     } catch (_) {
       _flags = const {};
     }
@@ -47,12 +47,16 @@ class AppObservabilityService {
 
   Future<void> recordError(Object error, StackTrace stack, {String context = ''}) async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
+    final rawError = error.toString();
+    final rawStack = stack.toString();
+    final safeError = rawError.length > 1200 ? rawError.substring(0, 1200) : rawError;
+    final safeStack = rawStack.length > 5000 ? rawStack.substring(0, 5000) : rawStack;
     try {
       await _db.collection('app_errors').add({
         'uid': uid,
         'context': context,
-        'error': error.toString().substring(0, error.toString().length.clamp(0, 1200)),
-        'stack': stack.toString().substring(0, stack.toString().length.clamp(0, 5000)),
+        'error': safeError,
+        'stack': safeStack,
         'platform': defaultTargetPlatform.name,
         'createdAt': FieldValue.serverTimestamp(),
       });
