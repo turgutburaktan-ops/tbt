@@ -45,11 +45,12 @@ Future<void> main() async {
 
       try {
         await FirebaseAppCheck.instance.activate(
-          providerAndroid:
-              kDebugMode ? AndroidProvider.debug : AndroidProvider.playIntegrity,
+          providerAndroid: kDebugMode
+              ? const AndroidDebugProvider()
+              : const AndroidPlayIntegrityProvider(),
           providerApple: kDebugMode
-              ? AppleProvider.debug
-              : AppleProvider.appAttestWithDeviceCheckFallback,
+              ? const AppleDebugProvider()
+              : const AppleAppAttestWithDeviceCheckFallbackProvider(),
         );
       } catch (error, stackTrace) {
         // App Check is defense-in-depth. A temporary provider/config problem
