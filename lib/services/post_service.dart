@@ -119,7 +119,7 @@ class PostService {
 
     final prepared = await VideoMediaService.instance.prepare(
       video,
-      maxDuration: const Duration(seconds: 30),
+      maxDuration: const Duration(seconds: 60),
     );
     final postRef = _firestore.collection('posts').doc();
     final videoRef =
@@ -267,7 +267,7 @@ class PostService {
     final participants = context['participants'] as List<String>;
     final prepared = await VideoMediaService.instance.prepare(
       video,
-      maxDuration: const Duration(seconds: 30),
+      maxDuration: const Duration(seconds: 60),
     );
 
     final memoryRef = _firestore.collection('event_memories').doc();
