@@ -13,6 +13,7 @@ import 'screens/campus_profile_screen.dart';
 import 'screens/chat_inbox_screen.dart';
 import 'screens/communities_screen.dart';
 import 'screens/notifications_screen.dart';
+import 'screens/rewards_hub_screen.dart';
 import 'services/deep_link_service.dart';
 import 'services/favorites_service.dart';
 import 'services/push_notification_service.dart';
@@ -53,8 +54,6 @@ Future<void> main() async {
               : const AppleAppAttestWithDeviceCheckFallbackProvider(),
         );
       } catch (error, stackTrace) {
-        // App Check is defense-in-depth. A temporary provider/config problem
-        // must not make the entire app unusable during rollout.
         if (kDebugMode) {
           debugPrint('App Check activation failed: $error');
           debugPrintStack(stackTrace: stackTrace);
@@ -192,6 +191,7 @@ class _BestPhotoSpotAppState extends State<BestPhotoSpotApp> {
       routes: {
         '/messages': (_) => const ChatInboxScreen(),
         '/notifications': (_) => const NotificationsScreen(),
+        '/rewards': (_) => const RewardsHubScreen(),
         '/campus': (_) => const CampusHomeScreen(),
         '/campus-profile': (_) => const CampusProfileScreen(),
         '/communities': (_) => const CommunitiesScreen(),
