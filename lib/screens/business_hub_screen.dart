@@ -1,0 +1,314 @@
+import 'dart:io';
+
+import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+
+import '../services/business_service.dart';
+import '../theme/app_theme.dart';
+
+class BusinessHubScreen extends StatefulWidget {
+  final String initialCategory;
+  final String initialVenueId;
+  final String initialVenueName;
+
+  const BusinessHubScreen({
+    super.key,
+    this.initialCategory = '',
+    this.initialVenueId = '',
+    this.initialVenueName = '',
+  });
+
+  @override
+  State<BusinessHubScreen> createState() => _BusinessHubScreenState();
+}
+
+class _BusinessHubScreenState extends State<BusinessHubScreen> {
+  final _category = TextEditingController();
+  final _venueId = TextEditingController();
+  final _venueName = TextEditingController();
+  final _email = TextEditingController();
+  final _phone = TextEditingController();
+  final _legalName = TextEditingController();
+  final _taxOffice = TextEditingController();
+  final _taxLast4 = TextEditingController();
+  File? _evidence;
+  bool _saving = false;
+  Map<String, dynamic>? _status;
+
+  @override
+  void initState() {
+    super.initState();
+    _category.text = widget.initialCategory;
+    _venueId.text = widget.initialVenueId;
+    _venueName.text = widget.initialVenueName;
+    if (_category.text.isNotEmpty && _venueId.text.isNotEmpty) _refreshStatus();
+  }
+
+  @override
+  void dispose() {
+    for (final c in [_category, _venueId, _venueName, _email, _phone, _legalName, _taxOffice, _taxLast4]) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  void _message(String value) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(value)));
+  }
+
+  Future<void> _refreshStatus() async {
+    if (_category.text.trim().isEmpty || _venueId.text.trim().isEmpty) return;
+    try {
+      final status = await BusinessService.instance.claimStatus(
+        _category.text.trim(),
+        _venueId.text.trim(),
+      );
+      if (mounted) setState(() => _status = status);
+    } catch (_) {}
+  }
+
+  Future<void> _pickEvidence() async {
+    final file = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 88,
+      requestFullMetadata: false,
+    );
+    if (file != null && mounted) setState(() => _evidence = File(file.path));
+  }
+
+  Future<void> _submit() async {
+    if (_saving) return;
+    if (_evidence == null) {
+      _message('Yetki kanıtı görselini ekle.');
+      return;
+    }
+    setState(() => _saving = true);
+    try {
+      await BusinessService.instance.submitClaim(
+        category: _category.text,
+        venueId: _venueId.text,
+        venueName: _venueName.text,
+        businessEmail: _email.text,
+        businessPhone: _phone.text,
+        legalName: _legalName.text,
+        taxOffice: _taxOffice.text,
+        taxNumberLast4: _taxLast4.text,
+        evidenceImage: _evidence!,
+      );
+      _message('Başvuru alındı. Manuel doğrulama tamamlanmadan işletme yetkisi açılmaz.');
+      await _refreshStatus();
+    } catch (e) {
+      _message(e.toString().replaceFirst('Exception: ', ''));
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final status = (_status?['status'] ?? '').toString();
+    final verified = status == 'verified';
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: AppBar(title: const Text('İşletmem')),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 36),
+        children: [
+          Container(
+            padding: const EdgeInsets.all(15),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: verified ? AppColors.cyan : AppColors.border),
+            ),
+            child: Row(children: [
+              Icon(
+                verified ? Icons.verified_rounded : Icons.verified_user_outlined,
+                color: verified ? AppColors.cyan : Colors.white60,
+              ),
+              const SizedBox(width: 11),
+              Expanded(
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text(
+                    verified
+                        ? 'Doğrulanmış İşletme'
+                        : status == 'pending_review'
+                            ? 'İnceleme Bekliyor'
+                            : status == 'rejected'
+                                ? 'Başvuru Reddedildi'
+                                : 'İşletme Doğrulaması',
+                    style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    verified
+                        ? 'Menü ve program yönetimi açıldı.'
+                        : 'Yetki yalnız manuel inceleme ve kanıt doğrulamasından sonra açılır.',
+                    style: const TextStyle(color: Colors.white60, fontSize: 11.5),
+                  ),
+                ]),
+              ),
+            ]),
+          ),
+          const SizedBox(height: 18),
+          if (!verified) ...[
+            const Text('Mekan Bilgisi', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
+            const SizedBox(height: 10),
+            TextField(controller: _venueName, decoration: const InputDecoration(labelText: 'Mekan adı')),
+            const SizedBox(height: 10),
+            TextField(controller: _category, decoration: const InputDecoration(labelText: 'Kategori kodu')),
+            const SizedBox(height: 10),
+            TextField(controller: _venueId, decoration: const InputDecoration(labelText: 'Mekan kimliği')),
+            const SizedBox(height: 18),
+            const Text('Yetki ve Şirket Bilgileri', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
+            const SizedBox(height: 10),
+            TextField(controller: _legalName, decoration: const InputDecoration(labelText: 'Yasal işletme unvanı')),
+            const SizedBox(height: 10),
+            TextField(controller: _email, keyboardType: TextInputType.emailAddress, decoration: const InputDecoration(labelText: 'İşletme e-postası')),
+            const SizedBox(height: 10),
+            TextField(controller: _phone, keyboardType: TextInputType.phone, decoration: const InputDecoration(labelText: 'İşletme telefonu')),
+            const SizedBox(height: 10),
+            TextField(controller: _taxOffice, decoration: const InputDecoration(labelText: 'Vergi dairesi')),
+            const SizedBox(height: 10),
+            TextField(controller: _taxLast4, keyboardType: TextInputType.number, maxLength: 4, decoration: const InputDecoration(labelText: 'Vergi numarasının son 4 hanesi')),
+            const SizedBox(height: 8),
+            OutlinedButton.icon(
+              onPressed: _pickEvidence,
+              icon: const Icon(Icons.document_scanner_outlined),
+              label: Text(_evidence == null ? 'Yetki kanıtı fotoğrafı ekle' : 'Kanıt seçildi ✓'),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Kabul edilebilir kanıt: işletme ruhsatı/vergi levhası üzerinde işletme adı görünür fotoğraf veya yetkili olduğunuzu gösteren resmi belge. Hassas alanları gereksiz yere paylaşmayın; yalnız doğrulama için gereken bilgiler incelenir.',
+              style: TextStyle(color: Colors.white54, fontSize: 11.5, height: 1.4),
+            ),
+            const SizedBox(height: 16),
+            FilledButton.icon(
+              onPressed: _saving ? null : _submit,
+              icon: _saving
+                  ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                  : const Icon(Icons.verified_user_outlined),
+              label: Text(_saving ? 'Başvuru gönderiliyor…' : 'Doğrulama Başvurusu Gönder'),
+            ),
+          ] else ...[
+            const Text('İşletme Yönetimi', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
+            const SizedBox(height: 10),
+            _ManagementTile(
+              icon: Icons.restaurant_menu_rounded,
+              title: 'Menü Yönetimi',
+              subtitle: 'Ürün, bölüm, açıklama ve fiyat ekle.',
+              onTap: () => _showMenuDialog(),
+            ),
+            _ManagementTile(
+              icon: Icons.calendar_month_rounded,
+              title: 'Program / Takvim',
+              subtitle: 'Canlı müzik, workshop, maç yayını ve özel program ekle.',
+              onTap: () => _showProgramDialog(),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Future<void> _showMenuDialog() async {
+    final name = TextEditingController();
+    final section = TextEditingController();
+    final desc = TextEditingController();
+    final price = TextEditingController();
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Menü ürünü ekle'),
+        content: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, children: [
+          TextField(controller: name, decoration: const InputDecoration(labelText: 'Ürün adı')),
+          TextField(controller: section, decoration: const InputDecoration(labelText: 'Bölüm (Kahveler, Tatlılar...)')),
+          TextField(controller: desc, decoration: const InputDecoration(labelText: 'Açıklama')),
+          TextField(controller: price, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Fiyat (TL)')),
+        ])),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Vazgeç')),
+          FilledButton(onPressed: () async {
+            final value = double.tryParse(price.text.replaceAll(',', '.')) ?? -1;
+            if (value < 0) return;
+            await BusinessService.instance.addMenuItem(
+              category: _category.text,
+              venueId: _venueId.text,
+              name: name.text,
+              section: section.text,
+              description: desc.text,
+              priceMinor: (value * 100).round(),
+            );
+            if (dialogContext.mounted) Navigator.pop(dialogContext);
+            _message('Menü ürünü eklendi.');
+          }, child: const Text('Ekle')),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _showProgramDialog() async {
+    final title = TextEditingController();
+    final desc = TextEditingController();
+    var startsAt = DateTime.now().add(const Duration(hours: 2));
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(builder: (context, setState) => AlertDialog(
+        title: const Text('Program ekle'),
+        content: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, children: [
+          TextField(controller: title, decoration: const InputDecoration(labelText: 'Program başlığı')),
+          TextField(controller: desc, decoration: const InputDecoration(labelText: 'Açıklama')),
+          const SizedBox(height: 10),
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.schedule_rounded),
+            title: Text('${startsAt.day}.${startsAt.month}.${startsAt.year} • ${startsAt.hour.toString().padLeft(2, '0')}:${startsAt.minute.toString().padLeft(2, '0')}'),
+            onTap: () async {
+              final date = await showDatePicker(context: context, firstDate: DateTime.now(), lastDate: DateTime.now().add(const Duration(days: 365)), initialDate: startsAt);
+              if (date == null || !context.mounted) return;
+              final time = await showTimePicker(context: context, initialTime: TimeOfDay.fromDateTime(startsAt));
+              if (time == null) return;
+              setState(() => startsAt = DateTime(date.year, date.month, date.day, time.hour, time.minute));
+            },
+          ),
+        ])),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Vazgeç')),
+          FilledButton(onPressed: () async {
+            await BusinessService.instance.addProgramItem(
+              category: _category.text,
+              venueId: _venueId.text,
+              title: title.text,
+              description: desc.text,
+              startsAt: startsAt,
+            );
+            if (dialogContext.mounted) Navigator.pop(dialogContext);
+            _message('Program eklendi.');
+          }, child: const Text('Ekle')),
+        ],
+      )),
+    );
+  }
+}
+
+class _ManagementTile extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+  const _ManagementTile({required this.icon, required this.title, required this.subtitle, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) => Card(
+        child: ListTile(
+          leading: Icon(icon, color: AppColors.cyan),
+          title: Text(title, style: const TextStyle(fontWeight: FontWeight.w900)),
+          subtitle: Text(subtitle),
+          trailing: const Icon(Icons.chevron_right_rounded),
+          onTap: onTap,
+        ),
+      );
+}
