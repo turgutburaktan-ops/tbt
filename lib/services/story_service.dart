@@ -5,7 +5,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 
 import '../models/app_story.dart';
+import 'app_notification_service.dart';
 import 'chat_service.dart';
+import 'content_moderation_service.dart';
 import 'video_media_service.dart';
 
 class StoryService {
@@ -159,6 +161,10 @@ class StoryService {
         'userPhotoUrl': user.photoURL ?? '',
       };
 
+  String _actorName(User user) => (user.displayName ?? '').trim().isNotEmpty
+      ? user.displayName!.trim()
+      : 'Bir kullanıcı';
+
   Future<void> recordView(AppStory story) async {
     final user = _auth.currentUser;
     if (user == null || user.uid == story.userId) return;
@@ -213,6 +219,18 @@ class StoryService {
       'viewedAt': FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
+    if (liked) {
+      try {
+        await AppNotificationService.instance.notifyUser(
+          userId: story.userId,
+          type: 'story_like',
+          title: '${_actorName(user)} storyini beğendi',
+          body: 'Story etkileşimlerini görmek için dokun.',
+          sourceId: story.id,
+          actorId: user.uid,
+        );
+      } catch (_) {}
+    }
   }
 
   Future<void> setReaction(AppStory story, String emoji) async {
@@ -227,6 +245,16 @@ class StoryService {
       'viewedAt': FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
+    try {
+      await AppNotificationService.instance.notifyUser(
+        userId: story.userId,
+        type: 'story_reaction',
+        title: '${_actorName(user)} storyine tepki verdi',
+        body: clean,
+        sourceId: story.id,
+        actorId: user.uid,
+      );
+    } catch (_) {}
   }
 
   Future<void> sendReply(AppStory story, String text) async {
@@ -238,6 +266,7 @@ class StoryService {
     if (clean.length > 500) {
       throw Exception('Story mesajı en fazla 500 karakter olabilir.');
     }
+    ContentModerationService.instance.enforce(clean);
 
     await _interactionRef(story.id, user.uid).set({
       ..._actorData(user),
