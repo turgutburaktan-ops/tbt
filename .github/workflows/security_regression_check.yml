@@ -74,7 +74,9 @@ jobs:
       - name: Check repository for private key material
         shell: bash
         run: |
-          if git grep -n -E -- 'BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY|private_key_id[[:space:]]*[:=]|service_account.*\.json' -- ':!pubspec.lock'; then
+          # Exclude this workflow itself so the detector does not match its own
+          # private-key/service-account search expression.
+          if git grep -n -E -- 'BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY|private_key_id[[:space:]]*[:=]|service_account.*\.json' -- ':!pubspec.lock' ':!.github/workflows/security_regression_check.yml'; then
             echo 'Potential private key/service-account material found in tracked files.'
             exit 1
           fi
