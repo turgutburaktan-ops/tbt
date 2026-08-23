@@ -14,8 +14,12 @@ import 'screens/campus_home_screen.dart';
 import 'screens/campus_profile_screen.dart';
 import 'screens/chat_inbox_screen.dart';
 import 'screens/communities_screen.dart';
+import 'screens/global_search_screen.dart';
+import 'screens/moderation_center_screen.dart';
 import 'screens/notifications_screen.dart';
 import 'screens/rewards_hub_screen.dart';
+import 'screens/safety_privacy_center_screen.dart';
+import 'services/app_observability_service.dart';
 import 'services/deep_link_service.dart';
 import 'services/favorites_service.dart';
 import 'services/push_notification_service.dart';
@@ -29,6 +33,11 @@ Future<void> main() async {
     if (kDebugMode) {
       debugPrint('Flutter error: ${details.exceptionAsString()}');
     }
+    unawaited(AppObservabilityService.instance.recordError(
+      details.exception,
+      details.stack ?? StackTrace.current,
+      context: 'flutter_error',
+    ));
   };
 
   PlatformDispatcher.instance.onError = (error, stack) {
@@ -36,6 +45,7 @@ Future<void> main() async {
       debugPrint('Unhandled platform error: $error');
       debugPrintStack(stackTrace: stack);
     }
+    unawaited(AppObservabilityService.instance.recordError(error, stack, context: 'platform_error'));
     return true;
   };
 
@@ -63,6 +73,7 @@ Future<void> main() async {
       }
 
       await FavoritesService.initialize();
+      await AppObservabilityService.instance.initialize();
     } catch (error, stackTrace) {
       bootstrapError = error;
       if (kDebugMode) {
@@ -83,6 +94,7 @@ Future<void> main() async {
       debugPrint('Uncaught zone error: $error');
       debugPrintStack(stackTrace: stack);
     }
+    unawaited(AppObservabilityService.instance.recordError(error, stack, context: 'zone_error'));
   });
 }
 
@@ -164,6 +176,7 @@ class _BestPhotoSpotAppState extends State<BestPhotoSpotApp> {
     DeepLinkService.instance.start(_navigatorKey);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       PushNotificationService.instance.initialize(_navigatorKey);
+      AppObservabilityService.instance.logEvent('app_open');
     });
   }
 
@@ -196,6 +209,9 @@ class _BestPhotoSpotAppState extends State<BestPhotoSpotApp> {
         '/rewards': (_) => const RewardsHubScreen(),
         '/business': (_) => const BusinessHubScreen(),
         '/admin': (_) => const AdminDashboardScreen(),
+        '/moderation': (_) => const ModerationCenterScreen(),
+        '/safety-privacy': (_) => const SafetyPrivacyCenterScreen(),
+        '/search': (_) => const GlobalSearchScreen(),
         '/campus': (_) => const CampusHomeScreen(),
         '/campus-profile': (_) => const CampusProfileScreen(),
         '/communities': (_) => const CommunitiesScreen(),
