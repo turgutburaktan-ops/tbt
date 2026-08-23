@@ -1,0 +1,102 @@
+name: Apply Product Safety Rules
+
+on:
+  push:
+    branches:
+      - feature/video-v1
+    paths:
+      - '.github/workflows/apply_product_safety_rules.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch-rules:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/video-v1
+
+      - name: Patch product safety rules
+        shell: python
+        run: |
+          from pathlib import Path
+          p = Path('firestore.rules')
+          s = p.read_text()
+
+          old_update = """      allow update: if isAdmin() ||\n        validAttendanceEventUpdate(eventId) ||\n        (signedIn() && resource.data.hostId == request.auth.uid && protectedEventFieldsSame() &&\n          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','updatedAt']) &&\n          request.resource.data.status in ['open','cancelled']);"""
+          new_update = """      allow update: if isAdmin() ||\n        validAttendanceEventUpdate(eventId) ||\n        (signedIn() && resource.data.hostId == request.auth.uid && protectedEventFieldsSame() &&\n          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','updatedAt']) &&\n          request.resource.data.status in ['open','cancelled']) ||\n        (signedIn() && resource.data.hostId == request.auth.uid && protectedEventFieldsSame() &&\n          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['safety','safetyUpdatedAt']));"""
+          if old_update in s:
+              s = s.replace(old_update, new_update, 1)
+
+          marker = "    // Default deny. Every writable collection must be deliberately reviewed."
+          if 'match /moderation_reports/{reportId}' not in s:
+              block = r'''
+    match /moderation_reports/{reportId} {
+      allow create: if signedIn() && request.resource.data.reporterId == request.auth.uid &&
+        request.resource.data.targetType is string && request.resource.data.targetId is string &&
+        request.resource.data.reason is string && request.resource.data.reason.size() >= 3 &&
+        request.resource.data.reason.size() <= 300 && request.resource.data.status == 'open';
+      allow read, update, delete: if isAdmin();
+    }
+
+    match /account_delete_requests/{uid} {
+      allow create, update, read: if isSelf(uid) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /analytics_events/{eventId} {
+      allow create: if signedIn() && request.resource.data.uid == request.auth.uid &&
+        request.resource.data.name is string && request.resource.data.name.size() <= 100;
+      allow read, update, delete: if isAdmin();
+    }
+
+    match /app_errors/{errorId} {
+      allow create: if signedIn() && request.resource.data.uid == request.auth.uid;
+      allow read, update, delete: if isAdmin();
+    }
+
+    match /app_config/{configId} {
+      allow read: if configId == 'public';
+      allow write: if isAdmin();
+    }
+
+    match /social_events/{eventId}/waitlist/{uid} {
+      allow read: if signedIn();
+      allow create, update, delete: if isSelf(uid) && request.resource.data.userId == uid;
+    }
+
+    match /users/{uid}/event_reliability/{eventId} {
+      allow read: if isSelf(uid) || isAdmin();
+      allow create, update: if signedIn() &&
+        exists(/databases/$(database)/documents/social_events/$(eventId)) &&
+        get(/databases/$(database)/documents/social_events/$(eventId)).data.hostId == request.auth.uid &&
+        request.resource.data.recordedBy == request.auth.uid;
+      allow delete: if isAdmin();
+    }
+
+    match /business_venues/{venueKey}/trust_reports/{reportId} {
+      allow create: if signedIn() && request.resource.data.reporterId == request.auth.uid &&
+        request.resource.data.reason is string && request.resource.data.reason.size() >= 3;
+      allow read, update, delete: if isAdmin();
+    }
+
+'''
+              if marker not in s:
+                  raise SystemExit('Default deny marker missing')
+              s = s.replace(marker, block + marker, 1)
+
+          p.write_text(s)
+
+      - name: Commit rules
+        run: |
+          if git diff --quiet -- firestore.rules; then
+            echo "No rule changes needed."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add firestore.rules
+          git commit -m "Secure moderation privacy analytics and event safety data"
+          git push origin HEAD:feature/video-v1
