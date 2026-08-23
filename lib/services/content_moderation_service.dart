@@ -15,7 +15,7 @@ class ContentModerationService {
   static final RegExp _repeat = RegExp(r'(.)\1{2,}');
 
   // Keep the list focused on strong profanity / direct insults. Mild everyday
-  // slang is intentionally not blocked so normal reviews are not punished.
+  // slang is intentionally not blocked so normal conversation is not punished.
   static const Set<String> _blockedTokens = {
     'amk', 'aq', 'aminakoyim', 'aminakoyayim', 'siktir', 'sikik', 'sikerim',
     'orospu', 'orosb', 'pic', 'pezevenk', 'yarrak', 'yarak', 'gotveren',
@@ -52,7 +52,7 @@ class ContentModerationService {
       if (phraseSource.contains(phrase)) {
         return const ModerationResult(
           blocked: true,
-          reason: 'Yorumunda topluluk kurallarına aykırı ağır bir ifade var.',
+          reason: 'İçeriğinde topluluk kurallarına aykırı ağır bir ifade var.',
         );
       }
     }
@@ -63,7 +63,7 @@ class ContentModerationService {
       if (_blockedTokens.contains(token)) {
         return const ModerationResult(
           blocked: true,
-          reason: 'Yorumunda topluluk kurallarına aykırı ağır bir ifade var.',
+          reason: 'İçeriğinde topluluk kurallarına aykırı ağır bir ifade var.',
         );
       }
     }
@@ -71,7 +71,7 @@ class ContentModerationService {
       if (blocked.length >= 4 && compact.contains(blocked)) {
         return const ModerationResult(
           blocked: true,
-          reason: 'Yorumunda topluluk kurallarına aykırı ağır bir ifade var.',
+          reason: 'İçeriğinde topluluk kurallarına aykırı ağır bir ifade var.',
         );
       }
     }
@@ -81,7 +81,7 @@ class ContentModerationService {
   void enforce(String input) {
     final result = check(input);
     if (result.blocked) {
-      throw Exception(result.reason ?? 'Yorum topluluk kurallarına uygun değil.');
+      throw Exception(result.reason ?? 'İçerik topluluk kurallarına uygun değil.');
     }
   }
 }
