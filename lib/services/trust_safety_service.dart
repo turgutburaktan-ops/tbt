@@ -21,13 +21,17 @@ class TrustSafetyService {
     String details = '',
   }) async {
     final cleanReason = reason.trim();
+    final cleanDetails = details.trim();
+    final limitedDetails = cleanDetails.length > 1000
+        ? cleanDetails.substring(0, 1000)
+        : cleanDetails;
     if (cleanReason.length < 3) throw ArgumentError('Geçerli bir şikâyet nedeni gerekli.');
     await _db.collection('moderation_reports').add({
       'reporterId': _uid,
       'targetType': targetType.trim(),
       'targetId': targetId.trim(),
       'reason': cleanReason,
-      'details': details.trim().substring(0, details.trim().length.clamp(0, 1000)),
+      'details': limitedDetails,
       'status': 'open',
       'priority': 'normal',
       'createdAt': FieldValue.serverTimestamp(),
