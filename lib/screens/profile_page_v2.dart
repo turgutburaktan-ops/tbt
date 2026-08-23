@@ -18,6 +18,7 @@ import 'create_post_screen.dart';
 import 'follow_list_screen.dart';
 import 'login_screen.dart';
 import 'post_detail_screen.dart';
+import 'user_statistics_screen.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -86,6 +87,15 @@ class _ProfileBodyState extends State<_ProfileBody> {
     );
   }
 
+  void _openStatistics() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => UserStatisticsScreen(userId: widget.user.uid),
+      ),
+    );
+  }
+
   void _openProfilePhoto(String url, String name) {
     Navigator.push(
       context,
@@ -146,6 +156,9 @@ class _ProfileBodyState extends State<_ProfileBody> {
     switch (value) {
       case 'edit':
         await _editProfile(displayName, bio);
+        return;
+      case 'stats':
+        _openStatistics();
         return;
       case 'share':
         await _shareProfile(displayName);
@@ -274,7 +287,15 @@ class _ProfileBodyState extends State<_ProfileBody> {
                               bio,
                             ),
                             itemBuilder: (_) => [
-                              PopupMenuItem(
+                              const PopupMenuItem(
+                                value: 'stats',
+                                child: ListTile(
+                                  dense: true,
+                                  leading: Icon(Icons.query_stats_rounded),
+                                  title: Text('İstatistikler'),
+                                ),
+                              ),
+                              const PopupMenuItem(
                                 value: 'edit',
                                 child: ListTile(
                                   dense: true,
@@ -282,7 +303,7 @@ class _ProfileBodyState extends State<_ProfileBody> {
                                   title: Text('Profili düzenle'),
                                 ),
                               ),
-                              PopupMenuItem(
+                              const PopupMenuItem(
                                 value: 'share',
                                 child: ListTile(
                                   dense: true,
@@ -290,7 +311,7 @@ class _ProfileBodyState extends State<_ProfileBody> {
                                   title: Text('Profili paylaş'),
                                 ),
                               ),
-                              PopupMenuItem(
+                              const PopupMenuItem(
                                 value: 'messages',
                                 child: ListTile(
                                   dense: true,
@@ -308,8 +329,8 @@ class _ProfileBodyState extends State<_ProfileBody> {
                                     title: Text('Kampüs'),
                                   ),
                                 ),
-                              PopupMenuDivider(),
-                              PopupMenuItem(
+                              const PopupMenuDivider(),
+                              const PopupMenuItem(
                                 value: 'logout',
                                 child: ListTile(
                                   dense: true,
@@ -389,7 +410,7 @@ class _ProfileBodyState extends State<_ProfileBody> {
                                                         child: Icon(
                                                           Icons.person,
                                                           size: 42,
-                                                          color: const Color(0x75FFFFFF),
+                                                          color: Color(0x75FFFFFF),
                                                         ),
                                                       ),
                                                     ),
@@ -435,7 +456,11 @@ class _ProfileBodyState extends State<_ProfileBody> {
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceAround,
                                   children: [
-                                    _Stat('${posts.length}', 'Gönderi'),
+                                    _Stat(
+                                      '${posts.length}',
+                                      'Gönderi',
+                                      onTap: _openStatistics,
+                                    ),
                                     StreamBuilder<int>(
                                       stream: SocialService.instance
                                           .followersCount(widget.user.uid),
@@ -483,14 +508,24 @@ class _ProfileBodyState extends State<_ProfileBody> {
                             ),
                           ),
                           const SizedBox(height: 10),
-                          SizedBox(
-                            width: double.infinity,
-                            child: OutlinedButton.icon(
-                              onPressed: () =>
-                                  _editProfile(displayName, bio),
-                              icon: const Icon(Icons.edit_outlined, size: 17),
-                              label: const Text('Profili Düzenle'),
-                            ),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: OutlinedButton.icon(
+                                  onPressed: () => _editProfile(displayName, bio),
+                                  icon: const Icon(Icons.edit_outlined, size: 17),
+                                  label: const Text('Profili Düzenle'),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: OutlinedButton.icon(
+                                  onPressed: _openStatistics,
+                                  icon: const Icon(Icons.query_stats_rounded, size: 17),
+                                  label: const Text('İstatistikler'),
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
@@ -832,7 +867,7 @@ class _Stat extends StatelessWidget {
         const SizedBox(height: 1),
         Text(
           label,
-          style: const TextStyle(color: const Color(0x75FFFFFF), fontSize: 10.8),
+          style: const TextStyle(color: Color(0x75FFFFFF), fontSize: 10.8),
         ),
       ],
     );
