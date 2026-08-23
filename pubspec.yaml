@@ -50,3 +50,5 @@ flutter:
 
 dependency_overrides:
   geolocator_android: 4.6.1
+
+# CI rebuild marker: 2026-08-23
