@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 import 'app_notification_service.dart';
 import 'chat_service.dart';
+import 'content_moderation_service.dart';
 
 class ContentEngagementService {
   ContentEngagementService._();
@@ -85,8 +86,10 @@ class ContentEngagementService {
     if (user == null) throw Exception('Yorum yapmak için giriş yapmalısın.');
     final clean = text.trim();
     if (clean.isEmpty) return;
-    if (clean.length > 500)
+    if (clean.length > 500) {
       throw Exception('Yorum en fazla 500 karakter olabilir.');
+    }
+    ContentModerationService.instance.enforce(clean);
     await _ref(collection, id).collection('comments').add({
       'userId': user.uid,
       'userName': (user.displayName ?? '').trim().isEmpty
