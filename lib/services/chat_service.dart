@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 import '../models/chat_message.dart';
 import 'app_notification_service.dart';
+import 'content_moderation_service.dart';
 import 'social_service.dart';
 
 class ChatService {
@@ -138,6 +139,7 @@ class ChatService {
     if (clean.length > 1500) {
       throw Exception('Mesaj en fazla 1500 karakter olabilir.');
     }
+    ContentModerationService.instance.enforce(clean);
     if (await isBlockedBetween(otherUserId)) {
       throw Exception('Bu kullanıcıyla mesajlaşma kullanılamıyor.');
     }
