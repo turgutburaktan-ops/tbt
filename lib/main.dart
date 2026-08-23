@@ -8,6 +8,8 @@ import 'package:flutter/material.dart';
 
 import 'firebase_options.dart';
 import 'screens/admin_dashboard_screen.dart';
+import 'screens/admin_insights_screen.dart';
+import 'screens/admin_portal_screen.dart';
 import 'screens/app_entry_gate.dart';
 import 'screens/business_hub_screen.dart';
 import 'screens/campus_home_screen.dart';
@@ -33,11 +35,13 @@ Future<void> main() async {
     if (kDebugMode) {
       debugPrint('Flutter error: ${details.exceptionAsString()}');
     }
-    unawaited(AppObservabilityService.instance.recordError(
-      details.exception,
-      details.stack ?? StackTrace.current,
-      context: 'flutter_error',
-    ));
+    if (Firebase.apps.isNotEmpty) {
+      unawaited(AppObservabilityService.instance.recordError(
+        details.exception,
+        details.stack ?? StackTrace.current,
+        context: 'flutter_error',
+      ));
+    }
   };
 
   PlatformDispatcher.instance.onError = (error, stack) {
@@ -45,7 +49,9 @@ Future<void> main() async {
       debugPrint('Unhandled platform error: $error');
       debugPrintStack(stackTrace: stack);
     }
-    unawaited(AppObservabilityService.instance.recordError(error, stack, context: 'platform_error'));
+    if (Firebase.apps.isNotEmpty) {
+      unawaited(AppObservabilityService.instance.recordError(error, stack, context: 'platform_error'));
+    }
     return true;
   };
 
@@ -94,7 +100,9 @@ Future<void> main() async {
       debugPrint('Uncaught zone error: $error');
       debugPrintStack(stackTrace: stack);
     }
-    unawaited(AppObservabilityService.instance.recordError(error, stack, context: 'zone_error'));
+    if (Firebase.apps.isNotEmpty) {
+      unawaited(AppObservabilityService.instance.recordError(error, stack, context: 'zone_error'));
+    }
   });
 }
 
@@ -208,7 +216,9 @@ class _BestPhotoSpotAppState extends State<BestPhotoSpotApp> {
         '/notifications': (_) => const NotificationsScreen(),
         '/rewards': (_) => const RewardsHubScreen(),
         '/business': (_) => const BusinessHubScreen(),
-        '/admin': (_) => const AdminDashboardScreen(),
+        '/admin': (_) => const AdminPortalScreen(),
+        '/admin-dashboard': (_) => const AdminDashboardScreen(),
+        '/admin-insights': (_) => const AdminInsightsScreen(),
         '/moderation': (_) => const ModerationCenterScreen(),
         '/safety-privacy': (_) => const SafetyPrivacyCenterScreen(),
         '/search': (_) => const GlobalSearchScreen(),
