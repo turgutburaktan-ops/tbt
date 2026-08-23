@@ -1,0 +1,59 @@
+name: Grant TBT Admin
+
+on:
+  workflow_dispatch:
+    inputs:
+      admin_email:
+        description: 'Firebase Auth email to grant admin access'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  grant-admin:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Firebase Admin SDK
+        run: npm install --no-save firebase-admin@13
+
+      - name: Grant admin custom claim
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          ADMIN_EMAIL: ${{ inputs.admin_email }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          node <<'NODE'
+          const admin = require('firebase-admin');
+
+          const raw = process.env.FIREBASE_SERVICE_ACCOUNT || '';
+          const email = (process.env.ADMIN_EMAIL || '').trim().toLowerCase();
+          if (!raw) throw new Error('FIREBASE_SERVICE_ACCOUNT secret is missing.');
+          if (!email || !email.includes('@')) throw new Error('A valid admin_email input is required.');
+
+          const serviceAccount = JSON.parse(raw);
+          admin.initializeApp({
+            credential: admin.credential.cert(serviceAccount),
+          });
+
+          (async () => {
+            const user = await admin.auth().getUserByEmail(email);
+            const current = user.customClaims || {};
+            await admin.auth().setCustomUserClaims(user.uid, {
+              ...current,
+              admin: true,
+            });
+            console.log(`Admin claim granted to Firebase user ${user.uid.slice(0, 6)}…`);
+          })().catch((error) => {
+            console.error(error?.message || error);
+            process.exit(1);
+          });
+          NODE
