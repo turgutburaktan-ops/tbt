@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 
 import 'firebase_options.dart';
 import 'screens/app_entry_gate.dart';
+import 'screens/business_hub_screen.dart';
 import 'screens/campus_home_screen.dart';
 import 'screens/campus_profile_screen.dart';
 import 'screens/chat_inbox_screen.dart';
@@ -192,6 +193,7 @@ class _BestPhotoSpotAppState extends State<BestPhotoSpotApp> {
         '/messages': (_) => const ChatInboxScreen(),
         '/notifications': (_) => const NotificationsScreen(),
         '/rewards': (_) => const RewardsHubScreen(),
+        '/business': (_) => const BusinessHubScreen(),
         '/campus': (_) => const CampusHomeScreen(),
         '/campus-profile': (_) => const CampusProfileScreen(),
         '/communities': (_) => const CommunitiesScreen(),
