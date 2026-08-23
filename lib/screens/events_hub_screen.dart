@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import 'event_photo_create_screen.dart';
 import 'past_events_screen.dart';
+import 'reels_screen.dart';
 import 'social_events_screen.dart';
 
 class EventsHubScreen extends StatefulWidget {
@@ -51,6 +52,14 @@ class _EventsHubScreenState extends State<EventsHubScreen> {
                             onTap: () => setState(() => _tab = 1),
                           ),
                         ),
+                        Expanded(
+                          child: _EventTab(
+                            icon: Icons.smart_display_outlined,
+                            label: 'Reels',
+                            selected: _tab == 2,
+                            onTap: () => setState(() => _tab = 2),
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -89,6 +98,7 @@ class _EventsHubScreenState extends State<EventsHubScreen> {
               children: const [
                 SocialEventsScreen(),
                 PastEventsScreen(embedded: true),
+                ReelsScreen(),
               ],
             ),
           ),
@@ -120,22 +130,26 @@ class _EventTab extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(10),
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 10),
+          padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 7),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
                 icon,
-                size: 17,
+                size: 16,
                 color: selected ? AppColors.cyan : Colors.white54,
               ),
-              const SizedBox(width: 7),
-              Text(
-                label,
-                style: TextStyle(
-                  color: selected ? Colors.white : Colors.white54,
-                  fontSize: 12.5,
-                  fontWeight: selected ? FontWeight.w900 : FontWeight.w700,
+              const SizedBox(width: 5),
+              Flexible(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: selected ? Colors.white : Colors.white54,
+                    fontSize: 11.5,
+                    fontWeight: selected ? FontWeight.w900 : FontWeight.w700,
+                  ),
                 ),
               ),
             ],
