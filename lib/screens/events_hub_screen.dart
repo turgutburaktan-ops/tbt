@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
+import 'event_photo_create_screen.dart';
 import 'past_events_screen.dart';
 import 'social_events_screen.dart';
 
@@ -22,33 +23,64 @@ class _EventsHubScreenState extends State<EventsHubScreen> {
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(14, 6, 14, 8),
-            child: Container(
-              padding: const EdgeInsets.all(3),
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(13),
-                border: Border.all(color: AppColors.border),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: _EventTab(
-                      icon: Icons.event_available_outlined,
-                      label: 'Yaklaşan',
-                      selected: _tab == 0,
-                      onTap: () => setState(() => _tab = 0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.all(3),
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(13),
+                      border: Border.all(color: AppColors.border),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: _EventTab(
+                            icon: Icons.event_available_outlined,
+                            label: 'Yaklaşan',
+                            selected: _tab == 0,
+                            onTap: () => setState(() => _tab = 0),
+                          ),
+                        ),
+                        Expanded(
+                          child: _EventTab(
+                            icon: Icons.photo_album_outlined,
+                            label: 'Anılarım',
+                            selected: _tab == 1,
+                            onTap: () => setState(() => _tab = 1),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  Expanded(
-                    child: _EventTab(
-                      icon: Icons.photo_album_outlined,
-                      label: 'Anılarım',
-                      selected: _tab == 1,
-                      onTap: () => setState(() => _tab = 1),
+                ),
+                const SizedBox(width: 8),
+                Tooltip(
+                  message: 'Fotoğraflı etkinlik oluştur',
+                  child: Material(
+                    color: AppColors.surfaceStrong,
+                    borderRadius: BorderRadius.circular(13),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(13),
+                      onTap: () async {
+                        await Navigator.push<bool>(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const EventPhotoCreateScreen(),
+                          ),
+                        );
+                        if (mounted) setState(() => _tab = 0);
+                      },
+                      child: const SizedBox(
+                        width: 46,
+                        height: 46,
+                        child: Icon(Icons.add_a_photo_outlined),
+                      ),
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
           Expanded(
