@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+import 'app_notification_service.dart';
+
 class SocialService {
   SocialService._();
 
@@ -146,6 +148,21 @@ class SocialService {
     );
 
     await batch.commit();
+
+    try {
+      final displayName = (user.displayName ?? '').trim().isEmpty
+          ? 'Bir kullanıcı'
+          : user.displayName!.trim();
+      await AppNotificationService.instance.notifyUser(
+        userId: targetUserId,
+        type: 'follow',
+        title: '$displayName seni takip etmeye başladı',
+        body: 'Profilini görmek için dokun.',
+        actorId: user.uid,
+      );
+    } catch (_) {
+      // Takip işlemi başarılıysa bildirim hatası ana işlemi bozmaz.
+    }
   }
 
   // =========================================================
