@@ -3,10 +3,14 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import '../screens/chat_screen.dart';
 import '../screens/community_profile_screen.dart';
 import '../screens/event_deep_link_screen.dart';
+import '../screens/post_detail_screen.dart';
+import '../screens/user_profile_screen.dart';
 
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {}
@@ -29,7 +33,11 @@ class PushNotificationService {
     _navigatorKey = navigatorKey;
     FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
     await _messaging.setAutoInitEnabled(true);
-    final settings = await _messaging.requestPermission(alert: true, badge: true, sound: true);
+    final settings = await _messaging.requestPermission(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
     if (settings.authorizationStatus == AuthorizationStatus.denied) return;
 
     _authSub?.cancel();
@@ -48,15 +56,24 @@ class PushNotificationService {
       if (context == null) return;
       final title = message.notification?.title ?? 'Yeni bildirim';
       final body = message.notification?.body ?? '';
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(body.isEmpty ? title : '$title\n$body'),
-        action: message.data.isEmpty ? null : SnackBarAction(label: 'Aç', onPressed: () => _openMessage(message)),
-      ));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(body.isEmpty ? title : '$title\n$body'),
+          action: message.data.isEmpty
+              ? null
+              : SnackBarAction(
+                  label: 'Aç',
+                  onPressed: () => _openMessage(message),
+                ),
+        ),
+      );
     });
     _openedSub?.cancel();
     _openedSub = FirebaseMessaging.onMessageOpenedApp.listen(_openMessage);
     final initial = await _messaging.getInitialMessage();
-    if (initial != null) WidgetsBinding.instance.addPostFrameCallback((_) => _openMessage(initial));
+    if (initial != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _openMessage(initial));
+    }
     if (_auth.currentUser != null) await _saveCurrentToken();
   }
 
@@ -65,26 +82,94 @@ class PushNotificationService {
     if (token != null && token.isNotEmpty) await _saveToken(token);
   }
 
+  String get _platformName {
+    switch (defaultTargetPlatform) {
+      case TargetPlatform.iOS:
+        return 'ios';
+      case TargetPlatform.android:
+        return 'android';
+      default:
+        return defaultTargetPlatform.name;
+    }
+  }
+
   Future<void> _saveToken(String token) async {
     final user = _auth.currentUser;
     if (user == null || token.isEmpty || token == _lastSavedToken) return;
     _lastSavedToken = token;
-    await _firestore.collection('users').doc(user.uid).collection('push_tokens').doc(token).set({
+    await _firestore
+        .collection('users')
+        .doc(user.uid)
+        .collection('push_tokens')
+        .doc(token)
+        .set({
       'token': token,
-      'platform': 'android',
+      'platform': _platformName,
       'updatedAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
   }
 
-  void _openMessage(RemoteMessage message) {
+  Future<Map<String, dynamic>> _profile(String userId) async {
+    if (userId.isEmpty) return const <String, dynamic>{};
+    final doc = await _firestore.collection('users').doc(userId).get();
+    return doc.data() ?? const <String, dynamic>{};
+  }
+
+  Future<void> _openMessage(RemoteMessage message) async {
     final navigator = _navigatorKey?.currentState;
     if (navigator == null) return;
+
+    final type = (message.data['type'] ?? '').toString().trim();
+    final sourceId = (message.data['sourceId'] ?? '').toString().trim();
+    final actorId = (message.data['actorId'] ?? '').toString().trim();
     final eventId = (message.data['eventId'] ?? '').toString().trim();
     final communityId = (message.data['communityId'] ?? '').toString().trim();
+
     if (eventId.isNotEmpty) {
-      navigator.push(MaterialPageRoute(builder: (_) => EventDeepLinkScreen(eventId: eventId)));
-    } else if (communityId.isNotEmpty) {
-      navigator.push(MaterialPageRoute(builder: (_) => CommunityProfileScreen(communityId: communityId)));
+      navigator.push(
+        MaterialPageRoute(builder: (_) => EventDeepLinkScreen(eventId: eventId)),
+      );
+      return;
+    }
+    if (communityId.isNotEmpty) {
+      navigator.push(
+        MaterialPageRoute(
+          builder: (_) => CommunityProfileScreen(communityId: communityId),
+        ),
+      );
+      return;
+    }
+    if (type == 'message' && actorId.isNotEmpty) {
+      final data = await _profile(actorId);
+      final displayName =
+          (data['displayName'] ?? data['username'] ?? 'Kullanıcı').toString();
+      navigator.push(
+        MaterialPageRoute(
+          builder: (_) => ChatScreen(
+            otherUserId: actorId,
+            otherDisplayName: displayName,
+          ),
+        ),
+      );
+      return;
+    }
+    if (type.startsWith('post_') && sourceId.isNotEmpty) {
+      final doc = await _firestore.collection('posts').doc(sourceId).get();
+      if (doc.exists) {
+        navigator.push(
+          MaterialPageRoute(
+            builder: (_) => PostDetailScreen(
+              post: {...?doc.data(), 'id': doc.id},
+            ),
+          ),
+        );
+      }
+      return;
+    }
+    if ((type == 'follow' || type.startsWith('story_')) && actorId.isNotEmpty) {
+      navigator.push(
+        MaterialPageRoute(builder: (_) => UserProfileScreen(userId: actorId)),
+      );
     }
   }
 
