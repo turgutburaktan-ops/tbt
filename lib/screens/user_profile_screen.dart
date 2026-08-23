@@ -8,6 +8,7 @@ import '../services/social_service.dart';
 import '../services/story_service.dart';
 import '../widgets/firebase_media_image.dart';
 import '../widgets/story_strip.dart';
+import '../widgets/user_safety_actions.dart';
 import 'chat_screen.dart';
 import 'post_detail_screen.dart';
 
@@ -65,6 +66,9 @@ class UserProfileScreen extends StatelessWidget {
         foregroundColor: Colors.white,
         elevation: 0,
         title: const Text('Profil'),
+        actions: [
+          if (!isOwnProfile && currentUser != null) UserSafetyActions(userId: userId),
+        ],
       ),
       body: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
         stream: SocialService.instance.userProfile(userId),
