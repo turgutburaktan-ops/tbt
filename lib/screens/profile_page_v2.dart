@@ -166,6 +166,15 @@ class _ProfileBodyState extends State<_ProfileBody> {
       case 'messages':
         if (mounted) Navigator.pushNamed(context, '/messages');
         return;
+      case 'search':
+        if (mounted) Navigator.pushNamed(context, '/search');
+        return;
+      case 'safety':
+        if (mounted) Navigator.pushNamed(context, '/safety-privacy');
+        return;
+      case 'business':
+        if (mounted) Navigator.pushNamed(context, '/business');
+        return;
       case 'campus':
         if (mounted) Navigator.pushNamed(context, '/campus');
         return;
@@ -318,6 +327,30 @@ class _ProfileBodyState extends State<_ProfileBody> {
                                   leading:
                                       Icon(Icons.chat_bubble_outline_rounded),
                                   title: Text('Mesajlar'),
+                                ),
+                              ),
+                              const PopupMenuItem(
+                                value: 'search',
+                                child: ListTile(
+                                  dense: true,
+                                  leading: Icon(Icons.search_rounded),
+                                  title: Text('TBT’de Ara'),
+                                ),
+                              ),
+                              const PopupMenuItem(
+                                value: 'safety',
+                                child: ListTile(
+                                  dense: true,
+                                  leading: Icon(Icons.shield_outlined),
+                                  title: Text('Güvenlik ve Gizlilik'),
+                                ),
+                              ),
+                              const PopupMenuItem(
+                                value: 'business',
+                                child: ListTile(
+                                  dense: true,
+                                  leading: Icon(Icons.storefront_outlined),
+                                  title: Text('İşletmem'),
                                 ),
                               ),
                               if (_campusEligible(profile))
