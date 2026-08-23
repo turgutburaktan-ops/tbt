@@ -46,6 +46,12 @@ jobs:
           dart --version
           xcodebuild -version
 
+      # iris_camera 1.0.6 currently publishes a SwiftPM manifest whose target
+      # points at a missing `Classes` path. Keep the app/plugin code untouched
+      # and use the plugin's CocoaPods integration for iOS instead.
+      - name: Use CocoaPods plugin integration
+        run: flutter config --no-enable-swift-package-manager
+
       - name: Install dependencies
         run: flutter pub get
 
