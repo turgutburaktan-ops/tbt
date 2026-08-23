@@ -433,6 +433,7 @@ class _FeedHubState extends State<_FeedHub> {
         child: Column(
           children: [
             const _HomeHeader(),
+            const _MissionCard(),
             Padding(
               padding: const EdgeInsets.fromLTRB(14, 2, 14, 8),
               child: _CompactTabs(
@@ -454,6 +455,106 @@ class _FeedHubState extends State<_FeedHub> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _MissionCard extends StatelessWidget {
+  const _MissionCard();
+
+  String _levelName(int xp) {
+    if (xp >= 5000) return 'Türkiye Kaşifi';
+    if (xp >= 2500) return 'Usta Kaşif';
+    if (xp >= 1200) return 'Şehir Rehberi';
+    if (xp >= 500) return 'Fotoğraf Avcısı';
+    if (xp >= 150) return 'Kaşif';
+    return 'Gezgin';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return const SizedBox.shrink();
+
+    return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+      stream: FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .snapshots(),
+      builder: (context, snapshot) {
+        final data = snapshot.data?.data() ?? const <String, dynamic>{};
+        final xp = (data['xp'] as num?)?.toInt() ?? 0;
+        final level = (data['levelName'] ?? _levelName(xp)).toString();
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(14, 0, 14, 8),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () => Navigator.pushNamed(context, '/rewards'),
+              borderRadius: BorderRadius.circular(16),
+              child: Ink(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF151B24), Color(0xFF191226)],
+                  ),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 46,
+                      height: 46,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: AppColors.accentGradient,
+                      ),
+                      alignment: Alignment.center,
+                      child: const Text('🔥', style: TextStyle(fontSize: 22)),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Bugünün Görevi',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                          const SizedBox(height: 3),
+                          const Text(
+                            'Bugün bir fotoğraf veya video paylaş • +30 XP',
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: 11.5,
+                            ),
+                          ),
+                          const SizedBox(height: 7),
+                          Text(
+                            '$level • $xp XP',
+                            style: const TextStyle(
+                              color: AppColors.cyan,
+                              fontSize: 10.8,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Icon(Icons.chevron_right_rounded, color: Colors.white54),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }
