@@ -1,11 +1,16 @@
 name: Grant TBT Admin
 
 on:
+  push:
+    branches:
+      - feature/video-v1
+    paths:
+      - '.github/workflows/grant_tbt_admin.yml'
   workflow_dispatch:
     inputs:
       admin_email:
         description: 'Firebase Auth email to grant admin access'
-        required: true
+        required: false
         type: string
 
 permissions:
@@ -27,7 +32,7 @@ jobs:
       - name: Grant admin custom claim
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-          ADMIN_EMAIL: ${{ inputs.admin_email }}
+          ADMIN_EMAIL: ${{ inputs.admin_email || 'turgutburaktan@gmail.com' }}
         shell: bash
         run: |
           set -euo pipefail
@@ -37,7 +42,7 @@ jobs:
           const raw = process.env.FIREBASE_SERVICE_ACCOUNT || '';
           const email = (process.env.ADMIN_EMAIL || '').trim().toLowerCase();
           if (!raw) throw new Error('FIREBASE_SERVICE_ACCOUNT secret is missing.');
-          if (!email || !email.includes('@')) throw new Error('A valid admin_email input is required.');
+          if (!email || !email.includes('@')) throw new Error('A valid admin email is required.');
 
           const serviceAccount = JSON.parse(raw);
           admin.initializeApp({
