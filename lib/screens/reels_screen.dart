@@ -79,7 +79,7 @@ class _ReelsScreenState extends State<ReelsScreen> {
               ),
             );
           }
-          final safeIndex = _activeIndex.clamp(0, docs.length - 1);
+          final safeIndex = _activeIndex.clamp(0, docs.length - 1).toInt();
           if (safeIndex != _activeIndex) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (mounted) setState(() => _activeIndex = safeIndex);
