@@ -1,0 +1,86 @@
+name: Apply Business Admin Rules
+
+on:
+  push:
+    branches:
+      - feature/video-v1
+    paths:
+      - .github/workflows/apply_business_admin_rules.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch-rules:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/video-v1
+
+      - name: Insert business security rules
+        shell: python
+        run: |
+          from pathlib import Path
+          path = Path('firestore.rules')
+          text = path.read_text()
+          marker = "    // Default deny. Every writable collection must be deliberately reviewed."
+          if 'match /business_claims/{venueKey}' in text:
+              print('Business rules already present.')
+              raise SystemExit(0)
+          block = r'''
+    // Business ownership is deliberately review-gated. Applicants can create
+    // a pending claim but cannot self-verify, change ownership or publish as a
+    // verified business. Only an account carrying the admin custom claim may
+    // approve/reject claims or change verified venue ownership.
+    match /business_claims/{venueKey} {
+      allow read: if isAdmin() || (signedIn() && resource.data.applicantUid == request.auth.uid);
+      allow create: if signedIn() &&
+        request.resource.data.applicantUid == request.auth.uid &&
+        request.resource.data.status == 'pending_review' &&
+        request.resource.data.verificationLevel == 'none' &&
+        request.resource.data.adminReviewRequired == true &&
+        request.resource.data.verifiedBy == null &&
+        request.resource.data.verifiedAt == null;
+      allow update, delete: if isAdmin();
+    }
+
+    match /business_venues/{venueKey} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+
+      match /menu/{itemId} {
+        allow read: if true;
+        allow create, update, delete: if signedIn() &&
+          exists(/databases/$(database)/documents/business_claims/$(venueKey)) &&
+          get(/databases/$(database)/documents/business_claims/$(venueKey)).data.status == 'verified' &&
+          get(/databases/$(database)/documents/business_claims/$(venueKey)).data.applicantUid == request.auth.uid &&
+          request.resource.data.createdBy == request.auth.uid;
+      }
+
+      match /program/{itemId} {
+        allow read: if true;
+        allow create, update, delete: if signedIn() &&
+          exists(/databases/$(database)/documents/business_claims/$(venueKey)) &&
+          get(/databases/$(database)/documents/business_claims/$(venueKey)).data.status == 'verified' &&
+          get(/databases/$(database)/documents/business_claims/$(venueKey)).data.applicantUid == request.auth.uid &&
+          request.resource.data.createdBy == request.auth.uid;
+      }
+    }
+
+'''
+          if marker not in text:
+              raise SystemExit('Default deny marker not found; refusing unsafe rewrite.')
+          path.write_text(text.replace(marker, block + marker, 1))
+
+      - name: Commit rules patch
+        run: |
+          if git diff --quiet -- firestore.rules; then
+            echo "No rule changes needed."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add firestore.rules
+          git commit -m "Secure business ownership and admin review rules"
+          git push origin HEAD:feature/video-v1
