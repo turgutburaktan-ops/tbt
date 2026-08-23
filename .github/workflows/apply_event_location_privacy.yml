@@ -1,0 +1,78 @@
+name: Apply Event Location Privacy
+
+on:
+  push:
+    branches:
+      - feature/video-v1
+    paths:
+      - '.github/workflows/apply_event_location_privacy.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/video-v1
+
+      - name: Patch event location storage
+        shell: python
+        run: |
+          from pathlib import Path
+          p = Path('lib/services/social_event_service.dart')
+          s = p.read_text()
+
+          anchor = """    final safeAllowedIds = allowedUserIds.map((id) => id.trim()).where((id) => id.isNotEmpty && id != user.uid).toSet().take(300).toList();\n\n    await ref.set({"""
+          replacement = """    final safeAllowedIds = allowedUserIds.map((id) => id.trim()).where((id) => id.isNotEmpty && id != user.uid).toSet().take(300).toList();\n    final exactLatitude = latitude ?? spot?.latitude;\n    final exactLongitude = longitude ?? spot?.longitude;\n    final approximateLatitude = exactLatitude == null ? null : (exactLatitude * 100).round() / 100.0;\n    final approximateLongitude = exactLongitude == null ? null : (exactLongitude * 100).round() / 100.0;\n\n    await ref.set({"""
+          if 'final exactLatitude =' not in s:
+              if anchor not in s: raise SystemExit('location compute anchor missing')
+              s = s.replace(anchor, replacement, 1)
+
+          old = """      'latitude': latitude ?? spot?.latitude,\n      'longitude': longitude ?? spot?.longitude,\n      'location': latitude != null && longitude != null ? GeoPoint(latitude, longitude) : (spot == null ? null : GeoPoint(spot.latitude, spot.longitude)),"""
+          new = """      'latitude': approximateLatitude,\n      'longitude': approximateLongitude,\n      'location': approximateLatitude != null && approximateLongitude != null\n          ? GeoPoint(approximateLatitude, approximateLongitude)\n          : null,"""
+          if old in s:
+              s = s.replace(old, new, 1)
+
+          after = """      'updatedAt': FieldValue.serverTimestamp(),\n    });\n\n    if (safeCommunityId != null && visibility == EventVisibility.public) {"""
+          insert = """      'updatedAt': FieldValue.serverTimestamp(),\n    });\n\n    if (exactLatitude != null && exactLongitude != null) {\n      await ref.collection('private_location').doc('main').set({\n        'hostId': user.uid,\n        'latitude': exactLatitude,\n        'longitude': exactLongitude,\n        'location': GeoPoint(exactLatitude, exactLongitude),\n        'locationLabel': locationLabel.trim().isNotEmpty ? locationLabel.trim() : (spot?.name ?? ''),\n        'createdAt': FieldValue.serverTimestamp(),\n        'updatedAt': FieldValue.serverTimestamp(),\n      });\n    }\n\n    if (safeCommunityId != null && visibility == EventVisibility.public) {"""
+          if "collection('private_location')" not in s:
+              if after not in s: raise SystemExit('private location insert anchor missing')
+              s = s.replace(after, insert, 1)
+          p.write_text(s)
+
+      - name: Patch Firestore private-location rules
+        shell: python
+        run: |
+          from pathlib import Path
+          p = Path('firestore.rules')
+          s = p.read_text()
+          marker = "      match /attendance/{uid} {"
+          if 'match /private_location/{locationId}' not in s:
+              block = r'''      match /private_location/{locationId} {
+        allow read: if signedIn() && (
+          get(/databases/$(database)/documents/social_events/$(eventId)).data.hostId == request.auth.uid ||
+          get(/databases/$(database)/documents/social_events/$(eventId)).data.participantIds.hasAny([request.auth.uid])
+        );
+        allow create, update: if signedIn() &&
+          get(/databases/$(database)/documents/social_events/$(eventId)).data.hostId == request.auth.uid &&
+          request.resource.data.hostId == request.auth.uid;
+        allow delete: if signedIn() &&
+          get(/databases/$(database)/documents/social_events/$(eventId)).data.hostId == request.auth.uid;
+      }
+
+'''
+              if marker not in s: raise SystemExit('attendance marker missing')
+              s = s.replace(marker, block + marker, 1)
+          p.write_text(s)
+
+      - name: Commit privacy patch
+        run: |
+          if git diff --quiet -- lib/services/social_event_service.dart firestore.rules; then exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add lib/services/social_event_service.dart firestore.rules
+          git commit -m "Protect precise event location for attendees"
+          git push origin HEAD:feature/video-v1
