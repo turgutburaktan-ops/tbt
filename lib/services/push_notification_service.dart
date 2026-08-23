@@ -15,7 +15,7 @@ import '../screens/user_profile_screen.dart';
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {}
 
-class PushNotificationService {
+class PushNotificationService with WidgetsBindingObserver {
   PushNotificationService._();
   static final PushNotificationService instance = PushNotificationService._();
 
@@ -28,9 +28,11 @@ class PushNotificationService {
   StreamSubscription<RemoteMessage>? _openedSub;
   GlobalKey<NavigatorState>? _navigatorKey;
   String? _lastSavedToken;
+  DateTime? _lastActivityWrite;
 
   Future<void> initialize(GlobalKey<NavigatorState> navigatorKey) async {
     _navigatorKey = navigatorKey;
+    WidgetsBinding.instance.addObserver(this);
     FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
     await _messaging.setAutoInitEnabled(true);
     final settings = await _messaging.requestPermission(
@@ -44,8 +46,10 @@ class PushNotificationService {
     _authSub = _auth.authStateChanges().listen((user) async {
       if (user == null) {
         _lastSavedToken = null;
+        _lastActivityWrite = null;
         return;
       }
+      await _markActive(force: true);
       await _saveCurrentToken();
     });
     _tokenSub?.cancel();
@@ -74,7 +78,37 @@ class PushNotificationService {
     if (initial != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _openMessage(initial));
     }
-    if (_auth.currentUser != null) await _saveCurrentToken();
+    if (_auth.currentUser != null) {
+      await _markActive(force: true);
+      await _saveCurrentToken();
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _markActive();
+    }
+  }
+
+  Future<void> _markActive({bool force = false}) async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+    final now = DateTime.now();
+    if (!force &&
+        _lastActivityWrite != null &&
+        now.difference(_lastActivityWrite!) < const Duration(minutes: 15)) {
+      return;
+    }
+    _lastActivityWrite = now;
+    try {
+      await _firestore.collection('users').doc(user.uid).set({
+        'lastActiveAt': FieldValue.serverTimestamp(),
+        'lastActivePlatform': _platformName,
+      }, SetOptions(merge: true));
+    } catch (_) {
+      // Activity tracking must never block app startup or foregrounding.
+    }
   }
 
   Future<void> _saveCurrentToken() async {
@@ -107,6 +141,7 @@ class PushNotificationService {
       'platform': _platformName,
       'updatedAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
+    await _markActive(force: true);
   }
 
   Future<Map<String, dynamic>> _profile(String userId) async {
@@ -118,6 +153,7 @@ class PushNotificationService {
   Future<void> _openMessage(RemoteMessage message) async {
     final navigator = _navigatorKey?.currentState;
     if (navigator == null) return;
+    await _markActive(force: true);
 
     final type = (message.data['type'] ?? '').toString().trim();
     final sourceId = (message.data['sourceId'] ?? '').toString().trim();
@@ -170,10 +206,15 @@ class PushNotificationService {
       navigator.push(
         MaterialPageRoute(builder: (_) => UserProfileScreen(userId: actorId)),
       );
+      return;
+    }
+    if (type == 'reengagement') {
+      navigator.pushNamed('/campus');
     }
   }
 
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _tokenSub?.cancel();
     _authSub?.cancel();
     _foregroundSub?.cancel();
