@@ -54,6 +54,8 @@ jobs:
 
       - name: 3 · Prepare Android host
         shell: bash
+        env:
+          MAPS_API_KEY: ${{ secrets.MAPS_API_KEY }}
         run: |
           set -euo pipefail
           cp android/app/src/main/AndroidManifest.xml /tmp/tbt-AndroidManifest.xml
@@ -62,8 +64,6 @@ jobs:
           cp /tmp/tbt-AndroidManifest.xml android/app/src/main/AndroidManifest.xml
           python3 - <<'PY'
           from pathlib import Path
-          manifest = Path('android/app/src/main/AndroidManifest.xml')
-          manifest.write_text(manifest.read_text().replace('${MAPS_API_KEY}', 'CI_DUMMY_MAPS_KEY'))
           gradle = Path('android/app/build.gradle.kts')
           text = gradle.read_text()
           text = text.replace('minSdk = flutter.minSdkVersion', 'minSdk = 26')
@@ -72,6 +72,18 @@ jobs:
           for activity in Path('android/app/src/main/kotlin').rglob('MainActivity.kt'):
               activity.write_text(activity.read_text().replace('package com.tbt.best_photo_spot', 'package com.tbt.social'))
           PY
+          if grep -q '\${MAPS_API_KEY}' android/app/src/main/AndroidManifest.xml; then
+            if [ -z "${MAPS_API_KEY:-}" ]; then
+              echo 'MAPS_API_KEY GitHub secret is missing. Refusing to publish a broken-map APK.'
+              exit 1
+            fi
+            python3 - <<'PY'
+          import os
+          from pathlib import Path
+          p = Path('android/app/src/main/AndroidManifest.xml')
+          p.write_text(p.read_text().replace('${MAPS_API_KEY}', os.environ['MAPS_API_KEY']))
+          PY
+          fi
           grep -q 'applicationId = "com.tbt.social"' android/app/build.gradle.kts
           grep -q 'namespace = "com.tbt.social"' android/app/build.gradle.kts
 
@@ -140,20 +152,28 @@ jobs:
         with:
           node-version: '20'
 
-      - name: 9 · Security checks
+      - name: 9 · Security gate
         shell: bash
         run: |
           set -euo pipefail
+          echo 'Checking tracked secrets...'
           if git grep -n -E -- 'BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY|private_key_id[[:space:]]*[:=]|service_account.*\.json' -- ':!pubspec.lock' ':!.github/workflows/security_regression_check.yml' ':!.github/workflows/tbt_full_build.yml'; then
             echo 'Potential private key/service-account material found in tracked files.'
             exit 1
           fi
-          if grep -nE 'match /\{collection\}/\{document\}.*' firestore.rules >/dev/null; then
-            if grep -nE 'allow write: if signedIn\(\).*!\(collection in' firestore.rules; then
-              echo 'Permissive authenticated wildcard write remains.'
-              exit 1
-            fi
+          echo 'Checking Firebase deny-by-default fallbacks...'
+          grep -q 'match /{allPaths=\*\*}' storage.rules
+          grep -A2 'match /{allPaths=\*\*}' storage.rules | grep -q 'allow read, write: if false'
+          grep -q 'safeMediaWrite' storage.rules
+          grep -q 'request.resource.size <= 50 \* 1024 \* 1024' storage.rules
+          grep -q "request.resource.contentType.matches('^(image|video)/.*\$')" storage.rules
+          grep -q 'function isAdmin()' firestore.rules
+          grep -q 'request.auth.token.admin == true' firestore.rules
+          if grep -nE 'allow (read, )?write: if true|allow write: if signedIn\(\);' firestore.rules storage.rules; then
+            echo 'Unsafe broad write rule found.'
+            exit 1
           fi
+          echo 'Security gate passed.'
 
       - name: 10 · Firebase rules emulator
         shell: bash
