@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../services/auth_service.dart';
-import 'phone_login_screen.dart';
 import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -123,15 +122,6 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  Future<void> _phoneLogin() async {
-    await Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const PhoneLoginScreen()),
-    );
-    if (!mounted) return;
-    if (AuthService.instance.isLoggedIn && !widget.embedded) Navigator.pop(context);
-  }
-
   void _showMessage(String text) {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
@@ -197,16 +187,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
                     : const Icon(Icons.apple_rounded, size: 24),
                 label: const Text('Apple ile devam et', style: TextStyle(fontWeight: FontWeight.w900)),
-              ),
-            ),
-            const SizedBox(height: 10),
-            SizedBox(
-              width: double.infinity,
-              height: 52,
-              child: OutlinedButton.icon(
-                onPressed: _busy ? null : _phoneLogin,
-                icon: const Icon(Icons.phone_android_rounded),
-                label: const Text('Telefon ile devam et', style: TextStyle(fontWeight: FontWeight.w900)),
               ),
             ),
             const Padding(
