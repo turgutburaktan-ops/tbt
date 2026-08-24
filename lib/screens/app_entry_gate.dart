@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import 'account_security_gate.dart';
 import 'app_onboarding_screen.dart';
 import 'guest_home_screen.dart';
 import 'home_shell_v3.dart';
@@ -35,16 +36,20 @@ class AppEntryGate extends StatelessWidget {
 
             final data = profileSnapshot.data?.data();
             final appOnboardingCompleted = data?['appOnboardingCompleted'] == true;
+            Widget next;
             if (!appOnboardingCompleted) {
-              return const AppOnboardingScreen();
+              next = const AppOnboardingScreen();
+            } else {
+              final onboardingRequired = data?['onboardingRequired'] == true;
+              final onboardingCompleted = data?['onboardingCompleted'] == true;
+              if (onboardingRequired && !onboardingCompleted) {
+                next = const StudentOnboardingScreen();
+              } else {
+                next = const HomeScreen();
+              }
             }
 
-            final onboardingRequired = data?['onboardingRequired'] == true;
-            final onboardingCompleted = data?['onboardingCompleted'] == true;
-            if (onboardingRequired && !onboardingCompleted) {
-              return const StudentOnboardingScreen();
-            }
-            return const HomeScreen();
+            return AccountSecurityGate(profile: data, child: next);
           },
         );
       },
