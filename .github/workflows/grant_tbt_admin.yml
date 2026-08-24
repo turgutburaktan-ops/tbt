@@ -29,7 +29,7 @@ jobs:
       - name: Install Firebase Admin SDK
         run: npm install --no-save firebase-admin@13
 
-      - name: Grant admin custom claim
+      - name: Grant owner access and verify profile
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
           ADMIN_EMAIL: ${{ inputs.admin_email || 'turgutburaktan@gmail.com' }}
@@ -55,8 +55,46 @@ jobs:
             await admin.auth().setCustomUserClaims(user.uid, {
               ...current,
               admin: true,
+              verified: true,
             });
-            console.log(`Admin claim granted to Firebase user ${user.uid.slice(0, 6)}…`);
+
+            const db = admin.firestore();
+            const username = 't.buraktan';
+            const usernameRef = db.collection('usernames').doc(username);
+            const userRef = db.collection('users').doc(user.uid);
+
+            await db.runTransaction(async (transaction) => {
+              const reservation = await transaction.get(usernameRef);
+              if (reservation.exists && reservation.data()?.uid !== user.uid) {
+                throw new Error(`@${username} is reserved by another Firebase user.`);
+              }
+
+              const now = admin.firestore.FieldValue.serverTimestamp();
+              transaction.set(usernameRef, {
+                uid: user.uid,
+                username,
+                normalized: username,
+                verified: true,
+                verificationStatus: 'verified',
+                updatedAt: now,
+                ...(!reservation.exists ? {createdAt: now} : {}),
+              }, {merge: true});
+              transaction.set(userRef, {
+                uid: user.uid,
+                email,
+                username,
+                usernameNormalized: username,
+                verified: true,
+                verificationStatus: 'verified',
+                verifiedAt: now,
+                phoneVerified: true,
+                phoneVerificationBypass: 'owner-admin-recovery',
+                phoneVerifiedAt: now,
+                updatedAt: now,
+              }, {merge: true});
+            });
+
+            console.log(`Owner access and @${username} verification granted to Firebase user ${user.uid.slice(0, 6)}…`);
           })().catch((error) => {
             console.error(error?.message || error);
             process.exit(1);
