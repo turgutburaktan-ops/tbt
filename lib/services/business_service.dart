@@ -22,6 +22,16 @@ class BusinessService {
     return Map<String, dynamic>.from(result.data as Map);
   }
 
+  Future<Map<String, dynamic>> entitlementStatus(
+    String category,
+    String venueId,
+  ) async {
+    final result = await _functions.httpsCallable('getBusinessEntitlement').call({
+      'venueKey': venueKey(category.trim(), venueId.trim()),
+    });
+    return Map<String, dynamic>.from(result.data as Map);
+  }
+
   Future<void> submitClaim({
     required String category,
     required String venueId,
