@@ -54,7 +54,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   Future<int> _count(Query<Map<String, dynamic>> query) async {
     final snap = await query.count().get();
-    return snap.count;
+    return snap.count ?? 0;
   }
 
   Future<void> _loadStats() async {
@@ -120,10 +120,16 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           content: TextField(
             controller: controller,
             maxLines: 3,
-            decoration: const InputDecoration(labelText: 'Ret nedeni'),
+            decoration: const InputDecoration(
+              labelText: 'Red gerekçesi',
+              hintText: 'Eksik belge, eşleşmeyen bilgiler vb.',
+            ),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Vazgeç')),
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Vazgeç'),
+            ),
             FilledButton(
               onPressed: () => Navigator.pop(dialogContext, controller.text.trim()),
               child: const Text('Reddet'),
@@ -132,66 +138,73 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         ),
       );
       controller.dispose();
-      if (result == null || result.length < 3) return;
-      reason = result;
+      if (result == null || result.trim().length < 3) return;
+      reason = result.trim();
     } else {
       final confirmed = await showDialog<bool>(
         context: context,
         builder: (dialogContext) => AlertDialog(
           title: const Text('İşletmeyi doğrula?'),
-          content: const Text('Belge, iletişim ve mekan eşleşmesini kontrol ettiğini onaylıyorsun.'),
+          content: const Text(
+            'Belge, iletişim bilgileri ve mekan eşleşmesini kontrol ettiğini onaylıyor musun?',
+          ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('Vazgeç')),
-            FilledButton(onPressed: () => Navigator.pop(dialogContext, true), child: const Text('Doğrula')),
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('Vazgeç'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: const Text('Kontrol Ettim'),
+            ),
           ],
         ),
       );
       if (confirmed != true) return;
     }
 
-    final adminUid = FirebaseAuth.instance.currentUser!.uid;
-    final batch = _db.batch();
-    batch.update(doc.reference, {
-      'status': approve ? 'verified' : 'rejected',
-      'verificationLevel': approve ? 'manual_strong' : 'none',
-      'verifiedBy': approve ? adminUid : null,
-      'verifiedAt': approve ? FieldValue.serverTimestamp() : null,
-      'rejectionReason': reason,
-      'updatedAt': FieldValue.serverTimestamp(),
-    });
-    if (approve) {
-      batch.set(
-        _db.collection('business_venues').doc(doc.id),
-        {
-          'venueKey': doc.id,
-          'venueId': data['venueId'],
-          'category': data['category'],
-          'venueName': data['venueName'],
-          'ownerUid': data['applicantUid'],
-          'verified': true,
-          'verificationLevel': 'manual_strong',
-          'verifiedAt': FieldValue.serverTimestamp(),
-          'verifiedBy': adminUid,
-          'updatedAt': FieldValue.serverTimestamp(),
-        },
-        SetOptions(merge: true),
+    final callableUrl = Uri.parse(
+      'https://us-central1-en-iyi-cekim-noktasi.cloudfunctions.net/adminReviewBusinessClaim',
+    );
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+    final token = await user.getIdToken();
+    final body = Uri(queryParameters: {
+      'claimId': doc.id,
+      'action': approve ? 'approve' : 'reject',
+      if (reason.isNotEmpty) 'reason': reason,
+    }).query;
+
+    final launched = await launchUrl(
+      callableUrl.replace(query: body),
+      mode: LaunchMode.externalApplication,
+      webOnlyWindowName: token,
+    );
+    if (!launched && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Doğrulama işlemi başlatılamadı.')),
       );
     }
-    await batch.commit();
-    await _loadStats();
   }
 
   @override
   Widget build(BuildContext context) {
     if (_checking) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return const Scaffold(
+        backgroundColor: AppColors.background,
+        body: Center(child: CircularProgressIndicator()),
+      );
     }
     if (!_isAdmin) {
       return const Scaffold(
+        backgroundColor: AppColors.background,
         body: Center(
           child: Padding(
-            padding: EdgeInsets.all(28),
-            child: Text('Bu alan yalnız TBT yöneticilerine açıktır.', textAlign: TextAlign.center),
+            padding: EdgeInsets.all(24),
+            child: Text(
+              'Bu ekran yalnızca TBT yöneticilerine açıktır.',
+              textAlign: TextAlign.center,
+            ),
           ),
         ),
       );
@@ -202,13 +215,16 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       appBar: AppBar(
         title: const Text('TBT Yönetim Paneli'),
         actions: [
-          IconButton(onPressed: _loadStats, icon: const Icon(Icons.refresh_rounded)),
+          IconButton(
+            onPressed: _loadingStats ? null : _loadStats,
+            icon: const Icon(Icons.refresh_rounded),
+          ),
         ],
       ),
       body: RefreshIndicator(
         onRefresh: _loadStats,
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 36),
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
           children: [
             SegmentedButton<String>(
               segments: const [
@@ -217,49 +233,140 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 ButtonSegment(value: '30d', label: Text('30 Gün')),
               ],
               selected: {_range},
-              showSelectedIcon: false,
-              onSelectionChanged: (value) async {
-                setState(() => _range = value.first);
-                await _loadStats();
+              onSelectionChanged: (values) {
+                setState(() => _range = values.first);
+                _loadStats();
               },
             ),
             const SizedBox(height: 16),
             if (_loadingStats && _stats.isEmpty)
-              const Center(child: CircularProgressIndicator())
+              const Center(child: Padding(
+                padding: EdgeInsets.all(24),
+                child: CircularProgressIndicator(),
+              ))
             else
-              Wrap(
-                spacing: 10,
-                runSpacing: 10,
+              GridView.count(
+                crossAxisCount: 2,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                mainAxisSpacing: 10,
+                crossAxisSpacing: 10,
+                childAspectRatio: 1.65,
                 children: _stats.entries
-                    .map((e) => _MetricCard(label: e.key, value: e.value))
+                    .map((entry) => _MetricCard(label: entry.key, value: entry.value))
                     .toList(),
               ),
-            const SizedBox(height: 24),
-            const Text('Eşitlik görünümü', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w900)),
-            const SizedBox(height: 5),
+            const SizedBox(height: 22),
             const Text(
-              'Cinsiyet dağılımı yalnız toplu olarak gösterilir. 10 kişiden küçük gruplar gizlenir.',
-              style: TextStyle(color: Colors.white54, fontSize: 12),
+              'Eşitlik görünümü',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
+            ),
+            const SizedBox(height: 6),
+            const Text(
+              'Cinsiyet bilgisi yalnız toplu istatistik olarak gösterilir. 10 kişiden küçük gruplar gizlenir.',
+              style: TextStyle(color: Colors.white60, height: 1.35),
             ),
             const SizedBox(height: 10),
-            _GenderCard(values: _gender),
-            const SizedBox(height: 24),
-            const Text('İşletme doğrulama kuyruğu', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w900)),
-            const SizedBox(height: 8),
+            ..._gender.entries.map((entry) {
+              final visible = entry.value >= 10;
+              return ListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(entry.key),
+                trailing: Text(
+                  visible ? '${entry.value}' : '<10',
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+                ),
+              );
+            }),
+            const Divider(height: 34),
+            Row(
+              children: [
+                const Expanded(
+                  child: Text(
+                    'İşletme doğrulama kuyruğu',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
+                  ),
+                ),
+                StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                  stream: _db
+                      .collection('business_claims')
+                      .where('status', isEqualTo: 'pending_review')
+                      .snapshots(),
+                  builder: (_, snapshot) => Badge(
+                    label: Text('${snapshot.data?.docs.length ?? 0}'),
+                    child: const Icon(Icons.verified_user_outlined),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
             StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-              stream: _db.collection('business_claims').where('status', isEqualTo: 'pending_review').snapshots(),
+              stream: _db
+                  .collection('business_claims')
+                  .where('status', isEqualTo: 'pending_review')
+                  .snapshots(),
               builder: (context, snapshot) {
-                if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+                if (!snapshot.hasData) {
+                  return const Center(child: CircularProgressIndicator());
+                }
                 final docs = snapshot.data!.docs;
                 if (docs.isEmpty) {
-                  return const _EmptyCard(text: 'Bekleyen işletme başvurusu yok.');
+                  return const Card(
+                    child: Padding(
+                      padding: EdgeInsets.all(18),
+                      child: Text('Bekleyen işletme başvurusu yok.'),
+                    ),
+                  );
                 }
                 return Column(
-                  children: docs.map((doc) => _ClaimCard(
-                    doc: doc,
-                    onApprove: () => _reviewClaim(doc, true),
-                    onReject: () => _reviewClaim(doc, false),
-                  )).toList(),
+                  children: docs.map((doc) {
+                    final d = doc.data();
+                    final legalName = (d['legalName'] ?? d['venueName'] ?? 'İşletme').toString();
+                    final proofUrl = (d['proofUrl'] ?? '').toString();
+                    return Card(
+                      margin: const EdgeInsets.only(bottom: 10),
+                      child: Padding(
+                        padding: const EdgeInsets.all(14),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(legalName, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900)),
+                            const SizedBox(height: 8),
+                            Text('E-posta: ${d['businessEmail'] ?? '-'}'),
+                            Text('Telefon: ${d['businessPhone'] ?? '-'}'),
+                            Text('Vergi dairesi: ${d['taxOffice'] ?? '-'}'),
+                            Text('Vergi no son 4: ${d['taxNumberLast4'] ?? '-'}'),
+                            const SizedBox(height: 8),
+                            if (proofUrl.isNotEmpty)
+                              OutlinedButton.icon(
+                                onPressed: () => launchUrl(Uri.parse(proofUrl), mode: LaunchMode.externalApplication),
+                                icon: const Icon(Icons.description_outlined),
+                                label: const Text('Yetki kanıtını aç'),
+                              ),
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: OutlinedButton(
+                                    onPressed: () => _reviewClaim(doc, false),
+                                    child: const Text('Reddet'),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: FilledButton.icon(
+                                    onPressed: () => _reviewClaim(doc, true),
+                                    icon: const Icon(Icons.verified_rounded),
+                                    label: const Text('Doğrula'),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }).toList(),
                 );
               },
             ),
@@ -276,116 +383,25 @@ class _MetricCard extends StatelessWidget {
   const _MetricCard({required this.label, required this.value});
 
   @override
-  Widget build(BuildContext context) => Container(
-        width: (MediaQuery.of(context).size.width - 42) / 2,
-        padding: const EdgeInsets.all(15),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.border),
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('$value', style: const TextStyle(fontSize: 27, fontWeight: FontWeight.w900)),
+            const SizedBox(height: 3),
+            Text(label, maxLines: 2, style: const TextStyle(color: Colors.white60, fontSize: 12)),
+          ],
         ),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text('$value', style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900)),
-          const SizedBox(height: 3),
-          Text(label, style: const TextStyle(color: Colors.white54, fontSize: 11.5)),
-        ]),
-      );
-}
-
-class _GenderCard extends StatelessWidget {
-  final Map<String, int> values;
-  const _GenderCard({required this.values});
-
-  @override
-  Widget build(BuildContext context) {
-    final visible = values.entries.where((e) => e.value >= 10).toList();
-    final hidden = values.entries.where((e) => e.value > 0 && e.value < 10).length;
-    final total = visible.fold<int>(0, (sum, e) => sum + e.value);
-    return Container(
-      padding: const EdgeInsets.all(15),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(
-        children: [
-          if (visible.isEmpty)
-            const Text('Henüz güvenli biçimde gösterilecek yeterli veri yok.', style: TextStyle(color: Colors.white54))
-          else
-            ...visible.map((e) {
-              final ratio = total == 0 ? 0.0 : e.value / total;
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: Column(children: [
-                  Row(children: [
-                    Expanded(child: Text(e.key, style: const TextStyle(fontWeight: FontWeight.w700))),
-                    Text('${e.value} • %${(ratio * 100).round()}'),
-                  ]),
-                  const SizedBox(height: 6),
-                  LinearProgressIndicator(value: ratio, minHeight: 7, borderRadius: BorderRadius.circular(8)),
-                ]),
-              );
-            }),
-          if (hidden > 0)
-            Text('$hidden küçük grup gizlendi.', style: const TextStyle(color: Colors.white38, fontSize: 11)),
-        ],
       ),
     );
   }
-}
-
-class _ClaimCard extends StatelessWidget {
-  final DocumentSnapshot<Map<String, dynamic>> doc;
-  final VoidCallback onApprove;
-  final VoidCallback onReject;
-  const _ClaimCard({required this.doc, required this.onApprove, required this.onReject});
-
-  @override
-  Widget build(BuildContext context) {
-    final d = doc.data() ?? const <String, dynamic>{};
-    final evidence = (d['evidenceUrl'] ?? '').toString();
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(15),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text((d['venueName'] ?? 'Mekan').toString(), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900)),
-        const SizedBox(height: 7),
-        Text('Yasal unvan: ${d['legalName'] ?? '-'}'),
-        Text('İşletme e-posta: ${d['businessEmail'] ?? '-'}'),
-        Text('Telefon: ${d['businessPhone'] ?? '-'}'),
-        Text('Vergi dairesi: ${d['taxOffice'] ?? '-'}'),
-        Text('Vergi no son 4: ${d['taxNumberLast4'] ?? '-'}'),
-        const SizedBox(height: 10),
-        if (evidence.isNotEmpty)
-          OutlinedButton.icon(
-            onPressed: () => launchUrl(Uri.parse(evidence), mode: LaunchMode.externalApplication),
-            icon: const Icon(Icons.verified_user_outlined),
-            label: const Text('Yetki kanıtını aç'),
-          ),
-        const SizedBox(height: 8),
-        Row(children: [
-          Expanded(child: OutlinedButton(onPressed: onReject, child: const Text('Reddet'))),
-          const SizedBox(width: 8),
-          Expanded(child: FilledButton(onPressed: onApprove, child: const Text('Doğrula'))),
-        ]),
-      ]),
-    );
-  }
-}
-
-class _EmptyCard extends StatelessWidget {
-  final String text;
-  const _EmptyCard({required this.text});
-  @override
-  Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.border)),
-        child: Center(child: Text(text, style: const TextStyle(color: Colors.white54))),
-      );
 }
