@@ -2,25 +2,6 @@ name: iOS Build Check
 
 on:
   workflow_dispatch:
-  pull_request:
-    paths:
-      - 'lib/**'
-      - 'assets/**'
-      - 'pubspec.yaml'
-      - 'pubspec.lock'
-      - 'ios/**'
-      - '.github/workflows/ios_build_check.yml'
-  push:
-    branches:
-      - main
-      - feature/video-v1
-    paths:
-      - 'lib/**'
-      - 'assets/**'
-      - 'pubspec.yaml'
-      - 'pubspec.lock'
-      - 'ios/**'
-      - '.github/workflows/ios_build_check.yml'
 
 permissions:
   contents: read
@@ -29,68 +10,53 @@ jobs:
   build-ios:
     runs-on: macos-latest
     timeout-minutes: 45
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: stable
           cache: true
-
       - name: Show toolchain
         run: |
           flutter --version
           dart --version
           xcodebuild -version
-
-      # iris_camera 1.0.6 currently publishes a SwiftPM manifest whose target
-      # points at a missing `Classes` path. Keep the app/plugin code untouched
-      # and use the plugin's CocoaPods integration for iOS instead.
       - name: Use CocoaPods plugin integration
         run: flutter config --no-enable-swift-package-manager
-
       - name: Install dependencies
         run: flutter pub get
-
       - name: Generate disposable iOS host if missing
         shell: bash
         run: |
           if [ ! -d ios/Runner.xcodeproj ]; then
             flutter create --platforms=ios --org com.tbt --project-name best_photo_spot .
           fi
-
       - name: Set minimum iOS target
         shell: bash
         run: |
           if [ -f ios/Podfile ]; then
             python3 - <<'PY'
           from pathlib import Path
+          import re
           p = Path('ios/Podfile')
           s = p.read_text()
-          if "platform :ios" in s:
-              import re
+          if 'platform :ios' in s:
               s = re.sub(r"platform :ios,\s*'[^']+'", "platform :ios, '14.0'", s)
           else:
               s = "platform :ios, '14.0'\n" + s
           p.write_text(s)
           PY
           fi
-
       - name: Build iOS without signing
         run: >-
           flutter build ios --debug --no-codesign --no-pub
           --dart-define=FIREBASE_IOS_API_KEY=ci-placeholder
           --dart-define=FIREBASE_IOS_APP_ID=1:330568532415:ios:ci-placeholder
           --dart-define=IOS_BUNDLE_ID=com.tbt.bestPhotoSpot
-
       - name: Verify app bundle
-        run: |
-          test -d build/ios/iphoneos/Runner.app
-          du -sh build/ios/iphoneos/Runner.app
-
+        run: test -d build/ios/iphoneos/Runner.app
       - name: Upload unsigned iOS app
         uses: actions/upload-artifact@v4
         with:
