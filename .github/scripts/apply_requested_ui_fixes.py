@@ -61,14 +61,12 @@ if old_pages in s:
     s = s.replace(old_pages, new_pages, 1)
 p.write_text(s)
 
-# Radar: keep event creation on the single Çevrende page and use the photo creator.
+# Radar: one clear create action, less duplicate content, better empty-state language.
 p = Path('lib/screens/radar_screen.dart')
 s = p.read_text()
 if "import 'event_photo_create_screen.dart';" not in s:
     s = s.replace("import 'event_deep_link_screen.dart';\n", "import 'event_deep_link_screen.dart';\nimport 'event_photo_create_screen.dart';\n")
-marker = """        SearchableSelectionField(
-          controller: _cityController,"""
-insert = """        SizedBox(
+old_create = """        SizedBox(
           width: double.infinity,
           child: FilledButton.icon(
             onPressed: () async {
@@ -78,7 +76,9 @@ insert = """        SizedBox(
               }
               await Navigator.push<bool>(
                 context,
-                MaterialPageRoute(builder: (_) => const EventPhotoCreateScreen()),
+                MaterialPageRoute(
+                  builder: (_) => const EventPhotoCreateScreen(),
+                ),
               );
             },
             icon: const Icon(Icons.add_a_photo_outlined),
@@ -86,21 +86,102 @@ insert = """        SizedBox(
           ),
         ),
         const SizedBox(height: 10),
-        SearchableSelectionField(
-          controller: _cityController,"""
-if insert not in s:
-    if marker not in s:
-        raise SystemExit('Missing patch target: radar event create')
-    s = s.replace(marker, insert, 1)
+"""
+s = s.replace(old_create, '')
+s = s.replace("hintText: 'Şehir seç veya Türkiye geneli bırak'", "hintText: 'Şehir seç; boş bırakırsan Türkiye geneli gösterilir'")
+s = s.replace("'ŞEHİR ŞU AN HAREKETLİ'", "'ŞEHRİN CANLI DURUMU'")
+old_bottom = """                      const SizedBox(height: 20),
+                      _sectionTitle(
+                        '⚡ Planı sen başlat',
+                        'Bir fikir seç, çevrendekilere haber ver',
+                      ),
+                      const SizedBox(height: 9),
+                      _quickStartStrip(alwaysShow: true),
+"""
+s = s.replace(old_bottom, '')
 p.write_text(s)
 
 # Main video/Reels capture is 60 sec. Story remains 15 sec.
 p = Path('lib/screens/camera_screen.dart')
 s = p.read_text()
-old_limit = "int get _videoLimitSeconds => widget.storyMode ? 15 : 30;"
-new_limit = "int get _videoLimitSeconds => widget.storyMode ? 15 : 60;"
-if old_limit in s:
-    s = s.replace(old_limit, new_limit, 1)
+s = s.replace(
+    "int get _videoLimitSeconds => widget.storyMode ? 15 : 30;",
+    "int get _videoLimitSeconds => widget.storyMode ? 15 : 60;",
+)
+p.write_text(s)
+
+# Profile: active Story ring stays tappable; + button opens Story camera instead of profile edit.
+p = Path('lib/screens/profile_page_v2.dart')
+s = p.read_text()
+if "import 'camera_screen.dart';" not in s:
+    s = s.replace("import 'create_post_screen.dart';\n", "import 'camera_screen.dart';\nimport 'create_post_screen.dart';\n")
+s = s.replace(
+    "onTap: () =>\n                                          _editProfile(displayName, bio),",
+    "onTap: () => Navigator.push(\n                                          context,\n                                          MaterialPageRoute(builder: (_) => const CameraScreen(storyMode: true)),\n                                        ),",
+    1,
+)
+p.write_text(s)
+
+# Campus: make student status explicit and give empty screens a clear next action.
+p = Path('lib/screens/campus_home_screen.dart')
+s = p.read_text()
+marker = """            children: [
+              if (newStudent)
+                _WelcomeCard("""
+insert = """            children: [
+              Container(
+                margin: const EdgeInsets.only(bottom: 14),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                decoration: BoxDecoration(
+                  color: card,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: border),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.school_outlined, size: 20, color: Colors.white70),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Kampüs profili aktif', style: TextStyle(fontWeight: FontWeight.w900)),
+                          const SizedBox(height: 2),
+                          Text('$university • ${classYear == 'Hazırlık' ? 'Hazırlık' : '$classYear. sınıf'}', style: const TextStyle(color: Colors.white60, fontSize: 11.5)),
+                        ],
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.pushNamed(context, '/campus-profile'),
+                      child: const Text('Düzenle'),
+                    ),
+                  ],
+                ),
+              ),
+              if (newStudent)
+                _WelcomeCard("""
+if marker in s and "Kampüs profili aktif" not in s:
+    s = s.replace(marker, insert, 1)
+s = s.replace("const _Empty('Henüz talep yok. İlk talebi sen oluştur.')", "const _Empty('Henüz talep yok. Ne yapmak istediğini seçerek ilk talebi oluştur.')")
+s = s.replace("const _Empty('Bu üniversitede henüz topluluk yok.')", "const _Empty('Henüz topluluk yok. Tüm toplulukları keşfet veya ilk topluluğu oluştur.')")
+s = s.replace("const _Empty('Yaklaşan kampüs etkinliği henüz yok.')", "const _Empty('Yaklaşan kampüs etkinliği yok. Çevrende sekmesinden yeni bir etkinlik oluşturabilirsin.')")
+p.write_text(s)
+
+# Statistics: separate active/completed wording and make the page easier to scan.
+p = Path('lib/screens/user_statistics_screen.dart')
+s = p.read_text()
+s = s.replace("_Metric('Aktif / tamamlanan', stats.openHostedEvents, Icons.event_available_outlined)", "_Metric('Aktif / tamamlanmış', stats.openHostedEvents, Icons.event_available_outlined)")
+s = s.replace(
+    "'Rakamlar Firebase’deki mevcut kayıtların tamamından hesaplanır. Yenile ile güncel değerleri tekrar çekebilirsin.'",
+    "'Toplam değerler tüm kayıtları, “Son 30 gün” satırları ise yakın dönemi gösterir. Yenile ile güncel değerleri tekrar çekebilirsin.'",
+)
+p.write_text(s)
+
+# Admin: make role preview impossible to miss in the management center.
+p = Path('lib/screens/admin_portal_screen.dart')
+s = p.read_text()
+s = s.replace("title: 'Rol Önizleme'", "title: 'Uygulamayı Rol Olarak Önizle'")
+s = s.replace("subtitle: 'Misafir, kullanıcı, etkinlik düzenleyici, işletme ve premium işletme gibi gör.'", "subtitle: 'Hesap açmadan Misafir, Kullanıcı, Düzenleyici, İşletme, Doğrulanmış ve Premium görünümünü test et.'")
 p.write_text(s)
 
 # Event cover attachment: support both the legacy creator and EventCreateScreenV2.
@@ -145,9 +226,8 @@ if "import 'event_photo_create_screen.dart';" not in s:
     s = s.replace("import 'event_location_picker_screen.dart';\n", "import 'event_location_picker_screen.dart';\nimport 'event_photo_create_screen.dart';\n")
 start = s.find('  Future<void> _openCreate() async {')
 end = s.find('\n  @override\n  Widget build(BuildContext context)', start)
-if start < 0 or end < 0:
-    raise SystemExit('Missing patch target: social event creator')
-replacement = """  Future<void> _openCreate() async {
+if start >= 0 and end >= 0:
+    replacement = """  Future<void> _openCreate() async {
     if (FirebaseAuth.instance.currentUser == null) {
       _showMessage('Etkinlik oluşturmak için giriş yapmalısın.');
       return;
@@ -161,8 +241,8 @@ replacement = """  Future<void> _openCreate() async {
     }
   }
 """
-if 'EventPhotoCreateScreen()' not in s[start:end]:
-    s = s[:start] + replacement + s[end:]
+    if 'EventPhotoCreateScreen()' not in s[start:end]:
+        s = s[:start] + replacement + s[end:]
 p.write_text(s)
 
 # Remove obsolete OSM packages. Google Maps is the only in-app map renderer.
