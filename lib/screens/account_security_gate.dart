@@ -91,6 +91,11 @@ class _AccountSecurityGateState extends State<AccountSecurityGate> {
       return const EmailSecuritySetupScreen();
     }
 
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null && user.email != null && !user.emailVerified) {
+      return const EmailSecuritySetupScreen();
+    }
+
     if (!_phoneVerified) {
       return const PhoneSecuritySetupScreen();
     }
@@ -249,8 +254,7 @@ class _EmailSecuritySetupScreenState extends State<EmailSecuritySetupScreen> {
             }, SetOptions(merge: true));
       } else if (mounted) {
         setState(
-          () => _message =
-              'E-posta henüz doğrulanmamış. Gelen kutunu ve spam klasörünü kontrol et.',
+          () => _message = 'E-posta henüz doğrulanmamış. Gelen kutunu ve spam klasörünü kontrol et.',
         );
       }
     } finally {
