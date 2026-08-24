@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'firebase_options.dart';
 import 'screens/admin_dashboard_screen.dart';
 import 'screens/admin_insights_screen.dart';
+import 'screens/admin_operations_screen.dart';
 import 'screens/admin_portal_screen.dart';
 import 'screens/app_entry_gate.dart';
 import 'screens/business_hub_screen.dart';
@@ -218,6 +219,10 @@ class _BestPhotoSpotAppState extends State<BestPhotoSpotApp> {
         '/business': (_) => const BusinessHubScreen(),
         '/admin': (_) => const AdminPortalScreen(),
         '/admin-dashboard': (_) => const AdminDashboardScreen(),
+        '/admin-users': (_) => const AdminUsersScreen(),
+        '/admin-businesses': (_) => const AdminBusinessesScreen(),
+        '/admin-growth': (_) => const AdminGrowthScreen(),
+        '/admin-preview': (_) => const AdminRolePreviewScreen(),
         '/admin-insights': (_) => const AdminInsightsScreen(),
         '/moderation': (_) => const ModerationCenterScreen(),
         '/safety-privacy': (_) => const SafetyPrivacyCenterScreen(),
