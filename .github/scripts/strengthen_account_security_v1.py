@@ -1,15 +1,23 @@
 from pathlib import Path
 import subprocess
 
-# Repair the security gate if a previous automated edit left it invalid.
 p = Path('lib/screens/account_security_gate.dart')
 s = p.read_text()
 if s.strip() == 'PLACEHOLDER':
-    s = subprocess.check_output(
-        ['git', 'show', 'HEAD^:lib/screens/account_security_gate.dart'], text=True
-    )
+    commits = subprocess.check_output(['git', 'rev-list', 'HEAD'], text=True).splitlines()
+    for commit in commits[1:]:
+        try:
+            candidate = subprocess.check_output(
+                ['git', 'show', f'{commit}:lib/screens/account_security_gate.dart'],
+                text=True,
+                stderr=subprocess.DEVNULL,
+            )
+        except subprocess.CalledProcessError:
+            continue
+        if candidate.strip() and candidate.strip() != 'PLACEHOLDER':
+            s = candidate
+            break
 
-# Keep exactly one email-verification gate before phone verification.
 block = """    final user = FirebaseAuth.instance.currentUser;
     if (user != null && user.email != null && !user.emailVerified) {
       return const EmailSecuritySetupScreen();
@@ -28,7 +36,6 @@ if block not in s and phone_gate in s:
     s = s.replace(phone_gate, block + phone_gate, 1)
 p.write_text(s)
 
-# Register: send email verification immediately after account creation.
 p = Path('lib/screens/register_screen.dart')
 s = p.read_text()
 needle = """      await AuthService.instance.register(email: email, password: password);
