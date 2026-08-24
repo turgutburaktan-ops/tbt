@@ -201,6 +201,20 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
       child: CustomScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
+          if (widget.embedded)
+            const SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(16, 10, 16, 10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Mekanlar', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, letterSpacing: -.35)),
+                    SizedBox(height: 3),
+                    Text('Türkiye genelindeki gezilecek ve fotoğraf çekilecek yerleri keşfet.', style: TextStyle(color: Color(0x75FFFFFF), fontSize: 11.5)),
+                  ],
+                ),
+              ),
+            ),
           if (!widget.embedded)
             SliverToBoxAdapter(
               child: Padding(
@@ -292,19 +306,19 @@ class _SpotVenueCard extends StatelessWidget {
             padding: const EdgeInsets.all(9),
             decoration: BoxDecoration(borderRadius: BorderRadius.circular(15), border: Border.all(color: selected ? AppColors.cyan.withValues(alpha: .38) : AppColors.border)),
             child: Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
-              SpotImage(spot: spot, width: 82, height: 96, borderRadius: BorderRadius.circular(11)),
+              SpotImage(spot: spot, width: 96, height: 108, borderRadius: BorderRadius.circular(11)),
               const SizedBox(width: 10),
               Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-                Text(spot.name, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 14.5, height: 1.12)),
+                Text(spot.name, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16.5, height: 1.15)),
                 const SizedBox(height: 4),
-                Row(children: [Expanded(child: Text('${spot.city}  •  ${spot.category}', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Color(0x75FFFFFF), fontSize: 10.8))), if (distanceLabel.isNotEmpty) ...[const SizedBox(width: 6), Text(distanceLabel, style: const TextStyle(color: AppColors.cyan, fontWeight: FontWeight.w900, fontSize: 10.3))]]),
+                Row(children: [Expanded(child: Text('${spot.city}  •  ${spot.category}', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Color(0x75FFFFFF), fontSize: 11.5))), if (distanceLabel.isNotEmpty) ...[const SizedBox(width: 6), Text(distanceLabel, style: const TextStyle(color: AppColors.cyan, fontWeight: FontWeight.w900, fontSize: 10.3))]]),
                 const SizedBox(height: 5),
-                Row(children: [const Icon(Icons.star_rounded, size: 14, color: AppColors.cyan), const SizedBox(width: 3), Text(spot.rating.toStringAsFixed(1), style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800)), if (verified) ...[const SizedBox(width: 7), const Icon(Icons.verified_rounded, size: 13, color: Colors.white38), const SizedBox(width: 3), const Flexible(child: Text('Doğrulanmış', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: Colors.white38, fontSize: 9.8, fontWeight: FontWeight.w700)))]]),
+                Row(children: [const Icon(Icons.star_rounded, size: 14, color: AppColors.cyan), const SizedBox(width: 3), Text(spot.rating.toStringAsFixed(1), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800)), if (verified) ...[const SizedBox(width: 7), const Icon(Icons.verified_rounded, size: 13, color: Colors.white38), const SizedBox(width: 3), const Flexible(child: Text('Doğrulanmış', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: Colors.white38, fontSize: 10.5, fontWeight: FontWeight.w700)))]]),
                 const SizedBox(height: 4),
-                InkWell(onTap: () => _showShootingGuide(context), borderRadius: BorderRadius.circular(9), child: const Padding(padding: EdgeInsets.symmetric(vertical: 4), child: Row(mainAxisSize: MainAxisSize.min, children: [Icon(Icons.photo_camera_outlined, size: 14, color: AppColors.cyan), SizedBox(width: 4), Text('Nasıl çekilir?', style: TextStyle(color: AppColors.cyan, fontSize: 10.5, fontWeight: FontWeight.w900))]))),
+                InkWell(onTap: () => _showShootingGuide(context), borderRadius: BorderRadius.circular(9), child: const Padding(padding: EdgeInsets.symmetric(vertical: 4), child: Row(mainAxisSize: MainAxisSize.min, children: [Icon(Icons.photo_camera_outlined, size: 14, color: AppColors.cyan), SizedBox(width: 4), Text('Nasıl çekilir?', style: TextStyle(color: AppColors.cyan, fontSize: 11.5, fontWeight: FontWeight.w900))]))),
               ])),
               const SizedBox(width: 6),
-              IconButton(tooltip: selected ? 'Rotadan çıkar' : 'Rotaya ekle', onPressed: onToggleRoute, style: IconButton.styleFrom(minimumSize: const Size(38, 38), backgroundColor: selected ? AppColors.cyan : AppColors.surfaceStrong, foregroundColor: selected ? const Color(0xFF041311) : Colors.white70), icon: Icon(selected ? Icons.check_rounded : Icons.add_rounded, size: 20)),
+              IconButton(tooltip: selected ? 'Rotadan çıkar' : 'Rotaya ekle', onPressed: onToggleRoute, style: IconButton.styleFrom(minimumSize: const Size(44, 44), backgroundColor: selected ? AppColors.cyan : AppColors.surfaceStrong, foregroundColor: selected ? const Color(0xFF041311) : Colors.white70), icon: Icon(selected ? Icons.check_rounded : Icons.add_rounded, size: 20)),
             ]),
           ),
         ),

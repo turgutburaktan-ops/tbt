@@ -49,20 +49,32 @@ class AuthService {
 
   Future<UserCredential?> signInWithGoogle() async {
     try {
-      final account = await _googleSignIn.signIn();
-      if (account == null) return null;
-      final authentication = await account.authentication;
-      final credential = GoogleAuthProvider.credential(
-        accessToken: authentication.accessToken,
-        idToken: authentication.idToken,
-      );
-      final result = await _auth.signInWithCredential(credential);
-      await _ensureSocialProfile(result.user, provider: 'google');
-      return result;
+      try {
+        final account = await _googleSignIn.signIn();
+        if (account == null) return null;
+        final authentication = await account.authentication;
+        final credential = GoogleAuthProvider.credential(
+          accessToken: authentication.accessToken,
+          idToken: authentication.idToken,
+        );
+        final result = await _auth.signInWithCredential(credential);
+        await _ensureSocialProfile(result.user, provider: 'google');
+        return result;
+      } catch (_) {
+        // GitHub Actions debug APKs can be signed with a CI-generated debug
+        // certificate that is not registered in Google OAuth. In that case,
+        // use Firebase's provider flow instead of failing the whole login.
+        try {
+          await _googleSignIn.signOut();
+        } catch (_) {}
+        final result = await _auth.signInWithProvider(GoogleAuthProvider());
+        await _ensureSocialProfile(result.user, provider: 'google');
+        return result;
+      }
     } on FirebaseAuthException catch (e) {
       throw Exception(_messageFromCode(e.code));
     } catch (_) {
-      throw Exception('Google ile giriş tamamlanamadı.');
+      throw Exception('Google ile giriş tamamlanamadı. Lütfen tekrar deneyin.');
     }
   }
 
