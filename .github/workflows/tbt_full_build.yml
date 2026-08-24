@@ -1,0 +1,247 @@
+name: TBT Full Build
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches:
+      - main
+      - feature/video-v1
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tbt-full-build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  analyze:
+    name: 1 · Analyze
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Install dependencies
+        run: flutter pub get
+      - name: Analyze Dart code
+        run: flutter analyze --no-fatal-warnings --no-fatal-infos
+      - name: Run Flutter tests when present
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -d test ] && find test -type f -name '*_test.dart' | grep -q .; then
+            flutter test
+          else
+            echo 'No Flutter tests found.'
+          fi
+
+  android:
+    name: 2 · Android
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Java 24
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '24'
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Install dependencies
+        run: flutter pub get
+      - name: Prepare disposable Android host
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp android/app/src/main/AndroidManifest.xml /tmp/tbt-AndroidManifest.xml
+          rm -rf android
+          flutter create --platforms=android --org com.tbt --project-name best_photo_spot .
+          cp /tmp/tbt-AndroidManifest.xml android/app/src/main/AndroidManifest.xml
+          python3 - <<'PY'
+          from pathlib import Path
+          manifest = Path('android/app/src/main/AndroidManifest.xml')
+          manifest.write_text(manifest.read_text().replace('${MAPS_API_KEY}', 'CI_DUMMY_MAPS_KEY'))
+          gradle = Path('android/app/build.gradle.kts')
+          text = gradle.read_text()
+          text = text.replace('minSdk = flutter.minSdkVersion', 'minSdk = 26')
+          text = text.replace('com.tbt.best_photo_spot', 'com.tbt.social')
+          gradle.write_text(text)
+          for activity in Path('android/app/src/main/kotlin').rglob('MainActivity.kt'):
+              activity.write_text(activity.read_text().replace('package com.tbt.best_photo_spot', 'package com.tbt.social'))
+          PY
+      - name: Verify Android identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -q 'applicationId = "com.tbt.social"' android/app/build.gradle.kts
+          grep -q 'namespace = "com.tbt.social"' android/app/build.gradle.kts
+          main_activity=$(find android/app/src/main/kotlin -name MainActivity.kt -print -quit)
+          test -n "$main_activity"
+          grep -q '^package com.tbt.social$' "$main_activity"
+      - name: Build Android debug APK
+        run: flutter build apk --debug --no-pub
+      - name: Verify Android artifact
+        run: test -s build/app/outputs/flutter-apk/app-debug.apk
+      - name: Upload Android APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: tbt-full-build-debug-apk
+          path: build/app/outputs/flutter-apk/app-debug.apk
+          if-no-files-found: error
+          retention-days: 7
+
+  ios:
+    name: 3 · iOS
+    runs-on: macos-latest
+    timeout-minutes: 50
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Use CocoaPods plugin integration
+        run: flutter config --no-enable-swift-package-manager
+      - name: Install dependencies
+        run: flutter pub get
+      - name: Generate disposable iOS host if missing
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ ! -d ios/Runner.xcodeproj ]; then
+            flutter create --platforms=ios --org com.tbt --project-name best_photo_spot .
+          fi
+      - name: Set minimum iOS target
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -f ios/Podfile ]; then
+            python3 - <<'PY'
+          from pathlib import Path
+          import re
+          p = Path('ios/Podfile')
+          s = p.read_text()
+          if 'platform :ios' in s:
+              s = re.sub(r"platform :ios,\s*'[^']+'", "platform :ios, '14.0'", s)
+          else:
+              s = "platform :ios, '14.0'\n" + s
+          p.write_text(s)
+          PY
+          fi
+      - name: Build iOS without signing
+        run: >-
+          flutter build ios --debug --no-codesign --no-pub
+          --dart-define=FIREBASE_IOS_API_KEY=ci-placeholder
+          --dart-define=FIREBASE_IOS_APP_ID=1:330568532415:ios:ci-placeholder
+          --dart-define=IOS_BUNDLE_ID=com.tbt.bestPhotoSpot
+      - name: Verify iOS artifact
+        run: test -d build/ios/iphoneos/Runner.app
+      - name: Upload unsigned iOS app
+        uses: actions/upload-artifact@v4
+        with:
+          name: tbt-full-build-ios-unsigned-app
+          path: build/ios/iphoneos/Runner.app
+          if-no-files-found: error
+          retention-days: 7
+
+  security:
+    name: 4 · Security
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Java 21
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install Flutter dependencies
+        run: flutter pub get
+      - name: Security static analysis
+        run: flutter analyze --no-fatal-infos --no-fatal-warnings
+      - name: Run tests when present
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -d test ] && find test -type f -name '*_test.dart' | grep -q .; then
+            flutter test
+          else
+            echo 'No Flutter tests found.'
+          fi
+      - name: Check repository for private key material
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git grep -n -E -- 'BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY|private_key_id[[:space:]]*[:=]|service_account.*\.json' -- ':!pubspec.lock' ':!.github/workflows/security_regression_check.yml' ':!.github/workflows/tbt_full_build.yml'; then
+            echo 'Potential private key/service-account material found in tracked files.'
+            exit 1
+          fi
+      - name: Check dangerous Firestore wildcard writes
+        shell: bash
+        run: |
+          set -euo pipefail
+          if grep -nE 'match /\{collection\}/\{document\}.*' firestore.rules >/dev/null; then
+            if grep -nE 'allow write: if signedIn\(\).*!\(collection in' firestore.rules; then
+              echo 'Permissive authenticated wildcard write remains.'
+              exit 1
+            fi
+          fi
+      - name: Validate Firebase rules syntax with emulator
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install -g firebase-tools
+          firebase emulators:exec --only firestore --project demo-tbt "echo Firestore-rules-ok" --non-interactive
+      - name: Audit Cloud Functions dependencies
+        shell: bash
+        working-directory: functions
+        run: |
+          set -euo pipefail
+          npm install --package-lock-only --ignore-scripts
+          npm audit --omit=dev --audit-level=high
+
+  result:
+    name: TBT Full Build Result
+    if: always()
+    needs: [analyze, android, ios, security]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Full build summary
+        shell: bash
+        run: |
+          echo "Analyze:  ${{ needs.analyze.result }}"
+          echo "Android:  ${{ needs.android.result }}"
+          echo "iOS:      ${{ needs.ios.result }}"
+          echo "Security: ${{ needs.security.result }}"
+          if [ "${{ needs.analyze.result }}" != "success" ] || \
+             [ "${{ needs.android.result }}" != "success" ] || \
+             [ "${{ needs.ios.result }}" != "success" ] || \
+             [ "${{ needs.security.result }}" != "success" ]; then
+            echo 'TBT Full Build FAILED.'
+            exit 1
+          fi
+          echo 'TBT Full Build PASSED.'
