@@ -110,16 +110,58 @@ s = s.replace(
 )
 p.write_text(s)
 
-# Profile: active Story ring stays tappable; + button opens Story camera instead of profile edit.
+# Profile: Story add action + content tabs for all/photos/videos.
 p = Path('lib/screens/profile_page_v2.dart')
 s = p.read_text()
 if "import 'camera_screen.dart';" not in s:
     s = s.replace("import 'create_post_screen.dart';\n", "import 'camera_screen.dart';\nimport 'create_post_screen.dart';\n")
+if "String _contentTab = 'all';" not in s:
+    s = s.replace("class _ProfileBodyState extends State<_ProfileBody> {", "class _ProfileBodyState extends State<_ProfileBody> {\n  String _contentTab = 'all';")
 s = s.replace(
     "onTap: () =>\n                                          _editProfile(displayName, bio),",
     "onTap: () => Navigator.push(\n                                          context,\n                                          MaterialPageRoute(builder: (_) => const CameraScreen(storyMode: true)),\n                                        ),",
     1,
 )
+needle = """              posts.sort((a, b) {
+                final at = a.data()['createdAt'];
+                final bt = b.data()['createdAt'];
+                if (at is Timestamp && bt is Timestamp) return bt.compareTo(at);
+                return 0;
+              });
+"""
+if needle in s and "final visiblePosts = posts.where" not in s:
+    s = s.replace(needle, needle + """              final visiblePosts = posts.where((post) {
+                final data = post.data();
+                final isVideo = (data['mediaType'] ?? '').toString() == 'video' ||
+                    (data['videoUrl'] ?? '').toString().isNotEmpty;
+                if (_contentTab == 'photos') return !isVideo;
+                if (_contentTab == 'videos') return isVideo;
+                return true;
+              }).toList();
+""", 1)
+# Insert tabs just before loading/grid branch.
+tab_marker = """                  if (postSnapshot.connectionState == ConnectionState.waiting)
+"""
+if tab_marker in s and "value: 'videos'" not in s:
+    tabs = """                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(14, 4, 14, 8),
+                      child: SegmentedButton<String>(
+                        segments: const [
+                          ButtonSegment(value: 'all', icon: Icon(Icons.grid_on_rounded), label: Text('Tümü')),
+                          ButtonSegment(value: 'photos', icon: Icon(Icons.photo_outlined), label: Text('Fotoğraf')),
+                          ButtonSegment(value: 'videos', icon: Icon(Icons.play_circle_outline_rounded), label: Text('Reels')),
+                        ],
+                        selected: {_contentTab},
+                        onSelectionChanged: (value) => setState(() => _contentTab = value.first),
+                      ),
+                    ),
+                  ),
+"""
+    s = s.replace(tab_marker, tabs + tab_marker, 1)
+s = s.replace("else if (posts.isEmpty)", "else if (visiblePosts.isEmpty)")
+s = s.replace("childCount: posts.length", "childCount: visiblePosts.length")
+s = s.replace("final post = posts[index];", "final post = visiblePosts[index];")
 p.write_text(s)
 
 # Campus: make student status explicit and give empty screens a clear next action.
@@ -167,10 +209,57 @@ s = s.replace("const _Empty('Bu üniversitede henüz topluluk yok.')", "const _E
 s = s.replace("const _Empty('Yaklaşan kampüs etkinliği henüz yok.')", "const _Empty('Yaklaşan kampüs etkinliği yok. Çevrende sekmesinden yeni bir etkinlik oluşturabilirsin.')")
 p.write_text(s)
 
-# Statistics: separate active/completed wording and make the page easier to scan.
+# Statistics: tabs + true active/completed event split.
 p = Path('lib/screens/user_statistics_screen.dart')
 s = p.read_text()
-s = s.replace("_Metric('Aktif / tamamlanan', stats.openHostedEvents, Icons.event_available_outlined)", "_Metric('Aktif / tamamlanmış', stats.openHostedEvents, Icons.event_available_outlined)")
+if "String _section = 'all';" not in s:
+    s = s.replace("Future<_UserStatistics>? _future;", "Future<_UserStatistics>? _future;\n  String _section = 'all';")
+s = s.replace("var openHostedEvents = 0;", "var activeHostedEvents = 0;\n    var completedHostedEvents = 0;")
+old_status = """      if (status == 'cancelled') {
+        cancelledHostedEvents++;
+      } else {
+        openHostedEvents++;
+      }
+"""
+new_status = """      if (status == 'cancelled') {
+        cancelledHostedEvents++;
+      } else {
+        final startsAt = data['startsAt'];
+        final endsAt = data['endsAt'];
+        final reference = endsAt is Timestamp ? endsAt.toDate() : (startsAt is Timestamp ? startsAt.toDate() : null);
+        if (reference != null && reference.isBefore(now)) {
+          completedHostedEvents++;
+        } else {
+          activeHostedEvents++;
+        }
+      }
+"""
+s = s.replace(old_status, new_status)
+s = s.replace("openHostedEvents: openHostedEvents,", "activeHostedEvents: activeHostedEvents,\n      completedHostedEvents: completedHostedEvents,")
+s = s.replace("final int openHostedEvents;", "final int activeHostedEvents;\n  final int completedHostedEvents;")
+s = s.replace("required this.openHostedEvents,", "required this.activeHostedEvents,\n    required this.completedHostedEvents,")
+s = s.replace("_Metric('Aktif / tamamlanan', stats.openHostedEvents, Icons.event_available_outlined)", "_Metric('Aktif', stats.activeHostedEvents, Icons.event_available_outlined),\n                    _Metric('Tamamlanan', stats.completedHostedEvents, Icons.task_alt_rounded)")
+s = s.replace("_Metric('Aktif / tamamlanmış', stats.openHostedEvents, Icons.event_available_outlined)", "_Metric('Aktif', stats.activeHostedEvents, Icons.event_available_outlined),\n                    _Metric('Tamamlanan', stats.completedHostedEvents, Icons.task_alt_rounded)")
+stat_marker = """                _OverviewCard(stats: stats),
+"""
+if stat_marker in s and "ButtonSegment(value: 'story'" not in s:
+    s = s.replace(stat_marker, """                SegmentedButton<String>(
+                  segments: const [
+                    ButtonSegment(value: 'all', label: Text('Genel')),
+                    ButtonSegment(value: 'posts', label: Text('İçerik')),
+                    ButtonSegment(value: 'story', label: Text('Story')),
+                    ButtonSegment(value: 'events', label: Text('Etkinlik')),
+                  ],
+                  selected: {_section},
+                  onSelectionChanged: (value) => setState(() => _section = value.first),
+                ),
+                const SizedBox(height: 12),
+                if (_section == 'all') _OverviewCard(stats: stats),
+""", 1)
+s = s.replace("                _Section(\n                  title: 'Sosyal',", "                if (_section == 'all') _Section(\n                  title: 'Sosyal',")
+s = s.replace("                _Section(\n                  title: 'Gönderiler',", "                if (_section == 'all' || _section == 'posts') _Section(\n                  title: 'Gönderiler',")
+s = s.replace("                _Section(\n                  title: 'Story',", "                if (_section == 'all' || _section == 'story') _Section(\n                  title: 'Story',")
+s = s.replace("                _Section(\n                  title: 'Etkinlikler',", "                if (_section == 'all' || _section == 'events') _Section(\n                  title: 'Etkinlikler',")
 s = s.replace(
     "'Rakamlar Firebase’deki mevcut kayıtların tamamından hesaplanır. Yenile ile güncel değerleri tekrar çekebilirsin.'",
     "'Toplam değerler tüm kayıtları, “Son 30 gün” satırları ise yakın dönemi gösterir. Yenile ile güncel değerleri tekrar çekebilirsin.'",
