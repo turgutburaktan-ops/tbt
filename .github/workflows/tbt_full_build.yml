@@ -9,20 +9,66 @@ on:
       - feature/video-v1
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: tbt-full-build-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
+  product_fixes:
+    name: Apply Product Fixes
+    runs-on: macos-latest
+    timeout-minutes: 20
+    outputs:
+      commit_sha: ${{ steps.final_ref.outputs.commit_sha }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Apply requested UI fixes
+        if: github.ref == 'refs/heads/feature/video-v1'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 .github/scripts/apply_requested_ui_fixes.py
+          dart format \
+            lib/screens/home_shell_screen.dart \
+            lib/screens/radar_screen.dart \
+            lib/screens/camera_screen.dart \
+            lib/screens/profile_page_v2.dart \
+            lib/screens/campus_home_screen.dart \
+            lib/screens/user_statistics_screen.dart \
+            lib/screens/admin_portal_screen.dart \
+            lib/screens/social_events_screen.dart \
+            lib/screens/event_photo_create_screen.dart \
+            lib/screens/selected_route_map_screen.dart
+          if ! git diff --quiet; then
+            git config user.name 'tbt-build-bot'
+            git config user.email 'actions@users.noreply.github.com'
+            git add lib pubspec.yaml
+            git commit -m 'fix: apply final nearby campus profile stats and map polish'
+            git push origin HEAD:feature/video-v1
+          fi
+      - name: Resolve build commit
+        id: final_ref
+        shell: bash
+        run: echo "commit_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
   analyze:
     name: Analyze
+    needs: product_fixes
     runs-on: macos-latest
     timeout-minutes: 30
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.product_fixes.outputs.commit_sha }}
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
@@ -44,11 +90,14 @@ jobs:
 
   android:
     name: Android
+    needs: product_fixes
     runs-on: macos-latest
     timeout-minutes: 45
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.product_fixes.outputs.commit_sha }}
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
@@ -109,11 +158,14 @@ jobs:
 
   ios:
     name: iOS
+    needs: product_fixes
     runs-on: macos-latest
     timeout-minutes: 45
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.product_fixes.outputs.commit_sha }}
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
@@ -160,11 +212,14 @@ jobs:
 
   security:
     name: Security
+    needs: product_fixes
     runs-on: ubuntu-latest
     timeout-minutes: 35
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.product_fixes.outputs.commit_sha }}
       - name: Setup Java 21 for Security
         uses: actions/setup-java@v5
         with:
@@ -216,17 +271,19 @@ jobs:
     name: TBT Full Build Result
     runs-on: ubuntu-latest
     if: always()
-    needs: [analyze, android, ios, security]
+    needs: [product_fixes, analyze, android, ios, security]
     steps:
       - name: Collect result
         shell: bash
         run: |
           set -euo pipefail
-          echo "Analyze:  ${{ needs.analyze.result }}"
-          echo "Android:  ${{ needs.android.result }}"
-          echo "iOS:      ${{ needs.ios.result }}"
-          echo "Security: ${{ needs.security.result }}"
-          if [ "${{ needs.analyze.result }}" != "success" ] || \
+          echo "Product fixes: ${{ needs.product_fixes.result }}"
+          echo "Analyze:       ${{ needs.analyze.result }}"
+          echo "Android:       ${{ needs.android.result }}"
+          echo "iOS:           ${{ needs.ios.result }}"
+          echo "Security:      ${{ needs.security.result }}"
+          if [ "${{ needs.product_fixes.result }}" != "success" ] || \
+             [ "${{ needs.analyze.result }}" != "success" ] || \
              [ "${{ needs.android.result }}" != "success" ] || \
              [ "${{ needs.ios.result }}" != "success" ] || \
              [ "${{ needs.security.result }}" != "success" ]; then
