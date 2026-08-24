@@ -123,6 +123,12 @@ jobs:
           cp android/app/src/main/AndroidManifest.xml /tmp/tbt-AndroidManifest.xml
           rm -rf android
           flutter create --platforms=android --org com.tbt --project-name best_photo_spot .
+
+          # Flutter 3.47 creates an AGP 9 host. Several current project plugins
+          # still use the legacy Kotlin Gradle Plugin. Keep AGP 9's compatibility
+          # mode until every plugin has migrated to built-in Kotlin.
+          printf '\nandroid.builtInKotlin=false\nandroid.newDsl=false\n' >> android/gradle.properties
+
           cp /tmp/tbt-AndroidManifest.xml android/app/src/main/AndroidManifest.xml
           python3 - <<'PY'
           from pathlib import Path
@@ -152,6 +158,8 @@ jobs:
           grep -q 'applicationId = "com.tbt.social"' android/app/build.gradle.kts
           grep -q 'namespace = "com.tbt.social"' android/app/build.gradle.kts
           grep -R -q 'FlutterFragmentActivity' android/app/src/main/kotlin
+          grep -q '^android.builtInKotlin=false$' android/gradle.properties
+          grep -q '^android.newDsl=false$' android/gradle.properties
       - name: Android APK Build
         run: flutter build apk --debug --no-pub
       - name: Verify Android APK
