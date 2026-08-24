@@ -1,4 +1,4 @@
-name: Buildler
+name: TBT Full Build
 
 on:
   workflow_dispatch:
@@ -9,52 +9,30 @@ on:
       - feature/video-v1
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
-  group: tbt-buildler-${{ github.ref }}
+  group: tbt-full-build-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  buildler:
-    name: Buildler
+  analyze:
+    name: Analyze
     runs-on: macos-latest
-    timeout-minutes: 90
+    timeout-minutes: 30
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: stable
           cache: true
-
-      - name: Apply pending requested product fixes
-        if: github.ref == 'refs/heads/feature/video-v1'
-        shell: bash
-        run: |
-          set -euo pipefail
-          python3 .github/scripts/apply_requested_ui_fixes.py
-          dart format lib/screens/home_shell_screen.dart lib/screens/radar_screen.dart lib/screens/camera_screen.dart lib/screens/social_events_screen.dart lib/screens/event_photo_create_screen.dart lib/screens/selected_route_map_screen.dart
-          if git diff --quiet; then
-            echo 'Requested product fixes already applied.'
-          else
-            git config user.name 'tbt-build-bot'
-            git config user.email 'actions@users.noreply.github.com'
-            git add lib pubspec.yaml
-            git commit -m 'fix: apply requested nearby reels event photo and maps changes'
-            git push origin HEAD:feature/video-v1
-            echo 'Requested fixes committed. A fresh Buildler run will validate the new commit.'
-          fi
-
       - name: Install dependencies
         run: flutter pub get
-
-      - name: 1 · Analyze
+      - name: Flutter analyze
         run: flutter analyze --no-fatal-warnings --no-fatal-infos
-
-      - name: 2 · Flutter tests
+      - name: Flutter tests
         shell: bash
         run: |
           set -euo pipefail
@@ -64,13 +42,26 @@ jobs:
             echo 'No Flutter tests found.'
           fi
 
+  android:
+    name: Android
+    runs-on: macos-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
       - name: Setup Java 24 for Android
         uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '24'
-
-      - name: 3 · Prepare Android host
+      - name: Install dependencies
+        run: flutter pub get
+      - name: Prepare Android host
         shell: bash
         env:
           MAPS_API_KEY: ${{ secrets.MAPS_API_KEY }}
@@ -104,13 +95,10 @@ jobs:
           fi
           grep -q 'applicationId = "com.tbt.social"' android/app/build.gradle.kts
           grep -q 'namespace = "com.tbt.social"' android/app/build.gradle.kts
-
-      - name: 4 · Android APK Build
+      - name: Android APK Build
         run: flutter build apk --debug --no-pub
-
-      - name: 5 · Verify Android APK
+      - name: Verify Android APK
         run: test -s build/app/outputs/flutter-apk/app-debug.apk
-
       - name: Upload Android APK
         uses: actions/upload-artifact@v4
         with:
@@ -119,7 +107,21 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
-      - name: 6 · Prepare clean iOS host
+  ios:
+    name: iOS
+    runs-on: macos-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Install dependencies
+        run: flutter pub get
+      - name: Prepare clean iOS host
         shell: bash
         run: |
           set -euo pipefail
@@ -140,17 +142,14 @@ jobs:
           PY
           grep -q "platform :ios, '15.0'" ios/Podfile
           rm -rf ios/Pods ios/Podfile.lock
-
-      - name: 7 · iOS Build
+      - name: iOS Build
         run: >-
           flutter build ios --debug --no-codesign --no-pub
           --dart-define=FIREBASE_IOS_API_KEY=ci-placeholder
           --dart-define=FIREBASE_IOS_APP_ID=1:330568532415:ios:ci-placeholder
           --dart-define=IOS_BUNDLE_ID=com.tbt.bestPhotoSpot
-
-      - name: 8 · Verify iOS App
+      - name: Verify iOS App
         run: test -d build/ios/iphoneos/Runner.app
-
       - name: Upload unsigned iOS app
         uses: actions/upload-artifact@v4
         with:
@@ -159,18 +158,23 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
+  security:
+    name: Security
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
       - name: Setup Java 21 for Security
         uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '21'
-
       - name: Setup Node 20
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-
-      - name: 9 · Security gate
+      - name: Security gate
         shell: bash
         run: |
           set -euo pipefail
@@ -194,15 +198,13 @@ jobs:
             exit 1
           fi
           echo 'Security gate passed.'
-
-      - name: 10 · Firebase rules emulator
+      - name: Firebase rules emulator
         shell: bash
         run: |
           set -euo pipefail
           npm install -g firebase-tools
           firebase emulators:exec --only firestore --project demo-tbt "echo Firestore-rules-ok" --non-interactive
-
-      - name: 11 · Cloud Functions audit
+      - name: Cloud Functions audit
         shell: bash
         working-directory: functions
         run: |
@@ -210,12 +212,25 @@ jobs:
           npm install --package-lock-only --ignore-scripts
           npm audit --omit=dev --audit-level=high
 
-      - name: Buildler completed
+  result:
+    name: TBT Full Build Result
+    runs-on: ubuntu-latest
+    if: always()
+    needs: [analyze, android, ios, security]
+    steps:
+      - name: Collect result
         shell: bash
         run: |
-          {
-            echo '## TBT Buildler ✅'
-            echo ''
-            echo 'Analyze + Android APK + iOS + Security tek build içinde başarıyla tamamlandı.'
-          } >> "$GITHUB_STEP_SUMMARY"
-          echo 'TBT BUILDLER PASSED.'
+          set -euo pipefail
+          echo "Analyze:  ${{ needs.analyze.result }}"
+          echo "Android:  ${{ needs.android.result }}"
+          echo "iOS:      ${{ needs.ios.result }}"
+          echo "Security: ${{ needs.security.result }}"
+          if [ "${{ needs.analyze.result }}" != "success" ] || \
+             [ "${{ needs.android.result }}" != "success" ] || \
+             [ "${{ needs.ios.result }}" != "success" ] || \
+             [ "${{ needs.security.result }}" != "success" ]; then
+            echo 'TBT FULL BUILD FAILED.'
+            exit 1
+          fi
+          echo 'TBT FULL BUILD PASSED.'
