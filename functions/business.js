@@ -1,5 +1,6 @@
 const {onCall, HttpsError} = require('firebase-functions/v2/https');
 const {getFirestore, FieldValue, Timestamp} = require('firebase-admin/firestore');
+const {getStorage} = require('firebase-admin/storage');
 
 function requireAuth(request) {
   if (!request.auth?.uid) throw new HttpsError('unauthenticated', 'Giriş gerekli.');
@@ -12,6 +13,30 @@ function clean(value, max = 300) {
 
 function venueKey(category, venueId) {
   return `${clean(category, 40)}:${clean(venueId, 180)}`;
+}
+
+async function verifyEvidenceFile(uid, id, evidenceStoragePath) {
+  const expectedPath = `users/${uid}/business_claims/${id}/evidence.jpg`;
+  if (evidenceStoragePath !== expectedPath) {
+    throw new HttpsError('permission-denied', 'Kanıt dosyası bu hesap ve mekanla eşleşmiyor.');
+  }
+
+  const file = getStorage().bucket().file(expectedPath);
+  let metadata;
+  try {
+    const [exists] = await file.exists();
+    if (!exists) throw new Error('missing');
+    [metadata] = await file.getMetadata();
+  } catch (_) {
+    throw new HttpsError('failed-precondition', 'Kanıt dosyası Storage üzerinde doğrulanamadı.');
+  }
+
+  const size = Number(metadata.size || 0);
+  const contentType = String(metadata.contentType || '').toLowerCase();
+  const allowedTypes = new Set(['image/jpeg', 'image/png', 'image/webp']);
+  if (!Number.isFinite(size) || size <= 0 || size > 15 * 1024 * 1024 || !allowedTypes.has(contentType)) {
+    throw new HttpsError('invalid-argument', 'Kanıt dosyası türü veya boyutu geçersiz.');
+  }
 }
 
 exports.submitBusinessClaim = onCall({region: 'europe-west1'}, async (request) => {
@@ -34,21 +59,33 @@ exports.submitBusinessClaim = onCall({region: 'europe-west1'}, async (request) =
   if (!category || !venueId || !venueName || !businessEmail || businessPhone.length < 10 || legalName.length < 3) {
     throw new HttpsError('invalid-argument', 'Eksik işletme bilgisi.');
   }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(businessEmail)) {
+    throw new HttpsError('invalid-argument', 'İşletme e-posta adresi geçersiz.');
+  }
   if (!/^\d{4}$/.test(taxNumberLast4)) {
     throw new HttpsError('invalid-argument', 'Vergi numarasının son 4 hanesi geçersiz.');
-  }
-  const expectedPrefix = `users/${uid}/business_claims/`;
-  if (!evidenceUrl || !evidenceStoragePath.startsWith(expectedPrefix)) {
-    throw new HttpsError('permission-denied', 'Kanıt dosyası bu hesaba ait değil.');
   }
 
   const db = getFirestore();
   const id = venueKey(category, venueId);
+  if (!evidenceUrl) {
+    throw new HttpsError('invalid-argument', 'Kanıt dosyası zorunlu.');
+  }
+  await verifyEvidenceFile(uid, id, evidenceStoragePath);
+
   const ref = db.collection('business_claims').doc(id);
   const snap = await ref.get();
   const old = snap.data() || {};
-  if (old.status === 'verified' && old.applicantUid !== uid) {
-    throw new HttpsError('already-exists', 'Bu mekan zaten doğrulanmış bir işletme tarafından yönetiliyor.');
+  if (snap.exists) {
+    if (old.status === 'verified') {
+      if (old.applicantUid === uid) {
+        throw new HttpsError('failed-precondition', 'Bu mekan zaten hesabın için doğrulanmış.');
+      }
+      throw new HttpsError('already-exists', 'Bu mekan zaten doğrulanmış bir işletme tarafından yönetiliyor.');
+    }
+    if (old.applicantUid && old.applicantUid !== uid && old.status !== 'rejected') {
+      throw new HttpsError('already-exists', 'Bu mekan için başka bir doğrulama başvurusu incelemede.');
+    }
   }
 
   await ref.set({
@@ -69,7 +106,7 @@ exports.submitBusinessClaim = onCall({region: 'europe-west1'}, async (request) =
     verificationLevel: 'none',
     adminReviewRequired: true,
     riskFlags: [],
-    submittedAt: FieldValue.serverTimestamp(),
+    submittedAt: old.submittedAt || FieldValue.serverTimestamp(),
     updatedAt: FieldValue.serverTimestamp(),
     verifiedAt: null,
     verifiedBy: null,
@@ -163,6 +200,9 @@ exports.adminReviewBusinessClaim = onCall({region: 'europe-west1'}, async (reque
   const snap = await ref.get();
   if (!snap.exists) throw new HttpsError('not-found', 'Başvuru bulunamadı.');
   const data = snap.data() || {};
+  if (data.status !== 'pending_review') {
+    throw new HttpsError('failed-precondition', 'Yalnız incelemedeki başvurular sonuçlandırılabilir.');
+  }
   const update = {
     status: decision,
     verificationLevel: decision === 'verified' ? 'manual_strong' : 'none',
