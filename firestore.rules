@@ -4,6 +4,22 @@ service cloud.firestore {
     function signedIn() { return request.auth != null; }
     function isAdmin() { return signedIn() && request.auth.token.admin == true; }
     function isSelf(uid) { return signedIn() && request.auth.uid == uid; }
+    function safeUserCreate(uid) {
+      return isSelf(uid) && request.resource.data.uid == uid &&
+        !request.resource.data.keys().hasAny([
+          'admin','isAdmin','role','roles','claims','permissions',
+          'verified','verificationStatus','businessVerified','venueVerified',
+          'moderationStatus','trustLevel','banned','disabled'
+        ]);
+    }
+    function safeUserUpdate(uid) {
+      return isSelf(uid) && (!('uid' in request.resource.data) || request.resource.data.uid == uid) &&
+        !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+          'uid','admin','isAdmin','role','roles','claims','permissions',
+          'verified','verificationStatus','businessVerified','venueVerified',
+          'moderationStatus','trustLevel','banned','disabled'
+        ]);
+    }
     function eventVisible(d) {
       return !('visibility' in d) || d.visibility == 'public' || (signedIn() && (
         d.hostId == request.auth.uid ||
@@ -88,14 +104,10 @@ service cloud.firestore {
       return /databases/$(database)/documents/social_events/$(eventId)/attendance/$(request.auth.uid);
     }
     function oldAttendanceStatus(eventId) {
-      return exists(eventAttendancePath(eventId))
-        ? get(eventAttendancePath(eventId)).data.status
-        : 'none';
+      return exists(eventAttendancePath(eventId)) ? get(eventAttendancePath(eventId)).data.status : 'none';
     }
     function newAttendanceStatus(eventId) {
-      return existsAfter(eventAttendancePath(eventId))
-        ? getAfter(eventAttendancePath(eventId)).data.status
-        : 'none';
+      return existsAfter(eventAttendancePath(eventId)) ? getAfter(eventAttendancePath(eventId)).data.status : 'none';
     }
     function validMembershipDelta(eventId) {
       let oldStatus = oldAttendanceStatus(eventId);
@@ -117,351 +129,123 @@ service cloud.firestore {
       let nextPrivate = request.resource.data.get('privateParticipantCount', 0);
       let interestedDelta = (nextStatus == 'interested' ? 1 : 0) - (oldStatus == 'interested' ? 1 : 0);
       let privateDelta = (nextStatus == 'private' ? 1 : 0) - (oldStatus == 'private' ? 1 : 0);
-      return nextInterested == oldInterested + interestedDelta &&
-        nextPrivate == oldPrivate + privateDelta &&
-        nextInterested >= 0 && nextPrivate >= 0;
+      return nextInterested == oldInterested + interestedDelta && nextPrivate == oldPrivate + privateDelta && nextInterested >= 0 && nextPrivate >= 0;
     }
     function validAttendanceEventUpdate(eventId) {
       let nextStatus = newAttendanceStatus(eventId);
       let changed = request.resource.data.diff(resource.data).affectedKeys();
       let capacity = request.resource.data.get('capacity', 1);
-      return signedIn() && resource.data.hostId != request.auth.uid &&
-        resource.data.status == 'open' &&
+      return signedIn() && resource.data.hostId != request.auth.uid && resource.data.status == 'open' &&
         nextStatus in ['going','interested','private','none'] &&
         changed.hasOnly(['participantIds','interestedCount','privateParticipantCount','updatedAt']) &&
         validMembershipDelta(eventId) && validAttendanceCounters(eventId) &&
         request.resource.data.participantIds.size() + request.resource.data.get('privateParticipantCount', 0) <= capacity;
     }
     function validCommentCreate() {
-      return signedIn() && request.resource.data.userId == request.auth.uid &&
-        request.resource.data.text is string && request.resource.data.text.size() > 0 &&
-        request.resource.data.text.size() <= 700;
+      return signedIn() && request.resource.data.userId == request.auth.uid && request.resource.data.text is string &&
+        request.resource.data.text.size() > 0 && request.resource.data.text.size() <= 700;
     }
 
     match /users/{uid} {
       allow read: if signedIn();
-      allow create: if isSelf(uid) && request.resource.data.uid == uid;
-      allow update: if isAdmin() || (isSelf(uid) && (!('uid' in request.resource.data) || request.resource.data.uid == uid));
+      allow create: if safeUserCreate(uid);
+      allow update: if isAdmin() || safeUserUpdate(uid);
       allow delete: if isAdmin() || isSelf(uid);
-
-      match /following/{targetId} {
-        allow read: if signedIn();
-        allow create, update: if isSelf(uid) && request.resource.data.userId == targetId;
-        allow delete: if isSelf(uid);
-      }
-      match /followers/{followerId} {
-        allow read: if signedIn();
-        allow create, update: if signedIn() && followerId == request.auth.uid && request.resource.data.userId == request.auth.uid;
-        allow delete: if signedIn() && followerId == request.auth.uid;
-      }
-      match /blocked/{blockedId} {
-        allow read: if signedIn() && (uid == request.auth.uid || blockedId == request.auth.uid);
-        allow create, update, delete: if isSelf(uid);
-      }
-      match /close_friends/{friendId} {
-        allow read, create, update, delete: if isSelf(uid);
-      }
+      match /following/{targetId} { allow read: if signedIn(); allow create, update: if isSelf(uid) && request.resource.data.userId == targetId; allow delete: if isSelf(uid); }
+      match /followers/{followerId} { allow read: if signedIn(); allow create, update: if signedIn() && followerId == request.auth.uid && request.resource.data.userId == request.auth.uid; allow delete: if signedIn() && followerId == request.auth.uid; }
+      match /blocked/{blockedId} { allow read: if signedIn() && (uid == request.auth.uid || blockedId == request.auth.uid); allow create, update, delete: if isSelf(uid); }
+      match /close_friends/{friendId} { allow read, create, update, delete: if isSelf(uid); }
       match /notifications/{notificationId} {
         allow read, update, delete: if isSelf(uid);
-        allow create: if signedIn() &&
+        allow create: if signedIn() && request.resource.data.keys().hasAll(['type','title','body','actorId']) &&
           request.resource.data.type is string && request.resource.data.title is string && request.resource.data.body is string &&
-          request.resource.data.title.size() <= 160 && request.resource.data.body.size() <= 600 &&
-          (uid == request.auth.uid || request.resource.data.actorId == request.auth.uid);
+          request.resource.data.actorId == request.auth.uid && request.resource.data.title.size() > 0 &&
+          request.resource.data.title.size() <= 160 && request.resource.data.body.size() > 0 && request.resource.data.body.size() <= 600;
       }
       match /push_tokens/{tokenId} {
         allow read: if isAdmin() || isSelf(uid);
-        allow create, update, delete: if isSelf(uid);
+        allow create, update: if isSelf(uid) && request.resource.data.keys().hasAll(['token']) &&
+          request.resource.data.token is string && request.resource.data.token.size() >= 20 && request.resource.data.token.size() <= 4096;
+        allow delete: if isSelf(uid);
       }
-      match /map_points/{pointId} {
-        allow read, create, update, delete: if isSelf(uid) &&
-          (request.method == 'delete' || request.resource.data.ownerId == uid);
-      }
+      match /map_points/{pointId} { allow read, create, update, delete: if isSelf(uid) && (request.method == 'delete' || request.resource.data.ownerId == uid); }
     }
 
     match /usernames/{usernameId} {
       allow read: if true;
-      allow create: if signedIn() &&
-        request.resource.data.uid == request.auth.uid &&
-        request.resource.data.normalized == usernameId &&
-        request.resource.data.username is string;
-      allow update: if signedIn() &&
-        resource.data.uid == request.auth.uid &&
-        request.resource.data.uid == resource.data.uid &&
-        request.resource.data.normalized == usernameId;
+      allow create: if signedIn() && request.resource.data.uid == request.auth.uid && request.resource.data.normalized == usernameId && request.resource.data.username is string;
+      allow update: if signedIn() && resource.data.uid == request.auth.uid && request.resource.data.uid == resource.data.uid && request.resource.data.normalized == usernameId;
       allow delete: if signedIn() && resource.data.uid == request.auth.uid;
     }
-
     match /chat_threads/{threadId} {
       allow read: if signedIn() && resource.data.memberIds.hasAny([request.auth.uid]);
-      allow create: if signedIn() && request.resource.data.type == 'direct' &&
-        request.resource.data.memberIds.size() == 2 && request.resource.data.memberIds.hasAny([request.auth.uid]);
-      allow update: if signedIn() && resource.data.memberIds.hasAny([request.auth.uid]) &&
-        request.resource.data.memberIds == resource.data.memberIds && request.resource.data.type == resource.data.type;
+      allow create: if signedIn() && request.resource.data.type == 'direct' && request.resource.data.memberIds.size() == 2 && request.resource.data.memberIds.hasAny([request.auth.uid]);
+      allow update: if signedIn() && resource.data.memberIds.hasAny([request.auth.uid]) && request.resource.data.memberIds == resource.data.memberIds && request.resource.data.type == resource.data.type;
       allow delete: if false;
-      match /messages/{messageId} {
-        allow read: if threadMember(threadId);
-        allow create: if threadMember(threadId) && request.resource.data.senderId == request.auth.uid &&
-          request.resource.data.text is string && request.resource.data.text.size() > 0 &&
-          request.resource.data.text.size() <= 1500 && request.resource.data.deleted == false;
-        allow update, delete: if false;
-      }
+      match /messages/{messageId} { allow read: if threadMember(threadId); allow create: if threadMember(threadId) && request.resource.data.senderId == request.auth.uid && request.resource.data.text is string && request.resource.data.text.size() > 0 && request.resource.data.text.size() <= 1500 && request.resource.data.deleted == false; allow update, delete: if false; }
     }
-
     match /stories/{storyId} {
       allow read: if signedIn();
-      allow create: if signedIn() && request.resource.data.userId == request.auth.uid &&
-        request.resource.data.expiresAt > request.time;
-      allow update: if signedIn() && resource.data.userId == request.auth.uid &&
-        request.resource.data.userId == resource.data.userId;
+      allow create: if signedIn() && request.resource.data.userId == request.auth.uid && request.resource.data.expiresAt > request.time;
+      allow update: if signedIn() && resource.data.userId == request.auth.uid && request.resource.data.userId == resource.data.userId;
       allow delete: if signedIn() && resource.data.userId == request.auth.uid;
-      match /interactions/{uid} {
-        allow read: if signedIn() && (uid == request.auth.uid ||
-          get(/databases/$(database)/documents/stories/$(storyId)).data.userId == request.auth.uid);
-        allow create, update: if signedIn() && uid == request.auth.uid &&
-          request.resource.data.userId == request.auth.uid;
-        allow delete: if signedIn() && uid == request.auth.uid;
-      }
+      match /interactions/{uid} { allow read: if signedIn() && (uid == request.auth.uid || get(/databases/$(database)/documents/stories/$(storyId)).data.userId == request.auth.uid); allow create, update: if signedIn() && uid == request.auth.uid && request.resource.data.userId == request.auth.uid; allow delete: if signedIn() && uid == request.auth.uid; }
     }
-
     match /social_events/{eventId} {
       allow read: if eventVisible(resource.data);
-      allow create: if signedIn() && request.resource.data.hostId == request.auth.uid &&
-        request.resource.data.status == 'open' && paidCreateValid() && privacyValid() && validCommunityHost();
-      allow update: if isAdmin() ||
-        validAttendanceEventUpdate(eventId) ||
-        (signedIn() && resource.data.hostId == request.auth.uid && protectedEventFieldsSame() &&
-          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','updatedAt']) &&
-          request.resource.data.status in ['open','cancelled']);
+      allow create: if signedIn() && request.resource.data.hostId == request.auth.uid && request.resource.data.status == 'open' && paidCreateValid() && privacyValid() && validCommunityHost();
+      allow update: if isAdmin() || validAttendanceEventUpdate(eventId) || (signedIn() && resource.data.hostId == request.auth.uid && protectedEventFieldsSame() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','updatedAt']) && request.resource.data.status in ['open','cancelled']);
       allow delete: if isAdmin();
-
-      match /attendance/{uid} {
-        allow read: if signedIn() && eventVisible(get(/databases/$(database)/documents/social_events/$(eventId)).data);
-        allow create, update: if isSelf(uid) &&
-          request.resource.data.userId == uid &&
-          request.resource.data.status in ['going','interested','private'] &&
-          get(/databases/$(database)/documents/social_events/$(eventId)).data.hostId != uid &&
-          get(/databases/$(database)/documents/social_events/$(eventId)).data.status == 'open';
-        allow delete: if isSelf(uid);
-      }
-      match /reports/{reporterId} {
-        allow read: if isAdmin();
-        allow create: if signedIn() && reporterId == request.auth.uid &&
-          request.resource.data.reporterId == request.auth.uid &&
-          request.resource.data.reason is string && request.resource.data.reason.size() >= 3 &&
-          request.resource.data.reason.size() <= 300;
-        allow update, delete: if false;
-      }
-      match /likes/{uid} {
-        allow read: if eventVisible(get(/databases/$(database)/documents/social_events/$(eventId)).data);
-        allow create: if isSelf(uid) && request.resource.data.userId == uid;
-        allow delete: if isSelf(uid);
-        allow update: if false;
-      }
-      match /comments/{commentId} {
-        allow read: if eventVisible(get(/databases/$(database)/documents/social_events/$(eventId)).data);
-        allow create: if validCommentCreate();
-        allow update, delete: if signedIn() && resource.data.userId == request.auth.uid;
-      }
-      match /tags/{taggedUserId} {
-        allow read: if eventVisible(get(/databases/$(database)/documents/social_events/$(eventId)).data);
-        allow create: if signedIn() && request.resource.data.userId == taggedUserId &&
-          request.resource.data.taggedBy == request.auth.uid;
-        allow update, delete: if signedIn() && resource.data.taggedBy == request.auth.uid;
-      }
-      match /{sub}/{docId} {
-        allow read, write: if false;
-      }
+      match /attendance/{uid} { allow read: if signedIn() && eventVisible(get(/databases/$(database)/documents/social_events/$(eventId)).data); allow create, update: if isSelf(uid) && request.resource.data.userId == uid && request.resource.data.status in ['going','interested','private'] && get(/databases/$(database)/documents/social_events/$(eventId)).data.hostId != uid && get(/databases/$(database)/documents/social_events/$(eventId)).data.status == 'open'; allow delete: if isSelf(uid); }
+      match /reports/{reporterId} { allow read: if isAdmin(); allow create: if signedIn() && reporterId == request.auth.uid && request.resource.data.reporterId == request.auth.uid && request.resource.data.reason is string && request.resource.data.reason.size() >= 3 && request.resource.data.reason.size() <= 300; allow update, delete: if false; }
+      match /likes/{uid} { allow read: if eventVisible(get(/databases/$(database)/documents/social_events/$(eventId)).data); allow create: if isSelf(uid) && request.resource.data.userId == uid; allow delete: if isSelf(uid); allow update: if false; }
+      match /comments/{commentId} { allow read: if eventVisible(get(/databases/$(database)/documents/social_events/$(eventId)).data); allow create: if validCommentCreate(); allow update, delete: if signedIn() && resource.data.userId == request.auth.uid; }
+      match /tags/{taggedUserId} { allow read: if eventVisible(get(/databases/$(database)/documents/social_events/$(eventId)).data); allow create: if signedIn() && request.resource.data.userId == taggedUserId && request.resource.data.taggedBy == request.auth.uid; allow update, delete: if signedIn() && resource.data.taggedBy == request.auth.uid; }
+      match /{sub}/{docId} { allow read, write: if false; }
     }
-
     match /event_memories/{memoryId} {
-      allow read: if memoryVisible(resource.data);
-      allow create: if validMemoryCreate();
-      allow update, delete: if isAdmin() || (signedIn() && resource.data.userId == request.auth.uid);
-      match /likes/{uid} {
-        allow read: if memoryVisible(get(/databases/$(database)/documents/event_memories/$(memoryId)).data);
-        allow create: if isSelf(uid) && request.resource.data.userId == uid;
-        allow delete: if isSelf(uid);
-        allow update: if false;
-      }
-      match /comments/{commentId} {
-        allow read: if memoryVisible(get(/databases/$(database)/documents/event_memories/$(memoryId)).data);
-        allow create: if validCommentCreate() && memoryVisible(get(/databases/$(database)/documents/event_memories/$(memoryId)).data);
-        allow update, delete: if signedIn() && resource.data.userId == request.auth.uid;
-      }
-      match /tags/{taggedUserId} {
-        allow read: if memoryVisible(get(/databases/$(database)/documents/event_memories/$(memoryId)).data);
-        allow create: if signedIn() && request.resource.data.userId == taggedUserId &&
-          request.resource.data.taggedBy == request.auth.uid;
-        allow update, delete: if signedIn() && resource.data.taggedBy == request.auth.uid;
-      }
-      match /{sub}/{docId} {
-        allow read, write: if false;
-      }
+      allow read: if memoryVisible(resource.data); allow create: if validMemoryCreate(); allow update, delete: if isAdmin() || (signedIn() && resource.data.userId == request.auth.uid);
+      match /likes/{uid} { allow read: if memoryVisible(get(/databases/$(database)/documents/event_memories/$(memoryId)).data); allow create: if isSelf(uid) && request.resource.data.userId == uid; allow delete: if isSelf(uid); allow update: if false; }
+      match /comments/{commentId} { allow read: if memoryVisible(get(/databases/$(database)/documents/event_memories/$(memoryId)).data); allow create: if validCommentCreate() && memoryVisible(get(/databases/$(database)/documents/event_memories/$(memoryId)).data); allow update, delete: if signedIn() && resource.data.userId == request.auth.uid; }
+      match /tags/{taggedUserId} { allow read: if memoryVisible(get(/databases/$(database)/documents/event_memories/$(memoryId)).data); allow create: if signedIn() && request.resource.data.userId == taggedUserId && request.resource.data.taggedBy == request.auth.uid; allow update, delete: if signedIn() && resource.data.taggedBy == request.auth.uid; }
+      match /{sub}/{docId} { allow read, write: if false; }
     }
-
     match /posts/{postId} {
-      allow read: if true;
-      allow create: if signedIn() && request.resource.data.userId == request.auth.uid && validEventMemoryPost();
-      allow update, delete: if isAdmin() || (signedIn() && resource.data.userId == request.auth.uid);
-      match /likes/{uid} {
-        allow read: if true;
-        allow create: if isSelf(uid) && request.resource.data.userId == uid;
-        allow delete: if isSelf(uid);
-        allow update: if false;
-      }
-      match /comments/{commentId} {
-        allow read: if true;
-        allow create: if validCommentCreate();
-        allow update, delete: if signedIn() && resource.data.userId == request.auth.uid;
-      }
-      match /tags/{taggedUserId} {
-        allow read: if true;
-        allow create: if signedIn() && request.resource.data.userId == taggedUserId &&
-          request.resource.data.taggedBy == request.auth.uid;
-        allow update, delete: if signedIn() && resource.data.taggedBy == request.auth.uid;
-      }
-      match /{sub}/{docId} {
-        allow read, write: if false;
-      }
+      allow read: if true; allow create: if signedIn() && request.resource.data.userId == request.auth.uid && validEventMemoryPost(); allow update, delete: if isAdmin() || (signedIn() && resource.data.userId == request.auth.uid);
+      match /likes/{uid} { allow read: if true; allow create: if isSelf(uid) && request.resource.data.userId == uid; allow delete: if isSelf(uid); allow update: if false; }
+      match /comments/{commentId} { allow read: if true; allow create: if validCommentCreate(); allow update, delete: if signedIn() && resource.data.userId == request.auth.uid; }
+      match /tags/{taggedUserId} { allow read: if true; allow create: if signedIn() && request.resource.data.userId == taggedUserId && request.resource.data.taggedBy == request.auth.uid; allow update, delete: if signedIn() && resource.data.taggedBy == request.auth.uid; }
+      match /{sub}/{docId} { allow read, write: if false; }
     }
-
-    match /spot_presence/{id} {
-      allow read: if signedIn();
-      allow create: if signedIn() && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if signedIn() && resource.data.userId == request.auth.uid;
-    }
-
-    match /spot_meetups/{id} {
-      allow read: if true;
-      allow create: if signedIn() && request.resource.data.hostId == request.auth.uid &&
-        request.resource.data.participantIds.hasAny([request.auth.uid]);
-      allow update: if signedIn() && (participantOnlyChange() ||
-        (resource.data.hostId == request.auth.uid &&
-          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','updatedAt']) &&
-          request.resource.data.status in ['open','cancelled']));
-      allow delete: if isAdmin();
-    }
-
+    match /spot_presence/{id} { allow read: if signedIn(); allow create: if signedIn() && request.resource.data.userId == request.auth.uid; allow update, delete: if signedIn() && resource.data.userId == request.auth.uid; }
+    match /spot_meetups/{id} { allow read: if true; allow create: if signedIn() && request.resource.data.hostId == request.auth.uid && request.resource.data.participantIds.hasAny([request.auth.uid]); allow update: if signedIn() && (participantOnlyChange() || (resource.data.hostId == request.auth.uid && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','updatedAt']) && request.resource.data.status in ['open','cancelled'])); allow delete: if isAdmin(); }
     match /event_tickets/{id} {
-      allow read: if signedIn() && (resource.data.userId == request.auth.uid ||
-        (exists(/databases/$(database)/documents/social_events/$(resource.data.eventId)) &&
-          get(/databases/$(database)/documents/social_events/$(resource.data.eventId)).data.hostId == request.auth.uid));
-      allow create: if signedIn() && request.resource.data.userId == request.auth.uid &&
-        exists(/databases/$(database)/documents/social_events/$(request.resource.data.eventId)) &&
-        request.resource.data.status in ['active','pendingPayment'] &&
-        ((get(/databases/$(database)/documents/social_events/$(request.resource.data.eventId)).data.accessType == 'free' && request.resource.data.status == 'active') ||
-         (get(/databases/$(database)/documents/social_events/$(request.resource.data.eventId)).data.accessType == 'paid' && request.resource.data.status == 'pendingPayment'));
-      allow update: if signedIn() && (
-        (resource.data.userId == request.auth.uid &&
-          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','updatedAt']) &&
-          request.resource.data.status == 'cancelled') ||
-        (exists(/databases/$(database)/documents/social_events/$(resource.data.eventId)) &&
-          get(/databases/$(database)/documents/social_events/$(resource.data.eventId)).data.hostId == request.auth.uid &&
-          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','usedAt','updatedAt']) &&
-          request.resource.data.status == 'used')
-      );
+      allow read: if signedIn() && (resource.data.userId == request.auth.uid || (exists(/databases/$(database)/documents/social_events/$(resource.data.eventId)) && get(/databases/$(database)/documents/social_events/$(resource.data.eventId)).data.hostId == request.auth.uid));
+      allow create: if signedIn() && request.resource.data.userId == request.auth.uid && exists(/databases/$(database)/documents/social_events/$(request.resource.data.eventId)) && request.resource.data.status in ['active','pendingPayment'] && ((get(/databases/$(database)/documents/social_events/$(request.resource.data.eventId)).data.accessType == 'free' && request.resource.data.status == 'active') || (get(/databases/$(database)/documents/social_events/$(request.resource.data.eventId)).data.accessType == 'paid' && request.resource.data.status == 'pendingPayment'));
+      allow update: if signedIn() && ((resource.data.userId == request.auth.uid && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','updatedAt']) && request.resource.data.status == 'cancelled') || (exists(/databases/$(database)/documents/social_events/$(resource.data.eventId)) && get(/databases/$(database)/documents/social_events/$(resource.data.eventId)).data.hostId == request.auth.uid && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','usedAt','updatedAt']) && request.resource.data.status == 'used'));
       allow delete: if isAdmin();
     }
-
-    match /user_reports/{id} {
-      allow read: if isAdmin();
-      allow create: if signedIn() && request.resource.data.reporterId == request.auth.uid &&
-        request.resource.data.reportedUserId is string && request.resource.data.reason is string &&
-        request.resource.data.reason.size() >= 3 && request.resource.data.reason.size() <= 500;
-      allow update, delete: if isAdmin();
-    }
-
-    match /activity_demands/{id} {
-      allow read: if true;
-      allow create, update: if signedIn() && request.resource.data.userId == request.auth.uid;
-      allow delete: if signedIn() && resource.data.userId == request.auth.uid;
-    }
-
+    match /user_reports/{id} { allow read: if isAdmin(); allow create: if signedIn() && request.resource.data.reporterId == request.auth.uid && request.resource.data.reportedUserId is string && request.resource.data.reason is string && request.resource.data.reason.size() >= 3 && request.resource.data.reason.size() <= 500; allow update, delete: if isAdmin(); }
+    match /activity_demands/{id} { allow read: if true; allow create, update: if signedIn() && request.resource.data.userId == request.auth.uid; allow delete: if signedIn() && resource.data.userId == request.auth.uid; }
     match /communities/{id} {
       allow read: if true;
-      allow create: if signedIn() && request.resource.data.ownerId == request.auth.uid &&
-        request.resource.data.verified == false &&
-        request.resource.data.verificationStatus == 'pending' &&
-        request.resource.data.adminIds.hasAny([request.auth.uid]);
-      allow update: if isAdmin() || (signedIn() && resource.data.ownerId == request.auth.uid &&
-        request.resource.data.ownerId == resource.data.ownerId &&
-        request.resource.data.verified == resource.data.verified &&
-        request.resource.data.verificationStatus == resource.data.verificationStatus);
+      allow create: if signedIn() && request.resource.data.ownerId == request.auth.uid && request.resource.data.verified == false && request.resource.data.verificationStatus == 'pending' && request.resource.data.adminIds.hasAny([request.auth.uid]);
+      allow update: if isAdmin() || (signedIn() && resource.data.ownerId == request.auth.uid && request.resource.data.ownerId == resource.data.ownerId && request.resource.data.verified == resource.data.verified && request.resource.data.verificationStatus == resource.data.verificationStatus);
       allow delete: if isAdmin();
-      match /followers/{uid} {
-        allow read: if true;
-        allow create, update: if signedIn() && uid == request.auth.uid &&
-          request.resource.data.userId == request.auth.uid;
-        allow delete: if signedIn() && uid == request.auth.uid;
-      }
+      match /followers/{uid} { allow read: if true; allow create, update: if signedIn() && uid == request.auth.uid && request.resource.data.userId == request.auth.uid; allow delete: if signedIn() && uid == request.auth.uid; }
     }
-
-    match /photo_spots/{id} {
-      allow read: if true;
-      allow create, update, delete: if isAdmin();
-    }
-
-    match /spot_submissions/{id} {
-      allow read: if isAdmin() || (signedIn() && resource.data.submittedBy == request.auth.uid);
-      allow create: if signedIn() && request.resource.data.submittedBy == request.auth.uid &&
-        request.resource.data.status == 'pending' &&
-        request.resource.data.coordinateVerified == false &&
-        request.resource.data.imageVerified == false &&
-        request.resource.data.name is string && request.resource.data.name.size() >= 3 &&
-        request.resource.data.name.size() <= 120;
-      allow update, delete: if isAdmin();
-    }
-
-    match /map_point_suggestions/{id} {
-      allow read: if isAdmin() || (signedIn() && resource.data.ownerId == request.auth.uid);
-      allow create: if signedIn() && request.resource.data.ownerId == request.auth.uid &&
-        request.resource.data.communitySuggested == true &&
-        request.resource.data.moderationStatus == 'pending' &&
-        request.resource.data.name is string && request.resource.data.name.size() >= 2 &&
-        request.resource.data.name.size() <= 60;
-      allow update, delete: if isAdmin();
-    }
-
+    match /photo_spots/{id} { allow read: if true; allow create, update, delete: if isAdmin(); }
+    match /spot_submissions/{id} { allow read: if isAdmin() || (signedIn() && resource.data.submittedBy == request.auth.uid); allow create: if signedIn() && request.resource.data.submittedBy == request.auth.uid && request.resource.data.status == 'pending' && request.resource.data.coordinateVerified == false && request.resource.data.imageVerified == false && request.resource.data.name is string && request.resource.data.name.size() >= 3 && request.resource.data.name.size() <= 120; allow update, delete: if isAdmin(); }
+    match /map_point_suggestions/{id} { allow read: if isAdmin() || (signedIn() && resource.data.ownerId == request.auth.uid); allow create: if signedIn() && request.resource.data.ownerId == request.auth.uid && request.resource.data.communitySuggested == true && request.resource.data.moderationStatus == 'pending' && request.resource.data.name is string && request.resource.data.name.size() >= 2 && request.resource.data.name.size() <= 60; allow update, delete: if isAdmin(); }
     match /venue_ratings/{venueKey} {
-      allow read: if true;
-      allow create, update, delete: if false;
-
+      allow read: if true; allow create, update, delete: if false;
       match /ratings/{uid} {
-        allow read: if true;
-        allow create, update: if isSelf(uid) && request.resource.data.userId == uid &&
-          request.resource.data.rating is int &&
-          request.resource.data.rating >= 1 && request.resource.data.rating <= 5 &&
-          request.resource.data.get('comment', '') is string &&
-          request.resource.data.get('comment', '').size() <= 700 &&
-          request.resource.data.get('moderationStatus', 'published') == 'published';
-        allow delete: if isSelf(uid) || isAdmin();
-
-        match /helpful/{voterId} {
-          allow read: if true;
-          allow create: if signedIn() && voterId == request.auth.uid && voterId != uid &&
-            request.resource.data.userId == request.auth.uid;
-          allow delete: if signedIn() && voterId == request.auth.uid;
-          allow update: if false;
-        }
-        match /{sub}/{docId} {
-          allow read, write: if false;
-        }
+        allow read: if true; allow create, update: if isSelf(uid) && request.resource.data.userId == uid && request.resource.data.rating is int && request.resource.data.rating >= 1 && request.resource.data.rating <= 5 && request.resource.data.get('comment', '') is string && request.resource.data.get('comment', '').size() <= 700 && request.resource.data.get('moderationStatus', 'published') == 'published'; allow delete: if isSelf(uid) || isAdmin();
+        match /helpful/{voterId} { allow read: if true; allow create: if signedIn() && voterId == request.auth.uid && voterId != uid && request.resource.data.userId == request.auth.uid; allow delete: if signedIn() && voterId == request.auth.uid; allow update: if false; }
+        match /{sub}/{docId} { allow read, write: if false; }
       }
     }
-
-    match /review_reports/{id} {
-      allow read: if isAdmin();
-      allow create: if signedIn() && request.resource.data.reporterId == request.auth.uid &&
-        request.resource.data.reviewUserId != request.auth.uid &&
-        request.resource.data.status == 'pending' &&
-        request.resource.data.reason is string && request.resource.data.reason.size() >= 3 &&
-        request.resource.data.reason.size() <= 120;
-      allow update, delete: if isAdmin();
-    }
-
-    // Default deny. Every writable collection must be deliberately reviewed.
-    match /{document=**} {
-      allow read, write: if false;
-    }
+    match /review_reports/{id} { allow read: if isAdmin(); allow create: if signedIn() && request.resource.data.reporterId == request.auth.uid && request.resource.data.reviewUserId != request.auth.uid && request.resource.data.status == 'pending' && request.resource.data.reason is string && request.resource.data.reason.size() >= 3 && request.resource.data.reason.size() <= 120; allow update, delete: if isAdmin(); }
+    match /{document=**} { allow read, write: if false; }
   }
 }
