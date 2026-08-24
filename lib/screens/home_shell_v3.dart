@@ -558,10 +558,20 @@ class _NearbyUnifiedHubState extends State<_NearbyUnifiedHub> {
                       ],
                     ),
                   ),
-                  IconButton.filledTonal(
-                    tooltip: 'Etkinlik oluştur',
+                  FilledButton.icon(
                     onPressed: _createEvent,
-                    icon: const Icon(Icons.add_a_photo_outlined),
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 13,
+                        vertical: 11,
+                      ),
+                      visualDensity: VisualDensity.compact,
+                    ),
+                    icon: const Icon(Icons.add_rounded, size: 19),
+                    label: const Text(
+                      'Etkinlik oluştur',
+                      style: TextStyle(fontWeight: FontWeight.w900),
+                    ),
                   ),
                 ],
               ),

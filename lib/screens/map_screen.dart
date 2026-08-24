@@ -41,6 +41,9 @@ class _MapScreenState extends State<MapScreen> {
   _MapContentFilter _filter = _MapContentFilter.all;
 
   static const LatLng _defaultLocation = LatLng(38.9637, 35.2433);
+  static const double _nearbyZoom = 16.5;
+  static const double _placeZoom = 17;
+  static const double _streetTilt = 45;
   static const List<String> _pointCategories = <String>[
     'Kafe',
     'Yeme-İçme',
@@ -231,10 +234,15 @@ class _MapScreenState extends State<MapScreen> {
         _selectedUserPoint = null;
         _roadRoute = null;
       });
-      await _mapController?.animateCamera(CameraUpdate.newLatLngZoom(
-        LatLng(position.latitude, position.longitude),
-        15,
-      ));
+      await _mapController?.animateCamera(
+        CameraUpdate.newCameraPosition(
+          CameraPosition(
+            target: LatLng(position.latitude, position.longitude),
+            zoom: _nearbyZoom,
+            tilt: _streetTilt,
+          ),
+        ),
+      );
     } catch (_) {
       if (showErrors && mounted) _message('Konum alınamadı.');
     } finally {
@@ -255,7 +263,15 @@ class _MapScreenState extends State<MapScreen> {
       _roadRoute = null;
       _loadingRoadRoute = _currentPosition != null;
     });
-    await _mapController?.animateCamera(CameraUpdate.newLatLngZoom(destination, 15));
+    await _mapController?.animateCamera(
+      CameraUpdate.newCameraPosition(
+        CameraPosition(
+          target: destination,
+          zoom: _placeZoom,
+          tilt: _streetTilt,
+        ),
+      ),
+    );
 
     final current = _currentPosition;
     if (current == null) return;
@@ -544,6 +560,8 @@ class _MapScreenState extends State<MapScreen> {
                   GoogleMap(
                     initialCameraPosition:
                         const CameraPosition(target: _defaultLocation, zoom: 5),
+                    mapType: MapType.normal,
+                    buildingsEnabled: true,
                     markers: _markers,
                     polylines: _polylines,
                     myLocationEnabled: _locationPermissionGranted,
@@ -556,10 +574,18 @@ class _MapScreenState extends State<MapScreen> {
                       _mapController = controller;
                       final position = _currentPosition;
                       if (position != null) {
-                        await controller.animateCamera(CameraUpdate.newLatLngZoom(
-                          LatLng(position.latitude, position.longitude),
-                          15,
-                        ));
+                        await controller.animateCamera(
+                          CameraUpdate.newCameraPosition(
+                            CameraPosition(
+                              target: LatLng(
+                                position.latitude,
+                                position.longitude,
+                              ),
+                              zoom: _nearbyZoom,
+                              tilt: _streetTilt,
+                            ),
+                          ),
+                        );
                       }
                     },
                   ),
