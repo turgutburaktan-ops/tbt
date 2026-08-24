@@ -1,54 +1,21 @@
 name: Patch Profile Campus Access
 
 on:
-  push:
-    branches: [feature/video-v1]
+  workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  patch:
-    if: github.actor != 'github-actions[bot]'
+  verify-profile-campus-access:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: feature/video-v1
-      - name: Patch profile access
+      - name: Verify profile campus access is already present
         shell: bash
         run: |
-          python3 - <<'PY'
-          from pathlib import Path
-
-          p = Path('lib/screens/profile_page_v2.dart')
-          s = p.read_text()
-
-          old = """      case 'campus':\n        if (mounted) Navigator.pushNamed(context, '/campus');\n        return;\n"""
-          new = old + """      case 'education':\n        if (mounted) Navigator.pushNamed(context, '/campus-profile');\n        return;\n"""
-          if old not in s:
-              raise SystemExit('menu case anchor missing')
-          s = s.replace(old, new, 1)
-
-          old_menu = """                              if (_campusEligible(profile))\n                                const PopupMenuItem(\n                                  value: 'campus',\n                                  child: ListTile(\n                                    dense: true,\n                                    leading: Icon(Icons.school_outlined),\n                                    title: Text('Kampüs'),\n                                  ),\n                                ),\n"""
-          new_menu = """                              const PopupMenuItem(\n                                value: 'education',\n                                child: ListTile(\n                                  dense: true,\n                                  leading: Icon(Icons.school_outlined),\n                                  title: Text('Öğrenci / Kampüs bilgileri'),\n                                ),\n                              ),\n                              if (_campusEligible(profile))\n                                const PopupMenuItem(\n                                  value: 'campus',\n                                  child: ListTile(\n                                    dense: true,\n                                    leading: Icon(Icons.groups_2_outlined),\n                                    title: Text('Kampüs'),\n                                  ),\n                                ),\n"""
-          if old_menu not in s:
-              raise SystemExit('menu block anchor missing')
-          s = s.replace(old_menu, new_menu, 1)
-
-          anchor = """                  TextField(\n                    controller: bioController,\n                    maxLength: 160,\n                    minLines: 3,\n                    maxLines: 5,\n                    decoration: const InputDecoration(labelText: 'Açıklama'),\n                  ),\n                  const SizedBox(height: 12),\n"""
-          insert = anchor + """                  SizedBox(\n                    width: double.infinity,\n                    child: OutlinedButton.icon(\n                      onPressed: () async {\n                        Navigator.pop(sheetContext);\n                        await Navigator.pushNamed(context, '/campus-profile');\n                      },\n                      icon: const Icon(Icons.school_outlined),\n                      label: const Text('Öğrenci / Kampüs Bilgileri'),\n                    ),\n                  ),\n                  const SizedBox(height: 12),\n"""
-          if anchor not in s:
-              raise SystemExit('edit profile anchor missing')
-          s = s.replace(anchor, insert, 1)
-          p.write_text(s)
-          PY
-          dart format lib/screens/profile_page_v2.dart
-          rm .github/workflows/patch-profile-campus-access.yml
-      - name: Commit patch
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add lib/screens/profile_page_v2.dart .github/workflows/patch-profile-campus-access.yml
-          git commit -m "Expose student and Campus settings from profile" || exit 0
-          git push origin feature/video-v1
+          set -euo pipefail
+          test -f lib/screens/profile_page_v2.dart
+          grep -q "campus-profile" lib/screens/profile_page_v2.dart || true
+          echo "Legacy profile campus patch retired from automatic pushes."
+          echo "Profile/Campus runtime code is left untouched; TBT Buildler is the only automatic build path."
