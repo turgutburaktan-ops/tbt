@@ -103,12 +103,9 @@ if old_limit in s:
     s = s.replace(old_limit, new_limit, 1)
 p.write_text(s)
 
-# Dedicated photo-event creator: avoid a Firestore host update that rules reject.
-# Add a server function call after upload to attach the cover safely.
+# Event cover attachment: support both the legacy creator and EventCreateScreenV2.
 p = Path('lib/screens/event_photo_create_screen.dart')
 s = p.read_text()
-if "package:cloud_functions/cloud_functions.dart" not in s:
-    s = s.replace("import 'package:cloud_firestore/cloud_firestore.dart';\n", "import 'package:cloud_firestore/cloud_firestore.dart';\nimport 'package:cloud_functions/cloud_functions.dart';\n")
 old = """      await FirebaseFirestore.instance
           .collection(SocialEventService.collection)
           .doc(eventId)
@@ -124,10 +121,22 @@ new = """      await FirebaseFunctions.instanceFor(region: 'europe-west1')
         'coverStoragePath': ref.fullPath,
       });"""
 if old in s:
+    if "package:cloud_functions/cloud_functions.dart" not in s:
+        s = s.replace("import 'package:cloud_firestore/cloud_firestore.dart';\n", "import 'package:cloud_firestore/cloud_firestore.dart';\nimport 'package:cloud_functions/cloud_functions.dart';\n")
     s = s.replace(old, new, 1)
+    p.write_text(s)
+elif "EventCreateScreenV2" in s:
+    v2 = Path('lib/screens/event_create_screen_v2.dart').read_text()
+    required = [
+        "package:cloud_functions/cloud_functions.dart",
+        "httpsCallable('setSocialEventCover')",
+        "'coverStoragePath': ref.fullPath",
+    ]
+    missing = [item for item in required if item not in v2]
+    if missing:
+        raise SystemExit('EventCreateScreenV2 cover attachment incomplete: ' + ', '.join(missing))
 elif "httpsCallable('setSocialEventCover')" not in s:
-    raise SystemExit('Missing patch target: event cover function call')
-p.write_text(s)
+    raise SystemExit('Missing compatible event cover attachment implementation')
 
 # The old all-fields create sheet is no longer the main route, but keep it photo-capable too.
 p = Path('lib/screens/social_events_screen.dart')
