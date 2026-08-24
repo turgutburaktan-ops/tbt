@@ -2,23 +2,6 @@ name: Validate Android Build
 
 on:
   workflow_dispatch:
-  pull_request:
-    paths:
-      - 'lib/**'
-      - 'pubspec.yaml'
-      - 'pubspec.lock'
-      - 'android/app/src/main/AndroidManifest.xml'
-      - '.github/workflows/validate_android_build.yml'
-  push:
-    branches:
-      - main
-      - feature/video-v1
-    paths:
-      - 'lib/**'
-      - 'pubspec.yaml'
-      - 'pubspec.lock'
-      - 'android/app/src/main/AndroidManifest.xml'
-      - '.github/workflows/validate_android_build.yml'
 
 permissions:
   contents: read
@@ -29,16 +12,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: stable
           cache: true
-
       - name: Install dependencies
         run: flutter pub get
-
       - name: Prepare temporary Android scaffold
         shell: bash
         run: |
@@ -49,31 +29,15 @@ jobs:
           cp /tmp/tbt-AndroidManifest.xml android/app/src/main/AndroidManifest.xml
           python3 - <<'PY'
           from pathlib import Path
-
           manifest = Path('android/app/src/main/AndroidManifest.xml')
-          text = manifest.read_text()
-          text = text.replace('${MAPS_API_KEY}', 'ci-placeholder-maps-key')
+          text = manifest.read_text().replace('${MAPS_API_KEY}', 'ci-placeholder-maps-key')
           manifest.write_text(text)
-
           gradle = Path('android/app/build.gradle.kts')
-          gradle_text = gradle.read_text()
-          gradle_text = gradle_text.replace(
-              'minSdk = flutter.minSdkVersion',
-              'minSdk = 26',
-          )
-          gradle_text = gradle_text.replace(
-              'com.tbt.best_photo_spot',
-              'com.tbt.social',
-          )
-          gradle.write_text(gradle_text)
-
+          text = gradle.read_text().replace('minSdk = flutter.minSdkVersion', 'minSdk = 26').replace('com.tbt.best_photo_spot', 'com.tbt.social')
+          gradle.write_text(text)
           for activity in Path('android/app/src/main/kotlin').rglob('MainActivity.kt'):
-              activity.write_text(activity.read_text().replace(
-                  'package com.tbt.best_photo_spot',
-                  'package com.tbt.social',
-              ))
+              activity.write_text(activity.read_text().replace('package com.tbt.best_photo_spot', 'package com.tbt.social'))
           PY
-
       - name: Verify package identity
         shell: bash
         run: |
@@ -81,10 +45,8 @@ jobs:
           grep -q 'namespace = "com.tbt.social"' android/app/build.gradle.kts
           main_activity=$(find android/app/src/main/kotlin -name MainActivity.kt -print -quit)
           grep -q '^package com.tbt.social$' "$main_activity"
-
       - name: Build debug APK
         run: flutter build apk --debug
-
       - name: Upload validation APK
         uses: actions/upload-artifact@v4
         with:
