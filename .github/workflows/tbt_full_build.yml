@@ -24,6 +24,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
       - name: Apply pending requested product fixes
         if: github.ref == 'refs/heads/feature/video-v1'
         shell: bash
@@ -41,12 +47,6 @@ jobs:
             git push origin HEAD:feature/video-v1
             echo 'Requested fixes committed. A fresh Buildler run will validate the new commit.'
           fi
-
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          channel: stable
-          cache: true
 
       - name: Install dependencies
         run: flutter pub get
