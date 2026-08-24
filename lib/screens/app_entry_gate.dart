@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import 'app_onboarding_screen.dart';
+import 'guest_home_screen.dart';
 import 'home_shell_screen.dart';
 import 'student_onboarding_screen.dart';
 
@@ -16,7 +17,7 @@ class AppEntryGate extends StatelessWidget {
       initialData: FirebaseAuth.instance.currentUser,
       builder: (context, authSnapshot) {
         final user = authSnapshot.data;
-        if (user == null) return const HomeScreen();
+        if (user == null) return const GuestHomeScreen();
 
         return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
           stream: FirebaseFirestore.instance
