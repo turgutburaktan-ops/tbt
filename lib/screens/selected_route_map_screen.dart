@@ -1,12 +1,10 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
-import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:latlong2/latlong.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '../models/route_place.dart';
 import '../services/route_selection_service.dart';
+import '../theme/app_theme.dart';
 
 class SelectedRouteMapScreen extends StatefulWidget {
   final List<RoutePlace> places;
@@ -21,9 +19,11 @@ class SelectedRouteMapScreen extends StatefulWidget {
 }
 
 class _SelectedRouteMapScreenState extends State<SelectedRouteMapScreen> {
-  final MapController _mapController = MapController();
+  GoogleMapController? _mapController;
   Position? _position;
   bool _gettingLocation = false;
+
+  static const _defaultCenter = LatLng(39.0, 35.0);
 
   @override
   void initState() {
@@ -41,18 +41,17 @@ class _SelectedRouteMapScreenState extends State<SelectedRouteMapScreen> {
         permission = await Geolocator.requestPermission();
       }
       if (permission == LocationPermission.denied ||
-          permission == LocationPermission.deniedForever) {
-        return;
-      }
+          permission == LocationPermission.deniedForever) return;
       final position = await Geolocator.getCurrentPosition(
-        locationSettings:
-            const LocationSettings(accuracy: LocationAccuracy.medium),
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.medium,
+        ),
       );
       if (!mounted) return;
       setState(() => _position = position);
-      WidgetsBinding.instance.addPostFrameCallback((_) => _fitAll());
+      await _fitAll();
     } catch (_) {
-      // The selected route still works without current location.
+      // Route preview still works without current location.
     } finally {
       if (mounted) setState(() => _gettingLocation = false);
     }
@@ -65,73 +64,27 @@ class _SelectedRouteMapScreenState extends State<SelectedRouteMapScreen> {
       points.add(LatLng(position.latitude, position.longitude));
     }
     points.addAll(
-      widget.places.map((place) => LatLng(place.latitude, place.longitude)),
+      widget.places.map((p) => LatLng(p.latitude, p.longitude)),
     );
     return points;
   }
 
-  LatLng _centerOf(List<LatLng> points) {
-    if (points.isEmpty) return const LatLng(39.0, 35.0);
-    final lat = points.map((p) => p.latitude).reduce((a, b) => a + b) /
-        points.length;
-    final lng = points.map((p) => p.longitude).reduce((a, b) => a + b) /
-        points.length;
-    return LatLng(lat, lng);
-  }
-
-  double _zoomFor(List<LatLng> points) {
-    if (points.length <= 1) return 14;
-    final minLat = points.map((p) => p.latitude).reduce(math.min);
-    final maxLat = points.map((p) => p.latitude).reduce(math.max);
-    final minLng = points.map((p) => p.longitude).reduce(math.min);
-    final maxLng = points.map((p) => p.longitude).reduce(math.max);
-    final span = math.max(maxLat - minLat, maxLng - minLng).abs();
-    if (span < .01) return 14;
-    if (span < .03) return 12.8;
-    if (span < .08) return 11.5;
-    if (span < .2) return 10;
-    if (span < .5) return 8.7;
-    if (span < 1.2) return 7.5;
-    return 6.2;
-  }
-
-  void _fitAll() {
-    final points = _routePoints;
-    if (points.isEmpty) return;
-    _mapController.move(_centerOf(points), _zoomFor(points));
-  }
-
-  List<Marker> get _markers {
-    final markers = <Marker>[];
+  Set<Marker> get _markers {
+    final markers = <Marker>{};
     for (var i = 0; i < widget.places.length; i++) {
       final place = widget.places[i];
       markers.add(
         Marker(
-          point: LatLng(place.latitude, place.longitude),
-          width: 48,
-          height: 48,
-          child: Tooltip(
-            message: '${i + 1}. ${place.name} • ${place.category}',
-            child: Container(
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: i == widget.places.length - 1
-                    ? const Color(0xFF42F5E9)
-                    : const Color(0xFF8B5CF6),
-                border: Border.all(color: Colors.white, width: 3),
-                boxShadow: const [
-                  BoxShadow(color: Colors.black45, blurRadius: 8),
-                ],
-              ),
-              alignment: Alignment.center,
-              child: Text(
-                '${i + 1}',
-                style: const TextStyle(
-                  color: Colors.black,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-            ),
+          markerId: MarkerId('route_${place.id}_$i'),
+          position: LatLng(place.latitude, place.longitude),
+          infoWindow: InfoWindow(
+            title: '${i + 1}. ${place.name}',
+            snippet: place.category,
+          ),
+          icon: BitmapDescriptor.defaultMarkerWithHue(
+            i == widget.places.length - 1
+                ? BitmapDescriptor.hueAzure
+                : BitmapDescriptor.hueViolet,
           ),
         ),
       );
@@ -140,25 +93,68 @@ class _SelectedRouteMapScreenState extends State<SelectedRouteMapScreen> {
     if (position != null) {
       markers.add(
         Marker(
-          point: LatLng(position.latitude, position.longitude),
-          width: 34,
-          height: 34,
-          child: Container(
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: const Color(0xFF2196F3),
-              border: Border.all(color: Colors.white, width: 3),
-              boxShadow: const [
-                BoxShadow(color: Colors.black38, blurRadius: 6),
-              ],
-            ),
-            child: const Icon(Icons.my_location_rounded,
-                size: 17, color: Colors.white),
-          ),
+          markerId: const MarkerId('my_location_route'),
+          position: LatLng(position.latitude, position.longitude),
+          infoWindow: const InfoWindow(title: 'Konumum'),
+          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueCyan),
         ),
       );
     }
     return markers;
+  }
+
+  Set<Polyline> get _polylines {
+    final points = _routePoints;
+    if (points.length < 2) return const <Polyline>{};
+    return {
+      Polyline(
+        polylineId: const PolylineId('selected_route_preview'),
+        points: points,
+        width: 5,
+        color: AppColors.cyan,
+        geodesic: true,
+      ),
+    };
+  }
+
+  LatLngBounds _boundsFor(List<LatLng> points) {
+    var minLat = points.first.latitude;
+    var maxLat = points.first.latitude;
+    var minLng = points.first.longitude;
+    var maxLng = points.first.longitude;
+    for (final point in points.skip(1)) {
+      if (point.latitude < minLat) minLat = point.latitude;
+      if (point.latitude > maxLat) maxLat = point.latitude;
+      if (point.longitude < minLng) minLng = point.longitude;
+      if (point.longitude > maxLng) maxLng = point.longitude;
+    }
+    if ((maxLat - minLat).abs() < .0005) {
+      minLat -= .002;
+      maxLat += .002;
+    }
+    if ((maxLng - minLng).abs() < .0005) {
+      minLng -= .002;
+      maxLng += .002;
+    }
+    return LatLngBounds(
+      southwest: LatLng(minLat, minLng),
+      northeast: LatLng(maxLat, maxLng),
+    );
+  }
+
+  Future<void> _fitAll() async {
+    final controller = _mapController;
+    final points = _routePoints;
+    if (controller == null || points.isEmpty) return;
+    if (points.length == 1) {
+      await controller.animateCamera(
+        CameraUpdate.newLatLngZoom(points.first, 14),
+      );
+      return;
+    }
+    await controller.animateCamera(
+      CameraUpdate.newLatLngBounds(_boundsFor(points), 54),
+    );
   }
 
   Future<void> _openGoogleMaps() async {
@@ -172,10 +168,9 @@ class _SelectedRouteMapScreenState extends State<SelectedRouteMapScreen> {
   @override
   Widget build(BuildContext context) {
     final points = _routePoints;
-    final initialCenter = _centerOf(points);
-    final initialZoom = _zoomFor(points);
-
+    final initial = points.isEmpty ? _defaultCenter : points.first;
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: Text('Rotam (${widget.places.length})'),
         actions: [
@@ -189,38 +184,19 @@ class _SelectedRouteMapScreenState extends State<SelectedRouteMapScreen> {
       body: Column(
         children: [
           Expanded(
-            child: FlutterMap(
-              mapController: _mapController,
-              options: MapOptions(
-                initialCenter: initialCenter,
-                initialZoom: initialZoom,
-                interactionOptions: const InteractionOptions(
-                  flags: InteractiveFlag.all,
-                ),
-              ),
-              children: [
-                TileLayer(
-                  urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                  userAgentPackageName: 'com.example.tbt',
-                  maxZoom: 19,
-                ),
-                if (points.length >= 2)
-                  PolylineLayer(
-                    polylines: [
-                      Polyline(
-                        points: points,
-                        strokeWidth: 5,
-                        color: const Color(0xFF42F5E9),
-                      ),
-                    ],
-                  ),
-                MarkerLayer(markers: _markers),
-                const RichAttributionWidget(
-                  attributions: [
-                    TextSourceAttribution('OpenStreetMap contributors'),
-                  ],
-                ),
-              ],
+            child: GoogleMap(
+              initialCameraPosition: CameraPosition(target: initial, zoom: 11),
+              onMapCreated: (controller) async {
+                _mapController = controller;
+                await _fitAll();
+              },
+              markers: _markers,
+              polylines: _polylines,
+              myLocationEnabled: _position != null,
+              myLocationButtonEnabled: true,
+              zoomControlsEnabled: false,
+              compassEnabled: true,
+              mapToolbarEnabled: false,
             ),
           ),
           SafeArea(
@@ -232,16 +208,16 @@ class _SelectedRouteMapScreenState extends State<SelectedRouteMapScreen> {
                   Expanded(
                     child: Text(
                       _position == null
-                          ? 'Seçilen ${widget.places.length} mekan uygulama içindeki haritada gösteriliyor.'
-                          : 'Konumun ve seçilen ${widget.places.length} mekan aynı rota üzerinde gösteriliyor.',
+                          ? 'Seçilen ${widget.places.length} nokta Google Maps üzerinde gösteriliyor.'
+                          : 'Konumun ve seçilen ${widget.places.length} nokta Google Maps üzerinde gösteriliyor.',
                       style: const TextStyle(color: Colors.white70),
                     ),
                   ),
                   const SizedBox(width: 10),
                   OutlinedButton.icon(
                     onPressed: _openGoogleMaps,
-                    icon: const Icon(Icons.open_in_new_rounded),
-                    label: const Text('Google Maps'),
+                    icon: const Icon(Icons.directions_rounded),
+                    label: const Text('Rotaya Git'),
                   ),
                 ],
               ),
