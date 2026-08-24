@@ -165,18 +165,24 @@ if 'EventPhotoCreateScreen()' not in s[start:end]:
     s = s[:start] + replacement + s[end:]
 p.write_text(s)
 
-# Remove OSM deps now that selected route preview is Google Maps.
+# Remove obsolete OSM packages. Google Maps is the only in-app map renderer.
 p = Path('pubspec.yaml')
 s = p.read_text().replace('  flutter_map: ^8.2.2\n', '').replace('  latlong2: ^0.9.1\n', '')
 p.write_text(s)
 
-# No OSM code may remain in lib.
+# Block actual OSM renderer/tile dependencies, not harmless historical text/comments.
 offenders = []
 for f in Path('lib').rglob('*.dart'):
     t = f.read_text()
-    if 'flutter_map' in t or 'openstreetmap.org' in t or 'package:latlong2' in t:
+    forbidden = (
+        "package:flutter_map/",
+        "package:latlong2/",
+        "tile.openstreetmap.org",
+        "{s}.tile.openstreetmap.org",
+    )
+    if any(item in t for item in forbidden):
         offenders.append(str(f))
 if offenders:
-    raise SystemExit('OpenStreetMap refs remain: ' + ', '.join(offenders))
+    raise SystemExit('OpenStreetMap renderer refs remain: ' + ', '.join(offenders))
 
 # Build trigger: requested UI fixes are intentionally idempotent.
