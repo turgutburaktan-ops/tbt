@@ -96,9 +96,51 @@ service cloud.firestore {
         get(/databases/$(database)/documents/social_events/$(id)).data.status != 'cancelled'
       );
     }
+    function blockedBetween(otherUid) {
+      return signedIn() && (
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)/blocked/$(otherUid)) ||
+        exists(/databases/$(database)/documents/users/$(otherUid)/blocked/$(request.auth.uid))
+      );
+    }
+    function validDirectThreadCreate() {
+      let members = request.resource.data.memberIds;
+      let other = members[0] == request.auth.uid ? members[1] : members[0];
+      return signedIn() && request.resource.data.type == 'direct' &&
+        members.size() == 2 && members[0] != members[1] &&
+        members.hasAny([request.auth.uid]) && !blockedBetween(other);
+    }
     function threadMember(id) {
       return signedIn() && exists(/databases/$(database)/documents/chat_threads/$(id)) &&
         get(/databases/$(database)/documents/chat_threads/$(id)).data.memberIds.hasAny([request.auth.uid]);
+    }
+    function threadUnblocked(id) {
+      let members = get(/databases/$(database)/documents/chat_threads/$(id)).data.memberIds;
+      let other = members[0] == request.auth.uid ? members[1] : members[0];
+      return members.size() == 2 && !blockedBetween(other);
+    }
+    function validStoryInteraction(storyId, uid) {
+      let story = get(/databases/$(database)/documents/stories/$(storyId)).data;
+      return signedIn() && uid == request.auth.uid && story.userId != uid && story.expiresAt > request.time &&
+        request.resource.data.userId == uid &&
+        request.resource.data.keys().hasOnly(['userId','userName','userPhotoUrl','viewedAt','updatedAt','liked','reaction','message','messageAt']) &&
+        request.resource.data.get('userName', '') is string && request.resource.data.get('userName', '').size() <= 120 &&
+        request.resource.data.get('userPhotoUrl', '') is string && request.resource.data.get('userPhotoUrl', '').size() <= 1200 &&
+        request.resource.data.get('reaction', '') is string && request.resource.data.get('reaction', '').size() <= 8 &&
+        request.resource.data.get('message', '') is string && request.resource.data.get('message', '').size() <= 500;
+    }
+    function validPostCreate() {
+      return signedIn() && request.resource.data.userId == request.auth.uid && validEventMemoryPost() &&
+        request.resource.data.get('caption', '') is string && request.resource.data.get('caption', '').size() <= 500 &&
+        request.resource.data.get('spotName', '') is string && request.resource.data.get('spotName', '').size() <= 120 &&
+        request.resource.data.get('mediaType', 'image') in ['image','video'] &&
+        request.resource.data.get('durationMs', 0) is int && request.resource.data.get('durationMs', 0) >= 0 && request.resource.data.get('durationMs', 0) <= 60000 &&
+        request.resource.data.get('sourceType', 'post') in ['post','event_memory'];
+    }
+    function validPostOwnerUpdate() {
+      return signedIn() && resource.data.userId == request.auth.uid && request.resource.data.userId == resource.data.userId &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['caption','spotName','updatedAt']) &&
+        request.resource.data.get('caption', '') is string && request.resource.data.get('caption', '').size() <= 500 &&
+        request.resource.data.get('spotName', '') is string && request.resource.data.get('spotName', '').size() <= 120;
     }
     function eventAttendancePath(eventId) {
       return /databases/$(database)/documents/social_events/$(eventId)/attendance/$(request.auth.uid);
@@ -179,17 +221,17 @@ service cloud.firestore {
     }
     match /chat_threads/{threadId} {
       allow read: if signedIn() && resource.data.memberIds.hasAny([request.auth.uid]);
-      allow create: if signedIn() && request.resource.data.type == 'direct' && request.resource.data.memberIds.size() == 2 && request.resource.data.memberIds.hasAny([request.auth.uid]);
-      allow update: if signedIn() && resource.data.memberIds.hasAny([request.auth.uid]) && request.resource.data.memberIds == resource.data.memberIds && request.resource.data.type == resource.data.type;
+      allow create: if validDirectThreadCreate();
+      allow update: if signedIn() && resource.data.memberIds.hasAny([request.auth.uid]) && request.resource.data.memberIds == resource.data.memberIds && request.resource.data.type == resource.data.type && threadUnblocked(threadId);
       allow delete: if false;
-      match /messages/{messageId} { allow read: if threadMember(threadId); allow create: if threadMember(threadId) && request.resource.data.senderId == request.auth.uid && request.resource.data.text is string && request.resource.data.text.size() > 0 && request.resource.data.text.size() <= 1500 && request.resource.data.deleted == false; allow update, delete: if false; }
+      match /messages/{messageId} { allow read: if threadMember(threadId); allow create: if threadMember(threadId) && threadUnblocked(threadId) && request.resource.data.senderId == request.auth.uid && request.resource.data.text is string && request.resource.data.text.size() > 0 && request.resource.data.text.size() <= 1500 && request.resource.data.deleted == false; allow update, delete: if false; }
     }
     match /stories/{storyId} {
       allow read: if signedIn();
       allow create: if signedIn() && request.resource.data.userId == request.auth.uid && request.resource.data.expiresAt > request.time;
       allow update: if signedIn() && resource.data.userId == request.auth.uid && request.resource.data.userId == resource.data.userId;
       allow delete: if signedIn() && resource.data.userId == request.auth.uid;
-      match /interactions/{uid} { allow read: if signedIn() && (uid == request.auth.uid || get(/databases/$(database)/documents/stories/$(storyId)).data.userId == request.auth.uid); allow create, update: if signedIn() && uid == request.auth.uid && request.resource.data.userId == request.auth.uid; allow delete: if signedIn() && uid == request.auth.uid; }
+      match /interactions/{uid} { allow read: if signedIn() && (uid == request.auth.uid || get(/databases/$(database)/documents/stories/$(storyId)).data.userId == request.auth.uid); allow create, update: if validStoryInteraction(storyId, uid); allow delete: if signedIn() && uid == request.auth.uid; }
     }
     match /social_events/{eventId} {
       allow read: if eventVisible(resource.data);
@@ -211,7 +253,10 @@ service cloud.firestore {
       match /{sub}/{docId} { allow read, write: if false; }
     }
     match /posts/{postId} {
-      allow read: if true; allow create: if signedIn() && request.resource.data.userId == request.auth.uid && validEventMemoryPost(); allow update, delete: if isAdmin() || (signedIn() && resource.data.userId == request.auth.uid);
+      allow read: if true;
+      allow create: if validPostCreate();
+      allow update: if isAdmin() || validPostOwnerUpdate();
+      allow delete: if isAdmin() || (signedIn() && resource.data.userId == request.auth.uid);
       match /likes/{uid} { allow read: if true; allow create: if isSelf(uid) && request.resource.data.userId == uid; allow delete: if isSelf(uid); allow update: if false; }
       match /comments/{commentId} { allow read: if true; allow create: if validCommentCreate(); allow update, delete: if signedIn() && resource.data.userId == request.auth.uid; }
       match /tags/{taggedUserId} { allow read: if true; allow create: if signedIn() && request.resource.data.userId == taggedUserId && request.resource.data.taggedBy == request.auth.uid; allow update, delete: if signedIn() && resource.data.taggedBy == request.auth.uid; }
