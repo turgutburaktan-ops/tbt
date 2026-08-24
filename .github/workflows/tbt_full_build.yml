@@ -1,4 +1,4 @@
-name: TBT Full Build
+name: Buildler
 
 on:
   workflow_dispatch:
@@ -12,7 +12,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: tbt-full-build-${{ github.ref }}
+  group: tbt-buildler-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -43,7 +43,7 @@ jobs:
           fi
 
   android:
-    name: 2 · Android
+    name: 2 · Android / APK
     runs-on: ubuntu-latest
     timeout-minutes: 40
     steps:
@@ -97,7 +97,7 @@ jobs:
       - name: Upload Android APK
         uses: actions/upload-artifact@v4
         with:
-          name: tbt-full-build-debug-apk
+          name: tbt-debug-apk
           path: build/app/outputs/flutter-apk/app-debug.apk
           if-no-files-found: error
           retention-days: 7
@@ -153,7 +153,7 @@ jobs:
       - name: Upload unsigned iOS app
         uses: actions/upload-artifact@v4
         with:
-          name: tbt-full-build-ios-unsigned-app
+          name: tbt-ios-unsigned-app
           path: build/ios/iphoneos/Runner.app
           if-no-files-found: error
           retention-days: 7
@@ -225,23 +225,36 @@ jobs:
           npm audit --omit=dev --audit-level=high
 
   result:
-    name: TBT Full Build Result
+    name: 5 · Genel Sonuç
     if: always()
     needs: [analyze, android, ios, security]
     runs-on: ubuntu-latest
     steps:
-      - name: Full build summary
+      - name: Buildler özeti
         shell: bash
         run: |
+          {
+            echo '## TBT Buildler'
+            echo ''
+            echo '| Kontrol | Sonuç |'
+            echo '|---|---|'
+            echo '| Analyze | ${{ needs.analyze.result }} |'
+            echo '| Android / APK | ${{ needs.android.result }} |'
+            echo '| iOS | ${{ needs.ios.result }} |'
+            echo '| Security | ${{ needs.security.result }} |'
+          } >> "$GITHUB_STEP_SUMMARY"
+
           echo "Analyze:  ${{ needs.analyze.result }}"
           echo "Android:  ${{ needs.android.result }}"
           echo "iOS:      ${{ needs.ios.result }}"
           echo "Security: ${{ needs.security.result }}"
+
           if [ "${{ needs.analyze.result }}" != "success" ] || \
              [ "${{ needs.android.result }}" != "success" ] || \
              [ "${{ needs.ios.result }}" != "success" ] || \
              [ "${{ needs.security.result }}" != "success" ]; then
-            echo 'TBT Full Build FAILED.'
+            echo 'BUILDLER FAILED.'
             exit 1
           fi
-          echo 'TBT Full Build PASSED.'
+
+          echo 'BUILDLER PASSED.'
