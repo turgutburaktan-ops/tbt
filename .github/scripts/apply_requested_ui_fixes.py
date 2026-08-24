@@ -174,3 +174,5 @@ for f in Path('lib').rglob('*.dart'):
         offenders.append(str(f))
 if offenders:
     raise SystemExit('OpenStreetMap refs remain: ' + ', '.join(offenders))
+
+# Build trigger: 2026-08-24 requested five-item fix pass.
