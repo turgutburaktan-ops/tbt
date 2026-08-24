@@ -1,0 +1,42 @@
+name: Analyze Diagnostics
+
+on:
+  push:
+    branches:
+      - feature/video-v1
+
+permissions:
+  contents: write
+
+jobs:
+  diagnose:
+    if: github.actor != 'tbt-build-bot'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Capture analyzer errors
+        shell: bash
+        run: |
+          set +e
+          flutter analyze --machine > /tmp/analyze-machine.txt 2>&1
+          status=$?
+          mkdir -p .ci
+          grep '^ERROR|' /tmp/analyze-machine.txt > .ci/analyze_errors.txt || true
+          if [ ! -s .ci/analyze_errors.txt ]; then
+            echo 'NO_ANALYZER_ERRORS' > .ci/analyze_errors.txt
+          fi
+          cat .ci/analyze_errors.txt
+          git config user.name 'tbt-build-bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add .ci/analyze_errors.txt
+          if ! git diff --cached --quiet; then
+            git commit -m 'ci: record analyzer errors [skip ci]'
+            git push origin HEAD:feature/video-v1
+          fi
+          exit $status
