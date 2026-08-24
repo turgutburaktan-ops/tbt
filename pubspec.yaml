@@ -23,8 +23,6 @@ dependencies:
   camerawesome: ^2.5.0
   geolocator: ^13.0.2
   google_maps_flutter: ^2.10.0
-  flutter_map: ^7.0.2
-  latlong2: ^0.9.1
   image_picker: ^1.1.2
   image: ^4.3.0
   flutter_image_filters: ^0.0.32
