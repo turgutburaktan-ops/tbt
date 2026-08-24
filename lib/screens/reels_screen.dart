@@ -4,11 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 
 import '../services/content_engagement_service.dart';
+import '../services/social_service.dart';
 import 'post_detail_screen.dart';
 import 'user_profile_screen.dart';
 
 class ReelsScreen extends StatefulWidget {
-  const ReelsScreen({super.key});
+  final bool embedded;
+
+  const ReelsScreen({super.key, this.embedded = false});
 
   @override
   State<ReelsScreen> createState() => _ReelsScreenState();
@@ -16,6 +19,7 @@ class ReelsScreen extends StatefulWidget {
 
 class _ReelsScreenState extends State<ReelsScreen> {
   int _activeIndex = 0;
+  int _section = 0;
 
   Stream<QuerySnapshot<Map<String, dynamic>>> get _stream => FirebaseFirestore
       .instance
@@ -25,7 +29,9 @@ class _ReelsScreenState extends State<ReelsScreen> {
       .snapshots();
 
   List<QueryDocumentSnapshot<Map<String, dynamic>>> _sorted(
-      QuerySnapshot<Map<String, dynamic>> snapshot) {
+    QuerySnapshot<Map<String, dynamic>> snapshot,
+    List<String> followingIds,
+  ) {
     final docs = [...snapshot.docs];
     docs.sort((a, b) {
       final av = a.data()['createdAt'];
@@ -36,23 +42,25 @@ class _ReelsScreenState extends State<ReelsScreen> {
     });
     return docs.where((doc) {
       final data = doc.data();
-      return (data['videoUrl'] ?? '').toString().trim().isNotEmpty;
+      final hasVideo =
+          (data['videoUrl'] ?? '').toString().trim().isNotEmpty;
+      if (!hasVideo) return false;
+      if (_section == 0) return true;
+      final ownerId = (data['userId'] ?? '').toString();
+      final me = FirebaseAuth.instance.currentUser?.uid;
+      return ownerId == me || followingIds.contains(ownerId);
     }).toList();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        foregroundColor: Colors.white,
-        elevation: 0,
-        title: const Text('Reels', style: TextStyle(fontWeight: FontWeight.w900)),
-      ),
-      body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-        stream: _stream,
-        builder: (context, snapshot) {
+    final body = StreamBuilder<List<String>>(
+      stream: SocialService.instance.followingIds(),
+      builder: (context, followingSnapshot) {
+        final followingIds = followingSnapshot.data ?? const <String>[];
+        return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+          stream: _stream,
+          builder: (context, snapshot) {
           if (snapshot.hasError) {
             return const Center(
               child: Text('Reels şu anda yüklenemiyor.', style: TextStyle(color: Colors.white70)),
@@ -61,7 +69,7 @@ class _ReelsScreenState extends State<ReelsScreen> {
           if (!snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
           }
-          final docs = _sorted(snapshot.data!);
+          final docs = _sorted(snapshot.data!, followingIds);
           if (docs.isEmpty) {
             return const Center(
               child: Padding(
@@ -85,25 +93,102 @@ class _ReelsScreenState extends State<ReelsScreen> {
               if (mounted) setState(() => _activeIndex = safeIndex);
             });
           }
-          return PageView.builder(
-            scrollDirection: Axis.vertical,
-            itemCount: docs.length,
-            onPageChanged: (index) => setState(() => _activeIndex = index),
-            itemBuilder: (_, index) {
-              final doc = docs[index];
-              return _ReelPage(
-                key: ValueKey(doc.id),
-                postId: doc.id,
-                data: doc.data(),
-                active: index == _activeIndex,
-              );
-            },
+          return Stack(
+            fit: StackFit.expand,
+            children: [
+              PageView.builder(
+                scrollDirection: Axis.vertical,
+                itemCount: docs.length,
+                onPageChanged: (index) => setState(() => _activeIndex = index),
+                itemBuilder: (_, index) {
+                  final doc = docs[index];
+                  return _ReelPage(
+                    key: ValueKey(doc.id),
+                    postId: doc.id,
+                    data: doc.data(),
+                    active: index == _activeIndex,
+                  );
+                },
+              ),
+              Positioned(
+                top: widget.embedded ? 58 : 12,
+                left: 0,
+                right: 0,
+                child: Center(
+                  child: _ReelsFilter(
+                    selected: _section,
+                    onChanged: (value) {
+                      setState(() {
+                        _section = value;
+                        _activeIndex = 0;
+                      });
+                    },
+                  ),
+                ),
+              ),
+            ],
           );
-        },
+          },
+        );
+      },
+    );
+
+    if (widget.embedded) return ColoredBox(color: Colors.black, child: body);
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        title:
+            const Text('Reels', style: TextStyle(fontWeight: FontWeight.w900)),
       ),
+      body: body,
     );
   }
 }
+
+class _ReelsFilter extends StatelessWidget {
+  final int selected;
+  final ValueChanged<int> onChanged;
+
+  const _ReelsFilter({required this.selected, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) => DecoratedBox(
+        decoration: BoxDecoration(
+          color: Colors.black54,
+          borderRadius: BorderRadius.circular(99),
+          border: Border.all(color: Colors.white24),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: List.generate(2, (index) {
+            final active = selected == index;
+            return InkWell(
+              onTap: () => onChanged(index),
+              borderRadius: BorderRadius.circular(99),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 160),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 18, vertical: 9),
+                decoration: BoxDecoration(
+                  color: active ? Colors.white : Colors.transparent,
+                  borderRadius: BorderRadius.circular(99),
+                ),
+                child: Text(
+                  index == 0 ? 'Sana Özel' : 'Takip',
+                  style: TextStyle(
+                    color: active ? Colors.black : Colors.white70,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+            );
+          }),
+        ),
+      );
 
 class _ReelPage extends StatelessWidget {
   final String postId;

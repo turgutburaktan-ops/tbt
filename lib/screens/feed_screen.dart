@@ -8,7 +8,6 @@ import '../services/social_service.dart';
 import '../widgets/app_video_player.dart';
 import '../widgets/content_engagement_bar.dart';
 import '../widgets/firebase_media_image.dart';
-import '../widgets/story_strip.dart';
 import 'social_events_screen.dart';
 import 'user_profile_screen.dart';
 
@@ -116,12 +115,7 @@ class FeedScreen extends StatelessWidget {
                             d.day == now.day;
                       }).take(6).toList();
 
-                      final visibleStoryUsers = mode == FeedMode.following
-                          ? <String>{currentUser.uid, ...followingIds}
-                          : null;
-                      final feedItems = <Widget>[
-                        StoryStrip(visibleUserIds: visibleStoryUsers),
-                      ];
+                      final feedItems = <Widget>[];
                       if (mode == FeedMode.forYou && tonight.isNotEmpty) {
                         feedItems.add(_TonightStrip(
                           events: tonight,
@@ -628,11 +622,11 @@ class _FeedPostCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        margin: const EdgeInsets.fromLTRB(10, 5, 10, 13),
+        margin: const EdgeInsets.fromLTRB(8, 4, 8, 14),
         decoration: BoxDecoration(
-          color: const Color(0xFF111315),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: const Color(0xFF24282D)),
+          color: const Color(0xFF0E1012),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: const Color(0xFF20242A)),
         ),
         clipBehavior: Clip.antiAlias,
         child: Column(
@@ -751,35 +745,7 @@ class _FeedPostCard extends StatelessWidget {
                   ]),
                 ),
               ),
-            if (spotName.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF191C1F),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(children: [
-                    const Icon(Icons.place_outlined,
-                        size: 17, color: Color(0xFFB7BCC2)),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text(spotName,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                              fontSize: 12, fontWeight: FontWeight.w800)),
-                    ),
-                    const Text('Noktayı gör',
-                        style: TextStyle(
-                            color: Color(0xFFB7BCC2),
-                            fontSize: 11,
-                            fontWeight: FontWeight.w800)),
-                  ]),
-                ),
-              ),
+            const SizedBox(height: 4),
           ],
         ),
       );

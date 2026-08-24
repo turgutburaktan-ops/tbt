@@ -7,6 +7,7 @@ import '../models/nearby_venue.dart';
 import '../services/app_notification_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/nearby_places_view.dart';
+import '../widgets/story_strip.dart';
 import 'campus_home_screen.dart';
 import 'event_photo_create_screen.dart';
 import 'feed_screen.dart';
@@ -208,7 +209,8 @@ class _HomeFeedHub extends StatefulWidget {
 }
 
 class _HomeFeedHubState extends State<_HomeFeedHub> {
-  int _section = 0;
+  int _contentMode = 0;
+  int _photoMode = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -216,30 +218,58 @@ class _HomeFeedHubState extends State<_HomeFeedHub> {
       color: AppColors.background,
       child: SafeArea(
         bottom: false,
-        child: Column(
-          children: [
-            const _HomeHeader(),
-            const _MissionShortcut(),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(14, 2, 14, 8),
-              child: _SegmentTabs(
-                labels: const ['Sana Özel', 'Takip', 'Reels'],
-                selected: _section,
-                onChanged: (value) => setState(() => _section = value),
-              ),
-            ),
-            Expanded(
-              child: IndexedStack(
-                index: _section,
-                children: const [
-                  _AuthAwareFeed(mode: FeedMode.forYou),
-                  _AuthAwareFeed(mode: FeedMode.following),
-                  ReelsScreen(),
+        child: _contentMode == 1
+            ? Stack(
+                children: [
+                  const Positioned.fill(child: ReelsScreen(embedded: true)),
+                  Positioned(
+                    top: 8,
+                    left: 14,
+                    right: 14,
+                    child: _SegmentTabs(
+                      labels: const ['Fotoğraflar', 'Reels'],
+                      selected: _contentMode,
+                      prominent: true,
+                      onChanged: (value) =>
+                          setState(() => _contentMode = value),
+                    ),
+                  ),
+                ],
+              )
+            : Column(
+                children: [
+                  const _HomeHeader(),
+                  const StoryStrip(),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(14, 2, 14, 7),
+                    child: _SegmentTabs(
+                      labels: const ['Fotoğraflar', 'Reels'],
+                      selected: _contentMode,
+                      prominent: true,
+                      onChanged: (value) =>
+                          setState(() => _contentMode = value),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(14, 0, 14, 8),
+                    child: _SegmentTabs(
+                      labels: const ['Sana Özel', 'Takip'],
+                      selected: _photoMode,
+                      onChanged: (value) =>
+                          setState(() => _photoMode = value),
+                    ),
+                  ),
+                  Expanded(
+                    child: IndexedStack(
+                      index: _photoMode,
+                      children: const [
+                        _AuthAwareFeed(mode: FeedMode.forYou),
+                        _AuthAwareFeed(mode: FeedMode.following),
+                      ],
+                    ),
+                  ),
                 ],
               ),
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -319,57 +349,6 @@ class _HomeHeader extends StatelessWidget {
           ],
         ),
       );
-}
-
-class _MissionShortcut extends StatelessWidget {
-  const _MissionShortcut();
-
-  @override
-  Widget build(BuildContext context) {
-    if (FirebaseAuth.instance.currentUser == null) return const SizedBox.shrink();
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(14, 0, 14, 8),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () => Navigator.pushNamed(context, '/rewards'),
-          borderRadius: BorderRadius.circular(16),
-          child: Ink(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              gradient: const LinearGradient(
-                colors: [Color(0xFF151B24), Color(0xFF191226)],
-              ),
-              border: Border.all(color: AppColors.border),
-            ),
-            child: const Row(
-              children: [
-                Text('🔥', style: TextStyle(fontSize: 21)),
-                SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Bugünün Görevi',
-                        style: TextStyle(fontWeight: FontWeight.w900),
-                      ),
-                      Text(
-                        'Fotoğraf veya video paylaş • ödüllerini gör',
-                        style: TextStyle(color: Colors.white60, fontSize: 11.5),
-                      ),
-                    ],
-                  ),
-                ),
-                Icon(Icons.chevron_right_rounded, color: Colors.white54),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 }
 
 class _PlacesHub extends StatefulWidget {
@@ -626,11 +605,13 @@ class _SegmentTabs extends StatelessWidget {
   final List<String> labels;
   final int selected;
   final ValueChanged<int> onChanged;
+  final bool prominent;
 
   const _SegmentTabs({
     required this.labels,
     required this.selected,
     required this.onChanged,
+    this.prominent = false,
   });
 
   @override
@@ -650,7 +631,7 @@ class _SegmentTabs extends StatelessWidget {
                 borderRadius: BorderRadius.circular(11),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 160),
-                  padding: const EdgeInsets.symmetric(vertical: 9),
+                  padding: EdgeInsets.symmetric(vertical: prominent ? 11 : 9),
                   decoration: BoxDecoration(
                     color: active ? AppColors.surfaceStrong : Colors.transparent,
                     borderRadius: BorderRadius.circular(11),
@@ -660,7 +641,7 @@ class _SegmentTabs extends StatelessWidget {
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: active ? Colors.white : Colors.white54,
-                      fontSize: 11.5,
+                      fontSize: prominent ? 14 : 11.5,
                       fontWeight: active ? FontWeight.w900 : FontWeight.w700,
                     ),
                   ),
