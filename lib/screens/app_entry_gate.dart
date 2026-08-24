@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 
 import 'app_onboarding_screen.dart';
 import 'guest_home_screen.dart';
-import 'home_shell_screen.dart';
+import 'home_shell_v3.dart';
 import 'student_onboarding_screen.dart';
 
 class AppEntryGate extends StatelessWidget {
