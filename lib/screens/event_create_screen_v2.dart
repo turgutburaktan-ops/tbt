@@ -27,14 +27,12 @@ class _EventCreateScreenV2State extends State<EventCreateScreenV2> {
   final _location = TextEditingController();
   final _description = TextEditingController();
   final _customType = TextEditingController();
-  final _price = TextEditingController();
   final _capacity = TextEditingController(text: '10');
   final _picker = ImagePicker();
 
   File? _image;
   DateTime _startsAt = DateTime.now().add(const Duration(hours: 2));
   SocialEventType _type = SocialEventType.social;
-  EventAccessType _accessType = EventAccessType.free;
   EventVisibility _visibility = EventVisibility.public;
   Map<String, String> _selectedPeople = {};
   EventLocationSelection? _selectedLocation;
@@ -49,7 +47,6 @@ class _EventCreateScreenV2State extends State<EventCreateScreenV2> {
       _location,
       _description,
       _customType,
-      _price,
       _capacity,
     ]) {
       c.dispose();
@@ -267,13 +264,6 @@ class _EventCreateScreenV2State extends State<EventCreateScreenV2> {
 
     String? uploadedPath;
     try {
-      final price = double.tryParse(_price.text.trim().replaceAll(',', '.')) ?? 0;
-      if (_accessType == EventAccessType.paid) {
-        final eligibility = await EventTrustService.instance.paidEventEligibility();
-        if (!eligibility.allowed) throw Exception(eligibility.reason);
-        if (price <= 0) throw Exception('Geçerli bir bilet fiyatı yazmalısın.');
-      }
-
       final allowed = await EventPrivacyService.instance.resolveAudience(
         _visibility,
         selectedUserIds: _selectedPeople.keys.toList(),
@@ -288,8 +278,8 @@ class _EventCreateScreenV2State extends State<EventCreateScreenV2> {
         locationLabel: _location.text,
         description: _description.text,
         customTypeLabel: _customType.text,
-        accessType: _accessType,
-        ticketPriceMinor: (price * 100).round(),
+        accessType: EventAccessType.free,
+        ticketPriceMinor: 0,
         latitude: _selectedLocation!.latitude,
         longitude: _selectedLocation!.longitude,
         visibility: _visibility,
@@ -449,35 +439,31 @@ class _EventCreateScreenV2State extends State<EventCreateScreenV2> {
             ),
           ],
           const SizedBox(height: 14),
-          SegmentedButton<EventAccessType>(
-            segments: const [
-              ButtonSegment(
-                value: EventAccessType.free,
-                label: Text('Ücretsiz'),
-                icon: Icon(Icons.confirmation_number_outlined),
-              ),
-              ButtonSegment(
-                value: EventAccessType.paid,
-                label: Text('Ücretli'),
-                icon: Icon(Icons.payments_outlined),
-              ),
-            ],
-            selected: {_accessType},
-            onSelectionChanged: _saving
-                ? null
-                : (values) => setState(() => _accessType = values.first),
-          ),
-          if (_accessType == EventAccessType.paid) ...[
-            const SizedBox(height: 12),
-            TextField(
-              controller: _price,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              decoration: const InputDecoration(
-                labelText: 'Bilet fiyatı (TL)',
-                prefixIcon: Icon(Icons.currency_lira),
-              ),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.border),
             ),
-          ],
+            child: const Row(
+              children: [
+                Icon(Icons.confirmation_number_outlined, color: AppColors.cyan),
+                SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Ücretsiz etkinlik', style: TextStyle(fontWeight: FontWeight.w900)),
+                      SizedBox(height: 2),
+                      Text('Ücretli etkinlikler şimdilik kapalı.', style: TextStyle(color: Colors.white54, fontSize: 11.5)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
           const SizedBox(height: 12),
           TextField(
             controller: _city,

@@ -85,7 +85,9 @@ class SocialEventService {
     final minimum = DateTime.now().add(const Duration(minutes: 15));
     if (startsAt.isBefore(minimum)) throw Exception('Etkinlik saati en az 15 dakika ileride olmalı.');
     if (type == SocialEventType.other && customTypeLabel.trim().length < 3) throw Exception('Diğer etkinlik türü için kısa bir ad yazmalısın.');
-    if (accessType == EventAccessType.paid && ticketPriceMinor <= 0) throw Exception('Ücretli etkinlik için geçerli bir bilet fiyatı yazmalısın.');
+    if (accessType == EventAccessType.paid) {
+      throw Exception('Ücretli etkinlikler şimdilik kapalı.');
+    }
     if (visibility == EventVisibility.selectedPeople && allowedUserIds.where((id) => id.trim().isNotEmpty).isEmpty) {
       throw Exception('Seçili kişiler etkinliği için en az bir kişi seçmelisin.');
     }
@@ -101,11 +103,6 @@ class SocialEventService {
       if (!admins.contains(user.uid)) throw Exception('Bu topluluk adına etkinlik oluşturma yetkin yok.');
       safeCommunityId = community.id;
       safeCommunityName = (data['name'] ?? communityName ?? '').toString().trim();
-    }
-
-    if (accessType == EventAccessType.paid) {
-      final eligibility = await EventTrustService.instance.paidEventEligibility();
-      if (!eligibility.allowed) throw Exception(eligibility.reason);
     }
 
     final ref = _firestore.collection(collection).doc();
