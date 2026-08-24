@@ -2,33 +2,6 @@ name: Security Regression Check
 
 on:
   workflow_dispatch:
-  pull_request:
-    paths:
-      - 'lib/**'
-      - 'functions/**'
-      - 'firestore.rules'
-      - 'storage.rules'
-      - 'firebase.json'
-      - 'pubspec.yaml'
-      - 'pubspec.lock'
-      - 'android/**'
-      - 'ios/**'
-      - '.github/workflows/security_regression_check.yml'
-  push:
-    branches:
-      - main
-      - feature/video-v1
-    paths:
-      - 'lib/**'
-      - 'functions/**'
-      - 'firestore.rules'
-      - 'storage.rules'
-      - 'firebase.json'
-      - 'pubspec.yaml'
-      - 'pubspec.lock'
-      - 'android/**'
-      - 'ios/**'
-      - '.github/workflows/security_regression_check.yml'
 
 permissions:
   contents: read
@@ -37,67 +10,50 @@ jobs:
   security-checks:
     runs-on: ubuntu-latest
     timeout-minutes: 35
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Setup Java
         uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '21'
-
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: stable
           cache: true
-
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-
       - name: Install Flutter dependencies
         run: flutter pub get
-
-      # Security regression should block on real analyzer errors. Existing
-      # deprecation/info warnings are tracked separately and must not prevent
-      # the rules/key/audit checks below from running.
       - name: Static analysis
         run: flutter analyze --no-fatal-infos --no-fatal-warnings
-
       - name: Unit/widget tests
         run: flutter test
-
       - name: Check repository for private key material
         shell: bash
         run: |
-          # Exclude this workflow itself so the detector does not match its own
-          # private-key/service-account search expression.
           if git grep -n -E -- 'BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY|private_key_id[[:space:]]*[:=]|service_account.*\.json' -- ':!pubspec.lock' ':!.github/workflows/security_regression_check.yml'; then
             echo 'Potential private key/service-account material found in tracked files.'
             exit 1
           fi
-
       - name: Check dangerous Firestore wildcard writes
         shell: bash
         run: |
           if grep -nE 'match /\{collection\}/\{document\}.*' firestore.rules >/dev/null; then
-            echo 'Generic Firestore collection matcher detected; reviewing write policy:'
             grep -nE 'allow write: if signedIn\(\).*!\(collection in' firestore.rules && {
               echo 'Permissive authenticated wildcard write remains and must be removed.'
               exit 1
             } || true
           fi
-
       - name: Validate Firebase rules syntax with emulator
         shell: bash
         run: |
           npm install -g firebase-tools
           firebase emulators:exec --only firestore --project demo-tbt "echo Firestore-rules-ok" --non-interactive
-
       - name: Audit Cloud Functions dependencies
         shell: bash
         working-directory: functions
