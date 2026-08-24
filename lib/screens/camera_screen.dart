@@ -12,10 +12,7 @@ import 'story_photo_editor_screen.dart';
 class CameraScreen extends StatefulWidget {
   final bool storyMode;
 
-  const CameraScreen({
-    super.key,
-    this.storyMode = false,
-  });
+  const CameraScreen({super.key, this.storyMode = false});
 
   @override
   State<CameraScreen> createState() => _CameraScreenState();
@@ -29,7 +26,7 @@ class _CameraScreenState extends State<CameraScreen>
   String _currentAction = '';
   String? _error;
 
-  int get _videoLimitSeconds => widget.storyMode ? 15 : 30;
+  int get _videoLimitSeconds => widget.storyMode ? 15 : 60;
 
   @override
   void initState() {
@@ -237,9 +234,7 @@ class _CameraScreenState extends State<CameraScreen>
 
     if (!mounted) return;
     await Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-        builder: (_) => CameraVideoPostScreen(video: video),
-      ),
+      MaterialPageRoute(builder: (_) => CameraVideoPostScreen(video: video)),
     );
   }
 
@@ -331,10 +326,7 @@ class _CameraScreenState extends State<CameraScreen>
                 const SizedBox(height: 16),
                 const Text(
                   'Fotoğraf veya video çek',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w900,
-                  ),
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
                 ),
                 const SizedBox(height: 6),
                 const Text(
@@ -625,18 +617,18 @@ class _StoryTopButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Material(
-        color: Colors.black45,
-        shape: const CircleBorder(),
-        child: InkWell(
-          customBorder: const CircleBorder(),
-          onTap: onTap,
-          child: SizedBox(
-            width: 44,
-            height: 44,
-            child: Icon(icon, color: Colors.white),
-          ),
-        ),
-      );
+    color: Colors.black45,
+    shape: const CircleBorder(),
+    child: InkWell(
+      customBorder: const CircleBorder(),
+      onTap: onTap,
+      child: SizedBox(
+        width: 44,
+        height: 44,
+        child: Icon(icon, color: Colors.white),
+      ),
+    ),
+  );
 }
 
 class _StoryModeButton extends StatelessWidget {
@@ -652,35 +644,35 @@ class _StoryModeButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => InkWell(
-        borderRadius: BorderRadius.circular(18),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 7),
-          child: Column(
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.black45,
-                  border: Border.all(color: Colors.white24),
-                ),
-                child: Icon(icon, color: Colors.white),
-              ),
-              const SizedBox(height: 5),
-              Text(
-                label,
-                style: const TextStyle(
-                  color: Colors.white70,
-                  fontSize: 10.5,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ],
+    borderRadius: BorderRadius.circular(18),
+    onTap: onTap,
+    child: Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 7),
+      child: Column(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.black45,
+              border: Border.all(color: Colors.white24),
+            ),
+            child: Icon(icon, color: Colors.white),
           ),
-        ),
-      );
+          const SizedBox(height: 5),
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white70,
+              fontSize: 10.5,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
 }
 
 class _CaptureButton extends StatelessWidget {
@@ -698,47 +690,44 @@ class _CaptureButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Material(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        child: InkWell(
-          onTap: onTap,
+    color: AppColors.surface,
+    borderRadius: BorderRadius.circular(16),
+    child: InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 10),
+        decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 10),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.border),
-            ),
-            child: Column(
-              children: [
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: AppColors.surfaceStrong,
-                    borderRadius: BorderRadius.circular(13),
-                  ),
-                  child: Icon(icon, size: 23, color: AppColors.cyan),
-                ),
-                const SizedBox(height: 9),
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 15.5,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  subtitle,
-                  style: const TextStyle(
-                    color: Color(0x75FFFFFF),
-                    fontSize: 10.5,
-                  ),
-                ),
-              ],
-            ),
-          ),
+          border: Border.all(color: AppColors.border),
         ),
-      );
+        child: Column(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: AppColors.surfaceStrong,
+                borderRadius: BorderRadius.circular(13),
+              ),
+              child: Icon(icon, size: 23, color: AppColors.cyan),
+            ),
+            const SizedBox(height: 9),
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 15.5,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              subtitle,
+              style: const TextStyle(color: Color(0x75FFFFFF), fontSize: 10.5),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
 }

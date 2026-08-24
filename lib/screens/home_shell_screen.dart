@@ -9,12 +9,12 @@ import '../theme/app_theme.dart';
 import '../widgets/nearby_places_view.dart';
 import 'camera_screen.dart';
 import 'campus_home_screen.dart';
-import 'events_hub_screen.dart';
 import 'feed_screen.dart';
 import 'login_screen.dart';
 import 'map_screen.dart';
 import 'profile_page_v2.dart';
 import 'radar_screen.dart';
+import 'reels_screen.dart';
 import 'spot_explore_screen_v2.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -50,7 +50,8 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     final now = DateTime.now();
-    final pressedRecently = _lastBackPressedAt != null &&
+    final pressedRecently =
+        _lastBackPressedAt != null &&
         now.difference(_lastBackPressedAt!) <= const Duration(seconds: 2);
     if (pressedRecently) {
       SystemNavigator.pop();
@@ -185,10 +186,13 @@ class _SimpleNavigationBar extends StatelessWidget {
                         item.$3,
                         maxLines: 1,
                         style: TextStyle(
-                          color: selected ? Colors.white : const Color(0x75FFFFFF),
+                          color: selected
+                              ? Colors.white
+                              : const Color(0x75FFFFFF),
                           fontSize: 9.5,
-                          fontWeight:
-                              selected ? FontWeight.w900 : FontWeight.w600,
+                          fontWeight: selected
+                              ? FontWeight.w900
+                              : FontWeight.w600,
                         ),
                       ),
                     ],
@@ -208,20 +212,20 @@ class _ProfileGate extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => StreamBuilder<User?>(
-        stream: FirebaseAuth.instance.authStateChanges(),
-        initialData: FirebaseAuth.instance.currentUser,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting &&
-              snapshot.data == null) {
-            return const SafeArea(
-              child: Center(child: CircularProgressIndicator()),
-            );
-          }
-          return snapshot.data == null
-              ? const LoginScreen(embedded: true)
-              : const ProfilePage();
-        },
-      );
+    stream: FirebaseAuth.instance.authStateChanges(),
+    initialData: FirebaseAuth.instance.currentUser,
+    builder: (context, snapshot) {
+      if (snapshot.connectionState == ConnectionState.waiting &&
+          snapshot.data == null) {
+        return const SafeArea(
+          child: Center(child: CircularProgressIndicator()),
+        );
+      }
+      return snapshot.data == null
+          ? const LoginScreen(embedded: true)
+          : const ProfilePage();
+    },
+  );
 }
 
 class _NearbyHub extends StatefulWidget {
@@ -235,15 +239,7 @@ class _NearbyHubState extends State<_NearbyHub> {
   int _section = 0;
 
   bool _campusEligible(Map<String, dynamic> data) {
-    const activeYears = <String>{
-      'Hazırlık',
-      '1',
-      '2',
-      '3',
-      '4',
-      '5',
-      '6',
-    };
+    const activeYears = <String>{'Hazırlık', '1', '2', '3', '4', '5', '6'};
     final university = (data['university'] ?? '').toString().trim();
     final classYear = (data['classYear'] ?? '').toString().trim();
     return university.isNotEmpty && activeYears.contains(classYear);
@@ -273,12 +269,11 @@ class _NearbyHubState extends State<_NearbyHub> {
 
   Widget _buildHub(bool campusEligible) {
     final labels = campusEligible
-        ? const ['Radar', 'Etkinlikler', 'Kampüs']
-        : const ['Radar', 'Etkinlikler'];
+        ? const ['Çevrende', 'Kampüs']
+        : const ['Çevrende'];
     final effectiveSection = _section >= labels.length ? 0 : _section;
     final pages = <Widget>[
       const RadarScreen(embedded: true),
-      const EventsHubScreen(),
       if (campusEligible) const CampusHomeScreen(),
     ];
 
@@ -307,7 +302,7 @@ class _NearbyHubState extends State<_NearbyHub> {
                           ),
                         ),
                         Text(
-                          'Radar, etkinlikler ve öğrencilere özel kampüs.',
+                          'Yakındaki planlar, etkinlikler ve öğrencilere özel kampüs.',
                           style: TextStyle(
                             color: Color(0x75FFFFFF),
                             fontSize: 11.5,
@@ -328,10 +323,7 @@ class _NearbyHubState extends State<_NearbyHub> {
               ),
             ),
             Expanded(
-              child: IndexedStack(
-                index: effectiveSection,
-                children: pages,
-              ),
+              child: IndexedStack(index: effectiveSection, children: pages),
             ),
           ],
         ),
@@ -353,47 +345,44 @@ class _NearbyTabs extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.all(3),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(13),
-          border: Border.all(color: AppColors.border),
-        ),
-        child: Row(
-          children: List.generate(labels.length, (index) {
-            final active = selected == index;
-            return Expanded(
-              child: InkWell(
-                onTap: () => onChanged(index),
+    padding: const EdgeInsets.all(3),
+    decoration: BoxDecoration(
+      color: AppColors.surface,
+      borderRadius: BorderRadius.circular(13),
+      border: Border.all(color: AppColors.border),
+    ),
+    child: Row(
+      children: List.generate(labels.length, (index) {
+        final active = selected == index;
+        return Expanded(
+          child: InkWell(
+            onTap: () => onChanged(index),
+            borderRadius: BorderRadius.circular(10),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 160),
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              decoration: BoxDecoration(
+                color: active ? AppColors.surfaceStrong : Colors.transparent,
                 borderRadius: BorderRadius.circular(10),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 160),
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  decoration: BoxDecoration(
-                    color: active ? AppColors.surfaceStrong : Colors.transparent,
-                    borderRadius: BorderRadius.circular(10),
-                    border: active && labels[index] == 'Kampüs'
-                        ? Border.all(
-                            color: AppColors.cyan.withValues(alpha: .45),
-                          )
-                        : null,
-                  ),
-                  child: Text(
-                    labels[index],
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color:
-                          active ? Colors.white : const Color(0x75FFFFFF),
-                      fontSize: 11.5,
-                      fontWeight: active ? FontWeight.w900 : FontWeight.w700,
-                    ),
-                  ),
+                border: active && labels[index] == 'Kampüs'
+                    ? Border.all(color: AppColors.cyan.withValues(alpha: .45))
+                    : null,
+              ),
+              child: Text(
+                labels[index],
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: active ? Colors.white : const Color(0x75FFFFFF),
+                  fontSize: 11.5,
+                  fontWeight: active ? FontWeight.w900 : FontWeight.w700,
                 ),
               ),
-            );
-          }),
-        ),
-      );
+            ),
+          ),
+        );
+      }),
+    ),
+  );
 }
 
 class _AuthAwareFeed extends StatelessWidget {
@@ -403,15 +392,15 @@ class _AuthAwareFeed extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => StreamBuilder<User?>(
-        stream: FirebaseAuth.instance.authStateChanges(),
-        initialData: FirebaseAuth.instance.currentUser,
-        builder: (context, snapshot) => FeedScreen(
-          key: ValueKey('${mode.name}-${snapshot.data?.uid ?? 'signed-out'}'),
-          mode: mode,
-          embedded: true,
-          includeEvents: false,
-        ),
-      );
+    stream: FirebaseAuth.instance.authStateChanges(),
+    initialData: FirebaseAuth.instance.currentUser,
+    builder: (context, snapshot) => FeedScreen(
+      key: ValueKey('${mode.name}-${snapshot.data?.uid ?? 'signed-out'}'),
+      mode: mode,
+      embedded: true,
+      includeEvents: false,
+    ),
+  );
 }
 
 class _FeedHub extends StatefulWidget {
@@ -436,9 +425,8 @@ class _FeedHubState extends State<_FeedHub> {
             const _MissionCard(),
             Padding(
               padding: const EdgeInsets.fromLTRB(14, 2, 14, 8),
-              child: _CompactTabs(
-                firstLabel: 'Sana Özel',
-                secondLabel: 'Takip',
+              child: _NearbyTabs(
+                labels: const ['Sana Özel', 'Takip', 'Reels'],
                 selected: _section,
                 onChanged: (value) => setState(() => _section = value),
               ),
@@ -449,6 +437,7 @@ class _FeedHubState extends State<_FeedHub> {
                 children: const [
                   _AuthAwareFeed(mode: FeedMode.forYou),
                   _AuthAwareFeed(mode: FeedMode.following),
+                  ReelsScreen(),
                 ],
               ),
             ),
@@ -547,7 +536,10 @@ class _MissionCard extends StatelessWidget {
                         ],
                       ),
                     ),
-                    const Icon(Icons.chevron_right_rounded, color: Colors.white54),
+                    const Icon(
+                      Icons.chevron_right_rounded,
+                      color: Colors.white54,
+                    ),
                   ],
                 ),
               ),
@@ -564,58 +556,58 @@ class _HomeHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.fromLTRB(14, 9, 8, 7),
-        child: Row(
-          children: [
-            Container(
-              width: 34,
-              height: 34,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(11),
-                gradient: AppColors.accentGradient,
-              ),
-              child: const Text(
-                'TBT',
-                style: TextStyle(
-                  color: Color(0xFF08090D),
-                  fontSize: 11,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
+    padding: const EdgeInsets.fromLTRB(14, 9, 8, 7),
+    child: Row(
+      children: [
+        Container(
+          width: 34,
+          height: 34,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(11),
+            gradient: AppColors.accentGradient,
+          ),
+          child: const Text(
+            'TBT',
+            style: TextStyle(
+              color: Color(0xFF08090D),
+              fontSize: 11,
+              fontWeight: FontWeight.w900,
             ),
-            const SizedBox(width: 9),
-            const Expanded(
-              child: Text(
-                'TBT',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: -.35,
-                ),
-              ),
-            ),
-            StreamBuilder<int>(
-              stream: AppNotificationService.instance.unreadCount(),
-              builder: (_, snapshot) => _HeaderAction(
-                tooltip: 'Bildirimler',
-                icon: Icons.notifications_none_rounded,
-                count: snapshot.data ?? 0,
-                onTap: () => Navigator.pushNamed(context, '/notifications'),
-              ),
-            ),
-            StreamBuilder<int>(
-              stream: AppNotificationService.instance.unreadMessageCount(),
-              builder: (_, snapshot) => _HeaderAction(
-                tooltip: 'Mesajlar',
-                icon: Icons.chat_bubble_outline_rounded,
-                count: snapshot.data ?? 0,
-                onTap: () => Navigator.pushNamed(context, '/messages'),
-              ),
-            ),
-          ],
+          ),
         ),
-      );
+        const SizedBox(width: 9),
+        const Expanded(
+          child: Text(
+            'TBT',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w900,
+              letterSpacing: -.35,
+            ),
+          ),
+        ),
+        StreamBuilder<int>(
+          stream: AppNotificationService.instance.unreadCount(),
+          builder: (_, snapshot) => _HeaderAction(
+            tooltip: 'Bildirimler',
+            icon: Icons.notifications_none_rounded,
+            count: snapshot.data ?? 0,
+            onTap: () => Navigator.pushNamed(context, '/notifications'),
+          ),
+        ),
+        StreamBuilder<int>(
+          stream: AppNotificationService.instance.unreadMessageCount(),
+          builder: (_, snapshot) => _HeaderAction(
+            tooltip: 'Mesajlar',
+            icon: Icons.chat_bubble_outline_rounded,
+            count: snapshot.data ?? 0,
+            onTap: () => Navigator.pushNamed(context, '/messages'),
+          ),
+        ),
+      ],
+    ),
+  );
 }
 
 class _ExploreHub extends StatefulWidget {
@@ -740,31 +732,31 @@ class _CompactTabs extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.all(3),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(13),
-          border: Border.all(color: AppColors.border),
+    padding: const EdgeInsets.all(3),
+    decoration: BoxDecoration(
+      color: AppColors.surface,
+      borderRadius: BorderRadius.circular(13),
+      border: Border.all(color: AppColors.border),
+    ),
+    child: Row(
+      children: [
+        Expanded(
+          child: _FeedTab(
+            label: firstLabel,
+            selected: selected == 0,
+            onTap: () => onChanged(0),
+          ),
         ),
-        child: Row(
-          children: [
-            Expanded(
-              child: _FeedTab(
-                label: firstLabel,
-                selected: selected == 0,
-                onTap: () => onChanged(0),
-              ),
-            ),
-            Expanded(
-              child: _FeedTab(
-                label: secondLabel,
-                selected: selected == 1,
-                onTap: () => onChanged(1),
-              ),
-            ),
-          ],
+        Expanded(
+          child: _FeedTab(
+            label: secondLabel,
+            selected: selected == 1,
+            onTap: () => onChanged(1),
+          ),
         ),
-      );
+      ],
+    ),
+  );
 }
 
 class _HeaderAction extends StatelessWidget {
@@ -782,16 +774,16 @@ class _HeaderAction extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => IconButton(
-        tooltip: tooltip,
-        onPressed: onTap,
-        style: IconButton.styleFrom(minimumSize: const Size(39, 39)),
-        icon: Badge(
-          isLabelVisible: count > 0,
-          backgroundColor: AppColors.violet,
-          label: Text(count > 99 ? '99+' : '$count'),
-          child: Icon(icon, color: Colors.white70, size: 21),
-        ),
-      );
+    tooltip: tooltip,
+    onPressed: onTap,
+    style: IconButton.styleFrom(minimumSize: const Size(39, 39)),
+    icon: Badge(
+      isLabelVisible: count > 0,
+      backgroundColor: AppColors.violet,
+      label: Text(count > 99 ? '99+' : '$count'),
+      child: Icon(icon, color: Colors.white70, size: 21),
+    ),
+  );
 }
 
 class _FeedTab extends StatelessWidget {
@@ -807,29 +799,29 @@ class _FeedTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Material(
-        color: Colors.transparent,
-        child: InkWell(
+    color: Colors.transparent,
+    child: InkWell(
+      borderRadius: BorderRadius.circular(10),
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 160),
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        decoration: BoxDecoration(
+          color: selected ? AppColors.surfaceStrong : Colors.transparent,
           borderRadius: BorderRadius.circular(10),
-          onTap: onTap,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 160),
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            decoration: BoxDecoration(
-              color: selected ? AppColors.surfaceStrong : Colors.transparent,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Text(
-              label,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: selected ? Colors.white : const Color(0x75FFFFFF),
-                fontSize: 11.8,
-                fontWeight: selected ? FontWeight.w900 : FontWeight.w700,
-              ),
-            ),
+        ),
+        child: Text(
+          label,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: selected ? Colors.white : const Color(0x75FFFFFF),
+            fontSize: 11.8,
+            fontWeight: selected ? FontWeight.w900 : FontWeight.w700,
           ),
         ),
-      );
+      ),
+    ),
+  );
 }
 
 class _ActivityChip extends StatelessWidget {
@@ -847,43 +839,43 @@ class _ActivityChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Material(
-        color: selected ? AppColors.surfaceStrong : AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
-        child: InkWell(
-          onTap: onTap,
+    color: selected ? AppColors.surfaceStrong : AppColors.surface,
+    borderRadius: BorderRadius.circular(12),
+    child: InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: selected
-                    ? AppColors.cyan.withValues(alpha: .50)
-                    : AppColors.border,
-              ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  icon,
-                  size: 16,
-                  color: selected ? AppColors.cyan : Colors.white54,
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 10.8,
-                    fontWeight: FontWeight.w800,
-                    color: selected ? Colors.white : Colors.white70,
-                  ),
-                ),
-              ],
-            ),
+          border: Border.all(
+            color: selected
+                ? AppColors.cyan.withValues(alpha: .50)
+                : AppColors.border,
           ),
         ),
-      );
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 16,
+              color: selected ? AppColors.cyan : Colors.white54,
+            ),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 10.8,
+                fontWeight: FontWeight.w800,
+                color: selected ? Colors.white : Colors.white70,
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
 }
 
 class _GradientIcon extends StatelessWidget {
@@ -891,20 +883,16 @@ class _GradientIcon extends StatelessWidget {
   final bool active;
   final double size;
 
-  const _GradientIcon({
-    required this.icon,
-    this.active = true,
-    this.size = 22,
-  });
+  const _GradientIcon({required this.icon, this.active = true, this.size = 22});
 
   @override
   Widget build(BuildContext context) => ShaderMask(
-        blendMode: BlendMode.srcIn,
-        shaderCallback: (bounds) => LinearGradient(
-          colors: active
-              ? const [AppColors.cyan, AppColors.violet]
-              : const [Color(0x75FFFFFF), Color(0x75FFFFFF)],
-        ).createShader(bounds),
-        child: Icon(icon, size: size),
-      );
+    blendMode: BlendMode.srcIn,
+    shaderCallback: (bounds) => LinearGradient(
+      colors: active
+          ? const [AppColors.cyan, AppColors.violet]
+          : const [Color(0x75FFFFFF), Color(0x75FFFFFF)],
+    ).createShader(bounds),
+    child: Icon(icon, size: size),
+  );
 }

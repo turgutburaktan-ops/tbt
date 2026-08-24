@@ -9,10 +9,7 @@ import '../theme/app_theme.dart';
 class SelectedRouteMapScreen extends StatefulWidget {
   final List<RoutePlace> places;
 
-  const SelectedRouteMapScreen({
-    super.key,
-    required this.places,
-  });
+  const SelectedRouteMapScreen({super.key, required this.places});
 
   @override
   State<SelectedRouteMapScreen> createState() => _SelectedRouteMapScreenState();
@@ -41,7 +38,8 @@ class _SelectedRouteMapScreenState extends State<SelectedRouteMapScreen> {
         permission = await Geolocator.requestPermission();
       }
       if (permission == LocationPermission.denied ||
-          permission == LocationPermission.deniedForever) return;
+          permission == LocationPermission.deniedForever)
+        return;
       final position = await Geolocator.getCurrentPosition(
         locationSettings: const LocationSettings(
           accuracy: LocationAccuracy.medium,
@@ -63,9 +61,7 @@ class _SelectedRouteMapScreenState extends State<SelectedRouteMapScreen> {
     if (position != null) {
       points.add(LatLng(position.latitude, position.longitude));
     }
-    points.addAll(
-      widget.places.map((p) => LatLng(p.latitude, p.longitude)),
-    );
+    points.addAll(widget.places.map((p) => LatLng(p.latitude, p.longitude)));
     return points;
   }
 
@@ -160,9 +156,8 @@ class _SelectedRouteMapScreenState extends State<SelectedRouteMapScreen> {
   Future<void> _openGoogleMaps() async {
     final opened = await RouteSelectionService.instance.openSelectedRoute();
     if (!mounted || opened) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Google Maps açılamadı.')),
-    );
+    ScaffoldMessenger.of(context)
+        .showSnackBar(const SnackBar(content: Text('Google Maps açılamadı.')));
   }
 
   @override

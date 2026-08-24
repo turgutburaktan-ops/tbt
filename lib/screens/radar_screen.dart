@@ -10,6 +10,7 @@ import '../theme/app_theme.dart';
 import '../widgets/searchable_selection_field.dart';
 import 'activity_demand_screen.dart';
 import 'event_deep_link_screen.dart';
+import 'event_photo_create_screen.dart';
 
 class RadarScreen extends StatefulWidget {
   final bool embedded;
@@ -123,67 +124,68 @@ class _RadarScreenState extends State<RadarScreen> {
     return switch (_category) {
       'Fotoğraf' => event.type == SocialEventType.photography,
       'Spor' => {
-          SocialEventType.cycling,
-          SocialEventType.running,
-          SocialEventType.walking,
-        }.contains(event.type),
-      'Kahve' => event.type == SocialEventType.foodDrink ||
-          _normalize(event.title).contains('kahve'),
+        SocialEventType.cycling,
+        SocialEventType.running,
+        SocialEventType.walking,
+      }.contains(event.type),
+      'Kahve' =>
+        event.type == SocialEventType.foodDrink ||
+            _normalize(event.title).contains('kahve'),
       'Gezi' => event.type == SocialEventType.trip,
       'Doğa' => {
-          SocialEventType.hiking,
-          SocialEventType.camping,
-        }.contains(event.type),
+        SocialEventType.hiking,
+        SocialEventType.camping,
+      }.contains(event.type),
       'Müzik' => {
-          SocialEventType.concert,
-          SocialEventType.festival,
-          SocialEventType.dance,
-        }.contains(event.type),
+        SocialEventType.concert,
+        SocialEventType.festival,
+        SocialEventType.dance,
+      }.contains(event.type),
       'Sosyal' => {
-          SocialEventType.social,
-          SocialEventType.followerMeetup,
-          SocialEventType.networking,
-          SocialEventType.party,
-        }.contains(event.type),
+        SocialEventType.social,
+        SocialEventType.followerMeetup,
+        SocialEventType.networking,
+        SocialEventType.party,
+      }.contains(event.type),
       _ => true,
     };
   }
 
   IconData _activityIcon(String activity) => switch (_normalize(activity)) {
-        'fotograf' => Icons.photo_camera_outlined,
-        'kahve' => Icons.local_cafe_outlined,
-        'yuruyus' => Icons.directions_walk_rounded,
-        'kosu' => Icons.directions_run_rounded,
-        'kamp' => Icons.terrain_outlined,
-        'spor' => Icons.sports_basketball_outlined,
-        'oyun' => Icons.sports_esports_outlined,
-        'muzik' => Icons.music_note_rounded,
-        'gezi' => Icons.route_outlined,
-        _ => Icons.bolt_rounded,
-      };
+    'fotograf' => Icons.photo_camera_outlined,
+    'kahve' => Icons.local_cafe_outlined,
+    'yuruyus' => Icons.directions_walk_rounded,
+    'kosu' => Icons.directions_run_rounded,
+    'kamp' => Icons.terrain_outlined,
+    'spor' => Icons.sports_basketball_outlined,
+    'oyun' => Icons.sports_esports_outlined,
+    'muzik' => Icons.music_note_rounded,
+    'gezi' => Icons.route_outlined,
+    _ => Icons.bolt_rounded,
+  };
 
   IconData _eventIcon(SocialEventType type) => switch (type) {
-        SocialEventType.photography => Icons.photo_camera_outlined,
-        SocialEventType.cycling => Icons.directions_bike_rounded,
-        SocialEventType.running => Icons.directions_run_rounded,
-        SocialEventType.walking => Icons.directions_walk_rounded,
-        SocialEventType.hiking => Icons.terrain_outlined,
-        SocialEventType.camping => Icons.cabin_outlined,
-        SocialEventType.concert => Icons.music_note_rounded,
-        SocialEventType.festival => Icons.festival_outlined,
-        SocialEventType.foodDrink => Icons.local_cafe_outlined,
-        SocialEventType.trip => Icons.route_outlined,
-        SocialEventType.gaming => Icons.sports_esports_outlined,
-        SocialEventType.cinema => Icons.movie_outlined,
-        SocialEventType.theatre => Icons.theater_comedy_outlined,
-        _ => Icons.groups_2_outlined,
-      };
+    SocialEventType.photography => Icons.photo_camera_outlined,
+    SocialEventType.cycling => Icons.directions_bike_rounded,
+    SocialEventType.running => Icons.directions_run_rounded,
+    SocialEventType.walking => Icons.directions_walk_rounded,
+    SocialEventType.hiking => Icons.terrain_outlined,
+    SocialEventType.camping => Icons.cabin_outlined,
+    SocialEventType.concert => Icons.music_note_rounded,
+    SocialEventType.festival => Icons.festival_outlined,
+    SocialEventType.foodDrink => Icons.local_cafe_outlined,
+    SocialEventType.trip => Icons.route_outlined,
+    SocialEventType.gaming => Icons.sports_esports_outlined,
+    SocialEventType.cinema => Icons.movie_outlined,
+    SocialEventType.theatre => Icons.theater_comedy_outlined,
+    _ => Icons.groups_2_outlined,
+  };
 
   String _windowLabel(String window) => switch (window) {
-        'tomorrow' => 'Yarın',
-        'weekend' => 'Hafta sonu',
-        _ => 'Bugün',
-      };
+    'tomorrow' => 'Yarın',
+    'weekend' => 'Hafta sonu',
+    _ => 'Bugün',
+  };
 
   String _timeUntil(DateTime value) {
     final diff = value.toLocal().difference(DateTime.now());
@@ -214,9 +216,7 @@ class _RadarScreenState extends State<RadarScreen> {
   void _openEvent(SocialEvent event) {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (_) => EventDeepLinkScreen(eventId: event.id),
-      ),
+      MaterialPageRoute(builder: (_) => EventDeepLinkScreen(eventId: event.id)),
     );
   }
 
@@ -267,23 +267,29 @@ class _RadarScreenState extends State<RadarScreen> {
             return StreamBuilder<List<SocialEvent>>(
               stream: SocialEventService.instance.watchUpcoming(),
               builder: (context, eventSnapshot) {
-                final allEvents =
-                    eventSnapshot.data ?? const <SocialEvent>[];
-                final events = allEvents
-                    .where((e) =>
-                        _sameCity(e.city) &&
-                        _eventInPeriod(e) &&
-                        _matchesCategory(e))
-                    .toList()
-                  ..sort((a, b) => a.startsAt.compareTo(b.startsAt));
+                final allEvents = eventSnapshot.data ?? const <SocialEvent>[];
+                final events =
+                    allEvents
+                        .where(
+                          (e) =>
+                              _sameCity(e.city) &&
+                              _eventInPeriod(e) &&
+                              _matchesCategory(e),
+                        )
+                        .toList()
+                      ..sort((a, b) => a.startsAt.compareTo(b.startsAt));
                 final soon = events
-                    .where((e) => e.startsAt
-                        .isBefore(DateTime.now().add(const Duration(hours: 3))))
+                    .where(
+                      (e) => e.startsAt.isBefore(
+                        DateTime.now().add(const Duration(hours: 3)),
+                      ),
+                    )
                     .take(8)
                     .toList();
                 final popular = [...events]
-                  ..sort((a, b) =>
-                      b.participantCount.compareTo(a.participantCount));
+                  ..sort(
+                    (a, b) => b.participantCount.compareTo(a.participantCount),
+                  );
 
                 return RefreshIndicator(
                   color: AppColors.cyan,
@@ -362,6 +368,26 @@ class _RadarScreenState extends State<RadarScreen> {
           ),
           const SizedBox(height: 10),
         ],
+        SizedBox(
+          width: double.infinity,
+          child: FilledButton.icon(
+            onPressed: () async {
+              if (FirebaseAuth.instance.currentUser == null) {
+                _message('Etkinlik oluşturmak için giriş yapmalısın.');
+                return;
+              }
+              await Navigator.push<bool>(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const EventPhotoCreateScreen(),
+                ),
+              );
+            },
+            icon: const Icon(Icons.add_a_photo_outlined),
+            label: const Text('Etkinlik Oluştur'),
+          ),
+        ),
+        const SizedBox(height: 10),
         SearchableSelectionField(
           controller: _cityController,
           options: turkeyCities,
@@ -392,27 +418,25 @@ class _RadarScreenState extends State<RadarScreen> {
   }
 
   Widget _categoryStrip() => SizedBox(
-        height: 37,
-        child: ListView.separated(
-          scrollDirection: Axis.horizontal,
-          itemCount: _categories.length,
-          separatorBuilder: (_, __) => const SizedBox(width: 6),
-          itemBuilder: (context, index) {
-            final label = _categories[index];
-            final selected = _category == label;
-            return ChoiceChip(
-              label: Text(label),
-              selected: selected,
-              showCheckmark: false,
-              onSelected: (_) => setState(() => _category = label),
-              visualDensity: VisualDensity.compact,
-              side: BorderSide(
-                color: selected ? AppColors.cyan : AppColors.border,
-              ),
-            );
-          },
-        ),
-      );
+    height: 37,
+    child: ListView.separated(
+      scrollDirection: Axis.horizontal,
+      itemCount: _categories.length,
+      separatorBuilder: (_, __) => const SizedBox(width: 6),
+      itemBuilder: (context, index) {
+        final label = _categories[index];
+        final selected = _category == label;
+        return ChoiceChip(
+          label: Text(label),
+          selected: selected,
+          showCheckmark: false,
+          onSelected: (_) => setState(() => _category = label),
+          visualDensity: VisualDensity.compact,
+          side: BorderSide(color: selected ? AppColors.cyan : AppColors.border),
+        );
+      },
+    ),
+  );
 
   Widget _hero(List<SocialEvent> events, List<ActivityDemand> demands) {
     final participantIds = <String>{};
@@ -449,7 +473,9 @@ class _RadarScreenState extends State<RadarScreen> {
           ),
           const SizedBox(height: 10),
           Text(
-            city.isEmpty ? 'Bugün ne yapmak istersin?' : '$city’da bugün ne yapmak istersin?',
+            city.isEmpty
+                ? 'Bugün ne yapmak istersin?'
+                : '$city’da bugün ne yapmak istersin?',
             style: const TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w900,
@@ -473,7 +499,9 @@ class _RadarScreenState extends State<RadarScreen> {
                 }
               },
               icon: const Icon(Icons.bolt_rounded),
-              label: Text(events.isEmpty ? 'İlk planı başlat' : 'Şimdi bir plan bul'),
+              label: Text(
+                events.isEmpty ? 'İlk planı başlat' : 'Şimdi bir plan bul',
+              ),
             ),
           ),
         ],
@@ -533,7 +561,8 @@ class _RadarScreenState extends State<RadarScreen> {
 
   Widget _eventCard(SocialEvent event) {
     final uid = FirebaseAuth.instance.currentUser?.uid;
-    final joined = uid != null &&
+    final joined =
+        uid != null &&
         (event.hostId == uid || event.participantIds.contains(uid));
     final loading = _joiningEventId == event.id;
     final remaining = event.remainingSlots.clamp(0, event.capacity);
@@ -610,8 +639,11 @@ class _RadarScreenState extends State<RadarScreen> {
                 const Spacer(),
                 Row(
                   children: [
-                    const Icon(Icons.groups_2_outlined,
-                        size: 14, color: Colors.white38),
+                    const Icon(
+                      Icons.groups_2_outlined,
+                      size: 14,
+                      color: Colors.white38,
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       '${event.participantCount}/${event.capacity}',
@@ -652,8 +684,8 @@ class _RadarScreenState extends State<RadarScreen> {
                             joined
                                 ? 'Detayları Gör'
                                 : event.isFull
-                                    ? 'Dolu'
-                                    : 'Ben de Geliyorum',
+                                ? 'Dolu'
+                                : 'Ben de Geliyorum',
                             style: const TextStyle(
                               fontSize: 10.5,
                               fontWeight: FontWeight.w900,
@@ -798,19 +830,19 @@ class _SectionHeading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900),
-          ),
-          const SizedBox(height: 1),
-          Text(
-            subtitle,
-            style: const TextStyle(color: Colors.white38, fontSize: 10.5),
-          ),
-        ],
-      );
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        title,
+        style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900),
+      ),
+      const SizedBox(height: 1),
+      Text(
+        subtitle,
+        style: const TextStyle(color: Colors.white38, fontSize: 10.5),
+      ),
+    ],
+  );
 }
 
 class _LiveDot extends StatefulWidget {
