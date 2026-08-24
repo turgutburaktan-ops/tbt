@@ -432,8 +432,9 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
                 );
               }
               final events = (snapshot.data ?? const <SocialEvent>[])
-                  .where((event) =>
-                      !_locallyCancelledEventIds.contains(event.id))
+                  .where(
+                    (event) => !_locallyCancelledEventIds.contains(event.id),
+                  )
                   .toList(growable: false);
               if (events.isEmpty) {
                 return _EmptyEvents(onCreate: _openCreate);
