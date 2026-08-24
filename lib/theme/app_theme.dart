@@ -120,7 +120,7 @@ class AppTheme {
         titleLarge: TextStyle(
           color: Colors.white,
           fontSize: 18,
-          fontWeight: FontWeight.w850,
+          fontWeight: FontWeight.w800,
           letterSpacing: -.15,
         ),
         titleMedium: TextStyle(
@@ -200,7 +200,7 @@ class AppTheme {
           foregroundColor: Colors.white,
           disabledBackgroundColor: AppColors.surfaceAlt,
           disabledForegroundColor: AppColors.textSubtle,
-          textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w850),
+          textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadii.medium),
           ),
@@ -239,7 +239,7 @@ class AppTheme {
         secondaryLabelStyle: const TextStyle(
           color: Colors.white,
           fontSize: 12,
-          fontWeight: FontWeight.w850,
+          fontWeight: FontWeight.w800,
         ),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadii.medium),
@@ -281,7 +281,7 @@ class AppTheme {
         indicatorColor: Color(0xFF242139),
         surfaceTintColor: Colors.transparent,
         labelTextStyle: WidgetStatePropertyAll(
-          TextStyle(fontSize: 10.5, fontWeight: FontWeight.w750),
+          TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700),
         ),
       ),
       bottomAppBarTheme: const BottomAppBarThemeData(
