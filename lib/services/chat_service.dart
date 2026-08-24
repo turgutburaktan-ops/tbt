@@ -16,6 +16,10 @@ class ChatService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
+  final List<DateTime> _recentSends = <DateTime>[];
+  String? _lastMessageFingerprint;
+  DateTime? _lastMessageAt;
+
   Future<User> _requiredUser() async {
     final current = _auth.currentUser;
     if (current != null) return current;
@@ -36,6 +40,28 @@ class ChatService {
   String directThreadId(String a, String b) {
     final ids = [a, b]..sort();
     return 'dm_${ids[0]}_${ids[1]}';
+  }
+
+  void _enforceClientRateLimit(String text) {
+    final now = DateTime.now();
+    _recentSends.removeWhere(
+      (time) => now.difference(time) > const Duration(seconds: 20),
+    );
+    if (_recentSends.length >= 8) {
+      throw Exception('Çok hızlı mesaj gönderiyorsun. Birkaç saniye bekle.');
+    }
+
+    final fingerprint = text.trim().toLowerCase();
+    final repeatedTooFast = _lastMessageFingerprint == fingerprint &&
+        _lastMessageAt != null &&
+        now.difference(_lastMessageAt!) < const Duration(seconds: 4);
+    if (repeatedTooFast) {
+      throw Exception('Aynı mesajı art arda çok hızlı gönderemezsin.');
+    }
+
+    _recentSends.add(now);
+    _lastMessageFingerprint = fingerprint;
+    _lastMessageAt = now;
   }
 
   Future<bool> isBlockedBetween(String otherUserId) async {
@@ -139,10 +165,20 @@ class ChatService {
     if (clean.length > 1500) {
       throw Exception('Mesaj en fazla 1500 karakter olabilir.');
     }
+    if (otherUserId == user.uid) {
+      throw Exception('Kendine mesaj gönderemezsin.');
+    }
+
+    final expectedThreadId = directThreadId(user.uid, otherUserId);
+    if (threadId != expectedThreadId) {
+      throw Exception('Geçersiz sohbet kimliği.');
+    }
+
     ContentModerationService.instance.enforce(clean);
     if (await isBlockedBetween(otherUserId)) {
       throw Exception('Bu kullanıcıyla mesajlaşma kullanılamıyor.');
     }
+    _enforceClientRateLimit(clean);
 
     final threadRef = _firestore.collection('chat_threads').doc(threadId);
     final thread = await threadRef.get();
@@ -150,7 +186,9 @@ class ChatService {
             ?.map((e) => e.toString())
             .toList() ??
         const <String>[];
-    if (!members.contains(user.uid) || !members.contains(otherUserId)) {
+    if (members.length != 2 ||
+        !members.contains(user.uid) ||
+        !members.contains(otherUserId)) {
       throw Exception('Bu sohbete erişimin yok.');
     }
 
@@ -221,6 +259,9 @@ class ChatService {
     String? threadId,
   }) async {
     final user = await _requiredUser();
+    if (otherUserId == user.uid) {
+      throw Exception('Kendini raporlayamazsın.');
+    }
     await _firestore.collection('user_reports').add({
       'reporterId': user.uid,
       'reportedUserId': otherUserId,
