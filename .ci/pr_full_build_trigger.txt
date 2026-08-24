@@ -1,2 +1,3 @@
 TBT Full Build pull_request visibility trigger.
 No runtime code.
+Final five-item product fix pass: 2026-08-24.
