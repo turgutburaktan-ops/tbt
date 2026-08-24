@@ -63,6 +63,7 @@ class _ProfileBody extends StatefulWidget {
 }
 
 class _ProfileBodyState extends State<_ProfileBody> {
+  String _contentTab = 'all';
   @override
   void initState() {
     super.initState();
@@ -80,10 +81,8 @@ class _ProfileBodyState extends State<_ProfileBody> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => FollowListScreen(
-          userId: widget.user.uid,
-          followers: followers,
-        ),
+        builder: (_) =>
+            FollowListScreen(userId: widget.user.uid, followers: followers),
       ),
     );
   }
@@ -115,8 +114,9 @@ class _ProfileBodyState extends State<_ProfileBody> {
             child: Center(
               child: FirebaseMediaImage(
                 imageUrl: url,
-                fallbackStoragePaths:
-                    FirebaseMediaImage.avatarPaths(widget.user.uid),
+                fallbackStoragePaths: FirebaseMediaImage.avatarPaths(
+                  widget.user.uid,
+                ),
                 fit: BoxFit.contain,
                 errorWidget: const Center(
                   child: Icon(Icons.person, size: 72, color: Colors.white38),
@@ -138,8 +138,9 @@ class _ProfileBodyState extends State<_ProfileBody> {
   }
 
   Future<void> _shareProfile(String displayName) async {
-    final handle =
-        displayName.trim().isEmpty ? 'Fotoğrafçı' : displayName.trim();
+    final handle = displayName.trim().isEmpty
+        ? 'Fotoğrafçı'
+        : displayName.trim();
     await Clipboard.setData(ClipboardData(text: '@$handle'));
     if (!mounted) return;
     ScaffoldMessenger.of(context)
@@ -243,20 +244,21 @@ class _ProfileBodyState extends State<_ProfileBody> {
         builder: (context, profileSnapshot) {
           final profile =
               profileSnapshot.data?.data() ?? const <String, dynamic>{};
-          final displayName = (profile['displayName'] ??
-                  widget.user.displayName ??
-                  'Fotoğrafçı')
-              .toString();
+          final displayName =
+              (profile['displayName'] ??
+                      widget.user.displayName ??
+                      'Fotoğrafçı')
+                  .toString();
           final bio = (profile['bio'] ?? '').toString();
-          final photoUrl =
-              (profile['photoUrl'] ?? widget.user.photoURL ?? '').toString();
+          final photoUrl = (profile['photoUrl'] ?? widget.user.photoURL ?? '')
+              .toString();
 
           return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
             stream: SocialService.instance.userPosts(widget.user.uid),
             builder: (context, postSnapshot) {
               final posts = [
                 ...(postSnapshot.data?.docs ??
-                    <QueryDocumentSnapshot<Map<String, dynamic>>>[])
+                    <QueryDocumentSnapshot<Map<String, dynamic>>>[]),
               ];
               posts.sort((a, b) {
                 final at = a.data()['createdAt'];
@@ -264,6 +266,15 @@ class _ProfileBodyState extends State<_ProfileBody> {
                 if (at is Timestamp && bt is Timestamp) return bt.compareTo(at);
                 return 0;
               });
+              final visiblePosts = posts.where((post) {
+                final data = post.data();
+                final isVideo =
+                    (data['mediaType'] ?? '').toString() == 'video' ||
+                    (data['videoUrl'] ?? '').toString().isNotEmpty;
+                if (_contentTab == 'photos') return !isVideo;
+                if (_contentTab == 'videos') return isVideo;
+                return true;
+              }).toList();
 
               return CustomScrollView(
                 slivers: [
@@ -291,11 +302,8 @@ class _ProfileBodyState extends State<_ProfileBody> {
                               color: Colors.white70,
                             ),
                             color: AppColors.surfaceAlt,
-                            onSelected: (value) => _handleProfileMenu(
-                              value,
-                              displayName,
-                              bio,
-                            ),
+                            onSelected: (value) =>
+                                _handleProfileMenu(value, displayName, bio),
                             itemBuilder: (_) => [
                               const PopupMenuItem(
                                 value: 'stats',
@@ -325,8 +333,9 @@ class _ProfileBodyState extends State<_ProfileBody> {
                                 value: 'messages',
                                 child: ListTile(
                                   dense: true,
-                                  leading:
-                                      Icon(Icons.chat_bubble_outline_rounded),
+                                  leading: Icon(
+                                    Icons.chat_bubble_outline_rounded,
+                                  ),
                                   title: Text('Mesajlar'),
                                 ),
                               ),
@@ -393,7 +402,8 @@ class _ProfileBodyState extends State<_ProfileBody> {
                                     stream: StoryService.instance
                                         .watchActiveForUser(widget.user.uid),
                                     builder: (context, storySnapshot) {
-                                      final stories = storySnapshot.data ??
+                                      final stories =
+                                          storySnapshot.data ??
                                           const <AppStory>[];
                                       final hasStory = stories.isNotEmpty;
                                       return GestureDetector(
@@ -408,8 +418,9 @@ class _ProfileBodyState extends State<_ProfileBody> {
                                           }
                                         },
                                         child: Container(
-                                          padding:
-                                              EdgeInsets.all(hasStory ? 2.5 : 0),
+                                          padding: EdgeInsets.all(
+                                            hasStory ? 2.5 : 0,
+                                          ),
                                           decoration: BoxDecoration(
                                             shape: BoxShape.circle,
                                             gradient: hasStory
@@ -418,7 +429,8 @@ class _ProfileBodyState extends State<_ProfileBody> {
                                           ),
                                           child: Container(
                                             padding: EdgeInsets.all(
-                                                hasStory ? 2 : 0),
+                                              hasStory ? 2 : 0,
+                                            ),
                                             decoration: const BoxDecoration(
                                               shape: BoxShape.circle,
                                               color: AppColors.background,
@@ -434,20 +446,23 @@ class _ProfileBodyState extends State<_ProfileBody> {
                                                   child: FirebaseMediaImage(
                                                     imageUrl: photoUrl,
                                                     fallbackStoragePaths:
-                                                        FirebaseMediaImage
-                                                            .avatarPaths(
-                                                                widget.user.uid),
+                                                        FirebaseMediaImage.avatarPaths(
+                                                          widget.user.uid,
+                                                        ),
                                                     errorWidget:
                                                         const ColoredBox(
-                                                      color: AppColors.surface,
-                                                      child: Center(
-                                                        child: Icon(
-                                                          Icons.person,
-                                                          size: 42,
-                                                          color: Color(0x75FFFFFF),
+                                                          color:
+                                                              AppColors.surface,
+                                                          child: Center(
+                                                            child: Icon(
+                                                              Icons.person,
+                                                              size: 42,
+                                                              color: Color(
+                                                                0x75FFFFFF,
+                                                              ),
+                                                            ),
+                                                          ),
                                                         ),
-                                                      ),
-                                                    ),
                                                   ),
                                                 ),
                                               ),
@@ -462,9 +477,13 @@ class _ProfileBodyState extends State<_ProfileBody> {
                                     bottom: 0,
                                     child: GestureDetector(
                                       onTap: () => Navigator.push(
-                                          context,
-                                          MaterialPageRoute(builder: (_) => const CameraScreen(storyMode: true)),
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => const CameraScreen(
+                                            storyMode: true,
+                                          ),
                                         ),
+                                      ),
                                       child: Container(
                                         width: 26,
                                         height: 26,
@@ -548,8 +567,12 @@ class _ProfileBodyState extends State<_ProfileBody> {
                             children: [
                               Expanded(
                                 child: OutlinedButton.icon(
-                                  onPressed: () => _editProfile(displayName, bio),
-                                  icon: const Icon(Icons.edit_outlined, size: 17),
+                                  onPressed: () =>
+                                      _editProfile(displayName, bio),
+                                  icon: const Icon(
+                                    Icons.edit_outlined,
+                                    size: 17,
+                                  ),
                                   label: const Text('Profili Düzenle'),
                                 ),
                               ),
@@ -557,7 +580,10 @@ class _ProfileBodyState extends State<_ProfileBody> {
                               Expanded(
                                 child: OutlinedButton.icon(
                                   onPressed: _openStatistics,
-                                  icon: const Icon(Icons.query_stats_rounded, size: 17),
+                                  icon: const Icon(
+                                    Icons.query_stats_rounded,
+                                    size: 17,
+                                  ),
                                   label: const Text('İstatistikler'),
                                 ),
                               ),
@@ -598,11 +624,38 @@ class _ProfileBodyState extends State<_ProfileBody> {
                       ),
                     ),
                   ),
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(14, 4, 14, 8),
+                      child: SegmentedButton<String>(
+                        segments: const [
+                          ButtonSegment(
+                            value: 'all',
+                            icon: Icon(Icons.grid_on_rounded),
+                            label: Text('Tümü'),
+                          ),
+                          ButtonSegment(
+                            value: 'photos',
+                            icon: Icon(Icons.photo_outlined),
+                            label: Text('Fotoğraf'),
+                          ),
+                          ButtonSegment(
+                            value: 'videos',
+                            icon: Icon(Icons.play_circle_outline_rounded),
+                            label: Text('Reels'),
+                          ),
+                        ],
+                        selected: {_contentTab},
+                        onSelectionChanged: (value) =>
+                            setState(() => _contentTab = value.first),
+                      ),
+                    ),
+                  ),
                   if (postSnapshot.connectionState == ConnectionState.waiting)
                     const SliverFillRemaining(
                       child: Center(child: CircularProgressIndicator()),
                     )
-                  else if (posts.isEmpty)
+                  else if (visiblePosts.isEmpty)
                     SliverFillRemaining(
                       hasScrollBody: false,
                       child: Center(
@@ -655,50 +708,48 @@ class _ProfileBodyState extends State<_ProfileBody> {
                       sliver: SliverGrid(
                         gridDelegate:
                             const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 3,
-                          crossAxisSpacing: 2,
-                          mainAxisSpacing: 2,
-                          childAspectRatio: 1,
-                        ),
-                        delegate: SliverChildBuilderDelegate(
-                          (context, index) {
-                            final data = posts[index].data();
-                            final imageUrl =
-                                (data['imageUrl'] ?? '').toString();
-                            final storagePath =
-                                (data['storagePath'] ?? '').toString();
-                            final fallbackStoragePaths =
-                                FirebaseMediaImage.postPaths(
-                              widget.user.uid,
-                              posts[index].id,
-                            );
-                            final caption =
-                                (data['caption'] ?? '').toString().trim();
-                            final spotName =
-                                (data['spotName'] ?? '').toString().trim();
-                            return _PostTile(
-                              imageUrl: imageUrl,
-                              storagePath: storagePath,
-                              fallbackStoragePaths: fallbackStoragePaths,
-                              caption: caption,
-                              spotName: spotName,
-                              onLongPress: () => _showPostPreview(
-                                imageUrl,
-                                storagePath,
-                                fallbackStoragePaths,
-                              ),
-                              onTap: () => Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => PostDetailScreen(
-                                    post: {...data, 'id': posts[index].id},
-                                  ),
+                              crossAxisCount: 3,
+                              crossAxisSpacing: 2,
+                              mainAxisSpacing: 2,
+                              childAspectRatio: 1,
+                            ),
+                        delegate: SliverChildBuilderDelegate((context, index) {
+                          final data = posts[index].data();
+                          final imageUrl = (data['imageUrl'] ?? '').toString();
+                          final storagePath = (data['storagePath'] ?? '')
+                              .toString();
+                          final fallbackStoragePaths =
+                              FirebaseMediaImage.postPaths(
+                                widget.user.uid,
+                                posts[index].id,
+                              );
+                          final caption = (data['caption'] ?? '')
+                              .toString()
+                              .trim();
+                          final spotName = (data['spotName'] ?? '')
+                              .toString()
+                              .trim();
+                          return _PostTile(
+                            imageUrl: imageUrl,
+                            storagePath: storagePath,
+                            fallbackStoragePaths: fallbackStoragePaths,
+                            caption: caption,
+                            spotName: spotName,
+                            onLongPress: () => _showPostPreview(
+                              imageUrl,
+                              storagePath,
+                              fallbackStoragePaths,
+                            ),
+                            onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => PostDetailScreen(
+                                  post: {...data, 'id': posts[index].id},
                                 ),
                               ),
-                            );
-                          },
-                          childCount: posts.length,
-                        ),
+                            ),
+                          );
+                        }, childCount: visiblePosts.length),
                       ),
                     ),
                 ],
@@ -783,8 +834,9 @@ class _ProfileBodyState extends State<_ProfileBody> {
                   ),
                   TextField(
                     controller: nameController,
-                    decoration:
-                        const InputDecoration(labelText: 'Ad / kullanıcı adı'),
+                    decoration: const InputDecoration(
+                      labelText: 'Ad / kullanıcı adı',
+                    ),
                   ),
                   const SizedBox(height: 10),
                   TextField(
@@ -858,7 +910,8 @@ class _PostTile extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         onLongPress: onLongPress,
-        child: imageUrl.isEmpty &&
+        child:
+            imageUrl.isEmpty &&
                 storagePath.isEmpty &&
                 fallbackStoragePaths.isEmpty
             ? const Center(

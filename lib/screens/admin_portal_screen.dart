@@ -20,7 +20,9 @@ class _AdminPortalScreenState extends State<AdminPortalScreen> {
   }
 
   Future<void> _check() async {
-    final token = await FirebaseAuth.instance.currentUser?.getIdTokenResult(true);
+    final token = await FirebaseAuth.instance.currentUser?.getIdTokenResult(
+      true,
+    );
     if (mounted) setState(() => _allowed = token?.claims?['admin'] == true);
   }
 
@@ -61,7 +63,13 @@ class _AdminPortalScreenState extends State<AdminPortalScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Operasyon merkezi', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
+                      Text(
+                        'Operasyon merkezi',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
                       SizedBox(height: 4),
                       Text(
                         'Kullanıcı, işletme, moderasyon, büyüme, sistem sağlığı ve rol önizlemelerini tek yerden kontrol et.',
@@ -95,7 +103,8 @@ class _AdminPortalScreenState extends State<AdminPortalScreen> {
           _AdminTile(
             icon: Icons.shield_outlined,
             title: 'Moderasyon ve Güvenlik',
-            subtitle: 'Şikâyetler, veri silme talepleri ve güvenlik operasyonları.',
+            subtitle:
+                'Şikâyetler, veri silme talepleri ve güvenlik operasyonları.',
             onTap: () => Navigator.pushNamed(context, '/moderation'),
           ),
           _AdminTile(
@@ -107,7 +116,8 @@ class _AdminPortalScreenState extends State<AdminPortalScreen> {
           _AdminTile(
             icon: Icons.monitor_heart_outlined,
             title: 'Sistem Sağlığı',
-            subtitle: 'Hata kayıtları, analitik olaylar ve operasyon sinyalleri.',
+            subtitle:
+                'Hata kayıtları, analitik olaylar ve operasyon sinyalleri.',
             onTap: () => Navigator.pushNamed(context, '/admin-insights'),
           ),
           _AdminTile(
@@ -129,8 +139,14 @@ class _PortalBadge extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     width: 50,
     height: 50,
-    decoration: const BoxDecoration(shape: BoxShape.circle, gradient: AppColors.accentGradient),
-    child: const Icon(Icons.admin_panel_settings_rounded, color: Color(0xFF07080C)),
+    decoration: const BoxDecoration(
+      shape: BoxShape.circle,
+      gradient: AppColors.accentGradient,
+    ),
+    child: const Icon(
+      Icons.admin_panel_settings_rounded,
+      color: Color(0xFF07080C),
+    ),
   );
 }
 
@@ -159,7 +175,11 @@ class _AdminTile extends StatelessWidget {
         decoration: BoxDecoration(
           color: highlighted ? AppColors.surfaceStrong : AppColors.surface,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: highlighted ? AppColors.cyan.withValues(alpha: .45) : AppColors.border),
+          border: Border.all(
+            color: highlighted
+                ? AppColors.cyan.withValues(alpha: .45)
+                : AppColors.border,
+          ),
         ),
         child: Icon(icon, color: highlighted ? AppColors.cyan : Colors.white70),
       ),

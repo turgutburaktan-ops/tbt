@@ -15,8 +15,10 @@ class UserStatisticsScreen extends StatefulWidget {
 
 class _UserStatisticsScreenState extends State<UserStatisticsScreen> {
   Future<_UserStatistics>? _future;
+  String _section = 'all';
 
-  String? get _userId => widget.userId ?? FirebaseAuth.instance.currentUser?.uid;
+  String? get _userId =>
+      widget.userId ?? FirebaseAuth.instance.currentUser?.uid;
 
   @override
   void initState() {
@@ -27,7 +29,9 @@ class _UserStatisticsScreenState extends State<UserStatisticsScreen> {
   void _reload() {
     final uid = _userId;
     _future = uid == null
-        ? Future<_UserStatistics>.error('İstatistikleri görmek için giriş yapmalısın.')
+        ? Future<_UserStatistics>.error(
+            'İstatistikleri görmek için giriş yapmalısın.',
+          )
         : _load(uid);
   }
 
@@ -43,7 +47,10 @@ class _UserStatisticsScreenState extends State<UserStatisticsScreen> {
       db.collection('posts').where('userId', isEqualTo: uid).get(),
       db.collection('stories').where('userId', isEqualTo: uid).get(),
       db.collection('social_events').where('hostId', isEqualTo: uid).get(),
-      db.collection('social_events').where('participantIds', arrayContains: uid).get(),
+      db
+          .collection('social_events')
+          .where('participantIds', arrayContains: uid)
+          .get(),
     ]);
 
     final profile = results[0] as DocumentSnapshot<Map<String, dynamic>>;
@@ -61,38 +68,40 @@ class _UserStatisticsScreenState extends State<UserStatisticsScreen> {
     var commentsReceived = 0;
     final uniquePostEngagers = <String>{};
 
-    await Future.wait(posts.docs.map((post) async {
-      final data = post.data();
-      final mediaType = (data['mediaType'] ?? '').toString();
-      final videoUrl = (data['videoUrl'] ?? '').toString();
-      if (mediaType == 'video' || videoUrl.isNotEmpty) {
-        videoPosts++;
-      } else {
-        photoPosts++;
-      }
+    await Future.wait(
+      posts.docs.map((post) async {
+        final data = post.data();
+        final mediaType = (data['mediaType'] ?? '').toString();
+        final videoUrl = (data['videoUrl'] ?? '').toString();
+        if (mediaType == 'video' || videoUrl.isNotEmpty) {
+          videoPosts++;
+        } else {
+          photoPosts++;
+        }
 
-      final createdAt = data['createdAt'];
-      if (createdAt is Timestamp && createdAt.toDate().isAfter(last30Days)) {
-        postsLast30Days++;
-      }
+        final createdAt = data['createdAt'];
+        if (createdAt is Timestamp && createdAt.toDate().isAfter(last30Days)) {
+          postsLast30Days++;
+        }
 
-      final engagement = await Future.wait([
-        post.reference.collection('likes').get(),
-        post.reference.collection('comments').get(),
-      ]);
-      final likes = engagement[0];
-      final comments = engagement[1];
-      likesReceived += likes.docs.length;
-      commentsReceived += comments.docs.length;
-      for (final doc in likes.docs) {
-        final id = (doc.data()['userId'] ?? doc.id).toString();
-        if (id.isNotEmpty && id != uid) uniquePostEngagers.add(id);
-      }
-      for (final doc in comments.docs) {
-        final id = (doc.data()['userId'] ?? '').toString();
-        if (id.isNotEmpty && id != uid) uniquePostEngagers.add(id);
-      }
-    }));
+        final engagement = await Future.wait([
+          post.reference.collection('likes').get(),
+          post.reference.collection('comments').get(),
+        ]);
+        final likes = engagement[0];
+        final comments = engagement[1];
+        likesReceived += likes.docs.length;
+        commentsReceived += comments.docs.length;
+        for (final doc in likes.docs) {
+          final id = (doc.data()['userId'] ?? doc.id).toString();
+          if (id.isNotEmpty && id != uid) uniquePostEngagers.add(id);
+        }
+        for (final doc in comments.docs) {
+          final id = (doc.data()['userId'] ?? '').toString();
+          if (id.isNotEmpty && id != uid) uniquePostEngagers.add(id);
+        }
+      }),
+    );
 
     var storiesLast30Days = 0;
     var storyViews = 0;
@@ -101,27 +110,35 @@ class _UserStatisticsScreenState extends State<UserStatisticsScreen> {
     var storyReplies = 0;
     final uniqueStoryViewers = <String>{};
 
-    await Future.wait(stories.docs.map((story) async {
-      final data = story.data();
-      final createdAt = data['createdAt'];
-      if (createdAt is Timestamp && createdAt.toDate().isAfter(last30Days)) {
-        storiesLast30Days++;
-      }
-      final interactions = await story.reference.collection('interactions').get();
-      for (final interaction in interactions.docs) {
-        final item = interaction.data();
-        final viewerId = (item['userId'] ?? interaction.id).toString();
-        if (item['viewedAt'] is Timestamp) {
-          storyViews++;
-          if (viewerId.isNotEmpty && viewerId != uid) uniqueStoryViewers.add(viewerId);
+    await Future.wait(
+      stories.docs.map((story) async {
+        final data = story.data();
+        final createdAt = data['createdAt'];
+        if (createdAt is Timestamp && createdAt.toDate().isAfter(last30Days)) {
+          storiesLast30Days++;
         }
-        if (item['liked'] == true) storyLikes++;
-        if ((item['reaction'] ?? '').toString().trim().isNotEmpty) storyReactions++;
-        if ((item['message'] ?? '').toString().trim().isNotEmpty) storyReplies++;
-      }
-    }));
+        final interactions = await story.reference
+            .collection('interactions')
+            .get();
+        for (final interaction in interactions.docs) {
+          final item = interaction.data();
+          final viewerId = (item['userId'] ?? interaction.id).toString();
+          if (item['viewedAt'] is Timestamp) {
+            storyViews++;
+            if (viewerId.isNotEmpty && viewerId != uid)
+              uniqueStoryViewers.add(viewerId);
+          }
+          if (item['liked'] == true) storyLikes++;
+          if ((item['reaction'] ?? '').toString().trim().isNotEmpty)
+            storyReactions++;
+          if ((item['message'] ?? '').toString().trim().isNotEmpty)
+            storyReplies++;
+        }
+      }),
+    );
 
-    var openHostedEvents = 0;
+    var activeHostedEvents = 0;
+    var completedHostedEvents = 0;
     var cancelledHostedEvents = 0;
     var totalEventParticipants = 0;
     for (final event in hostedEvents.docs) {
@@ -130,7 +147,16 @@ class _UserStatisticsScreenState extends State<UserStatisticsScreen> {
       if (status == 'cancelled') {
         cancelledHostedEvents++;
       } else {
-        openHostedEvents++;
+        final startsAt = data['startsAt'];
+        final endsAt = data['endsAt'];
+        final reference = endsAt is Timestamp
+            ? endsAt.toDate()
+            : (startsAt is Timestamp ? startsAt.toDate() : null);
+        if (reference != null && reference.isBefore(now)) {
+          completedHostedEvents++;
+        } else {
+          activeHostedEvents++;
+        }
       }
       final ids = (data['participantIds'] as List? ?? const [])
           .map((e) => e.toString())
@@ -140,7 +166,9 @@ class _UserStatisticsScreenState extends State<UserStatisticsScreen> {
     }
 
     final hostedIds = hostedEvents.docs.map((e) => e.id).toSet();
-    final attendedEvents = joinedEvents.docs.where((e) => !hostedIds.contains(e.id)).length;
+    final attendedEvents = joinedEvents.docs
+        .where((e) => !hostedIds.contains(e.id))
+        .length;
 
     DateTime? memberSince;
     final createdAt = profile.data()?['createdAt'];
@@ -164,7 +192,8 @@ class _UserStatisticsScreenState extends State<UserStatisticsScreen> {
       storyReactions: storyReactions,
       storyReplies: storyReplies,
       hostedEvents: hostedEvents.docs.length,
-      openHostedEvents: openHostedEvents,
+      activeHostedEvents: activeHostedEvents,
+      completedHostedEvents: completedHostedEvents,
       cancelledHostedEvents: cancelledHostedEvents,
       eventParticipants: totalEventParticipants,
       attendedEvents: attendedEvents,
@@ -194,7 +223,8 @@ class _UserStatisticsScreenState extends State<UserStatisticsScreen> {
           }
           if (snapshot.hasError || !snapshot.hasData) {
             return _ErrorState(
-              message: snapshot.error?.toString() ?? 'İstatistikler yüklenemedi.',
+              message:
+                  snapshot.error?.toString() ?? 'İstatistikler yüklenemedi.',
               onRetry: () => setState(_reload),
             );
           }
@@ -208,67 +238,179 @@ class _UserStatisticsScreenState extends State<UserStatisticsScreen> {
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.fromLTRB(14, 12, 14, 34),
               children: [
-                _OverviewCard(stats: stats),
+                SegmentedButton<String>(
+                  segments: const [
+                    ButtonSegment(value: 'all', label: Text('Genel')),
+                    ButtonSegment(value: 'posts', label: Text('İçerik')),
+                    ButtonSegment(value: 'story', label: Text('Story')),
+                    ButtonSegment(value: 'events', label: Text('Etkinlik')),
+                  ],
+                  selected: {_section},
+                  onSelectionChanged: (value) =>
+                      setState(() => _section = value.first),
+                ),
+                const SizedBox(height: 12),
+                if (_section == 'all') _OverviewCard(stats: stats),
                 const SizedBox(height: 14),
-                _Section(
-                  title: 'Sosyal',
-                  icon: Icons.people_alt_outlined,
-                  children: [
-                    _Metric('Takipçi', stats.followers, Icons.person_add_alt_1_rounded),
-                    _Metric('Takip edilen', stats.following, Icons.people_outline_rounded),
-                    _Metric('Etkileşime geçen benzersiz kişi', stats.uniquePostEngagers, Icons.hub_outlined),
-                  ],
-                ),
-                _Section(
-                  title: 'Gönderiler',
-                  icon: Icons.grid_on_rounded,
-                  children: [
-                    _Metric('Toplam gönderi', stats.posts, Icons.collections_outlined),
-                    _Metric('Fotoğraf', stats.photoPosts, Icons.photo_outlined),
-                    _Metric('Video', stats.videoPosts, Icons.videocam_outlined),
-                    _Metric('Son 30 gün', stats.postsLast30Days, Icons.calendar_month_outlined),
-                    _Metric('Alınan beğeni', stats.likesReceived, Icons.favorite_border_rounded),
-                    _Metric('Alınan yorum', stats.commentsReceived, Icons.chat_bubble_outline_rounded),
-                  ],
-                ),
-                _Section(
-                  title: 'Story',
-                  icon: Icons.auto_stories_outlined,
-                  children: [
-                    _Metric('Toplam story', stats.stories, Icons.add_circle_outline_rounded),
-                    _Metric('Son 30 gün', stats.storiesLast30Days, Icons.calendar_today_outlined),
-                    _Metric('Toplam görüntülenme', stats.storyViews, Icons.visibility_outlined),
-                    _Metric('Benzersiz izleyici', stats.uniqueStoryViewers, Icons.group_outlined),
-                    _Metric('Story beğenisi', stats.storyLikes, Icons.favorite_outline_rounded),
-                    _Metric('Emoji tepkisi', stats.storyReactions, Icons.emoji_emotions_outlined),
-                    _Metric('Story yanıtı', stats.storyReplies, Icons.reply_rounded),
-                  ],
-                ),
-                _Section(
-                  title: 'Etkinlikler',
-                  icon: Icons.event_available_outlined,
-                  children: [
-                    _Metric('Oluşturulan', stats.hostedEvents, Icons.add_box_outlined),
-                    _Metric('Aktif / tamamlanmış', stats.openHostedEvents, Icons.event_available_outlined),
-                    _Metric('İptal edilen', stats.cancelledHostedEvents, Icons.event_busy_outlined),
-                    _Metric('Etkinliklerine katılan kişi', stats.eventParticipants, Icons.groups_2_outlined),
-                    _Metric('Katıldığın etkinlik', stats.attendedEvents, Icons.directions_walk_rounded),
-                  ],
-                ),
+                if (_section == 'all')
+                  _Section(
+                    title: 'Sosyal',
+                    icon: Icons.people_alt_outlined,
+                    children: [
+                      _Metric(
+                        'Takipçi',
+                        stats.followers,
+                        Icons.person_add_alt_1_rounded,
+                      ),
+                      _Metric(
+                        'Takip edilen',
+                        stats.following,
+                        Icons.people_outline_rounded,
+                      ),
+                      _Metric(
+                        'Etkileşime geçen benzersiz kişi',
+                        stats.uniquePostEngagers,
+                        Icons.hub_outlined,
+                      ),
+                    ],
+                  ),
+                if (_section == 'all' || _section == 'posts')
+                  _Section(
+                    title: 'Gönderiler',
+                    icon: Icons.grid_on_rounded,
+                    children: [
+                      _Metric(
+                        'Toplam gönderi',
+                        stats.posts,
+                        Icons.collections_outlined,
+                      ),
+                      _Metric(
+                        'Fotoğraf',
+                        stats.photoPosts,
+                        Icons.photo_outlined,
+                      ),
+                      _Metric(
+                        'Video',
+                        stats.videoPosts,
+                        Icons.videocam_outlined,
+                      ),
+                      _Metric(
+                        'Son 30 gün',
+                        stats.postsLast30Days,
+                        Icons.calendar_month_outlined,
+                      ),
+                      _Metric(
+                        'Alınan beğeni',
+                        stats.likesReceived,
+                        Icons.favorite_border_rounded,
+                      ),
+                      _Metric(
+                        'Alınan yorum',
+                        stats.commentsReceived,
+                        Icons.chat_bubble_outline_rounded,
+                      ),
+                    ],
+                  ),
+                if (_section == 'all' || _section == 'story')
+                  _Section(
+                    title: 'Story',
+                    icon: Icons.auto_stories_outlined,
+                    children: [
+                      _Metric(
+                        'Toplam story',
+                        stats.stories,
+                        Icons.add_circle_outline_rounded,
+                      ),
+                      _Metric(
+                        'Son 30 gün',
+                        stats.storiesLast30Days,
+                        Icons.calendar_today_outlined,
+                      ),
+                      _Metric(
+                        'Toplam görüntülenme',
+                        stats.storyViews,
+                        Icons.visibility_outlined,
+                      ),
+                      _Metric(
+                        'Benzersiz izleyici',
+                        stats.uniqueStoryViewers,
+                        Icons.group_outlined,
+                      ),
+                      _Metric(
+                        'Story beğenisi',
+                        stats.storyLikes,
+                        Icons.favorite_outline_rounded,
+                      ),
+                      _Metric(
+                        'Emoji tepkisi',
+                        stats.storyReactions,
+                        Icons.emoji_emotions_outlined,
+                      ),
+                      _Metric(
+                        'Story yanıtı',
+                        stats.storyReplies,
+                        Icons.reply_rounded,
+                      ),
+                    ],
+                  ),
+                if (_section == 'all' || _section == 'events')
+                  _Section(
+                    title: 'Etkinlikler',
+                    icon: Icons.event_available_outlined,
+                    children: [
+                      _Metric(
+                        'Oluşturulan',
+                        stats.hostedEvents,
+                        Icons.add_box_outlined,
+                      ),
+                      _Metric(
+                        'Aktif',
+                        stats.activeHostedEvents,
+                        Icons.event_available_outlined,
+                      ),
+                      _Metric(
+                        'Tamamlanan',
+                        stats.completedHostedEvents,
+                        Icons.task_alt_rounded,
+                      ),
+                      _Metric(
+                        'İptal edilen',
+                        stats.cancelledHostedEvents,
+                        Icons.event_busy_outlined,
+                      ),
+                      _Metric(
+                        'Etkinliklerine katılan kişi',
+                        stats.eventParticipants,
+                        Icons.groups_2_outlined,
+                      ),
+                      _Metric(
+                        'Katıldığın etkinlik',
+                        stats.attendedEvents,
+                        Icons.directions_walk_rounded,
+                      ),
+                    ],
+                  ),
                 if (stats.memberSince != null)
                   Padding(
                     padding: const EdgeInsets.only(top: 4),
                     child: Text(
                       'Üyelik başlangıcı: ${_formatDate(stats.memberSince!)}',
                       textAlign: TextAlign.center,
-                      style: const TextStyle(color: Color(0x75FFFFFF), fontSize: 11.5),
+                      style: const TextStyle(
+                        color: Color(0x75FFFFFF),
+                        fontSize: 11.5,
+                      ),
                     ),
                   ),
                 const SizedBox(height: 8),
                 const Text(
                   'Toplam değerler tüm kayıtları, “Son 30 gün” satırları ise yakın dönemi gösterir. Yenile ile güncel değerleri tekrar çekebilirsin.',
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: Color(0x52FFFFFF), fontSize: 10.5, height: 1.35),
+                  style: TextStyle(
+                    color: Color(0x52FFFFFF),
+                    fontSize: 10.5,
+                    height: 1.35,
+                  ),
                 ),
               ],
             ),
@@ -301,7 +443,10 @@ class _OverviewCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Genel görünüm', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w900)),
+          const Text(
+            'Genel görünüm',
+            style: TextStyle(fontSize: 19, fontWeight: FontWeight.w900),
+          ),
           const SizedBox(height: 4),
           const Text(
             'Profilindeki sosyal hareket, içerik ve etkinlik performansı.',
@@ -310,11 +455,20 @@ class _OverviewCard extends StatelessWidget {
           const SizedBox(height: 16),
           Row(
             children: [
-              Expanded(child: _HeroMetric(value: stats.posts, label: 'Gönderi')),
+              Expanded(
+                child: _HeroMetric(value: stats.posts, label: 'Gönderi'),
+              ),
               const SizedBox(width: 8),
-              Expanded(child: _HeroMetric(value: stats.likesReceived, label: 'Beğeni')),
+              Expanded(
+                child: _HeroMetric(value: stats.likesReceived, label: 'Beğeni'),
+              ),
               const SizedBox(width: 8),
-              Expanded(child: _HeroMetric(value: stats.storyViews, label: 'Story izlenme')),
+              Expanded(
+                child: _HeroMetric(
+                  value: stats.storyViews,
+                  label: 'Story izlenme',
+                ),
+              ),
             ],
           ),
         ],
@@ -339,9 +493,20 @@ class _HeroMetric extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Text('$value', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900)),
+          Text(
+            '$value',
+            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900),
+          ),
           const SizedBox(height: 3),
-          Text(label, textAlign: TextAlign.center, style: const TextStyle(color: Color(0x75FFFFFF), fontSize: 10.5, fontWeight: FontWeight.w700)),
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: Color(0x75FFFFFF),
+              fontSize: 10.5,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
         ],
       ),
     );
@@ -353,7 +518,11 @@ class _Section extends StatelessWidget {
   final IconData icon;
   final List<Widget> children;
 
-  const _Section({required this.title, required this.icon, required this.children});
+  const _Section({
+    required this.title,
+    required this.icon,
+    required this.children,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -372,7 +541,15 @@ class _Section extends StatelessWidget {
               children: [
                 Icon(icon, size: 19, color: AppColors.cyan),
                 const SizedBox(width: 8),
-                Expanded(child: Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w900))),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
@@ -400,12 +577,26 @@ class _Metric extends StatelessWidget {
           Container(
             width: 34,
             height: 34,
-            decoration: BoxDecoration(color: AppColors.surfaceAlt, borderRadius: BorderRadius.circular(11)),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceAlt,
+              borderRadius: BorderRadius.circular(11),
+            ),
             child: Icon(icon, size: 17, color: Colors.white70),
           ),
           const SizedBox(width: 10),
-          Expanded(child: Text(label, style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700))),
-          Text('$value', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900)),
+          Expanded(
+            child: Text(
+              label,
+              style: const TextStyle(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          Text(
+            '$value',
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
+          ),
         ],
       ),
     );
@@ -426,11 +617,23 @@ class _ErrorState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.query_stats_rounded, size: 42, color: Colors.white38),
+            const Icon(
+              Icons.query_stats_rounded,
+              size: 42,
+              color: Colors.white38,
+            ),
             const SizedBox(height: 12),
-            Text(message, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white60)),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.white60),
+            ),
             const SizedBox(height: 14),
-            FilledButton.icon(onPressed: onRetry, icon: const Icon(Icons.refresh_rounded), label: const Text('Tekrar dene')),
+            FilledButton.icon(
+              onPressed: onRetry,
+              icon: const Icon(Icons.refresh_rounded),
+              label: const Text('Tekrar dene'),
+            ),
           ],
         ),
       ),
@@ -456,7 +659,8 @@ class _UserStatistics {
   final int storyReactions;
   final int storyReplies;
   final int hostedEvents;
-  final int openHostedEvents;
+  final int activeHostedEvents;
+  final int completedHostedEvents;
   final int cancelledHostedEvents;
   final int eventParticipants;
   final int attendedEvents;
@@ -480,7 +684,8 @@ class _UserStatistics {
     required this.storyReactions,
     required this.storyReplies,
     required this.hostedEvents,
-    required this.openHostedEvents,
+    required this.activeHostedEvents,
+    required this.completedHostedEvents,
     required this.cancelledHostedEvents,
     required this.eventParticipants,
     required this.attendedEvents,
