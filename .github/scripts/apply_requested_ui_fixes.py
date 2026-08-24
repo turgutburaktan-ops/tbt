@@ -15,9 +15,7 @@ s = p.read_text()
 s = s.replace("import 'events_hub_screen.dart';\n", '')
 if "import 'reels_screen.dart';" not in s:
     s = s.replace("import 'radar_screen.dart';\n", "import 'radar_screen.dart';\nimport 'reels_screen.dart';\n")
-s = require_replace(
-    s,
-    """    final labels = campusEligible
+old_nearby = """    final labels = campusEligible
         ? const ['Radar', 'Etkinlikler', 'Kampüs']
         : const ['Radar', 'Etkinlikler'];
     final effectiveSection = _section >= labels.length ? 0 : _section;
@@ -25,46 +23,42 @@ s = require_replace(
       const RadarScreen(embedded: true),
       const EventsHubScreen(),
       if (campusEligible) const CampusHomeScreen(),
-    ];""",
-    """    final labels = campusEligible
+    ];"""
+new_nearby = """    final labels = campusEligible
         ? const ['Çevrende', 'Kampüs']
         : const ['Çevrende'];
     final effectiveSection = _section >= labels.length ? 0 : _section;
     final pages = <Widget>[
       const RadarScreen(embedded: true),
       if (campusEligible) const CampusHomeScreen(),
-    ];""",
-    'nearby tabs',
-)
+    ];"""
+if old_nearby in s:
+    s = s.replace(old_nearby, new_nearby, 1)
 s = s.replace("'Radar, etkinlikler ve öğrencilere özel kampüs.'", "'Yakındaki planlar, etkinlikler ve öğrencilere özel kampüs.'", 1)
-s = require_replace(
-    s,
-    """              child: _CompactTabs(
+old_tabs = """              child: _CompactTabs(
                 firstLabel: 'Sana Özel',
                 secondLabel: 'Takip',
                 selected: _section,
                 onChanged: (value) => setState(() => _section = value),
-              ),""",
-    """              child: _NearbyTabs(
+              ),"""
+new_tabs = """              child: _NearbyTabs(
                 labels: const ['Sana Özel', 'Takip', 'Reels'],
                 selected: _section,
                 onChanged: (value) => setState(() => _section = value),
-              ),""",
-    'home reels tabs',
-)
-s = require_replace(
-    s,
-    """                children: const [
+              ),"""
+if old_tabs in s:
+    s = s.replace(old_tabs, new_tabs, 1)
+old_pages = """                children: const [
                   _AuthAwareFeed(mode: FeedMode.forYou),
                   _AuthAwareFeed(mode: FeedMode.following),
-                ],""",
-    """                children: const [
+                ],"""
+new_pages = """                children: const [
                   _AuthAwareFeed(mode: FeedMode.forYou),
                   _AuthAwareFeed(mode: FeedMode.following),
                   ReelsScreen(),
-                ],""",
-    'home reels page',
-)
+                ],"""
+if old_pages in s:
+    s = s.replace(old_pages, new_pages, 1)
 p.write_text(s)
 
 # Radar: keep event creation on the single Çevrende page and use the photo creator.
@@ -103,12 +97,10 @@ p.write_text(s)
 # Main video/Reels capture is 60 sec. Story remains 15 sec.
 p = Path('lib/screens/camera_screen.dart')
 s = p.read_text()
-s = require_replace(
-    s,
-    "int get _videoLimitSeconds => widget.storyMode ? 15 : 30;",
-    "int get _videoLimitSeconds => widget.storyMode ? 15 : 60;",
-    'video duration',
-)
+old_limit = "int get _videoLimitSeconds => widget.storyMode ? 15 : 30;"
+new_limit = "int get _videoLimitSeconds => widget.storyMode ? 15 : 60;"
+if old_limit in s:
+    s = s.replace(old_limit, new_limit, 1)
 p.write_text(s)
 
 # Dedicated photo-event creator: avoid a Firestore host update that rules reject.
@@ -131,7 +123,10 @@ new = """      await FirebaseFunctions.instanceFor(region: 'europe-west1')
         'coverImageUrl': url,
         'coverStoragePath': ref.fullPath,
       });"""
-s = require_replace(s, old, new, 'event cover function call')
+if old in s:
+    s = s.replace(old, new, 1)
+elif "httpsCallable('setSocialEventCover')" not in s:
+    raise SystemExit('Missing patch target: event cover function call')
 p.write_text(s)
 
 # The old all-fields create sheet is no longer the main route, but keep it photo-capable too.
@@ -175,4 +170,4 @@ for f in Path('lib').rglob('*.dart'):
 if offenders:
     raise SystemExit('OpenStreetMap refs remain: ' + ', '.join(offenders))
 
-# Build trigger: 2026-08-24 requested five-item fix pass.
+# Build trigger: requested UI fixes are intentionally idempotent.
