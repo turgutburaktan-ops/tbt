@@ -96,6 +96,11 @@ class _AccountSecurityGateState extends State<AccountSecurityGate> {
       return const EmailSecuritySetupScreen();
     }
 
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null && user.email != null && !user.emailVerified) {
+      return const EmailSecuritySetupScreen();
+    }
+
     if (!_phoneVerified) {
       return const PhoneSecuritySetupScreen();
     }
