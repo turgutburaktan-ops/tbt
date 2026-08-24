@@ -26,40 +26,44 @@ function entitlementFor(data) {
   };
 }
 
+async function grantEarlyAccess(db, claimId, ownerUid) {
+  const until = Timestamp.fromMillis(
+    Date.now() + EARLY_ACCESS_DAYS * 24 * 60 * 60 * 1000,
+  );
+  const entitlement = {
+    plan: EARLY_ACCESS_PLAN,
+    earlyAccessStatus: 'active',
+    earlyAccessStartedAt: FieldValue.serverTimestamp(),
+    earlyAccessUntil: until,
+    subscriptionStatus: 'none',
+    billingRequired: false,
+    premiumEntitled: true,
+    premiumReason: 'verified_early_business',
+    premiumUpdatedAt: FieldValue.serverTimestamp(),
+  };
+  await Promise.all([
+    db.collection('business_claims').doc(claimId).set(entitlement, {merge: true}),
+    db.collection('business_venues').doc(claimId).set({
+      ...entitlement,
+      ownerUid: ownerUid || null,
+      verified: true,
+      updatedAt: FieldValue.serverTimestamp(),
+    }, {merge: true}),
+  ]);
+  return {...entitlement, earlyAccessUntil: until};
+}
+
 exports.grantEarlyBusinessAccessOnVerification = onDocumentUpdated(
   {document: 'business_claims/{claimId}', region: 'europe-west1'},
   async (event) => {
     const before = event.data?.before?.data() || {};
     const after = event.data?.after?.data() || {};
     if (before.status === 'verified' || after.status !== 'verified') return;
-
-    const db = getFirestore();
-    const claimId = event.params.claimId;
-    const claimRef = db.collection('business_claims').doc(claimId);
-    const venueRef = db.collection('business_venues').doc(claimId);
-    const startMs = Date.now();
-    const until = Timestamp.fromMillis(startMs + EARLY_ACCESS_DAYS * 24 * 60 * 60 * 1000);
-    const entitlement = {
-      plan: EARLY_ACCESS_PLAN,
-      earlyAccessStatus: 'active',
-      earlyAccessStartedAt: FieldValue.serverTimestamp(),
-      earlyAccessUntil: until,
-      subscriptionStatus: 'none',
-      billingRequired: false,
-      premiumEntitled: true,
-      premiumReason: 'verified_early_business',
-      premiumUpdatedAt: FieldValue.serverTimestamp(),
-    };
-
-    await Promise.all([
-      claimRef.set(entitlement, {merge: true}),
-      venueRef.set({
-        ...entitlement,
-        ownerUid: after.applicantUid || null,
-        verified: true,
-        updatedAt: FieldValue.serverTimestamp(),
-      }, {merge: true}),
-    ]);
+    await grantEarlyAccess(
+      getFirestore(),
+      event.params.claimId,
+      after.applicantUid,
+    );
   }
 );
 
@@ -69,14 +73,24 @@ exports.getBusinessEntitlement = onCall({region: 'europe-west1'}, async (request
   if (!claimId || claimId.length > 240) {
     throw new HttpsError('invalid-argument', 'Mekan kimliği geçersiz.');
   }
-  const snap = await getFirestore().collection('business_claims').doc(claimId).get();
+  const db = getFirestore();
+  const ref = db.collection('business_claims').doc(claimId);
+  const snap = await ref.get();
   if (!snap.exists) return {exists: false, entitled: false, source: 'none'};
-  const data = snap.data() || {};
+  let data = snap.data() || {};
   if (data.applicantUid !== uid && request.auth.token.admin !== true) {
     throw new HttpsError('permission-denied', 'Bu işletmenin plan bilgisine erişemezsin.');
   }
   if (data.status !== 'verified') {
     return {exists: true, verified: false, entitled: false, source: 'none'};
   }
+
+  // Verified businesses that existed before this feature are enrolled once,
+  // the first time their owner opens the entitlement-aware business panel.
+  if (!data.earlyAccessStatus && data.subscriptionStatus !== 'active') {
+    const granted = await grantEarlyAccess(db, claimId, data.applicantUid);
+    data = {...data, ...granted};
+  }
+
   return {exists: true, verified: true, ...entitlementFor(data)};
 });
