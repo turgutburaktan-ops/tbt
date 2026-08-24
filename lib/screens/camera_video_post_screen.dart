@@ -72,16 +72,30 @@ class _CameraVideoPostScreenState extends State<CameraVideoPostScreen> {
 
   Future<void> _share() async {
     if (_sharing) return;
-    if (_spotController.text.trim().isEmpty) {
+    final spotName = _spotController.text.trim();
+    final caption = _captionController.text.trim();
+    if (spotName.isEmpty) {
       _message('Çekim noktası adını yaz.');
+      return;
+    }
+    if (spotName.length > 120) {
+      _message('Çekim noktası adı en fazla 120 karakter olabilir.');
+      return;
+    }
+    if (caption.length > 500) {
+      _message('Açıklama en fazla 500 karakter olabilir.');
+      return;
+    }
+    if (!await widget.video.exists() || await widget.video.length() <= 0) {
+      _message('Paylaşılacak video bulunamadı.');
       return;
     }
     setState(() => _sharing = true);
     try {
       await PostService.instance.createVideoPost(
         video: widget.video,
-        caption: _captionController.text,
-        spotName: _spotController.text,
+        caption: caption,
+        spotName: spotName,
         latitude: _latitude,
         longitude: _longitude,
       );
@@ -124,13 +138,14 @@ class _CameraVideoPostScreenState extends State<CameraVideoPostScreen> {
           ),
           const SizedBox(height: 8),
           const Text(
-            'Video paylaşılırken 720p hazırlanacak. En fazla 30 saniye.',
+            'Video paylaşılırken 720p hazırlanacak. En fazla 60 saniye.',
             textAlign: TextAlign.center,
             style: TextStyle(color: Colors.white38, fontSize: 12),
           ),
           const SizedBox(height: 18),
           TextField(
             controller: _spotController,
+            maxLength: 120,
             decoration: const InputDecoration(
               labelText: 'Çekim noktası adı',
               hintText: 'Örn. Galata Köprüsü',
