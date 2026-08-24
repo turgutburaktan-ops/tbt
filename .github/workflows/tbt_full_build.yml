@@ -89,27 +89,27 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
-      - name: 6 · Prepare iOS
+      - name: 6 · Prepare clean iOS host
         shell: bash
         run: |
           set -euo pipefail
           flutter config --no-enable-swift-package-manager
-          if [ ! -d ios/Runner.xcodeproj ]; then
-            flutter create --platforms=ios --org com.tbt --project-name best_photo_spot .
-          fi
-          if [ -f ios/Podfile ]; then
-            python3 - <<'PY'
+          rm -rf ios
+          flutter create --platforms=ios --org com.tbt --project-name best_photo_spot .
+          test -f ios/Podfile
+          python3 - <<'PY'
           from pathlib import Path
           import re
           p = Path('ios/Podfile')
           s = p.read_text()
-          if 'platform :ios' in s:
-              s = re.sub(r"platform :ios,\s*'[^']+'", "platform :ios, '14.0'", s)
+          if re.search(r"^\s*#?\s*platform :ios,\s*'[^']+'", s, flags=re.M):
+              s = re.sub(r"^\s*#?\s*platform :ios,\s*'[^']+'", "platform :ios, '15.0'", s, count=1, flags=re.M)
           else:
-              s = "platform :ios, '14.0'\n" + s
+              s = "platform :ios, '15.0'\n" + s
           p.write_text(s)
           PY
-          fi
+          grep -q "platform :ios, '15.0'" ios/Podfile
+          rm -rf ios/Pods ios/Podfile.lock
 
       - name: 7 · iOS Build
         run: >-
