@@ -36,6 +36,7 @@ jobs:
         run: |
           set -euo pipefail
           python3 .github/scripts/apply_requested_ui_fixes.py
+          python3 .github/scripts/strengthen_account_security_v1.py
           dart format \
             lib/screens/home_shell_screen.dart \
             lib/screens/radar_screen.dart \
@@ -48,12 +49,13 @@ jobs:
             lib/screens/event_photo_create_screen.dart \
             lib/screens/selected_route_map_screen.dart \
             lib/screens/account_security_gate.dart \
+            lib/screens/register_screen.dart \
             lib/services/biometric_auth_service.dart
           if ! git diff --quiet; then
             git config user.name 'tbt-build-bot'
             git config user.email 'actions@users.noreply.github.com'
             git add lib pubspec.yaml
-            git commit -m 'fix: apply requested product and security polish'
+            git commit -m 'fix: enforce email phone and biometric account security'
             git push origin HEAD:feature/video-v1
           fi
       - name: Resolve build commit
