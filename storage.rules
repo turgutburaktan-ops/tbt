@@ -9,17 +9,29 @@ service firebase.storage {
       return signedIn() && request.auth.uid == uid;
     }
 
-    function safeMediaWrite() {
+    function safeImageWrite() {
       return request.resource != null &&
         request.resource.size > 0 &&
-        request.resource.size <= 50 * 1024 * 1024 &&
+        request.resource.size <= 15 * 1024 * 1024 &&
         request.resource.contentType != null &&
-        request.resource.contentType.matches('^(image|video)/.*$');
+        request.resource.contentType.matches('^image/(jpeg|png|webp|heic|heif)$');
     }
 
-    // All user-generated media is namespaced by Firebase Auth uid.
-    // Public reads preserve the existing feed/story/profile behavior, while
-    // only the owning account can create, replace or delete its files.
+    function safeVideoWrite() {
+      return request.resource != null &&
+        request.resource.size > 0 &&
+        request.resource.size <= 100 * 1024 * 1024 &&
+        request.resource.contentType != null &&
+        request.resource.contentType.matches('^video/(mp4|quicktime)$');
+    }
+
+    function safeMediaWrite() {
+      return safeImageWrite() || safeVideoWrite();
+    }
+
+    // User media stays namespaced by Firebase Auth uid. This keeps existing
+    // public feed/profile rendering intact while preventing cross-account writes.
+    // SVG and arbitrary image/video MIME types are intentionally rejected.
     match /users/{uid}/{allPaths=**} {
       allow read: if true;
       allow create, update: if isOwner(uid) && safeMediaWrite();
