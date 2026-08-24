@@ -149,6 +149,35 @@ class CampusHomeScreen extends StatelessWidget {
           body: ListView(
             padding: const EdgeInsets.fromLTRB(14, 8, 14, 32),
             children: [
+              Container(
+                margin: const EdgeInsets.only(bottom: 14),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                decoration: BoxDecoration(
+                  color: card,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: border),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.school_outlined, size: 20, color: Colors.white70),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Kampüs profili aktif', style: TextStyle(fontWeight: FontWeight.w900)),
+                          const SizedBox(height: 2),
+                          Text('$university • ${classYear == 'Hazırlık' ? 'Hazırlık' : '$classYear. sınıf'}', style: const TextStyle(color: Colors.white60, fontSize: 11.5)),
+                        ],
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.pushNamed(context, '/campus-profile'),
+                      child: const Text('Düzenle'),
+                    ),
+                  ],
+                ),
+              ),
               if (newStudent)
                 _WelcomeCard(
                   department: department,
@@ -316,7 +345,7 @@ class _DemandSection extends StatelessWidget {
               const _Title('Kampüste ne yapmak istiyorlar?'),
               const SizedBox(height: 10),
               if (items.isEmpty)
-                const _Empty('Henüz talep yok. İlk talebi sen oluştur.')
+                const _Empty('Henüz talep yok. Ne yapmak istediğini seçerek ilk talebi oluştur.')
               else
                 Wrap(
                   spacing: 8,
@@ -373,7 +402,7 @@ class _CommunitiesSection extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               if (docs.isEmpty)
-                const _Empty('Bu üniversitede henüz topluluk yok.')
+                const _Empty('Henüz topluluk yok. Tüm toplulukları keşfet veya ilk topluluğu oluştur.')
               else
                 SizedBox(
                   height: 118,
@@ -475,7 +504,7 @@ class _EventsSection extends StatelessWidget {
                   const _Title('Yaklaşan kampüs etkinlikleri'),
                   const SizedBox(height: 10),
                   if (events.isEmpty)
-                    const _Empty('Yaklaşan kampüs etkinliği henüz yok.')
+                    const _Empty('Yaklaşan kampüs etkinliği yok. Çevrende sekmesinden yeni bir etkinlik oluşturabilirsin.')
                   else
                     ...events.take(5).map((doc) {
                       final d = doc.data();

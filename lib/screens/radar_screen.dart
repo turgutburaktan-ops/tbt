@@ -329,13 +329,6 @@ class _RadarScreenState extends State<RadarScreen> {
                       ),
                       const SizedBox(height: 9),
                       _demandSection(demands),
-                      const SizedBox(height: 20),
-                      _sectionTitle(
-                        '⚡ Planı sen başlat',
-                        'Bir fikir seç, çevrendekilere haber ver',
-                      ),
-                      const SizedBox(height: 9),
-                      _quickStartStrip(alwaysShow: true),
                     ],
                   ),
                 );
@@ -368,31 +361,11 @@ class _RadarScreenState extends State<RadarScreen> {
           ),
           const SizedBox(height: 10),
         ],
-        SizedBox(
-          width: double.infinity,
-          child: FilledButton.icon(
-            onPressed: () async {
-              if (FirebaseAuth.instance.currentUser == null) {
-                _message('Etkinlik oluşturmak için giriş yapmalısın.');
-                return;
-              }
-              await Navigator.push<bool>(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const EventPhotoCreateScreen(),
-                ),
-              );
-            },
-            icon: const Icon(Icons.add_a_photo_outlined),
-            label: const Text('Etkinlik Oluştur'),
-          ),
-        ),
-        const SizedBox(height: 10),
         SearchableSelectionField(
           controller: _cityController,
           options: turkeyCities,
           labelText: 'Şehir',
-          hintText: 'Şehir seç veya Türkiye geneli bırak',
+          hintText: 'Şehir seç; boş bırakırsan Türkiye geneli gösterilir',
           prefixIcon: Icons.location_city_outlined,
           onChanged: _setCity,
           maxSuggestions: 7,
@@ -462,7 +435,7 @@ class _RadarScreenState extends State<RadarScreen> {
               _LiveDot(),
               SizedBox(width: 8),
               Text(
-                'ŞEHİR ŞU AN HAREKETLİ',
+                'ŞEHRİN CANLI DURUMU',
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w900,

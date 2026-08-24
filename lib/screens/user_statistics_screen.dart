@@ -249,7 +249,7 @@ class _UserStatisticsScreenState extends State<UserStatisticsScreen> {
                   icon: Icons.event_available_outlined,
                   children: [
                     _Metric('Oluşturulan', stats.hostedEvents, Icons.add_box_outlined),
-                    _Metric('Aktif / tamamlanan', stats.openHostedEvents, Icons.event_available_outlined),
+                    _Metric('Aktif / tamamlanmış', stats.openHostedEvents, Icons.event_available_outlined),
                     _Metric('İptal edilen', stats.cancelledHostedEvents, Icons.event_busy_outlined),
                     _Metric('Etkinliklerine katılan kişi', stats.eventParticipants, Icons.groups_2_outlined),
                     _Metric('Katıldığın etkinlik', stats.attendedEvents, Icons.directions_walk_rounded),
@@ -266,7 +266,7 @@ class _UserStatisticsScreenState extends State<UserStatisticsScreen> {
                   ),
                 const SizedBox(height: 8),
                 const Text(
-                  'Rakamlar Firebase’deki mevcut kayıtların tamamından hesaplanır. Yenile ile güncel değerleri tekrar çekebilirsin.',
+                  'Toplam değerler tüm kayıtları, “Son 30 gün” satırları ise yakın dönemi gösterir. Yenile ile güncel değerleri tekrar çekebilirsin.',
                   textAlign: TextAlign.center,
                   style: TextStyle(color: Color(0x52FFFFFF), fontSize: 10.5, height: 1.35),
                 ),

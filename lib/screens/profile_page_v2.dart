@@ -14,6 +14,7 @@ import '../services/story_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/firebase_media_image.dart';
 import '../widgets/story_strip.dart';
+import 'camera_screen.dart';
 import 'create_post_screen.dart';
 import 'follow_list_screen.dart';
 import 'login_screen.dart';
@@ -460,8 +461,10 @@ class _ProfileBodyState extends State<_ProfileBody> {
                                     right: -1,
                                     bottom: 0,
                                     child: GestureDetector(
-                                      onTap: () =>
-                                          _editProfile(displayName, bio),
+                                      onTap: () => Navigator.push(
+                                          context,
+                                          MaterialPageRoute(builder: (_) => const CameraScreen(storyMode: true)),
+                                        ),
                                       child: Container(
                                         width: 26,
                                         height: 26,

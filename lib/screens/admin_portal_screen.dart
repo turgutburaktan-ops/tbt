@@ -112,8 +112,8 @@ class _AdminPortalScreenState extends State<AdminPortalScreen> {
           ),
           _AdminTile(
             icon: Icons.visibility_outlined,
-            title: 'Rol Önizleme',
-            subtitle: 'Misafir, kullanıcı, etkinlik düzenleyici, işletme ve premium işletme gibi gör.',
+            title: 'Uygulamayı Rol Olarak Önizle',
+            subtitle: 'Hesap açmadan Misafir, Kullanıcı, Düzenleyici, İşletme, Doğrulanmış ve Premium görünümünü test et.',
             highlighted: true,
             onTap: () => Navigator.pushNamed(context, '/admin-preview'),
           ),
