@@ -43,11 +43,12 @@ class _AccountSecurityGateState extends State<AccountSecurityGate> {
 
   Future<void> _evaluate() async {
     if (!_phoneVerified) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _checking = false;
           _unlocked = false;
         });
+      }
       return;
     }
     final available = await BiometricAuthService.instance.canUseBiometrics();
@@ -209,11 +210,13 @@ class _EmailSecuritySetupScreenState extends State<EmailSecuritySetupScreen> {
     });
     try {
       await user.sendEmailVerification();
-      if (mounted)
+      if (mounted) {
         setState(() => _message = 'Doğrulama e-postası yeniden gönderildi.');
+      }
     } on FirebaseAuthException catch (e) {
-      if (mounted)
+      if (mounted) {
         setState(() => _message = e.message ?? 'E-posta gönderilemedi.');
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -230,11 +233,12 @@ class _EmailSecuritySetupScreenState extends State<EmailSecuritySetupScreen> {
       await user.reload();
       final refreshed = FirebaseAuth.instance.currentUser;
       if (refreshed?.emailVerified == true) {
-        if (mounted)
+        if (mounted) {
           setState(
             () => _message =
                 'E-posta doğrulandı. Telefon güvenliği adımına geçiliyor.',
           );
+        }
         await FirebaseFirestore.instance
             .collection('users')
             .doc(refreshed!.uid)
@@ -245,7 +249,8 @@ class _EmailSecuritySetupScreenState extends State<EmailSecuritySetupScreen> {
             }, SetOptions(merge: true));
       } else if (mounted) {
         setState(
-          () => _message = 'E-posta henüz doğrulanmamış. Gelen kutunu ve spam klasörünü kontrol et.',
+          () => _message =
+              'E-posta henüz doğrulanmamış. Gelen kutunu ve spam klasörünü kontrol et.',
         );
       }
     } finally {
@@ -336,6 +341,31 @@ class _PhoneSecuritySetupScreenState extends State<PhoneSecuritySetupScreen> {
     super.dispose();
   }
 
+  String _friendlyPhoneError(FirebaseAuthException e) {
+    switch (e.code) {
+      case 'invalid-phone-number':
+        return 'Telefon numarası geçersiz. Ülke koduyla birlikte kontrol et. (kod: ${e.code})';
+      case 'too-many-requests':
+        return 'Çok fazla SMS denemesi yapıldı. Bir süre bekleyip tekrar dene. (kod: ${e.code})';
+      case 'quota-exceeded':
+        return 'Firebase SMS kotası aşıldı. Daha sonra tekrar dene. (kod: ${e.code})';
+      case 'missing-client-identifier':
+      case 'missing-app-credential':
+      case 'invalid-app-credential':
+      case 'app-not-authorized':
+        return 'Android uygulama doğrulaması başarısız. APK imzasının SHA-1/SHA-256 değerleri Firebase Android uygulamasına eklenmeli ve Play Integrity/reCAPTCHA yapılandırması kontrol edilmeli. (kod: ${e.code})';
+      case 'operation-not-allowed':
+        return 'Firebase isteği operation-not-allowed ile reddetti. Phone sağlayıcısı açık olduğuna göre Android uygulama kimliği, proje eşleşmesi ve uygulama doğrulamasını kontrol etmeliyiz. (kod: ${e.code})';
+      case 'network-request-failed':
+        return 'İnternet bağlantısı kurulamadı. Bağlantıyı kontrol edip tekrar dene. (kod: ${e.code})';
+      default:
+        final detail = (e.message ?? '').trim();
+        return detail.isEmpty
+            ? 'SMS doğrulama başlatılamadı. Firebase hata kodu: ${e.code}'
+            : '$detail (Firebase kodu: ${e.code})';
+    }
+  }
+
   Future<void> _sendCode() async {
     final phone = _phone.text.replaceAll(' ', '').trim();
     if (!phone.startsWith('+') || phone.length < 10) {
@@ -359,9 +389,7 @@ class _PhoneSecuritySetupScreenState extends State<PhoneSecuritySetupScreen> {
           if (!mounted) return;
           setState(() {
             _busy = false;
-            _error = e.code == 'operation-not-allowed'
-                ? 'Telefon doğrulama Firebase tarafında henüz etkin değil.'
-                : (e.message ?? 'SMS doğrulama başlatılamadı.');
+            _error = _friendlyPhoneError(e);
           });
         },
         codeSent: (verificationId, _) {
@@ -369,6 +397,7 @@ class _PhoneSecuritySetupScreenState extends State<PhoneSecuritySetupScreen> {
           setState(() {
             _verificationId = verificationId;
             _busy = false;
+            _error = null;
           });
         },
         codeAutoRetrievalTimeout: (verificationId) {
@@ -379,12 +408,18 @@ class _PhoneSecuritySetupScreenState extends State<PhoneSecuritySetupScreen> {
           });
         },
       );
+    } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _busy = false;
+        _error = _friendlyPhoneError(e);
+      });
     } catch (e) {
-      if (mounted)
-        setState(() {
-          _busy = false;
-          _error = 'Kod gönderilemedi: $e';
-        });
+      if (!mounted) return;
+      setState(() {
+        _busy = false;
+        _error = 'Kod gönderilemedi: ${e.runtimeType}: $e';
+      });
     }
   }
 
@@ -435,7 +470,7 @@ class _PhoneSecuritySetupScreenState extends State<PhoneSecuritySetupScreen> {
         _busy = false;
         _error = e.code == 'credential-already-in-use'
             ? 'Bu telefon numarası başka bir hesapta kullanılıyor.'
-            : (e.message ?? 'Telefon doğrulanamadı.');
+            : '${e.message ?? 'Telefon doğrulanamadı.'} (Firebase kodu: ${e.code})';
       });
     }
   }
