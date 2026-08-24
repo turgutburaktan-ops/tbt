@@ -189,6 +189,7 @@ class _ReelsFilter extends StatelessWidget {
           }),
         ),
       );
+}
 
 class _ReelPage extends StatelessWidget {
   final String postId;

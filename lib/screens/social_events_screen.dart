@@ -24,6 +24,7 @@ class SocialEventsScreen extends StatefulWidget {
 
 class _SocialEventsScreenState extends State<SocialEventsScreen> {
   SocialEventType? _selectedType;
+  final Set<String> _locallyCancelledEventIds = <String>{};
 
   Stream<List<SocialEvent>> get _stream =>
       SocialEventService.instance.watchUpcoming(type: _selectedType);
@@ -210,8 +211,17 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
         ),
       );
       if (cancel == true) {
-        await SocialEventService.instance.leave(event.id);
-        _showMessage('Etkinlik iptal edildi.');
+        setState(() => _locallyCancelledEventIds.add(event.id));
+        try {
+          await SocialEventService.instance.leave(event.id);
+          if (!mounted) return;
+          _showMessage('Etkinlik iptal edildi.');
+        } catch (e) {
+          if (mounted) {
+            setState(() => _locallyCancelledEventIds.remove(event.id));
+          }
+          _showMessage(_friendlyError(e));
+        }
       }
       return;
     }
@@ -421,7 +431,10 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
                   ),
                 );
               }
-              final events = snapshot.data ?? const <SocialEvent>[];
+              final events = (snapshot.data ?? const <SocialEvent>[])
+                  .where((event) =>
+                      !_locallyCancelledEventIds.contains(event.id))
+                  .toList(growable: false);
               if (events.isEmpty) {
                 return _EmptyEvents(onCreate: _openCreate);
               }

@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import '../data/turkey_selection_data.dart';
 import '../models/social_event.dart';
 import '../services/activity_demand_service.dart';
-import '../services/social_event_service.dart';
 import '../widgets/searchable_selection_field.dart';
+import 'event_create_screen_v2.dart';
 import 'event_location_picker_screen.dart';
 
 class ActivityDemandScreen extends StatefulWidget {
@@ -122,27 +122,26 @@ class _ActivityDemandScreenState extends State<ActivityDemandScreen> {
     );
     if (location == null || !mounted) return;
 
-    setState(() => _busy = true);
-    try {
-      await SocialEventService.instance.create(
-        title: '$_activity buluşması',
-        type: _eventType(_activity),
-        startsAt: _startForWindow(),
-        capacity: interestedCount.clamp(4, 50),
-        city: _cityController.text.trim(),
-        locationLabel: location.label,
-        description: 'Bu buluşma aynı aktiviteyi yapmak isteyen kullanıcıların talebinden oluşturuldu.',
-        latitude: location.latitude,
-        longitude: location.longitude,
-        visibility: EventVisibility.public,
-      );
-      if (!mounted) return;
+    final created = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => EventCreateScreenV2(
+          initialTitle: '$_activity buluşması',
+          initialType: _eventType(_activity),
+          initialStartsAt: _startForWindow(),
+          initialCapacity: interestedCount.clamp(4, 50),
+          initialCity: _cityController.text.trim(),
+          initialLocationLabel: location.label,
+          initialDescription:
+              'Bu buluşma aynı aktiviteyi yapmak isteyen kullanıcıların talebinden oluşturuldu.',
+          initialLatitude: location.latitude,
+          initialLongitude: location.longitude,
+        ),
+      ),
+    );
+    if (created == true && mounted) {
       _message('Buluşma oluşturuldu.');
       Navigator.pop(context, true);
-    } catch (e) {
-      _message(e.toString().replaceFirst('Exception: ', ''));
-    } finally {
-      if (mounted) setState(() => _busy = false);
     }
   }
 

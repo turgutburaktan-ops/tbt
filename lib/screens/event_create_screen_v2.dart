@@ -15,29 +15,70 @@ import '../theme/app_theme.dart';
 import 'event_location_picker_screen.dart';
 
 class EventCreateScreenV2 extends StatefulWidget {
-  const EventCreateScreenV2({super.key});
+  final String initialTitle;
+  final String initialCity;
+  final String initialLocationLabel;
+  final String initialDescription;
+  final int initialCapacity;
+  final DateTime? initialStartsAt;
+  final SocialEventType initialType;
+  final double? initialLatitude;
+  final double? initialLongitude;
+
+  const EventCreateScreenV2({
+    super.key,
+    this.initialTitle = '',
+    this.initialCity = '',
+    this.initialLocationLabel = '',
+    this.initialDescription = '',
+    this.initialCapacity = 10,
+    this.initialStartsAt,
+    this.initialType = SocialEventType.social,
+    this.initialLatitude,
+    this.initialLongitude,
+  });
 
   @override
   State<EventCreateScreenV2> createState() => _EventCreateScreenV2State();
 }
 
 class _EventCreateScreenV2State extends State<EventCreateScreenV2> {
-  final _title = TextEditingController();
-  final _city = TextEditingController();
-  final _location = TextEditingController();
-  final _description = TextEditingController();
+  late final TextEditingController _title;
+  late final TextEditingController _city;
+  late final TextEditingController _location;
+  late final TextEditingController _description;
   final _customType = TextEditingController();
-  final _capacity = TextEditingController(text: '10');
+  late final TextEditingController _capacity;
   final _picker = ImagePicker();
 
   File? _image;
-  DateTime _startsAt = DateTime.now().add(const Duration(hours: 2));
-  SocialEventType _type = SocialEventType.social;
+  late DateTime _startsAt;
+  late SocialEventType _type;
   EventVisibility _visibility = EventVisibility.public;
   Map<String, String> _selectedPeople = {};
   EventLocationSelection? _selectedLocation;
   bool _saving = false;
   String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _title = TextEditingController(text: widget.initialTitle);
+    _city = TextEditingController(text: widget.initialCity);
+    _location = TextEditingController(text: widget.initialLocationLabel);
+    _description = TextEditingController(text: widget.initialDescription);
+    _capacity = TextEditingController(text: widget.initialCapacity.toString());
+    _startsAt = widget.initialStartsAt ??
+        DateTime.now().add(const Duration(hours: 2));
+    _type = widget.initialType;
+    if (widget.initialLatitude != null && widget.initialLongitude != null) {
+      _selectedLocation = EventLocationSelection(
+        latitude: widget.initialLatitude!,
+        longitude: widget.initialLongitude!,
+        label: widget.initialLocationLabel,
+      );
+    }
+  }
 
   @override
   void dispose() {

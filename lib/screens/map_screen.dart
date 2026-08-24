@@ -1,11 +1,15 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '../models/photo_spot.dart';
+import '../models/nearby_venue.dart';
 import '../models/social_event.dart';
 import '../models/user_map_point.dart';
 import '../services/road_route_service.dart';
+import '../services/nearby_venue_service.dart';
 import '../services/social_event_service.dart';
 import '../services/spot_repository.dart';
 import '../services/user_map_point_service.dart';
@@ -28,11 +32,14 @@ class _MapScreenState extends State<MapScreen> {
   PhotoSpot? _selectedSpot;
   SocialEvent? _selectedEvent;
   UserMapPoint? _selectedUserPoint;
+  NearbyVenue? _selectedVenue;
   List<PhotoSpot> _spots = List<PhotoSpot>.from(demoSpots);
   List<SocialEvent> _events = const [];
   List<UserMapPoint> _userPoints = const [];
+  List<NearbyVenue> _nearbyVenues = const [];
   final List<PhotoSpot> _routeSpots = [];
   bool _loadingSpots = true;
+  bool _loadingNearbyVenues = false;
   bool _locationPermissionGranted = false;
   bool _gettingLocation = false;
   bool _loadingRoadRoute = false;
@@ -41,9 +48,6 @@ class _MapScreenState extends State<MapScreen> {
   _MapContentFilter _filter = _MapContentFilter.all;
 
   static const LatLng _defaultLocation = LatLng(38.9637, 35.2433);
-  static const double _nearbyZoom = 16.5;
-  static const double _placeZoom = 17;
-  static const double _streetTilt = 45;
   static const List<String> _pointCategories = <String>[
     'Kafe',
     'Yeme-İçme',
@@ -119,6 +123,25 @@ class _MapScreenState extends State<MapScreen> {
           onTap: () => _selectDestination(
             destination: LatLng(spot.latitude, spot.longitude),
             spot: spot,
+          ),
+        ));
+      }
+      for (final venue in _nearbyVenues) {
+        markers.add(Marker(
+          markerId: MarkerId('venue_${venue.category.name}_${venue.id}'),
+          position: LatLng(venue.latitude, venue.longitude),
+          icon: BitmapDescriptor.defaultMarkerWithHue(switch (venue.category) {
+            NearbyVenueCategory.cafe => BitmapDescriptor.hueOrange,
+            NearbyVenueCategory.dining => BitmapDescriptor.hueRose,
+            NearbyVenueCategory.hotel => BitmapDescriptor.hueAzure,
+          }),
+          infoWindow: InfoWindow(
+            title: venue.name,
+            snippet: venue.category.label,
+          ),
+          onTap: () => _selectDestination(
+            destination: LatLng(venue.latitude, venue.longitude),
+            venue: venue,
           ),
         ));
       }
@@ -232,17 +255,14 @@ class _MapScreenState extends State<MapScreen> {
         _selectedSpot = null;
         _selectedEvent = null;
         _selectedUserPoint = null;
+        _selectedVenue = null;
         _roadRoute = null;
       });
-      await _mapController?.animateCamera(
-        CameraUpdate.newCameraPosition(
-          CameraPosition(
-            target: LatLng(position.latitude, position.longitude),
-            zoom: _nearbyZoom,
-            tilt: _streetTilt,
-          ),
-        ),
-      );
+      unawaited(_loadNearbyVenues(position));
+      await _mapController?.animateCamera(CameraUpdate.newLatLngZoom(
+        LatLng(position.latitude, position.longitude),
+        15,
+      ));
     } catch (_) {
       if (showErrors && mounted) _message('Konum alınamadı.');
     } finally {
@@ -255,22 +275,18 @@ class _MapScreenState extends State<MapScreen> {
     PhotoSpot? spot,
     SocialEvent? event,
     UserMapPoint? userPoint,
+    NearbyVenue? venue,
   }) async {
     setState(() {
       _selectedSpot = spot;
       _selectedEvent = event;
       _selectedUserPoint = userPoint;
+      _selectedVenue = venue;
       _roadRoute = null;
       _loadingRoadRoute = _currentPosition != null;
     });
     await _mapController?.animateCamera(
-      CameraUpdate.newCameraPosition(
-        CameraPosition(
-          target: destination,
-          zoom: _placeZoom,
-          tilt: _streetTilt,
-        ),
-      ),
+      CameraUpdate.newLatLngZoom(destination, 15),
     );
 
     final current = _currentPosition;
@@ -307,29 +323,12 @@ class _MapScreenState extends State<MapScreen> {
     );
   }
 
-  String _fallbackDistance(double latitude, double longitude) {
-    final current = _currentPosition;
-    if (current == null) return '';
-    final meters = Geolocator.distanceBetween(
-      current.latitude,
-      current.longitude,
-      latitude,
-      longitude,
-    );
-    final km = meters / 1000;
-    final label = meters < 1000
-        ? '${meters.round()} m'
-        : km < 10
-            ? '${km.toStringAsFixed(1)} km'
-            : '${km.round()} km';
-    return 'Yaklaşık $label kuş uçuşu';
-  }
-
   String _distanceText(double latitude, double longitude) {
     if (_loadingRoadRoute) return 'Yol mesafesi hesaplanıyor…';
     final route = _roadRoute;
     if (route != null) return '${route.distanceLabel} • ${route.durationLabel}';
-    return _fallbackDistance(latitude, longitude);
+    if (_currentPosition == null) return '';
+    return 'Yol mesafesi alınamadı';
   }
 
   void _message(String value) {
@@ -343,9 +342,61 @@ class _MapScreenState extends State<MapScreen> {
       _selectedSpot = null;
       _selectedEvent = null;
       _selectedUserPoint = null;
+      _selectedVenue = null;
       _roadRoute = null;
       _loadingRoadRoute = false;
     });
+  }
+
+  Future<void> _loadNearbyVenues(Position position) async {
+    if (_loadingNearbyVenues) return;
+    if (mounted) setState(() => _loadingNearbyVenues = true);
+    try {
+      final groups = await Future.wait(
+        NearbyVenueCategory.values.map(
+          (category) => _loadVenueCategory(category, position),
+        ),
+      );
+      if (!mounted) return;
+      setState(() {
+        _nearbyVenues = groups.expand((items) => items).toList(growable: false);
+      });
+    } catch (_) {
+      if (mounted) _message('Yakındaki mekanların bir kısmı yüklenemedi.');
+    } finally {
+      if (mounted) setState(() => _loadingNearbyVenues = false);
+    }
+  }
+
+  Future<List<NearbyVenue>> _loadVenueCategory(
+    NearbyVenueCategory category,
+    Position position,
+  ) async {
+    try {
+      final venues = await NearbyVenueService.instance.nearby(
+        category: category,
+        latitude: position.latitude,
+        longitude: position.longitude,
+      );
+      venues.sort((a, b) {
+        final aDistance = Geolocator.distanceBetween(
+          position.latitude,
+          position.longitude,
+          a.latitude,
+          a.longitude,
+        );
+        final bDistance = Geolocator.distanceBetween(
+          position.latitude,
+          position.longitude,
+          b.latitude,
+          b.longitude,
+        );
+        return aDistance.compareTo(bDistance);
+      });
+      return venues.take(120).toList(growable: false);
+    } catch (_) {
+      return const <NearbyVenue>[];
+    }
   }
 
   void _showAll() {
@@ -404,6 +455,25 @@ class _MapScreenState extends State<MapScreen> {
 
   void _toggleUserPointRoute(UserMapPoint point) {
     _toggleRouteSpot(_asRouteSpot(point));
+  }
+
+  PhotoSpot _asVenueRouteSpot(NearbyVenue venue) => PhotoSpot(
+        id: 'venue:${venue.category.name}:${venue.id}',
+        name: venue.name,
+        city: venue.address,
+        latitude: venue.latitude,
+        longitude: venue.longitude,
+        rating: 0,
+        bestTime: venue.openingHours,
+        angle: '',
+        imageUrl: '',
+        category: venue.category.label,
+        description: venue.address,
+        tags: [venue.category.label],
+      );
+
+  void _toggleVenueRoute(NearbyVenue venue) {
+    _toggleRouteSpot(_asVenueRouteSpot(venue));
   }
 
   void _openEvents() {
@@ -543,7 +613,8 @@ class _MapScreenState extends State<MapScreen> {
   Widget build(BuildContext context) {
     final hasSelection = _selectedSpot != null ||
         _selectedEvent != null ||
-        _selectedUserPoint != null;
+        _selectedUserPoint != null ||
+        _selectedVenue != null;
     final bottomOffset = hasSelection ? 204.0 : 24.0;
 
     return StreamBuilder<List<UserMapPoint>>(
@@ -560,8 +631,6 @@ class _MapScreenState extends State<MapScreen> {
                   GoogleMap(
                     initialCameraPosition:
                         const CameraPosition(target: _defaultLocation, zoom: 5),
-                    mapType: MapType.normal,
-                    buildingsEnabled: true,
                     markers: _markers,
                     polylines: _polylines,
                     myLocationEnabled: _locationPermissionGranted,
@@ -575,15 +644,9 @@ class _MapScreenState extends State<MapScreen> {
                       final position = _currentPosition;
                       if (position != null) {
                         await controller.animateCamera(
-                          CameraUpdate.newCameraPosition(
-                            CameraPosition(
-                              target: LatLng(
-                                position.latitude,
-                                position.longitude,
-                              ),
-                              zoom: _nearbyZoom,
-                              tilt: _streetTilt,
-                            ),
+                          CameraUpdate.newLatLngZoom(
+                            LatLng(position.latitude, position.longitude),
+                            15,
                           ),
                         );
                       }
@@ -620,7 +683,7 @@ class _MapScreenState extends State<MapScreen> {
                                 ],
                               ),
                             ),
-                            if (_loadingSpots)
+                            if (_loadingSpots || _loadingNearbyVenues)
                               const SizedBox(
                                 width: 18,
                                 height: 18,
@@ -685,6 +748,7 @@ class _MapScreenState extends State<MapScreen> {
                                 _filter = _MapContentFilter.events;
                                 _selectedSpot = null;
                                 _selectedUserPoint = null;
+                                _selectedVenue = null;
                               }),
                             ),
                             _FilterButton(
@@ -694,6 +758,7 @@ class _MapScreenState extends State<MapScreen> {
                                 _filter = _MapContentFilter.mine;
                                 _selectedSpot = null;
                                 _selectedEvent = null;
+                                _selectedVenue = null;
                               }),
                             ),
                           ]),
@@ -781,6 +846,27 @@ class _MapScreenState extends State<MapScreen> {
                         onClose: _clearSelection,
                         onToggleRoute: () => _toggleUserPointRoute(_selectedUserPoint!),
                         onDelete: () => _deleteUserPoint(_selectedUserPoint!),
+                      ),
+                    ),
+                  if (_selectedVenue != null)
+                    Positioned(
+                      left: 16,
+                      right: 16,
+                      bottom: 16,
+                      child: _VenueCard(
+                        venue: _selectedVenue!,
+                        distanceLabel: _distanceText(
+                          _selectedVenue!.latitude,
+                          _selectedVenue!.longitude,
+                        ),
+                        inRoute: _routeSpots.any(
+                          (item) =>
+                              item.id ==
+                              'venue:${_selectedVenue!.category.name}:${_selectedVenue!.id}',
+                        ),
+                        onClose: _clearSelection,
+                        onToggleRoute: () =>
+                            _toggleVenueRoute(_selectedVenue!),
                       ),
                     ),
                 ],
@@ -985,6 +1071,105 @@ class _SpotCard extends StatelessWidget {
                 icon: const Icon(Icons.close, color: Colors.white54),
               ),
             ]),
+          ),
+        ),
+      );
+}
+
+class _VenueCard extends StatelessWidget {
+  final NearbyVenue venue;
+  final String distanceLabel;
+  final bool inRoute;
+  final VoidCallback onClose;
+  final VoidCallback onToggleRoute;
+
+  const _VenueCard({
+    required this.venue,
+    required this.distanceLabel,
+    required this.inRoute,
+    required this.onClose,
+    required this.onToggleRoute,
+  });
+
+  IconData get _icon => switch (venue.category) {
+        NearbyVenueCategory.cafe => Icons.local_cafe_outlined,
+        NearbyVenueCategory.dining => Icons.restaurant_outlined,
+        NearbyVenueCategory.hotel => Icons.hotel_outlined,
+      };
+
+  @override
+  Widget build(BuildContext context) => Card(
+        color: const Color(0xFF0F1113),
+        clipBehavior: Clip.antiAlias,
+        child: Padding(
+          padding: const EdgeInsets.all(13),
+          child: Row(
+            children: [
+              CircleAvatar(
+                radius: 27,
+                backgroundColor: const Color(0x2237E3D0),
+                child: Icon(_icon, color: const Color(0xFF62E6D2)),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      venue.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      venue.category.label,
+                      style: const TextStyle(color: Colors.white60),
+                    ),
+                    if (venue.address.isNotEmpty)
+                      Text(
+                        venue.address,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Colors.white54,
+                          fontSize: 11,
+                        ),
+                      ),
+                    if (distanceLabel.isNotEmpty)
+                      Text(
+                        distanceLabel,
+                        style: const TextStyle(
+                          color: Color(0xFF62E6D2),
+                          fontWeight: FontWeight.w900,
+                          fontSize: 12,
+                        ),
+                      ),
+                    TextButton.icon(
+                      onPressed: onToggleRoute,
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 2),
+                        visualDensity: VisualDensity.compact,
+                      ),
+                      icon: Icon(
+                        inRoute
+                            ? Icons.check_circle_rounded
+                            : Icons.add_location_alt_outlined,
+                        size: 18,
+                      ),
+                      label: Text(inRoute ? 'Rotada' : 'Rotaya Ekle'),
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                onPressed: onClose,
+                icon: const Icon(Icons.close, color: Colors.white54),
+              ),
+            ],
           ),
         ),
       );

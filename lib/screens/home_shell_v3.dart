@@ -514,42 +514,61 @@ class _NearbyUnifiedHubState extends State<_NearbyUnifiedHub> {
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(14, 10, 8, 7),
-              child: Row(
+              padding: const EdgeInsets.fromLTRB(14, 10, 14, 7),
+              child: Column(
                 children: [
-                  const _GradientIcon(icon: Icons.near_me_rounded, size: 23),
-                  const SizedBox(width: 9),
-                  const Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Çevrende',
-                          style: TextStyle(
-                            fontSize: 23,
-                            fontWeight: FontWeight.w900,
-                          ),
-                        ),
-                        Text(
-                          'Yakındaki planlar ve etkinlikler tek akışta.',
-                          style: TextStyle(color: Colors.white54, fontSize: 11.5),
-                        ),
-                      ],
-                    ),
-                  ),
-                  FilledButton.icon(
-                    onPressed: _createEvent,
-                    style: FilledButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 13,
-                        vertical: 11,
+                  Row(
+                    children: [
+                      const _GradientIcon(
+                        icon: Icons.near_me_rounded,
+                        size: 23,
                       ),
-                      visualDensity: VisualDensity.compact,
-                    ),
-                    icon: const Icon(Icons.add_rounded, size: 19),
-                    label: const Text(
-                      'Etkinlik oluştur',
-                      style: TextStyle(fontWeight: FontWeight.w900),
+                      const SizedBox(width: 9),
+                      const Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Çevrende',
+                              style: TextStyle(
+                                fontSize: 23,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                            Text(
+                              'Yakındaki planlar ve etkinlikler tek akışta.',
+                              style: TextStyle(
+                                color: Colors.white54,
+                                fontSize: 11.5,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: FilledButton.icon(
+                      onPressed: _createEvent,
+                      style: FilledButton.styleFrom(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      icon: const Icon(
+                        Icons.add_circle_outline_rounded,
+                        size: 21,
+                      ),
+                      label: const Text(
+                        'Etkinlik oluştur',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w900,
+                          fontSize: 15,
+                        ),
+                      ),
                     ),
                   ),
                 ],

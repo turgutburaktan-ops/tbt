@@ -1070,11 +1070,8 @@ class _NearbyVenueMapScreen extends StatelessWidget {
       body: GoogleMap(
         initialCameraPosition: CameraPosition(
           target: LatLng(position.latitude, position.longitude),
-          zoom: 16.5,
-          tilt: 45,
+          zoom: 13,
         ),
-        mapType: MapType.normal,
-        buildingsEnabled: true,
         markers: markers,
         myLocationEnabled: true,
         myLocationButtonEnabled: true,
