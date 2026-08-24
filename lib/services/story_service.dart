@@ -19,6 +19,34 @@ class StoryService {
   final _firestore = FirebaseFirestore.instance;
   final _storage = FirebaseStorage.instance;
 
+  DateTime? _lastStoryCreateAt;
+  final Map<String, DateTime> _lastInteractionAt = <String, DateTime>{};
+
+  void _enforceStoryCreateCooldown() {
+    final now = DateTime.now();
+    final previous = _lastStoryCreateAt;
+    if (previous != null && now.difference(previous) < const Duration(seconds: 3)) {
+      throw Exception('Çok hızlı story paylaşımı yapıyorsun. Birkaç saniye bekle.');
+    }
+    _lastStoryCreateAt = now;
+  }
+
+  void _enforceInteractionCooldown(String storyId, String action) {
+    final now = DateTime.now();
+    final key = '$storyId:$action';
+    final previous = _lastInteractionAt[key];
+    if (previous != null && now.difference(previous) < const Duration(milliseconds: 700)) {
+      throw Exception('Çok hızlı işlem yapıyorsun. Lütfen tekrar dene.');
+    }
+    _lastInteractionAt[key] = now;
+  }
+
+  void _ensureActiveStory(AppStory story) {
+    if (!story.isActive) {
+      throw Exception('Bu story artık aktif değil.');
+    }
+  }
+
   Stream<List<AppStory>> watchActive() {
     return _firestore
         .collection('stories')
@@ -60,11 +88,12 @@ class StoryService {
   Future<void> createStory(File image) async {
     final user = _auth.currentUser;
     if (user == null) throw Exception('Story paylaşmak için giriş yapmalısın.');
+    _enforceStoryCreateCooldown();
     if (!await image.exists() || await image.length() == 0) {
       throw Exception('Paylaşılacak fotoğraf bulunamadı.');
     }
-    if (await image.length() > 40 * 1024 * 1024) {
-      throw Exception('Fotoğraf 40 MB sınırını aşıyor.');
+    if (await image.length() > 15 * 1024 * 1024) {
+      throw Exception('Fotoğraf 15 MB sınırını aşıyor.');
     }
 
     final storyRef = _firestore.collection('stories').doc();
@@ -96,6 +125,7 @@ class StoryService {
   Future<void> createVideoStory(File sourceVideo) async {
     final user = _auth.currentUser;
     if (user == null) throw Exception('Story paylaşmak için giriş yapmalısın.');
+    _enforceStoryCreateCooldown();
 
     final prepared = await VideoMediaService.instance.prepare(
       sourceVideo,
@@ -167,7 +197,7 @@ class StoryService {
 
   Future<void> recordView(AppStory story) async {
     final user = _auth.currentUser;
-    if (user == null || user.uid == story.userId) return;
+    if (user == null || user.uid == story.userId || !story.isActive) return;
     await _interactionRef(story.id, user.uid).set({
       ..._actorData(user),
       'viewedAt': FieldValue.serverTimestamp(),
@@ -213,6 +243,8 @@ class StoryService {
     final user = _auth.currentUser;
     if (user == null) throw Exception('Story beğenmek için giriş yapmalısın.');
     if (user.uid == story.userId) return;
+    _ensureActiveStory(story);
+    _enforceInteractionCooldown(story.id, 'like');
     await _interactionRef(story.id, user.uid).set({
       ..._actorData(user),
       'liked': liked,
@@ -237,6 +269,8 @@ class StoryService {
     final user = _auth.currentUser;
     if (user == null) throw Exception('Tepki göndermek için giriş yapmalısın.');
     if (user.uid == story.userId) return;
+    _ensureActiveStory(story);
+    _enforceInteractionCooldown(story.id, 'reaction');
     final clean = emoji.trim();
     if (clean.isEmpty || clean.length > 8) return;
     await _interactionRef(story.id, user.uid).set({
@@ -261,6 +295,8 @@ class StoryService {
     final user = _auth.currentUser;
     if (user == null) throw Exception('Mesaj göndermek için giriş yapmalısın.');
     if (user.uid == story.userId) return;
+    _ensureActiveStory(story);
+    _enforceInteractionCooldown(story.id, 'reply');
     final clean = text.trim();
     if (clean.isEmpty) return;
     if (clean.length > 500) {
