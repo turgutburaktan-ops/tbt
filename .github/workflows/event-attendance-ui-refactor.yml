@@ -1,82 +1,44 @@
-name: Event Attendance UI Refactor
+name: Event Attendance UI Refactor (manual check)
 
 on:
-  push:
-    branches: [feature/video-v1]
+  workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  apply-refactor:
-    if: github.actor != 'github-actions[bot]'
+  verify-current-ui:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           ref: feature/video-v1
-      - name: Apply event attendance UI refactor
+      - name: Verify current event attendance UI
         shell: bash
         run: |
+          set -euo pipefail
           python3 - <<'PY'
           from pathlib import Path
 
-          def rep(s, old, new, label):
-              if old not in s:
-                  raise SystemExit(f'Missing target: {label}')
-              return s.replace(old, new, 1)
+          screen = Path('lib/screens/social_events_screen.dart').read_text()
+          service = Path('lib/services/social_event_service.dart').read_text()
 
-          p = Path('lib/screens/social_events_screen.dart')
-          s = p.read_text()
-          s = rep(s,
-              "import '../services/social_event_service.dart';\n",
-              "import '../services/social_event_service.dart';\nimport '../theme/app_theme.dart';\nimport '../widgets/event_attendance_actions.dart';\n",
-              'imports')
-          s = rep(s,
-              "          FilledButton.icon(onPressed: _openCreate, icon: const Icon(Icons.add, size: 19), label: const Text('Oluştur')),\n",
-              "          Container(\n            decoration: BoxDecoration(\n              gradient: AppColors.accentGradient,\n              borderRadius: BorderRadius.circular(13),\n              boxShadow: [BoxShadow(color: AppColors.cyan.withValues(alpha: .16), blurRadius: 14)],\n            ),\n            child: FilledButton.icon(\n              style: FilledButton.styleFrom(\n                backgroundColor: Colors.transparent,\n                shadowColor: Colors.transparent,\n                foregroundColor: const Color(0xFF08090D),\n              ),\n              onPressed: _openCreate,\n              icon: const Icon(Icons.add_rounded, size: 20),\n              label: const Text('Etkinlik Oluştur', style: TextStyle(fontWeight: FontWeight.w900)),\n            ),\n          ),\n",
-              'create CTA')
-          s = rep(s,
-              "            if (events.isEmpty) return const Center(child: Text('Yaklaşan etkinlik yok.'));\n",
-              "            if (events.isEmpty) {\n              return Center(\n                child: Padding(\n                  padding: const EdgeInsets.all(28),\n                  child: Container(\n                    width: double.infinity,\n                    padding: const EdgeInsets.all(22),\n                    decoration: BoxDecoration(\n                      color: AppColors.surface,\n                      borderRadius: BorderRadius.circular(20),\n                      border: Border.all(color: AppColors.border),\n                    ),\n                    child: Column(\n                      mainAxisSize: MainAxisSize.min,\n                      children: [\n                        Container(\n                          width: 58,\n                          height: 58,\n                          decoration: BoxDecoration(gradient: AppColors.accentGradient, borderRadius: BorderRadius.circular(18)),\n                          child: const Icon(Icons.celebration_rounded, color: Color(0xFF08090D), size: 30),\n                        ),\n                        const SizedBox(height: 14),\n                        const Text('Yakınında henüz etkinlik yok', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),\n                        const SizedBox(height: 6),\n                        const Text('Fotoğraf yürüyüşü, kahve buluşması, gezi veya başka bir etkinlik başlat.', textAlign: TextAlign.center, style: TextStyle(color: Colors.white60, height: 1.4)),\n                        const SizedBox(height: 16),\n                        SizedBox(\n                          width: double.infinity,\n                          child: FilledButton.icon(\n                            onPressed: _openCreate,\n                            icon: const Icon(Icons.add_rounded),\n                            label: const Text('İlk Etkinliği Oluştur'),\n                          ),\n                        ),\n                      ],\n                    ),\n                  ),\n                ),\n              );\n            }\n",
-              'empty state')
-          s = rep(s,
-              "                final joined = uid != null && event.participantIds.contains(uid);\n",
-              "                final joined = uid != null && event.isAttending(uid);\n",
-              'joined state')
-          s = rep(s,
-              "                        Text('${event.participantCount}/${event.capacity}', style: const TextStyle(fontWeight: FontWeight.w800)),\n",
-              "                        Column(\n                          crossAxisAlignment: CrossAxisAlignment.end,\n                          children: [\n                            Text('${event.participantCount}/${event.capacity}', style: const TextStyle(fontWeight: FontWeight.w900)),\n                            if (event.interestedCount > 0) Text('${event.interestedCount} ilgili', style: const TextStyle(color: AppColors.cyan, fontSize: 10.5, fontWeight: FontWeight.w700)),\n                          ],\n                        ),\n",
-              'attendance counts')
-          s = rep(s,
-              "                        FilledButton(\n                          onPressed: event.isFull && !joined && !isHost ? null : () => _toggleJoin(event),\n                          child: Text(isHost ? 'İptal Et' : joined ? 'Ayrıl' : event.isFull ? 'Dolu' : event.isPaid ? 'Bilet Al' : 'Katıl'),\n                        ),\n",
-              "                        if (isHost)\n                          FilledButton.tonal(\n                            onPressed: () => _toggleJoin(event),\n                            child: const Text('İptal Et'),\n                          )\n                        else\n                          EventAttendanceActions(event: event, onMessage: _showMessage),\n",
-              'attendance CTA')
-          p.write_text(s)
+          required_screen = [
+              "Future<void> _openCreate() async",
+              "Etkinlik Oluştur",
+              "Future<void> _showAttendanceChoices(SocialEvent event) async",
+              "EventAttendanceChoice.attending",
+              "EventAttendanceChoice.interested",
+              "EventAttendanceChoice.hidden",
+          ]
+          required_service = [
+              "participantIds",
+          ]
 
-          p = Path('lib/services/social_event_service.dart')
-          s = p.read_text()
-          s = rep(s,
-              "      'participantIds': [user.uid],\n",
-              "      'participantIds': [user.uid],\n      'hiddenParticipantIds': <String>[],\n      'interestedIds': <String>[],\n",
-              'new event attendance arrays')
-          s = rep(s,
-              "      final participants = (data['participantIds'] as List? ?? const []).map((item) => item.toString()).toList();\n      final title = (data['title'] ?? 'Etkinlik').toString();\n",
-              "      final participants = (data['participantIds'] as List? ?? const []).map((item) => item.toString()).toList();\n      final hiddenParticipants = (data['hiddenParticipantIds'] as List? ?? const []).map((item) => item.toString()).toList();\n      final title = (data['title'] ?? 'Etkinlik').toString();\n",
-              'hidden participants capacity read')
-          s = rep(s,
-              "        if (participants.length >= capacity) throw Exception('Bu etkinlikte boş yer kalmadı.');\n",
-              "        if (participants.length + hiddenParticipants.length >= capacity) throw Exception('Bu etkinlikte boş yer kalmadı.');\n",
-              'capacity total')
-          p.write_text(s)
+          missing = [item for item in required_screen if item not in screen]
+          missing += [item for item in required_service if item not in service]
+          if missing:
+              raise SystemExit('Current event attendance UI is missing: ' + ', '.join(missing))
+
+          print('Current event attendance UI and create flow are present. No legacy refactor is required.')
           PY
-      - name: Format touched Dart files
-        run: dart format lib/screens/social_events_screen.dart lib/services/social_event_service.dart lib/models/social_event.dart lib/services/event_attendance_service.dart lib/widgets/event_attendance_actions.dart
-      - name: Commit changes
-        run: |
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add lib/screens/social_events_screen.dart lib/services/social_event_service.dart lib/models/social_event.dart lib/services/event_attendance_service.dart lib/widgets/event_attendance_actions.dart
-          if git diff --cached --quiet; then exit 0; fi
-          git commit -m 'Add richer event attendance choices and prominent CTAs'
-          git push origin feature/video-v1
