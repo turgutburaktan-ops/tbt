@@ -35,17 +35,19 @@ class _AccountSecurityGateState extends State<AccountSecurityGate> {
   @override
   void didUpdateWidget(covariant AccountSecurityGate oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.profile?['phoneVerified'] != widget.profile?['phoneVerified']) {
+    if (oldWidget.profile?['phoneVerified'] !=
+        widget.profile?['phoneVerified']) {
       _evaluate();
     }
   }
 
   Future<void> _evaluate() async {
     if (!_phoneVerified) {
-      if (mounted) setState(() {
-        _checking = false;
-        _unlocked = false;
-      });
+      if (mounted)
+        setState(() {
+          _checking = false;
+          _unlocked = false;
+        });
       return;
     }
     final available = await BiometricAuthService.instance.canUseBiometrics();
@@ -97,9 +99,16 @@ class _AccountSecurityGateState extends State<AccountSecurityGate> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.fingerprint_rounded, size: 72, color: AppColors.violetBright),
+                  const Icon(
+                    Icons.fingerprint_rounded,
+                    size: 72,
+                    color: AppColors.violetBright,
+                  ),
                   const SizedBox(height: 18),
-                  const Text('TBT kilitli', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w900)),
+                  const Text(
+                    'TBT kilitli',
+                    style: TextStyle(fontSize: 26, fontWeight: FontWeight.w900),
+                  ),
                   const SizedBox(height: 8),
                   const Text(
                     'Hesabını açmak için parmak izi veya cihaz biyometrisini kullan.',
@@ -142,13 +151,22 @@ class _AccountSecurityGateState extends State<AccountSecurityGate> {
                     borderRadius: BorderRadius.circular(18),
                     onTap: _enableBiometric,
                     child: const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 7,
+                      ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(Icons.fingerprint_rounded, size: 17),
                           SizedBox(width: 5),
-                          Text('Biyometriyi aç', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800)),
+                          Text(
+                            'Biyometriyi aç',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -169,7 +187,8 @@ class PhoneSecuritySetupScreen extends StatefulWidget {
   const PhoneSecuritySetupScreen({super.key});
 
   @override
-  State<PhoneSecuritySetupScreen> createState() => _PhoneSecuritySetupScreenState();
+  State<PhoneSecuritySetupScreen> createState() =>
+      _PhoneSecuritySetupScreenState();
 }
 
 class _PhoneSecuritySetupScreenState extends State<PhoneSecuritySetupScreen> {
@@ -189,7 +208,9 @@ class _PhoneSecuritySetupScreenState extends State<PhoneSecuritySetupScreen> {
   Future<void> _sendCode() async {
     final phone = _phone.text.replaceAll(' ', '').trim();
     if (!phone.startsWith('+') || phone.length < 10) {
-      setState(() => _error = 'Telefon numarasını ülke koduyla gir. Örn: +905...');
+      setState(
+        () => _error = 'Telefon numarasını ülke koduyla gir. Örn: +905...',
+      );
       return;
     }
     setState(() {
@@ -228,10 +249,11 @@ class _PhoneSecuritySetupScreenState extends State<PhoneSecuritySetupScreen> {
         },
       );
     } catch (e) {
-      if (mounted) setState(() {
-        _busy = false;
-        _error = 'Kod gönderilemedi: $e';
-      });
+      if (mounted)
+        setState(() {
+          _busy = false;
+          _error = 'Kod gönderilemedi: $e';
+        });
     }
   }
 
@@ -239,11 +261,20 @@ class _PhoneSecuritySetupScreenState extends State<PhoneSecuritySetupScreen> {
     final id = _verificationId;
     final sms = _code.text.trim();
     if (id == null || sms.length < 4) return;
-    final credential = PhoneAuthProvider.credential(verificationId: id, smsCode: sms);
-    await _finishVerification(credential, _phone.text.replaceAll(' ', '').trim());
+    final credential = PhoneAuthProvider.credential(
+      verificationId: id,
+      smsCode: sms,
+    );
+    await _finishVerification(
+      credential,
+      _phone.text.replaceAll(' ', '').trim(),
+    );
   }
 
-  Future<void> _finishVerification(PhoneAuthCredential credential, String phone) async {
+  Future<void> _finishVerification(
+    PhoneAuthCredential credential,
+    String phone,
+  ) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
     setState(() {
@@ -251,7 +282,9 @@ class _PhoneSecuritySetupScreenState extends State<PhoneSecuritySetupScreen> {
       _error = null;
     });
     try {
-      final alreadyLinked = user.providerData.any((p) => p.providerId == PhoneAuthProvider.PROVIDER_ID);
+      final alreadyLinked = user.providerData.any(
+        (p) => p.providerId == PhoneAuthProvider.PROVIDER_ID,
+      );
       if (!alreadyLinked) {
         await user.linkWithCredential(credential);
       } else {
@@ -285,16 +318,27 @@ class _PhoneSecuritySetupScreenState extends State<PhoneSecuritySetupScreen> {
         title: const Text('Hesap güvenliği'),
         automaticallyImplyLeading: false,
         actions: [
-          TextButton(onPressed: _busy ? null : () => FirebaseAuth.instance.signOut(), child: const Text('Çıkış')),
+          TextButton(
+            onPressed: _busy ? null : () => FirebaseAuth.instance.signOut(),
+            child: const Text('Çıkış'),
+          ),
         ],
       ),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(22),
           children: [
-            const Icon(Icons.verified_user_outlined, size: 68, color: AppColors.violetBright),
+            const Icon(
+              Icons.verified_user_outlined,
+              size: 68,
+              color: AppColors.violetBright,
+            ),
             const SizedBox(height: 18),
-            const Text('İki adımlı doğrulama', textAlign: TextAlign.center, style: TextStyle(fontSize: 25, fontWeight: FontWeight.w900)),
+            const Text(
+              'İki adımlı doğrulama',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 25, fontWeight: FontWeight.w900),
+            ),
             const SizedBox(height: 8),
             const Text(
               'Hesabını korumak için telefon numaranı bir kez SMS koduyla doğrula. Sonraki açılışlarda cihaz destekliyorsa parmak izi kullanabilirsin.',
@@ -306,7 +350,10 @@ class _PhoneSecuritySetupScreenState extends State<PhoneSecuritySetupScreen> {
               controller: _phone,
               enabled: !codeSent && !_busy,
               keyboardType: TextInputType.phone,
-              decoration: const InputDecoration(labelText: 'Telefon numarası', prefixIcon: Icon(Icons.phone_outlined)),
+              decoration: const InputDecoration(
+                labelText: 'Telefon numarası',
+                prefixIcon: Icon(Icons.phone_outlined),
+              ),
             ),
             if (codeSent) ...[
               const SizedBox(height: 12),
@@ -314,7 +361,10 @@ class _PhoneSecuritySetupScreenState extends State<PhoneSecuritySetupScreen> {
                 controller: _code,
                 enabled: !_busy,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'SMS doğrulama kodu', prefixIcon: Icon(Icons.sms_outlined)),
+                decoration: const InputDecoration(
+                  labelText: 'SMS doğrulama kodu',
+                  prefixIcon: Icon(Icons.sms_outlined),
+                ),
               ),
             ],
             if (_error != null) ...[
@@ -325,8 +375,14 @@ class _PhoneSecuritySetupScreenState extends State<PhoneSecuritySetupScreen> {
             FilledButton.icon(
               onPressed: _busy ? null : (codeSent ? _confirmCode : _sendCode),
               icon: _busy
-                  ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                  : Icon(codeSent ? Icons.verified_outlined : Icons.sms_outlined),
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Icon(
+                      codeSent ? Icons.verified_outlined : Icons.sms_outlined,
+                    ),
               label: Text(codeSent ? 'Kodu doğrula' : 'Kod gönder'),
             ),
             if (codeSent)
@@ -334,10 +390,10 @@ class _PhoneSecuritySetupScreenState extends State<PhoneSecuritySetupScreen> {
                 onPressed: _busy
                     ? null
                     : () => setState(() {
-                          _verificationId = null;
-                          _code.clear();
-                          _error = null;
-                        }),
+                        _verificationId = null;
+                        _code.clear();
+                        _error = null;
+                      }),
                 child: const Text('Telefon numarasını değiştir'),
               ),
           ],
