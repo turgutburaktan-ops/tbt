@@ -46,12 +46,14 @@ jobs:
             lib/screens/admin_portal_screen.dart \
             lib/screens/social_events_screen.dart \
             lib/screens/event_photo_create_screen.dart \
-            lib/screens/selected_route_map_screen.dart
+            lib/screens/selected_route_map_screen.dart \
+            lib/screens/account_security_gate.dart \
+            lib/services/biometric_auth_service.dart
           if ! git diff --quiet; then
             git config user.name 'tbt-build-bot'
             git config user.email 'actions@users.noreply.github.com'
             git add lib pubspec.yaml
-            git commit -m 'fix: apply final nearby campus profile stats and map polish'
+            git commit -m 'fix: apply requested product and security polish'
             git push origin HEAD:feature/video-v1
           fi
       - name: Resolve build commit
@@ -128,7 +130,10 @@ jobs:
           text = text.replace('com.tbt.best_photo_spot', 'com.tbt.social')
           gradle.write_text(text)
           for activity in Path('android/app/src/main/kotlin').rglob('MainActivity.kt'):
-              activity.write_text(activity.read_text().replace('package com.tbt.best_photo_spot', 'package com.tbt.social'))
+              source = activity.read_text().replace('package com.tbt.best_photo_spot', 'package com.tbt.social')
+              source = source.replace('import io.flutter.embedding.android.FlutterActivity', 'import io.flutter.embedding.android.FlutterFragmentActivity')
+              source = source.replace('FlutterActivity()', 'FlutterFragmentActivity()')
+              activity.write_text(source)
           PY
           if grep -q '\${MAPS_API_KEY}' android/app/src/main/AndroidManifest.xml; then
             if [ -z "${MAPS_API_KEY:-}" ]; then
@@ -144,6 +149,7 @@ jobs:
           fi
           grep -q 'applicationId = "com.tbt.social"' android/app/build.gradle.kts
           grep -q 'namespace = "com.tbt.social"' android/app/build.gradle.kts
+          grep -R -q 'FlutterFragmentActivity' android/app/src/main/kotlin
       - name: Android APK Build
         run: flutter build apk --debug --no-pub
       - name: Verify Android APK
@@ -191,8 +197,14 @@ jobs:
           else:
               s = "platform :ios, '15.0'\n" + s
           p.write_text(s)
+          plist = Path('ios/Runner/Info.plist')
+          t = plist.read_text()
+          if 'NSFaceIDUsageDescription' not in t:
+              t = t.replace('</dict>', '\t<key>NSFaceIDUsageDescription</key>\n\t<string>TBT hesabını güvenli şekilde açmak için Face ID kullanılır.</string>\n</dict>')
+              plist.write_text(t)
           PY
           grep -q "platform :ios, '15.0'" ios/Podfile
+          grep -q 'NSFaceIDUsageDescription' ios/Runner/Info.plist
           rm -rf ios/Pods ios/Podfile.lock
       - name: iOS Build
         run: >-
