@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 
 import 'firebase_options.dart';
 import 'screens/admin_business_premium_screen.dart';
+import 'screens/admin_business_preview_screen.dart';
 import 'screens/admin_dashboard_screen.dart';
 import 'screens/admin_insights_screen.dart';
 import 'screens/admin_operations_screen.dart';
@@ -31,43 +32,29 @@ import 'theme/app_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
   FlutterError.onError = (details) {
     FlutterError.presentError(details);
     if (kDebugMode) debugPrint('Flutter error: ${details.exceptionAsString()}');
     if (Firebase.apps.isNotEmpty) {
-      unawaited(AppObservabilityService.instance.recordError(
-        details.exception,
-        details.stack ?? StackTrace.current,
-        context: 'flutter_error',
-      ));
+      unawaited(AppObservabilityService.instance.recordError(details.exception, details.stack ?? StackTrace.current, context: 'flutter_error'));
     }
   };
-
   PlatformDispatcher.instance.onError = (error, stack) {
     if (kDebugMode) {
       debugPrint('Unhandled platform error: $error');
       debugPrintStack(stackTrace: stack);
     }
-    if (Firebase.apps.isNotEmpty) {
-      unawaited(AppObservabilityService.instance.recordError(error, stack, context: 'platform_error'));
-    }
+    if (Firebase.apps.isNotEmpty) unawaited(AppObservabilityService.instance.recordError(error, stack, context: 'platform_error'));
     return true;
   };
-
   await runZonedGuarded(() async {
     Object? bootstrapError;
     try {
-      await Firebase.initializeApp(options: AppFirebaseOptions.currentPlatform)
-          .timeout(const Duration(seconds: 15));
+      await Firebase.initializeApp(options: AppFirebaseOptions.currentPlatform).timeout(const Duration(seconds: 15));
       try {
         await FirebaseAppCheck.instance.activate(
-          providerAndroid: kDebugMode
-              ? const AndroidDebugProvider()
-              : const AndroidPlayIntegrityProvider(),
-          providerApple: kDebugMode
-              ? const AppleDebugProvider()
-              : const AppleAppAttestWithDeviceCheckFallbackProvider(),
+          providerAndroid: kDebugMode ? const AndroidDebugProvider() : const AndroidPlayIntegrityProvider(),
+          providerApple: kDebugMode ? const AppleDebugProvider() : const AppleAppAttestWithDeviceCheckFallbackProvider(),
         );
       } catch (error, stackTrace) {
         if (kDebugMode) {
@@ -84,65 +71,41 @@ Future<void> main() async {
         debugPrintStack(stackTrace: stackTrace);
       }
     }
-
-    runApp(
-      bootstrapError == null
-          ? const BestPhotoSpotApp()
-          : BootstrapFailureApp(debugError: kDebugMode ? bootstrapError.toString() : null),
-    );
+    runApp(bootstrapError == null ? const BestPhotoSpotApp() : BootstrapFailureApp(debugError: kDebugMode ? bootstrapError.toString() : null));
   }, (error, stack) {
     if (kDebugMode) {
       debugPrint('Uncaught zone error: $error');
       debugPrintStack(stackTrace: stack);
     }
-    if (Firebase.apps.isNotEmpty) {
-      unawaited(AppObservabilityService.instance.recordError(error, stack, context: 'zone_error'));
-    }
+    if (Firebase.apps.isNotEmpty) unawaited(AppObservabilityService.instance.recordError(error, stack, context: 'zone_error'));
   });
 }
 
 class BootstrapFailureApp extends StatelessWidget {
   final String? debugError;
   const BootstrapFailureApp({super.key, this.debugError});
-
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.dark,
-      home: Scaffold(
-        backgroundColor: const Color(0xFF090A0C),
-        body: SafeArea(
-          child: Center(
-            child: Padding(
-              padding: const EdgeInsets.all(28),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.error_outline_rounded, size: 54, color: Colors.white70),
-                  const SizedBox(height: 18),
-                  const Text('Uygulama başlatılamadı', textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900)),
-                  const SizedBox(height: 10),
-                  const Text(
-                    'Başlangıç bağlantısı kurulamadı. İnternet bağlantını kontrol edip uygulamayı yeniden aç.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.white60, height: 1.4),
-                  ),
-                  if (debugError != null) ...[
-                    const SizedBox(height: 16),
-                    Text(debugError!, maxLines: 5, overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(color: Colors.white38, fontSize: 11)),
-                  ],
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => MaterialApp(
+    debugShowCheckedModeBanner: false,
+    theme: AppTheme.dark,
+    home: Scaffold(
+      backgroundColor: const Color(0xFF090A0C),
+      body: SafeArea(child: Center(child: Padding(
+        padding: const EdgeInsets.all(28),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          const Icon(Icons.error_outline_rounded, size: 54, color: Colors.white70),
+          const SizedBox(height: 18),
+          const Text('Uygulama başlatılamadı', textAlign: TextAlign.center, style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900)),
+          const SizedBox(height: 10),
+          const Text('Başlangıç bağlantısı kurulamadı. İnternet bağlantını kontrol edip uygulamayı yeniden aç.', textAlign: TextAlign.center, style: TextStyle(color: Colors.white60, height: 1.4)),
+          if (debugError != null) ...[
+            const SizedBox(height: 16),
+            Text(debugError!, maxLines: 5, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white38, fontSize: 11)),
+          ],
+        ]),
+      ))),
+    ),
+  );
 }
 
 class BestPhotoSpotApp extends StatefulWidget {
@@ -153,7 +116,6 @@ class BestPhotoSpotApp extends StatefulWidget {
 
 class _BestPhotoSpotAppState extends State<BestPhotoSpotApp> {
   final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
-
   @override
   void initState() {
     super.initState();
@@ -163,51 +125,45 @@ class _BestPhotoSpotAppState extends State<BestPhotoSpotApp> {
       AppObservabilityService.instance.logEvent('app_open');
     });
   }
-
   @override
   void dispose() {
     DeepLinkService.instance.dispose();
     PushNotificationService.instance.dispose();
     super.dispose();
   }
-
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      navigatorKey: _navigatorKey,
-      debugShowCheckedModeBanner: false,
-      title: 'En İyi Çekim Noktası',
-      theme: AppTheme.dark,
-      builder: (context, child) {
-        final media = MediaQuery.of(context);
-        final currentScale = media.textScaler.scale(1.0);
-        final clampedScale = currentScale.clamp(0.90, 1.25).toDouble();
-        return MediaQuery(
-          data: media.copyWith(textScaler: TextScaler.linear(clampedScale)),
-          child: child ?? const SizedBox.shrink(),
-        );
-      },
-      routes: {
-        '/messages': (_) => const ChatInboxScreen(),
-        '/notifications': (_) => const NotificationsScreen(),
-        '/rewards': (_) => const RewardsHubScreen(),
-        '/business': (_) => const BusinessHubScreen(),
-        '/admin': (_) => const AdminPortalScreen(),
-        '/admin-dashboard': (_) => const AdminDashboardScreen(),
-        '/admin-users': (_) => const AdminUsersScreen(),
-        '/admin-businesses': (_) => const AdminBusinessesScreen(),
-        '/admin-business-premium': (_) => const AdminBusinessPremiumScreen(),
-        '/admin-growth': (_) => const AdminGrowthScreen(),
-        '/admin-preview': (_) => const AdminRolePreviewScreen(),
-        '/admin-insights': (_) => const AdminInsightsScreen(),
-        '/moderation': (_) => const ModerationCenterScreen(),
-        '/safety-privacy': (_) => const SafetyPrivacyCenterScreen(),
-        '/search': (_) => const GlobalSearchScreen(),
-        '/campus': (_) => const CampusHomeScreen(),
-        '/campus-profile': (_) => const CampusProfileScreen(),
-        '/communities': (_) => const CommunitiesScreen(),
-      },
-      home: const AppEntryGate(),
-    );
-  }
+  Widget build(BuildContext context) => MaterialApp(
+    navigatorKey: _navigatorKey,
+    debugShowCheckedModeBanner: false,
+    title: 'En İyi Çekim Noktası',
+    theme: AppTheme.dark,
+    builder: (context, child) {
+      final media = MediaQuery.of(context);
+      final currentScale = media.textScaler.scale(1.0);
+      final clampedScale = currentScale.clamp(0.90, 1.25).toDouble();
+      return MediaQuery(data: media.copyWith(textScaler: TextScaler.linear(clampedScale)), child: child ?? const SizedBox.shrink());
+    },
+    routes: {
+      '/messages': (_) => const ChatInboxScreen(),
+      '/notifications': (_) => const NotificationsScreen(),
+      '/rewards': (_) => const RewardsHubScreen(),
+      '/business': (_) => const BusinessHubScreen(),
+      '/admin': (_) => const AdminPortalScreen(),
+      '/admin-dashboard': (_) => const AdminDashboardScreen(),
+      '/admin-users': (_) => const AdminUsersScreen(),
+      '/admin-businesses': (_) => const AdminBusinessesScreen(),
+      '/admin-business-premium': (_) => const AdminBusinessPremiumScreen(),
+      '/admin-business-preview': (_) => const AdminBusinessPreviewScreen(),
+      '/admin-growth': (_) => const AdminGrowthScreen(),
+      '/admin-preview': (_) => const AdminRolePreviewScreen(),
+      '/admin-insights': (_) => const AdminInsightsScreen(),
+      '/moderation': (_) => const ModerationCenterScreen(),
+      '/safety-privacy': (_) => const SafetyPrivacyCenterScreen(),
+      '/search': (_) => const GlobalSearchScreen(),
+      '/campus': (_) => const CampusHomeScreen(),
+      '/campus-profile': (_) => const CampusProfileScreen(),
+      '/communities': (_) => const CommunitiesScreen(),
+    },
+    home: const AppEntryGate(),
+  );
 }
