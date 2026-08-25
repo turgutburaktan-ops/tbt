@@ -1,8 +1,10 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:http/http.dart' as http;
 
 import 'location_service.dart';
 
@@ -14,13 +16,32 @@ class BusinessService {
   final _storage = FirebaseStorage.instance;
   final _functions = FirebaseFunctions.instanceFor(region: 'europe-west1');
 
+  static final Uri _claimV2Uri = Uri.parse(
+    'https://europe-west1-en-iyi-cekim-noktasi.cloudfunctions.net/submitBusinessClaimV2',
+  );
+
   String venueKey(String category, String venueId) => '$category:$venueId';
 
   Future<User> _authenticatedUser() async {
-    final user = _auth.currentUser;
+    var user = _auth.currentUser;
+    if (user == null) {
+      try {
+        user = await _auth.authStateChanges().firstWhere((value) => value != null).timeout(const Duration(seconds: 4));
+      } catch (_) {}
+    }
     if (user == null) throw Exception('Oturumun sona ermiş. Yeniden giriş yapmalısın.');
-    await user.getIdToken(true);
+    await user.reload();
+    user = _auth.currentUser ?? user;
+    final token = await user.getIdToken(true);
+    if (token == null || token.isEmpty) throw Exception('Firebase oturum anahtarı alınamadı. Yeniden giriş yapmalısın.');
     return user;
+  }
+
+  Future<String> _freshIdToken() async {
+    final user = await _authenticatedUser();
+    final token = await user.getIdToken(true);
+    if (token == null || token.isEmpty) throw Exception('Firebase oturum anahtarı alınamadı.');
+    return token;
   }
 
   Future<Map<String, dynamic>> createBusinessCandidate({
@@ -64,16 +85,69 @@ class BusinessService {
     return Map<String, dynamic>.from(result.data as Map);
   }
 
-  Future<void> submitClaim({required String category, required String venueId, required String venueName, required String businessEmail, required String businessPhone, required String legalName, required String taxOffice, required String taxNumberLast4, required File evidenceImage}) async {
+  Future<void> submitClaim({
+    required String category,
+    required String venueId,
+    required String venueName,
+    required String businessEmail,
+    required String businessPhone,
+    required String legalName,
+    required String taxOffice,
+    required String taxNumberLast4,
+    required File evidenceImage,
+  }) async {
     final user = await _authenticatedUser();
     if (!user.emailVerified) throw Exception('Önce hesabındaki e-posta adresini doğrulamalısın.');
-    if (!await evidenceImage.exists() || await evidenceImage.length() <= 0) throw Exception('Yetki kanıtı fotoğrafı zorunlu.');
-    if (await evidenceImage.length() > 15 * 1024 * 1024) throw Exception('Kanıt görseli 15 MB sınırını aşıyor.');
-    final id = venueKey(category, venueId);
-    final evidenceRef = _storage.ref().child('users/${user.uid}/business_claims/$id/evidence.jpg');
-    await evidenceRef.putFile(evidenceImage, SettableMetadata(contentType: 'image/jpeg'));
-    final evidenceUrl = await evidenceRef.getDownloadURL();
-    await _functions.httpsCallable('submitBusinessClaim').call({'category': category,'venueId': venueId,'venueName': venueName,'businessEmail': businessEmail,'businessPhone': businessPhone,'legalName': legalName,'taxOffice': taxOffice,'taxNumberLast4': taxNumberLast4,'evidenceUrl': evidenceUrl,'evidenceStoragePath': evidenceRef.fullPath});
+    if (!await evidenceImage.exists()) throw Exception('Yetki kanıtı fotoğrafı bulunamadı.');
+
+    final bytes = await evidenceImage.readAsBytes();
+    if (bytes.isEmpty) throw Exception('Yetki kanıtı fotoğrafı boş.');
+    if (bytes.length > 10 * 1024 * 1024) throw Exception('Kanıt görseli 10 MB sınırını aşıyor.');
+
+    final lowerPath = evidenceImage.path.toLowerCase();
+    final contentType = lowerPath.endsWith('.png')
+        ? 'image/png'
+        : lowerPath.endsWith('.webp')
+            ? 'image/webp'
+            : 'image/jpeg';
+
+    final token = await _freshIdToken();
+    final response = await http
+        .post(
+          _claimV2Uri,
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+          body: jsonEncode({
+            'data': {
+              'category': category,
+              'venueId': venueId,
+              'venueName': venueName,
+              'businessEmail': businessEmail,
+              'businessPhone': businessPhone,
+              'legalName': legalName,
+              'taxOffice': taxOffice,
+              'taxNumberLast4': taxNumberLast4,
+              'evidenceContentType': contentType,
+              'evidenceBase64': base64Encode(bytes),
+            }
+          }),
+        )
+        .timeout(const Duration(seconds: 65));
+
+    Map<String, dynamic> decoded = const {};
+    try {
+      decoded = Map<String, dynamic>.from(jsonDecode(response.body) as Map);
+    } catch (_) {}
+    if (response.statusCode < 200 || response.statusCode >= 300 || decoded['error'] != null) {
+      final error = decoded['error'];
+      if (error is Map) {
+        final message = (error['message'] ?? error['status'] ?? '').toString().trim();
+        if (message.isNotEmpty) throw Exception(message);
+      }
+      throw Exception('İşletme doğrulama başvurusu gönderilemedi (${response.statusCode}).');
+    }
   }
 
   Future<void> updateProfile({required String category, required String venueId, required String description, required String phone, required String website, required String openingHours}) async {
