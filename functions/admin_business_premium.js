@@ -24,15 +24,25 @@ exports.adminSetBusinessPremium = onCall({region: 'europe-west1'}, async (reques
   }
 
   if (!enabled) {
+    const data = claim.data() || {};
+    const now = Date.now();
+    const earlyUntil = data.earlyAccessUntil instanceof Timestamp ? data.earlyAccessUntil.toMillis() : 0;
+    const paidActive = data.subscriptionStatus === 'active';
+    const earlyActive = data.earlyAccessStatus === 'active' && earlyUntil > now;
+    const fallbackEntitled = paidActive || earlyActive;
     const clear = {
       adminPremiumStatus: 'inactive',
       adminPremiumUntil: null,
       adminPremiumNote: note,
+      premiumEntitled: fallbackEntitled,
+      premiumReason: paidActive ? 'paid_subscription' : earlyActive ? 'verified_early_business' : 'none',
+      plan: paidActive ? String(data.subscriptionPlan || 'business_pro') : earlyActive ? 'early_business_premium' : 'free',
+      billingRequired: paidActive,
       premiumUpdatedAt: FieldValue.serverTimestamp(),
       premiumUpdatedBy: adminUid,
     };
     await Promise.all([claimRef.set(clear, {merge: true}), venueRef.set(clear, {merge: true})]);
-    return {enabled: false};
+    return {enabled: false, fallbackEntitled};
   }
 
   const until = Timestamp.fromMillis(Date.now() + days * 86400000);
