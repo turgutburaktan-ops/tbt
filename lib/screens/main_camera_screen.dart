@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../theme/app_theme.dart';
+import '../widgets/retention_hub_quick_entry.dart';
 import 'camera_video_post_screen.dart';
 import 'create_post_screen.dart';
 
@@ -109,86 +110,88 @@ class _MainCameraScreenState extends State<MainCameraScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('Kamera')),
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(22),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 520),
-              child: Column(
-                children: [
-                  Container(
-                    width: 78,
-                    height: 78,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: AppColors.accentGradient,
-                      border: Border.all(color: Colors.white12),
+    return RetentionHubQuickEntry(
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        appBar: AppBar(title: const Text('Kamera')),
+        body: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(22),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 520),
+                child: Column(
+                  children: [
+                    Container(
+                      width: 78,
+                      height: 78,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: AppColors.accentGradient,
+                        border: Border.all(color: Colors.white12),
+                      ),
+                      child: const Icon(
+                        Icons.photo_camera_rounded,
+                        size: 36,
+                        color: Colors.white,
+                      ),
                     ),
-                    child: const Icon(
-                      Icons.photo_camera_rounded,
-                      size: 36,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 18),
-                  const Text(
-                    'Ne çekmek istiyorsun?',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900),
-                  ),
-                  const SizedBox(height: 6),
-                  const Text(
-                    'Fotoğraf çek veya 1 dakikaya kadar video/Reels oluştur.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.white60, height: 1.4),
-                  ),
-                  if (_error != null) ...[
-                    const SizedBox(height: 14),
-                    Text(
-                      _error!,
+                    const SizedBox(height: 18),
+                    const Text(
+                      'Ne çekmek istiyorsun?',
                       textAlign: TextAlign.center,
-                      style: const TextStyle(color: Colors.redAccent),
+                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900),
                     ),
+                    const SizedBox(height: 6),
+                    const Text(
+                      'Fotoğraf çek veya 1 dakikaya kadar video/Reels oluştur.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.white60, height: 1.4),
+                    ),
+                    if (_error != null) ...[
+                      const SizedBox(height: 14),
+                      Text(
+                        _error!,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(color: Colors.redAccent),
+                      ),
+                    ],
+                    const SizedBox(height: 24),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 54,
+                      child: FilledButton.icon(
+                        onPressed: _busy ? null : () => _photo(ImageSource.camera),
+                        icon: const Icon(Icons.camera_alt_outlined),
+                        label: const Text('Fotoğraf Çek'),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 54,
+                      child: FilledButton.icon(
+                        onPressed: _busy ? null : () => _video(ImageSource.camera),
+                        icon: const Icon(Icons.videocam_outlined),
+                        label: const Text('Video / Reels Çek • 1 dk'),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 52,
+                      child: OutlinedButton.icon(
+                        onPressed: _busy ? null : _gallery,
+                        icon: const Icon(Icons.photo_library_outlined),
+                        label: const Text('Galeriden Seç'),
+                      ),
+                    ),
+                    if (_busy) ...[
+                      const SizedBox(height: 20),
+                      const CircularProgressIndicator(),
+                    ],
                   ],
-                  const SizedBox(height: 24),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 54,
-                    child: FilledButton.icon(
-                      onPressed: _busy ? null : () => _photo(ImageSource.camera),
-                      icon: const Icon(Icons.camera_alt_outlined),
-                      label: const Text('Fotoğraf Çek'),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 54,
-                    child: FilledButton.icon(
-                      onPressed: _busy ? null : () => _video(ImageSource.camera),
-                      icon: const Icon(Icons.videocam_outlined),
-                      label: const Text('Video / Reels Çek • 1 dk'),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 52,
-                    child: OutlinedButton.icon(
-                      onPressed: _busy ? null : _gallery,
-                      icon: const Icon(Icons.photo_library_outlined),
-                      label: const Text('Galeriden Seç'),
-                    ),
-                  ),
-                  if (_busy) ...[
-                    const SizedBox(height: 20),
-                    const CircularProgressIndicator(),
-                  ],
-                ],
+                ),
               ),
             ),
           ),
