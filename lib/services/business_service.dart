@@ -4,6 +4,8 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 
+import 'location_service.dart';
+
 class BusinessService {
   BusinessService._();
   static final instance = BusinessService._();
@@ -25,18 +27,20 @@ class BusinessService {
     required String category,
     required String venueName,
     required String address,
-    required double latitude,
-    required double longitude,
     String city = '',
   }) async {
     await _authenticatedUser();
+    final position = await LocationService.getCurrentPosition();
+    if (position == null) {
+      throw Exception('İşletme konumu alınamadı. Konum servislerini açıp işletmedeyken tekrar dene.');
+    }
     final result = await _functions.httpsCallable('createBusinessCandidate').call({
       'category': category,
       'venueName': venueName,
       'address': address,
       'city': city,
-      'latitude': latitude,
-      'longitude': longitude,
+      'latitude': position.latitude,
+      'longitude': position.longitude,
     });
     return Map<String, dynamic>.from(result.data as Map);
   }
