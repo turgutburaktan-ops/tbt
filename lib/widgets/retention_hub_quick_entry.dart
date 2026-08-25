@@ -11,31 +11,38 @@ class RetentionHubQuickEntry extends StatelessWidget {
         children: [
           child,
           Positioned(
-            left: 14,
-            bottom: 132,
+            left: 12,
+            bottom: 122,
             child: SafeArea(
               top: false,
               child: Material(
-                color: const Color(0xFF141821),
-                elevation: 8,
-                borderRadius: BorderRadius.circular(999),
+                color: Colors.transparent,
                 child: InkWell(
                   borderRadius: BorderRadius.circular(999),
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute(builder: (_) => const RetentionHubScreen()),
                   ),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 9),
+                  child: Ink(
+                    padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
                     decoration: BoxDecoration(
+                      color: const Color(0xE60D1118),
                       borderRadius: BorderRadius.circular(999),
-                      border: Border.all(color: const Color(0xFF39DDE8).withValues(alpha: .45)),
+                      border: Border.all(color: const Color(0x5545E7F2)),
                     ),
                     child: const Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.bolt_rounded, size: 17, color: Color(0xFF39DDE8)),
-                        SizedBox(width: 6),
-                        Text('Bugün TBT', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 12)),
+                        Icon(Icons.bolt_rounded, size: 15, color: Color(0xFF45E7F2)),
+                        SizedBox(width: 5),
+                        Text(
+                          'Bugün TBT',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 11,
+                            letterSpacing: -.1,
+                          ),
+                        ),
                       ],
                     ),
                   ),
