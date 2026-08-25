@@ -5,13 +5,14 @@ async function expireCollection(collectionId, dateField) {
   const db = getFirestore();
   const now = Timestamp.now();
   const snap = await db.collectionGroup(collectionId)
-    .where('active', '==', true)
     .where(dateField, '<=', now)
     .limit(400)
     .get();
   if (snap.empty) return 0;
+  const activeDocs = snap.docs.filter((doc) => doc.data()?.active !== false);
+  if (activeDocs.length === 0) return 0;
   const batch = db.batch();
-  for (const doc of snap.docs) {
+  for (const doc of activeDocs) {
     batch.update(doc.ref, {
       active: false,
       expiredAutomatically: true,
@@ -20,7 +21,7 @@ async function expireCollection(collectionId, dateField) {
     });
   }
   await batch.commit();
-  return snap.size;
+  return activeDocs.length;
 }
 
 exports.expireBusinessContent = onSchedule(
