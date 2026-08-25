@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:cloud_functions/cloud_functions.dart';
@@ -169,7 +170,7 @@ class _BusinessHubScreenState extends State<BusinessHubScreen> {
                   const SizedBox(height: 3),
                   Text(
                     verified
-                        ? 'Menü ve program yönetimi açıldı.'
+                        ? 'Profil, menü, kampanya, etkinlik ve paylaşımlarını yönetebilirsin.'
                         : 'Yetki yalnız manuel inceleme ve kanıt doğrulamasından sonra açılır.',
                     style: const TextStyle(color: Colors.white60, fontSize: 11.5),
                   ),
@@ -226,17 +227,43 @@ class _BusinessHubScreenState extends State<BusinessHubScreen> {
               'Kabul edilebilir kanıt: işletme ruhsatı/vergi levhası üzerinde işletme adı görünür fotoğraf veya yetkili olduğunuzu gösteren resmi belge. Hassas alanları gereksiz yere paylaşmayın; yalnız doğrulama için gereken bilgiler incelenir.',
               style: TextStyle(color: Colors.white54, fontSize: 11.5, height: 1.4),
             ),
+            if (status == 'pending_review') ...[
+              const SizedBox(height: 14),
+              const Card(
+                child: ListTile(
+                  leading: Icon(Icons.hourglass_top_rounded, color: AppColors.cyan),
+                  title: Text('Başvurun incelemede', style: TextStyle(fontWeight: FontWeight.w900)),
+                  subtitle: Text('Sonuçlanana kadar tekrar başvuru göndermen gerekmez.'),
+                ),
+              ),
+            ],
+            if (status == 'rejected' && (_status?['rejectionReason'] ?? '').toString().isNotEmpty) ...[
+              const SizedBox(height: 14),
+              Card(
+                child: ListTile(
+                  leading: const Icon(Icons.info_outline_rounded),
+                  title: const Text('Reddedilme nedeni', style: TextStyle(fontWeight: FontWeight.w900)),
+                  subtitle: Text((_status?['rejectionReason'] ?? '').toString()),
+                ),
+              ),
+            ],
             const SizedBox(height: 16),
             FilledButton.icon(
-              onPressed: _saving ? null : _submit,
+              onPressed: _saving || status == 'pending_review' ? null : _submit,
               icon: _saving
                   ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
                   : const Icon(Icons.verified_user_outlined),
-              label: Text(_saving ? 'Başvuru gönderiliyor…' : 'Doğrulama Başvurusu Gönder'),
+              label: Text(_saving ? 'Başvuru gönderiliyor…' : status == 'rejected' ? 'Düzelterek Tekrar Gönder' : 'Doğrulama Başvurusu Gönder'),
             ),
           ] else ...[
             const Text('İşletme Yönetimi', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
             const SizedBox(height: 10),
+            _ManagementTile(
+              icon: Icons.store_mall_directory_outlined,
+              title: 'Profil Bilgileri',
+              subtitle: 'Açıklama, telefon, web sitesi ve çalışma saatlerini düzenle.',
+              onTap: _showProfileDialog,
+            ),
             _ManagementTile(
               icon: Icons.restaurant_menu_rounded,
               title: 'Menü Yönetimi',
@@ -284,6 +311,65 @@ class _BusinessHubScreenState extends State<BusinessHubScreen> {
         'dining' => 'Restoran / Yeme-İçme',
         _ => 'İşletme',
       };
+
+  Future<void> _showProfileDialog() async {
+    final key = BusinessService.instance.venueKey(_category.text.trim(), _venueId.text.trim());
+    Map<String, dynamic> existing = const {};
+    try {
+      final snap = await FirebaseFirestore.instance.collection('business_venues').doc(key).get();
+      existing = snap.data() ?? const {};
+    } catch (_) {}
+    if (!mounted) return;
+
+    final description = TextEditingController(text: (existing['description'] ?? '').toString());
+    final phone = TextEditingController(text: (existing['phone'] ?? '').toString());
+    final website = TextEditingController(text: (existing['website'] ?? '').toString());
+    final openingHours = TextEditingController(text: (existing['openingHours'] ?? '').toString());
+
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Profil bilgilerini düzenle'),
+        content: SingleChildScrollView(
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            TextField(controller: description, maxLines: 4, decoration: const InputDecoration(labelText: 'İşletme hakkında')),
+            const SizedBox(height: 10),
+            TextField(controller: phone, keyboardType: TextInputType.phone, decoration: const InputDecoration(labelText: 'Telefon')),
+            const SizedBox(height: 10),
+            TextField(controller: website, keyboardType: TextInputType.url, decoration: const InputDecoration(labelText: 'Web sitesi')),
+            const SizedBox(height: 10),
+            TextField(controller: openingHours, maxLines: 3, decoration: const InputDecoration(labelText: 'Çalışma saatleri', hintText: 'Pzt-Cum 08:00-22:00\nCmt-Paz 09:00-23:00')),
+          ]),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Vazgeç')),
+          FilledButton(
+            onPressed: () async {
+              try {
+                await BusinessService.instance.updateProfile(
+                  category: _category.text.trim(),
+                  venueId: _venueId.text.trim(),
+                  description: description.text,
+                  phone: phone.text,
+                  website: website.text,
+                  openingHours: openingHours.text,
+                );
+                if (dialogContext.mounted) Navigator.pop(dialogContext);
+                _message('İşletme profili güncellendi.');
+              } catch (e) {
+                _message(_friendlyError(e));
+              }
+            },
+            child: const Text('Kaydet'),
+          ),
+        ],
+      ),
+    );
+    description.dispose();
+    phone.dispose();
+    website.dispose();
+    openingHours.dispose();
+  }
 
   Future<void> _showCampaignDialog() async {
     final title = TextEditingController();
@@ -360,16 +446,20 @@ class _BusinessHubScreenState extends State<BusinessHubScreen> {
           FilledButton(onPressed: () async {
             final value = double.tryParse(price.text.replaceAll(',', '.')) ?? -1;
             if (value < 0) return;
-            await BusinessService.instance.addMenuItem(
-              category: _category.text,
-              venueId: _venueId.text,
-              name: name.text,
-              section: section.text,
-              description: desc.text,
-              priceMinor: (value * 100).round(),
-            );
-            if (dialogContext.mounted) Navigator.pop(dialogContext);
-            _message('Menü ürünü eklendi.');
+            try {
+              await BusinessService.instance.addMenuItem(
+                category: _category.text,
+                venueId: _venueId.text,
+                name: name.text,
+                section: section.text,
+                description: desc.text,
+                priceMinor: (value * 100).round(),
+              );
+              if (dialogContext.mounted) Navigator.pop(dialogContext);
+              _message('Menü ürünü eklendi.');
+            } catch (e) {
+              _message(_friendlyError(e));
+            }
           }, child: const Text('Ekle')),
         ],
       ),
@@ -404,15 +494,19 @@ class _BusinessHubScreenState extends State<BusinessHubScreen> {
         actions: [
           TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Vazgeç')),
           FilledButton(onPressed: () async {
-            await BusinessService.instance.addProgramItem(
-              category: _category.text,
-              venueId: _venueId.text,
-              title: title.text,
-              description: desc.text,
-              startsAt: startsAt,
-            );
-            if (dialogContext.mounted) Navigator.pop(dialogContext);
-            _message('Program eklendi.');
+            try {
+              await BusinessService.instance.addProgramItem(
+                category: _category.text,
+                venueId: _venueId.text,
+                title: title.text,
+                description: desc.text,
+                startsAt: startsAt,
+              );
+              if (dialogContext.mounted) Navigator.pop(dialogContext);
+              _message('Program eklendi.');
+            } catch (e) {
+              _message(_friendlyError(e));
+            }
           }, child: const Text('Ekle')),
         ],
       )),
