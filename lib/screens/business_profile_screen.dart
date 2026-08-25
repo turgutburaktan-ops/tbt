@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -34,6 +35,15 @@ class BusinessProfileScreen extends StatelessWidget {
       };
 
   String get _menuLabel => venue.category == NearbyVenueCategory.hotel ? 'Odalar & Hizmetler' : 'Menü';
+
+  Future<void> _recordMetric(String metric) async {
+    if (FirebaseAuth.instance.currentUser == null) return;
+    try {
+      await FirebaseFunctions.instanceFor(region: 'europe-west1')
+          .httpsCallable('recordBusinessMetric')
+          .call({'venueKey': _key, 'metric': metric});
+    } catch (_) {}
+  }
 
   Future<void> _launch(BuildContext context, Uri uri) async {
     if (!await launchUrl(uri, mode: LaunchMode.externalApplication) && context.mounted) {
@@ -131,19 +141,26 @@ class BusinessProfileScreen extends StatelessWidget {
                           _QuickAction(
                             icon: Icons.directions_rounded,
                             label: 'Yol tarifi',
-                            onTap: () => _launch(
-                              context,
-                              Uri.https('www.google.com', '/maps/dir/', {
-                                'api': '1',
-                                'destination': '${venue.latitude},${venue.longitude}',
-                              }),
-                            ),
+                            onTap: () async {
+                              await _recordMetric('directions');
+                              if (!context.mounted) return;
+                              await _launch(
+                                context,
+                                Uri.https('www.google.com', '/maps/dir/', {
+                                  'api': '1',
+                                  'destination': '${venue.latitude},${venue.longitude}',
+                                }),
+                              );
+                            },
                           ),
                           _QuickAction(
                             icon: Icons.call_outlined,
                             label: 'Ara',
                             enabled: phone.isNotEmpty,
-                            onTap: () => _launch(context, Uri(scheme: 'tel', path: phone)),
+                            onTap: () async {
+                              await _recordMetric('phone');
+                              if (context.mounted) await _launch(context, Uri(scheme: 'tel', path: phone));
+                            },
                           ),
                           _QuickAction(
                             icon: Icons.language_rounded,
@@ -190,6 +207,11 @@ class BusinessProfileScreen extends StatelessWidget {
                     TabBar(
                       isScrollable: true,
                       tabAlignment: TabAlignment.start,
+                      onTap: (index) {
+                        if (index == 1) _recordMetric('menu_view');
+                        if (index == 2) _recordMetric('campaign_view');
+                        if (index == 3) _recordMetric('event_view');
+                      },
                       tabs: [
                         const Tab(text: 'Genel'),
                         Tab(text: _menuLabel),
@@ -222,6 +244,7 @@ class BusinessProfileScreen extends StatelessWidget {
                   emptyIcon: Icons.event_outlined,
                   emptyText: 'Yaklaşan etkinlik veya program bulunmuyor.',
                   activeOnly: true,
+                  hidePastPrograms: true,
                   builder: (data) => _ProgramCard(data: data),
                 ),
                 _BusinessPostsTab(venueKey: _key),
@@ -342,6 +365,7 @@ class _BusinessCollectionTab extends StatelessWidget {
   final String emptyText;
   final bool activeOnly;
   final bool hideExpiredCampaigns;
+  final bool hidePastPrograms;
   const _BusinessCollectionTab({
     required this.stream,
     required this.builder,
@@ -349,6 +373,7 @@ class _BusinessCollectionTab extends StatelessWidget {
     required this.emptyText,
     this.activeOnly = false,
     this.hideExpiredCampaigns = false,
+    this.hidePastPrograms = false,
   });
 
   @override
@@ -363,7 +388,11 @@ class _BusinessCollectionTab extends StatelessWidget {
             if (activeOnly && d['active'] == false) return false;
             if (hideExpiredCampaigns) {
               final until = d['validUntil'];
-              if (until is Timestamp && until.toDate().isBefore(now)) return false;
+              if (until is Timestamp && !until.toDate().isAfter(now)) return false;
+            }
+            if (hidePastPrograms) {
+              final starts = d['startsAt'];
+              if (starts is Timestamp && starts.toDate().isBefore(now.subtract(const Duration(hours: 1)))) return false;
             }
             return true;
           }).toList()
@@ -523,23 +552,37 @@ class _HoursStatus {
     final p = value.split(':');
     if (p.length != 2) return -1;
     final h = int.tryParse(p[0]), m = int.tryParse(p[1]);
-    return h == null || m == null ? -1 : h * 60 + m;
+    if (h == null || m == null || h < 0 || h > 23 || m < 0 || m > 59) return -1;
+    return h * 60 + m;
   }
 
   static _HoursStatus? from(dynamic source) {
     if (source is! Map || source.isEmpty) return null;
     final weekly = Map<String, dynamic>.from(source);
     final now = DateTime.now();
+    final nowMin = now.hour * 60 + now.minute;
+
+    final previousIndex = (now.weekday + 5) % 7;
+    final previousRow = Map<String, dynamic>.from((weekly[_dayKeys[previousIndex]] as Map?) ?? const {});
+    if (previousRow.isNotEmpty && previousRow['closed'] != true) {
+      final previousOpen = _minutes((previousRow['open'] ?? '').toString());
+      final previousCloseText = (previousRow['close'] ?? '').toString();
+      final previousClose = _minutes(previousCloseText);
+      if (previousOpen >= 0 && previousClose >= 0 && previousClose <= previousOpen && nowMin < previousClose) {
+        return _HoursStatus(true, 'Açık • $previousCloseText’de kapanıyor');
+      }
+    }
+
     final key = _dayKeys[now.weekday - 1];
     final row = Map<String, dynamic>.from((weekly[key] as Map?) ?? const {});
     if (row.isEmpty) return null;
     if (row['closed'] == true) return _nextOpening(weekly, now, 'Kapalı');
     final openText = (row['open'] ?? '').toString();
     final closeText = (row['close'] ?? '').toString();
-    final openMin = _minutes(openText), closeMin = _minutes(closeText), nowMin = now.hour * 60 + now.minute;
+    final openMin = _minutes(openText), closeMin = _minutes(closeText);
     if (openMin < 0 || closeMin < 0) return null;
     final crossesMidnight = closeMin <= openMin;
-    final isOpen = crossesMidnight ? (nowMin >= openMin || nowMin < closeMin) : (nowMin >= openMin && nowMin < closeMin);
+    final isOpen = crossesMidnight ? nowMin >= openMin : (nowMin >= openMin && nowMin < closeMin);
     if (isOpen) return _HoursStatus(true, 'Açık • $closeText’de kapanıyor');
     if (nowMin < openMin) return _HoursStatus(false, 'Kapalı • $openText’da açılıyor');
     return _nextOpening(weekly, now, 'Kapalı');
