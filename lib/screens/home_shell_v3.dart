@@ -11,12 +11,12 @@ import '../widgets/story_strip.dart';
 import 'campus_home_screen.dart';
 import 'event_photo_create_screen.dart';
 import 'feed_screen.dart';
+import 'home_discover_screen.dart';
 import 'login_screen.dart';
 import 'main_camera_screen.dart';
 import 'map_screen.dart';
 import 'profile_page_v2.dart';
 import 'radar_screen.dart';
-import 'reels_screen.dart';
 import 'spot_explore_screen_v2.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -167,7 +167,7 @@ class _HomeFeedHub extends StatefulWidget {
 }
 
 class _HomeFeedHubState extends State<_HomeFeedHub> {
-  int _contentMode = 0;
+  int _section = 0;
   int _photoMode = 0;
 
   @override
@@ -175,46 +175,50 @@ class _HomeFeedHubState extends State<_HomeFeedHub> {
         color: AppColors.background,
         child: SafeArea(
           bottom: false,
-          child: _contentMode == 1
-              ? Stack(
+          child: Column(
+            children: [
+              const _HomeHeader(),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(14, 2, 14, 7),
+                child: _SegmentTabs(
+                  labels: const ['Ana Sayfa', 'Keşfet'],
+                  selected: _section,
+                  prominent: true,
+                  onChanged: (value) => setState(() => _section = value),
+                ),
+              ),
+              Expanded(
+                child: IndexedStack(
+                  index: _section,
                   children: [
-                    const Positioned.fill(child: ReelsScreen(embedded: true)),
-                    Positioned(
-                      top: 8,
-                      left: 16,
-                      right: 16,
-                      child: Align(
-                        alignment: Alignment.topCenter,
-                        child: _SegmentTabs(labels: const ['Akış', 'Reels'], selected: _contentMode, prominent: true, onChanged: (v) => setState(() => _contentMode = v)),
-                      ),
+                    Column(
+                      children: [
+                        const StoryStrip(),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(14, 3, 14, 5),
+                          child: _SegmentTabs(
+                            labels: const ['Sana Özel', 'Takip'],
+                            selected: _photoMode,
+                            onChanged: (value) => setState(() => _photoMode = value),
+                          ),
+                        ),
+                        Expanded(
+                          child: IndexedStack(
+                            index: _photoMode,
+                            children: const [
+                              _AuthAwareFeed(mode: FeedMode.forYou),
+                              _AuthAwareFeed(mode: FeedMode.following),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                )
-              : Column(
-                  children: [
-                    const _HomeHeader(),
-                    const StoryStrip(),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(14, 3, 14, 4),
-                      child: Row(
-                        children: [
-                          Expanded(child: _SegmentTabs(labels: const ['Akış', 'Reels'], selected: _contentMode, prominent: true, onChanged: (v) => setState(() => _contentMode = v))),
-                          const SizedBox(width: 8),
-                          Expanded(child: _SegmentTabs(labels: const ['Sana Özel', 'Takip'], selected: _photoMode, onChanged: (v) => setState(() => _photoMode = v))),
-                        ],
-                      ),
-                    ),
-                    Expanded(
-                      child: IndexedStack(
-                        index: _photoMode,
-                        children: const [
-                          _AuthAwareFeed(mode: FeedMode.forYou),
-                          _AuthAwareFeed(mode: FeedMode.following),
-                        ],
-                      ),
-                    ),
+                    const HomeDiscoverScreen(),
                   ],
                 ),
+              ),
+            ],
+          ),
         ),
       );
 }
