@@ -24,7 +24,7 @@ import 'screens/global_search_screen.dart';
 import 'screens/moderation_center_screen.dart';
 import 'screens/notifications_screen.dart';
 import 'screens/rewards_hub_screen.dart';
-import 'screens/safety_privacy_center.dart';
+import 'screens/safety_privacy_center_screen.dart';
 import 'services/app_observability_service.dart';
 import 'services/deep_link_service.dart';
 import 'services/favorites_service.dart';
@@ -162,7 +162,7 @@ class _BestPhotoSpotAppState extends State<BestPhotoSpotApp> {
       '/admin-preview': (_) => const AdminRolePreviewScreen(),
       '/admin-insights': (_) => const AdminInsightsScreen(),
       '/moderation': (_) => const ModerationCenterScreen(),
-      '/safety-privacy': (_) => const SafetyPrivacyCenter(),
+      '/safety-privacy': (_) => const SafetyPrivacyCenterScreen(),
       '/search': (_) => const GlobalSearchScreen(),
       '/campus': (_) => const CampusHomeScreen(),
       '/campus-profile': (_) => const CampusProfileScreen(),
