@@ -1,7 +1,7 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import '../services/admin_console_service.dart';
 import '../theme/app_theme.dart';
 import 'business_hub_screen.dart';
 
@@ -14,18 +14,32 @@ class AdminBusinessesV2Screen extends StatefulWidget {
 
 class _AdminBusinessesV2ScreenState extends State<AdminBusinessesV2Screen> {
   bool? _allowed;
+  bool _loading = true;
   String _filter = 'all';
   String _query = '';
+  String? _error;
+  List<Map<String, dynamic>> _items = const [];
 
   @override
   void initState() {
     super.initState();
-    _check();
+    _load();
   }
 
-  Future<void> _check() async {
-    final token = await FirebaseAuth.instance.currentUser?.getIdTokenResult(true);
-    if (mounted) setState(() => _allowed = token?.claims?['admin'] == true);
+  Future<void> _load() async {
+    if (mounted) setState(() { _loading = true; _error = null; });
+    try {
+      final token = await FirebaseAuth.instance.currentUser?.getIdTokenResult(true);
+      final allowed = token?.claims?['admin'] == true;
+      if (!allowed) {
+        if (mounted) setState(() { _allowed = false; _loading = false; });
+        return;
+      }
+      final items = await AdminConsoleService.instance.businessClaims();
+      if (mounted) setState(() { _allowed = true; _items = items; _loading = false; });
+    } catch (e) {
+      if (mounted) setState(() { _allowed = true; _loading = false; _error = e.toString(); });
+    }
   }
 
   void _preview(Map<String, dynamic> data) {
@@ -72,36 +86,38 @@ class _AdminBusinessesV2ScreenState extends State<AdminBusinessesV2Screen> {
     );
   }
 
+  List<Map<String, dynamic>> get _filtered => _items.where((d) {
+    final status = (d['status'] ?? '').toString();
+    if (_filter != 'all' && status != _filter) return false;
+    if (_query.isEmpty) return true;
+    final text = '${d['venueName'] ?? ''} ${d['legalName'] ?? ''} ${d['businessEmail'] ?? ''} ${d['category'] ?? ''}'.toLowerCase();
+    return text.contains(_query);
+  }).toList();
+
   @override
   Widget build(BuildContext context) {
-    if (_allowed == null) return const Scaffold(backgroundColor: AppColors.background, body: Center(child: CircularProgressIndicator()));
-    if (_allowed != true) return const Scaffold(backgroundColor: AppColors.background, body: Center(child: Text('Yönetici yetkisi gerekli.')));
-
+    if (_allowed == false) return const Scaffold(backgroundColor: AppColors.background, body: Center(child: Text('Yönetici yetkisi gerekli.')));
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('İşletme Kontrol Merkezi')),
+      appBar: AppBar(
+        title: const Text('İşletme Kontrol Merkezi', maxLines: 1, overflow: TextOverflow.ellipsis),
+        actions: [IconButton(onPressed: _load, tooltip: 'Yenile', icon: const Icon(Icons.refresh_rounded))],
+      ),
       body: Column(
         children: [
           Container(
             margin: const EdgeInsets.fromLTRB(14, 10, 14, 8),
             padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: AppColors.cyan.withValues(alpha: .4)),
-            ),
+            decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(18), border: Border.all(color: AppColors.cyan.withValues(alpha: .4))),
             child: const Row(children: [
               Icon(Icons.touch_app_rounded, color: AppColors.cyan),
               SizedBox(width: 10),
-              Expanded(child: Text('Bir işletmeye dokunduğunda doğrudan işletme sahibinin paneli açılır. Sağdaki bilgi simgesi kayıt detaylarını gösterir.', style: TextStyle(color: Colors.white70, height: 1.35))),
+              Expanded(child: Text('İşletmeye dokununca sahibi gibi panel önizlemesi açılır. Bilgi simgesi kayıt detaylarını gösterir.', style: TextStyle(color: Colors.white70, height: 1.35))),
             ]),
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(14, 4, 14, 8),
-            child: TextField(
-              onChanged: (v) => setState(() => _query = v.trim().toLowerCase()),
-              decoration: const InputDecoration(prefixIcon: Icon(Icons.search_rounded), hintText: 'İşletme ara'),
-            ),
+            child: TextField(onChanged: (v) => setState(() => _query = v.trim().toLowerCase()), decoration: const InputDecoration(prefixIcon: Icon(Icons.search_rounded), hintText: 'İşletme ara')),
           ),
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
@@ -118,56 +134,60 @@ class _AdminBusinessesV2ScreenState extends State<AdminBusinessesV2Screen> {
             ),
           ),
           const SizedBox(height: 8),
-          Expanded(
-            child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-              stream: FirebaseFirestore.instance.collection('business_claims').limit(300).snapshots(),
-              builder: (context, snapshot) {
-                if (snapshot.hasError) return Center(child: Text('İşletmeler yüklenemedi: ${snapshot.error}'));
-                if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
-                final docs = snapshot.data!.docs.where((doc) {
-                  final d = doc.data();
-                  final status = (d['status'] ?? '').toString();
-                  if (_filter != 'all' && status != _filter) return false;
-                  if (_query.isEmpty) return true;
-                  final text = '${d['venueName'] ?? ''} ${d['legalName'] ?? ''} ${d['businessEmail'] ?? ''} ${d['category'] ?? ''}'.toLowerCase();
-                  return text.contains(_query);
-                }).toList();
-                if (docs.isEmpty) return const Center(child: Text('Bu filtrede işletme yok.'));
-                return ListView.builder(
-                  padding: const EdgeInsets.fromLTRB(14, 0, 14, 30),
-                  itemCount: docs.length,
-                  itemBuilder: (context, index) {
-                    final d = docs[index].data();
-                    final status = (d['status'] ?? '').toString();
-                    final name = (d['venueName'] ?? d['legalName'] ?? 'İşletme').toString();
-                    return Card(
-                      child: ListTile(
-                        contentPadding: const EdgeInsets.fromLTRB(14, 7, 6, 7),
-                        leading: CircleAvatar(
-                          backgroundColor: status == 'verified' ? AppColors.cyan.withValues(alpha: .12) : AppColors.surfaceStrong,
-                          child: Icon(status == 'verified' ? Icons.verified_rounded : Icons.storefront_rounded, color: status == 'verified' ? AppColors.cyan : Colors.white70),
-                        ),
-                        title: Text(name, style: const TextStyle(fontWeight: FontWeight.w900)),
-                        subtitle: Text('${d['category'] ?? 'işletme'} • ${status.isEmpty ? 'başvuru yok' : status}'),
-                        onTap: () => _preview(d),
-                        trailing: IconButton(
-                          tooltip: 'İşletme detayları',
-                          onPressed: () => _details(d),
-                          icon: const Icon(Icons.info_outline_rounded),
-                        ),
-                      ),
-                    );
-                  },
-                );
-              },
-            ),
-          ),
+          Expanded(child: _body()),
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _preview({'category': 'cafe', 'venueId': 'admin_demo', 'venueName': 'TBT Demo İşletme'}),
         icon: const Icon(Icons.visibility_rounded),
         label: const Text('Demo Panel'),
+      ),
+    );
+  }
+
+  Widget _body() {
+    if (_loading) return const Center(child: CircularProgressIndicator());
+    if (_error != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            const Icon(Icons.cloud_off_rounded, size: 44, color: Colors.white54),
+            const SizedBox(height: 12),
+            const Text('İşletmeler yüklenemedi', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
+            const SizedBox(height: 6),
+            const Text('Admin veri servisiyle bağlantı kurulamadı.', textAlign: TextAlign.center, style: TextStyle(color: Colors.white60)),
+            const SizedBox(height: 14),
+            FilledButton.icon(onPressed: _load, icon: const Icon(Icons.refresh_rounded), label: const Text('Tekrar Dene')),
+          ]),
+        ),
+      );
+    }
+    final docs = _filtered;
+    if (docs.isEmpty) return const Center(child: Text('Bu filtrede işletme yok.'));
+    return RefreshIndicator(
+      onRefresh: _load,
+      child: ListView.builder(
+        padding: const EdgeInsets.fromLTRB(14, 0, 14, 90),
+        itemCount: docs.length,
+        itemBuilder: (context, index) {
+          final d = docs[index];
+          final status = (d['status'] ?? '').toString();
+          final name = (d['venueName'] ?? d['legalName'] ?? 'İşletme').toString();
+          return Card(
+            child: ListTile(
+              contentPadding: const EdgeInsets.fromLTRB(14, 7, 6, 7),
+              leading: CircleAvatar(
+                backgroundColor: status == 'verified' ? AppColors.cyan.withValues(alpha: .12) : AppColors.surfaceStrong,
+                child: Icon(status == 'verified' ? Icons.verified_rounded : Icons.storefront_rounded, color: status == 'verified' ? AppColors.cyan : Colors.white70),
+              ),
+              title: Text(name, style: const TextStyle(fontWeight: FontWeight.w900)),
+              subtitle: Text('${d['category'] ?? 'işletme'} • ${status.isEmpty ? 'başvuru yok' : status}'),
+              onTap: () => _preview(d),
+              trailing: IconButton(tooltip: 'İşletme detayları', onPressed: () => _details(d), icon: const Icon(Icons.info_outline_rounded)),
+            ),
+          );
+        },
       ),
     );
   }
