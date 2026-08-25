@@ -147,6 +147,34 @@ async function assertVerifiedOwner(request, category, venueId) {
   return {uid, db, id};
 }
 
+exports.updateBusinessProfile = onCall({region: 'europe-west1'}, async (request) => {
+  const d = request.data || {};
+  const {uid, db, id} = await assertVerifiedOwner(request, d.category, d.venueId);
+  const description = clean(d.description, 1200);
+  const phone = clean(d.phone, 40);
+  const website = clean(d.website, 500);
+  const openingHours = clean(d.openingHours, 500);
+
+  if (phone && phone.replace(/\D/g, '').length < 10) {
+    throw new HttpsError('invalid-argument', 'İşletme telefonu geçersiz.');
+  }
+  if (website && !/^https?:\/\//i.test(website) && !/^[\w.-]+\.[a-z]{2,}/i.test(website)) {
+    throw new HttpsError('invalid-argument', 'Web sitesi adresi geçersiz.');
+  }
+
+  await db.collection('business_venues').doc(id).set({
+    ownerUid: uid,
+    verified: true,
+    description,
+    phone,
+    website,
+    openingHours,
+    updatedAt: FieldValue.serverTimestamp(),
+  }, {merge: true});
+
+  return {ok: true};
+});
+
 exports.addBusinessMenuItem = onCall({region: 'europe-west1'}, async (request) => {
   const d = request.data || {};
   const {uid, db, id} = await assertVerifiedOwner(request, d.category, d.venueId);
