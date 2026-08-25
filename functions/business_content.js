@@ -110,7 +110,7 @@ exports.updateBusinessContentItem = onCall({region: 'europe-west1'}, async (requ
 
 exports.deleteBusinessContentItem = onCall({region: 'europe-west1'}, async (request) => {
   const d = request.data || {};
-  const {db, id} = await ownerContext(request, d.category, d.venueId);
+  const {uid, db, id} = await ownerContext(request, d.category, d.venueId);
   const type = clean(d.type, 20);
   const itemId = clean(d.itemId, 180);
   const cfg = configFor(type);
@@ -118,6 +118,15 @@ exports.deleteBusinessContentItem = onCall({region: 'europe-west1'}, async (requ
   const ref = db.collection('business_venues').doc(id).collection(cfg.collection).doc(itemId);
   const snap = await ref.get();
   if (!snap.exists) throw new HttpsError('not-found', 'İçerik bulunamadı.');
+
+  if (type === 'menu') {
+    const storedPath = clean(snap.data()?.imageStoragePath, 600);
+    const expected = `users/${uid}/business_menu/${id}/${itemId}/product.jpg`;
+    if (storedPath === expected) {
+      try { await getStorage().bucket().file(storedPath).delete({ignoreNotFound: true}); } catch (_) {}
+    }
+  }
+
   await ref.delete();
   return {ok: true};
 });
