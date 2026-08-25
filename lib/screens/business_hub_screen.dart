@@ -8,6 +8,7 @@ import 'package:image_picker/image_picker.dart';
 import '../services/business_service.dart';
 import '../theme/app_theme.dart';
 import 'business_content_manager_screen.dart';
+import 'business_hours_screen.dart';
 import 'business_pro_dashboard_screen.dart';
 import 'create_post_screen.dart';
 
@@ -16,15 +17,8 @@ class BusinessHubScreen extends StatefulWidget {
   final String initialVenueId;
   final String initialVenueName;
 
-  const BusinessHubScreen({
-    super.key,
-    this.initialCategory = '',
-    this.initialVenueId = '',
-    this.initialVenueName = '',
-  });
-
-  @override
-  State<BusinessHubScreen> createState() => _BusinessHubScreenState();
+  const BusinessHubScreen({super.key,this.initialCategory = '',this.initialVenueId = '',this.initialVenueName = ''});
+  @override State<BusinessHubScreen> createState() => _BusinessHubScreenState();
 }
 
 class _BusinessHubScreenState extends State<BusinessHubScreen> {
@@ -36,386 +30,35 @@ class _BusinessHubScreenState extends State<BusinessHubScreen> {
   final _legalName = TextEditingController();
   final _taxOffice = TextEditingController();
   final _taxLast4 = TextEditingController();
-
   File? _evidence;
   bool _saving = false;
   bool _uploadingMedia = false;
   Map<String, dynamic>? _status;
 
-  @override
-  void initState() {
-    super.initState();
-    _category.text = widget.initialCategory;
-    _venueId.text = widget.initialVenueId;
-    _venueName.text = widget.initialVenueName;
-    if (_category.text.isNotEmpty && _venueId.text.isNotEmpty) _refreshStatus();
-  }
+  @override void initState(){super.initState();_category.text=widget.initialCategory;_venueId.text=widget.initialVenueId;_venueName.text=widget.initialVenueName;if(_category.text.isNotEmpty&&_venueId.text.isNotEmpty)_refreshStatus();}
+  @override void dispose(){for(final c in [_category,_venueId,_venueName,_email,_phone,_legalName,_taxOffice,_taxLast4]){c.dispose();}super.dispose();}
 
-  @override
-  void dispose() {
-    for (final c in [_category, _venueId, _venueName, _email, _phone, _legalName, _taxOffice, _taxLast4]) {
-      c.dispose();
-    }
-    super.dispose();
-  }
+  void _message(String value){if(!mounted)return;ScaffoldMessenger.of(context)..hideCurrentSnackBar()..showSnackBar(SnackBar(content:Text(value)));}
+  String _friendlyError(Object error){if(error is FirebaseFunctionsException)return error.message??'İşlem tamamlanamadı.';return error.toString().replaceFirst('Exception: ','');}
+  Future<void> _refreshStatus() async {if(_category.text.trim().isEmpty||_venueId.text.trim().isEmpty)return;try{final status=await BusinessService.instance.claimStatus(_category.text.trim(),_venueId.text.trim());if(mounted)setState(()=>_status=status);}catch(_){}}
+  Future<void> _pickEvidence() async {final file=await ImagePicker().pickImage(source:ImageSource.gallery,imageQuality:88,requestFullMetadata:false);if(file!=null&&mounted)setState(()=>_evidence=File(file.path));}
+  Future<void> _pickProfileImage(String kind) async {if(_uploadingMedia)return;final picked=await ImagePicker().pickImage(source:ImageSource.gallery,imageQuality:88,maxWidth:kind=='logo'?1400:2400,requestFullMetadata:false);if(picked==null||!mounted)return;setState(()=>_uploadingMedia=true);try{await BusinessService.instance.updateProfileImage(category:_category.text.trim(),venueId:_venueId.text.trim(),kind:kind,image:File(picked.path));_message(kind=='logo'?'İşletme logosu güncellendi.':'Kapak fotoğrafı güncellendi.');}catch(e){_message(_friendlyError(e));}finally{if(mounted)setState(()=>_uploadingMedia=false);}}
+  Future<void> _submit() async {if(_saving)return;if(_evidence==null)return _message('Yetki kanıtı görselini ekle.');setState(()=>_saving=true);try{await BusinessService.instance.submitClaim(category:_category.text.trim(),venueId:_venueId.text.trim(),venueName:_venueName.text.trim(),businessEmail:_email.text.trim(),businessPhone:_phone.text.trim(),legalName:_legalName.text.trim(),taxOffice:_taxOffice.text.trim(),taxNumberLast4:_taxLast4.text.trim(),evidenceImage:_evidence!);_message('Başvuru alındı. Manuel doğrulama tamamlanmadan işletme yetkisi açılmaz.');await _refreshStatus();}catch(e){_message(_friendlyError(e));}finally{if(mounted)setState(()=>_saving=false);}}
 
-  void _message(String value) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(value)));
-  }
+  void _openManager(String type)=>Navigator.push(context,MaterialPageRoute(builder:(_)=>BusinessContentManagerScreen(category:_category.text.trim(),venueId:_venueId.text.trim(),type:type)));
+  void _openPro()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>BusinessProDashboardScreen(category:_category.text.trim(),venueId:_venueId.text.trim(),venueName:_venueName.text.trim())));
+  void _openHours()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>BusinessHoursScreen(category:_category.text.trim(),venueId:_venueId.text.trim())));
 
-  String _friendlyError(Object error) {
-    if (error is FirebaseFunctionsException) return error.message ?? 'İşlem tamamlanamadı.';
-    return error.toString().replaceFirst('Exception: ', '');
-  }
+  @override Widget build(BuildContext context){final status=(_status?['status']??'').toString();final verified=status=='verified';final hasVenue=_category.text.trim().isNotEmpty&&_venueId.text.trim().isNotEmpty&&_venueName.text.trim().isNotEmpty;return Scaffold(backgroundColor:AppColors.background,appBar:AppBar(title:const Text('İşletmem')),body:RefreshIndicator(onRefresh:_refreshStatus,child:ListView(padding:const EdgeInsets.fromLTRB(16,14,16,36),children:[_StatusCard(status:status,verified:verified),const SizedBox(height:18),if(!hasVenue)const _ChooseVenueState()else if(!verified)_buildClaimForm(status)else _buildManagement()])));}
 
-  Future<void> _refreshStatus() async {
-    if (_category.text.trim().isEmpty || _venueId.text.trim().isEmpty) return;
-    try {
-      final status = await BusinessService.instance.claimStatus(_category.text.trim(), _venueId.text.trim());
-      if (mounted) setState(() => _status = status);
-    } catch (_) {}
-  }
+  Widget _buildClaimForm(String status){final rejection=(_status?['rejectionReason']??'').toString();return Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[Card(child:ListTile(leading:const Icon(Icons.storefront_rounded,color:AppColors.cyan),title:Text(_venueName.text,style:const TextStyle(fontWeight:FontWeight.w900)),subtitle:Text(_categoryLabel(_category.text)),trailing:const Icon(Icons.lock_outline_rounded,size:18))),const SizedBox(height:14),const Text('Yetki ve Şirket Bilgileri',style:TextStyle(fontSize:18,fontWeight:FontWeight.w900)),const SizedBox(height:10),TextField(controller:_legalName,decoration:const InputDecoration(labelText:'Yasal işletme unvanı')),const SizedBox(height:10),TextField(controller:_email,keyboardType:TextInputType.emailAddress,decoration:const InputDecoration(labelText:'İşletme e-postası')),const SizedBox(height:10),TextField(controller:_phone,keyboardType:TextInputType.phone,decoration:const InputDecoration(labelText:'İşletme telefonu')),const SizedBox(height:10),TextField(controller:_taxOffice,decoration:const InputDecoration(labelText:'Vergi dairesi')),const SizedBox(height:10),TextField(controller:_taxLast4,keyboardType:TextInputType.number,maxLength:4,decoration:const InputDecoration(labelText:'Vergi numarasının son 4 hanesi')),OutlinedButton.icon(onPressed:_pickEvidence,icon:const Icon(Icons.document_scanner_outlined),label:Text(_evidence==null?'Yetki kanıtı fotoğrafı ekle':'Kanıt seçildi ✓')),if(status=='pending_review')const Card(child:ListTile(leading:Icon(Icons.hourglass_top_rounded,color:AppColors.cyan),title:Text('Başvurun incelemede'),subtitle:Text('Sonuçlanana kadar tekrar başvuru göndermen gerekmez.'))),if(status=='rejected'&&rejection.isNotEmpty)Card(child:ListTile(leading:const Icon(Icons.info_outline_rounded),title:const Text('Reddedilme nedeni'),subtitle:Text(rejection))),const SizedBox(height:12),FilledButton.icon(onPressed:_saving||status=='pending_review'?null:_submit,icon:_saving?const SizedBox(width:18,height:18,child:CircularProgressIndicator(strokeWidth:2)):const Icon(Icons.verified_user_outlined),label:Text(_saving?'Başvuru gönderiliyor…':status=='rejected'?'Düzelterek Tekrar Gönder':'Doğrulama Başvurusu Gönder'))]);}
 
-  Future<void> _pickEvidence() async {
-    final file = await ImagePicker().pickImage(source: ImageSource.gallery, imageQuality: 88, requestFullMetadata: false);
-    if (file != null && mounted) setState(() => _evidence = File(file.path));
-  }
+  Widget _buildManagement()=>Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[const Text('İşletme Yönetimi',style:TextStyle(fontSize:18,fontWeight:FontWeight.w900)),const SizedBox(height:10),_ManagementTile(icon:Icons.workspace_premium_rounded,title:'TBT Business Pro',subtitle:'Kurucu işletme avantajı, istatistikler, rezervasyonlar ve Boost.',onTap:_openPro,highlighted:true),_ManagementTile(icon:Icons.store_mall_directory_outlined,title:'Profil Bilgileri',subtitle:'Açıklama, telefon ve web sitesini düzenle.',onTap:_showProfileDialog),_ManagementTile(icon:Icons.schedule_rounded,title:'Çalışma Saatleri',subtitle:'Pazartesi–Pazar saatlerini ayarla; Açık/Kapalı otomatik hesaplansın.',onTap:_openHours),_ManagementTile(icon:Icons.account_circle_outlined,title:'İşletme Logosu',subtitle:_uploadingMedia?'Görsel yükleniyor…':'Profil logosunu değiştir.',onTap:()=>_pickProfileImage('logo')),_ManagementTile(icon:Icons.panorama_outlined,title:'Kapak Fotoğrafı',subtitle:_uploadingMedia?'Görsel yükleniyor…':'Kapak görselini değiştir.',onTap:()=>_pickProfileImage('cover')),_ManagementTile(icon:Icons.restaurant_menu_rounded,title:'Menü Yönetimi',subtitle:'Fotoğraf, stok durumu, fiyat ve görünürlüğü yönet.',onTap:()=>_openManager('menu')),_ManagementTile(icon:Icons.local_offer_outlined,title:'Kampanya Yönetimi',subtitle:'Süreli kampanya yayınla; süresi dolunca otomatik kapanır.',onTap:()=>_openManager('campaign')),_ManagementTile(icon:Icons.calendar_month_rounded,title:'Program / Etkinlik Yönetimi',subtitle:'Program ekle, değiştir, görünürlüğünü yönet veya sil.',onTap:()=>_openManager('program')),_ManagementTile(icon:Icons.add_to_photos_outlined,title:'Fotoğraf / Video Paylaş',subtitle:'İşletme profilinde ve ana akışta yayınla.',onTap:()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>CreatePostScreen(businessVenueKey:BusinessService.instance.venueKey(_category.text.trim(),_venueId.text.trim()),businessVenueName:_venueName.text.trim()))))]);
 
-  Future<void> _pickProfileImage(String kind) async {
-    if (_uploadingMedia) return;
-    final picked = await ImagePicker().pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 88,
-      maxWidth: kind == 'logo' ? 1400 : 2400,
-      requestFullMetadata: false,
-    );
-    if (picked == null || !mounted) return;
-    setState(() => _uploadingMedia = true);
-    try {
-      await BusinessService.instance.updateProfileImage(
-        category: _category.text.trim(),
-        venueId: _venueId.text.trim(),
-        kind: kind,
-        image: File(picked.path),
-      );
-      _message(kind == 'logo' ? 'İşletme logosu güncellendi.' : 'Kapak fotoğrafı güncellendi.');
-    } catch (e) {
-      _message(_friendlyError(e));
-    } finally {
-      if (mounted) setState(() => _uploadingMedia = false);
-    }
-  }
-
-  Future<void> _submit() async {
-    if (_saving) return;
-    if (_evidence == null) return _message('Yetki kanıtı görselini ekle.');
-    setState(() => _saving = true);
-    try {
-      await BusinessService.instance.submitClaim(
-        category: _category.text.trim(),
-        venueId: _venueId.text.trim(),
-        venueName: _venueName.text.trim(),
-        businessEmail: _email.text.trim(),
-        businessPhone: _phone.text.trim(),
-        legalName: _legalName.text.trim(),
-        taxOffice: _taxOffice.text.trim(),
-        taxNumberLast4: _taxLast4.text.trim(),
-        evidenceImage: _evidence!,
-      );
-      _message('Başvuru alındı. Manuel doğrulama tamamlanmadan işletme yetkisi açılmaz.');
-      await _refreshStatus();
-    } catch (e) {
-      _message(_friendlyError(e));
-    } finally {
-      if (mounted) setState(() => _saving = false);
-    }
-  }
-
-  void _openManager(String type) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => BusinessContentManagerScreen(
-          category: _category.text.trim(),
-          venueId: _venueId.text.trim(),
-          type: type,
-        ),
-      ),
-    );
-  }
-
-  void _openPro() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => BusinessProDashboardScreen(
-          category: _category.text.trim(),
-          venueId: _venueId.text.trim(),
-          venueName: _venueName.text.trim(),
-        ),
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final status = (_status?['status'] ?? '').toString();
-    final verified = status == 'verified';
-    final hasVenue = _category.text.trim().isNotEmpty && _venueId.text.trim().isNotEmpty && _venueName.text.trim().isNotEmpty;
-
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('İşletmem')),
-      body: RefreshIndicator(
-        onRefresh: _refreshStatus,
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 14, 16, 36),
-          children: [
-            _StatusCard(status: status, verified: verified),
-            const SizedBox(height: 18),
-            if (!hasVenue)
-              const _ChooseVenueState()
-            else if (!verified)
-              _buildClaimForm(status)
-            else
-              _buildManagement(),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildClaimForm(String status) {
-    final rejection = (_status?['rejectionReason'] ?? '').toString();
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Card(
-          child: ListTile(
-            leading: const Icon(Icons.storefront_rounded, color: AppColors.cyan),
-            title: Text(_venueName.text, style: const TextStyle(fontWeight: FontWeight.w900)),
-            subtitle: Text(_categoryLabel(_category.text)),
-            trailing: const Icon(Icons.lock_outline_rounded, size: 18),
-          ),
-        ),
-        const SizedBox(height: 14),
-        const Text('Yetki ve Şirket Bilgileri', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
-        const SizedBox(height: 10),
-        TextField(controller: _legalName, decoration: const InputDecoration(labelText: 'Yasal işletme unvanı')),
-        const SizedBox(height: 10),
-        TextField(controller: _email, keyboardType: TextInputType.emailAddress, decoration: const InputDecoration(labelText: 'İşletme e-postası')),
-        const SizedBox(height: 10),
-        TextField(controller: _phone, keyboardType: TextInputType.phone, decoration: const InputDecoration(labelText: 'İşletme telefonu')),
-        const SizedBox(height: 10),
-        TextField(controller: _taxOffice, decoration: const InputDecoration(labelText: 'Vergi dairesi')),
-        const SizedBox(height: 10),
-        TextField(controller: _taxLast4, keyboardType: TextInputType.number, maxLength: 4, decoration: const InputDecoration(labelText: 'Vergi numarasının son 4 hanesi')),
-        OutlinedButton.icon(
-          onPressed: _pickEvidence,
-          icon: const Icon(Icons.document_scanner_outlined),
-          label: Text(_evidence == null ? 'Yetki kanıtı fotoğrafı ekle' : 'Kanıt seçildi ✓'),
-        ),
-        if (status == 'pending_review')
-          const Card(child: ListTile(leading: Icon(Icons.hourglass_top_rounded, color: AppColors.cyan), title: Text('Başvurun incelemede'), subtitle: Text('Sonuçlanana kadar tekrar başvuru göndermen gerekmez.'))),
-        if (status == 'rejected' && rejection.isNotEmpty)
-          Card(child: ListTile(leading: const Icon(Icons.info_outline_rounded), title: const Text('Reddedilme nedeni'), subtitle: Text(rejection))),
-        const SizedBox(height: 12),
-        FilledButton.icon(
-          onPressed: _saving || status == 'pending_review' ? null : _submit,
-          icon: _saving ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.verified_user_outlined),
-          label: Text(_saving ? 'Başvuru gönderiliyor…' : status == 'rejected' ? 'Düzelterek Tekrar Gönder' : 'Doğrulama Başvurusu Gönder'),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildManagement() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        const Text('İşletme Yönetimi', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
-        const SizedBox(height: 10),
-        _ManagementTile(
-          icon: Icons.workspace_premium_rounded,
-          title: 'TBT Business Pro',
-          subtitle: 'Kurucu işletme avantajı, istatistikler, rezervasyonlar ve Boost.',
-          onTap: _openPro,
-          highlighted: true,
-        ),
-        _ManagementTile(icon: Icons.store_mall_directory_outlined, title: 'Profil Bilgileri', subtitle: 'Açıklama, telefon, web sitesi ve çalışma saatlerini düzenle.', onTap: _showProfileDialog),
-        _ManagementTile(icon: Icons.account_circle_outlined, title: 'İşletme Logosu', subtitle: _uploadingMedia ? 'Görsel yükleniyor…' : 'Profil logosunu değiştir.', onTap: () => _pickProfileImage('logo')),
-        _ManagementTile(icon: Icons.panorama_outlined, title: 'Kapak Fotoğrafı', subtitle: _uploadingMedia ? 'Görsel yükleniyor…' : 'Kapak görselini değiştir.', onTap: () => _pickProfileImage('cover')),
-        _ManagementTile(icon: Icons.restaurant_menu_rounded, title: 'Menü Yönetimi', subtitle: 'Ekle, düzenle, aktif/pasif yap veya sil.', onTap: () => _openManager('menu')),
-        _ManagementTile(icon: Icons.local_offer_outlined, title: 'Kampanya Yönetimi', subtitle: 'Yayınla, düzenle, pasife al veya sil.', onTap: () => _openManager('campaign')),
-        _ManagementTile(icon: Icons.calendar_month_rounded, title: 'Program / Etkinlik Yönetimi', subtitle: 'Program ekle, değiştir, görünürlüğünü yönet veya sil.', onTap: () => _openManager('program')),
-        _ManagementTile(
-          icon: Icons.add_to_photos_outlined,
-          title: 'Fotoğraf / Video Paylaş',
-          subtitle: 'İşletme profilinde ve ana akışta yayınla.',
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => CreatePostScreen(
-                businessVenueKey: BusinessService.instance.venueKey(_category.text.trim(), _venueId.text.trim()),
-                businessVenueName: _venueName.text.trim(),
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Future<void> _showProfileDialog() async {
-    final key = BusinessService.instance.venueKey(_category.text.trim(), _venueId.text.trim());
-    Map<String, dynamic> existing = const {};
-    try {
-      final snap = await FirebaseFirestore.instance.collection('business_venues').doc(key).get();
-      existing = snap.data() ?? const {};
-    } catch (_) {}
-    if (!mounted) return;
-
-    final description = TextEditingController(text: (existing['description'] ?? '').toString());
-    final phone = TextEditingController(text: (existing['phone'] ?? '').toString());
-    final website = TextEditingController(text: (existing['website'] ?? '').toString());
-    final openingHours = TextEditingController(text: (existing['openingHours'] ?? '').toString());
-
-    await showDialog<void>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Profil bilgilerini düzenle'),
-        content: SingleChildScrollView(
-          child: Column(mainAxisSize: MainAxisSize.min, children: [
-            TextField(controller: description, maxLines: 4, decoration: const InputDecoration(labelText: 'İşletme hakkında')),
-            const SizedBox(height: 10),
-            TextField(controller: phone, keyboardType: TextInputType.phone, decoration: const InputDecoration(labelText: 'Telefon')),
-            const SizedBox(height: 10),
-            TextField(controller: website, keyboardType: TextInputType.url, decoration: const InputDecoration(labelText: 'Web sitesi')),
-            const SizedBox(height: 10),
-            TextField(controller: openingHours, maxLines: 3, decoration: const InputDecoration(labelText: 'Çalışma saatleri', hintText: 'Pzt-Cum 08:00-22:00\nCmt-Paz 09:00-23:00')),
-          ]),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Vazgeç')),
-          FilledButton(
-            onPressed: () async {
-              try {
-                await BusinessService.instance.updateProfile(
-                  category: _category.text.trim(),
-                  venueId: _venueId.text.trim(),
-                  description: description.text,
-                  phone: phone.text,
-                  website: website.text,
-                  openingHours: openingHours.text,
-                );
-                if (dialogContext.mounted) Navigator.pop(dialogContext);
-                _message('İşletme profili güncellendi.');
-              } catch (e) {
-                _message(_friendlyError(e));
-              }
-            },
-            child: const Text('Kaydet'),
-          ),
-        ],
-      ),
-    );
-
-    description.dispose();
-    phone.dispose();
-    website.dispose();
-    openingHours.dispose();
-  }
-
-  String _categoryLabel(String value) => switch (value) {
-        'cafe' => 'Kafe',
-        'hotel' => 'Otel / Konaklama',
-        'dining' => 'Restoran / Yeme-İçme',
-        _ => 'İşletme',
-      };
+  Future<void> _showProfileDialog() async {final key=BusinessService.instance.venueKey(_category.text.trim(),_venueId.text.trim());Map<String,dynamic> existing=const{};try{final snap=await FirebaseFirestore.instance.collection('business_venues').doc(key).get();existing=snap.data()??const{};}catch(_){}if(!mounted)return;final description=TextEditingController(text:(existing['description']??'').toString());final phone=TextEditingController(text:(existing['phone']??'').toString());final website=TextEditingController(text:(existing['website']??'').toString());await showDialog<void>(context:context,builder:(dialogContext)=>AlertDialog(title:const Text('Profil bilgilerini düzenle'),content:SingleChildScrollView(child:Column(mainAxisSize:MainAxisSize.min,children:[TextField(controller:description,maxLines:4,decoration:const InputDecoration(labelText:'İşletme hakkında')),const SizedBox(height:10),TextField(controller:phone,keyboardType:TextInputType.phone,decoration:const InputDecoration(labelText:'Telefon')),const SizedBox(height:10),TextField(controller:website,keyboardType:TextInputType.url,decoration:const InputDecoration(labelText:'Web sitesi'))])),actions:[TextButton(onPressed:()=>Navigator.pop(dialogContext),child:const Text('Vazgeç')),FilledButton(onPressed:()async{try{await BusinessService.instance.updateProfile(category:_category.text.trim(),venueId:_venueId.text.trim(),description:description.text,phone:phone.text,website:website.text,openingHours:(existing['openingHours']??'').toString());if(dialogContext.mounted)Navigator.pop(dialogContext);_message('İşletme profili güncellendi.');}catch(e){_message(_friendlyError(e));}},child:const Text('Kaydet'))]));description.dispose();phone.dispose();website.dispose();}
+  String _categoryLabel(String value)=>switch(value){'cafe'=>'Kafe','hotel'=>'Otel / Konaklama','dining'=>'Restoran / Yeme-İçme',_=>'İşletme'};
 }
 
-class _StatusCard extends StatelessWidget {
-  final String status;
-  final bool verified;
-  const _StatusCard({required this.status, required this.verified});
-
-  @override
-  Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.all(15),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: verified ? AppColors.cyan : AppColors.border),
-        ),
-        child: Row(children: [
-          Icon(verified ? Icons.verified_rounded : Icons.verified_user_outlined, color: verified ? AppColors.cyan : Colors.white60),
-          const SizedBox(width: 11),
-          Expanded(
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(
-                verified
-                    ? 'Doğrulanmış İşletme'
-                    : status == 'pending_review'
-                        ? 'İnceleme Bekliyor'
-                        : status == 'rejected'
-                            ? 'Başvuru Reddedildi'
-                            : 'İşletme Doğrulaması',
-                style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
-              ),
-              const SizedBox(height: 3),
-              Text(verified ? 'İşletme araçların aktif.' : 'Yetki doğrulamadan sonra açılır.', style: const TextStyle(color: Colors.white60, fontSize: 11.5)),
-            ]),
-          ),
-        ]),
-      );
-}
-
-class _ChooseVenueState extends StatelessWidget {
-  const _ChooseVenueState();
-
-  @override
-  Widget build(BuildContext context) => const Padding(
-        padding: EdgeInsets.symmetric(vertical: 28),
-        child: Column(children: [
-          Icon(Icons.storefront_outlined, size: 58, color: AppColors.cyan),
-          SizedBox(height: 14),
-          Text('Önce işletmeni seç', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900)),
-          SizedBox(height: 8),
-          Text('Mekan profilindeki işletme doğrulama bağlantısından başla.', textAlign: TextAlign.center, style: TextStyle(color: Colors.white60)),
-        ]),
-      );
-}
-
-class _ManagementTile extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final VoidCallback onTap;
-  final bool highlighted;
-
-  const _ManagementTile({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.onTap,
-    this.highlighted = false,
-  });
-
-  @override
-  Widget build(BuildContext context) => Card(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: highlighted ? AppColors.cyan : AppColors.border),
-        ),
-        child: ListTile(
-          onTap: onTap,
-          leading: Icon(icon, color: highlighted ? AppColors.cyan : null),
-          title: Text(title, style: const TextStyle(fontWeight: FontWeight.w900)),
-          subtitle: Text(subtitle),
-          trailing: const Icon(Icons.chevron_right_rounded),
-        ),
-      );
-}
+class _StatusCard extends StatelessWidget{final String status;final bool verified;const _StatusCard({required this.status,required this.verified});@override Widget build(BuildContext context)=>Container(padding:const EdgeInsets.all(15),decoration:BoxDecoration(color:AppColors.surface,borderRadius:BorderRadius.circular(18),border:Border.all(color:verified?AppColors.cyan:AppColors.border)),child:Row(children:[Icon(verified?Icons.verified_rounded:Icons.verified_user_outlined,color:verified?AppColors.cyan:Colors.white60),const SizedBox(width:11),Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(verified?'Doğrulanmış İşletme':status=='pending_review'?'İnceleme Bekliyor':status=='rejected'?'Başvuru Reddedildi':'İşletme Doğrulaması',style:const TextStyle(fontWeight:FontWeight.w900,fontSize:16)),const SizedBox(height:3),Text(verified?'İşletme araçların aktif.':'Yetki doğrulamadan sonra açılır.',style:const TextStyle(color:Colors.white60,fontSize:11.5))]))]));}
+class _ChooseVenueState extends StatelessWidget{const _ChooseVenueState();@override Widget build(BuildContext context)=>const Padding(padding:EdgeInsets.symmetric(vertical:28),child:Column(children:[Icon(Icons.storefront_outlined,size:58,color:AppColors.cyan),SizedBox(height:14),Text('Önce işletmeni seç',style:TextStyle(fontSize:22,fontWeight:FontWeight.w900)),SizedBox(height:8),Text('Mekan profilindeki işletme doğrulama bağlantısından başla.',textAlign:TextAlign.center,style:TextStyle(color:Colors.white60))]));}
+class _ManagementTile extends StatelessWidget{final IconData icon;final String title;final String subtitle;final VoidCallback onTap;final bool highlighted;const _ManagementTile({required this.icon,required this.title,required this.subtitle,required this.onTap,this.highlighted=false});@override Widget build(BuildContext context)=>Card(shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(16),side:BorderSide(color:highlighted?AppColors.cyan:AppColors.border)),child:ListTile(onTap:onTap,leading:Icon(icon,color:highlighted?AppColors.cyan:null),title:Text(title,style:const TextStyle(fontWeight:FontWeight.w900)),subtitle:Text(subtitle),trailing:const Icon(Icons.chevron_right_rounded)));}
