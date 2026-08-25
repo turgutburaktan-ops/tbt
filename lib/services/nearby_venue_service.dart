@@ -1,5 +1,7 @@
 import 'dart:convert';
+import 'dart:math' as math;
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -7,7 +9,6 @@ import '../models/nearby_venue.dart';
 
 class NearbyVenueService {
   NearbyVenueService._();
-
   static final instance = NearbyVenueService._();
 
   static const _cacheLifetime = Duration(hours: 18);
@@ -30,7 +31,9 @@ class NearbyVenueService {
     final prefs = await SharedPreferences.getInstance();
     final cacheKey = _cacheKey(category, latitude, longitude);
     final cached = _readCache(prefs, cacheKey);
-    if (!forceRefresh && cached != null && !cached.isExpired) return cached.venues;
+    if (!forceRefresh && cached != null && !cached.isExpired) {
+      return _merge(cached.venues, await _tbtBusinesses(category, latitude, longitude, radiusMeters));
+    }
 
     Object? lastError;
     for (final endpoint in _endpoints) {
@@ -44,18 +47,82 @@ class NearbyVenueService {
           lastError = 'HTTP ${response.statusCode}';
           continue;
         }
-        final venues = _parse(response.body, category);
+        final osm = _parse(response.body, category);
         await prefs.setString(cacheKey, jsonEncode({
           'savedAt': DateTime.now().millisecondsSinceEpoch,
-          'venues': venues.map((venue) => venue.toJson()).toList(),
+          'venues': osm.map((venue) => venue.toJson()).toList(),
         }));
-        return venues;
+        return _merge(osm, await _tbtBusinesses(category, latitude, longitude, radiusMeters));
       } catch (error) {
         lastError = error;
       }
     }
-    if (cached != null) return cached.venues;
+
+    final tbt = await _tbtBusinesses(category, latitude, longitude, radiusMeters);
+    if (cached != null) return _merge(cached.venues, tbt);
+    if (tbt.isNotEmpty) return tbt;
     throw Exception('Mekan verisi alınamadı: ${lastError ?? 'bağlantı hatası'}');
+  }
+
+  Future<List<NearbyVenue>> _tbtBusinesses(
+    NearbyVenueCategory category,
+    double latitude,
+    double longitude,
+    int radiusMeters,
+  ) async {
+    try {
+      final snap = await FirebaseFirestore.instance
+          .collection('business_venues')
+          .where('source', isEqualTo: 'user_submission')
+          .limit(300)
+          .get();
+      final out = <NearbyVenue>[];
+      for (final doc in snap.docs) {
+        final d = doc.data();
+        if (d['verified'] != true || d['pendingListing'] == true || (d['category'] ?? '').toString() != category.name) continue;
+        final lat = (d['latitude'] as num?)?.toDouble();
+        final lon = (d['longitude'] as num?)?.toDouble();
+        if (lat == null || lon == null) continue;
+        if (_distanceMeters(latitude, longitude, lat, lon) > radiusMeters) continue;
+        final name = (d['venueName'] ?? '').toString().trim();
+        if (name.isEmpty) continue;
+        out.add(NearbyVenue(
+          id: (d['venueId'] ?? doc.id).toString(),
+          category: category,
+          name: name,
+          latitude: lat,
+          longitude: lon,
+          address: (d['address'] ?? '').toString(),
+          openingHours: (d['openingHours'] ?? '').toString(),
+          phone: (d['phone'] ?? '').toString(),
+          website: (d['website'] ?? '').toString(),
+        ));
+      }
+      return out;
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  List<NearbyVenue> _merge(List<NearbyVenue> base, List<NearbyVenue> manual) {
+    final out = <NearbyVenue>[];
+    final seen = <String>{};
+    for (final venue in [...manual, ...base]) {
+      final key = '${venue.name.toLowerCase().trim()}_${venue.latitude.toStringAsFixed(4)}_${venue.longitude.toStringAsFixed(4)}';
+      if (seen.add(key)) out.add(venue);
+      if (out.length >= 350) break;
+    }
+    return out;
+  }
+
+  double _distanceMeters(double lat1, double lon1, double lat2, double lon2) {
+    const earth = 6371000.0;
+    double rad(double v) => v * math.pi / 180.0;
+    final dLat = rad(lat2 - lat1);
+    final dLon = rad(lon2 - lon1);
+    final a = math.sin(dLat / 2) * math.sin(dLat / 2) +
+        math.cos(rad(lat1)) * math.cos(rad(lat2)) * math.sin(dLon / 2) * math.sin(dLon / 2);
+    return earth * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
   }
 
   String _cacheKey(NearbyVenueCategory category, double latitude, double longitude) {
@@ -110,17 +177,13 @@ out center tags;
       if (latitude == null || longitude == null) continue;
       final dedupeKey = '${name.toLowerCase()}_${latitude.toStringAsFixed(4)}_${longitude.toStringAsFixed(4)}';
       if (!seen.add(dedupeKey)) continue;
-
       final street = (tags['addr:street'] ?? '').toString().trim();
       final number = (tags['addr:housenumber'] ?? '').toString().trim();
       final district = (tags['addr:district'] ?? tags['addr:suburb'] ?? '').toString().trim();
       final city = (tags['addr:city'] ?? '').toString().trim();
-      final address = [
-        [street, number].where((part) => part.isNotEmpty).join(' '),
-        district,
-        city,
-      ].where((part) => part.isNotEmpty).join(', ');
-
+      final address = [[street, number].where((part) => part.isNotEmpty).join(' '), district, city]
+          .where((part) => part.isNotEmpty)
+          .join(', ');
       venues.add(NearbyVenue(
         id: '${item['type'] ?? 'node'}-${item['id'] ?? dedupeKey}',
         category: category,
