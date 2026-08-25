@@ -21,6 +21,22 @@ class BusinessService {
     return user;
   }
 
+  Future<Map<String, dynamic>> createBusinessCandidate({
+    required String category,
+    required String venueName,
+    required String address,
+    String city = '',
+  }) async {
+    await _authenticatedUser();
+    final result = await _functions.httpsCallable('createBusinessCandidate').call({
+      'category': category,
+      'venueName': venueName,
+      'address': address,
+      'city': city,
+    });
+    return Map<String, dynamic>.from(result.data as Map);
+  }
+
   Future<Map<String, dynamic>> claimStatus(String category, String venueId) async {
     await _authenticatedUser();
     final result = await _functions.httpsCallable('getBusinessClaim').call({'category': category, 'venueId': venueId});
