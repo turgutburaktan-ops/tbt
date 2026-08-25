@@ -33,6 +33,21 @@ async function expireBoosts() {
     .get();
   const expired = snap.docs.filter((doc) => (doc.data()?.status || '') !== 'expired');
   if (expired.length === 0) return 0;
+
+  const parentRefs = new Map();
+  for (const doc of expired) {
+    const venueRef = doc.ref.parent.parent;
+    if (venueRef) parentRefs.set(venueRef.path, venueRef);
+  }
+  const parentSnaps = await Promise.all([...parentRefs.values()].map((ref) => ref.get()));
+  const clearable = new Set();
+  for (const venueSnap of parentSnaps) {
+    const until = venueSnap.data()?.boostActiveUntil;
+    if (!(until instanceof Timestamp) || until.toMillis() <= now.toMillis()) {
+      clearable.add(venueSnap.ref.path);
+    }
+  }
+
   const batch = db.batch();
   for (const doc of expired) {
     batch.update(doc.ref, {
@@ -40,7 +55,7 @@ async function expireBoosts() {
       expiredAt: FieldValue.serverTimestamp(),
     });
     const venueRef = doc.ref.parent.parent;
-    if (venueRef) {
+    if (venueRef && clearable.has(venueRef.path)) {
       batch.set(venueRef, {
         boostActive: false,
         boostActiveUntil: null,
