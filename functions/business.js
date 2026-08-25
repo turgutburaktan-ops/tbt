@@ -15,28 +15,31 @@ function venueKey(category, venueId) {
   return `${clean(category, 40)}:${clean(venueId, 180)}`;
 }
 
-async function verifyEvidenceFile(uid, id, evidenceStoragePath) {
-  const expectedPath = `users/${uid}/business_claims/${id}/evidence.jpg`;
-  if (evidenceStoragePath !== expectedPath) {
-    throw new HttpsError('permission-denied', 'Kanıt dosyası bu hesap ve mekanla eşleşmiyor.');
-  }
-
-  const file = getStorage().bucket().file(expectedPath);
+async function verifiedImageMetadata(path, maxBytes) {
+  const file = getStorage().bucket().file(path);
   let metadata;
   try {
     const [exists] = await file.exists();
     if (!exists) throw new Error('missing');
     [metadata] = await file.getMetadata();
   } catch (_) {
-    throw new HttpsError('failed-precondition', 'Kanıt dosyası Storage üzerinde doğrulanamadı.');
+    throw new HttpsError('failed-precondition', 'Görsel dosyası Storage üzerinde doğrulanamadı.');
   }
-
   const size = Number(metadata.size || 0);
   const contentType = String(metadata.contentType || '').toLowerCase();
   const allowedTypes = new Set(['image/jpeg', 'image/png', 'image/webp']);
-  if (!Number.isFinite(size) || size <= 0 || size > 15 * 1024 * 1024 || !allowedTypes.has(contentType)) {
-    throw new HttpsError('invalid-argument', 'Kanıt dosyası türü veya boyutu geçersiz.');
+  if (!Number.isFinite(size) || size <= 0 || size > maxBytes || !allowedTypes.has(contentType)) {
+    throw new HttpsError('invalid-argument', 'Görsel dosyası türü veya boyutu geçersiz.');
   }
+  return metadata;
+}
+
+async function verifyEvidenceFile(uid, id, evidenceStoragePath) {
+  const expectedPath = `users/${uid}/business_claims/${id}/evidence.jpg`;
+  if (evidenceStoragePath !== expectedPath) {
+    throw new HttpsError('permission-denied', 'Kanıt dosyası bu hesap ve mekanla eşleşmiyor.');
+  }
+  await verifiedImageMetadata(expectedPath, 15 * 1024 * 1024);
 }
 
 exports.submitBusinessClaim = onCall({region: 'europe-west1'}, async (request) => {
@@ -172,6 +175,34 @@ exports.updateBusinessProfile = onCall({region: 'europe-west1'}, async (request)
     updatedAt: FieldValue.serverTimestamp(),
   }, {merge: true});
 
+  return {ok: true};
+});
+
+exports.updateBusinessProfileMedia = onCall({region: 'europe-west1'}, async (request) => {
+  const d = request.data || {};
+  const {uid, db, id} = await assertVerifiedOwner(request, d.category, d.venueId);
+  const kind = clean(d.kind, 20);
+  const imageUrl = clean(d.imageUrl, 1200);
+  const storagePath = clean(d.storagePath, 600);
+  if (!['logo', 'cover'].includes(kind) || !imageUrl) {
+    throw new HttpsError('invalid-argument', 'İşletme görseli bilgileri geçersiz.');
+  }
+
+  const expectedPath = `users/${uid}/business_profiles/${id}/${kind}.jpg`;
+  if (storagePath !== expectedPath) {
+    throw new HttpsError('permission-denied', 'İşletme görseli bu hesap ve mekanla eşleşmiyor.');
+  }
+  await verifiedImageMetadata(expectedPath, 12 * 1024 * 1024);
+
+  const field = kind === 'logo' ? 'logoUrl' : 'coverUrl';
+  const pathField = kind === 'logo' ? 'logoStoragePath' : 'coverStoragePath';
+  await db.collection('business_venues').doc(id).set({
+    ownerUid: uid,
+    verified: true,
+    [field]: imageUrl,
+    [pathField]: storagePath,
+    updatedAt: FieldValue.serverTimestamp(),
+  }, {merge: true});
   return {ok: true};
 });
 
