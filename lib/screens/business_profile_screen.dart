@@ -70,6 +70,7 @@ class BusinessProfileScreen extends StatelessWidget {
         final managedWebsite = (profile['website'] ?? '').toString().trim();
         final phone = managedPhone.isNotEmpty ? managedPhone : venue.phone.trim();
         final website = managedWebsite.isNotEmpty ? managedWebsite : venue.website.trim();
+        final liveHours = _HoursStatus.from(profile['weeklyHours']);
 
         return DefaultTabController(
           length: 5,
@@ -84,7 +85,6 @@ class BusinessProfileScreen extends StatelessWidget {
                   title: innerScrolled ? Text(venue.name) : null,
                   flexibleSpace: FlexibleSpaceBar(
                     background: _BusinessHeader(
-                      venue: venue,
                       coverUrl: coverUrl,
                       logoUrl: logoUrl,
                       verified: verified,
@@ -99,9 +99,7 @@ class BusinessProfileScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(children: [
-                          Expanded(
-                            child: Text(venue.name, style: const TextStyle(fontSize: 23, fontWeight: FontWeight.w900)),
-                          ),
+                          Expanded(child: Text(venue.name, style: const TextStyle(fontSize: 23, fontWeight: FontWeight.w900))),
                           if (verified) const Icon(Icons.verified_rounded, color: AppColors.cyan, size: 22),
                         ]),
                         const SizedBox(height: 5),
@@ -113,6 +111,17 @@ class BusinessProfileScreen extends StatelessWidget {
                           ].join('  •  '),
                           style: const TextStyle(color: Colors.white60, fontWeight: FontWeight.w700),
                         ),
+                        if (liveHours != null) ...[
+                          const SizedBox(height: 5),
+                          Text(
+                            liveHours.label,
+                            style: TextStyle(
+                              color: liveHours.open ? AppColors.cyan : Colors.white54,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                        ],
                         if (venue.address.isNotEmpty) ...[
                           const SizedBox(height: 5),
                           Text(venue.address, style: const TextStyle(color: Colors.white54)),
@@ -154,10 +163,7 @@ class BusinessProfileScreen extends StatelessWidget {
                         ]),
                         if (!isOwner) ...[
                           const SizedBox(height: 12),
-                          BusinessPublicActions(
-                            venueKey: _key,
-                            reservationsEnabled: verified,
-                          ),
+                          BusinessPublicActions(venueKey: _key, reservationsEnabled: verified),
                         ],
                         if (!verified && FirebaseAuth.instance.currentUser != null) ...[
                           const SizedBox(height: 6),
@@ -196,13 +202,11 @@ class BusinessProfileScreen extends StatelessWidget {
                 ),
               ],
               body: TabBarView(children: [
-                _OverviewTab(venue: venue, profile: profile, venueKey: _key),
+                _OverviewTab(venue: venue, profile: profile),
                 _BusinessCollectionTab(
                   stream: venueRef.collection('menu').snapshots(),
                   emptyIcon: venue.category == NearbyVenueCategory.hotel ? Icons.bed_outlined : Icons.restaurant_menu_rounded,
-                  emptyText: venue.category == NearbyVenueCategory.hotel
-                      ? 'Oda ve hizmet bilgisi henüz eklenmedi.'
-                      : 'Menü henüz eklenmedi.',
+                  emptyText: venue.category == NearbyVenueCategory.hotel ? 'Oda ve hizmet bilgisi henüz eklenmedi.' : 'Menü henüz eklenmedi.',
                   builder: (data) => _MenuCard(data: data),
                 ),
                 _BusinessCollectionTab(
@@ -210,6 +214,7 @@ class BusinessProfileScreen extends StatelessWidget {
                   emptyIcon: Icons.local_offer_outlined,
                   emptyText: 'Aktif kampanya bulunmuyor.',
                   activeOnly: true,
+                  hideExpiredCampaigns: true,
                   builder: (data) => _CampaignCard(data: data),
                 ),
                 _BusinessCollectionTab(
@@ -230,12 +235,11 @@ class BusinessProfileScreen extends StatelessWidget {
 }
 
 class _BusinessHeader extends StatelessWidget {
-  final NearbyVenue venue;
   final String coverUrl;
   final String logoUrl;
   final bool verified;
   final IconData icon;
-  const _BusinessHeader({required this.venue, required this.coverUrl, required this.logoUrl, required this.verified, required this.icon});
+  const _BusinessHeader({required this.coverUrl, required this.logoUrl, required this.verified, required this.icon});
 
   @override
   Widget build(BuildContext context) => Stack(fit: StackFit.expand, children: [
@@ -249,7 +253,11 @@ class _BusinessHeader extends StatelessWidget {
             width: 76,
             height: 76,
             clipBehavior: Clip.antiAlias,
-            decoration: BoxDecoration(color: AppColors.surfaceStrong, borderRadius: BorderRadius.circular(22), border: Border.all(color: verified ? AppColors.cyan : Colors.white24, width: 2)),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceStrong,
+              borderRadius: BorderRadius.circular(22),
+              border: Border.all(color: verified ? AppColors.cyan : Colors.white24, width: 2),
+            ),
             child: logoUrl.isEmpty ? Icon(icon, size: 36, color: AppColors.cyan) : FirebaseMediaImage(imageUrl: logoUrl, fit: BoxFit.cover),
           ),
         ),
@@ -283,17 +291,17 @@ class _QuickAction extends StatelessWidget {
 class _OverviewTab extends StatelessWidget {
   final NearbyVenue venue;
   final Map<String, dynamic> profile;
-  final String venueKey;
-  const _OverviewTab({required this.venue, required this.profile, required this.venueKey});
+  const _OverviewTab({required this.venue, required this.profile});
 
   @override
   Widget build(BuildContext context) {
-    final managedHours = (profile['openingHours'] ?? '').toString().trim();
-    final openingHours = managedHours.isNotEmpty ? managedHours : venue.openingHours;
+    final weekly = Map<String, dynamic>.from((profile['weeklyHours'] as Map?) ?? const {});
+    final fallback = (profile['openingHours'] ?? venue.openingHours).toString().trim();
+    final hoursText = weekly.isNotEmpty ? _HoursStatus.weekSummary(weekly) : (fallback.isEmpty ? 'İşletme henüz çalışma saati eklemedi.' : fallback);
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 36),
       children: [
-        _InfoCard(icon: Icons.schedule_rounded, title: 'Çalışma saatleri', value: openingHours.isEmpty ? 'İşletme henüz çalışma saati eklemedi.' : openingHours),
+        _InfoCard(icon: Icons.schedule_rounded, title: 'Çalışma saatleri', value: hoursText),
         if ((profile['description'] ?? '').toString().isNotEmpty)
           _InfoCard(icon: Icons.info_outline_rounded, title: 'Hakkında', value: profile['description'].toString()),
         const SizedBox(height: 8),
@@ -333,7 +341,15 @@ class _BusinessCollectionTab extends StatelessWidget {
   final IconData emptyIcon;
   final String emptyText;
   final bool activeOnly;
-  const _BusinessCollectionTab({required this.stream, required this.builder, required this.emptyIcon, required this.emptyText, this.activeOnly = false});
+  final bool hideExpiredCampaigns;
+  const _BusinessCollectionTab({
+    required this.stream,
+    required this.builder,
+    required this.emptyIcon,
+    required this.emptyText,
+    this.activeOnly = false,
+    this.hideExpiredCampaigns = false,
+  });
 
   @override
   Widget build(BuildContext context) => StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
@@ -341,11 +357,15 @@ class _BusinessCollectionTab extends StatelessWidget {
         builder: (context, snapshot) {
           if (snapshot.hasError) return const _EmptyState(icon: Icons.cloud_off_outlined, text: 'Bilgiler yüklenemedi.');
           if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+          final now = DateTime.now();
           final docs = snapshot.data!.docs.where((doc) {
             final d = doc.data();
             if (activeOnly && d['active'] == false) return false;
-            final end = d['validUntil'] ?? d['startsAt'];
-            return end is! Timestamp || end.toDate().isAfter(DateTime.now().subtract(const Duration(hours: 4)));
+            if (hideExpiredCampaigns) {
+              final until = d['validUntil'];
+              if (until is Timestamp && until.toDate().isBefore(now)) return false;
+            }
+            return true;
           }).toList()
             ..sort((a, b) {
               final ad = a.data()['createdAt'] as Timestamp?;
@@ -366,17 +386,50 @@ class _BusinessCollectionTab extends StatelessWidget {
 class _MenuCard extends StatelessWidget {
   final Map<String, dynamic> data;
   const _MenuCard({required this.data});
+
   @override
-  Widget build(BuildContext context) => Card(
-        child: ListTile(
-          title: Text((data['name'] ?? '').toString(), style: const TextStyle(fontWeight: FontWeight.w900)),
-          subtitle: Text([(data['section'] ?? '').toString(), (data['description'] ?? '').toString()].where((e) => e.isNotEmpty).join('\n')),
-          trailing: Text(
-            '${(((data['priceMinor'] as num?)?.toInt() ?? 0) / 100).toStringAsFixed(2)} ₺',
-            style: const TextStyle(color: AppColors.cyan, fontWeight: FontWeight.w900),
+  Widget build(BuildContext context) {
+    final image = (data['imageUrl'] ?? '').toString();
+    final available = data['available'] != false;
+    final price = (((data['priceMinor'] as num?)?.toInt() ?? 0) / 100).toStringAsFixed(2);
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Container(
+            width: 72,
+            height: 72,
+            clipBehavior: Clip.antiAlias,
+            decoration: BoxDecoration(color: AppColors.surfaceStrong, borderRadius: BorderRadius.circular(14)),
+            child: image.isEmpty ? const Icon(Icons.fastfood_outlined, color: Colors.white30) : FirebaseMediaImage(imageUrl: image, fit: BoxFit.cover),
           ),
-        ),
-      );
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Row(children: [
+                Expanded(child: Text((data['name'] ?? '').toString(), style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16))),
+                if (!available)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(color: Colors.white10, borderRadius: BorderRadius.circular(999)),
+                    child: const Text('Stokta yok', style: TextStyle(color: Colors.white54, fontSize: 10, fontWeight: FontWeight.w900)),
+                  ),
+              ]),
+              const SizedBox(height: 4),
+              if ((data['section'] ?? '').toString().isNotEmpty)
+                Text((data['section'] ?? '').toString(), style: const TextStyle(color: AppColors.cyan, fontSize: 11, fontWeight: FontWeight.w800)),
+              if ((data['description'] ?? '').toString().isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Text((data['description'] ?? '').toString(), style: const TextStyle(color: Colors.white60)),
+              ],
+              const SizedBox(height: 7),
+              Text('$price ₺', style: TextStyle(color: available ? AppColors.cyan : Colors.white38, fontWeight: FontWeight.w900)),
+            ]),
+          ),
+        ]),
+      ),
+    );
+  }
 }
 
 class _CampaignCard extends StatelessWidget {
@@ -385,14 +438,22 @@ class _CampaignCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final until = data['validUntil'] as Timestamp?;
-    return Card(child: Padding(padding: const EdgeInsets.all(15), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      const Icon(Icons.local_offer_rounded, color: AppColors.violetBright),
-      const SizedBox(height: 8),
-      Text((data['title'] ?? '').toString(), style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900)),
-      const SizedBox(height: 5),
-      Text((data['description'] ?? '').toString(), style: const TextStyle(color: Colors.white60, height: 1.4)),
-      if (until != null) ...[const SizedBox(height: 8), Text('${until.toDate().day}.${until.toDate().month}.${until.toDate().year} tarihine kadar', style: const TextStyle(color: AppColors.cyan, fontSize: 11, fontWeight: FontWeight.w800))],
-    ])));
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(15),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          const Icon(Icons.local_offer_rounded, color: AppColors.violetBright),
+          const SizedBox(height: 8),
+          Text((data['title'] ?? '').toString(), style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900)),
+          const SizedBox(height: 5),
+          Text((data['description'] ?? '').toString(), style: const TextStyle(color: Colors.white60, height: 1.4)),
+          if (until != null) ...[
+            const SizedBox(height: 8),
+            Text('${until.toDate().day}.${until.toDate().month}.${until.toDate().year} tarihine kadar', style: const TextStyle(color: AppColors.cyan, fontSize: 11, fontWeight: FontWeight.w800)),
+          ],
+        ]),
+      ),
+    );
   }
 }
 
@@ -403,11 +464,16 @@ class _ProgramCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final starts = data['startsAt'] as Timestamp?;
     final d = starts?.toDate();
-    return Card(child: ListTile(
-      leading: const Icon(Icons.event_rounded, color: AppColors.cyan),
-      title: Text((data['title'] ?? '').toString(), style: const TextStyle(fontWeight: FontWeight.w900)),
-      subtitle: Text([(data['description'] ?? '').toString(), if (d != null) '${d.day}.${d.month}.${d.year} • ${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}'].where((e) => e.isNotEmpty).join('\n')),
-    ));
+    return Card(
+      child: ListTile(
+        leading: const Icon(Icons.event_rounded, color: AppColors.cyan),
+        title: Text((data['title'] ?? '').toString(), style: const TextStyle(fontWeight: FontWeight.w900)),
+        subtitle: Text([
+          (data['description'] ?? '').toString(),
+          if (d != null) '${d.day}.${d.month}.${d.year} • ${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}',
+        ].where((e) => e.isNotEmpty).join('\n')),
+      ),
+    );
   }
 }
 
@@ -419,7 +485,8 @@ class _BusinessPostsTab extends StatelessWidget {
         stream: FirebaseFirestore.instance.collection('posts').where('businessVenueKey', isEqualTo: venueKey).limit(60).snapshots(),
         builder: (context, snapshot) {
           if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
-          final docs = snapshot.data!.docs.toList()..sort((a, b) => ((b.data()['createdAt'] as Timestamp?)?.millisecondsSinceEpoch ?? 0).compareTo((a.data()['createdAt'] as Timestamp?)?.millisecondsSinceEpoch ?? 0));
+          final docs = snapshot.data!.docs.toList()
+            ..sort((a, b) => ((b.data()['createdAt'] as Timestamp?)?.millisecondsSinceEpoch ?? 0).compareTo((a.data()['createdAt'] as Timestamp?)?.millisecondsSinceEpoch ?? 0));
           if (docs.isEmpty) return const _EmptyState(icon: Icons.photo_library_outlined, text: 'İşletme henüz fotoğraf veya video paylaşmadı.');
           return GridView.builder(
             padding: const EdgeInsets.fromLTRB(4, 8, 4, 30),
@@ -430,8 +497,12 @@ class _BusinessPostsTab extends StatelessWidget {
               return InkWell(
                 onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => PostDetailScreen(post: data))),
                 child: Stack(fit: StackFit.expand, children: [
-                  FirebaseMediaImage(imageUrl: (data['imageUrl'] ?? data['thumbnailUrl'] ?? '').toString(), storagePath: (data['storagePath'] ?? data['thumbnailStoragePath'] ?? '').toString()),
-                  if ((data['mediaType'] ?? '').toString() == 'video') const Positioned(top: 6, right: 6, child: Icon(Icons.play_circle_fill_rounded, shadows: [Shadow(blurRadius: 5)])),
+                  FirebaseMediaImage(
+                    imageUrl: (data['imageUrl'] ?? data['thumbnailUrl'] ?? '').toString(),
+                    storagePath: (data['storagePath'] ?? data['thumbnailStoragePath'] ?? '').toString(),
+                  ),
+                  if ((data['mediaType'] ?? '').toString() == 'video')
+                    const Positioned(top: 6, right: 6, child: Icon(Icons.play_circle_fill_rounded, shadows: [Shadow(blurRadius: 5)])),
                 ]),
               );
             },
@@ -440,12 +511,81 @@ class _BusinessPostsTab extends StatelessWidget {
       );
 }
 
+class _HoursStatus {
+  final bool open;
+  final String label;
+  const _HoursStatus(this.open, this.label);
+
+  static const _dayKeys = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+  static const _dayLabels = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
+
+  static int _minutes(String value) {
+    final p = value.split(':');
+    if (p.length != 2) return -1;
+    final h = int.tryParse(p[0]), m = int.tryParse(p[1]);
+    return h == null || m == null ? -1 : h * 60 + m;
+  }
+
+  static _HoursStatus? from(dynamic source) {
+    if (source is! Map || source.isEmpty) return null;
+    final weekly = Map<String, dynamic>.from(source);
+    final now = DateTime.now();
+    final key = _dayKeys[now.weekday - 1];
+    final row = Map<String, dynamic>.from((weekly[key] as Map?) ?? const {});
+    if (row.isEmpty) return null;
+    if (row['closed'] == true) return _nextOpening(weekly, now, 'Kapalı');
+    final openText = (row['open'] ?? '').toString();
+    final closeText = (row['close'] ?? '').toString();
+    final openMin = _minutes(openText), closeMin = _minutes(closeText), nowMin = now.hour * 60 + now.minute;
+    if (openMin < 0 || closeMin < 0) return null;
+    final crossesMidnight = closeMin <= openMin;
+    final isOpen = crossesMidnight ? (nowMin >= openMin || nowMin < closeMin) : (nowMin >= openMin && nowMin < closeMin);
+    if (isOpen) return _HoursStatus(true, 'Açık • $closeText’de kapanıyor');
+    if (nowMin < openMin) return _HoursStatus(false, 'Kapalı • $openText’da açılıyor');
+    return _nextOpening(weekly, now, 'Kapalı');
+  }
+
+  static _HoursStatus _nextOpening(Map<String, dynamic> weekly, DateTime now, String prefix) {
+    for (var add = 1; add <= 7; add++) {
+      final date = now.add(Duration(days: add));
+      final key = _dayKeys[date.weekday - 1];
+      final row = Map<String, dynamic>.from((weekly[key] as Map?) ?? const {});
+      if (row.isEmpty || row['closed'] == true) continue;
+      final open = (row['open'] ?? '').toString();
+      if (_minutes(open) < 0) continue;
+      final day = add == 1 ? 'yarın' : _dayLabels[date.weekday - 1];
+      return _HoursStatus(false, '$prefix • $day $open’da açılıyor');
+    }
+    return const _HoursStatus(false, 'Kapalı');
+  }
+
+  static String weekSummary(Map<String, dynamic> weekly) {
+    final lines = <String>[];
+    for (var i = 0; i < _dayKeys.length; i++) {
+      final row = Map<String, dynamic>.from((weekly[_dayKeys[i]] as Map?) ?? const {});
+      if (row.isEmpty) continue;
+      final text = row['closed'] == true ? 'Kapalı' : '${row['open'] ?? ''} – ${row['close'] ?? ''}';
+      lines.add('${_dayLabels[i]}: $text');
+    }
+    return lines.isEmpty ? 'İşletme henüz çalışma saati eklemedi.' : lines.join('\n');
+  }
+}
+
 class _EmptyState extends StatelessWidget {
   final IconData icon;
   final String text;
   const _EmptyState({required this.icon, required this.text});
   @override
-  Widget build(BuildContext context) => Center(child: Padding(padding: const EdgeInsets.all(32), child: Column(mainAxisSize: MainAxisSize.min, children: [Icon(icon, size: 48, color: Colors.white24), const SizedBox(height: 12), Text(text, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white54))])));
+  Widget build(BuildContext context) => Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            Icon(icon, size: 48, color: Colors.white24),
+            const SizedBox(height: 12),
+            Text(text, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white54)),
+          ]),
+        ),
+      );
 }
 
 class _TabHeaderDelegate extends SliverPersistentHeaderDelegate {
