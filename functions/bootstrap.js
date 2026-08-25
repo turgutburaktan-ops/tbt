@@ -6,6 +6,7 @@ Object.assign(exports, require('./business_growth'));
 Object.assign(exports, require('./business_maintenance'));
 Object.assign(exports, require('./business_candidate'));
 Object.assign(exports, require('./business_candidate_publish'));
+Object.assign(exports, require('./business_claim_v2'));
 Object.assign(exports, require('./business_notifications'));
 Object.assign(exports, require('./admin_business_premium'));
 Object.assign(exports, require('./early_business_access'));
