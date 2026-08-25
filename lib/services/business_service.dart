@@ -30,10 +30,7 @@ class BusinessService {
     return Map<String, dynamic>.from(result.data as Map);
   }
 
-  Future<Map<String, dynamic>> entitlementStatus(
-    String category,
-    String venueId,
-  ) async {
+  Future<Map<String, dynamic>> entitlementStatus(String category, String venueId) async {
     final result = await _functions.httpsCallable('getBusinessEntitlement').call({
       'venueKey': venueKey(category.trim(), venueId.trim()),
     });
@@ -52,9 +49,7 @@ class BusinessService {
     required File evidenceImage,
   }) async {
     final user = await _authenticatedUser();
-    if (!user.emailVerified) {
-      throw Exception('Önce hesabındaki e-posta adresini doğrulamalısın.');
-    }
+    if (!user.emailVerified) throw Exception('Önce hesabındaki e-posta adresini doğrulamalısın.');
     if (!await evidenceImage.exists() || await evidenceImage.length() <= 0) {
       throw Exception('Yetki kanıtı fotoğrafı zorunlu.');
     }
@@ -63,13 +58,8 @@ class BusinessService {
     }
 
     final id = venueKey(category, venueId);
-    final evidenceRef = _storage
-        .ref()
-        .child('users/${user.uid}/business_claims/$id/evidence.jpg');
-    await evidenceRef.putFile(
-      evidenceImage,
-      SettableMetadata(contentType: 'image/jpeg'),
-    );
+    final evidenceRef = _storage.ref().child('users/${user.uid}/business_claims/$id/evidence.jpg');
+    await evidenceRef.putFile(evidenceImage, SettableMetadata(contentType: 'image/jpeg'));
     final evidenceUrl = await evidenceRef.getDownloadURL();
 
     await _functions.httpsCallable('submitBusinessClaim').call({
@@ -112,24 +102,13 @@ class BusinessService {
     required File image,
   }) async {
     final user = await _authenticatedUser();
-    if (kind != 'logo' && kind != 'cover') {
-      throw Exception('Geçersiz işletme görseli türü.');
-    }
-    if (!await image.exists() || await image.length() <= 0) {
-      throw Exception('Görsel dosyası okunamadı.');
-    }
-    if (await image.length() > 12 * 1024 * 1024) {
-      throw Exception('Görsel 12 MB sınırını aşıyor.');
-    }
+    if (kind != 'logo' && kind != 'cover') throw Exception('Geçersiz işletme görseli türü.');
+    if (!await image.exists() || await image.length() <= 0) throw Exception('Görsel dosyası okunamadı.');
+    if (await image.length() > 12 * 1024 * 1024) throw Exception('Görsel 12 MB sınırını aşıyor.');
 
     final id = venueKey(category.trim(), venueId.trim());
-    final imageRef = _storage
-        .ref()
-        .child('users/${user.uid}/business_profiles/$id/$kind.jpg');
-    await imageRef.putFile(
-      image,
-      SettableMetadata(contentType: 'image/jpeg'),
-    );
+    final imageRef = _storage.ref().child('users/${user.uid}/business_profiles/$id/$kind.jpg');
+    await imageRef.putFile(image, SettableMetadata(contentType: 'image/jpeg'));
     final imageUrl = await imageRef.getDownloadURL();
 
     await _functions.httpsCallable('updateBusinessProfileMedia').call({
@@ -191,6 +170,52 @@ class BusinessService {
       'title': title,
       'description': description,
       'validUntilMs': validUntil.millisecondsSinceEpoch,
+    });
+  }
+
+  Future<void> updateContentItem({
+    required String category,
+    required String venueId,
+    required String type,
+    required String itemId,
+    required Map<String, dynamic> changes,
+  }) async {
+    await _authenticatedUser();
+    await _functions.httpsCallable('updateBusinessContentItem').call({
+      'category': category,
+      'venueId': venueId,
+      'type': type,
+      'itemId': itemId,
+      ...changes,
+    });
+  }
+
+  Future<void> setContentActive({
+    required String category,
+    required String venueId,
+    required String type,
+    required String itemId,
+    required bool active,
+  }) => updateContentItem(
+        category: category,
+        venueId: venueId,
+        type: type,
+        itemId: itemId,
+        changes: {'active': active},
+      );
+
+  Future<void> deleteContentItem({
+    required String category,
+    required String venueId,
+    required String type,
+    required String itemId,
+  }) async {
+    await _authenticatedUser();
+    await _functions.httpsCallable('deleteBusinessContentItem').call({
+      'category': category,
+      'venueId': venueId,
+      'type': type,
+      'itemId': itemId,
     });
   }
 }
