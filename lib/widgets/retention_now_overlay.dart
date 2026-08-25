@@ -173,10 +173,10 @@ class _StatsCard extends StatelessWidget {
     ]),
   );
 }
-class _Stat extends StatelessWidget { final String value,label; const _Stat(this.value,this.label); @override Widget build(BuildContext context)=>Column(children:[Text(value,style:const TextStyle(fontSize:20,fontWeight:FontWeight.w900,color:Color(0xFF45E7F2))),const SizedBox(height:2),Text(label,textAlign:TextAlign.center,style:const TextStyle(fontSize:10,color:Colors.white46))]); }
+class _Stat extends StatelessWidget { final String value,label; const _Stat(this.value,this.label); @override Widget build(BuildContext context)=>Column(children:[Text(value,style:const TextStyle(fontSize:20,fontWeight:FontWeight.w900,color:Color(0xFF45E7F2))),const SizedBox(height:2),Text(label,textAlign:TextAlign.center,style:TextStyle(fontSize:10,color:Colors.white.withValues(alpha:.46)))]); }
 class _Divider extends StatelessWidget { const _Divider(); @override Widget build(BuildContext context)=>Container(width:1,height:30,color:Colors.white10); }
 class _Section extends StatelessWidget { final IconData icon; final String title; const _Section({required this.icon,required this.title}); @override Widget build(BuildContext context)=>Row(children:[Icon(icon,size:18,color:Colors.white60),const SizedBox(width:7),Text(title,style:const TextStyle(fontSize:16,fontWeight:FontWeight.w900))]); }
-class _Empty extends StatelessWidget { final String text; const _Empty(this.text); @override Widget build(BuildContext context)=>Container(padding:const EdgeInsets.all(14),decoration:BoxDecoration(color:const Color(0xFF111620),borderRadius:BorderRadius.circular(16)),child:Text(text,style:const TextStyle(color:Colors.white50,height:1.35))); }
+class _Empty extends StatelessWidget { final String text; const _Empty(this.text); @override Widget build(BuildContext context)=>Container(padding:const EdgeInsets.all(14),decoration:BoxDecoration(color:const Color(0xFF111620),borderRadius:BorderRadius.circular(16)),child:Text(text,style:TextStyle(color:Colors.white.withValues(alpha:.50),height:1.35))); }
 
 class _PostTile extends StatelessWidget {
   final Map<String,dynamic> data; const _PostTile(this.data);
@@ -202,7 +202,7 @@ class _InfoTile extends StatelessWidget {
   @override Widget build(BuildContext context)=>Container(
     margin:const EdgeInsets.only(bottom:7),padding:const EdgeInsets.symmetric(horizontal:12,vertical:11),
     decoration:BoxDecoration(color:const Color(0xFF111620),borderRadius:BorderRadius.circular(15)),
-    child:Row(children:[Container(width:36,height:36,decoration:BoxDecoration(color:Colors.white.withValues(alpha:.05),borderRadius:BorderRadius.circular(11)),child:Icon(icon,size:18,color:Colors.white60)),const SizedBox(width:10),Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(title,maxLines:1,overflow:TextOverflow.ellipsis,style:const TextStyle(fontWeight:FontWeight.w800,fontSize:13)),if(subtitle.isNotEmpty)...[const SizedBox(height:2),Text(subtitle,maxLines:2,overflow:TextOverflow.ellipsis,style:const TextStyle(color:Colors.white46,fontSize:11.5))]]))]),
+    child:Row(children:[Container(width:36,height:36,decoration:BoxDecoration(color:Colors.white.withValues(alpha:.05),borderRadius:BorderRadius.circular(11)),child:Icon(icon,size:18,color:Colors.white60)),const SizedBox(width:10),Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(title,maxLines:1,overflow:TextOverflow.ellipsis,style:const TextStyle(fontWeight:FontWeight.w800,fontSize:13)),if(subtitle.isNotEmpty)...[const SizedBox(height:2),Text(subtitle,maxLines:2,overflow:TextOverflow.ellipsis,style:TextStyle(color:Colors.white.withValues(alpha:.46),fontSize:11.5))]]))]),
   );
 }
 
