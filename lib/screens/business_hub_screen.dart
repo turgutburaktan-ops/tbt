@@ -36,6 +36,7 @@ class _BusinessHubScreenState extends State<BusinessHubScreen> {
   final _taxLast4 = TextEditingController();
   File? _evidence;
   bool _saving = false;
+  bool _uploadingMedia = false;
   Map<String, dynamic>? _status;
 
   @override
@@ -99,6 +100,31 @@ class _BusinessHubScreenState extends State<BusinessHubScreen> {
       requestFullMetadata: false,
     );
     if (file != null && mounted) setState(() => _evidence = File(file.path));
+  }
+
+  Future<void> _pickProfileImage(String kind) async {
+    if (_uploadingMedia) return;
+    final picked = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 88,
+      maxWidth: kind == 'logo' ? 1400 : 2400,
+      requestFullMetadata: false,
+    );
+    if (picked == null || !mounted) return;
+    setState(() => _uploadingMedia = true);
+    try {
+      await BusinessService.instance.updateProfileImage(
+        category: _category.text.trim(),
+        venueId: _venueId.text.trim(),
+        kind: kind,
+        image: File(picked.path),
+      );
+      _message(kind == 'logo' ? 'İşletme logosu güncellendi.' : 'Kapak fotoğrafı güncellendi.');
+    } catch (e) {
+      _message(_friendlyError(e));
+    } finally {
+      if (mounted) setState(() => _uploadingMedia = false);
+    }
   }
 
   Future<void> _submit() async {
@@ -263,6 +289,18 @@ class _BusinessHubScreenState extends State<BusinessHubScreen> {
               title: 'Profil Bilgileri',
               subtitle: 'Açıklama, telefon, web sitesi ve çalışma saatlerini düzenle.',
               onTap: _showProfileDialog,
+            ),
+            _ManagementTile(
+              icon: Icons.account_circle_outlined,
+              title: 'İşletme Logosu',
+              subtitle: _uploadingMedia ? 'Görsel yükleniyor…' : 'Profilde görünen işletme logosunu değiştir.',
+              onTap: () => _pickProfileImage('logo'),
+            ),
+            _ManagementTile(
+              icon: Icons.panorama_outlined,
+              title: 'Kapak Fotoğrafı',
+              subtitle: _uploadingMedia ? 'Görsel yükleniyor…' : 'İşletme profilinin kapak görselini değiştir.',
+              onTap: () => _pickProfileImage('cover'),
             ),
             _ManagementTile(
               icon: Icons.restaurant_menu_rounded,
