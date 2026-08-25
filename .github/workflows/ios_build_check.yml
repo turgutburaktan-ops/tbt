@@ -46,24 +46,24 @@ jobs:
           p = Path('ios/Podfile')
           s = p.read_text()
           if 'platform :ios' in s:
-              s = re.sub(r"platform :ios,\s*'[^']+'", "platform :ios, '14.0'", s)
+              s = re.sub(r"platform :ios,\s*'[^']+'", "platform :ios, '15.0'", s)
           else:
-              s = "platform :ios, '14.0'\n" + s
+              s = "platform :ios, '15.0'\n" + s
           p.write_text(s)
           PY
           fi
-      - name: Build iOS without signing
+      - name: Build iOS simulator
         run: >-
-          flutter build ios --debug --no-codesign --no-pub
+          flutter build ios --simulator --debug --no-pub
           --dart-define=FIREBASE_IOS_API_KEY=ci-placeholder
           --dart-define=FIREBASE_IOS_APP_ID=1:330568532415:ios:ci-placeholder
           --dart-define=IOS_BUNDLE_ID=com.tbt.bestPhotoSpot
-      - name: Verify app bundle
-        run: test -d build/ios/iphoneos/Runner.app
-      - name: Upload unsigned iOS app
+      - name: Verify simulator app bundle
+        run: test -d build/ios/iphonesimulator/Runner.app
+      - name: Upload iOS simulator app
         uses: actions/upload-artifact@v4
         with:
-          name: best-photo-spot-ios-unsigned-app
-          path: build/ios/iphoneos/Runner.app
+          name: best-photo-spot-ios-simulator-app
+          path: build/ios/iphonesimulator/Runner.app
           if-no-files-found: error
           retention-days: 7
