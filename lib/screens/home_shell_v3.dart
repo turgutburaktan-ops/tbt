@@ -5,6 +5,8 @@ import 'package:flutter/services.dart';
 
 import '../models/nearby_venue.dart';
 import '../services/app_notification_service.dart';
+import '../services/city_location_service.dart';
+import '../services/nearby_venue_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/nearby_places_view.dart';
 import '../widgets/story_strip.dart';
@@ -276,6 +278,8 @@ class _PlacesHub extends StatefulWidget {
 
 class _PlacesHubState extends State<_PlacesHub> {
   String _category = 'Gezilecek Yerler';
+  String _cityLabel = 'Konumum';
+  bool _cityLoading = false;
 
   void _openMap() => Navigator.push(
         context,
@@ -294,6 +298,64 @@ class _PlacesHubState extends State<_PlacesHub> {
     return NearbyVenueCategory.dining;
   }
 
+  Future<void> _pickCity() async {
+    if (_cityLoading) return;
+    final controller = TextEditingController(
+      text: NearbyVenueService.instance.selectedCityName ?? '',
+    );
+    final result = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Şehir seç'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          textCapitalization: TextCapitalization.words,
+          textInputAction: TextInputAction.done,
+          decoration: const InputDecoration(
+            hintText: 'Örn. Elazığ, İstanbul, İzmir',
+            prefixIcon: Icon(Icons.location_city_outlined),
+          ),
+          onSubmitted: (value) => Navigator.pop(dialogContext, value.trim()),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, ''),
+            child: const Text('Konumumu kullan'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, controller.text.trim()),
+            child: const Text('Şehri göster'),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (result == null) return;
+    if (result.isEmpty) {
+      NearbyVenueService.instance.useCurrentCity();
+      if (mounted) setState(() => _cityLabel = 'Konumum');
+      return;
+    }
+
+    setState(() => _cityLoading = true);
+    final city = await CityLocationService.instance.resolve(result);
+    if (!mounted) return;
+    setState(() => _cityLoading = false);
+    if (city == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Şehir bulunamadı. Şehir adını kontrol edip tekrar dene.')),
+      );
+      return;
+    }
+    NearbyVenueService.instance.selectCity(
+      name: city.name,
+      latitude: city.latitude,
+      longitude: city.longitude,
+    );
+    setState(() => _cityLabel = city.name);
+  }
+
   @override
   Widget build(BuildContext context) {
     const categories = <(IconData, String)>[
@@ -308,7 +370,7 @@ class _PlacesHubState extends State<_PlacesHub> {
       content = const SpotExploreScreen(embedded: true);
     } else {
       content = NearbyPlacesView(
-        key: ValueKey(_category),
+        key: ValueKey('${_category}_${NearbyVenueService.instance.selectedCityName ?? 'current'}'),
         category: _nearbyCategory(),
       );
     }
@@ -357,6 +419,30 @@ class _PlacesHubState extends State<_PlacesHub> {
                     .toList(),
               ),
             ),
+            if (_category != 'Gezilecek Yerler')
+              Padding(
+                padding: const EdgeInsets.fromLTRB(14, 0, 14, 9),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: _cityLoading ? null : _pickCity,
+                        icon: _cityLoading
+                            ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                            : const Icon(Icons.location_city_outlined, size: 18),
+                        label: Text(_cityLabel, maxLines: 1, overflow: TextOverflow.ellipsis),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    const Expanded(
+                      child: Text(
+                        'Şehrin tamamındaki sonuçlar gösterilir; yakınlık sadece sıralamada kullanılır.',
+                        style: TextStyle(color: Colors.white54, fontSize: 10.5, height: 1.25),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             Expanded(child: content),
           ],
         ),
