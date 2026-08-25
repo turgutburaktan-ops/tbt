@@ -11,3 +11,4 @@ Object.assign(exports, require('./business_notifications'));
 Object.assign(exports, require('./admin_business_premium'));
 Object.assign(exports, require('./early_business_access'));
 Object.assign(exports, require('./event_cover'));
+Object.assign(exports, require('./retention'));
