@@ -7,6 +7,7 @@ import '../models/nearby_venue.dart';
 import '../services/business_service.dart';
 import '../services/venue_rating_service.dart';
 import '../theme/app_theme.dart';
+import '../widgets/business_public_actions.dart';
 import '../widgets/firebase_media_image.dart';
 import '../widgets/venue_reviews_section.dart';
 import 'business_hub_screen.dart';
@@ -24,10 +25,7 @@ class BusinessProfileScreen extends StatelessWidget {
     this.rating = VenueRatingSummary.empty,
   });
 
-  String get _key => BusinessService.instance.venueKey(
-        venue.category.name,
-        venue.id,
-      );
+  String get _key => BusinessService.instance.venueKey(venue.category.name, venue.id);
 
   IconData get _icon => switch (venue.category) {
         NearbyVenueCategory.cafe => Icons.local_cafe_rounded,
@@ -35,17 +33,25 @@ class BusinessProfileScreen extends StatelessWidget {
         NearbyVenueCategory.hotel => Icons.hotel_rounded,
       };
 
-  String get _menuLabel => venue.category == NearbyVenueCategory.hotel
-      ? 'Odalar & Hizmetler'
-      : 'Menü';
+  String get _menuLabel => venue.category == NearbyVenueCategory.hotel ? 'Odalar & Hizmetler' : 'Menü';
 
   Future<void> _launch(BuildContext context, Uri uri) async {
-    if (!await launchUrl(uri, mode: LaunchMode.externalApplication) &&
-        context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Bağlantı açılamadı.')),
-      );
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication) && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Bağlantı açılamadı.')));
     }
+  }
+
+  void _openBusinessHub(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => BusinessHubScreen(
+          initialCategory: venue.category.name,
+          initialVenueId: venue.id,
+          initialVenueName: venue.name,
+        ),
+      ),
+    );
   }
 
   @override
@@ -57,8 +63,7 @@ class BusinessProfileScreen extends StatelessWidget {
         final profile = snapshot.data?.data() ?? const <String, dynamic>{};
         final verified = profile['verified'] == true;
         final ownerUid = (profile['ownerUid'] ?? '').toString();
-        final isOwner = verified && ownerUid.isNotEmpty &&
-            FirebaseAuth.instance.currentUser?.uid == ownerUid;
+        final isOwner = verified && ownerUid.isNotEmpty && FirebaseAuth.instance.currentUser?.uid == ownerUid;
         final coverUrl = (profile['coverUrl'] ?? '').toString();
         final logoUrl = (profile['logoUrl'] ?? '').toString();
         final managedPhone = (profile['phone'] ?? '').toString().trim();
@@ -95,13 +100,9 @@ class BusinessProfileScreen extends StatelessWidget {
                       children: [
                         Row(children: [
                           Expanded(
-                            child: Text(
-                              venue.name,
-                              style: const TextStyle(fontSize: 23, fontWeight: FontWeight.w900),
-                            ),
+                            child: Text(venue.name, style: const TextStyle(fontSize: 23, fontWeight: FontWeight.w900)),
                           ),
-                          if (verified)
-                            const Icon(Icons.verified_rounded, color: AppColors.cyan, size: 22),
+                          if (verified) const Icon(Icons.verified_rounded, color: AppColors.cyan, size: 22),
                         ]),
                         const SizedBox(height: 5),
                         Text(
@@ -144,21 +145,35 @@ class BusinessProfileScreen extends StatelessWidget {
                               if (uri != null) _launch(context, uri);
                             },
                           ),
-                          _QuickAction(
-                            icon: isOwner ? Icons.dashboard_customize_outlined : Icons.storefront_outlined,
-                            label: isOwner ? 'Yönet' : 'Benim',
-                            onTap: () => Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => BusinessHubScreen(
-                                  initialCategory: venue.category.name,
-                                  initialVenueId: venue.id,
-                                  initialVenueName: venue.name,
-                                ),
+                          if (isOwner)
+                            _QuickAction(
+                              icon: Icons.dashboard_customize_outlined,
+                              label: 'Yönet',
+                              onTap: () => _openBusinessHub(context),
+                            ),
+                        ]),
+                        if (!isOwner) ...[
+                          const SizedBox(height: 12),
+                          BusinessPublicActions(
+                            venueKey: _key,
+                            reservationsEnabled: verified,
+                          ),
+                        ],
+                        if (!verified && FirebaseAuth.instance.currentUser != null) ...[
+                          const SizedBox(height: 6),
+                          Align(
+                            alignment: Alignment.center,
+                            child: TextButton.icon(
+                              onPressed: () => _openBusinessHub(context),
+                              icon: const Icon(Icons.verified_user_outlined, size: 16),
+                              label: const Text('Bu işletmeyi mi yönetiyorsunuz? İşletme doğrulaması'),
+                              style: TextButton.styleFrom(
+                                foregroundColor: Colors.white54,
+                                textStyle: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600),
                               ),
                             ),
                           ),
-                        ]),
+                        ],
                       ],
                     ),
                   ),
@@ -184,9 +199,7 @@ class BusinessProfileScreen extends StatelessWidget {
                 _OverviewTab(venue: venue, profile: profile, venueKey: _key),
                 _BusinessCollectionTab(
                   stream: venueRef.collection('menu').snapshots(),
-                  emptyIcon: venue.category == NearbyVenueCategory.hotel
-                      ? Icons.bed_outlined
-                      : Icons.restaurant_menu_rounded,
+                  emptyIcon: venue.category == NearbyVenueCategory.hotel ? Icons.bed_outlined : Icons.restaurant_menu_rounded,
                   emptyText: venue.category == NearbyVenueCategory.hotel
                       ? 'Oda ve hizmet bilgisi henüz eklenmedi.'
                       : 'Menü henüz eklenmedi.',
@@ -227,8 +240,7 @@ class _BusinessHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Stack(fit: StackFit.expand, children: [
         Container(decoration: const BoxDecoration(gradient: LinearGradient(colors: [Color(0xFF10252B), Color(0xFF241735)], begin: Alignment.topLeft, end: Alignment.bottomRight))),
-        if (coverUrl.isNotEmpty)
-          FirebaseMediaImage(imageUrl: coverUrl, fit: BoxFit.cover),
+        if (coverUrl.isNotEmpty) FirebaseMediaImage(imageUrl: coverUrl, fit: BoxFit.cover),
         const DecoratedBox(decoration: BoxDecoration(gradient: LinearGradient(colors: [Colors.transparent, Color(0xD905060A)], begin: Alignment.topCenter, end: Alignment.bottomCenter))),
         Positioned(
           left: 18,
@@ -361,10 +373,7 @@ class _MenuCard extends StatelessWidget {
           subtitle: Text([(data['section'] ?? '').toString(), (data['description'] ?? '').toString()].where((e) => e.isNotEmpty).join('\n')),
           trailing: Text(
             '${(((data['priceMinor'] as num?)?.toInt() ?? 0) / 100).toStringAsFixed(2)} ₺',
-            style: const TextStyle(
-              color: AppColors.cyan,
-              fontWeight: FontWeight.w900,
-            ),
+            style: const TextStyle(color: AppColors.cyan, fontWeight: FontWeight.w900),
           ),
         ),
       );
