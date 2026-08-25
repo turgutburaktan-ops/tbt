@@ -7,7 +7,6 @@ on:
     paths:
       - 'functions/**'
       - 'firebase.json'
-      - 'firestore.indexes.json'
       - '.github/workflows/deploy_firebase_functions.yml'
 
 jobs:
@@ -42,10 +41,10 @@ jobs:
           with open(os.environ['GITHUB_ENV'], 'a', encoding='utf-8') as env_file:
               env_file.write(f'GOOGLE_APPLICATION_CREDENTIALS={target}\n')
           PY
-      - name: Deploy Firebase backend
+      - name: Deploy Firebase Functions
         run: >-
           firebase deploy
-          --only functions,firestore:indexes
+          --only functions
           --project en-iyi-cekim-noktasi
           --force
           --non-interactive
