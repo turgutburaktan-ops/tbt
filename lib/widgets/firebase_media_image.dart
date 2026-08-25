@@ -4,6 +4,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 
+import 'temporary_pinch_zoom.dart';
+
 /// Loads user media through Firebase Storage instead of trusting a persisted
 /// download token forever. Old download URLs remain as a final fallback.
 class FirebaseMediaImage extends StatefulWidget {
@@ -62,6 +64,14 @@ class _FirebaseMediaImageState extends State<FirebaseMediaImage> {
   bool _recoveryAttempted = false;
   bool _recoveringBytes = false;
 
+  bool get _isPostMedia {
+    if (widget.storagePath.contains('/posts/')) return true;
+    return widget.fallbackStoragePaths.any((path) => path.contains('/posts/'));
+  }
+
+  Widget _withPostZoom(Widget child) =>
+      _isPostMedia ? TemporaryPinchZoom(child: child) : child;
+
   @override
   void initState() {
     super.initState();
@@ -73,8 +83,7 @@ class _FirebaseMediaImageState extends State<FirebaseMediaImage> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.imageUrl != widget.imageUrl ||
         oldWidget.storagePath != widget.storagePath ||
-        !_samePaths(
-            oldWidget.fallbackStoragePaths, widget.fallbackStoragePaths)) {
+        !_samePaths(oldWidget.fallbackStoragePaths, widget.fallbackStoragePaths)) {
       _recoveryAttempted = false;
       _recoveringBytes = false;
       _resolvedBytes = null;
@@ -94,8 +103,6 @@ class _FirebaseMediaImageState extends State<FirebaseMediaImage> {
   Future<String?> _initialUrl() {
     final savedUrl = widget.imageUrl.trim();
     if (savedUrl.startsWith('http://') || savedUrl.startsWith('https://')) {
-      // This path preserves CachedNetworkImage's disk-cache speed. Storage is
-      // contacted only if the persisted URL really fails.
       return Future<String?>.value(savedUrl);
     }
     return _resolveFreshUrl();
@@ -105,11 +112,8 @@ class _FirebaseMediaImageState extends State<FirebaseMediaImage> {
     for (final reference in _storageReferences()) {
       try {
         return await reference.getDownloadURL();
-      } catch (_) {
-        // Try the next known Storage reference.
-      }
+      } catch (_) {}
     }
-
     return null;
   }
 
@@ -130,16 +134,13 @@ class _FirebaseMediaImageState extends State<FirebaseMediaImage> {
     if (savedUrl.isNotEmpty && _isFirebaseStorageUrl(savedUrl)) {
       try {
         add(storage.refFromURL(savedUrl));
-      } catch (_) {
-        // A malformed legacy URL must not block predictable path recovery.
-      }
+      } catch (_) {}
     }
 
     for (final path in widget.fallbackStoragePaths) {
       final cleanPath = path.trim();
       if (cleanPath.isNotEmpty) add(storage.ref().child(cleanPath));
     }
-
     return references;
   }
 
@@ -163,9 +164,7 @@ class _FirebaseMediaImageState extends State<FirebaseMediaImage> {
           bytes = candidate;
           break;
         }
-      } catch (_) {
-        // Authenticated byte download is the last recovery path.
-      }
+      } catch (_) {}
     }
 
     if (!mounted) return;
@@ -184,32 +183,23 @@ class _FirebaseMediaImageState extends State<FirebaseMediaImage> {
         uri.host.endsWith('.firebasestorage.app');
   }
 
-  Widget _placeholder() {
-    return widget.placeholder ??
-        const ColoredBox(
-          color: Color(0xFF171A1D),
-          child: Center(
-            child: SizedBox(
-              width: 22,
-              height: 22,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: Colors.white24,
-              ),
-            ),
+  Widget _placeholder() => widget.placeholder ??
+      const ColoredBox(
+        color: Color(0xFF171A1D),
+        child: Center(
+          child: SizedBox(
+            width: 22,
+            height: 22,
+            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white24),
           ),
-        );
-  }
+        ),
+      );
 
-  Widget _error() {
-    return widget.errorWidget ??
-        const ColoredBox(
-          color: Color(0xFF171A1D),
-          child: Center(
-            child: Icon(Icons.broken_image_outlined, color: Colors.white30),
-          ),
-        );
-  }
+  Widget _error() => widget.errorWidget ??
+      const ColoredBox(
+        color: Color(0xFF171A1D),
+        child: Center(child: Icon(Icons.broken_image_outlined, color: Colors.white30)),
+      );
 
   Widget _memoryImage(Uint8List bytes) {
     return LayoutBuilder(
@@ -219,11 +209,10 @@ class _FirebaseMediaImageState extends State<FirebaseMediaImage> {
             : constraints.maxWidth.isFinite
                 ? constraints.maxWidth
                 : MediaQuery.sizeOf(context).width;
-        final deviceWidth =
-            (logicalWidth * MediaQuery.devicePixelRatioOf(context))
-                .round()
-                .clamp(64, 2160)
-                .toInt();
+        final deviceWidth = (logicalWidth * MediaQuery.devicePixelRatioOf(context))
+            .round()
+            .clamp(64, 2160)
+            .toInt();
         return Image.memory(
           bytes,
           width: widget.width,
@@ -242,35 +231,35 @@ class _FirebaseMediaImageState extends State<FirebaseMediaImage> {
   @override
   Widget build(BuildContext context) {
     final bytes = _resolvedBytes;
-    if (bytes != null) return _memoryImage(bytes);
+    if (bytes != null) return _withPostZoom(_memoryImage(bytes));
     if (_recoveringBytes) return _placeholder();
 
     return FutureBuilder<String?>(
       future: _resolvedUrl,
       builder: (context, snapshot) {
-        if (snapshot.connectionState != ConnectionState.done) {
-          return _placeholder();
-        }
+        if (snapshot.connectionState != ConnectionState.done) return _placeholder();
         final url = snapshot.data;
         if (url == null || url.isEmpty) return _error();
-        return CachedNetworkImage(
-          imageUrl: url,
-          width: widget.width,
-          height: widget.height,
-          fit: widget.fit,
-          alignment: widget.alignment,
-          filterQuality: widget.filterQuality,
-          fadeInDuration: const Duration(milliseconds: 180),
-          placeholder: (_, __) => _placeholder(),
-          errorWidget: (_, __, ___) {
-            final willRecover = !_recoveryAttempted && _canRecover;
-            if (willRecover) {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (mounted) _recoverAfterLoadError();
-              });
-            }
-            return willRecover ? _placeholder() : _error();
-          },
+        return _withPostZoom(
+          CachedNetworkImage(
+            imageUrl: url,
+            width: widget.width,
+            height: widget.height,
+            fit: widget.fit,
+            alignment: widget.alignment,
+            filterQuality: widget.filterQuality,
+            fadeInDuration: const Duration(milliseconds: 180),
+            placeholder: (_, __) => _placeholder(),
+            errorWidget: (_, __, ___) {
+              final willRecover = !_recoveryAttempted && _canRecover;
+              if (willRecover) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (mounted) _recoverAfterLoadError();
+                });
+              }
+              return willRecover ? _placeholder() : _error();
+            },
+          ),
         );
       },
     );
