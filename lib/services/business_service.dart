@@ -28,19 +28,27 @@ class BusinessService {
     required String venueName,
     required String address,
     String city = '',
+    double? latitude,
+    double? longitude,
   }) async {
     await _authenticatedUser();
-    final position = await LocationService.getCurrentPosition();
-    if (position == null) {
-      throw Exception('İşletme konumu alınamadı. Konum servislerini açıp işletmedeyken tekrar dene.');
+    var lat = latitude;
+    var lon = longitude;
+    if (lat == null || lon == null) {
+      final position = await LocationService.getCurrentPosition();
+      if (position == null) {
+        throw Exception('İşletme konumu alınamadı. Konum servislerini açıp işletmedeyken tekrar dene.');
+      }
+      lat = position.latitude;
+      lon = position.longitude;
     }
     final result = await _functions.httpsCallable('createBusinessCandidate').call({
       'category': category,
       'venueName': venueName,
       'address': address,
       'city': city,
-      'latitude': position.latitude,
-      'longitude': position.longitude,
+      'latitude': lat,
+      'longitude': lon,
     });
     return Map<String, dynamic>.from(result.data as Map);
   }
