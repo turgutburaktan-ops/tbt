@@ -25,6 +25,8 @@ class BusinessService {
     required String category,
     required String venueName,
     required String address,
+    required double latitude,
+    required double longitude,
     String city = '',
   }) async {
     await _authenticatedUser();
@@ -33,6 +35,8 @@ class BusinessService {
       'venueName': venueName,
       'address': address,
       'city': city,
+      'latitude': latitude,
+      'longitude': longitude,
     });
     return Map<String, dynamic>.from(result.data as Map);
   }
