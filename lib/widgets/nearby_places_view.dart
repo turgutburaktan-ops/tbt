@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -32,16 +33,17 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
   Position? _position;
   List<NearbyVenue> _venues = const [];
   final Set<String> _selectedIds = <String>{};
+  final Set<String> _boostedKeys = <String>{};
   final Map<String, VenueRatingSummary> _ratings = {};
   _VenueSort _sort = _VenueSort.nearest;
   double? _maxDistanceKm;
   bool _loading = true;
   String? _error;
 
-  String _routeId(NearbyVenue venue) =>
-      'venue:${venue.category.name}:${venue.id}';
-  String _ratingKey(NearbyVenue venue) =>
-      '${venue.category.name}:${venue.id}';
+  String _routeId(NearbyVenue venue) => 'venue:${venue.category.name}:${venue.id}';
+  String _ratingKey(NearbyVenue venue) => '${venue.category.name}:${venue.id}';
+  String _businessKey(NearbyVenue venue) => '${venue.category.name}:${venue.id}';
+  bool _isBoosted(NearbyVenue venue) => _boostedKeys.contains(_businessKey(venue));
 
   @override
   void initState() {
@@ -55,6 +57,7 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
     if (oldWidget.category != widget.category) {
       _searchController.clear();
       _ratings.clear();
+      _boostedKeys.clear();
       _sort = _VenueSort.nearest;
       _maxDistanceKm = null;
       _load();
@@ -65,6 +68,35 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }
+
+  Future<Set<String>> _loadBoostedKeys(List<NearbyVenue> venues) async {
+    final keys = venues.map(_businessKey).toSet().toList();
+    if (keys.isEmpty) return <String>{};
+    final boosted = <String>{};
+    final now = DateTime.now();
+    for (var offset = 0; offset < keys.length; offset += 30) {
+      final end = math.min(offset + 30, keys.length);
+      final chunk = keys.sublist(offset, end);
+      try {
+        final snap = await FirebaseFirestore.instance
+            .collection('business_venues')
+            .where(FieldPath.documentId, whereIn: chunk)
+            .get();
+        for (final doc in snap.docs) {
+          final data = doc.data();
+          final until = data['boostActiveUntil'];
+          if (data['boostActive'] == true &&
+              until is Timestamp &&
+              until.toDate().isAfter(now)) {
+            boosted.add(doc.id);
+          }
+        }
+      } catch (_) {
+        // Boost keşfi yüklenemese bile normal mekan listesini göstermeye devam et.
+      }
+    }
+    return boosted;
   }
 
   Future<void> _load({bool forceRefresh = false}) async {
@@ -83,20 +115,25 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
         longitude: position.longitude,
         forceRefresh: forceRefresh,
       );
-      venues.sort(
-        (a, b) => _distance(position, a).compareTo(_distance(position, b)),
-      );
+      final boosted = await _loadBoostedKeys(venues);
+      venues.sort((a, b) {
+        final aBoost = boosted.contains(_businessKey(a));
+        final bBoost = boosted.contains(_businessKey(b));
+        if (aBoost != bBoost) return aBoost ? -1 : 1;
+        return _distance(position, a).compareTo(_distance(position, b));
+      });
       if (!mounted) return;
       setState(() {
         _position = position;
         _venues = venues;
+        _boostedKeys
+          ..clear()
+          ..addAll(boosted);
         _selectedIds
           ..clear()
           ..addAll(
             venues
-                .where(
-                  (v) => RouteSelectionService.instance.contains(_routeId(v)),
-                )
+                .where((v) => RouteSelectionService.instance.contains(_routeId(v)))
                 .map(_routeId),
           );
         _loading = false;
@@ -112,8 +149,7 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
       if (!mounted) return;
       setState(() {
         _loading = false;
-        _error =
-            'Mekanlar şu anda yüklenemedi. Bağlantını kontrol edip tekrar dene.';
+        _error = 'Mekanlar şu anda yüklenemedi. Bağlantını kontrol edip tekrar dene.';
       });
     }
   }
@@ -131,8 +167,7 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
     }
   }
 
-  double _distance(Position position, NearbyVenue venue) =>
-      Geolocator.distanceBetween(
+  double _distance(Position position, NearbyVenue venue) => Geolocator.distanceBetween(
         position.latitude,
         position.longitude,
         venue.latitude,
@@ -157,14 +192,15 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
   List<NearbyVenue> get _visibleVenues {
     final query = _searchController.text.trim().toLowerCase();
     final items = _venues.where((venue) {
-      if (_maxDistanceKm != null && _distanceKm(venue) > _maxDistanceKm!) {
-        return false;
-      }
+      if (_maxDistanceKm != null && _distanceKm(venue) > _maxDistanceKm!) return false;
       if (query.isEmpty) return true;
       return '${venue.name} ${venue.address}'.toLowerCase().contains(query);
     }).toList();
     final position = _position;
     items.sort((a, b) {
+      final aBoost = _isBoosted(a);
+      final bBoost = _isBoosted(b);
+      if (aBoost != bBoost) return aBoost ? -1 : 1;
       final ar = _ratings[_ratingKey(a)] ?? VenueRatingSummary.empty;
       final br = _ratings[_ratingKey(b)] ?? VenueRatingSummary.empty;
       switch (_sort) {
@@ -189,8 +225,8 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
     candidates.sort((a, b) {
       final ar = _ratings[_ratingKey(a)] ?? VenueRatingSummary.empty;
       final br = _ratings[_ratingKey(b)] ?? VenueRatingSummary.empty;
-      final aScore = ar.average * math.log(ar.count + 2) - (_distanceKm(a) * .08);
-      final bScore = br.average * math.log(br.count + 2) - (_distanceKm(b) * .08);
+      final aScore = ar.average * math.log(ar.count + 2) - (_distanceKm(a) * .08) + (_isBoosted(a) ? 100 : 0);
+      final bScore = br.average * math.log(br.count + 2) - (_distanceKm(b) * .08) + (_isBoosted(b) ? 100 : 0);
       return bScore.compareTo(aScore);
     });
     return candidates.take(6).toList();
@@ -216,9 +252,7 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
       'destination': '${venue.latitude},${venue.longitude}',
     });
     if (!await launchUrl(uri, mode: LaunchMode.externalApplication) && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Harita uygulaması açılamadı.')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Harita uygulaması açılamadı.')));
     }
   }
 
@@ -254,10 +288,7 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
                       venue.name,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w900,
-                      ),
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
                     ),
                   ),
                   IconButton(
@@ -283,10 +314,7 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
       ),
     );
     try {
-      final summary = await VenueRatingService.instance.summary(
-        venue.category.name,
-        venue.id,
-      );
+      final summary = await VenueRatingService.instance.summary(venue.category.name, venue.id);
       if (mounted) setState(() => _ratings[_ratingKey(venue)] = summary);
     } catch (_) {}
   }
@@ -323,9 +351,7 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
   }
 
   Future<void> _pickForMe() async {
-    final pool = _featuredVenues.isNotEmpty
-        ? _featuredVenues
-        : _visibleVenues.take(10).toList();
+    final pool = _featuredVenues.isNotEmpty ? _featuredVenues : _visibleVenues.take(10).toList();
     if (pool.isEmpty) return;
     final picked = pool[math.Random().nextInt(pool.length)];
     final rating = _ratings[_ratingKey(picked)] ?? VenueRatingSummary.empty;
@@ -334,9 +360,7 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
       context: context,
       useSafeArea: true,
       backgroundColor: AppColors.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (sheetContext) => Padding(
         padding: const EdgeInsets.fromLTRB(18, 12, 18, 24),
         child: Column(
@@ -347,22 +371,17 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
               child: Container(
                 width: 40,
                 height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.white24,
-                  borderRadius: BorderRadius.circular(99),
-                ),
+                decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(99)),
               ),
             ),
             const SizedBox(height: 16),
-            const Text(
-              '🎲 Bugünün seçimi',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
-            ),
+            const Text('🎲 Bugünün seçimi', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
             const SizedBox(height: 10),
-            Text(
-              picked.name,
-              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900),
-            ),
+            Text(picked.name, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900)),
+            if (_isBoosted(picked)) ...[
+              const SizedBox(height: 5),
+              const _BoostBadge(),
+            ],
             const SizedBox(height: 5),
             Text(
               '${_distanceLabel(picked)}${rating.count > 0 ? ' • ⭐ ${rating.average.toStringAsFixed(1)}' : ''}',
@@ -370,10 +389,7 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
             ),
             if (picked.address.isNotEmpty) ...[
               const SizedBox(height: 6),
-              Text(
-                picked.address,
-                style: const TextStyle(color: Colors.white54),
-              ),
+              Text(picked.address, style: const TextStyle(color: Colors.white54)),
             ],
             const SizedBox(height: 18),
             Row(
@@ -474,11 +490,11 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
             const SizedBox(height: 18),
             const _SectionTitle(
               title: '✨ Yakınında öne çıkanlar',
-              subtitle: 'Mesafe ve topluluk puanına göre',
+              subtitle: 'Yakınlık, topluluk puanı ve aktif Boost görünürlüğüne göre',
             ),
             const SizedBox(height: 9),
             SizedBox(
-              height: 126,
+              height: 132,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 itemCount: featured.length,
@@ -487,9 +503,9 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
                   final venue = featured[index];
                   return _FeaturedVenueCard(
                     venue: venue,
-                    rating: _ratings[_ratingKey(venue)] ??
-                        VenueRatingSummary.empty,
+                    rating: _ratings[_ratingKey(venue)] ?? VenueRatingSummary.empty,
                     distance: _distanceLabel(venue),
+                    boosted: _isBoosted(venue),
                     onTap: () => _openBusinessProfile(venue),
                   );
                 },
@@ -514,106 +530,62 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
                   final rating = _ratings[_ratingKey(venue)]!;
                   return ActionChip(
                     avatar: const Icon(Icons.star_rounded, size: 16),
-                    label: Text(
-                      '${venue.name} • ${rating.average.toStringAsFixed(1)}',
-                    ),
+                    label: Text('${venue.name} • ${rating.average.toStringAsFixed(1)}'),
                     onPressed: () => _openBusinessProfile(venue),
                   );
                 },
               ),
             ),
           ],
-          const RouteSelectionButton(
-            padding: EdgeInsets.fromLTRB(0, 12, 0, 0),
-          ),
+          const RouteSelectionButton(padding: EdgeInsets.fromLTRB(0, 12, 0, 0)),
           const SizedBox(height: 10),
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
               children: [
-                _DistanceChip(
-                  label: 'Tümü',
-                  selected: _maxDistanceKm == null,
-                  onTap: () => setState(() => _maxDistanceKm = null),
-                ),
+                _DistanceChip(label: 'Tümü', selected: _maxDistanceKm == null, onTap: () => setState(() => _maxDistanceKm = null)),
                 const SizedBox(width: 6),
-                _DistanceChip(
-                  label: '1 km',
-                  selected: _maxDistanceKm == 1,
-                  onTap: () => setState(() => _maxDistanceKm = 1),
-                ),
+                _DistanceChip(label: '1 km', selected: _maxDistanceKm == 1, onTap: () => setState(() => _maxDistanceKm = 1)),
                 const SizedBox(width: 6),
-                _DistanceChip(
-                  label: '3 km',
-                  selected: _maxDistanceKm == 3,
-                  onTap: () => setState(() => _maxDistanceKm = 3),
-                ),
+                _DistanceChip(label: '3 km', selected: _maxDistanceKm == 3, onTap: () => setState(() => _maxDistanceKm = 3)),
                 const SizedBox(width: 6),
-                _DistanceChip(
-                  label: '10 km',
-                  selected: _maxDistanceKm == 10,
-                  onTap: () => setState(() => _maxDistanceKm = 10),
-                ),
+                _DistanceChip(label: '10 km', selected: _maxDistanceKm == 10, onTap: () => setState(() => _maxDistanceKm = 10)),
               ],
             ),
           ),
           const SizedBox(height: 9),
           SegmentedButton<_VenueSort>(
             segments: const [
-              ButtonSegment(
-                value: _VenueSort.nearest,
-                label: Text('Yakın'),
-              ),
-              ButtonSegment(
-                value: _VenueSort.rating,
-                label: Text('Puan'),
-              ),
-              ButtonSegment(
-                value: _VenueSort.popular,
-                label: Text('Popüler'),
-              ),
+              ButtonSegment(value: _VenueSort.nearest, label: Text('Yakın')),
+              ButtonSegment(value: _VenueSort.rating, label: Text('Puan')),
+              ButtonSegment(value: _VenueSort.popular, label: Text('Popüler')),
             ],
             selected: {_sort},
             showSelectedIcon: false,
-            onSelectionChanged: (value) =>
-                setState(() => _sort = value.first),
+            onSelectionChanged: (value) => setState(() => _sort = value.first),
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(2, 12, 2, 7),
             child: Row(
               children: [
-                const Expanded(
-                  child: Text(
-                    'Yakındaki mekanlar',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
-                  ),
-                ),
-                Text(
-                  '${venues.length} mekan',
-                  style: const TextStyle(
-                    color: Color(0x75FFFFFF),
-                    fontSize: 11.5,
-                  ),
-                ),
+                const Expanded(child: Text('Yakındaki mekanlar', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900))),
+                Text('${venues.length} mekan', style: const TextStyle(color: Color(0x75FFFFFF), fontSize: 11.5)),
               ],
             ),
           ),
           if (venues.isEmpty)
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 48),
-              child: _MessageState(
-                icon: Icons.place_outlined,
-                message: 'Bu bölgede eşleşen mekan bulunamadı.',
-              ),
+              child: _MessageState(icon: Icons.place_outlined, message: 'Bu bölgede eşleşen mekan bulunamadı.'),
             )
           else
             ...venues.map((venue) {
-              final rating =
-                  _ratings[_ratingKey(venue)] ?? VenueRatingSummary.empty;
+              final rating = _ratings[_ratingKey(venue)] ?? VenueRatingSummary.empty;
               return _VenueCard(
                 venue: venue,
                 rating: rating,
                 distance: _distanceLabel(venue),
+                boosted: _isBoosted(venue),
                 onDirections: () => _openDirections(venue),
                 onReviews: () => _openReviews(venue),
                 selected: _selectedIds.contains(_routeId(venue)),
@@ -627,15 +599,26 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
               Uri.parse('https://www.openstreetmap.org/copyright'),
               mode: LaunchMode.externalApplication,
             ),
-            child: const Text(
-              'Mekan verisi © OpenStreetMap katkıda bulunanlar',
-              style: TextStyle(color: Color(0x52FFFFFF), fontSize: 10.5),
-            ),
+            child: const Text('Mekan verisi © OpenStreetMap katkıda bulunanlar', style: TextStyle(color: Color(0x52FFFFFF), fontSize: 10.5)),
           ),
         ],
       ),
     );
   }
+}
+
+class _BoostBadge extends StatelessWidget {
+  const _BoostBadge();
+  @override
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+        decoration: BoxDecoration(
+          color: AppColors.violetBright.withValues(alpha: .14),
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: AppColors.violetBright.withValues(alpha: .32)),
+        ),
+        child: const Text('Öne Çıkan', style: TextStyle(color: AppColors.violetBright, fontSize: 9.5, fontWeight: FontWeight.w900)),
+      );
 }
 
 class _DiscoveryHero extends StatelessWidget {
@@ -644,12 +627,7 @@ class _DiscoveryHero extends StatelessWidget {
   final VoidCallback onPick;
   final VoidCallback onMap;
 
-  const _DiscoveryHero({
-    required this.category,
-    required this.venueCount,
-    required this.onPick,
-    required this.onMap,
-  });
+  const _DiscoveryHero({required this.category, required this.venueCount, required this.onPick, required this.onMap});
 
   String get _question => switch (category) {
         NearbyVenueCategory.cafe => 'Kahve için nereye gidelim?',
@@ -662,26 +640,17 @@ class _DiscoveryHero extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
-          gradient: const LinearGradient(
-            colors: [Color(0xFF151B24), Color(0xFF191226)],
-          ),
+          gradient: const LinearGradient(colors: [Color(0xFF151B24), Color(0xFF191226)]),
           border: Border.all(color: AppColors.border),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              _question,
-              style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w900),
-            ),
+            Text(_question, style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w900)),
             const SizedBox(height: 4),
             Text(
               'Yakınında $venueCount seçenek var. Kararsızsan TBT senin için seçsin.',
-              style: const TextStyle(
-                color: Colors.white60,
-                fontSize: 11.5,
-                height: 1.35,
-              ),
+              style: const TextStyle(color: Colors.white60, fontSize: 11.5, height: 1.35),
             ),
             const SizedBox(height: 13),
             Row(
@@ -715,15 +684,9 @@ class _SectionTitle extends StatelessWidget {
   Widget build(BuildContext context) => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            title,
-            style: const TextStyle(fontSize: 16.5, fontWeight: FontWeight.w900),
-          ),
+          Text(title, style: const TextStyle(fontSize: 16.5, fontWeight: FontWeight.w900)),
           const SizedBox(height: 2),
-          Text(
-            subtitle,
-            style: const TextStyle(color: Colors.white38, fontSize: 10.5),
-          ),
+          Text(subtitle, style: const TextStyle(color: Colors.white38, fontSize: 10.5)),
         ],
       );
 }
@@ -732,32 +695,20 @@ class _DistanceChip extends StatelessWidget {
   final String label;
   final bool selected;
   final VoidCallback onTap;
-  const _DistanceChip({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
+  const _DistanceChip({required this.label, required this.selected, required this.onTap});
 
   @override
-  Widget build(BuildContext context) => ChoiceChip(
-        label: Text(label),
-        selected: selected,
-        onSelected: (_) => onTap(),
-      );
+  Widget build(BuildContext context) => ChoiceChip(label: Text(label), selected: selected, onSelected: (_) => onTap());
 }
 
 class _FeaturedVenueCard extends StatelessWidget {
   final NearbyVenue venue;
   final VenueRatingSummary rating;
   final String distance;
+  final bool boosted;
   final VoidCallback onTap;
 
-  const _FeaturedVenueCard({
-    required this.venue,
-    required this.rating,
-    required this.distance,
-    required this.onTap,
-  });
+  const _FeaturedVenueCard({required this.venue, required this.rating, required this.distance, required this.boosted, required this.onTap});
 
   @override
   Widget build(BuildContext context) => SizedBox(
@@ -772,49 +723,34 @@ class _FeaturedVenueCard extends StatelessWidget {
               padding: const EdgeInsets.all(13),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.border),
+                border: Border.all(color: boosted ? AppColors.violetBright.withValues(alpha: .45) : AppColors.border),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
-                      const Icon(
-                        Icons.place_rounded,
-                        color: AppColors.cyan,
-                        size: 18,
-                      ),
+                      const Icon(Icons.place_rounded, color: AppColors.cyan, size: 18),
                       const Spacer(),
-                      Text(
-                        distance,
-                        style: const TextStyle(
-                          color: AppColors.cyan,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
+                      Text(distance, style: const TextStyle(color: AppColors.cyan, fontSize: 10, fontWeight: FontWeight.w900)),
                     ],
                   ),
-                  const SizedBox(height: 9),
+                  if (boosted) ...[
+                    const SizedBox(height: 5),
+                    const _BoostBadge(),
+                  ],
+                  const SizedBox(height: 7),
                   Text(
                     venue.name,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w900,
-                    ),
+                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w900),
                   ),
                   const Spacer(),
                   Text(
-                    rating.count == 0
-                        ? 'Henüz TBT puanı yok'
-                        : '⭐ ${rating.average.toStringAsFixed(1)} • ${rating.count} yorum',
+                    rating.count == 0 ? 'Henüz TBT puanı yok' : '⭐ ${rating.average.toStringAsFixed(1)} • ${rating.count} yorum',
                     maxLines: 1,
-                    style: const TextStyle(
-                      color: Colors.white54,
-                      fontSize: 10,
-                    ),
+                    style: const TextStyle(color: Colors.white54, fontSize: 10),
                   ),
                 ],
               ),
@@ -828,6 +764,7 @@ class _VenueCard extends StatelessWidget {
   final NearbyVenue venue;
   final VenueRatingSummary rating;
   final String distance;
+  final bool boosted;
   final VoidCallback onDirections;
   final VoidCallback onReviews;
   final bool selected;
@@ -838,6 +775,7 @@ class _VenueCard extends StatelessWidget {
     required this.venue,
     required this.rating,
     required this.distance,
+    required this.boosted,
     required this.onDirections,
     required this.onReviews,
     required this.selected,
@@ -856,158 +794,120 @@ class _VenueCard extends StatelessWidget {
         onTap: onOpenProfile,
         borderRadius: BorderRadius.circular(15),
         child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.fromLTRB(12, 11, 8, 11),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(15),
-          border: Border.all(
-            color: selected
-                ? AppColors.cyan.withValues(alpha: .40)
-                : AppColors.border,
-          ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 42,
-              height: 42,
-              decoration: BoxDecoration(
-                color: AppColors.surfaceStrong,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(_icon, size: 21, color: AppColors.cyan),
+          margin: const EdgeInsets.only(bottom: 8),
+          padding: const EdgeInsets.fromLTRB(12, 11, 8, 11),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(15),
+            border: Border.all(
+              color: boosted
+                  ? AppColors.violetBright.withValues(alpha: .45)
+                  : selected
+                      ? AppColors.cyan.withValues(alpha: .40)
+                      : AppColors.border,
             ),
-            const SizedBox(width: 11),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          venue.name,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 14.5,
-                            fontWeight: FontWeight.w900,
-                            height: 1.15,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        distance,
-                        style: const TextStyle(
-                          color: AppColors.cyan,
-                          fontSize: 10.5,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(color: AppColors.surfaceStrong, borderRadius: BorderRadius.circular(12)),
+                child: Icon(_icon, size: 21, color: AppColors.cyan),
+              ),
+              const SizedBox(width: 11),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (boosted) ...[
+                      const _BoostBadge(),
+                      const SizedBox(height: 5),
                     ],
-                  ),
-                  const SizedBox(height: 4),
-                  InkWell(
-                    onTap: onReviews,
-                    borderRadius: BorderRadius.circular(8),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 3),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.star_rounded,
-                            size: 17,
-                            color: Color(0xFFFFC857),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            venue.name,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontSize: 14.5, fontWeight: FontWeight.w900, height: 1.15),
                           ),
-                          const SizedBox(width: 4),
-                          Flexible(
-                            child: Text(
-                              rating.count == 0
-                                  ? 'İlk puanı ve yorumu sen ver'
-                                  : '${rating.average.toStringAsFixed(1)} · ${rating.count} değerlendirme',
-                              style: const TextStyle(
-                                color: Colors.white70,
-                                fontSize: 10.5,
-                                fontWeight: FontWeight.w800,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(distance, style: const TextStyle(color: AppColors.cyan, fontSize: 10.5, fontWeight: FontWeight.w900)),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    InkWell(
+                      onTap: onReviews,
+                      borderRadius: BorderRadius.circular(8),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 3),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.star_rounded, size: 17, color: Color(0xFFFFC857)),
+                            const SizedBox(width: 4),
+                            Flexible(
+                              child: Text(
+                                rating.count == 0 ? 'İlk puanı ve yorumu sen ver' : '${rating.average.toStringAsFixed(1)} · ${rating.count} değerlendirme',
+                                style: const TextStyle(color: Colors.white70, fontSize: 10.5, fontWeight: FontWeight.w800),
                               ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                  Text(
-                    venue.address.isEmpty
-                        ? venue.category.label
-                        : '${venue.category.label}  •  ${venue.address}',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: Color(0x75FFFFFF),
-                      fontSize: 11,
-                    ),
-                  ),
-                  if (venue.openingHours.isNotEmpty) ...[
-                    const SizedBox(height: 3),
                     Text(
-                      venue.openingHours,
+                      venue.address.isEmpty ? venue.category.label : '${venue.category.label}  •  ${venue.address}',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Color(0x52FFFFFF),
-                        fontSize: 10,
+                      style: const TextStyle(color: Color(0x75FFFFFF), fontSize: 11),
+                    ),
+                    if (venue.openingHours.isNotEmpty) ...[
+                      const SizedBox(height: 3),
+                      Text(
+                        venue.openingHours,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(color: Color(0x52FFFFFF), fontSize: 10),
                       ),
+                    ],
+                    const SizedBox(height: 3),
+                    TextButton.icon(
+                      onPressed: onReviews,
+                      style: TextButton.styleFrom(visualDensity: VisualDensity.compact, padding: EdgeInsets.zero),
+                      icon: const Icon(Icons.rate_review_outlined, size: 16),
+                      label: const Text('Yorumları gör / yorum yap'),
                     ),
                   ],
-                  const SizedBox(height: 3),
-                  TextButton.icon(
-                    onPressed: onReviews,
-                    style: TextButton.styleFrom(
-                      visualDensity: VisualDensity.compact,
-                      padding: EdgeInsets.zero,
+                ),
+              ),
+              const SizedBox(width: 6),
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    tooltip: selected ? 'Rotadan çıkar' : 'Rotaya ekle',
+                    onPressed: onSelected,
+                    style: IconButton.styleFrom(
+                      minimumSize: const Size(38, 38),
+                      backgroundColor: selected ? AppColors.cyan : AppColors.surfaceStrong,
+                      foregroundColor: selected ? const Color(0xFF041311) : Colors.white70,
                     ),
-                    icon: const Icon(Icons.rate_review_outlined, size: 16),
-                    label: const Text('Yorumları gör / yorum yap'),
+                    icon: Icon(selected ? Icons.check_rounded : Icons.add_rounded, size: 20),
+                  ),
+                  IconButton(
+                    tooltip: 'Yol tarifi',
+                    onPressed: onDirections,
+                    style: IconButton.styleFrom(minimumSize: const Size(38, 38), foregroundColor: const Color(0x75FFFFFF)),
+                    icon: const Icon(Icons.directions_rounded, size: 19),
                   ),
                 ],
               ),
-            ),
-            const SizedBox(width: 6),
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  tooltip: selected ? 'Rotadan çıkar' : 'Rotaya ekle',
-                  onPressed: onSelected,
-                  style: IconButton.styleFrom(
-                    minimumSize: const Size(38, 38),
-                    backgroundColor:
-                        selected ? AppColors.cyan : AppColors.surfaceStrong,
-                    foregroundColor: selected
-                        ? const Color(0xFF041311)
-                        : Colors.white70,
-                  ),
-                  icon: Icon(
-                    selected ? Icons.check_rounded : Icons.add_rounded,
-                    size: 20,
-                  ),
-                ),
-                IconButton(
-                  tooltip: 'Yol tarifi',
-                  onPressed: onDirections,
-                  style: IconButton.styleFrom(
-                    minimumSize: const Size(38, 38),
-                    foregroundColor: const Color(0x75FFFFFF),
-                  ),
-                  icon: const Icon(Icons.directions_rounded, size: 19),
-                ),
-              ],
-            ),
-          ],
-        ),
+            ],
+          ),
         ),
       );
 }
@@ -1018,12 +918,7 @@ class _MessageState extends StatelessWidget {
   final String? actionLabel;
   final VoidCallback? onAction;
 
-  const _MessageState({
-    required this.icon,
-    required this.message,
-    this.actionLabel,
-    this.onAction,
-  });
+  const _MessageState({required this.icon, required this.message, this.actionLabel, this.onAction});
 
   @override
   Widget build(BuildContext context) => Center(
@@ -1035,25 +930,14 @@ class _MessageState extends StatelessWidget {
               Container(
                 width: 56,
                 height: 56,
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: AppColors.border),
-                ),
+                decoration: BoxDecoration(color: AppColors.surface, shape: BoxShape.circle, border: Border.all(color: AppColors.border)),
                 child: Icon(icon, size: 26, color: Colors.white38),
               ),
               const SizedBox(height: 12),
-              Text(
-                message,
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.white60, height: 1.4),
-              ),
+              Text(message, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white60, height: 1.4)),
               if (actionLabel != null && onAction != null) ...[
                 const SizedBox(height: 14),
-                OutlinedButton(
-                  onPressed: onAction,
-                  child: Text(actionLabel!),
-                ),
+                OutlinedButton(onPressed: onAction, child: Text(actionLabel!)),
               ],
             ],
           ),
@@ -1066,11 +950,7 @@ class _NearbyVenueMapScreen extends StatelessWidget {
   final Position position;
   final List<NearbyVenue> venues;
 
-  const _NearbyVenueMapScreen({
-    required this.category,
-    required this.position,
-    required this.venues,
-  });
+  const _NearbyVenueMapScreen({required this.category, required this.position, required this.venues});
 
   @override
   Widget build(BuildContext context) {
@@ -1093,10 +973,7 @@ class _NearbyVenueMapScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: Text('${category.label} Haritası')),
       body: GoogleMap(
-        initialCameraPosition: CameraPosition(
-          target: LatLng(position.latitude, position.longitude),
-          zoom: 13,
-        ),
+        initialCameraPosition: CameraPosition(target: LatLng(position.latitude, position.longitude), zoom: 13),
         markers: markers,
         myLocationEnabled: true,
         myLocationButtonEnabled: true,
