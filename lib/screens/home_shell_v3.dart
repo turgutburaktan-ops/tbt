@@ -298,7 +298,7 @@ class _PlacesHubState extends State<_PlacesHub> {
   Widget build(BuildContext context) {
     const categories = <(IconData, String)>[
       (Icons.landscape_outlined, 'Gezilecek Yerler'),
-      (Icons.restaurant_outlined, 'Yeme-İçme'),
+      (Icons.restaurant_outlined, 'Lezzet'),
       (Icons.local_cafe_outlined, 'Kafeler'),
       (Icons.hotel_outlined, 'Oteller'),
     ];
@@ -338,7 +338,7 @@ class _PlacesHubState extends State<_PlacesHub> {
             ),
             const Padding(
               padding: EdgeInsets.fromLTRB(14, 0, 14, 8),
-              child: Text('Yeme-içme, kahve, konaklama ve gezilecek yerler.', style: TextStyle(color: Color(0x75FFFFFF), fontSize: 11.5)),
+              child: Text('Lezzet, kahve, konaklama ve gezilecek yerler.', style: TextStyle(color: Color(0x75FFFFFF), fontSize: 11.5)),
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(14, 0, 14, 8),
