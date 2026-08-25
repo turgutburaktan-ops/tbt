@@ -13,7 +13,8 @@ exports.publishVerifiedBusinessCandidate = onDocumentUpdated(
     const venue = await venueRef.get();
     const data = venue.data() || {};
     if (data.source !== 'user_submission') return;
-    await venueRef.set({
+
+    const update = {
       verified: true,
       pendingListing: false,
       listingStatus: 'published',
@@ -21,6 +22,20 @@ exports.publishVerifiedBusinessCandidate = onDocumentUpdated(
       verificationLevel: after.verificationLevel || 'manual_strong',
       publishedAt: FieldValue.serverTimestamp(),
       updatedAt: FieldValue.serverTimestamp(),
-    }, {merge: true});
+    };
+    await venueRef.set(update, {merge: true});
+
+    const venueId = String(data.venueId || after.venueId || '');
+    const submissionId = venueId.startsWith('user_') ? venueId.substring(5) : '';
+    if (submissionId) {
+      await db.collection('business_venue_submissions').doc(submissionId).set({
+        status: 'published',
+        listingStatus: 'published',
+        verified: true,
+        pendingListing: false,
+        publishedAt: FieldValue.serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp(),
+      }, {merge: true});
+    }
   },
 );
