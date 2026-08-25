@@ -12,12 +12,16 @@ class NearbyVenueService {
   static final instance = NearbyVenueService._();
 
   static const _cacheLifetime = Duration(hours: 18);
+  // City-scale discovery: location is used for ordering, not for a tiny
+  // "near me" cut-off. 80 km covers the full urban area and outskirts of
+  // most Turkish cities while keeping Overpass requests bounded.
+  static const int cityScaleRadiusMeters = 80000;
   static const _endpoints = <String>[
     'https://overpass-api.de/api/interpreter',
     'https://overpass.private.coffee/api/interpreter',
   ];
   static const _headers = <String, String>{
-    'User-Agent': 'TBT-mobile/0.1 (nearby places)',
+    'User-Agent': 'TBT-mobile/0.1 (city places)',
     'Accept': 'application/json',
   };
 
@@ -25,11 +29,11 @@ class NearbyVenueService {
     required NearbyVenueCategory category,
     required double latitude,
     required double longitude,
-    int radiusMeters = 25000,
+    int radiusMeters = cityScaleRadiusMeters,
     bool forceRefresh = false,
   }) async {
     final prefs = await SharedPreferences.getInstance();
-    final cacheKey = _cacheKey(category, latitude, longitude);
+    final cacheKey = _cacheKey(category, latitude, longitude, radiusMeters);
     final cached = _readCache(prefs, cacheKey);
     if (!forceRefresh && cached != null && !cached.isExpired) {
       return _merge(cached.venues, await _tbtBusinesses(category, latitude, longitude, radiusMeters));
@@ -74,12 +78,14 @@ class NearbyVenueService {
       final snap = await FirebaseFirestore.instance
           .collection('business_venues')
           .where('source', isEqualTo: 'user_submission')
-          .limit(300)
+          .limit(500)
           .get();
       final out = <NearbyVenue>[];
       for (final doc in snap.docs) {
         final d = doc.data();
-        if (d['verified'] != true || d['pendingListing'] == true || (d['category'] ?? '').toString() != category.name) continue;
+        if (d['verified'] != true ||
+            d['pendingListing'] == true ||
+            (d['category'] ?? '').toString() != category.name) continue;
         final lat = (d['latitude'] as num?)?.toDouble();
         final lon = (d['longitude'] as num?)?.toDouble();
         if (lat == null || lon == null) continue;
@@ -110,7 +116,7 @@ class NearbyVenueService {
     for (final venue in [...manual, ...base]) {
       final key = '${venue.name.toLowerCase().trim()}_${venue.latitude.toStringAsFixed(4)}_${venue.longitude.toStringAsFixed(4)}';
       if (seen.add(key)) out.add(venue);
-      if (out.length >= 350) break;
+      if (out.length >= 600) break;
     }
     return out;
   }
@@ -125,10 +131,15 @@ class NearbyVenueService {
     return earth * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
   }
 
-  String _cacheKey(NearbyVenueCategory category, double latitude, double longitude) {
-    final latCell = (latitude * 40).round();
-    final lonCell = (longitude * 40).round();
-    return 'nearby_venues_v3_${category.name}_${latCell}_$lonCell';
+  String _cacheKey(
+    NearbyVenueCategory category,
+    double latitude,
+    double longitude,
+    int radiusMeters,
+  ) {
+    final latCell = (latitude * 10).round();
+    final lonCell = (longitude * 10).round();
+    return 'city_venues_v4_${category.name}_${radiusMeters}_${latCell}_$lonCell';
   }
 
   _CachedVenues? _readCache(SharedPreferences prefs, String key) {
@@ -195,7 +206,7 @@ out center tags;
         phone: (tags['contact:phone'] ?? tags['phone'] ?? '').toString(),
         website: (tags['contact:website'] ?? tags['website'] ?? '').toString(),
       ));
-      if (venues.length >= 300) break;
+      if (venues.length >= 500) break;
     }
     return venues;
   }
