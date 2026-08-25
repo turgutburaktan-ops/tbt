@@ -29,7 +29,6 @@ import 'services/deep_link_service.dart';
 import 'services/favorites_service.dart';
 import 'services/push_notification_service.dart';
 import 'theme/app_theme.dart';
-import 'widgets/admin_quick_entry.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -142,11 +141,10 @@ class _BestPhotoSpotAppState extends State<BestPhotoSpotApp> {
       final media = MediaQuery.of(context);
       final currentScale = media.textScaler.scale(1.0);
       final clampedScale = currentScale.clamp(0.90, 1.25).toDouble();
-      final content = MediaQuery(
+      return MediaQuery(
         data: media.copyWith(textScaler: TextScaler.linear(clampedScale)),
         child: child ?? const SizedBox.shrink(),
       );
-      return AdminQuickEntry(child: content);
     },
     routes: {
       '/messages': (_) => const ChatInboxScreen(),
