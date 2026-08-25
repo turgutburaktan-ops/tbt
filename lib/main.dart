@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'firebase_options.dart';
 import 'screens/admin_business_premium_screen.dart';
 import 'screens/admin_business_preview_screen.dart';
+import 'screens/admin_businesses_v2_screen.dart';
 import 'screens/admin_dashboard_screen.dart';
 import 'screens/admin_insights_screen.dart';
 import 'screens/admin_operations_screen.dart';
@@ -23,7 +24,7 @@ import 'screens/global_search_screen.dart';
 import 'screens/moderation_center_screen.dart';
 import 'screens/notifications_screen.dart';
 import 'screens/rewards_hub_screen.dart';
-import 'screens/safety_privacy_center_screen.dart';
+import 'screens/safety_privacy_center.dart';
 import 'services/app_observability_service.dart';
 import 'services/deep_link_service.dart';
 import 'services/favorites_service.dart';
@@ -154,14 +155,14 @@ class _BestPhotoSpotAppState extends State<BestPhotoSpotApp> {
       '/admin': (_) => const AdminPortalScreen(),
       '/admin-dashboard': (_) => const AdminDashboardScreen(),
       '/admin-users': (_) => const AdminUsersScreen(),
-      '/admin-businesses': (_) => const AdminBusinessesScreen(),
+      '/admin-businesses': (_) => const AdminBusinessesV2Screen(),
       '/admin-business-premium': (_) => const AdminBusinessPremiumScreen(),
       '/admin-business-preview': (_) => const AdminBusinessPreviewScreen(),
       '/admin-growth': (_) => const AdminGrowthScreen(),
       '/admin-preview': (_) => const AdminRolePreviewScreen(),
       '/admin-insights': (_) => const AdminInsightsScreen(),
       '/moderation': (_) => const ModerationCenterScreen(),
-      '/safety-privacy': (_) => const SafetyPrivacyCenterScreen(),
+      '/safety-privacy': (_) => const SafetyPrivacyCenter(),
       '/search': (_) => const GlobalSearchScreen(),
       '/campus': (_) => const CampusHomeScreen(),
       '/campus-profile': (_) => const CampusProfileScreen(),
