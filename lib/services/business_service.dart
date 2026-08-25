@@ -86,6 +86,25 @@ class BusinessService {
     });
   }
 
+  Future<void> updateProfile({
+    required String category,
+    required String venueId,
+    required String description,
+    required String phone,
+    required String website,
+    required String openingHours,
+  }) async {
+    await _authenticatedUser();
+    await _functions.httpsCallable('updateBusinessProfile').call({
+      'category': category,
+      'venueId': venueId,
+      'description': description,
+      'phone': phone,
+      'website': website,
+      'openingHours': openingHours,
+    });
+  }
+
   Future<void> addMenuItem({
     required String category,
     required String venueId,
