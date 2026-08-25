@@ -2,9 +2,11 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 
 import '../services/business_service.dart';
 import '../theme/app_theme.dart';
+import 'create_post_screen.dart';
 
 class BusinessHubScreen extends StatefulWidget {
   final String initialCategory;
@@ -59,6 +61,25 @@ class _BusinessHubScreenState extends State<BusinessHubScreen> {
       ..showSnackBar(SnackBar(content: Text(value)));
   }
 
+  String _friendlyError(Object error) {
+    if (error is FirebaseFunctionsException) {
+      switch (error.code) {
+        case 'unauthenticated':
+          return 'Oturumun doğrulanamadı. Çıkış yapıp yeniden giriş yaptıktan sonra tekrar dene.';
+        case 'permission-denied':
+          return error.message ?? 'Bu işlem için yetkin yok.';
+        case 'failed-precondition':
+        case 'invalid-argument':
+        case 'already-exists':
+          return error.message ?? 'Başvuru bilgilerini kontrol et.';
+        case 'not-found':
+          return 'İşletme doğrulama servisi bulunamadı. Uygulama yöneticisine bildir.';
+      }
+      return error.message ?? 'İşlem tamamlanamadı. Biraz sonra tekrar dene.';
+    }
+    return error.toString().replaceFirst('Exception: ', '');
+  }
+
   Future<void> _refreshStatus() async {
     if (_category.text.trim().isEmpty || _venueId.text.trim().isEmpty) return;
     try {
@@ -101,7 +122,7 @@ class _BusinessHubScreenState extends State<BusinessHubScreen> {
       _message('Başvuru alındı. Manuel doğrulama tamamlanmadan işletme yetkisi açılmaz.');
       await _refreshStatus();
     } catch (e) {
-      _message(e.toString().replaceFirst('Exception: ', ''));
+      _message(_friendlyError(e));
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -111,6 +132,9 @@ class _BusinessHubScreenState extends State<BusinessHubScreen> {
   Widget build(BuildContext context) {
     final status = (_status?['status'] ?? '').toString();
     final verified = status == 'verified';
+    final hasSelectedVenue = widget.initialCategory.isNotEmpty &&
+        widget.initialVenueId.isNotEmpty &&
+        widget.initialVenueName.isNotEmpty;
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(title: const Text('İşletmem')),
@@ -154,14 +178,31 @@ class _BusinessHubScreenState extends State<BusinessHubScreen> {
             ]),
           ),
           const SizedBox(height: 18),
-          if (!verified) ...[
+          if (!verified && !hasSelectedVenue) ...[
+            const SizedBox(height: 10),
+            const Icon(Icons.storefront_outlined, size: 58, color: AppColors.cyan),
+            const SizedBox(height: 14),
+            const Text(
+              'Önce işletmeni seç',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Mekanlar bölümünden işletmeni aç ve profilindeki “Bu işletme benim” seçeneğine dokun. Böylece mekan adı ve kimliği güvenli biçimde otomatik doldurulur.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.white60, height: 1.45),
+            ),
+          ] else if (!verified) ...[
             const Text('Mekan Bilgisi', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
             const SizedBox(height: 10),
-            TextField(controller: _venueName, decoration: const InputDecoration(labelText: 'Mekan adı')),
-            const SizedBox(height: 10),
-            TextField(controller: _category, decoration: const InputDecoration(labelText: 'Kategori kodu')),
-            const SizedBox(height: 10),
-            TextField(controller: _venueId, decoration: const InputDecoration(labelText: 'Mekan kimliği')),
+            ListTile(
+              contentPadding: const EdgeInsets.symmetric(horizontal: 4),
+              leading: const Icon(Icons.storefront_rounded, color: AppColors.cyan),
+              title: Text(_venueName.text, style: const TextStyle(fontWeight: FontWeight.w900)),
+              subtitle: Text(_categoryLabel(_category.text)),
+              trailing: const Icon(Icons.lock_outline_rounded, size: 18),
+            ),
             const SizedBox(height: 18),
             const Text('Yetki ve Şirket Bilgileri', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
             const SizedBox(height: 10),
@@ -208,8 +249,93 @@ class _BusinessHubScreenState extends State<BusinessHubScreen> {
               subtitle: 'Canlı müzik, workshop, maç yayını ve özel program ekle.',
               onTap: () => _showProgramDialog(),
             ),
+            _ManagementTile(
+              icon: Icons.local_offer_outlined,
+              title: 'Kampanyalar',
+              subtitle: 'Süreli fırsat ve duyuru yayınla.',
+              onTap: () => _showCampaignDialog(),
+            ),
+            _ManagementTile(
+              icon: Icons.add_to_photos_outlined,
+              title: 'Fotoğraf / Video Paylaş',
+              subtitle: 'İşletme profilinde ve ana akışta yayınla.',
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => CreatePostScreen(
+                    businessVenueKey: BusinessService.instance.venueKey(
+                      _category.text.trim(),
+                      _venueId.text.trim(),
+                    ),
+                    businessVenueName: _venueName.text.trim(),
+                  ),
+                ),
+              ),
+            ),
           ],
         ],
+      ),
+    );
+  }
+
+  String _categoryLabel(String value) => switch (value) {
+        'cafe' => 'Kafe',
+        'hotel' => 'Otel / Konaklama',
+        'dining' => 'Restoran / Yeme-İçme',
+        _ => 'İşletme',
+      };
+
+  Future<void> _showCampaignDialog() async {
+    final title = TextEditingController();
+    final description = TextEditingController();
+    var validUntil = DateTime.now().add(const Duration(days: 7));
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Kampanya yayınla'),
+          content: SingleChildScrollView(
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+              TextField(controller: title, decoration: const InputDecoration(labelText: 'Kampanya başlığı')),
+              TextField(controller: description, maxLines: 3, decoration: const InputDecoration(labelText: 'Açıklama ve koşullar')),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.event_available_outlined),
+                title: Text('Son gün: ${validUntil.day}.${validUntil.month}.${validUntil.year}'),
+                onTap: () async {
+                  final picked = await showDatePicker(
+                    context: context,
+                    firstDate: DateTime.now(),
+                    lastDate: DateTime.now().add(const Duration(days: 365)),
+                    initialDate: validUntil,
+                  );
+                  if (picked != null) setDialogState(() => validUntil = picked.add(const Duration(hours: 23, minutes: 59)));
+                },
+              ),
+            ]),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Vazgeç')),
+            FilledButton(
+              onPressed: () async {
+                try {
+                  await BusinessService.instance.addCampaign(
+                    category: _category.text.trim(),
+                    venueId: _venueId.text.trim(),
+                    title: title.text,
+                    description: description.text,
+                    validUntil: validUntil,
+                  );
+                  if (dialogContext.mounted) Navigator.pop(dialogContext);
+                  _message('Kampanya yayınlandı.');
+                } catch (e) {
+                  _message(_friendlyError(e));
+                }
+              },
+              child: const Text('Yayınla'),
+            ),
+          ],
+        ),
       ),
     );
   }

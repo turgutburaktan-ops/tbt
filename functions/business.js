@@ -184,6 +184,24 @@ exports.addBusinessProgramItem = onCall({region: 'europe-west1'}, async (request
   return {ok: true};
 });
 
+exports.addBusinessCampaign = onCall({region: 'europe-west1'}, async (request) => {
+  const d = request.data || {};
+  const {uid, db, id} = await assertVerifiedOwner(request, d.category, d.venueId);
+  const title = clean(d.title, 140);
+  const description = clean(d.description, 700);
+  const validUntilMs = Number(d.validUntilMs || 0);
+  if (!title || !description || !Number.isFinite(validUntilMs) || validUntilMs < Date.now()) {
+    throw new HttpsError('invalid-argument', 'Kampanya bilgileri geçersiz.');
+  }
+  const venueRef = db.collection('business_venues').doc(id);
+  await venueRef.set({ownerUid: uid, verified: true, updatedAt: FieldValue.serverTimestamp()}, {merge: true});
+  await venueRef.collection('campaigns').add({
+    title, description, validUntil: Timestamp.fromMillis(validUntilMs), active: true,
+    createdBy: uid, createdAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp(),
+  });
+  return {ok: true};
+});
+
 exports.adminReviewBusinessClaim = onCall({region: 'europe-west1'}, async (request) => {
   requireAuth(request);
   if (request.auth.token.admin !== true) {

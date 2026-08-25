@@ -12,10 +12,14 @@ import '../widgets/app_video_player.dart';
 
 class CreatePostScreen extends StatefulWidget {
   final String? initialImagePath;
+  final String businessVenueKey;
+  final String businessVenueName;
 
   const CreatePostScreen({
     super.key,
     this.initialImagePath,
+    this.businessVenueKey = '',
+    this.businessVenueName = '',
   });
 
   @override
@@ -45,6 +49,9 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       _image = File(widget.initialImagePath!);
     }
     _captionController.addListener(_refreshCaptionCounter);
+    if (widget.businessVenueName.isNotEmpty) {
+      _spotController.text = widget.businessVenueName;
+    }
   }
 
   void _refreshCaptionCounter() {
@@ -332,6 +339,8 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
           longitude: _longitude,
           taggedUserIds: ids,
           taggedUserNames: names,
+          businessVenueKey: widget.businessVenueKey,
+          businessVenueName: widget.businessVenueName,
         );
       } else {
         await PostService.instance.createPost(
@@ -342,6 +351,8 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
           longitude: _longitude,
           taggedUserIds: ids,
           taggedUserNames: names,
+          businessVenueKey: widget.businessVenueKey,
+          businessVenueName: widget.businessVenueName,
         );
       }
       if (!mounted) return;
@@ -409,7 +420,9 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       appBar: AppBar(
         backgroundColor: const Color(0xFF090A0C),
         foregroundColor: Colors.white,
-        title: const Text('Paylaş'),
+        title: Text(widget.businessVenueName.isEmpty
+            ? 'Paylaş'
+            : '${widget.businessVenueName} adına paylaş'),
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(18, 16, 18, 40),

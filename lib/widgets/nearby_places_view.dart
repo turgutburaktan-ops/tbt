@@ -12,6 +12,7 @@ import '../services/nearby_venue_service.dart';
 import '../services/route_selection_service.dart';
 import '../services/venue_rating_service.dart';
 import '../theme/app_theme.dart';
+import '../screens/business_profile_screen.dart';
 import 'route_selection_button.dart';
 import 'venue_reviews_section.dart';
 
@@ -219,6 +220,19 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
         const SnackBar(content: Text('Harita uygulaması açılamadı.')),
       );
     }
+  }
+
+  void _openBusinessProfile(NearbyVenue venue) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => BusinessProfileScreen(
+          venue: venue,
+          distance: _distanceLabel(venue),
+          rating: _ratings[_ratingKey(venue)] ?? VenueRatingSummary.empty,
+        ),
+      ),
+    );
   }
 
   Future<void> _openReviews(NearbyVenue venue) async {
@@ -476,7 +490,7 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
                     rating: _ratings[_ratingKey(venue)] ??
                         VenueRatingSummary.empty,
                     distance: _distanceLabel(venue),
-                    onTap: () => _openDirections(venue),
+                    onTap: () => _openBusinessProfile(venue),
                   );
                 },
               ),
@@ -503,7 +517,7 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
                     label: Text(
                       '${venue.name} • ${rating.average.toStringAsFixed(1)}',
                     ),
-                    onPressed: () => _openReviews(venue),
+                    onPressed: () => _openBusinessProfile(venue),
                   );
                 },
               ),
@@ -604,6 +618,7 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
                 onReviews: () => _openReviews(venue),
                 selected: _selectedIds.contains(_routeId(venue)),
                 onSelected: () => _toggleSelection(venue),
+                onOpenProfile: () => _openBusinessProfile(venue),
               );
             }),
           const SizedBox(height: 4),
@@ -817,6 +832,7 @@ class _VenueCard extends StatelessWidget {
   final VoidCallback onReviews;
   final bool selected;
   final VoidCallback onSelected;
+  final VoidCallback onOpenProfile;
 
   const _VenueCard({
     required this.venue,
@@ -826,6 +842,7 @@ class _VenueCard extends StatelessWidget {
     required this.onReviews,
     required this.selected,
     required this.onSelected,
+    required this.onOpenProfile,
   });
 
   IconData get _icon => switch (venue.category) {
@@ -835,7 +852,10 @@ class _VenueCard extends StatelessWidget {
       };
 
   @override
-  Widget build(BuildContext context) => Container(
+  Widget build(BuildContext context) => InkWell(
+        onTap: onOpenProfile,
+        borderRadius: BorderRadius.circular(15),
+        child: Container(
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.fromLTRB(12, 11, 8, 11),
         decoration: BoxDecoration(
@@ -988,6 +1008,7 @@ class _VenueCard extends StatelessWidget {
             ),
           ],
         ),
+        ),
       );
 }
 
@@ -1061,6 +1082,10 @@ class _NearbyVenueMapScreen extends StatelessWidget {
             infoWindow: InfoWindow(
               title: venue.name,
               snippet: venue.address.isEmpty ? category.label : venue.address,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => BusinessProfileScreen(venue: venue)),
+              ),
             ),
           ),
         )

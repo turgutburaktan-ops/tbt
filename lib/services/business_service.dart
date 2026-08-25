@@ -14,7 +14,15 @@ class BusinessService {
 
   String venueKey(String category, String venueId) => '$category:$venueId';
 
+  Future<User> _authenticatedUser() async {
+    final user = _auth.currentUser;
+    if (user == null) throw Exception('Oturumun sona ermiş. Yeniden giriş yapmalısın.');
+    await user.getIdToken(true);
+    return user;
+  }
+
   Future<Map<String, dynamic>> claimStatus(String category, String venueId) async {
+    await _authenticatedUser();
     final result = await _functions.httpsCallable('getBusinessClaim').call({
       'category': category,
       'venueId': venueId,
@@ -43,8 +51,7 @@ class BusinessService {
     required String taxNumberLast4,
     required File evidenceImage,
   }) async {
-    final user = _auth.currentUser;
-    if (user == null) throw Exception('İşletme başvurusu için giriş yapmalısın.');
+    final user = await _authenticatedUser();
     if (!user.emailVerified) {
       throw Exception('Önce hesabındaki e-posta adresini doğrulamalısın.');
     }
@@ -87,6 +94,7 @@ class BusinessService {
     required int priceMinor,
     String description = '',
   }) async {
+    await _authenticatedUser();
     await _functions.httpsCallable('addBusinessMenuItem').call({
       'category': category,
       'venueId': venueId,
@@ -104,12 +112,30 @@ class BusinessService {
     required DateTime startsAt,
     String description = '',
   }) async {
+    await _authenticatedUser();
     await _functions.httpsCallable('addBusinessProgramItem').call({
       'category': category,
       'venueId': venueId,
       'title': title,
       'description': description,
       'startsAtMs': startsAt.millisecondsSinceEpoch,
+    });
+  }
+
+  Future<void> addCampaign({
+    required String category,
+    required String venueId,
+    required String title,
+    required String description,
+    required DateTime validUntil,
+  }) async {
+    await _authenticatedUser();
+    await _functions.httpsCallable('addBusinessCampaign').call({
+      'category': category,
+      'venueId': venueId,
+      'title': title,
+      'description': description,
+      'validUntilMs': validUntil.millisecondsSinceEpoch,
     });
   }
 }

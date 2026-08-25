@@ -26,6 +26,8 @@ class PostService {
     required double? longitude,
     required List<String> taggedUserIds,
     required List<String> taggedUserNames,
+    String businessVenueKey = '',
+    String businessVenueName = '',
   }) {
     return {
       'id': id,
@@ -44,6 +46,8 @@ class PostService {
       'likesCount': 0,
       'commentsCount': 0,
       'sourceType': 'post',
+      'businessVenueKey': businessVenueKey,
+      'businessVenueName': businessVenueName,
       'createdAt': FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
     };
@@ -57,6 +61,8 @@ class PostService {
     double? longitude,
     List<String> taggedUserIds = const <String>[],
     List<String> taggedUserNames = const <String>[],
+    String businessVenueKey = '',
+    String businessVenueName = '',
   }) async {
     final user = _auth.currentUser;
     if (user == null) throw Exception('Fotoğraf paylaşmak için giriş yapmalısın.');
@@ -93,6 +99,8 @@ class PostService {
         longitude: longitude,
         taggedUserIds: taggedUserIds,
         taggedUserNames: taggedUserNames,
+        businessVenueKey: businessVenueKey,
+        businessVenueName: businessVenueName,
       ),
       'mediaType': 'image',
       'imageUrl': imageUrl,
@@ -113,6 +121,8 @@ class PostService {
     double? longitude,
     List<String> taggedUserIds = const <String>[],
     List<String> taggedUserNames = const <String>[],
+    String businessVenueKey = '',
+    String businessVenueName = '',
   }) async {
     final user = _auth.currentUser;
     if (user == null) throw Exception('Video paylaşmak için giriş yapmalısın.');
@@ -158,6 +168,8 @@ class PostService {
         longitude: longitude,
         taggedUserIds: taggedUserIds,
         taggedUserNames: taggedUserNames,
+        businessVenueKey: businessVenueKey,
+        businessVenueName: businessVenueName,
       ),
       'mediaType': 'video',
       'imageUrl': thumbnailUrl,

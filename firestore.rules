@@ -136,6 +136,14 @@ service cloud.firestore {
         request.resource.data.get('durationMs', 0) is int && request.resource.data.get('durationMs', 0) >= 0 && request.resource.data.get('durationMs', 0) <= 60000 &&
         request.resource.data.get('sourceType', 'post') in ['post','event_memory'];
     }
+    function validBusinessPost() {
+      let key = request.resource.data.get('businessVenueKey', '');
+      return key == '' || (
+        exists(/databases/$(database)/documents/business_venues/$(key)) &&
+        get(/databases/$(database)/documents/business_venues/$(key)).data.verified == true &&
+        get(/databases/$(database)/documents/business_venues/$(key)).data.ownerUid == request.auth.uid
+      );
+    }
     function validPostOwnerUpdate() {
       return signedIn() && resource.data.userId == request.auth.uid && request.resource.data.userId == resource.data.userId &&
         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['caption','spotName','updatedAt']) &&
@@ -254,12 +262,21 @@ service cloud.firestore {
     }
     match /posts/{postId} {
       allow read: if true;
-      allow create: if validPostCreate();
+      allow create: if validPostCreate() && validBusinessPost();
       allow update: if isAdmin() || validPostOwnerUpdate();
       allow delete: if isAdmin() || (signedIn() && resource.data.userId == request.auth.uid);
       match /likes/{uid} { allow read: if true; allow create: if isSelf(uid) && request.resource.data.userId == uid; allow delete: if isSelf(uid); allow update: if false; }
       match /comments/{commentId} { allow read: if true; allow create: if validCommentCreate(); allow update, delete: if signedIn() && resource.data.userId == request.auth.uid; }
       match /tags/{taggedUserId} { allow read: if true; allow create: if signedIn() && request.resource.data.userId == taggedUserId && request.resource.data.taggedBy == request.auth.uid; allow update, delete: if signedIn() && resource.data.taggedBy == request.auth.uid; }
+      match /{sub}/{docId} { allow read, write: if false; }
+    }
+    match /business_venues/{venueKey} {
+      allow read: if true;
+      allow create, update, delete: if false;
+      match /menu/{itemId} { allow read: if true; allow write: if false; }
+      match /program/{itemId} { allow read: if true; allow write: if false; }
+      match /campaigns/{itemId} { allow read: if true; allow write: if false; }
+      match /trust_reports/{reportId} { allow read, write: if false; }
       match /{sub}/{docId} { allow read, write: if false; }
     }
     match /spot_presence/{id} { allow read: if signedIn(); allow create: if signedIn() && request.resource.data.userId == request.auth.uid; allow update, delete: if signedIn() && resource.data.userId == request.auth.uid; }

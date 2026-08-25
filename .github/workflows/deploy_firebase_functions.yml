@@ -44,7 +44,7 @@ jobs:
       - name: Deploy business functions
         run: >-
           firebase deploy
-          --only functions:submitBusinessClaim,functions:getBusinessClaim,functions:addBusinessMenuItem,functions:addBusinessProgramItem,functions:adminReviewBusinessClaim,functions:getBusinessEntitlement,functions:grantEarlyBusinessAccessOnVerification
+          --only functions:submitBusinessClaim,functions:getBusinessClaim,functions:addBusinessMenuItem,functions:addBusinessProgramItem,functions:addBusinessCampaign,functions:adminReviewBusinessClaim,functions:getBusinessEntitlement,functions:grantEarlyBusinessAccessOnVerification
           --project en-iyi-cekim-noktasi
           --force
           --non-interactive
