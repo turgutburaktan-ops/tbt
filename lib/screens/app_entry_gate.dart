@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import '../widgets/retention_now_overlay.dart';
 import 'account_security_gate.dart';
 import 'app_onboarding_screen.dart';
 import 'guest_home_screen.dart';
@@ -45,7 +46,7 @@ class AppEntryGate extends StatelessWidget {
               if (onboardingRequired && !onboardingCompleted) {
                 next = const StudentOnboardingScreen();
               } else {
-                next = const HomeScreen();
+                next = const RetentionNowOverlay(child: HomeScreen());
               }
             }
 
