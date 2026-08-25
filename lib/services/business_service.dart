@@ -105,6 +105,42 @@ class BusinessService {
     });
   }
 
+  Future<void> updateProfileImage({
+    required String category,
+    required String venueId,
+    required String kind,
+    required File image,
+  }) async {
+    final user = await _authenticatedUser();
+    if (kind != 'logo' && kind != 'cover') {
+      throw Exception('Geçersiz işletme görseli türü.');
+    }
+    if (!await image.exists() || await image.length() <= 0) {
+      throw Exception('Görsel dosyası okunamadı.');
+    }
+    if (await image.length() > 12 * 1024 * 1024) {
+      throw Exception('Görsel 12 MB sınırını aşıyor.');
+    }
+
+    final id = venueKey(category.trim(), venueId.trim());
+    final imageRef = _storage
+        .ref()
+        .child('users/${user.uid}/business_profiles/$id/$kind.jpg');
+    await imageRef.putFile(
+      image,
+      SettableMetadata(contentType: 'image/jpeg'),
+    );
+    final imageUrl = await imageRef.getDownloadURL();
+
+    await _functions.httpsCallable('updateBusinessProfileMedia').call({
+      'category': category,
+      'venueId': venueId,
+      'kind': kind,
+      'imageUrl': imageUrl,
+      'storagePath': imageRef.fullPath,
+    });
+  }
+
   Future<void> addMenuItem({
     required String category,
     required String venueId,
