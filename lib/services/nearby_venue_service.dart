@@ -12,9 +12,6 @@ class NearbyVenueService {
   static final instance = NearbyVenueService._();
 
   static const _cacheLifetime = Duration(hours: 18);
-  // City-scale discovery: location is used for ordering, not for a tiny
-  // "near me" cut-off. 80 km covers the full urban area and outskirts of
-  // most Turkish cities while keeping Overpass requests bounded.
   static const int cityScaleRadiusMeters = 80000;
   static const _endpoints = <String>[
     'https://overpass-api.de/api/interpreter',
@@ -25,6 +22,29 @@ class NearbyVenueService {
     'Accept': 'application/json',
   };
 
+  double? _cityLatitude;
+  double? _cityLongitude;
+  String? _cityName;
+
+  String? get selectedCityName => _cityName;
+  bool get hasSelectedCity => _cityLatitude != null && _cityLongitude != null;
+
+  void selectCity({
+    required String name,
+    required double latitude,
+    required double longitude,
+  }) {
+    _cityName = name.trim();
+    _cityLatitude = latitude;
+    _cityLongitude = longitude;
+  }
+
+  void useCurrentCity() {
+    _cityName = null;
+    _cityLatitude = null;
+    _cityLongitude = null;
+  }
+
   Future<List<NearbyVenue>> nearby({
     required NearbyVenueCategory category,
     required double latitude,
@@ -32,11 +52,16 @@ class NearbyVenueService {
     int radiusMeters = cityScaleRadiusMeters,
     bool forceRefresh = false,
   }) async {
+    final queryLatitude = _cityLatitude ?? latitude;
+    final queryLongitude = _cityLongitude ?? longitude;
     final prefs = await SharedPreferences.getInstance();
-    final cacheKey = _cacheKey(category, latitude, longitude, radiusMeters);
+    final cacheKey = _cacheKey(category, queryLatitude, queryLongitude, radiusMeters);
     final cached = _readCache(prefs, cacheKey);
     if (!forceRefresh && cached != null && !cached.isExpired) {
-      return _merge(cached.venues, await _tbtBusinesses(category, latitude, longitude, radiusMeters));
+      return _merge(
+        cached.venues,
+        await _tbtBusinesses(category, queryLatitude, queryLongitude, radiusMeters),
+      );
     }
 
     Object? lastError;
@@ -45,7 +70,7 @@ class NearbyVenueService {
         final response = await http.post(
           Uri.parse(endpoint),
           headers: _headers,
-          body: {'data': _query(category, latitude, longitude, radiusMeters)},
+          body: {'data': _query(category, queryLatitude, queryLongitude, radiusMeters)},
         ).timeout(const Duration(seconds: 28));
         if (response.statusCode != 200) {
           lastError = 'HTTP ${response.statusCode}';
@@ -56,13 +81,16 @@ class NearbyVenueService {
           'savedAt': DateTime.now().millisecondsSinceEpoch,
           'venues': osm.map((venue) => venue.toJson()).toList(),
         }));
-        return _merge(osm, await _tbtBusinesses(category, latitude, longitude, radiusMeters));
+        return _merge(
+          osm,
+          await _tbtBusinesses(category, queryLatitude, queryLongitude, radiusMeters),
+        );
       } catch (error) {
         lastError = error;
       }
     }
 
-    final tbt = await _tbtBusinesses(category, latitude, longitude, radiusMeters);
+    final tbt = await _tbtBusinesses(category, queryLatitude, queryLongitude, radiusMeters);
     if (cached != null) return _merge(cached.venues, tbt);
     if (tbt.isNotEmpty) return tbt;
     throw Exception('Mekan verisi alınamadı: ${lastError ?? 'bağlantı hatası'}');
@@ -139,7 +167,7 @@ class NearbyVenueService {
   ) {
     final latCell = (latitude * 10).round();
     final lonCell = (longitude * 10).round();
-    return 'city_venues_v4_${category.name}_${radiusMeters}_${latCell}_$lonCell';
+    return 'city_venues_v5_${category.name}_${radiusMeters}_${latCell}_$lonCell';
   }
 
   _CachedVenues? _readCache(SharedPreferences prefs, String key) {
