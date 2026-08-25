@@ -23,199 +23,85 @@ class BusinessService {
 
   Future<Map<String, dynamic>> claimStatus(String category, String venueId) async {
     await _authenticatedUser();
-    final result = await _functions.httpsCallable('getBusinessClaim').call({
-      'category': category,
-      'venueId': venueId,
-    });
+    final result = await _functions.httpsCallable('getBusinessClaim').call({'category': category, 'venueId': venueId});
     return Map<String, dynamic>.from(result.data as Map);
   }
 
   Future<Map<String, dynamic>> entitlementStatus(String category, String venueId) async {
-    final result = await _functions.httpsCallable('getBusinessEntitlement').call({
-      'venueKey': venueKey(category.trim(), venueId.trim()),
-    });
+    final result = await _functions.httpsCallable('getBusinessEntitlement').call({'venueKey': venueKey(category.trim(), venueId.trim())});
     return Map<String, dynamic>.from(result.data as Map);
   }
 
-  Future<void> submitClaim({
-    required String category,
-    required String venueId,
-    required String venueName,
-    required String businessEmail,
-    required String businessPhone,
-    required String legalName,
-    required String taxOffice,
-    required String taxNumberLast4,
-    required File evidenceImage,
-  }) async {
+  Future<void> submitClaim({required String category, required String venueId, required String venueName, required String businessEmail, required String businessPhone, required String legalName, required String taxOffice, required String taxNumberLast4, required File evidenceImage}) async {
     final user = await _authenticatedUser();
     if (!user.emailVerified) throw Exception('Önce hesabındaki e-posta adresini doğrulamalısın.');
-    if (!await evidenceImage.exists() || await evidenceImage.length() <= 0) {
-      throw Exception('Yetki kanıtı fotoğrafı zorunlu.');
-    }
-    if (await evidenceImage.length() > 15 * 1024 * 1024) {
-      throw Exception('Kanıt görseli 15 MB sınırını aşıyor.');
-    }
-
+    if (!await evidenceImage.exists() || await evidenceImage.length() <= 0) throw Exception('Yetki kanıtı fotoğrafı zorunlu.');
+    if (await evidenceImage.length() > 15 * 1024 * 1024) throw Exception('Kanıt görseli 15 MB sınırını aşıyor.');
     final id = venueKey(category, venueId);
     final evidenceRef = _storage.ref().child('users/${user.uid}/business_claims/$id/evidence.jpg');
     await evidenceRef.putFile(evidenceImage, SettableMetadata(contentType: 'image/jpeg'));
     final evidenceUrl = await evidenceRef.getDownloadURL();
-
-    await _functions.httpsCallable('submitBusinessClaim').call({
-      'category': category,
-      'venueId': venueId,
-      'venueName': venueName,
-      'businessEmail': businessEmail,
-      'businessPhone': businessPhone,
-      'legalName': legalName,
-      'taxOffice': taxOffice,
-      'taxNumberLast4': taxNumberLast4,
-      'evidenceUrl': evidenceUrl,
-      'evidenceStoragePath': evidenceRef.fullPath,
-    });
+    await _functions.httpsCallable('submitBusinessClaim').call({'category': category,'venueId': venueId,'venueName': venueName,'businessEmail': businessEmail,'businessPhone': businessPhone,'legalName': legalName,'taxOffice': taxOffice,'taxNumberLast4': taxNumberLast4,'evidenceUrl': evidenceUrl,'evidenceStoragePath': evidenceRef.fullPath});
   }
 
-  Future<void> updateProfile({
-    required String category,
-    required String venueId,
-    required String description,
-    required String phone,
-    required String website,
-    required String openingHours,
-  }) async {
+  Future<void> updateProfile({required String category, required String venueId, required String description, required String phone, required String website, required String openingHours}) async {
     await _authenticatedUser();
-    await _functions.httpsCallable('updateBusinessProfile').call({
-      'category': category,
-      'venueId': venueId,
-      'description': description,
-      'phone': phone,
-      'website': website,
-      'openingHours': openingHours,
-    });
+    await _functions.httpsCallable('updateBusinessProfile').call({'category': category,'venueId': venueId,'description': description,'phone': phone,'website': website,'openingHours': openingHours});
   }
 
-  Future<void> updateProfileImage({
-    required String category,
-    required String venueId,
-    required String kind,
-    required File image,
-  }) async {
+  Future<void> updateWeeklyHours({required String category, required String venueId, required Map<String, dynamic> weeklyHours}) async {
+    await _authenticatedUser();
+    await _functions.httpsCallable('updateBusinessWeeklyHours').call({'category': category, 'venueId': venueId, 'weeklyHours': weeklyHours});
+  }
+
+  Future<void> updateProfileImage({required String category, required String venueId, required String kind, required File image}) async {
     final user = await _authenticatedUser();
     if (kind != 'logo' && kind != 'cover') throw Exception('Geçersiz işletme görseli türü.');
     if (!await image.exists() || await image.length() <= 0) throw Exception('Görsel dosyası okunamadı.');
     if (await image.length() > 12 * 1024 * 1024) throw Exception('Görsel 12 MB sınırını aşıyor.');
-
     final id = venueKey(category.trim(), venueId.trim());
     final imageRef = _storage.ref().child('users/${user.uid}/business_profiles/$id/$kind.jpg');
     await imageRef.putFile(image, SettableMetadata(contentType: 'image/jpeg'));
     final imageUrl = await imageRef.getDownloadURL();
-
-    await _functions.httpsCallable('updateBusinessProfileMedia').call({
-      'category': category,
-      'venueId': venueId,
-      'kind': kind,
-      'imageUrl': imageUrl,
-      'storagePath': imageRef.fullPath,
-    });
+    await _functions.httpsCallable('updateBusinessProfileMedia').call({'category': category,'venueId': venueId,'kind': kind,'imageUrl': imageUrl,'storagePath': imageRef.fullPath});
   }
 
-  Future<void> addMenuItem({
-    required String category,
-    required String venueId,
-    required String name,
-    required String section,
-    required int priceMinor,
-    String description = '',
-  }) async {
-    await _authenticatedUser();
-    await _functions.httpsCallable('addBusinessMenuItem').call({
-      'category': category,
-      'venueId': venueId,
-      'name': name,
-      'section': section,
-      'description': description,
-      'priceMinor': priceMinor,
-    });
+  Future<Map<String, String>> uploadMenuImage({required String category, required String venueId, required String itemId, required File image}) async {
+    final user = await _authenticatedUser();
+    if (!await image.exists() || await image.length() <= 0) throw Exception('Ürün görseli okunamadı.');
+    if (await image.length() > 10 * 1024 * 1024) throw Exception('Ürün görseli 10 MB sınırını aşıyor.');
+    final id = venueKey(category.trim(), venueId.trim());
+    final ref = _storage.ref().child('users/${user.uid}/business_menu/$id/$itemId/product.jpg');
+    await ref.putFile(image, SettableMetadata(contentType: 'image/jpeg'));
+    return {'imageUrl': await ref.getDownloadURL(), 'imageStoragePath': ref.fullPath};
   }
 
-  Future<void> addProgramItem({
-    required String category,
-    required String venueId,
-    required String title,
-    required DateTime startsAt,
-    String description = '',
-  }) async {
+  Future<String> addMenuItem({required String category, required String venueId, required String name, required String section, required int priceMinor, String description = '', bool available = true}) async {
     await _authenticatedUser();
-    await _functions.httpsCallable('addBusinessProgramItem').call({
-      'category': category,
-      'venueId': venueId,
-      'title': title,
-      'description': description,
-      'startsAtMs': startsAt.millisecondsSinceEpoch,
-    });
+    final result = await _functions.httpsCallable('addBusinessMenuItem').call({'category': category,'venueId': venueId,'name': name,'section': section,'description': description,'priceMinor': priceMinor,'available': available});
+    final data = Map<String, dynamic>.from(result.data as Map);
+    return (data['itemId'] ?? '').toString();
   }
 
-  Future<void> addCampaign({
-    required String category,
-    required String venueId,
-    required String title,
-    required String description,
-    required DateTime validUntil,
-  }) async {
+  Future<void> addProgramItem({required String category, required String venueId, required String title, required DateTime startsAt, String description = ''}) async {
     await _authenticatedUser();
-    await _functions.httpsCallable('addBusinessCampaign').call({
-      'category': category,
-      'venueId': venueId,
-      'title': title,
-      'description': description,
-      'validUntilMs': validUntil.millisecondsSinceEpoch,
-    });
+    await _functions.httpsCallable('addBusinessProgramItem').call({'category': category,'venueId': venueId,'title': title,'description': description,'startsAtMs': startsAt.millisecondsSinceEpoch});
   }
 
-  Future<void> updateContentItem({
-    required String category,
-    required String venueId,
-    required String type,
-    required String itemId,
-    required Map<String, dynamic> changes,
-  }) async {
+  Future<void> addCampaign({required String category, required String venueId, required String title, required String description, required DateTime validUntil}) async {
     await _authenticatedUser();
-    await _functions.httpsCallable('updateBusinessContentItem').call({
-      'category': category,
-      'venueId': venueId,
-      'type': type,
-      'itemId': itemId,
-      ...changes,
-    });
+    await _functions.httpsCallable('addBusinessCampaign').call({'category': category,'venueId': venueId,'title': title,'description': description,'validUntilMs': validUntil.millisecondsSinceEpoch});
   }
 
-  Future<void> setContentActive({
-    required String category,
-    required String venueId,
-    required String type,
-    required String itemId,
-    required bool active,
-  }) => updateContentItem(
-        category: category,
-        venueId: venueId,
-        type: type,
-        itemId: itemId,
-        changes: {'active': active},
-      );
-
-  Future<void> deleteContentItem({
-    required String category,
-    required String venueId,
-    required String type,
-    required String itemId,
-  }) async {
+  Future<void> updateContentItem({required String category, required String venueId, required String type, required String itemId, required Map<String, dynamic> changes}) async {
     await _authenticatedUser();
-    await _functions.httpsCallable('deleteBusinessContentItem').call({
-      'category': category,
-      'venueId': venueId,
-      'type': type,
-      'itemId': itemId,
-    });
+    await _functions.httpsCallable('updateBusinessContentItem').call({'category': category,'venueId': venueId,'type': type,'itemId': itemId,...changes});
+  }
+
+  Future<void> setContentActive({required String category, required String venueId, required String type, required String itemId, required bool active}) => updateContentItem(category: category, venueId: venueId, type: type, itemId: itemId, changes: {'active': active});
+
+  Future<void> deleteContentItem({required String category, required String venueId, required String type, required String itemId}) async {
+    await _authenticatedUser();
+    await _functions.httpsCallable('deleteBusinessContentItem').call({'category': category,'venueId': venueId,'type': type,'itemId': itemId});
   }
 }
