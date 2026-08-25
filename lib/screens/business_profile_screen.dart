@@ -61,6 +61,10 @@ class BusinessProfileScreen extends StatelessWidget {
             FirebaseAuth.instance.currentUser?.uid == ownerUid;
         final coverUrl = (profile['coverUrl'] ?? '').toString();
         final logoUrl = (profile['logoUrl'] ?? '').toString();
+        final managedPhone = (profile['phone'] ?? '').toString().trim();
+        final managedWebsite = (profile['website'] ?? '').toString().trim();
+        final phone = managedPhone.isNotEmpty ? managedPhone : venue.phone.trim();
+        final website = managedWebsite.isNotEmpty ? managedWebsite : venue.website.trim();
 
         return DefaultTabController(
           length: 5,
@@ -128,16 +132,15 @@ class BusinessProfileScreen extends StatelessWidget {
                           _QuickAction(
                             icon: Icons.call_outlined,
                             label: 'Ara',
-                            enabled: venue.phone.isNotEmpty,
-                            onTap: () => _launch(context, Uri(scheme: 'tel', path: venue.phone)),
+                            enabled: phone.isNotEmpty,
+                            onTap: () => _launch(context, Uri(scheme: 'tel', path: phone)),
                           ),
                           _QuickAction(
                             icon: Icons.language_rounded,
                             label: 'Web',
-                            enabled: venue.website.isNotEmpty,
+                            enabled: website.isNotEmpty,
                             onTap: () {
-                              final raw = venue.website.trim();
-                              final uri = Uri.tryParse(raw.startsWith('http') ? raw : 'https://$raw');
+                              final uri = Uri.tryParse(website.startsWith('http') ? website : 'https://$website');
                               if (uri != null) _launch(context, uri);
                             },
                           ),
@@ -272,18 +275,22 @@ class _OverviewTab extends StatelessWidget {
   const _OverviewTab({required this.venue, required this.profile, required this.venueKey});
 
   @override
-  Widget build(BuildContext context) => ListView(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 36),
-        children: [
-          _InfoCard(icon: Icons.schedule_rounded, title: 'Çalışma saatleri', value: venue.openingHours.isEmpty ? 'İşletme henüz çalışma saati eklemedi.' : venue.openingHours),
-          if ((profile['description'] ?? '').toString().isNotEmpty)
-            _InfoCard(icon: Icons.info_outline_rounded, title: 'Hakkında', value: profile['description'].toString()),
-          const SizedBox(height: 8),
-          const Text('Puanlar ve yorumlar', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
-          const SizedBox(height: 10),
-          VenueReviewsSection(category: venue.category.name, venueId: venue.id, venueName: venue.name),
-        ],
-      );
+  Widget build(BuildContext context) {
+    final managedHours = (profile['openingHours'] ?? '').toString().trim();
+    final openingHours = managedHours.isNotEmpty ? managedHours : venue.openingHours;
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 36),
+      children: [
+        _InfoCard(icon: Icons.schedule_rounded, title: 'Çalışma saatleri', value: openingHours.isEmpty ? 'İşletme henüz çalışma saati eklemedi.' : openingHours),
+        if ((profile['description'] ?? '').toString().isNotEmpty)
+          _InfoCard(icon: Icons.info_outline_rounded, title: 'Hakkında', value: profile['description'].toString()),
+        const SizedBox(height: 8),
+        const Text('Puanlar ve yorumlar', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
+        const SizedBox(height: 10),
+        VenueReviewsSection(category: venue.category.name, venueId: venue.id, venueName: venue.name),
+      ],
+    );
+  }
 }
 
 class _InfoCard extends StatelessWidget {
