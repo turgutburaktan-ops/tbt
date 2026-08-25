@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'firebase_options.dart';
+import 'screens/admin_business_premium_screen.dart';
 import 'screens/admin_dashboard_screen.dart';
 import 'screens/admin_insights_screen.dart';
 import 'screens/admin_operations_screen.dart';
@@ -33,9 +34,7 @@ Future<void> main() async {
 
   FlutterError.onError = (details) {
     FlutterError.presentError(details);
-    if (kDebugMode) {
-      debugPrint('Flutter error: ${details.exceptionAsString()}');
-    }
+    if (kDebugMode) debugPrint('Flutter error: ${details.exceptionAsString()}');
     if (Firebase.apps.isNotEmpty) {
       unawaited(AppObservabilityService.instance.recordError(
         details.exception,
@@ -59,10 +58,8 @@ Future<void> main() async {
   await runZonedGuarded(() async {
     Object? bootstrapError;
     try {
-      await Firebase.initializeApp(
-        options: AppFirebaseOptions.currentPlatform,
-      ).timeout(const Duration(seconds: 15));
-
+      await Firebase.initializeApp(options: AppFirebaseOptions.currentPlatform)
+          .timeout(const Duration(seconds: 15));
       try {
         await FirebaseAppCheck.instance.activate(
           providerAndroid: kDebugMode
@@ -78,7 +75,6 @@ Future<void> main() async {
           debugPrintStack(stackTrace: stackTrace);
         }
       }
-
       await FavoritesService.initialize();
       await AppObservabilityService.instance.initialize();
     } catch (error, stackTrace) {
@@ -92,9 +88,7 @@ Future<void> main() async {
     runApp(
       bootstrapError == null
           ? const BestPhotoSpotApp()
-          : BootstrapFailureApp(
-              debugError: kDebugMode ? bootstrapError.toString() : null,
-            ),
+          : BootstrapFailureApp(debugError: kDebugMode ? bootstrapError.toString() : null),
     );
   }, (error, stack) {
     if (kDebugMode) {
@@ -109,7 +103,6 @@ Future<void> main() async {
 
 class BootstrapFailureApp extends StatelessWidget {
   final String? debugError;
-
   const BootstrapFailureApp({super.key, this.debugError});
 
   @override
@@ -126,20 +119,10 @@ class BootstrapFailureApp extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(
-                    Icons.error_outline_rounded,
-                    size: 54,
-                    color: Colors.white70,
-                  ),
+                  const Icon(Icons.error_outline_rounded, size: 54, color: Colors.white70),
                   const SizedBox(height: 18),
-                  const Text(
-                    'Uygulama başlatılamadı',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
+                  const Text('Uygulama başlatılamadı', textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900)),
                   const SizedBox(height: 10),
                   const Text(
                     'Başlangıç bağlantısı kurulamadı. İnternet bağlantını kontrol edip uygulamayı yeniden aç.',
@@ -148,16 +131,9 @@ class BootstrapFailureApp extends StatelessWidget {
                   ),
                   if (debugError != null) ...[
                     const SizedBox(height: 16),
-                    Text(
-                      debugError!,
-                      maxLines: 5,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        color: Colors.white38,
-                        fontSize: 11,
-                      ),
-                    ),
+                    Text(debugError!, maxLines: 5, overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(color: Colors.white38, fontSize: 11)),
                   ],
                 ],
               ),
@@ -171,7 +147,6 @@ class BootstrapFailureApp extends StatelessWidget {
 
 class BestPhotoSpotApp extends StatefulWidget {
   const BestPhotoSpotApp({super.key});
-
   @override
   State<BestPhotoSpotApp> createState() => _BestPhotoSpotAppState();
 }
@@ -221,6 +196,7 @@ class _BestPhotoSpotAppState extends State<BestPhotoSpotApp> {
         '/admin-dashboard': (_) => const AdminDashboardScreen(),
         '/admin-users': (_) => const AdminUsersScreen(),
         '/admin-businesses': (_) => const AdminBusinessesScreen(),
+        '/admin-business-premium': (_) => const AdminBusinessPremiumScreen(),
         '/admin-growth': (_) => const AdminGrowthScreen(),
         '/admin-preview': (_) => const AdminRolePreviewScreen(),
         '/admin-insights': (_) => const AdminInsightsScreen(),
