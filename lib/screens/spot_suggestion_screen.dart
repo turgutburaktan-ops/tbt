@@ -254,11 +254,6 @@ class _SpotSuggestionScreenState extends State<SpotSuggestionScreen> {
                   () => EagerGestureRecognizer(),
                 ),
               },
-              gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
-                Factory<OneSequenceGestureRecognizer>(
-                  () => EagerGestureRecognizer(),
-                ),
-              },
               initialCameraPosition: CameraPosition(
                 target: initial,
                 zoom: _pickedLocation == null ? 5.2 : 16,
