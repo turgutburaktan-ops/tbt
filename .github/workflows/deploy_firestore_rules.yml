@@ -10,6 +10,7 @@ on:
       - '.github/workflows/deploy_firestore_rules.yml'
   workflow_dispatch:
 
+# Keep this workflow as the production gate for runtime Firestore rule changes.
 jobs:
   deploy:
     runs-on: ubuntu-latest
