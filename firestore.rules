@@ -138,10 +138,17 @@ service cloud.firestore {
     }
     function validBusinessPost() {
       let key = request.resource.data.get('businessVenueKey', '');
+      let name = request.resource.data.get('businessVenueName', '');
+      let official = request.resource.data.get('businessOfficial', false);
       return key == '' || (
-        exists(/databases/$(database)/documents/business_venues/$(key)) &&
-        get(/databases/$(database)/documents/business_venues/$(key)).data.verified == true &&
-        get(/databases/$(database)/documents/business_venues/$(key)).data.ownerUid == request.auth.uid
+        key is string && key.size() <= 240 &&
+        name is string && name.size() <= 160 &&
+        official is bool &&
+        (!official || (
+          exists(/databases/$(database)/documents/business_venues/$(key)) &&
+          get(/databases/$(database)/documents/business_venues/$(key)).data.verified == true &&
+          get(/databases/$(database)/documents/business_venues/$(key)).data.ownerUid == request.auth.uid
+        ))
       );
     }
     function validPostOwnerUpdate() {

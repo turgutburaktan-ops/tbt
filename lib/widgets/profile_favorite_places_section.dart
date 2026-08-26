@@ -2,6 +2,17 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import '../data/curated_photo_spots.dart';
+import '../data/curated_photo_spots_cities.dart';
+import '../data/curated_photo_spots_extra.dart';
+import '../data/curated_photo_spots_official_bulk.dart';
+import '../data/curated_photo_spots_official_complete.dart';
+import '../data/curated_photo_spots_official_routes.dart';
+import '../data/curated_photo_spots_regions.dart';
+import '../data/curated_photo_spots_verified_expansion.dart';
+import '../models/photo_spot.dart';
+import '../services/nationwide_candidate_spot_resolver.dart';
+
 class ProfileFavoritePlacesSection extends StatelessWidget {
   final String userId;
   final bool editable;
@@ -210,19 +221,32 @@ class _FavoritePlacePickerState extends State<_FavoritePlacePicker> {
 
   Future<List<_PlaceChoice>> _load() async {
     if (widget.type.key == 'spot') {
-      final snap = await FirebaseFirestore.instance
-          .collection('photo_spots')
-          .where('status', isEqualTo: 'published')
-          .limit(500)
-          .get();
-      return snap.docs.map((doc) {
-        final d = doc.data();
-        return _PlaceChoice(
-          id: doc.id,
-          name: (d['name'] ?? 'Gezilecek yer').toString(),
-          subtitle: (d['city'] ?? d['district'] ?? '').toString(),
-        );
-      }).toList()..sort((a, b) => a.name.compareTo(b.name));
+      final byId = <String, PhotoSpot>{};
+      for (final group in <List<PhotoSpot>>[
+        demoSpots,
+        curatedPhotoSpots,
+        curatedPhotoSpotsExtra,
+        curatedPhotoSpotsCities,
+        curatedPhotoSpotsRegions,
+        curatedPhotoSpotsOfficialRoutes,
+        curatedPhotoSpotsOfficialBulk,
+        curatedPhotoSpotsVerifiedExpansion,
+        curatedPhotoSpotsOfficialComplete,
+      ]) {
+        for (final spot in group) {
+          byId[spot.id] = spot;
+        }
+      }
+      final spots = NationwideCandidateSpotResolver.mergeInto(
+        byId.values.toList(),
+      );
+      return spots
+          .map(
+            (spot) =>
+                _PlaceChoice(id: spot.id, name: spot.name, subtitle: spot.city),
+          )
+          .toList()
+        ..sort((a, b) => a.name.compareTo(b.name));
     }
     final snap = await FirebaseFirestore.instance
         .collection('business_venues')

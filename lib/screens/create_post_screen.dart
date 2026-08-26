@@ -437,7 +437,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
         title: Text(
           widget.businessVenueName.isEmpty
               ? 'Paylaş'
-              : '${widget.businessVenueName} adına paylaş',
+              : '${widget.businessVenueName} • Paylaş',
         ),
       ),
       body: ListView(

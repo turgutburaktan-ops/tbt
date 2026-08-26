@@ -6,6 +6,7 @@ import '../theme/app_theme.dart';
 import '../widgets/app_video_player.dart';
 import '../widgets/firebase_media_image.dart';
 import 'camera_screen.dart';
+import 'home_discover_screen.dart';
 import 'login_screen.dart';
 import 'radar_screen.dart';
 import 'spot_explore_screen_v2.dart';
@@ -211,6 +212,19 @@ class _GuestFeed extends StatelessWidget {
     );
   }
 
+  Future<void> _openDiscover(BuildContext context) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => Scaffold(
+          backgroundColor: AppColors.background,
+          appBar: AppBar(title: const Text('Keşfet')),
+          body: const HomeDiscoverScreen(),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -244,6 +258,11 @@ class _GuestFeed extends StatelessWidget {
                     'TBT',
                     style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900),
                   ),
+                ),
+                TextButton.icon(
+                  onPressed: () => _openDiscover(context),
+                  icon: const Icon(Icons.explore_outlined, size: 18),
+                  label: const Text('Keşfet'),
                 ),
                 TextButton(
                   onPressed: () => _openLogin(context),

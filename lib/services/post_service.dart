@@ -48,6 +48,12 @@ class PostService {
       'sourceType': 'post',
       'businessVenueKey': businessVenueKey,
       'businessVenueName': businessVenueName,
+      // Visitor check-ins may reference a venue but must never impersonate the
+      // verified business account. Official business publishing is separately
+      // protected by Firestore ownership checks.
+      'businessOfficial': false,
+      // Keep the legacy field used by business profile queries in sync.
+      'venueKey': businessVenueKey,
       'createdAt': FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
     };
