@@ -52,11 +52,24 @@ jobs:
           sed -i 's/com.tbt.best_photo_spot/com.tbt.social/g' android/app/build.gradle.kts
           main_activity=$(find android/app/src/main/kotlin -name MainActivity.kt -print -quit)
           sed -i 's/package com.tbt.best_photo_spot/package com.tbt.social/' "$main_activity"
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('android/app/build.gradle.kts')
+          s = p.read_text()
+          marker = '    buildTypes {\n'
+          signing = '''    signingConfigs {\n        getByName("debug") {\n            storeFile = file(System.getProperty("user.home") + "/.android/debug.keystore")\n            storePassword = "android"\n            keyAlias = "androiddebugkey"\n            keyPassword = "android"\n        }\n    }\n\n'''
+          if signing not in s:
+              s = s.replace(marker, signing + marker, 1)
+          debug_block = '''    buildTypes {\n        getByName("debug") {\n            signingConfig = signingConfigs.getByName("debug")\n        }\n'''
+          s = s.replace(marker, debug_block, 1)
+          p.write_text(s)
+          PY
       - name: Verify package identity
         shell: bash
         run: |
           grep -q 'applicationId = "com.tbt.social"' android/app/build.gradle.kts
           grep -q 'namespace = "com.tbt.social"' android/app/build.gradle.kts
+          grep -q 'storeFile = file(System.getProperty("user.home") + "/.android/debug.keystore")' android/app/build.gradle.kts
           main_activity=$(find android/app/src/main/kotlin -name MainActivity.kt -print -quit)
           grep -q '^package com.tbt.social$' "$main_activity"
       - name: Build debug APK
@@ -69,7 +82,9 @@ jobs:
           APKSIGNER=$(find "$ANDROID_HOME/build-tools" -type f -name apksigner | sort -V | tail -1)
           test -n "$APKSIGNER"
           "$APKSIGNER" verify --print-certs "$APK" | tee /tmp/apk-signing.txt
-          grep -qi '75:8F:F2:13:89:03:3E:D2:63:75:41:5F:AD:30:E1:1F:9A:D1:F3:64' /tmp/apk-signing.txt
+          tr '[:lower:]' '[:upper:]' < /tmp/apk-signing.txt | tr -d ':' > /tmp/apk-signing-normalized.txt
+          grep -q '758FF21389033ED26375415FAD30E11F9AD1F364' /tmp/apk-signing-normalized.txt
+          grep -q '3F9AA496CAF137EAC148CD942923956D3D6A2ADAFF9CDB1051DE024062819625' /tmp/apk-signing-normalized.txt
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
         with:
