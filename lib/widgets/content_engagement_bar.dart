@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../services/content_engagement_service.dart';
+import '../services/invite_link_service.dart';
 import 'mention_text.dart';
 
 class ContentEngagementBar extends StatelessWidget {
@@ -328,6 +329,21 @@ class ContentEngagementBar extends StatelessWidget {
     );
   }
 
+  Future<void> _shareOutside(BuildContext context) async {
+    if (contentId.trim().isEmpty) return;
+    try {
+      if (sourceType == 'post') {
+        await InviteLinkService.instance.sharePost(postId: contentId, title: title);
+      } else if (sourceType == 'event') {
+        await InviteLinkService.instance.shareEvent(eventId: contentId, eventTitle: title);
+      } else {
+        _message(context, 'Bu içerik dışarıya paylaşılamıyor.');
+      }
+    } catch (_) {
+      if (context.mounted) _message(context, 'Paylaşım menüsü açılamadı.');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     const accent = Color(0xFFB7BCC2);
@@ -438,7 +454,13 @@ class ContentEngagementBar extends StatelessWidget {
           ),
         const Spacer(),
         IconButton(
-          tooltip: 'Gönder',
+          tooltip: 'WhatsApp veya başka uygulamada paylaş',
+          visualDensity: VisualDensity.compact,
+          onPressed: contentId.trim().isEmpty ? null : () => _shareOutside(context),
+          icon: const Icon(Icons.ios_share_rounded, size: 25),
+        ),
+        IconButton(
+          tooltip: 'TBT içinde gönder',
           visualDensity: VisualDensity.compact,
           onPressed: () async {
             final user = await _pickUser(context, 'Kime göndermek istiyorsun?');

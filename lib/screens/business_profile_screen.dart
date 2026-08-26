@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../models/nearby_venue.dart';
@@ -38,6 +39,18 @@ class BusinessProfileScreen extends StatelessWidget {
   String get _menuLabel => venue.category == NearbyVenueCategory.hotel
       ? 'Odalar & Hizmetler'
       : 'Menü';
+
+  Future<void> _shareVenue() async {
+    final maps = Uri.https('www.google.com', '/maps/search/', {
+      'api': '1',
+      'query': '${venue.latitude},${venue.longitude}',
+    });
+    final address = venue.address.trim();
+    await Share.share(
+      '${venue.name} mekanına göz at.${address.isEmpty ? '' : '\n$address'}\n$maps',
+      subject: venue.name,
+    );
+  }
 
   Future<void> _recordMetric(String metric) async {
     if (FirebaseAuth.instance.currentUser == null) return;
@@ -107,6 +120,13 @@ class BusinessProfileScreen extends StatelessWidget {
                   pinned: true,
                   stretch: true,
                   title: innerScrolled ? Text(venue.name) : null,
+                  actions: [
+                    IconButton(
+                      tooltip: 'Mekanı paylaş',
+                      onPressed: _shareVenue,
+                      icon: const Icon(Icons.ios_share_rounded),
+                    ),
+                  ],
                   flexibleSpace: FlexibleSpaceBar(
                     background: _BusinessHeader(
                       coverUrl: coverUrl,
