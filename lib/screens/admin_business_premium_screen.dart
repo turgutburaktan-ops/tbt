@@ -13,7 +13,8 @@ class AdminBusinessPremiumScreen extends StatefulWidget {
       _AdminBusinessPremiumScreenState();
 }
 
-class _AdminBusinessPremiumScreenState extends State<AdminBusinessPremiumScreen> {
+class _AdminBusinessPremiumScreenState
+    extends State<AdminBusinessPremiumScreen> {
   final _search = TextEditingController();
   bool? _allowed;
   String? _busyId;
@@ -25,7 +26,9 @@ class _AdminBusinessPremiumScreenState extends State<AdminBusinessPremiumScreen>
   }
 
   Future<void> _check() async {
-    final token = await FirebaseAuth.instance.currentUser?.getIdTokenResult(true);
+    final token = await FirebaseAuth.instance.currentUser?.getIdTokenResult(
+      true,
+    );
     if (mounted) setState(() => _allowed = token?.claims?['admin'] == true);
   }
 
@@ -36,11 +39,11 @@ class _AdminBusinessPremiumScreenState extends State<AdminBusinessPremiumScreen>
   }
 
   String _category(String value) => switch (value) {
-        'cafe' => 'Kafe',
-        'dining' => 'Lezzet',
-        'hotel' => 'Otel',
-        _ => 'İşletme',
-      };
+    'cafe' => 'Kafe',
+    'dining' => 'Lezzet',
+    'hotel' => 'Otel',
+    _ => 'İşletme',
+  };
 
   Future<void> _setPremium(
     String venueKey,
@@ -54,11 +57,11 @@ class _AdminBusinessPremiumScreenState extends State<AdminBusinessPremiumScreen>
       await FirebaseFunctions.instanceFor(region: 'europe-west1')
           .httpsCallable('adminSetBusinessPremium')
           .call({
-        'venueKey': venueKey,
-        'enabled': enabled,
-        'days': days,
-        'note': note,
-      });
+            'venueKey': venueKey,
+            'enabled': enabled,
+            'days': days,
+            'note': note,
+          });
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -199,20 +202,22 @@ class _AdminBusinessPremiumScreenState extends State<AdminBusinessPremiumScreen>
                 }
 
                 final q = _search.text.trim().toLowerCase();
-                final docs = snapshot.data!.docs.where((doc) {
-                  final d = doc.data();
-                  final hay =
-                      '${d['venueName'] ?? d['name'] ?? ''} ${d['category'] ?? ''} ${d['ownerEmail'] ?? ''} ${doc.id}'
-                          .toLowerCase();
-                  return q.isEmpty || hay.contains(q);
-                }).toList()
-                  ..sort((a, b) {
-                    final an = (a.data()['venueName'] ?? a.data()['name'] ?? '')
-                        .toString();
-                    final bn = (b.data()['venueName'] ?? b.data()['name'] ?? '')
-                        .toString();
-                    return an.compareTo(bn);
-                  });
+                final docs =
+                    snapshot.data!.docs.where((doc) {
+                      final d = doc.data();
+                      final hay =
+                          '${d['venueName'] ?? d['name'] ?? ''} ${d['category'] ?? ''} ${d['ownerEmail'] ?? ''} ${doc.id}'
+                              .toLowerCase();
+                      return q.isEmpty || hay.contains(q);
+                    }).toList()..sort((a, b) {
+                      final an =
+                          (a.data()['venueName'] ?? a.data()['name'] ?? '')
+                              .toString();
+                      final bn =
+                          (b.data()['venueName'] ?? b.data()['name'] ?? '')
+                              .toString();
+                      return an.compareTo(bn);
+                    });
 
                 if (docs.isEmpty) {
                   return Center(
@@ -246,7 +251,9 @@ class _AdminBusinessPremiumScreenState extends State<AdminBusinessPremiumScreen>
                     final paid = d['subscriptionStatus'] == 'active';
                     final verified = d['verified'] == true;
                     final busy = _busyId == doc.id;
-                    final category = _category((d['category'] ?? '').toString());
+                    final category = _category(
+                      (d['category'] ?? '').toString(),
+                    );
 
                     return Card(
                       margin: const EdgeInsets.only(bottom: 8),
@@ -255,8 +262,8 @@ class _AdminBusinessPremiumScreenState extends State<AdminBusinessPremiumScreen>
                           adminActive || paid || early
                               ? Icons.workspace_premium_rounded
                               : verified
-                                  ? Icons.verified_rounded
-                                  : Icons.storefront_outlined,
+                              ? Icons.verified_rounded
+                              : Icons.storefront_outlined,
                           color: adminActive || paid || early || verified
                               ? AppColors.cyan
                               : Colors.white54,
@@ -278,7 +285,9 @@ class _AdminBusinessPremiumScreenState extends State<AdminBusinessPremiumScreen>
                             ? const SizedBox(
                                 width: 22,
                                 height: 22,
-                                child: CircularProgressIndicator(strokeWidth: 2),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
                               )
                             : PopupMenuButton<String>(
                                 onSelected: (value) async {

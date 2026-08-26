@@ -541,11 +541,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                     ],
                     _title('Uygulama'),
-                    _staticTile(
-                      Icons.language_rounded,
-                      'Dil',
-                      'Türkçe',
-                    ),
+                    _staticTile(Icons.language_rounded, 'Dil', 'Türkçe'),
                     _tile(
                       Icons.storage_outlined,
                       'Veri ve depolama',
@@ -642,31 +638,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   String _type(String v) => switch (v) {
-        'creator' => 'İçerik Üreticisi',
-        'business_owner' => 'İşletme Sahibi',
-        'venue_manager' => 'Mekan Yöneticisi',
-        'organizer' => 'Organizatör',
-        _ => 'Kişisel',
-      };
+    'creator' => 'İçerik Üreticisi',
+    'business_owner' => 'İşletme Sahibi',
+    'venue_manager' => 'Mekan Yöneticisi',
+    'organizer' => 'Organizatör',
+    _ => 'Kişisel',
+  };
 
   Widget _title(String t) => Padding(
-        padding: const EdgeInsets.fromLTRB(4, 22, 4, 8),
-        child: Text(
-          t,
-          style: const TextStyle(
-            color: Colors.white54,
-            fontWeight: FontWeight.w800,
-            fontSize: 13,
-          ),
-        ),
-      );
+    padding: const EdgeInsets.fromLTRB(4, 22, 4, 8),
+    child: Text(
+      t,
+      style: const TextStyle(
+        color: Colors.white54,
+        fontWeight: FontWeight.w800,
+        fontSize: 13,
+      ),
+    ),
+  );
 
-  Widget _tile(
-    IconData i,
-    String t,
-    String s,
-    FutureOr<void> Function() tap,
-  ) =>
+  Widget _tile(IconData i, String t, String s, FutureOr<void> Function() tap) =>
       Card(
         margin: const EdgeInsets.only(bottom: 7),
         child: ListTile(
@@ -679,13 +670,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
       );
 
   Widget _staticTile(IconData i, String t, String s) => Card(
-        margin: const EdgeInsets.only(bottom: 7),
-        child: ListTile(
-          leading: Icon(i),
-          title: Text(t, style: const TextStyle(fontWeight: FontWeight.w800)),
-          subtitle: Text(s),
-        ),
-      );
+    margin: const EdgeInsets.only(bottom: 7),
+    child: ListTile(
+      leading: Icon(i),
+      title: Text(t, style: const TextStyle(fontWeight: FontWeight.w800)),
+      subtitle: Text(s),
+    ),
+  );
 
   Widget _switch(
     IconData i,
@@ -693,49 +684,48 @@ class _SettingsScreenState extends State<SettingsScreen> {
     String s,
     bool value,
     Future<void> Function(bool) onChanged,
-  ) =>
-      Card(
-        margin: const EdgeInsets.only(bottom: 7),
-        child: SwitchListTile(
-          secondary: Icon(i),
-          title: Text(t, style: const TextStyle(fontWeight: FontWeight.w800)),
-          subtitle: Text(s),
-          value: value,
-          onChanged: (v) async {
-            await onChanged(v);
-            if (mounted) setState(() {});
-          },
-        ),
-      );
+  ) => Card(
+    margin: const EdgeInsets.only(bottom: 7),
+    child: SwitchListTile(
+      secondary: Icon(i),
+      title: Text(t, style: const TextStyle(fontWeight: FontWeight.w800)),
+      subtitle: Text(s),
+      value: value,
+      onChanged: (v) async {
+        await onChanged(v);
+        if (mounted) setState(() {});
+      },
+    ),
+  );
 
   Widget _infoRow(String label, String value) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 6),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(
-              width: 82,
-              child: Text(
-                label,
-                style: const TextStyle(color: Colors.white54),
-              ),
-            ),
-            Expanded(
-              child: Text(value, style: const TextStyle(fontWeight: FontWeight.w700)),
-            ),
-          ],
+    padding: const EdgeInsets.symmetric(vertical: 6),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 82,
+          child: Text(label, style: const TextStyle(color: Colors.white54)),
         ),
-      );
+        Expanded(
+          child: Text(
+            value,
+            style: const TextStyle(fontWeight: FontWeight.w700),
+          ),
+        ),
+      ],
+    ),
+  );
 
   Widget _statusRow(String label, bool verified) => Row(
-        children: [
-          Expanded(child: Text(label)),
-          Icon(
-            verified ? Icons.verified_rounded : Icons.error_outline_rounded,
-            color: verified ? AppColors.cyan : Colors.white38,
-          ),
-          const SizedBox(width: 5),
-          Text(verified ? 'Doğrulandı' : 'Doğrulanmadı'),
-        ],
-      );
+    children: [
+      Expanded(child: Text(label)),
+      Icon(
+        verified ? Icons.verified_rounded : Icons.error_outline_rounded,
+        color: verified ? AppColors.cyan : Colors.white38,
+      ),
+      const SizedBox(width: 5),
+      Text(verified ? 'Doğrulandı' : 'Doğrulanmadı'),
+    ],
+  );
 }
