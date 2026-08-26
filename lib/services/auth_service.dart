@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 class AuthService {
@@ -25,8 +26,10 @@ class AuthService {
         password: password,
       );
     } on FirebaseAuthException catch (e) {
+      _logAuthFailure('register', e);
       throw Exception(_messageFromCode(e.code));
-    } catch (_) {
+    } catch (e) {
+      debugPrint('Auth register failure: $e');
       throw Exception('Hesap oluşturulurken bir hata oluştu.');
     }
   }
@@ -41,8 +44,10 @@ class AuthService {
         password: password,
       );
     } on FirebaseAuthException catch (e) {
+      _logAuthFailure('email-login', e);
       throw Exception(_messageFromCode(e.code));
-    } catch (_) {
+    } catch (e) {
+      debugPrint('Auth email login failure: $e');
       throw Exception('Giriş yapılırken bir hata oluştu.');
     }
   }
@@ -60,10 +65,8 @@ class AuthService {
         final result = await _auth.signInWithCredential(credential);
         await _ensureSocialProfile(result.user, provider: 'google');
         return result;
-      } catch (_) {
-        // GitHub Actions debug APKs can be signed with a CI-generated debug
-        // certificate that is not registered in Google OAuth. In that case,
-        // use Firebase's provider flow instead of failing the whole login.
+      } catch (e) {
+        debugPrint('Native Google sign-in failed, trying Firebase provider: $e');
         try {
           await _googleSignIn.signOut();
         } catch (_) {}
@@ -72,8 +75,18 @@ class AuthService {
         return result;
       }
     } on FirebaseAuthException catch (e) {
+      _logAuthFailure('google-login', e);
       throw Exception(_messageFromCode(e.code));
-    } catch (_) {
+    } catch (e) {
+      debugPrint('Google sign-in failure: $e');
+      final raw = e.toString().toLowerCase();
+      if (raw.contains('invalid-cert-hash') ||
+          raw.contains('developer_error') ||
+          raw.contains('10:')) {
+        throw Exception(
+          'Google ile giriş şu anda doğrulanamıyor. Uygulamayı güncelleyip tekrar deneyin.',
+        );
+      }
       throw Exception('Google ile giriş tamamlanamadı. Lütfen tekrar deneyin.');
     }
   }
@@ -87,8 +100,10 @@ class AuthService {
       await _ensureSocialProfile(result.user, provider: 'apple');
       return result;
     } on FirebaseAuthException catch (e) {
+      _logAuthFailure('apple-login', e);
       throw Exception(_messageFromCode(e.code));
-    } catch (_) {
+    } catch (e) {
+      debugPrint('Apple sign-in failure: $e');
       throw Exception('Apple ile giriş tamamlanamadı.');
     }
   }
@@ -128,22 +143,45 @@ class AuthService {
     required void Function(String message) failed,
     void Function(UserCredential credential)? autoVerified,
   }) async {
-    await _auth.verifyPhoneNumber(
-      phoneNumber: phoneNumber,
-      verificationCompleted: (credential) async {
-        try {
-          final result = await _auth.signInWithCredential(credential);
-          await _ensureSocialProfile(result.user, provider: 'phone');
-          autoVerified?.call(result);
-        } on FirebaseAuthException catch (e) {
+    try {
+      await _auth.verifyPhoneNumber(
+        phoneNumber: phoneNumber,
+        verificationCompleted: (credential) async {
+          try {
+            final result = await _auth.signInWithCredential(credential);
+            await _ensureSocialProfile(result.user, provider: 'phone');
+            autoVerified?.call(result);
+          } on FirebaseAuthException catch (e) {
+            _logAuthFailure('phone-auto-verify', e);
+            failed(_messageFromCode(e.code));
+          } catch (e) {
+            debugPrint('Phone auto verification failure: $e');
+            failed('Telefon doğrulaması tamamlanamadı. Lütfen tekrar deneyin.');
+          }
+        },
+        verificationFailed: (e) {
+          _logAuthFailure('phone-verification', e);
           failed(_messageFromCode(e.code));
-        }
-      },
-      verificationFailed: (e) => failed(_messageFromCode(e.code)),
-      codeSent: (verificationId, _) => codeSent(verificationId),
-      codeAutoRetrievalTimeout: (_) {},
-      timeout: const Duration(seconds: 60),
-    );
+        },
+        codeSent: (verificationId, _) => codeSent(verificationId),
+        codeAutoRetrievalTimeout: (_) {},
+        timeout: const Duration(seconds: 60),
+      );
+    } on FirebaseAuthException catch (e) {
+      _logAuthFailure('phone-verification-start', e);
+      failed(_messageFromCode(e.code));
+    } catch (e) {
+      debugPrint('Phone verification start failure: $e');
+      final raw = e.toString().toLowerCase();
+      if (raw.contains('missing-client-identifier') ||
+          raw.contains('invalid-cert-hash')) {
+        failed(
+          'Telefon doğrulaması şu anda güvenlik kontrolünden geçemiyor. Uygulamayı güncelleyip tekrar deneyin.',
+        );
+        return;
+      }
+      failed('Telefon doğrulaması başlatılamadı. Lütfen tekrar deneyin.');
+    }
   }
 
   Future<UserCredential> confirmPhoneCode({
@@ -159,6 +197,7 @@ class AuthService {
       await _ensureSocialProfile(result.user, provider: 'phone');
       return result;
     } on FirebaseAuthException catch (e) {
+      _logAuthFailure('phone-code-confirm', e);
       throw Exception(_messageFromCode(e.code));
     }
   }
@@ -172,6 +211,7 @@ class AuthService {
     try {
       await _auth.sendPasswordResetEmail(email: email.trim());
     } on FirebaseAuthException catch (e) {
+      _logAuthFailure('password-reset', e);
       throw Exception(_messageFromCode(e.code));
     }
   }
@@ -187,6 +227,12 @@ class AuthService {
     final user = _auth.currentUser;
     if (user == null) throw Exception('Oturum açmış kullanıcı bulunamadı.');
     await user.delete();
+  }
+
+  void _logAuthFailure(String flow, FirebaseAuthException e) {
+    debugPrint(
+      'Firebase Auth [$flow] code=${e.code} message=${e.message ?? '-'}',
+    );
   }
 
   String _messageFromCode(String code) {
@@ -220,12 +266,18 @@ class AuthService {
       case 'account-exists-with-different-credential':
         return 'Bu e-posta farklı bir giriş yöntemiyle kayıtlı.';
       case 'operation-not-allowed':
-        return 'Bu giriş yöntemi Firebase tarafında henüz etkin değil.';
+        return 'Bu giriş yöntemi şu anda kullanılamıyor.';
+      case 'invalid-cert-hash':
+      case 'app-not-authorized':
+        return 'Uygulamanın giriş sertifikası doğrulanamadı. Uygulamayı güncelleyip tekrar deneyin.';
+      case 'missing-client-identifier':
+      case 'captcha-check-failed':
+        return 'Telefon doğrulaması güvenlik kontrolünden geçemedi. Uygulamayı güncelleyip tekrar deneyin.';
       case 'web-context-cancelled':
       case 'canceled-popup-request':
         return 'Giriş işlemi iptal edildi.';
       default:
-        return 'Giriş işlemi tamamlanamadı: $code';
+        return 'İşlem tamamlanamadı. Lütfen tekrar deneyin.';
     }
   }
 }
