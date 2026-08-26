@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -7,6 +8,7 @@ import 'business_panel_preview_screen.dart';
 
 class AdminBusinessesV2Screen extends StatefulWidget {
   const AdminBusinessesV2Screen({super.key});
+
   @override
   State<AdminBusinessesV2Screen> createState() =>
       _AdminBusinessesV2ScreenState();
@@ -15,95 +17,163 @@ class AdminBusinessesV2Screen extends StatefulWidget {
 class _AdminBusinessesV2ScreenState extends State<AdminBusinessesV2Screen> {
   bool? _allowed;
   bool _loading = true;
-  String _filter = 'all', _query = '';
+  String _filter = 'all';
+  String _query = '';
   String? _error;
   List<Map<String, dynamic>> _items = const [];
+
   @override
   void initState() {
     super.initState();
     _load();
   }
 
+  String _keyFor(Map<String, dynamic> data) {
+    final direct = (data['venueKey'] ?? data['id'] ?? '').toString().trim();
+    if (direct.isNotEmpty) return direct;
+    final category = (data['category'] ?? '').toString().trim();
+    final venueId = (data['venueId'] ?? '').toString().trim();
+    if (category.isNotEmpty && venueId.isNotEmpty) return '$category:$venueId';
+    return '${data['venueName'] ?? data['legalName'] ?? ''}|$category'
+        .toLowerCase();
+  }
+
   Future<void> _load() async {
-    if (mounted)
+    if (mounted) {
       setState(() {
         _loading = true;
         _error = null;
       });
+    }
     try {
-      final token = await FirebaseAuth.instance.currentUser?.getIdTokenResult(
-        true,
-      );
+      final token = await FirebaseAuth.instance.currentUser?.getIdTokenResult(true);
       if (token?.claims?['admin'] != true) {
-        if (mounted)
+        if (mounted) {
           setState(() {
             _allowed = false;
             _loading = false;
           });
+        }
         return;
       }
-      final items = await AdminConsoleService.instance.businessClaims();
-      if (mounted)
+
+      final claimsFuture = AdminConsoleService.instance.businessClaims();
+      final venuesFuture = FirebaseFirestore.instance
+          .collection('business_venues')
+          .limit(1000)
+          .get();
+      final claims = await claimsFuture;
+      final venues = await venuesFuture;
+
+      final merged = <String, Map<String, dynamic>>{};
+
+      for (final doc in venues.docs) {
+        final data = doc.data();
+        merged[doc.id] = {
+          ...data,
+          'venueKey': doc.id,
+          'venueName': (data['venueName'] ?? data['name'] ?? 'İşletme').toString(),
+          'status': data['verified'] == true ? 'verified' : 'registered',
+          'source': 'venue',
+        };
+      }
+
+      for (final raw in claims) {
+        final claim = Map<String, dynamic>.from(raw);
+        final key = _keyFor(claim);
+        final existing = merged[key];
+        if (existing == null) {
+          merged[key] = {...claim, 'source': 'claim'};
+        } else {
+          merged[key] = {
+            ...existing,
+            ...claim,
+            'venueKey': existing['venueKey'] ?? claim['venueKey'] ?? key,
+            'venueName': claim['venueName'] ?? existing['venueName'],
+            'source': 'venue+claim',
+          };
+        }
+      }
+
+      final items = merged.values.toList()
+        ..sort((a, b) =>
+            (a['venueName'] ?? a['legalName'] ?? '').toString().compareTo(
+                  (b['venueName'] ?? b['legalName'] ?? '').toString(),
+                ));
+
+      if (mounted) {
         setState(() {
           _allowed = true;
           _items = items;
           _loading = false;
         });
-    } catch (e) {
-      if (mounted)
+      }
+    } catch (error) {
+      if (mounted) {
         setState(() {
           _allowed = true;
           _loading = false;
-          _error = e.toString();
+          _error = error.toString();
         });
+      }
     }
   }
 
-  void _preview(Map<String, dynamic> d) {
-    final category = (d['category'] ?? 'cafe').toString();
-    final name = (d['venueName'] ?? d['legalName'] ?? 'TBT Demo İşletme')
+  void _preview(Map<String, dynamic> data) {
+    final category = (data['category'] ?? 'cafe').toString();
+    final name = (data['venueName'] ?? data['legalName'] ?? 'TBT İşletme')
         .toString();
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) =>
-            BusinessPanelPreviewScreen(venueName: name, category: category),
+        builder: (_) => BusinessPanelPreviewScreen(
+          venueName: name,
+          category: category,
+        ),
       ),
     );
   }
 
-  List<Map<String, dynamic>> get _filtered => _items.where((d) {
-    final status = (d['status'] ?? '').toString();
-    if (_filter != 'all' && status != _filter) return false;
-    if (_query.isEmpty) return true;
-    return '${d['venueName'] ?? ''} ${d['legalName'] ?? ''} ${d['businessEmail'] ?? ''} ${d['category'] ?? ''}'
-        .toLowerCase()
-        .contains(_query);
-  }).toList();
+  List<Map<String, dynamic>> get _filtered => _items.where((data) {
+        final status = (data['status'] ?? 'registered').toString();
+        if (_filter != 'all' && status != _filter) return false;
+        if (_query.isEmpty) return true;
+        final haystack =
+            '${data['venueName'] ?? ''} ${data['legalName'] ?? ''} ${data['businessEmail'] ?? data['ownerEmail'] ?? ''} ${data['category'] ?? ''} ${data['venueKey'] ?? ''}'
+                .toLowerCase();
+        return haystack.contains(_query);
+      }).toList();
 
   int _count(String status) => status == 'all'
       ? _items.length
-      : _items.where((e) => (e['status'] ?? '').toString() == status).length;
-  String _statusLabel(String s) => switch (s) {
-    'verified' => 'Onaylı',
-    'pending_review' => 'Bekleyen',
-    'rejected' => 'Reddedildi',
-    _ => 'Başvuru yok',
-  };
-  String _cat(String c) => switch (c) {
-    'cafe' => 'Kafe',
-    'dining' => 'Lezzet',
-    'hotel' => 'Otel',
-    _ => 'İşletme',
-  };
+      : _items
+          .where((item) => (item['status'] ?? 'registered').toString() == status)
+          .length;
+
+  String _statusLabel(String status) => switch (status) {
+        'verified' => 'Onaylı',
+        'pending_review' => 'Bekleyen',
+        'rejected' => 'Reddedildi',
+        'registered' => 'Kayıtlı',
+        _ => 'Kayıtlı',
+      };
+
+  String _categoryLabel(String category) => switch (category) {
+        'cafe' => 'Kafe',
+        'dining' => 'Lezzet',
+        'hotel' => 'Otel',
+        _ => 'İşletme',
+      };
 
   @override
   Widget build(BuildContext context) {
-    if (_allowed == false)
+    if (_allowed == false) {
       return const Scaffold(
         backgroundColor: AppColors.background,
         body: Center(child: Text('Yönetici yetkisi gerekli.')),
       );
+    }
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -124,15 +194,11 @@ class _AdminBusinessesV2ScreenState extends State<AdminBusinessesV2Screen> {
             _summary(),
             const SizedBox(height: 14),
             TextField(
-              onChanged: (v) => setState(() => _query = v.trim().toLowerCase()),
-              decoration: InputDecoration(
-                prefixIcon: const Icon(Icons.search_rounded),
-                hintText: 'İşletme adı, e-posta veya kategori ara',
-                filled: true,
-                fillColor: AppColors.surface,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
+              onChanged: (value) =>
+                  setState(() => _query = value.trim().toLowerCase()),
+              decoration: const InputDecoration(
+                prefixIcon: Icon(Icons.search_rounded),
+                hintText: 'İşletme adı, e-posta veya mekan kimliği ara',
               ),
             ),
             const SizedBox(height: 12),
@@ -141,6 +207,7 @@ class _AdminBusinessesV2ScreenState extends State<AdminBusinessesV2Screen> {
               child: Row(
                 children: [
                   _chip('all', 'Tümü', _count('all')),
+                  _chip('registered', 'Kayıtlı', _count('registered')),
                   _chip('pending_review', 'Bekleyen', _count('pending_review')),
                   _chip('verified', 'Onaylı', _count('verified')),
                   _chip('rejected', 'Reddedilen', _count('rejected')),
@@ -166,96 +233,98 @@ class _AdminBusinessesV2ScreenState extends State<AdminBusinessesV2Screen> {
   }
 
   Widget _summary() => Container(
-    padding: const EdgeInsets.all(16),
-    decoration: BoxDecoration(
-      color: AppColors.surface,
-      borderRadius: BorderRadius.circular(20),
-      border: Border.all(color: AppColors.border),
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Row(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(Icons.storefront_rounded, color: AppColors.cyan),
-            SizedBox(width: 10),
-            Text(
-              'İşletme yönetimi',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
+            const Row(
+              children: [
+                Icon(Icons.storefront_rounded, color: AppColors.cyan),
+                SizedBox(width: 10),
+                Text(
+                  'İşletme yönetimi',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
+                ),
+              ],
+            ),
+            const SizedBox(height: 7),
+            const Text(
+              'Mekan profilleri ve işletme başvuruları aynı merkezde gösterilir.',
+              style: TextStyle(color: Colors.white60, height: 1.35),
+            ),
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                Expanded(child: _mini('Toplam', _count('all'))),
+                const SizedBox(width: 8),
+                Expanded(child: _mini('Bekleyen', _count('pending_review'))),
+                const SizedBox(width: 8),
+                Expanded(child: _mini('Onaylı', _count('verified'))),
+              ],
             ),
           ],
         ),
-        const SizedBox(height: 7),
-        const Text(
-          'Başvuruları kontrol et, doğrulanan mekanların panelini görüntüle ve yönetim durumlarını tek ekrandan takip et.',
-          style: TextStyle(color: Colors.white60, height: 1.35),
+      );
+
+  Widget _mini(String label, int count) => Container(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceStrong,
+          borderRadius: BorderRadius.circular(14),
         ),
-        const SizedBox(height: 14),
-        Row(
+        child: Column(
           children: [
-            Expanded(child: _mini('Toplam', _count('all'))),
-            const SizedBox(width: 8),
-            Expanded(child: _mini('Bekleyen', _count('pending_review'))),
-            const SizedBox(width: 8),
-            Expanded(child: _mini('Onaylı', _count('verified'))),
+            Text(
+              '$count',
+              style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w900),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: const TextStyle(color: Colors.white54, fontSize: 11),
+            ),
           ],
         ),
-      ],
-    ),
-  );
+      );
 
-  Widget _mini(String label, int n) => Container(
-    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
-    decoration: BoxDecoration(
-      color: AppColors.surfaceStrong,
-      borderRadius: BorderRadius.circular(14),
-    ),
-    child: Column(
-      children: [
-        Text(
-          '$n',
-          style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w900),
+  Widget _chip(String value, String label, int count) => Padding(
+        padding: const EdgeInsets.only(right: 8),
+        child: ChoiceChip(
+          selected: _filter == value,
+          onSelected: (_) => setState(() => _filter = value),
+          label: Text('$label  $count'),
         ),
-        const SizedBox(height: 2),
-        Text(
-          label,
-          style: const TextStyle(color: Colors.white54, fontSize: 11),
-        ),
-      ],
-    ),
-  );
-  Widget _chip(String value, String label, int n) => Padding(
-    padding: const EdgeInsets.only(right: 8),
-    child: ChoiceChip(
-      selected: _filter == value,
-      onSelected: (_) => setState(() => _filter = value),
-      label: Text('$label  $n'),
-    ),
-  );
+      );
 
-  Widget _businessCard(Map<String, dynamic> d) {
-    final status = (d['status'] ?? '').toString(),
-        name = (d['venueName'] ?? d['legalName'] ?? 'İşletme').toString(),
-        category = (d['category'] ?? '').toString();
+  Widget _businessCard(Map<String, dynamic> data) {
+    final status = (data['status'] ?? 'registered').toString();
+    final name = (data['venueName'] ?? data['legalName'] ?? 'İşletme').toString();
+    final category = (data['category'] ?? '').toString();
+    final email = (data['businessEmail'] ?? data['ownerEmail'] ?? '').toString();
+    final verified = status == 'verified' || data['verified'] == true;
+
     return Card(
       margin: const EdgeInsets.only(bottom: 9),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
-        onTap: () => _preview(d),
+        onTap: () => _preview(data),
         child: Padding(
           padding: const EdgeInsets.all(14),
           child: Row(
             children: [
               CircleAvatar(
                 radius: 24,
-                backgroundColor: status == 'verified'
+                backgroundColor: verified
                     ? AppColors.cyan.withValues(alpha: .12)
                     : AppColors.surfaceStrong,
                 child: Icon(
-                  status == 'verified'
-                      ? Icons.verified_rounded
-                      : Icons.storefront_outlined,
-                  color: status == 'verified' ? AppColors.cyan : Colors.white70,
+                  verified ? Icons.verified_rounded : Icons.storefront_outlined,
+                  color: verified ? AppColors.cyan : Colors.white70,
                 ),
               ),
               const SizedBox(width: 12),
@@ -274,13 +343,13 @@ class _AdminBusinessesV2ScreenState extends State<AdminBusinessesV2Screen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '${_cat(category)} • ${_statusLabel(status)}',
+                      '${_categoryLabel(category)} • ${_statusLabel(status)}',
                       style: const TextStyle(color: Colors.white60),
                     ),
-                    if ((d['businessEmail'] ?? '').toString().isNotEmpty) ...[
+                    if (email.isNotEmpty) ...[
                       const SizedBox(height: 3),
                       Text(
-                        (d['businessEmail'] ?? '').toString(),
+                        email,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
@@ -294,7 +363,7 @@ class _AdminBusinessesV2ScreenState extends State<AdminBusinessesV2Screen> {
               ),
               IconButton(
                 tooltip: 'Detay',
-                onPressed: () => _details(d),
+                onPressed: () => _details(data),
                 icon: const Icon(Icons.info_outline_rounded),
               ),
               const Icon(Icons.chevron_right_rounded, color: Colors.white38),
@@ -305,89 +374,108 @@ class _AdminBusinessesV2ScreenState extends State<AdminBusinessesV2Screen> {
     );
   }
 
-  void _details(Map<String, dynamic> d) => showModalBottomSheet<void>(
-    context: context,
-    useSafeArea: true,
-    showDragHandle: true,
-    builder: (_) => Padding(
-      padding: const EdgeInsets.fromLTRB(18, 4, 18, 28),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            (d['venueName'] ?? d['legalName'] ?? 'İşletme').toString(),
-            style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w900),
-          ),
-          const SizedBox(height: 14),
-          _info('Durum', _statusLabel((d['status'] ?? '').toString())),
-          _info('Kategori', _cat((d['category'] ?? '').toString())),
-          _info('E-posta', (d['businessEmail'] ?? '-').toString()),
-          _info('Telefon', (d['businessPhone'] ?? '-').toString()),
-          const SizedBox(height: 14),
-          FilledButton.icon(
-            onPressed: () {
-              Navigator.pop(context);
-              _preview(d);
-            },
-            icon: const Icon(Icons.dashboard_customize_outlined),
-            label: const Text('Paneli Görüntüle'),
-          ),
-        ],
+  void _details(Map<String, dynamic> data) {
+    showModalBottomSheet<void>(
+      context: context,
+      useSafeArea: true,
+      showDragHandle: true,
+      builder: (sheetContext) => Padding(
+        padding: const EdgeInsets.fromLTRB(18, 4, 18, 28),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              (data['venueName'] ?? data['legalName'] ?? 'İşletme').toString(),
+              style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w900),
+            ),
+            const SizedBox(height: 14),
+            _info('Durum', _statusLabel((data['status'] ?? 'registered').toString())),
+            _info('Kategori', _categoryLabel((data['category'] ?? '').toString())),
+            _info(
+              'E-posta',
+              (data['businessEmail'] ?? data['ownerEmail'] ?? '-').toString(),
+            ),
+            _info('Telefon', (data['businessPhone'] ?? data['phone'] ?? '-').toString()),
+            const SizedBox(height: 14),
+            FilledButton.icon(
+              onPressed: () {
+                Navigator.pop(sheetContext);
+                _preview(data);
+              },
+              icon: const Icon(Icons.dashboard_customize_outlined),
+              label: const Text('Paneli Görüntüle'),
+            ),
+          ],
+        ),
       ),
-    ),
-  );
-  Widget _info(String a, String b) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: 5),
-    child: Row(
-      children: [
-        SizedBox(
-          width: 90,
-          child: Text(a, style: const TextStyle(color: Colors.white54)),
+    );
+  }
+
+  Widget _info(String label, String value) => Padding(
+        padding: const EdgeInsets.symmetric(vertical: 5),
+        child: Row(
+          children: [
+            SizedBox(
+              width: 90,
+              child: Text(label, style: const TextStyle(color: Colors.white54)),
+            ),
+            Expanded(
+              child: Text(
+                value,
+                style: const TextStyle(fontWeight: FontWeight.w700),
+              ),
+            ),
+          ],
         ),
-        Expanded(
-          child: Text(b, style: const TextStyle(fontWeight: FontWeight.w700)),
-        ),
-      ],
-    ),
-  );
+      );
+
   Widget _empty() => Padding(
-    padding: const EdgeInsets.only(top: 74),
-    child: Column(
-      children: [
-        const Icon(Icons.storefront_outlined, size: 48, color: Colors.white24),
-        const SizedBox(height: 12),
-        Text(
-          _query.isNotEmpty
-              ? 'Aramana uygun işletme yok.'
-              : 'Bu bölümde henüz işletme yok.',
-          style: const TextStyle(fontWeight: FontWeight.w800),
+        padding: const EdgeInsets.only(top: 74),
+        child: Column(
+          children: [
+            const Icon(
+              Icons.storefront_outlined,
+              size: 48,
+              color: Colors.white24,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              _query.isNotEmpty
+                  ? 'Aramana uygun işletme yok.'
+                  : 'Bu filtrede işletme yok.',
+              style: const TextStyle(fontWeight: FontWeight.w800),
+            ),
+          ],
         ),
-        const SizedBox(height: 5),
-        const Text(
-          'Yeni başvurular geldiğinde burada görünecek.',
-          style: TextStyle(color: Colors.white54),
-        ),
-      ],
-    ),
-  );
+      );
+
   Widget _errorCard() => Padding(
-    padding: const EdgeInsets.only(top: 50),
-    child: Column(
-      children: [
-        const Icon(Icons.cloud_off_rounded, size: 46, color: Colors.white38),
-        const SizedBox(height: 10),
-        const Text(
-          'İşletmeler yüklenemedi',
-          style: TextStyle(fontWeight: FontWeight.w900),
+        padding: const EdgeInsets.only(top: 50),
+        child: Column(
+          children: [
+            const Icon(Icons.cloud_off_rounded, size: 46, color: Colors.white38),
+            const SizedBox(height: 10),
+            const Text(
+              'İşletmeler yüklenemedi',
+              style: TextStyle(fontWeight: FontWeight.w900),
+            ),
+            const SizedBox(height: 6),
+            if (_error != null)
+              Text(
+                _error!,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.white38, fontSize: 11),
+              ),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: _load,
+              icon: const Icon(Icons.refresh_rounded),
+              label: const Text('Tekrar Dene'),
+            ),
+          ],
         ),
-        const SizedBox(height: 12),
-        OutlinedButton.icon(
-          onPressed: _load,
-          icon: const Icon(Icons.refresh_rounded),
-          label: const Text('Tekrar Dene'),
-        ),
-      ],
-    ),
-  );
+      );
 }
