@@ -2,10 +2,10 @@ from pathlib import Path
 import re
 
 
-def replace_once(path: str, old: str, new: str, label: str) -> None:
+def replace_once(path: str, old: str, new: str, label: str, marker: str | None = None) -> None:
     p = Path(path)
     text = p.read_text()
-    if new in text:
+    if (marker and marker in text) or new in text:
         return
     if old not in text:
         raise SystemExit(f"Missing patch target: {label}")
@@ -28,6 +28,7 @@ replace_once(
       'venueKey': businessVenueKey,
       'createdAt': FieldValue.serverTimestamp(),""",
     'post venue metadata',
+    marker="'businessOfficial': false",
 )
 
 replace_once(
@@ -39,6 +40,7 @@ replace_once(
               ? 'Paylaş'
               : '${widget.businessVenueName} • Paylaş',""",
     'visitor post title',
+    marker="${widget.businessVenueName} • Paylaş",
 )
 
 # 2) Firestore: allow a signed-in visitor to tag a venue. Only an explicit
@@ -68,7 +70,7 @@ new_rule = """    function validBusinessPost() {
         ))
       );
     }"""
-if new_rule not in s:
+if "request.resource.data.get('businessOfficial', false)" not in s:
     if old_rule not in s:
         raise SystemExit('Missing patch target: validBusinessPost')
     p.write_text(s.replace(old_rule, new_rule, 1))
@@ -135,7 +137,7 @@ new_spot_load = """    if (widget.type.key == 'spot') {
           .toList()
         ..sort((a, b) => a.name.compareTo(b.name));
     }"""
-if new_spot_load not in s:
+if 'NationwideCandidateSpotResolver.mergeInto' not in s:
     if old_spot_load not in s:
         raise SystemExit('Missing patch target: favorite spot catalogue')
     s = s.replace(old_spot_load, new_spot_load, 1)
