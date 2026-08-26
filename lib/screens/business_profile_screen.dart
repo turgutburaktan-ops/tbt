@@ -13,6 +13,7 @@ import '../widgets/business_public_actions.dart';
 import '../widgets/firebase_media_image.dart';
 import '../widgets/venue_reviews_section.dart';
 import 'business_hub_screen.dart';
+import 'create_post_screen.dart';
 import 'post_detail_screen.dart';
 
 class BusinessProfileScreen extends StatelessWidget {
@@ -315,6 +316,102 @@ class BusinessProfileScreen extends StatelessWidget {
                             );
                           },
                         ),
+                        const SizedBox(height: 14),
+                        StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                          stream: FirebaseFirestore.instance
+                              .collection('posts')
+                              .where('venueKey', isEqualTo: _key)
+                              .limit(20)
+                              .snapshots(),
+                          builder: (context, postSnap) {
+                            final postCount = postSnap.data?.docs.length ?? 0;
+                            return StreamBuilder<
+                              QuerySnapshot<Map<String, dynamic>>
+                            >(
+                              stream: FirebaseFirestore.instance
+                                  .collection('users')
+                                  .where(
+                                    'favoriteVenueKeys',
+                                    arrayContains: _key,
+                                  )
+                                  .limit(20)
+                                  .snapshots(),
+                              builder: (context, favSnap) {
+                                final favoriteCount =
+                                    favSnap.data?.docs.length ?? 0;
+                                if (postCount == 0 && favoriteCount == 0)
+                                  return const SizedBox.shrink();
+                                return Container(
+                                  width: double.infinity,
+                                  padding: const EdgeInsets.all(14),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.surface,
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(color: AppColors.border),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      const Text(
+                                        'TBT’de bu mekan',
+                                        style: TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w900,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Wrap(
+                                        spacing: 14,
+                                        runSpacing: 7,
+                                        children: [
+                                          if (favoriteCount > 0)
+                                            Text(
+                                              '♥ $favoriteCount kişinin favorilerinde',
+                                              style: const TextStyle(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.w800,
+                                              ),
+                                            ),
+                                          if (postCount > 0)
+                                            Text(
+                                              '▣ $postCount paylaşım',
+                                              style: const TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.white70,
+                                                fontWeight: FontWeight.w700,
+                                              ),
+                                            ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            );
+                          },
+                        ),
+                        if (FirebaseAuth.instance.currentUser != null) ...[
+                          const SizedBox(height: 10),
+                          SizedBox(
+                            width: double.infinity,
+                            child: OutlinedButton.icon(
+                              onPressed: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => CreatePostScreen(
+                                    businessVenueKey: _key,
+                                    businessVenueName: venue.name,
+                                  ),
+                                ),
+                              ),
+                              icon: const Icon(Icons.place_outlined),
+                              label: const Text(
+                                'Buradaydım • Fotoğraf / Video Paylaş',
+                              ),
+                            ),
+                          ),
+                        ],
                         if (!verified &&
                             FirebaseAuth.instance.currentUser != null) ...[
                           const SizedBox(height: 6),
