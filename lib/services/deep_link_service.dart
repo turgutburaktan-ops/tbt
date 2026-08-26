@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 
 import '../screens/community_profile_screen.dart';
 import '../screens/event_deep_link_screen.dart';
+import '../screens/post_deep_link_screen.dart';
+import '../screens/user_profile_screen.dart';
 import 'invite_link_service.dart';
 
 class DeepLinkService {
@@ -52,6 +54,20 @@ class DeepLinkService {
           navigator.push(
             MaterialPageRoute(
               builder: (_) => EventDeepLinkScreen(eventId: target.id),
+            ),
+          );
+          break;
+        case 'profile':
+          navigator.push(
+            MaterialPageRoute(
+              builder: (_) => UserProfileScreen(userId: target.id),
+            ),
+          );
+          break;
+        case 'post':
+          navigator.push(
+            MaterialPageRoute(
+              builder: (_) => PostDeepLinkScreen(postId: target.id),
             ),
           );
           break;
