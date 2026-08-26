@@ -27,6 +27,7 @@ import 'screens/moderation_center_screen.dart';
 import 'screens/notifications_screen.dart';
 import 'screens/rewards_hub_screen.dart';
 import 'screens/safety_privacy_center_screen.dart';
+import 'screens/settings_screen.dart';
 import 'services/app_observability_service.dart';
 import 'services/deep_link_service.dart';
 import 'services/favorites_service.dart';
@@ -153,6 +154,7 @@ class _BestPhotoSpotAppState extends State<BestPhotoSpotApp> {
       '/messages': (_) => const ChatInboxScreen(),
       '/notifications': (_) => const NotificationsScreen(),
       '/rewards': (_) => const RewardsHubScreen(),
+      '/settings': (_) => const SettingsScreen(),
       '/business': (_) => const ManagedVenuesScreen(),
       '/business-claim': (_) => const BusinessHubScreen(),
       '/admin': (_) => const AdminPortalScreen(),
