@@ -333,9 +333,15 @@ class ContentEngagementBar extends StatelessWidget {
     if (contentId.trim().isEmpty) return;
     try {
       if (sourceType == 'post') {
-        await InviteLinkService.instance.sharePost(postId: contentId, title: title);
+        await InviteLinkService.instance.sharePost(
+          postId: contentId,
+          title: title,
+        );
       } else if (sourceType == 'event') {
-        await InviteLinkService.instance.shareEvent(eventId: contentId, eventTitle: title);
+        await InviteLinkService.instance.shareEvent(
+          eventId: contentId,
+          eventTitle: title,
+        );
       } else {
         _message(context, 'Bu içerik dışarıya paylaşılamıyor.');
       }
@@ -456,7 +462,9 @@ class ContentEngagementBar extends StatelessWidget {
         IconButton(
           tooltip: 'WhatsApp veya başka uygulamada paylaş',
           visualDensity: VisualDensity.compact,
-          onPressed: contentId.trim().isEmpty ? null : () => _shareOutside(context),
+          onPressed: contentId.trim().isEmpty
+              ? null
+              : () => _shareOutside(context),
           icon: const Icon(Icons.ios_share_rounded, size: 25),
         ),
         IconButton(
