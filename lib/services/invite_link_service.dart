@@ -22,6 +22,12 @@ class InviteLinkService {
   Uri eventUri(String eventId) =>
       Uri.https(webHost, '/event/${_safeOutgoingId(eventId)}');
 
+  Uri profileUri(String userId) =>
+      Uri.https(webHost, '/profile/${_safeOutgoingId(userId)}');
+
+  Uri postUri(String postId) =>
+      Uri.https(webHost, '/post/${_safeOutgoingId(postId)}');
+
   Uri communityAppUri(String communityId) => Uri(
     scheme: scheme,
     host: 'community',
@@ -66,7 +72,12 @@ class InviteLinkService {
   }
 
   bool _validTarget(String type, String id) {
-    if (type != 'event' && type != 'community') return false;
+    if (type != 'event' &&
+        type != 'community' &&
+        type != 'profile' &&
+        type != 'post') {
+      return false;
+    }
     return _safeId.hasMatch(id);
   }
 
@@ -95,6 +106,28 @@ class InviteLinkService {
     await Share.share(
       '$eventTitle etkinliğine göz at.${meta.isEmpty ? '' : '\n$meta'}\n${eventUri(eventId)}',
       subject: eventTitle,
+    );
+  }
+
+  Future<void> shareProfile({
+    required String userId,
+    required String displayName,
+  }) async {
+    final name = displayName.trim().isEmpty ? 'TBT profili' : displayName.trim();
+    await Share.share(
+      '$name profilini TBT’de gör.\n${profileUri(userId)}',
+      subject: name,
+    );
+  }
+
+  Future<void> sharePost({
+    required String postId,
+    required String title,
+  }) async {
+    final text = title.trim().isEmpty ? 'TBT paylaşımı' : title.trim();
+    await Share.share(
+      '$text\n${postUri(postId)}',
+      subject: 'TBT paylaşımı',
     );
   }
 }
