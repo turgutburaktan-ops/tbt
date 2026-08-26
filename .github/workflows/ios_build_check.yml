@@ -9,9 +9,14 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ios-build-check-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build-ios:
-    runs-on: macos-latest
+    name: Build iOS Simulator
+    runs-on: macos-15
     timeout-minutes: 45
     steps:
       - name: Checkout
@@ -30,28 +35,24 @@ jobs:
         run: flutter config --no-enable-swift-package-manager
       - name: Install dependencies
         run: flutter pub get
-      - name: Generate disposable iOS host if missing
+      - name: Prepare clean iOS host
         shell: bash
         run: |
-          if [ ! -d ios/Runner.xcodeproj ]; then
-            flutter create --platforms=ios --org com.tbt --project-name best_photo_spot .
-          fi
-      - name: Set minimum iOS target
-        shell: bash
-        run: |
-          if [ -f ios/Podfile ]; then
-            python3 - <<'PY'
+          set -euo pipefail
+          rm -rf ios
+          flutter create --platforms=ios --org com.tbt --project-name best_photo_spot .
+          python3 - <<'PY'
           from pathlib import Path
           import re
           p = Path('ios/Podfile')
           s = p.read_text()
-          if 'platform :ios' in s:
-              s = re.sub(r"platform :ios,\s*'[^']+'", "platform :ios, '15.0'", s)
+          if re.search(r"^\s*#?\s*platform :ios,\s*'[^']+'", s, flags=re.M):
+              s = re.sub(r"^\s*#?\s*platform :ios,\s*'[^']+'", "platform :ios, '15.0'", s, count=1, flags=re.M)
           else:
               s = "platform :ios, '15.0'\n" + s
           p.write_text(s)
           PY
-          fi
+          rm -rf ios/Pods ios/Podfile.lock
       - name: Build iOS simulator
         run: >-
           flutter build ios --simulator --debug --no-pub
