@@ -3,11 +3,12 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
 import 'admin_business_preview_screen.dart';
+import 'admin_business_sandbox_screen.dart';
 import 'admin_businesses_v2_screen.dart';
-import 'business_hub_screen.dart';
 
 class AdminPortalScreen extends StatefulWidget {
   const AdminPortalScreen({super.key});
+
   @override
   State<AdminPortalScreen> createState() => _AdminPortalScreenState();
 }
@@ -22,9 +23,7 @@ class _AdminPortalScreenState extends State<AdminPortalScreen> {
   }
 
   Future<void> _check() async {
-    final token = await FirebaseAuth.instance.currentUser?.getIdTokenResult(
-      true,
-    );
+    final token = await FirebaseAuth.instance.currentUser?.getIdTokenResult(true);
     if (mounted) setState(() => _allowed = token?.claims?['admin'] == true);
   }
 
@@ -32,11 +31,9 @@ class _AdminPortalScreenState extends State<AdminPortalScreen> {
       Navigator.push(context, MaterialPageRoute(builder: (_) => page));
 
   void _demoBusiness() => _open(
-    const BusinessHubScreen(
-      initialCategory: 'cafe',
-      initialVenueId: 'admin_demo',
-      initialVenueName: 'TBT Demo İşletme',
-      previewMode: true,
+    const AdminBusinessSandboxScreen(
+      venueName: 'TBT Demo İşletme',
+      category: 'cafe',
     ),
   );
 
@@ -90,20 +87,10 @@ class _AdminPortalScreenState extends State<AdminPortalScreen> {
               children: [
                 Row(
                   children: [
-                    Icon(
-                      Icons.admin_panel_settings_rounded,
-                      color: AppColors.cyan,
-                      size: 30,
-                    ),
+                    Icon(Icons.admin_panel_settings_rounded, color: AppColors.cyan, size: 30),
                     SizedBox(width: 10),
                     Expanded(
-                      child: Text(
-                        'Operasyon Merkezi',
-                        style: TextStyle(
-                          fontSize: 23,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
+                      child: Text('Operasyon Merkezi', style: TextStyle(fontSize: 23, fontWeight: FontWeight.w900)),
                     ),
                     _AdminPill(),
                   ],
@@ -117,15 +104,12 @@ class _AdminPortalScreenState extends State<AdminPortalScreen> {
             ),
           ),
           const SizedBox(height: 18),
-          const Text(
-            'İşletme Yönetimi',
-            style: TextStyle(fontSize: 19, fontWeight: FontWeight.w900),
-          ),
+          const Text('İşletme Yönetimi', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w900)),
           const SizedBox(height: 10),
           _HeroAction(
             icon: Icons.storefront_rounded,
             title: 'İşletmeler',
-            subtitle: 'Bir işletmeye dokun ve işletme panelini önizle.',
+            subtitle: 'Bir işletmeye dokun ve gerçek veriye dokunmadan işletme sahibi gibi test et.',
             button: 'İşletmeleri Aç',
             onTap: () => _open(const AdminBusinessesV2Screen()),
           ),
@@ -135,8 +119,8 @@ class _AdminPortalScreenState extends State<AdminPortalScreen> {
               Expanded(
                 child: _CompactAction(
                   icon: Icons.visibility_rounded,
-                  title: 'Panel Önizleme',
-                  subtitle: 'İşletme seçerek sahibinin gördüğü paneli aç.',
+                  title: 'Panel Testi',
+                  subtitle: 'Kayıtlı işletmeyi seç, menü ve etkinlik dahil paneli dene.',
                   onTap: () => _open(const AdminBusinessPreviewScreen()),
                 ),
               ),
@@ -145,81 +129,30 @@ class _AdminPortalScreenState extends State<AdminPortalScreen> {
                 child: _CompactAction(
                   icon: Icons.science_outlined,
                   title: 'Demo İşletme',
-                  subtitle: 'Gerçek işletme olmadan paneli test et.',
+                  subtitle: 'Hiçbir şey kaydetmeden tüm işletme işlemlerini dene.',
                   onTap: _demoBusiness,
                 ),
               ),
             ],
           ),
           const SizedBox(height: 10),
-          const _RouteTile(
-            Icons.workspace_premium_rounded,
-            'Business Pro',
-            'İşletmeye Premium/Pro ver veya geri al.',
-            '/admin-business-premium',
-            accent: true,
-          ),
+          const _RouteTile(Icons.workspace_premium_rounded, 'Business Pro', 'İşletmeye Premium/Pro ver veya geri al.', '/admin-business-premium', accent: true),
           const SizedBox(height: 22),
-          const Text(
-            'Topluluk Katkıları',
-            style: TextStyle(fontSize: 19, fontWeight: FontWeight.w900),
-          ),
+          const Text('Topluluk Katkıları', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w900)),
           const SizedBox(height: 9),
-          const _RouteTile(
-            Icons.add_location_alt_rounded,
-            'Yeni Yer Önerileri',
-            'Kullanıcıların eklediği gezilecek yerleri onayla, reddet veya mükerrer işaretle.',
-            '/admin-spot-submissions',
-            accent: true,
-          ),
+          const _RouteTile(Icons.add_location_alt_rounded, 'Yeni Yer Önerileri', 'Kullanıcıların eklediği gezilecek yerleri onayla, reddet veya mükerrer işaretle.', '/admin-spot-submissions', accent: true),
           const SizedBox(height: 22),
-          const Text(
-            'Operasyon',
-            style: TextStyle(fontSize: 19, fontWeight: FontWeight.w900),
-          ),
+          const Text('Operasyon', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w900)),
           const SizedBox(height: 9),
-          const _RouteTile(
-            Icons.dashboard_rounded,
-            'Genel Bakış',
-            'Bekleyen işlemler ve sistem özeti.',
-            '/admin-dashboard',
-          ),
-          const _RouteTile(
-            Icons.manage_accounts_rounded,
-            'Kullanıcı Yönetimi',
-            'Kullanıcı ara ve hesabı incele.',
-            '/admin-users',
-          ),
-          const _RouteTile(
-            Icons.shield_rounded,
-            'Moderasyon',
-            'Şikâyetler ve güvenlik işlemleri.',
-            '/moderation',
-          ),
-          const _RouteTile(
-            Icons.trending_up_rounded,
-            'Büyüme',
-            'Şehir, kullanım ve dönüşüm sinyalleri.',
-            '/admin-growth',
-          ),
-          const _RouteTile(
-            Icons.monitor_heart_rounded,
-            'Sistem Sağlığı',
-            'Hata ve operasyon kayıtları.',
-            '/admin-insights',
-          ),
+          const _RouteTile(Icons.dashboard_rounded, 'Genel Bakış', 'Bekleyen işlemler ve sistem özeti.', '/admin-dashboard'),
+          const _RouteTile(Icons.manage_accounts_rounded, 'Kullanıcı Yönetimi', 'Kullanıcı ara ve hesabı incele.', '/admin-users'),
+          const _RouteTile(Icons.shield_rounded, 'Moderasyon', 'Şikâyetler ve güvenlik işlemleri.', '/moderation'),
+          const _RouteTile(Icons.trending_up_rounded, 'Büyüme', 'Şehir, kullanım ve dönüşüm sinyalleri.', '/admin-growth'),
+          const _RouteTile(Icons.monitor_heart_rounded, 'Sistem Sağlığı', 'Hata ve operasyon kayıtları.', '/admin-insights'),
           const SizedBox(height: 22),
-          const Text(
-            'Uygulama Testleri',
-            style: TextStyle(fontSize: 19, fontWeight: FontWeight.w900),
-          ),
+          const Text('Uygulama Testleri', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w900)),
           const SizedBox(height: 9),
-          const _RouteTile(
-            Icons.layers_outlined,
-            'Rol Önizleme',
-            'Misafir, kullanıcı, düzenleyici ve işletme rollerini test et.',
-            '/admin-preview',
-          ),
+          const _RouteTile(Icons.layers_outlined, 'Rol Önizleme', 'Misafir, kullanıcı, düzenleyici ve işletme rollerini test et.', '/admin-preview'),
         ],
       ),
     );
@@ -232,6 +165,7 @@ class _HeroAction extends StatelessWidget {
   final String subtitle;
   final String button;
   final VoidCallback onTap;
+
   const _HeroAction({
     required this.icon,
     required this.title,
@@ -267,26 +201,11 @@ class _HeroAction extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
+                Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
                 const SizedBox(height: 4),
-                Text(
-                  subtitle,
-                  style: const TextStyle(color: Colors.white60, height: 1.3),
-                ),
+                Text(subtitle, style: const TextStyle(color: Colors.white60, height: 1.3)),
                 const SizedBox(height: 9),
-                Text(
-                  button,
-                  style: const TextStyle(
-                    color: AppColors.cyan,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
+                Text(button, style: const TextStyle(color: AppColors.cyan, fontWeight: FontWeight.w900)),
               ],
             ),
           ),
@@ -302,6 +221,7 @@ class _CompactAction extends StatelessWidget {
   final String title;
   final String subtitle;
   final VoidCallback onTap;
+
   const _CompactAction({
     required this.icon,
     required this.title,
@@ -332,11 +252,7 @@ class _CompactAction extends StatelessWidget {
             subtitle,
             maxLines: 3,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              color: Colors.white54,
-              fontSize: 11.5,
-              height: 1.25,
-            ),
+            style: const TextStyle(color: Colors.white54, fontSize: 11.5, height: 1.25),
           ),
         ],
       ),
@@ -350,6 +266,7 @@ class _RouteTile extends StatelessWidget {
   final String subtitle;
   final String route;
   final bool accent;
+
   const _RouteTile(
     this.icon,
     this.title,
@@ -367,14 +284,10 @@ class _RouteTile extends StatelessWidget {
         width: 44,
         height: 44,
         decoration: BoxDecoration(
-          color: accent
-              ? AppColors.cyan.withValues(alpha: .12)
-              : AppColors.surfaceStrong,
+          color: accent ? AppColors.cyan.withValues(alpha: .12) : AppColors.surfaceStrong,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: accent
-                ? AppColors.cyan.withValues(alpha: .4)
-                : AppColors.border,
+            color: accent ? AppColors.cyan.withValues(alpha: .4) : AppColors.border,
           ),
         ),
         child: Icon(icon, color: accent ? AppColors.cyan : Colors.white70),
@@ -389,6 +302,7 @@ class _RouteTile extends StatelessWidget {
 
 class _AdminPill extends StatelessWidget {
   const _AdminPill();
+
   @override
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
