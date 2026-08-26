@@ -1,4 +1,5 @@
 from pathlib import Path
+import runpy
 
 # Mekanlar: "En iyi" etiketi diğer mekanları daha düşük kaliteli gösterdiği için kaldır.
 p = Path('lib/widgets/nearby_places_view.dart')
@@ -44,3 +45,6 @@ if old in s:
 elif "aPinned" not in s:
     raise SystemExit('Spot sorting target not found')
 p.write_text(s)
+
+# Yeni yer harita gesture fix + profil favori mekanlar.
+runpy.run_path('.github/scripts/apply_profile_favorites_and_map_fix.py', run_name='__main__')
