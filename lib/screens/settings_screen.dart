@@ -595,7 +595,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       onPressed: () async {
                         await AuthService.instance.logout();
                         if (context.mounted) {
-                          Navigator.of(context).popUntil((route) => route.isFirst);
+                          Navigator.of(context)
+                              .popUntil((route) => route.isFirst);
                         }
                       },
                       icon: const Icon(Icons.logout_rounded),
@@ -664,56 +665,49 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   String _profileTypeLabel(String value) => switch (value) {
-        'creator' => 'İçerik Üreticisi',
-        'business_owner' => 'İşletme Sahibi',
-        'venue_manager' => 'Mekan Yöneticisi',
-        'organizer' => 'Organizatör',
-        _ => 'Kişisel',
-      };
+    'creator' => 'İçerik Üreticisi',
+    'business_owner' => 'İşletme Sahibi',
+    'venue_manager' => 'Mekan Yöneticisi',
+    'organizer' => 'Organizatör',
+    _ => 'Kişisel',
+  };
 
   Widget _section(String title) => Padding(
-        padding: const EdgeInsets.fromLTRB(4, 22, 4, 8),
-        child: Text(
-          title,
-          style: const TextStyle(
-            color: Colors.white54,
-            fontWeight: FontWeight.w800,
-            fontSize: 13,
-          ),
-        ),
-      );
+    padding: const EdgeInsets.fromLTRB(4, 22, 4, 8),
+    child: Text(
+      title,
+      style: const TextStyle(
+        color: Colors.white54,
+        fontWeight: FontWeight.w800,
+        fontSize: 13,
+      ),
+    ),
+  );
 
   Widget _tile(
     IconData icon,
     String title,
     String subtitle,
     VoidCallback onTap,
-  ) =>
-      Card(
-        margin: const EdgeInsets.only(bottom: 7),
-        child: ListTile(
-          leading: Icon(icon),
-          title: Text(
-            title,
-            style: const TextStyle(fontWeight: FontWeight.w800),
-          ),
-          subtitle: Text(subtitle),
-          trailing: const Icon(Icons.chevron_right_rounded),
-          onTap: onTap,
-        ),
-      );
+  ) => Card(
+    margin: const EdgeInsets.only(bottom: 7),
+    child: ListTile(
+      leading: Icon(icon),
+      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w800)),
+      subtitle: Text(subtitle),
+      trailing: const Icon(Icons.chevron_right_rounded),
+      onTap: onTap,
+    ),
+  );
 
   Widget _staticTile(IconData icon, String title, String subtitle) => Card(
-        margin: const EdgeInsets.only(bottom: 7),
-        child: ListTile(
-          leading: Icon(icon),
-          title: Text(
-            title,
-            style: const TextStyle(fontWeight: FontWeight.w800),
-          ),
-          subtitle: Text(subtitle),
-        ),
-      );
+    margin: const EdgeInsets.only(bottom: 7),
+    child: ListTile(
+      leading: Icon(icon),
+      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w800)),
+      subtitle: Text(subtitle),
+    ),
+  );
 
   Widget _switchTile(
     IconData icon,
@@ -721,55 +715,48 @@ class _SettingsScreenState extends State<SettingsScreen> {
     String subtitle,
     bool value,
     Future<void> Function(bool) onChanged,
-  ) =>
-      Card(
-        margin: const EdgeInsets.only(bottom: 7),
-        child: SwitchListTile(
-          secondary: Icon(icon),
-          title: Text(
-            title,
-            style: const TextStyle(fontWeight: FontWeight.w800),
-          ),
-          subtitle: Text(subtitle),
-          value: value,
-          onChanged: (next) async {
-            await onChanged(next);
-            if (mounted) setState(() {});
-          },
-        ),
-      );
+  ) => Card(
+    margin: const EdgeInsets.only(bottom: 7),
+    child: SwitchListTile(
+      secondary: Icon(icon),
+      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w800)),
+      subtitle: Text(subtitle),
+      value: value,
+      onChanged: (next) async {
+        await onChanged(next);
+        if (mounted) setState(() {});
+      },
+    ),
+  );
 
   Widget _infoRow(String label, String value) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 6),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(
-              width: 82,
-              child: Text(
-                label,
-                style: const TextStyle(color: Colors.white54),
-              ),
-            ),
-            Expanded(
-              child: Text(
-                value,
-                style: const TextStyle(fontWeight: FontWeight.w700),
-              ),
-            ),
-          ],
+    padding: const EdgeInsets.symmetric(vertical: 6),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 82,
+          child: Text(label, style: const TextStyle(color: Colors.white54)),
         ),
-      );
+        Expanded(
+          child: Text(
+            value,
+            style: const TextStyle(fontWeight: FontWeight.w700),
+          ),
+        ),
+      ],
+    ),
+  );
 
   Widget _statusRow(String label, bool verified) => Row(
-        children: [
-          Expanded(child: Text(label)),
-          Icon(
-            verified ? Icons.verified_rounded : Icons.error_outline_rounded,
-            color: verified ? AppColors.cyan : Colors.white38,
-          ),
-          const SizedBox(width: 5),
-          Text(verified ? 'Doğrulandı' : 'Doğrulanmadı'),
-        ],
-      );
+    children: [
+      Expanded(child: Text(label)),
+      Icon(
+        verified ? Icons.verified_rounded : Icons.error_outline_rounded,
+        color: verified ? AppColors.cyan : Colors.white38,
+      ),
+      const SizedBox(width: 5),
+      Text(verified ? 'Doğrulandı' : 'Doğrulanmadı'),
+    ],
+  );
 }
