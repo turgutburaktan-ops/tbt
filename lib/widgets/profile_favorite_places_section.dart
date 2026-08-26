@@ -264,8 +264,12 @@ class _FavoritePlacePickerState extends State<_FavoritePlacePicker> {
     double longitude = 35;
     try {
       final position = await LocationService.getCurrentPosition();
-      latitude = position.latitude;
-      longitude = position.longitude;
+      if (position != null) {
+        latitude = position.latitude;
+        longitude = position.longitude;
+      } else if (!NearbyVenueService.instance.hasSelectedCity) {
+        throw StateError('Konum alınamadı ve seçili şehir yok.');
+      }
     } catch (_) {
       if (!NearbyVenueService.instance.hasSelectedCity) rethrow;
     }
