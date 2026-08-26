@@ -213,3 +213,18 @@ s = re.sub(
     flags=re.S,
 )
 p.write_text(s)
+
+# 6) Earlier UI patchers can accidentally insert the same GoogleMap named
+# argument more than once. Normalize each consecutive gestureRecognizers block
+# down to a single instance after all other patchers have run.
+p = Path('lib/screens/spot_suggestion_screen.dart')
+s = p.read_text()
+block = """              gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
+                Factory<OneSequenceGestureRecognizer>(
+                  () => EagerGestureRecognizer(),
+                ),
+              },
+"""
+while block + block in s:
+    s = s.replace(block + block, block, 1)
+p.write_text(s)
