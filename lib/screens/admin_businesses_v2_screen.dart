@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../services/admin_console_service.dart';
 import '../theme/app_theme.dart';
-import 'business_hub_screen.dart';
+import 'business_panel_preview_screen.dart';
 
 class AdminBusinessesV2Screen extends StatefulWidget {
   const AdminBusinessesV2Screen({super.key});
@@ -26,9 +26,8 @@ class _AdminBusinessesV2ScreenState extends State<AdminBusinessesV2Screen>{
 
   void _preview(Map<String,dynamic>d){
     final category=(d['category']??'cafe').toString();
-    final id=(d['venueId']??'admin_preview').toString();
     final name=(d['venueName']??d['legalName']??'TBT Demo İşletme').toString();
-    Navigator.push(context,MaterialPageRoute(builder:(_)=>BusinessHubScreen(initialCategory:category,initialVenueId:id.isEmpty?'admin_preview':id,initialVenueName:name,previewMode:true)));
+    Navigator.push(context,MaterialPageRoute(builder:(_)=>BusinessPanelPreviewScreen(venueName:name,category:category)));
   }
 
   List<Map<String,dynamic>> get _filtered=>_items.where((d){
