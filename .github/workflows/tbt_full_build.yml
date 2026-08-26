@@ -36,6 +36,7 @@ jobs:
         run: |
           set -euo pipefail
           python3 .github/scripts/apply_requested_ui_fixes.py
+          python3 .github/scripts/apply_ui_polish.py
           dart format lib
           if ! git diff --quiet; then
             git config user.name 'tbt-build-bot'
