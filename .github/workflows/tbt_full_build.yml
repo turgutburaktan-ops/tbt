@@ -38,12 +38,13 @@ jobs:
           python3 .github/scripts/apply_requested_ui_fixes.py
           python3 .github/scripts/apply_ui_polish.py
           python3 .github/scripts/apply_retention_loop.py
+          python3 .github/scripts/apply_runtime_stability_fixes.py
           dart format lib
           if ! git diff --quiet; then
             git config user.name 'tbt-build-bot'
             git config user.email 'actions@users.noreply.github.com'
-            git add lib pubspec.yaml
-            git commit -m 'fix: apply requested product UI fixes'
+            git add lib pubspec.yaml firestore.rules
+            git commit -m 'fix: apply runtime stability fixes'
             git push origin HEAD:feature/video-v1
           fi
       - name: Resolve build commit
@@ -92,6 +93,11 @@ jobs:
           distribution: temurin
           java-version: '24'
       - run: flutter pub get
+      - name: Restore stable Android debug signing key
+        uses: actions/cache@v4
+        with:
+          path: ~/.android/debug.keystore
+          key: tbt-android-debug-keystore-v1
       - name: Prepare Android host
         shell: bash
         env:
@@ -122,6 +128,13 @@ jobs:
           fi
       - name: Android APK Build
         run: flutter build apk --debug --no-pub
+      - name: Report Android auth certificate fingerprints
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f "$HOME/.android/debug.keystore"
+          echo 'Register these SHA fingerprints for Android package com.tbt.social in Firebase Authentication:'
+          keytool -list -v -alias androiddebugkey -keystore "$HOME/.android/debug.keystore" -storepass android -keypass android | grep -E 'SHA1:|SHA256:'
       - name: Verify Android APK
         run: test -s build/app/outputs/flutter-apk/app-debug.apk
       - name: Upload Android APK
