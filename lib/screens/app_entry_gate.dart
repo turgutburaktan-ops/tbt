@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../widgets/retention_hub_quick_entry.dart';
 import '../widgets/retention_now_overlay.dart';
-import 'account_security_gate.dart';
+import 'account_security_gate_v2.dart';
 import 'app_onboarding_screen.dart';
 import 'guest_home_screen.dart';
 import 'home_shell_v3.dart';
@@ -49,7 +49,7 @@ class AppEntryGate extends StatelessWidget {
               }
             }
 
-            return AccountSecurityGate(profile: data, child: next);
+            return AccountSecurityGateV2(profile: data, child: next);
           },
         );
       },
