@@ -16,48 +16,48 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  User? get user => FirebaseAuth.instance.currentUser;
-  DocumentReference<Map<String, dynamic>>? get ref => user == null
+  User? get _user => FirebaseAuth.instance.currentUser;
+  DocumentReference<Map<String, dynamic>>? get _userRef => _user == null
       ? null
-      : FirebaseFirestore.instance.collection('users').doc(user!.uid);
+      : FirebaseFirestore.instance.collection('users').doc(_user!.uid);
 
-  Future<void> _set(String key, bool value) async {
-    final document = ref;
-    if (document == null) return;
+  void _message(String value) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(value)));
+  }
+
+  Future<void> _setBool(String key, bool value) async {
+    final ref = _userRef;
+    if (ref == null) return;
     try {
-      await document.update({'settings.$key': value});
+      await ref.update({'settings.$key': value});
     } catch (_) {
-      await document.set({
+      await ref.set({
         'settings': {key: value},
       }, SetOptions(merge: true));
     }
   }
 
-  void _message(String text) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(text)));
-  }
-
   Future<void> _editProfile(Map<String, dynamic> data) async {
-    final u = user;
-    final document = ref;
-    if (u == null || document == null) return;
+    final user = _user;
+    final ref = _userRef;
+    if (user == null || ref == null) return;
 
     final name = TextEditingController(
-      text: (data['displayName'] ?? u.displayName ?? '').toString(),
+      text: (data['displayName'] ?? user.displayName ?? '').toString(),
     );
     final bio = TextEditingController(text: (data['bio'] ?? '').toString());
     var type = (data['profileType'] ?? 'personal').toString();
-    const allowed = <String>{
+    const validTypes = {
       'personal',
       'creator',
       'business_owner',
       'venue_manager',
       'organizer',
     };
-    if (!allowed.contains(type)) type = 'personal';
+    if (!validTypes.contains(type)) type = 'personal';
 
     final save = await showModalBottomSheet<bool>(
       context: context,
@@ -65,7 +65,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       useSafeArea: true,
       backgroundColor: AppColors.background,
       builder: (sheetContext) => StatefulBuilder(
-        builder: (context, setSheet) => Padding(
+        builder: (context, setSheetState) => Padding(
           padding: EdgeInsets.fromLTRB(
             18,
             18,
@@ -117,12 +117,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                 ],
                 onChanged: (value) {
-                  if (value != null) setSheet(() => type = value);
+                  if (value != null) setSheetState(() => type = value);
                 },
               ),
               const SizedBox(height: 8),
               const Text(
-                'Profil türü yetki veya doğrulanmış rozet vermez. Mekan yönetimi ayrıca doğrulanır.',
+                'Profil türü seçimi hesap veya işletme doğrulaması vermez. Mekan yönetimi ayrıca onaylanır.',
                 style: TextStyle(color: Colors.white54, fontSize: 11.5),
               ),
               const SizedBox(height: 16),
@@ -141,13 +141,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
       if (displayName.length < 2) {
         _message('Görünen ad en az 2 karakter olmalı.');
       } else {
-        await document.set({
+        await ref.set({
           'displayName': displayName,
           'bio': bio.text.trim(),
           'profileType': type,
           'updatedAt': FieldValue.serverTimestamp(),
         }, SetOptions(merge: true));
-        await u.updateDisplayName(displayName);
+        await user.updateDisplayName(displayName);
         _message('Profil bilgilerin güncellendi.');
       }
     }
@@ -155,16 +155,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
     bio.dispose();
   }
 
-  Future<void> _openSecurity() async {
-    final u = user;
-    if (u == null) return;
-    final email = (u.email ?? '').trim();
+  Future<void> _security() async {
+    final user = _user;
+    if (user == null) return;
+    final email = (user.email ?? '').trim();
     final action = await showModalBottomSheet<String>(
       context: context,
       useSafeArea: true,
       backgroundColor: AppColors.background,
-      builder: (context) => Padding(
-        padding: const EdgeInsets.fromLTRB(18, 14, 18, 26),
+      builder: (sheetContext) => Padding(
+        padding: const EdgeInsets.fromLTRB(18, 16, 18, 26),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -177,47 +177,50 @@ class _SettingsScreenState extends State<SettingsScreen> {
             _infoRow('E-posta', email.isEmpty ? 'Bağlı değil' : email),
             _infoRow(
               'Telefon',
-              (u.phoneNumber ?? '').isEmpty ? 'Bağlı değil' : u.phoneNumber!,
+              (user.phoneNumber ?? '').isEmpty
+                  ? 'Bağlı değil'
+                  : user.phoneNumber!,
             ),
-            const SizedBox(height: 14),
-            if (email.isNotEmpty)
+            if (email.isNotEmpty) ...[
+              const SizedBox(height: 14),
               FilledButton.icon(
-                onPressed: () => Navigator.pop(context, 'reset'),
+                onPressed: () => Navigator.pop(sheetContext, 'reset'),
                 icon: const Icon(Icons.password_rounded),
                 label: const Text('Şifre sıfırlama e-postası gönder'),
               ),
+            ],
           ],
         ),
       ),
     );
+
     if (action == 'reset' && email.isNotEmpty) {
       try {
         await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
         _message('Şifre sıfırlama bağlantısı e-posta adresine gönderildi.');
-      } on FirebaseAuthException catch (e) {
-        _message(e.message ?? 'Şifre sıfırlama e-postası gönderilemedi.');
+      } on FirebaseAuthException catch (error) {
+        _message(error.message ?? 'Şifre sıfırlama e-postası gönderilemedi.');
       }
     }
   }
 
-  Future<void> _openVerification() async {
-    final u = user;
-    if (u == null) return;
-    await u.reload();
+  Future<void> _verification() async {
+    final user = _user;
+    if (user == null) return;
+    await user.reload();
     final fresh = FirebaseAuth.instance.currentUser;
     if (fresh == null) return;
-    final verified = fresh.emailVerified;
-    final phoneVerified = (fresh.phoneNumber ?? '').isNotEmpty;
+
     final action = await showDialog<String>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Doğrulama durumu'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _statusRow('E-posta', verified),
+            _statusRow('E-posta', fresh.emailVerified),
             const SizedBox(height: 9),
-            _statusRow('Telefon', phoneVerified),
+            _statusRow('Telefon', (fresh.phoneNumber ?? '').isNotEmpty),
             const SizedBox(height: 10),
             const Text(
               'Profil türü seçmek, hesabı veya işletmeyi otomatik doğrulamaz.',
@@ -227,29 +230,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('Kapat'),
           ),
-          if (!verified && fresh.email != null)
+          if (!fresh.emailVerified && fresh.email != null)
             FilledButton(
-              onPressed: () => Navigator.pop(context, 'email'),
+              onPressed: () => Navigator.pop(dialogContext, 'send'),
               child: const Text('E-postayı doğrula'),
             ),
         ],
       ),
     );
-    if (action == 'email') {
+
+    if (action == 'send') {
       try {
         await fresh.sendEmailVerification();
         _message('Doğrulama e-postası gönderildi.');
-      } on FirebaseAuthException catch (e) {
-        _message(e.message ?? 'Doğrulama e-postası gönderilemedi.');
+      } on FirebaseAuthException catch (error) {
+        _message(error.message ?? 'Doğrulama e-postası gönderilemedi.');
       }
     }
   }
 
-  Future<void> _editInterests(Map<String, dynamic> settings) async {
-    const choices = <String>[
+  Future<void> _interests(Map<String, dynamic> settings) async {
+    const choices = [
       'Fotoğraf',
       'Gezi',
       'Doğa',
@@ -262,15 +266,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
     ];
     final selected = <String>{
       ...((settings['interests'] is List)
-          ? (settings['interests'] as List).map((e) => e.toString())
+          ? (settings['interests'] as List).map((item) => item.toString())
           : const <String>[]),
     };
+
     final save = await showModalBottomSheet<bool>(
       context: context,
       useSafeArea: true,
       backgroundColor: AppColors.background,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setSheet) => Padding(
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (context, setSheetState) => Padding(
           padding: const EdgeInsets.fromLTRB(18, 16, 18, 24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -293,15 +298,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   return FilterChip(
                     label: Text(item),
                     selected: selected.contains(item),
-                    onSelected: (value) => setSheet(() {
-                      value ? selected.add(item) : selected.remove(item);
+                    onSelected: (value) => setSheetState(() {
+                      if (value) {
+                        selected.add(item);
+                      } else {
+                        selected.remove(item);
+                      }
                     }),
                   );
                 }).toList(),
               ),
               const SizedBox(height: 18),
               FilledButton(
-                onPressed: () => Navigator.pop(context, true),
+                onPressed: () => Navigator.pop(sheetContext, true),
                 child: const Text('Kaydet'),
               ),
             ],
@@ -309,11 +318,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
       ),
     );
+
+    final ref = _userRef;
     if (save == true && ref != null) {
       try {
-        await ref!.update({'settings.interests': selected.toList()});
+        await ref.update({'settings.interests': selected.toList()});
       } catch (_) {
-        await ref!.set({
+        await ref.set({
           'settings': {'interests': selected.toList()},
         }, SetOptions(merge: true));
       }
@@ -321,7 +332,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
-  void _openStorage() {
+  void _storage() {
     showModalBottomSheet<void>(
       context: context,
       useSafeArea: true,
@@ -338,7 +349,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             const SizedBox(height: 8),
             const Text(
-              'Video otomatik oynatma tercihini Ayarlar > İçerik ve Keşif bölümünden değiştirebilirsin.',
+              'Video otomatik oynatma tercihini İçerik ve Keşif bölümünden değiştirebilirsin.',
               style: TextStyle(color: Colors.white60, height: 1.4),
             ),
             const SizedBox(height: 16),
@@ -358,10 +369,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  void _showHelp() {
+  void _help() {
     showDialog<void>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Yardım ve destek'),
         content: const Text(
           'Bir hesabı, içeriği veya mekanı şikayet etmek için ilgili içerikteki üç nokta menüsünü kullan. Hesap güvenliği için Gizlilik ve Güvenlik bölümüne, işletme yönetimi için Yönettiğim Mekanlar bölümüne gidebilirsin.',
@@ -369,7 +380,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         actions: [
           FilledButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('Tamam'),
           ),
         ],
@@ -377,18 +388,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  void _showAbout() {
+  void _about() {
     showDialog<void>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('TBT'),
         content: const Text(
-          'TBT; içerik, mekan, gezi noktası ve etkinlikleri tek sosyal keşif deneyiminde bir araya getirir.\n\nTopluluk güvenliği için kullanıcı önerileri ve işletme sahiplikleri doğrulama süreçlerinden geçer.',
+          'TBT; içerik, mekan, gezi noktası ve etkinlikleri tek sosyal keşif deneyiminde bir araya getirir.\n\nKullanıcı yer önerileri ve işletme sahiplikleri doğrulama süreçlerinden geçer.',
           style: TextStyle(height: 1.45),
         ),
         actions: [
           FilledButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('Kapat'),
           ),
         ],
@@ -398,167 +409,182 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final u = user;
+    final user = _user;
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(title: const Text('Ayarlar')),
-      body: u == null
+      body: user == null
           ? const Center(child: Text('Ayarlar için giriş yapmalısın.'))
           : StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-              stream: ref!.snapshots(),
+              stream: _userRef!.snapshots(),
               builder: (context, snapshot) {
                 final data = snapshot.data?.data() ?? const <String, dynamic>{};
                 final settings = Map<String, dynamic>.from(
                   data['settings'] is Map ? data['settings'] as Map : {},
                 );
                 final type = (data['profileType'] ?? 'personal').toString();
+
                 return ListView(
                   padding: const EdgeInsets.fromLTRB(14, 8, 14, 32),
                   children: [
-                    _profile(data, u, type),
-                    _title('Hesap'),
+                    _profile(data, user, type),
+                    _section('Hesap'),
                     _tile(
                       Icons.person_outline_rounded,
                       'Profil bilgileri',
                       'Ad, biyografi ve profil türü',
-                      () => _editProfile(data),
+                      () {
+                        _editProfile(data);
+                      },
                     ),
                     _tile(
                       Icons.lock_outline_rounded,
                       'Şifre ve güvenlik',
                       'E-posta, telefon ve şifre güvenliği',
-                      _openSecurity,
+                      () {
+                        _security();
+                      },
                     ),
                     _tile(
                       Icons.verified_user_outlined,
                       'Doğrulama',
                       'Hesap doğrulama durumunu gör',
-                      _openVerification,
+                      () {
+                        _verification();
+                      },
                     ),
-                    _title('Gizlilik'),
-                    _switch(
+                    _section('Gizlilik'),
+                    _switchTile(
                       Icons.lock_person_outlined,
                       'Gizli hesap',
                       'Yeni takipçileri sen onayla',
                       settings['privateAccount'] == true,
-                      (v) => _set('privateAccount', v),
+                      (value) => _setBool('privateAccount', value),
                     ),
-                    _switch(
+                    _switchTile(
                       Icons.location_off_outlined,
                       'Konum görünürlüğü',
                       'Konumunu sosyal içeriklerde göster',
                       settings['locationVisible'] == true,
-                      (v) => _set('locationVisible', v),
+                      (value) => _setBool('locationVisible', value),
                     ),
                     _tile(
                       Icons.shield_outlined,
                       'Gizlilik ve güvenlik',
                       'Mesaj, etiketleme, yorum ve engellenen hesaplar',
-                      () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const SafetyPrivacyCenterScreen(),
-                        ),
-                      ),
+                      () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const SafetyPrivacyCenterScreen(),
+                          ),
+                        );
+                      },
                     ),
-                    _title('Bildirimler'),
-                    _switch(
+                    _section('Bildirimler'),
+                    _switchTile(
                       Icons.chat_bubble_outline_rounded,
                       'Mesajlar',
                       'Yeni mesaj bildirimleri',
                       settings['notifyMessages'] != false,
-                      (v) => _set('notifyMessages', v),
+                      (value) => _setBool('notifyMessages', value),
                     ),
-                    _switch(
+                    _switchTile(
                       Icons.favorite_border_rounded,
                       'Beğeni ve yorumlar',
                       'İçerik etkileşimlerini bildir',
                       settings['notifyEngagement'] != false,
-                      (v) => _set('notifyEngagement', v),
+                      (value) => _setBool('notifyEngagement', value),
                     ),
-                    _switch(
+                    _switchTile(
                       Icons.event_outlined,
                       'Etkinlikler',
                       'Daveti, katılımı ve hatırlatmaları bildir',
                       settings['notifyEvents'] != false,
-                      (v) => _set('notifyEvents', v),
+                      (value) => _setBool('notifyEvents', value),
                     ),
-                    _switch(
+                    _switchTile(
                       Icons.emoji_events_outlined,
                       'XP ve görevler',
                       'Puan, seviye ve görev gelişmelerini bildir',
                       settings['notifyRewards'] != false,
-                      (v) => _set('notifyRewards', v),
+                      (value) => _setBool('notifyRewards', value),
                     ),
-                    _title('İçerik ve Keşif'),
-                    _switch(
+                    _section('İçerik ve Keşif'),
+                    _switchTile(
                       Icons.play_circle_outline_rounded,
                       'Videoları otomatik oynat',
                       'Akış ve keşifte videolar otomatik başlasın',
                       settings['autoplayVideos'] != false,
-                      (v) => _set('autoplayVideos', v),
+                      (value) => _setBool('autoplayVideos', value),
                     ),
-                    _switch(
+                    _switchTile(
                       Icons.visibility_off_outlined,
                       'Hassas içerik filtresi',
                       'Hassas olabilecek içerikleri azalt',
                       settings['sensitiveFilter'] != false,
-                      (v) => _set('sensitiveFilter', v),
+                      (value) => _setBool('sensitiveFilter', value),
                     ),
                     _tile(
                       Icons.interests_outlined,
                       'İlgi alanları',
                       'Önerilerini şekillendiren konuları yönet',
-                      () => _editInterests(settings),
+                      () {
+                        _interests(settings);
+                      },
                     ),
                     if (type == 'business_owner' ||
                         type == 'venue_manager') ...[
-                      _title('Mekanlar ve Yönetim'),
+                      _section('Mekanlar ve Yönetim'),
                       _tile(
                         Icons.storefront_outlined,
                         'Yönettiğim Mekanlar',
                         'Yetkili olduğun mekanları tek yerden yönet',
-                        () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const ManagedVenuesScreen(),
-                          ),
-                        ),
+                        () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const ManagedVenuesScreen(),
+                            ),
+                          );
+                        },
                       ),
                     ],
                     if (type == 'organizer') ...[
-                      _title('Organizatör'),
+                      _section('Organizatör'),
                       _tile(
                         Icons.event_available_outlined,
                         'Etkinlik yönetimi',
-                        'Etkinliklerini görüntüle, katılımı takip et',
-                        () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const SocialEventsScreen(),
-                          ),
-                        ),
+                        'Etkinliklerini görüntüle ve katılımı takip et',
+                        () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const SocialEventsScreen(),
+                            ),
+                          );
+                        },
                       ),
                     ],
-                    _title('Uygulama'),
+                    _section('Uygulama'),
                     _staticTile(Icons.language_rounded, 'Dil', 'Türkçe'),
                     _tile(
                       Icons.storage_outlined,
                       'Veri ve depolama',
                       'Önbellek ve veri tercihleri',
-                      _openStorage,
+                      _storage,
                     ),
                     _tile(
                       Icons.help_outline_rounded,
                       'Yardım ve destek',
                       'Güvenlik, şikayet ve yardım yolları',
-                      _showHelp,
+                      _help,
                     ),
                     _tile(
                       Icons.info_outline_rounded,
                       'TBT hakkında',
                       'Uygulama ve topluluk bilgileri',
-                      _showAbout,
+                      _about,
                     ),
                     const SizedBox(height: 16),
                     OutlinedButton.icon(
@@ -569,7 +595,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       onPressed: () async {
                         await AuthService.instance.logout();
                         if (context.mounted) {
-                          Navigator.of(context).popUntil((r) => r.isFirst);
+                          Navigator.of(context).popUntil((route) => route.isFirst);
                         }
                       },
                       icon: const Icon(Icons.logout_rounded),
@@ -582,11 +608,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _profile(Map<String, dynamic> d, User u, String type) {
-    final name = (d['displayName'] ?? u.displayName ?? 'TBT Kullanıcısı')
+  Widget _profile(Map<String, dynamic> data, User user, String type) {
+    final name = (data['displayName'] ?? user.displayName ?? 'TBT Kullanıcısı')
         .toString();
-    final username = (d['username'] ?? '').toString();
-    final photo = (d['photoUrl'] ?? u.photoURL ?? '').toString();
+    final username = (data['username'] ?? '').toString();
+    final photo = (data['photoUrl'] ?? user.photoURL ?? '').toString();
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -623,7 +649,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                 const SizedBox(height: 3),
                 Text(
-                  _type(type),
+                  _profileTypeLabel(type),
                   style: const TextStyle(
                     color: AppColors.cyan,
                     fontWeight: FontWeight.w700,
@@ -637,95 +663,113 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  String _type(String v) => switch (v) {
-    'creator' => 'İçerik Üreticisi',
-    'business_owner' => 'İşletme Sahibi',
-    'venue_manager' => 'Mekan Yöneticisi',
-    'organizer' => 'Organizatör',
-    _ => 'Kişisel',
-  };
+  String _profileTypeLabel(String value) => switch (value) {
+        'creator' => 'İçerik Üreticisi',
+        'business_owner' => 'İşletme Sahibi',
+        'venue_manager' => 'Mekan Yöneticisi',
+        'organizer' => 'Organizatör',
+        _ => 'Kişisel',
+      };
 
-  Widget _title(String t) => Padding(
-    padding: const EdgeInsets.fromLTRB(4, 22, 4, 8),
-    child: Text(
-      t,
-      style: const TextStyle(
-        color: Colors.white54,
-        fontWeight: FontWeight.w800,
-        fontSize: 13,
-      ),
-    ),
-  );
-
-  Widget _tile(IconData i, String t, String s, FutureOr<void> Function() tap) =>
-      Card(
-        margin: const EdgeInsets.only(bottom: 7),
-        child: ListTile(
-          leading: Icon(i),
-          title: Text(t, style: const TextStyle(fontWeight: FontWeight.w800)),
-          subtitle: Text(s),
-          trailing: const Icon(Icons.chevron_right_rounded),
-          onTap: () => tap(),
+  Widget _section(String title) => Padding(
+        padding: const EdgeInsets.fromLTRB(4, 22, 4, 8),
+        child: Text(
+          title,
+          style: const TextStyle(
+            color: Colors.white54,
+            fontWeight: FontWeight.w800,
+            fontSize: 13,
+          ),
         ),
       );
 
-  Widget _staticTile(IconData i, String t, String s) => Card(
-    margin: const EdgeInsets.only(bottom: 7),
-    child: ListTile(
-      leading: Icon(i),
-      title: Text(t, style: const TextStyle(fontWeight: FontWeight.w800)),
-      subtitle: Text(s),
-    ),
-  );
+  Widget _tile(
+    IconData icon,
+    String title,
+    String subtitle,
+    VoidCallback onTap,
+  ) =>
+      Card(
+        margin: const EdgeInsets.only(bottom: 7),
+        child: ListTile(
+          leading: Icon(icon),
+          title: Text(
+            title,
+            style: const TextStyle(fontWeight: FontWeight.w800),
+          ),
+          subtitle: Text(subtitle),
+          trailing: const Icon(Icons.chevron_right_rounded),
+          onTap: onTap,
+        ),
+      );
 
-  Widget _switch(
-    IconData i,
-    String t,
-    String s,
+  Widget _staticTile(IconData icon, String title, String subtitle) => Card(
+        margin: const EdgeInsets.only(bottom: 7),
+        child: ListTile(
+          leading: Icon(icon),
+          title: Text(
+            title,
+            style: const TextStyle(fontWeight: FontWeight.w800),
+          ),
+          subtitle: Text(subtitle),
+        ),
+      );
+
+  Widget _switchTile(
+    IconData icon,
+    String title,
+    String subtitle,
     bool value,
     Future<void> Function(bool) onChanged,
-  ) => Card(
-    margin: const EdgeInsets.only(bottom: 7),
-    child: SwitchListTile(
-      secondary: Icon(i),
-      title: Text(t, style: const TextStyle(fontWeight: FontWeight.w800)),
-      subtitle: Text(s),
-      value: value,
-      onChanged: (v) async {
-        await onChanged(v);
-        if (mounted) setState(() {});
-      },
-    ),
-  );
+  ) =>
+      Card(
+        margin: const EdgeInsets.only(bottom: 7),
+        child: SwitchListTile(
+          secondary: Icon(icon),
+          title: Text(
+            title,
+            style: const TextStyle(fontWeight: FontWeight.w800),
+          ),
+          subtitle: Text(subtitle),
+          value: value,
+          onChanged: (next) async {
+            await onChanged(next);
+            if (mounted) setState(() {});
+          },
+        ),
+      );
 
   Widget _infoRow(String label, String value) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: 6),
-    child: Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SizedBox(
-          width: 82,
-          child: Text(label, style: const TextStyle(color: Colors.white54)),
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              width: 82,
+              child: Text(
+                label,
+                style: const TextStyle(color: Colors.white54),
+              ),
+            ),
+            Expanded(
+              child: Text(
+                value,
+                style: const TextStyle(fontWeight: FontWeight.w700),
+              ),
+            ),
+          ],
         ),
-        Expanded(
-          child: Text(
-            value,
-            style: const TextStyle(fontWeight: FontWeight.w700),
-          ),
-        ),
-      ],
-    ),
-  );
+      );
 
   Widget _statusRow(String label, bool verified) => Row(
-    children: [
-      Expanded(child: Text(label)),
-      Icon(
-        verified ? Icons.verified_rounded : Icons.error_outline_rounded,
-        color: verified ? AppColors.cyan : Colors.white38,
-      ),
-      const SizedBox(width: 5),
-      Text(verified ? 'Doğrulandı' : 'Doğrulanmadı'),
-    ],
-  );
+        children: [
+          Expanded(child: Text(label)),
+          Icon(
+            verified ? Icons.verified_rounded : Icons.error_outline_rounded,
+            color: verified ? AppColors.cyan : Colors.white38,
+          ),
+          const SizedBox(width: 5),
+          Text(verified ? 'Doğrulandı' : 'Doğrulanmadı'),
+        ],
+      );
 }
