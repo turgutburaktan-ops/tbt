@@ -378,12 +378,7 @@ class _PlacesHubState extends State<_PlacesHub> {
     if (_category == 'Gezilecek Yerler') {
       content = const SpotExploreScreen(embedded: true);
     } else {
-      content = NearbyPlacesView(
-        key: ValueKey(
-          '${_category}_${NearbyVenueService.instance.selectedCityName ?? 'current'}',
-        ),
-        category: _nearbyCategory(),
-      );
+      content = NearbyPlacesView(category: _nearbyCategory());
     }
 
     return ColoredBox(
