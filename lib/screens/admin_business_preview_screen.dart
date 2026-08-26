@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../services/admin_console_service.dart';
 import '../theme/app_theme.dart';
-import 'business_hub_screen.dart';
+import 'admin_business_sandbox_screen.dart';
 
 class AdminBusinessPreviewScreen extends StatefulWidget {
   const AdminBusinessPreviewScreen({super.key});
@@ -28,49 +28,47 @@ class _AdminBusinessPreviewScreenState
 
   Future<void> _load() async {
     if (mounted) setState(() => _loading = true);
-    final token = await FirebaseAuth.instance.currentUser?.getIdTokenResult(
-      true,
-    );
+    final token = await FirebaseAuth.instance.currentUser?.getIdTokenResult(true);
     final allowed = token?.claims?['admin'] == true;
     if (!allowed) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _allowed = false;
           _loading = false;
         });
+      }
       return;
     }
     try {
       final items = await AdminConsoleService.instance.businessClaims();
-      if (mounted)
+      if (mounted) {
         setState(() {
           _allowed = true;
           _items = items;
           _loading = false;
         });
+      }
     } catch (_) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _allowed = true;
           _items = const [];
           _loading = false;
         });
+      }
     }
   }
 
-  void _openPreview(BuildContext context, Map<String, dynamic> d) {
-    final category = (d['category'] ?? 'cafe').toString();
-    final venueId = (d['venueId'] ?? '').toString();
-    final venueName = (d['venueName'] ?? d['legalName'] ?? 'Örnek İşletme')
-        .toString();
+  void _openSandbox(Map<String, dynamic> data) {
+    final category = (data['category'] ?? 'cafe').toString();
+    final venueName =
+        (data['venueName'] ?? data['legalName'] ?? 'TBT Demo İşletme').toString();
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => BusinessHubScreen(
-          initialCategory: category,
-          initialVenueId: venueId.isEmpty ? 'admin_preview' : venueId,
-          initialVenueName: venueName,
-          previewMode: true,
+        builder: (_) => AdminBusinessSandboxScreen(
+          venueName: venueName,
+          category: category,
         ),
       ),
     );
@@ -78,13 +76,16 @@ class _AdminBusinessPreviewScreenState
 
   @override
   Widget build(BuildContext context) {
-    if (_allowed == false)
+    if (_allowed == false) {
       return const Scaffold(
+        backgroundColor: AppColors.background,
         body: Center(child: Text('Yönetici yetkisi gerekli.')),
       );
-    final docs = _items.where((d) {
+    }
+
+    final docs = _items.where((data) {
       final text =
-          '${d['venueName'] ?? ''} ${d['legalName'] ?? ''} ${d['category'] ?? ''}'
+          '${data['venueName'] ?? ''} ${data['legalName'] ?? ''} ${data['category'] ?? ''}'
               .toLowerCase();
       return _query.isEmpty || text.contains(_query);
     }).toList();
@@ -92,11 +93,7 @@ class _AdminBusinessPreviewScreenState
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text(
-          'İşletme Paneli Önizleme',
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
+        title: const Text('İşletme Test Merkezi'),
         actions: [
           IconButton(onPressed: _load, icon: const Icon(Icons.refresh_rounded)),
         ],
@@ -115,13 +112,14 @@ class _AdminBusinessPreviewScreenState
               border: Border.all(color: AppColors.cyan.withValues(alpha: .35)),
             ),
             child: const Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.visibility_rounded, color: AppColors.cyan),
+                Icon(Icons.science_outlined, color: AppColors.cyan),
                 SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    'İşletmeyi seç; panel sahibi gibi açılır. Önizleme modunda gerçek veriye yazılmaz.',
-                    style: TextStyle(color: Colors.white70, height: 1.35),
+                    'Bir işletme seç ve sahibi gibi paneli dene. Menü, kampanya, etkinlik, çalışma saati ve profil değişiklikleri yalnızca test ekranında tutulur; gerçek işletmeye veya Firebase’e kaydolmaz.',
+                    style: TextStyle(color: Colors.white70, height: 1.4),
                   ),
                 ),
               ],
@@ -130,7 +128,8 @@ class _AdminBusinessPreviewScreenState
           Padding(
             padding: const EdgeInsets.fromLTRB(14, 4, 14, 10),
             child: TextField(
-              onChanged: (v) => setState(() => _query = v.trim().toLowerCase()),
+              onChanged: (value) =>
+                  setState(() => _query = value.trim().toLowerCase()),
               decoration: const InputDecoration(
                 prefixIcon: Icon(Icons.search_rounded),
                 labelText: 'İşletme ara',
@@ -141,19 +140,18 @@ class _AdminBusinessPreviewScreenState
             margin: const EdgeInsets.fromLTRB(14, 0, 14, 10),
             child: ListTile(
               leading: const CircleAvatar(
-                child: Icon(Icons.storefront_rounded),
+                child: Icon(Icons.science_outlined),
               ),
               title: const Text(
-                'Demo İşletme',
+                'TBT Demo İşletme',
                 style: TextStyle(fontWeight: FontWeight.w900),
               ),
               subtitle: const Text(
-                'Gerçek işletme kaydı olmadan paneli test et.',
+                'Gerçek işletme seçmeden tüm panel işlemlerini dene.',
               ),
               trailing: const Icon(Icons.chevron_right_rounded),
-              onTap: () => _openPreview(context, {
+              onTap: () => _openSandbox({
                 'category': 'cafe',
-                'venueId': 'admin_demo',
                 'venueName': 'TBT Demo İşletme',
               }),
             ),
@@ -169,8 +167,8 @@ class _AdminBusinessPreviewScreenState
                       padding: const EdgeInsets.fromLTRB(14, 0, 14, 30),
                       itemCount: docs.length,
                       itemBuilder: (context, index) {
-                        final d = docs[index];
-                        final status = (d['status'] ?? '').toString();
+                        final data = docs[index];
+                        final status = (data['status'] ?? '').toString();
                         return Card(
                           child: ListTile(
                             leading: Icon(
@@ -182,15 +180,19 @@ class _AdminBusinessPreviewScreenState
                                   : Colors.white60,
                             ),
                             title: Text(
-                              (d['venueName'] ?? d['legalName'] ?? 'İşletme')
+                              (data['venueName'] ??
+                                      data['legalName'] ??
+                                      'İşletme')
                                   .toString(),
                               style: const TextStyle(
                                 fontWeight: FontWeight.w900,
                               ),
                             ),
-                            subtitle: Text('${d['category'] ?? ''} • $status'),
-                            trailing: const Icon(Icons.open_in_new_rounded),
-                            onTap: () => _openPreview(context, d),
+                            subtitle: Text(
+                              '${data['category'] ?? 'işletme'} • ${status.isEmpty ? 'kayıtlı' : status}',
+                            ),
+                            trailing: const Icon(Icons.science_outlined),
+                            onTap: () => _openSandbox(data),
                           ),
                         );
                       },
