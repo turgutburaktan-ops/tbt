@@ -23,7 +23,9 @@ class _AdminPortalScreenState extends State<AdminPortalScreen> {
   }
 
   Future<void> _check() async {
-    final token = await FirebaseAuth.instance.currentUser?.getIdTokenResult(true);
+    final token = await FirebaseAuth.instance.currentUser?.getIdTokenResult(
+      true,
+    );
     if (mounted) setState(() => _allowed = token?.claims?['admin'] == true);
   }
 
@@ -87,10 +89,20 @@ class _AdminPortalScreenState extends State<AdminPortalScreen> {
               children: [
                 Row(
                   children: [
-                    Icon(Icons.admin_panel_settings_rounded, color: AppColors.cyan, size: 30),
+                    Icon(
+                      Icons.admin_panel_settings_rounded,
+                      color: AppColors.cyan,
+                      size: 30,
+                    ),
                     SizedBox(width: 10),
                     Expanded(
-                      child: Text('Operasyon Merkezi', style: TextStyle(fontSize: 23, fontWeight: FontWeight.w900)),
+                      child: Text(
+                        'Operasyon Merkezi',
+                        style: TextStyle(
+                          fontSize: 23,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
                     ),
                     _AdminPill(),
                   ],
@@ -104,7 +116,10 @@ class _AdminPortalScreenState extends State<AdminPortalScreen> {
             ),
           ),
           const SizedBox(height: 18),
-          const Text('İşletme Yönetimi', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w900)),
+          const Text(
+            'İşletme Yönetimi',
+            style: TextStyle(fontSize: 19, fontWeight: FontWeight.w900),
+          ),
           const SizedBox(height: 10),
           _HeroAction(
             icon: Icons.storefront_rounded,
@@ -129,30 +144,82 @@ class _AdminPortalScreenState extends State<AdminPortalScreen> {
                 child: _CompactAction(
                   icon: Icons.science_outlined,
                   title: 'Demo İşletme',
-                  subtitle: 'Hiçbir şey kaydetmeden tüm işletme işlemlerini dene.',
+                  subtitle:
+                      'Hiçbir şey kaydetmeden tüm işletme işlemlerini dene.',
                   onTap: _demoBusiness,
                 ),
               ),
             ],
           ),
           const SizedBox(height: 10),
-          const _RouteTile(Icons.workspace_premium_rounded, 'Business Pro', 'İşletmeye Premium/Pro ver veya geri al.', '/admin-business-premium', accent: true),
+          const _RouteTile(
+            Icons.workspace_premium_rounded,
+            'Business Pro',
+            'İşletmeye Premium/Pro ver veya geri al.',
+            '/admin-business-premium',
+            accent: true,
+          ),
           const SizedBox(height: 22),
-          const Text('Topluluk Katkıları', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w900)),
+          const Text(
+            'Topluluk Katkıları',
+            style: TextStyle(fontSize: 19, fontWeight: FontWeight.w900),
+          ),
           const SizedBox(height: 9),
-          const _RouteTile(Icons.add_location_alt_rounded, 'Yeni Yer Önerileri', 'Kullanıcıların eklediği gezilecek yerleri onayla, reddet veya mükerrer işaretle.', '/admin-spot-submissions', accent: true),
+          const _RouteTile(
+            Icons.add_location_alt_rounded,
+            'Yeni Yer Önerileri',
+            'Kullanıcıların eklediği gezilecek yerleri onayla, reddet veya mükerrer işaretle.',
+            '/admin-spot-submissions',
+            accent: true,
+          ),
           const SizedBox(height: 22),
-          const Text('Operasyon', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w900)),
+          const Text(
+            'Operasyon',
+            style: TextStyle(fontSize: 19, fontWeight: FontWeight.w900),
+          ),
           const SizedBox(height: 9),
-          const _RouteTile(Icons.dashboard_rounded, 'Genel Bakış', 'Bekleyen işlemler ve sistem özeti.', '/admin-dashboard'),
-          const _RouteTile(Icons.manage_accounts_rounded, 'Kullanıcı Yönetimi', 'Kullanıcı ara ve hesabı incele.', '/admin-users'),
-          const _RouteTile(Icons.shield_rounded, 'Moderasyon', 'Şikâyetler ve güvenlik işlemleri.', '/moderation'),
-          const _RouteTile(Icons.trending_up_rounded, 'Büyüme', 'Şehir, kullanım ve dönüşüm sinyalleri.', '/admin-growth'),
-          const _RouteTile(Icons.monitor_heart_rounded, 'Sistem Sağlığı', 'Hata ve operasyon kayıtları.', '/admin-insights'),
+          const _RouteTile(
+            Icons.dashboard_rounded,
+            'Genel Bakış',
+            'Bekleyen işlemler ve sistem özeti.',
+            '/admin-dashboard',
+          ),
+          const _RouteTile(
+            Icons.manage_accounts_rounded,
+            'Kullanıcı Yönetimi',
+            'Kullanıcı ara ve hesabı incele.',
+            '/admin-users',
+          ),
+          const _RouteTile(
+            Icons.shield_rounded,
+            'Moderasyon',
+            'Şikâyetler ve güvenlik işlemleri.',
+            '/moderation',
+          ),
+          const _RouteTile(
+            Icons.trending_up_rounded,
+            'Büyüme',
+            'Şehir, kullanım ve dönüşüm sinyalleri.',
+            '/admin-growth',
+          ),
+          const _RouteTile(
+            Icons.monitor_heart_rounded,
+            'Sistem Sağlığı',
+            'Hata ve operasyon kayıtları.',
+            '/admin-insights',
+          ),
           const SizedBox(height: 22),
-          const Text('Uygulama Testleri', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w900)),
+          const Text(
+            'Uygulama Testleri',
+            style: TextStyle(fontSize: 19, fontWeight: FontWeight.w900),
+          ),
           const SizedBox(height: 9),
-          const _RouteTile(Icons.layers_outlined, 'Rol Önizleme', 'Misafir, kullanıcı, düzenleyici ve işletme rollerini test et.', '/admin-preview'),
+          const _RouteTile(
+            Icons.layers_outlined,
+            'Rol Önizleme',
+            'Misafir, kullanıcı, düzenleyici ve işletme rollerini test et.',
+            '/admin-preview',
+          ),
         ],
       ),
     );
@@ -201,11 +268,26 @@ class _HeroAction extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
                 const SizedBox(height: 4),
-                Text(subtitle, style: const TextStyle(color: Colors.white60, height: 1.3)),
+                Text(
+                  subtitle,
+                  style: const TextStyle(color: Colors.white60, height: 1.3),
+                ),
                 const SizedBox(height: 9),
-                Text(button, style: const TextStyle(color: AppColors.cyan, fontWeight: FontWeight.w900)),
+                Text(
+                  button,
+                  style: const TextStyle(
+                    color: AppColors.cyan,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
               ],
             ),
           ),
@@ -252,7 +334,11 @@ class _CompactAction extends StatelessWidget {
             subtitle,
             maxLines: 3,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(color: Colors.white54, fontSize: 11.5, height: 1.25),
+            style: const TextStyle(
+              color: Colors.white54,
+              fontSize: 11.5,
+              height: 1.25,
+            ),
           ),
         ],
       ),
@@ -284,10 +370,14 @@ class _RouteTile extends StatelessWidget {
         width: 44,
         height: 44,
         decoration: BoxDecoration(
-          color: accent ? AppColors.cyan.withValues(alpha: .12) : AppColors.surfaceStrong,
+          color: accent
+              ? AppColors.cyan.withValues(alpha: .12)
+              : AppColors.surfaceStrong,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: accent ? AppColors.cyan.withValues(alpha: .4) : AppColors.border,
+            color: accent
+                ? AppColors.cyan.withValues(alpha: .4)
+                : AppColors.border,
           ),
         ),
         child: Icon(icon, color: accent ? AppColors.cyan : Colors.white70),
