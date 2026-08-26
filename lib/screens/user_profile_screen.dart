@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../models/app_story.dart';
 import '../services/chat_service.dart';
+import '../services/invite_link_service.dart';
 import '../services/social_service.dart';
 import '../services/story_service.dart';
 import '../widgets/firebase_media_image.dart';
@@ -16,6 +17,13 @@ class UserProfileScreen extends StatelessWidget {
   final String userId;
 
   const UserProfileScreen({super.key, required this.userId});
+
+  Future<void> _shareProfile(String displayName) async {
+    await InviteLinkService.instance.shareProfile(
+      userId: userId,
+      displayName: displayName,
+    );
+  }
 
   Future<void> _openChat(BuildContext context, String displayName) async {
     try {
@@ -57,6 +65,11 @@ class UserProfileScreen extends StatelessWidget {
         elevation: 0,
         title: const Text('Profil'),
         actions: [
+          IconButton(
+            tooltip: 'Profili paylaş',
+            onPressed: () => _shareProfile('TBT kullanıcısı'),
+            icon: const Icon(Icons.ios_share_rounded),
+          ),
           if (!isOwnProfile && currentUser != null)
             UserSafetyActions(userId: userId),
         ],
@@ -309,7 +322,7 @@ class UserProfileScreen extends StatelessWidget {
                                         Icons.chat_bubble_outline_rounded,
                                         size: 19,
                                       ),
-                                      label: const Text('Mesaj Gönder'),
+                                      label: const Text('Mesaj At'),
                                     ),
                                   ),
                                 ),
