@@ -17,9 +17,27 @@ class ContentModerationService {
   // Keep the list focused on strong profanity / direct insults. Mild everyday
   // slang is intentionally not blocked so normal conversation is not punished.
   static const Set<String> _blockedTokens = {
-    'amk', 'aq', 'aminakoyim', 'aminakoyayim', 'siktir', 'sikik', 'sikerim',
-    'orospu', 'orosb', 'pic', 'pezevenk', 'yarrak', 'yarak', 'gotveren',
-    'ibne', 'kahpe', 'kaltak', 'oc', 'oç', 'orosbucocugu', 'orospuccocugu',
+    'amk',
+    'aq',
+    'aminakoyim',
+    'aminakoyayim',
+    'siktir',
+    'sikik',
+    'sikerim',
+    'orospu',
+    'orosb',
+    'pic',
+    'pezevenk',
+    'yarrak',
+    'yarak',
+    'gotveren',
+    'ibne',
+    'kahpe',
+    'kaltak',
+    'oc',
+    'oç',
+    'orosbucocugu',
+    'orospuccocugu',
   };
 
   static const List<String> _blockedPhrases = [
@@ -33,8 +51,16 @@ class ContentModerationService {
   String normalize(String input) {
     var value = input.toLowerCase().trim();
     const replacements = <String, String>{
-      'â': 'a', 'î': 'i', 'û': 'u',
-      '@': 'a', '4': 'a', '3': 'e', '1': 'i', '!': 'i', '0': 'o', '\$': 's',
+      'â': 'a',
+      'î': 'i',
+      'û': 'u',
+      '@': 'a',
+      '4': 'a',
+      '3': 'e',
+      '1': 'i',
+      '!': 'i',
+      '0': 'o',
+      '\$': 's',
     };
     replacements.forEach((key, replacement) {
       value = value.replaceAll(key, replacement);
@@ -81,7 +107,9 @@ class ContentModerationService {
   void enforce(String input) {
     final result = check(input);
     if (result.blocked) {
-      throw Exception(result.reason ?? 'İçerik topluluk kurallarına uygun değil.');
+      throw Exception(
+        result.reason ?? 'İçerik topluluk kurallarına uygun değil.',
+      );
     }
   }
 }

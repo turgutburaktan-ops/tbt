@@ -36,9 +36,7 @@ class SpotMeetup {
   bool get isFull => participantCount >= capacity;
   bool get isOpen => status == 'open' && !isFull;
 
-  factory SpotMeetup.fromDocument(
-    DocumentSnapshot<Map<String, dynamic>> doc,
-  ) {
+  factory SpotMeetup.fromDocument(DocumentSnapshot<Map<String, dynamic>> doc) {
     final data = doc.data() ?? const <String, dynamic>{};
     final rawStartsAt = data['startsAt'];
     final startsAt = rawStartsAt is Timestamp

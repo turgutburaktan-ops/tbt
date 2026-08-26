@@ -19,7 +19,14 @@ class _AppOnboardingScreenState extends State<AppOnboardingScreen> {
   bool _saving = false;
 
   static const _choices = [
-    'Fotoğraf', 'Gezi', 'Kahve', 'Doğa', 'Spor', 'Müzik', 'Kamp', 'Yemek',
+    'Fotoğraf',
+    'Gezi',
+    'Kahve',
+    'Doğa',
+    'Spor',
+    'Müzik',
+    'Kamp',
+    'Yemek',
   ];
 
   @override
@@ -47,7 +54,8 @@ class _AppOnboardingScreenState extends State<AppOnboardingScreen> {
         },
         'privacy': {
           'locationVisibility': 'approximate',
-          'preciseEventLocationOnlyForAttendees': _preciseLocationForAttendeesOnly,
+          'preciseEventLocationOnlyForAttendees':
+              _preciseLocationForAttendeesOnly,
           'analyticsConsent': _analyticsConsent,
         },
         'onboardingUpdatedAt': FieldValue.serverTimestamp(),
@@ -64,21 +72,33 @@ class _AppOnboardingScreenState extends State<AppOnboardingScreen> {
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-          const Text('Neler ilgini çekiyor?', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900)),
+          const Text(
+            'Neler ilgini çekiyor?',
+            style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900),
+          ),
           const SizedBox(height: 12),
           Wrap(
             spacing: 8,
             runSpacing: 8,
-            children: _choices.map((value) => FilterChip(
-              label: Text(value),
-              selected: _interests.contains(value),
-              onSelected: (selected) => setState(() {
-                selected ? _interests.add(value) : _interests.remove(value);
-              }),
-            )).toList(),
+            children: _choices
+                .map(
+                  (value) => FilterChip(
+                    label: Text(value),
+                    selected: _interests.contains(value),
+                    onSelected: (selected) => setState(() {
+                      selected
+                          ? _interests.add(value)
+                          : _interests.remove(value);
+                    }),
+                  ),
+                )
+                .toList(),
           ),
           const SizedBox(height: 20),
-          TextField(controller: _city, decoration: const InputDecoration(labelText: 'Şehir')),
+          TextField(
+            controller: _city,
+            decoration: const InputDecoration(labelText: 'Şehir'),
+          ),
           const SizedBox(height: 20),
           SwitchListTile(
             value: _eventAlerts,
@@ -90,18 +110,25 @@ class _AppOnboardingScreenState extends State<AppOnboardingScreen> {
             value: _socialAlerts,
             onChanged: (v) => setState(() => _socialAlerts = v),
             title: const Text('Sosyal bildirimler'),
-            subtitle: const Text('Takip, yorum, beğeni ve topluluk hareketleri.'),
+            subtitle: const Text(
+              'Takip, yorum, beğeni ve topluluk hareketleri.',
+            ),
           ),
           SwitchListTile(
             value: _preciseLocationForAttendeesOnly,
-            onChanged: (v) => setState(() => _preciseLocationForAttendeesOnly = v),
-            title: const Text('Kesin etkinlik konumunu yalnız katılımcılar görsün'),
+            onChanged: (v) =>
+                setState(() => _preciseLocationForAttendeesOnly = v),
+            title: const Text(
+              'Kesin etkinlik konumunu yalnız katılımcılar görsün',
+            ),
           ),
           SwitchListTile(
             value: _analyticsConsent,
             onChanged: (v) => setState(() => _analyticsConsent = v),
             title: const Text('Anonim kullanım analitiğine izin ver'),
-            subtitle: const Text('TBT’nin hangi bölümlerinin geliştirilmesi gerektiğini anlamamıza yardım eder.'),
+            subtitle: const Text(
+              'TBT’nin hangi bölümlerinin geliştirilmesi gerektiğini anlamamıza yardım eder.',
+            ),
           ),
           const SizedBox(height: 18),
           FilledButton(

@@ -25,7 +25,8 @@ const verifiedTravelImageRegistryBatch3 = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons',
     author: 'Aslı Yılmaz',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Babadag_view_of_Oludeniz.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Babadag_view_of_Oludeniz.jpg',
   ),
   'kelebekler-vadisi': SpotImageInfo(
     assetPath: 'assets/spots/kelebekler-vadisi.jpg',
@@ -41,7 +42,8 @@ const verifiedTravelImageRegistryBatch3 = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons',
     author: 'Buse Kocaaslan',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Sakl%C4%B1kent_kanyon.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Sakl%C4%B1kent_kanyon.jpg',
   ),
   'ihlara-vadisi': SpotImageInfo(
     assetPath: 'assets/spots/ihlara-vadisi.jpg',
@@ -49,7 +51,8 @@ const verifiedTravelImageRegistryBatch3 = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons',
     author: 'Benh LIEU SONG',
     license: 'CC BY-SA 2.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Ihlara_valley_canyon.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Ihlara_valley_canyon.jpg',
   ),
   'yedigoller-milli-parki': SpotImageInfo(
     assetPath: 'assets/spots/yedigoller-milli-parki.jpg',

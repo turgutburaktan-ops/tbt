@@ -12,12 +12,10 @@ const curatedPhotoSpotsOfficialRoutes = <PhotoSpot>[
     longitude: 34.295278,
     rating: 4.9,
     bestTime: '07:00 - 10:00',
-    angle:
-        'Vadi tabanında Melendiz Çayı’nı yönlendirici çizgi olarak kullan; yüksek seyirlerde kıvrımı kadraja al',
+    angle: 'Vadi tabanında Melendiz Çayı’nı yönlendirici çizgi olarak kullan; yüksek seyirlerde kıvrımı kadraja al',
     imageUrl: '',
     category: 'Doğa',
-    description:
-        'Kanyon duvarları, kaya oyma yapılar ve Melendiz Çayı ile geniş açı ve katmanlı doğa fotoğrafları için güçlü bir rota.',
+    description: 'Kanyon duvarları, kaya oyma yapılar ve Melendiz Çayı ile geniş açı ve katmanlı doğa fotoğrafları için güçlü bir rota.',
     recommendedLens: '16-35mm',
     difficulty: 'Orta',
     tags: ['Aksaray', 'Ihlara', 'Kanyon', 'Doğa', 'Tarih', 'Gün Doğumu'],
@@ -30,12 +28,10 @@ const curatedPhotoSpotsOfficialRoutes = <PhotoSpot>[
     longitude: 34.25943,
     rating: 4.9,
     bestTime: '07:00 - 09:30',
-    angle:
-        'Kaya oyma yapıları önde, vadiyi arkada bırakacak çapraz geniş açı kullan',
+    angle: 'Kaya oyma yapıları önde, vadiyi arkada bırakacak çapraz geniş açı kullan',
     imageUrl: '',
     category: 'Tarih',
-    description:
-        'Kaya oyma mimarisi ve Kapadokya benzeri jeolojik formasyonları aynı kadrajda birleştirebileceğin dramatik bir nokta.',
+    description: 'Kaya oyma mimarisi ve Kapadokya benzeri jeolojik formasyonları aynı kadrajda birleştirebileceğin dramatik bir nokta.',
     recommendedLens: '16-35mm',
     difficulty: 'Orta',
     tags: ['Aksaray', 'Selime', 'Tarih', 'Peribacaları', 'Kaya', 'Gün Doğumu'],
@@ -48,12 +44,10 @@ const curatedPhotoSpotsOfficialRoutes = <PhotoSpot>[
     longitude: 33.55,
     rating: 4.8,
     bestTime: '08:00 - 10:30',
-    angle:
-        'Anıtsal taç kapıyı merkezleyip simetriyi koru; avluda gölge-ışık çizgilerini kullan',
+    angle: 'Anıtsal taç kapıyı merkezleyip simetriyi koru; avluda gölge-ışık çizgilerini kullan',
     imageUrl: '',
     category: 'Mimari',
-    description:
-        'Selçuklu taş işçiliği, güçlü simetri ve büyük ölçekli mimari detaylar için öne çıkan tarihî çekim noktası.',
+    description: 'Selçuklu taş işçiliği, güçlü simetri ve büyük ölçekli mimari detaylar için öne çıkan tarihî çekim noktası.',
     recommendedLens: '16-35mm',
     tags: ['Aksaray', 'Sultanhanı', 'Mimari', 'Selçuklu', 'Tarih', 'Simetri'],
   ),
@@ -65,12 +59,10 @@ const curatedPhotoSpotsOfficialRoutes = <PhotoSpot>[
     longitude: 30.851267,
     rating: 4.9,
     bestTime: '17:00 - 19:30',
-    angle:
-        'Eğirdir Gölü’nü geniş panorama olarak al; kıyı çizgisini diyagonal kullan',
+    angle: 'Eğirdir Gölü’nü geniş panorama olarak al; kıyı çizgisini diyagonal kullan',
     imageUrl: '',
     category: 'Manzara',
-    description:
-        'Eğirdir Gölü’nün büyük bölümünü yüksekten gören, gün batımı ve geniş panorama çekimleri için çok güçlü bir seyir noktası.',
+    description: 'Eğirdir Gölü’nün büyük bölümünü yüksekten gören, gün batımı ve geniş panorama çekimleri için çok güçlü bir seyir noktası.',
     recommendedLens: '16-35mm',
     difficulty: 'Kolay',
     tags: ['Isparta', 'Eğirdir', 'Akpınar', 'Manzara', 'Göl', 'Gün Batımı'],
@@ -86,8 +78,7 @@ const curatedPhotoSpotsOfficialRoutes = <PhotoSpot>[
     angle: 'Kıyıdaki ağaçları doğal çerçeve yapıp göl yansımasını koru',
     imageUrl: '',
     category: 'Doğa',
-    description:
-        'Sakin göl yüzeyi, orman dokusu ve sabah yansımalarıyla doğa ve kuş fotoğrafçılığı için uygun.',
+    description: 'Sakin göl yüzeyi, orman dokusu ve sabah yansımalarıyla doğa ve kuş fotoğrafçılığı için uygun.',
     recommendedLens: '24-70mm',
     difficulty: 'Kolay',
     tags: ['Isparta', 'Kovada', 'Göl', 'Doğa', 'Yansıma', 'Kuş'],
@@ -103,8 +94,7 @@ const curatedPhotoSpotsOfficialRoutes = <PhotoSpot>[
     angle: 'Kale duvarlarını ön plan yapıp Elazığ ovasını arkada katmanla',
     imageUrl: '',
     category: 'Tarih',
-    description:
-        'Harput’un tarihî dokusu ile geniş Elazığ manzarasını aynı karede birleştirebileceğin yüksek konumlu çekim noktası.',
+    description: 'Harput’un tarihî dokusu ile geniş Elazığ manzarasını aynı karede birleştirebileceğin yüksek konumlu çekim noktası.',
     recommendedLens: '24-70mm',
     difficulty: 'Orta',
     tags: ['Elazığ', 'Harput', 'Kale', 'Tarih', 'Manzara', 'Gün Batımı'],
@@ -117,12 +107,10 @@ const curatedPhotoSpotsOfficialRoutes = <PhotoSpot>[
     longitude: 28.935833,
     rating: 4.8,
     bestTime: '17:00 - 19:30',
-    angle:
-        'Haliç kıvrımını tele lensle sıkıştır; minare ve şehir katmanlarını üst üste getir',
+    angle: 'Haliç kıvrımını tele lensle sıkıştır; minare ve şehir katmanlarını üst üste getir',
     imageUrl: '',
     category: 'Manzara',
-    description:
-        'Haliç, tarihî yarımada ve şehir katmanlarını yüksek açıdan fotoğraflamak için klasik İstanbul noktalarından biri.',
+    description: 'Haliç, tarihî yarımada ve şehir katmanlarını yüksek açıdan fotoğraflamak için klasik İstanbul noktalarından biri.',
     recommendedLens: '70-200mm',
     tags: ['İstanbul', 'Haliç', 'Pierre Loti', 'Manzara', 'Gün Batımı'],
   ),
@@ -134,12 +122,10 @@ const curatedPhotoSpotsOfficialRoutes = <PhotoSpot>[
     longitude: 28.989722,
     rating: 4.8,
     bestTime: '08:00 - 11:00',
-    angle:
-        'Göl yansımasını ve ağaç tünellerini simetrik ya da merkez dışı kompozisyonla kullan',
+    angle: 'Göl yansımasını ve ağaç tünellerini simetrik ya da merkez dışı kompozisyonla kullan',
     imageUrl: '',
     category: 'Doğa',
-    description:
-        'Mevsim renkleri, gölet yansımaları ve yoğun ağaç dokusuyla özellikle sonbahar ve portre çekimleri için güçlü.',
+    description: 'Mevsim renkleri, gölet yansımaları ve yoğun ağaç dokusuyla özellikle sonbahar ve portre çekimleri için güçlü.',
     recommendedLens: '35-85mm',
     difficulty: 'Kolay',
     tags: [
@@ -149,7 +135,7 @@ const curatedPhotoSpotsOfficialRoutes = <PhotoSpot>[
       'Doğa',
       'Sonbahar',
       'Portre',
-      'Yansıma'
+      'Yansıma',
     ],
   ),
   PhotoSpot(
@@ -164,8 +150,7 @@ const curatedPhotoSpotsOfficialRoutes = <PhotoSpot>[
         'Hisarı Boğaz ve Fatih Sultan Mehmet Köprüsü ile aynı eksende katmanla',
     imageUrl: '',
     category: 'Mimari',
-    description:
-        'Hisar duvarları, Boğaz ve köprü katmanlarını bir araya getirerek güçlü tarih-şehir kompozisyonları sunar.',
+    description: 'Hisar duvarları, Boğaz ve köprü katmanlarını bir araya getirerek güçlü tarih-şehir kompozisyonları sunar.',
     recommendedLens: '24-70mm',
     difficulty: 'Kolay',
     tags: [
@@ -174,7 +159,7 @@ const curatedPhotoSpotsOfficialRoutes = <PhotoSpot>[
       'Rumeli Hisarı',
       'Mimari',
       'Tarih',
-      'Gün Doğumu'
+      'Gün Doğumu',
     ],
   ),
 ];

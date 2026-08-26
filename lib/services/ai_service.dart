@@ -129,8 +129,9 @@ class AiService {
         request.files.add(
           await http.MultipartFile.fromPath('image', imagePath),
         );
-        final streamed =
-            await request.send().timeout(const Duration(seconds: 75));
+        final streamed = await request.send().timeout(
+          const Duration(seconds: 75),
+        );
         final response = await http.Response.fromStream(streamed);
         if (response.statusCode != 200) {
           throw _AiHttpException(
@@ -141,14 +142,13 @@ class AiService {
         }
         final decoded = jsonDecode(response.body);
         if (decoded is! Map<String, dynamic>) {
-          throw const FormatException(
-            'AI sunucusundan geçersiz yanıt alındı.',
-          );
+          throw const FormatException('AI sunucusundan geçersiz yanıt alındı.');
         }
         return PhotoAnalysis.fromJson(decoded);
       } catch (error) {
         lastError = error;
-        final canTryLegacy = i < urls.length - 1 &&
+        final canTryLegacy =
+            i < urls.length - 1 &&
             (error is! _AiHttpException ||
                 _canFallbackStatus(error.statusCode));
         if (!canTryLegacy) rethrow;
@@ -176,8 +176,9 @@ class AiService {
         request.files.add(
           await http.MultipartFile.fromPath('image', imagePath),
         );
-        final streamed =
-            await request.send().timeout(const Duration(seconds: 30));
+        final streamed = await request.send().timeout(
+          const Duration(seconds: 30),
+        );
         final response = await http.Response.fromStream(streamed);
         if (response.statusCode != 200) {
           throw _AiHttpException(
@@ -192,7 +193,8 @@ class AiService {
         return LiveFrameAnalysis.fromJson(decoded);
       } catch (error) {
         lastError = error;
-        final canTryLegacy = i < urls.length - 1 &&
+        final canTryLegacy =
+            i < urls.length - 1 &&
             (error is! _AiHttpException ||
                 _canFallbackStatus(error.statusCode));
         if (!canTryLegacy) rethrow;
@@ -239,8 +241,9 @@ class AiService {
           await http.MultipartFile.fromPath('image', imagePath),
         );
 
-        final streamed =
-            await request.send().timeout(const Duration(seconds: 120));
+        final streamed = await request.send().timeout(
+          const Duration(seconds: 120),
+        );
         final response = await http.Response.fromStream(streamed);
         if (response.statusCode != 200) {
           throw _AiHttpException(
@@ -257,9 +260,7 @@ class AiService {
         } else {
           final decoded = jsonDecode(response.body);
           if (decoded is! Map<String, dynamic>) {
-            throw const FormatException(
-              'AI düzenleme geçersiz yanıt verdi.',
-            );
+            throw const FormatException('AI düzenleme geçersiz yanıt verdi.');
           }
           final imageBase64 = decoded['image_base64']?.toString();
           if (imageBase64 == null || imageBase64.isEmpty) {
@@ -277,7 +278,8 @@ class AiService {
         return AiEditResult(outputPath: output.path);
       } catch (error) {
         lastError = error;
-        final canTryLegacy = i < urls.length - 1 &&
+        final canTryLegacy =
+            i < urls.length - 1 &&
             (error is! _AiHttpException ||
                 _canFallbackStatus(error.statusCode));
         if (!canTryLegacy) rethrow;

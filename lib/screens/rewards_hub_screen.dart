@@ -47,7 +47,10 @@ class RewardsHubScreen extends StatelessWidget {
         title: const Text('Görevler & Ödüller'),
       ),
       body: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-        stream: FirebaseFirestore.instance.collection('users').doc(uid).snapshots(),
+        stream: FirebaseFirestore.instance
+            .collection('users')
+            .doc(uid)
+            .snapshots(),
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
@@ -197,7 +200,10 @@ class RewardsHubScreen extends StatelessWidget {
               const SizedBox(height: 22),
               Text(
                 city.isEmpty ? 'Türkiye Sıralaması' : '$city Sıralaması',
-                style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w900),
+                style: const TextStyle(
+                  fontSize: 19,
+                  fontWeight: FontWeight.w900,
+                ),
               ),
               const SizedBox(height: 8),
               _Leaderboard(city: city),
@@ -238,39 +244,41 @@ class _Mission extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: const Color(0xFF121416),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white10),
+    margin: const EdgeInsets.only(bottom: 8),
+    padding: const EdgeInsets.all(14),
+    decoration: BoxDecoration(
+      color: const Color(0xFF121416),
+      borderRadius: BorderRadius.circular(16),
+      border: Border.all(color: Colors.white10),
+    ),
+    child: Row(
+      children: [
+        Icon(
+          done
+              ? Icons.check_circle_rounded
+              : Icons.radio_button_unchecked_rounded,
+          color: done ? Colors.greenAccent : Colors.white38,
         ),
-        child: Row(
-          children: [
-            Icon(
-              done ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
-              color: done ? Colors.greenAccent : Colors.white38,
-            ),
-            const SizedBox(width: 11),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title, style: const TextStyle(fontWeight: FontWeight.w800)),
-                  Text(
-                    subtitle,
-                    style: const TextStyle(color: Colors.white54, fontSize: 12),
-                  ),
-                ],
+        const SizedBox(width: 11),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title, style: const TextStyle(fontWeight: FontWeight.w800)),
+              Text(
+                subtitle,
+                style: const TextStyle(color: Colors.white54, fontSize: 12),
               ),
-            ),
-            Text(
-              '$progress/$target',
-              style: const TextStyle(fontWeight: FontWeight.w900),
-            ),
-          ],
+            ],
+          ),
         ),
-      );
+        Text(
+          '$progress/$target',
+          style: const TextStyle(fontWeight: FontWeight.w900),
+        ),
+      ],
+    ),
+  );
 }
 
 class _Leaderboard extends StatelessWidget {
@@ -279,66 +287,60 @@ class _Leaderboard extends StatelessWidget {
   const _Leaderboard({required this.city});
 
   @override
-  Widget build(BuildContext context) =>
-      StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-        stream: FirebaseFirestore.instance.collection('users').limit(100).snapshots(),
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          final users = snapshot.data!.docs.where((doc) {
-            if (city.isEmpty) return true;
-            return (doc.data()['city'] ?? '')
-                    .toString()
-                    .trim()
-                    .toLowerCase() ==
-                city.toLowerCase();
-          }).toList();
-          users.sort(
-            (a, b) => ((b.data()['xp'] as num?)?.toInt() ?? 0).compareTo(
-              (a.data()['xp'] as num?)?.toInt() ?? 0,
-            ),
-          );
-          final top = users.take(10).toList();
-          if (top.isEmpty) {
-            return const Text(
-              'Sıralama henüz oluşmadı.',
-              style: TextStyle(color: Colors.white54),
-            );
-          }
-          return Container(
-            decoration: BoxDecoration(
-              color: const Color(0xFF121416),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.white10),
-            ),
-            child: Column(
-              children: List.generate(top.length, (index) {
-                final data = top[index].data();
-                final name =
-                    (data['displayName'] ?? data['username'] ?? 'Kaşif').toString();
-                final xp = (data['xp'] as num?)?.toInt() ?? 0;
-                return ListTile(
-                  dense: true,
-                  leading: CircleAvatar(
-                    radius: 16,
-                    child: Text('${index + 1}'),
-                  ),
-                  title: Text(
-                    name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  trailing: Text(
-                    '$xp XP',
-                    style: const TextStyle(fontWeight: FontWeight.w900),
-                  ),
-                );
-              }),
-            ),
-          );
-        },
+  Widget build(
+    BuildContext context,
+  ) => StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+    stream: FirebaseFirestore.instance
+        .collection('users')
+        .limit(100)
+        .snapshots(),
+    builder: (context, snapshot) {
+      if (!snapshot.hasData) {
+        return const Center(child: CircularProgressIndicator());
+      }
+      final users = snapshot.data!.docs.where((doc) {
+        if (city.isEmpty) return true;
+        return (doc.data()['city'] ?? '').toString().trim().toLowerCase() ==
+            city.toLowerCase();
+      }).toList();
+      users.sort(
+        (a, b) => ((b.data()['xp'] as num?)?.toInt() ?? 0).compareTo(
+          (a.data()['xp'] as num?)?.toInt() ?? 0,
+        ),
       );
+      final top = users.take(10).toList();
+      if (top.isEmpty) {
+        return const Text(
+          'Sıralama henüz oluşmadı.',
+          style: TextStyle(color: Colors.white54),
+        );
+      }
+      return Container(
+        decoration: BoxDecoration(
+          color: const Color(0xFF121416),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.white10),
+        ),
+        child: Column(
+          children: List.generate(top.length, (index) {
+            final data = top[index].data();
+            final name = (data['displayName'] ?? data['username'] ?? 'Kaşif')
+                .toString();
+            final xp = (data['xp'] as num?)?.toInt() ?? 0;
+            return ListTile(
+              dense: true,
+              leading: CircleAvatar(radius: 16, child: Text('${index + 1}')),
+              title: Text(name, maxLines: 1, overflow: TextOverflow.ellipsis),
+              trailing: Text(
+                '$xp XP',
+                style: const TextStyle(fontWeight: FontWeight.w900),
+              ),
+            );
+          }),
+        ),
+      );
+    },
+  );
 }
 
 class _XpRow extends StatelessWidget {
@@ -349,20 +351,14 @@ class _XpRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 5),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                label,
-                style: const TextStyle(color: Colors.white70),
-              ),
-            ),
-            Text(
-              '+$xp XP',
-              style: const TextStyle(fontWeight: FontWeight.w900),
-            ),
-          ],
+    padding: const EdgeInsets.symmetric(vertical: 5),
+    child: Row(
+      children: [
+        Expanded(
+          child: Text(label, style: const TextStyle(color: Colors.white70)),
         ),
-      );
+        Text('+$xp XP', style: const TextStyle(fontWeight: FontWeight.w900)),
+      ],
+    ),
+  );
 }

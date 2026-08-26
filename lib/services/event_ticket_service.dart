@@ -33,14 +33,14 @@ class EventTicketService {
         .limit(limit)
         .snapshots()
         .map((snapshot) {
-      final items = snapshot.docs.map(EventTicket.fromDocument).toList();
-      items.sort((a, b) {
-        final at = a.issuedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
-        final bt = b.issuedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
-        return bt.compareTo(at);
-      });
-      return items;
-    });
+          final items = snapshot.docs.map(EventTicket.fromDocument).toList();
+          items.sort((a, b) {
+            final at = a.issuedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+            final bt = b.issuedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+            return bt.compareTo(at);
+          });
+          return items;
+        });
   }
 
   Stream<EventTicket?> watchTicket(String eventId) {
@@ -53,8 +53,10 @@ class EventTicketService {
     });
   }
 
-  Future<void> markUsed(
-      {required String qrToken, required String eventId}) async {
+  Future<void> markUsed({
+    required String qrToken,
+    required String eventId,
+  }) async {
     final user = _auth.currentUser;
     if (user == null) throw Exception('Bilet kontrolü için giriş yapmalısın.');
 
@@ -75,7 +77,8 @@ class EventTicketService {
       final eventData = event.data() ?? const <String, dynamic>{};
       if ((eventData['hostId'] ?? '').toString() != user.uid) {
         throw Exception(
-            'Bu etkinliğin biletlerini yalnızca organizatör kontrol edebilir.');
+          'Bu etkinliğin biletlerini yalnızca organizatör kontrol edebilir.',
+        );
       }
 
       final ticket = await transaction.get(ticketRef);

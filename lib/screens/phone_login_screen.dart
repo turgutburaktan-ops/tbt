@@ -103,19 +103,25 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Icon(Icons.phone_android_rounded,
-                  size: 64, color: Color(0xFFB7BCC2)),
+              const Icon(
+                Icons.phone_android_rounded,
+                size: 64,
+                color: Color(0xFFB7BCC2),
+              ),
               const SizedBox(height: 18),
               Text(
-                waitingForCode ? 'Kodunu doğrula' : 'Telefon numaranla devam et',
+                waitingForCode
+                    ? 'Kodunu doğrula'
+                    : 'Telefon numaranla devam et',
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900),
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w900,
+                ),
               ),
               const SizedBox(height: 8),
               Text(
-                waitingForCode
-                    ? 'SMS ile gelen 6 haneli kodu gir.'
-                    : 'Numaran yalnızca giriş ve hesap güvenliği için kullanılır.',
+                waitingForCode ? 'SMS ile gelen 6 haneli kodu gir.' : 'Numaran yalnızca giriş ve hesap güvenliği için kullanılır.',
                 textAlign: TextAlign.center,
                 style: const TextStyle(color: Colors.white54),
               ),
@@ -151,17 +157,23 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
                   onPressed: _loading
                       ? null
                       : waitingForCode
-                          ? _confirmCode
-                          : _sendCode,
+                      ? _confirmCode
+                      : _sendCode,
                   child: _loading
                       ? const SizedBox(
                           width: 22,
                           height: 22,
                           child: CircularProgressIndicator(
-                              strokeWidth: 2.5, color: Colors.black),
+                            strokeWidth: 2.5,
+                            color: Colors.black,
+                          ),
                         )
-                      : Text(waitingForCode ? 'Doğrula ve Giriş Yap' : 'Kod Gönder',
-                          style: const TextStyle(fontWeight: FontWeight.w900)),
+                      : Text(
+                          waitingForCode
+                              ? 'Doğrula ve Giriş Yap'
+                              : 'Kod Gönder',
+                          style: const TextStyle(fontWeight: FontWeight.w900),
+                        ),
                 ),
               ),
               if (waitingForCode) ...[
@@ -170,9 +182,9 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
                   onPressed: _loading
                       ? null
                       : () => setState(() {
-                            _verificationId = null;
-                            _codeController.clear();
-                          }),
+                          _verificationId = null;
+                          _codeController.clear();
+                        }),
                   child: const Text('Telefon numarasını değiştir'),
                 ),
               ],
@@ -184,21 +196,21 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
   }
 
   InputDecoration _decoration(String label, IconData icon) => InputDecoration(
-        labelText: label,
-        prefixIcon: Icon(icon, color: const Color(0xFFB7BCC2)),
-        filled: true,
-        fillColor: const Color(0xFF121416),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(18),
-          borderSide: BorderSide.none,
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(18),
-          borderSide: const BorderSide(color: Colors.white12),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(18),
-          borderSide: const BorderSide(color: Color(0xFFB7BCC2)),
-        ),
-      );
+    labelText: label,
+    prefixIcon: Icon(icon, color: const Color(0xFFB7BCC2)),
+    filled: true,
+    fillColor: const Color(0xFF121416),
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(18),
+      borderSide: BorderSide.none,
+    ),
+    enabledBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(18),
+      borderSide: const BorderSide(color: Colors.white12),
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(18),
+      borderSide: const BorderSide(color: Color(0xFFB7BCC2)),
+    ),
+  );
 }

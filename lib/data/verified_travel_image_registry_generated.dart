@@ -48,14 +48,16 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'HJunghans',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Samosata_Philipp_II_Rv.JPG',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Samosata_Philipp_II_Rv.JPG',
   ),
   'wd-q174270-amorium': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Amorion%2C_Unterstadt.jpg/1920px-Amorion%2C_Unterstadt.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Torsten62',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Amorion,_Unterstadt.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Amorion,_Unterstadt.jpg',
   ),
   'wd-q616079-synnada': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Dioniso%2C_I-II_secolo_dc.%2C_da_synnada_%28shuhut%29_01.jpg/1920px-Dioniso%2C_I-II_secolo_dc.%2C_da_synnada_%28shuhut%29_01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -83,7 +85,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Pragdon',
     license: 'CC0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Columns_of_Thiatira.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Columns_of_Thiatira.jpg',
   ),
   'wd-q794830-asikli-hoyuk': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/2/24/Asikli-hoyuk.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled',
@@ -97,14 +100,16 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'prilfish',
     license: 'CC BY 2.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Ihlara_-_25936870521.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Ihlara_-_25936870521.jpg',
   ),
   'wd-q679305-kyme': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5b/Ancient_City_Cyme-12.jpg/1920px-Ancient_City_Cyme-12.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Ollios',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Ancient_City_Cyme-12.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Ancient_City_Cyme-12.jpg',
   ),
   'wd-q17631591-tisna': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/Tisna_Antik_Kenti%2C_Koca_Kale_Tepe_01.jpg/1920px-Tisna_Antik_Kenti%2C_Koca_Kale_Tepe_01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -132,14 +137,16 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Nedim Ardoğa',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Kemere_Bridge,_Turkey.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Kemere_Bridge,_Turkey.jpg',
   ),
   'wd-q6104469-oluz-hoyuk': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Oluz_H%C3%B6y%C3%BCk_02.jpg/1920px-Oluz_H%C3%B6y%C3%BCk_02.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Ingeborg Simon',
     license: 'CC BY-SA 3.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Oluz_H%C3%B6y%C3%BCk_02.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Oluz_H%C3%B6y%C3%BCk_02.jpg',
   ),
   'wd-q529237-anemurium-antik-kenti': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/70/Turkey%2C_Anamur_-_Anemurion_01.jpg/1920px-Turkey%2C_Anamur_-_Anemurion_01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -160,7 +167,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Canercangul',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Ankara_Roma_Tiyatrosu.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Ankara_Roma_Tiyatrosu.jpg',
   ),
   'wd-q6044801-ankara-roma-yolu': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Ankara_Roma_Yolu.JPG/1920px-Ankara_Roma_Yolu.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -181,21 +189,24 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Carole Raddato from FRANKFURT, Germany',
     license: 'CC BY-SA 2.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Tumulus_of_King_Midas_02.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Tumulus_of_King_Midas_02.jpg',
   ),
   'wd-q200441-antakya': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/1/19/Antiochia_su_Oronte.PNG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled',
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Cristiano64',
     license: 'CC BY-SA 3.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Antiochia_su_Oronte.PNG',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Antiochia_su_Oronte.PNG',
   ),
   'wd-q3677505-antakya-hipodromu': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/1/19/Antiochia_su_Oronte.PNG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled',
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Cristiano64',
     license: 'CC BY-SA 3.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Antiochia_su_Oronte.PNG',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Antiochia_su_Oronte.PNG',
   ),
   'wd-q4775098-antiphellos': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fc/Antiphellus_Ancient_Theatre_-_2014.10_-_panoramio.jpg/1920px-Antiphellus_Ancient_Theatre_-_2014.10_-_panoramio.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -237,14 +248,16 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Dosseman',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Arykanda_Basilica_4955.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Arykanda_Basilica_4955.jpg',
   ),
   'wd-q137769806-arykanda-devlet-agorasi': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/74/Arykanda_State_Agora_5003.jpg/1920px-Arykanda_State_Agora_5003.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Dosseman',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Arykanda_State_Agora_5003.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Arykanda_State_Agora_5003.jpg',
   ),
   'wd-q137769662-arykanda-nisli-yapi': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7c/Arycanda_Building_with_niches_3840.jpg/1920px-Arycanda_Building_with_niches_3840.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -279,7 +292,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Falk2',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:J22_146_Aspendos,_Stadion.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:J22_146_Aspendos,_Stadion.jpg',
   ),
   'wd-q116671699-devlet-agorasi': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6c/Side_State_Agora_in_2015_6080.jpg/1920px-Side_State_Agora_in_2015_6080.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -342,7 +356,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Dave Lonsdale',
     license: 'CC BY 2.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Phaselis_theatre_02.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Phaselis_theatre_02.jpg',
   ),
   'wd-q2148209-rhodiapolis': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/81/Rhodiapolis.JPG/1920px-Rhodiapolis.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -356,7 +371,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Vwpolonia75 (Jens K. Müller)',
     license: 'CC BY-SA 3.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Seleukia(Turkey)2012.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Seleukia(Turkey)2012.jpg',
   ),
   'wd-q1424724-selinus': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/aa/The_aqueduct_of_Selinus%2C_Cilicia%2C_Turkey_%2836599906310%29.jpg/1920px-The_aqueduct_of_Selinus%2C_Cilicia%2C_Turkey_%2836599906310%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -377,7 +393,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'User:Duesentrieb',
     license: 'CC BY-SA 3.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Roman_theatre_at_Side_1.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Roman_theatre_at_Side_1.jpg',
   ),
   'wd-q1431866-syedra': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b9/Syedra_-_panoramio_-_matzi01.jpg/1920px-Syedra_-_panoramio_-_matzi01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -391,14 +408,16 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Ingo Mehling',
     license: 'CC BY-SA 3.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Termessos_-_Theater.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Termessos_-_Theater.jpg',
   ),
   'wd-q2450857-trebenna': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Trebenna_-_Acropolis.jpg/1920px-Trebenna_-_Acropolis.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Ole Weidner',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Trebenna_-_Acropolis.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Trebenna_-_Acropolis.jpg',
   ),
   'wd-q55984359-tr-perge-roma-tiyatrosu': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/Antalya%2C_PERGE.JPG/1920px-Antalya%2C_PERGE.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -412,7 +431,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Ingeborg Simon',
     license: 'CC BY-SA 3.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Relief_%C3%96k%C3%BCzini.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Relief_%C3%96k%C3%BCzini.jpg',
   ),
   'wd-q585145-dara': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/Dara_P1030851_20080424091200.JPG/1920px-Dara_P1030851_20080424091200.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -440,7 +460,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Katpatuka',
     license: 'CC0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:%C3%87e%C3%A7_tumulus.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:%C3%87e%C3%A7_tumulus.jpg',
   ),
   'wd-q98649674-afrodisias-odeionu-veya-bouleuterionu': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9c/Afrodisias_-_Aphrodisias_-_Ode%C3%B3n.jpg/1920px-Afrodisias_-_Aphrodisias_-_Ode%C3%B3n.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -454,7 +475,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Kefaser at Turkish Wikipedia',
     license: 'Public domain',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Alabanda_Bouleuterion.JPG',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Alabanda_Bouleuterion.JPG',
   ),
   'wd-q1848789-alinda': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2b/Alinda_Aquaeduct.JPG/1920px-Alinda_Aquaeduct.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -475,7 +497,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Wolfgang Glock',
     license: 'Public domain',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Miletus_Northern_Agora.JPG',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Miletus_Northern_Agora.JPG',
   ),
   'wd-q1799887-lade-adasi': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/32/Lade_1.jpg/1920px-Lade_1.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -517,7 +540,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'https://www.flickr.com/photos/jiuguangw/',
     license: 'CC BY-SA 2.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:The_Theater_of_Miletus.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:The_Theater_of_Miletus.jpg',
   ),
   'wd-q56640740-milet-antik-tiyatrosu': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f1/Antikes_Theater_in_Milet_%28T%C3%BCrkei%29%2C_Orchestra_und_Zuschauerraum.JPG/1920px-Antikes_Theater_in_Milet_%28T%C3%BCrkei%29%2C_Orchestra_und_Zuschauerraum.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -545,14 +569,16 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Hekataios von Milet',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Didyma_Poseidon_Altar.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Didyma_Poseidon_Altar.jpg',
   ),
   'wd-q89718384-sebasteion-tapinagi': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Aphrodisias_-_Sebasteion.jpg/1920px-Aphrodisias_-_Sebasteion.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Bernard Gagnon',
     license: 'CC BY-SA 3.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Aphrodisias_-_Sebasteion.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Aphrodisias_-_Sebasteion.jpg',
   ),
   'wd-q78787479-zeus-sosipolis-tapinagi': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/af/Statue_of_Athena_Parthenos_from_the_Library_of_Pergamon_with_the_temple_of_Zeus_Sosipolis_from_Magnesia_on_the_Maeander_in_the_background%2C_Pergamon_Museum_Berlin_%288404209815%29.jpg/1920px-thumbnail.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -629,14 +655,16 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Prioryman',
     license: 'CC BY-SA 3.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Red_basilica_west_view.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Red_basilica_west_view.jpg',
   ),
   'wd-q1646054-pergamon-antik-tiyatrosu': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5b/Theatre_of_Pergamon.jpg/1920px-Theatre_of_Pergamon.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Bernard Gagnon',
     license: 'CC BY-SA 3.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Theatre_of_Pergamon.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Theatre_of_Pergamon.jpg',
   ),
   'wd-q2448404-trajan-tapinagi': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/Pergamon_6.jpg/1920px-Pergamon_6.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -671,7 +699,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Photo: Andreas Praefcke',
     license: 'Public domain',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Frauenstatuetten_Hacilar.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Frauenstatuetten_Hacilar.jpg',
   ),
   'wd-q917259-kremna': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/KremnaAntikKenti1.jpg/1920px-KremnaAntikKenti1.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -713,21 +742,24 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Dosseman',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Knidos_Theatre_95_005.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Knidos_Theatre_95_005.jpg',
   ),
   'wd-q134728167-knidos-symmachos-heroonu': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d9/Knidos_Symmachos_Heroonu.jpg/1920px-Knidos_Symmachos_Heroonu.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Aerdemsenturk',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Knidos_Symmachos_Heroonu.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Knidos_Symmachos_Heroonu.jpg',
   ),
   'wd-q132182827-sarikavak-hoyugu': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/56/Sarkavak_Hy_1761902516.jpg/1920px-Sarkavak_Hy_1761902516.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Sakaryonca',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Sarkavak_Hy_1761902516.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Sarkavak_Hy_1761902516.jpg',
   ),
   'wd-q20717664-demirkoy-dokumhanesi': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/DupnisaCave.JPG/1920px-DupnisaCave.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -818,7 +850,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Hekataios von Milet',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Didyma_Theatre_Plan.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Didyma_Theatre_Plan.jpg',
   ),
   'wd-q105531304-didyma-artemis-tapinagi': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/35/Didyma_Artemistempel_Fundament.jpg/1920px-Didyma_Artemistempel_Fundament.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -846,7 +879,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Sar Kissatim',
     license: 'CC BY-SA 3.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Ausgang_des_Tigristunnels.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Ausgang_des_Tigristunnels.jpg',
   ),
   'wd-q272720-cayonu': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7f/Cay%C3%B6n%C3%BC_-_Zellplangeb%C3%A4ude.jpg/1920px-Cay%C3%B6n%C3%BC_-_Zellplangeb%C3%A4ude.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -874,7 +908,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Ingeborg Simon',
     license: 'CC BY-SA 3.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Prusias_ad_Hypium_10.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Prusias_ad_Hypium_10.jpg',
   ),
   'wd-q6092391-edirne-sarayi': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9f/Cihann%C3%BCmaKasr%C4%B1Edirne.JPG/1920px-Cihann%C3%BCmaKasr%C4%B1Edirne.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -895,7 +930,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Dosseman',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Bandirma_Cyzicus_2874.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Bandirma_Cyzicus_2874.jpg',
   ),
   'wd-q133888614-kyzikos-hadrian-tapinagi': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/The_remains_of_the_Temple_of_Hadrian%2C_Cyzicus_%28Kyzikos%29%2C_the_eighth_wonder_of_the_ancient_world%2C_Mysia%2C_Turkey_-_53076088188.jpg/1920px-The_remains_of_the_Temple_of_Hadrian%2C_Cyzicus_%28Kyzikos%29%2C_the_eighth_wonder_of_the_ancient_world%2C_Mysia%2C_Turkey_-_53076088188.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -951,14 +987,16 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Bertramz',
     license: 'CC BY-SA 3.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Altintepe-apadanaW.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Altintepe-apadanaW.jpg',
   ),
   'wd-q1301195-hadrianapolis-paflagonya': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a7/Hadrianapolis_Dec_2025_02.jpg/1920px-Hadrianapolis_Dec_2025_02.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'İmmortalance',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Hadrianapolis_Dec_2025_02.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Hadrianapolis_Dec_2025_02.jpg',
   ),
   'wd-q14544632-sanliurfa-kalesi': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/UrfaKale.jpg/1920px-UrfaKale.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -972,7 +1010,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Bollweevil',
     license: 'CC BY-SA 3.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Cistern_of_Philoxenos.JPG',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Cistern_of_Philoxenos.JPG',
   ),
   'wd-q124952951-sultan-sarnici': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/31/Interior_of_the_Cistern_of_Pulcheria_November_2013.jpg/1920px-Interior_of_the_Cistern_of_Pulcheria_November_2013.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -993,7 +1032,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Klaus-Peter Simon',
     license: 'CC BY-SA 3.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:AntepKale2_(cropped).jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:AntepKale2_(cropped).jpg',
   ),
   'wd-q135959868-seydikoy-tumulusu': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/c/c6/Seydik%C3%B6y_T%C3%BCm%C3%BCl%C3%BCs%C3%BC.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled',
@@ -1035,14 +1075,16 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Own work by Peterdhduncan',
     license: 'Public domain',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:PrieneTheatreMay2007.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:PrieneTheatreMay2007.jpg',
   ),
   'wd-q1776499-manastir-vadisi': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/G%C3%BCzelyurtKlostertal.jpg/1920px-G%C3%BCzelyurtKlostertal.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Klaus-Peter Simon',
     license: 'CC BY 3.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:G%C3%BCzelyurtKlostertal.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:G%C3%BCzelyurtKlostertal.jpg',
   ),
   'wd-q481670-amik-ovasi': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7b/Amik_Ovas%C4%B1%27n%C4%B1n_Amanoslar%27dan_g%C3%B6r%C3%BCn%C3%BCm%C3%BC.jpg/1920px-Amik_Ovas%C4%B1%27n%C4%B1n_Amanoslar%27dan_g%C3%B6r%C3%BCn%C3%BCm%C3%BC.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -1098,7 +1140,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Havuz Aslantas Projesi',
     license: 'CC0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Havuz-Aslanta%C5%9F.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Havuz-Aslanta%C5%9F.jpg',
   ),
   'wd-q2599044-yalburt': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/51/Yalburt14-17.jpg/1920px-Yalburt14-17.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -1119,14 +1162,16 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Dosseman',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Antioch_of_Pisidia_2898.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Antioch_of_Pisidia_2898.jpg',
   ),
   'wd-q137767061-antiokheia-roma-hamami': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Antioch_of_Pisidia_2888.jpg/1920px-Antioch_of_Pisidia_2888.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Dosseman',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Antioch_of_Pisidia_2888.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Antioch_of_Pisidia_2888.jpg',
   ),
   'wd-q135429766-khalkedon-nekropolu': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/Kalkedon_Nekropol%C3%BC_01.jpg/1920px-Kalkedon_Nekropol%C3%BC_01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -1147,7 +1192,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Ingeborg Simon',
     license: 'CC BY-SA 3.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:B%C3%BCkl%C3%BCkale_01.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:B%C3%BCkl%C3%BCkale_01.jpg',
   ),
   'wd-q6099672-boncuklu-hoyuk': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/Boncuklu_H%C3%B6y%C3%BCk_001.jpg/1920px-Boncuklu_H%C3%B6y%C3%BCk_001.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -1168,7 +1214,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Chescargot',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:MettiusModestusArch.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:MettiusModestusArch.jpg',
   ),
   'wd-q106641289-patara-tiyatrosu': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Patara_Theatre_Seats_2013_4636.jpg/1920px-Patara_Theatre_Seats_2013_4636.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -1182,7 +1229,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Aerdemsenturk',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Sebeda_Kaya_Mezar%C4%B1.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Sebeda_Kaya_Mezar%C4%B1.jpg',
   ),
   'wd-q2211116-satala': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7d/Satala%2C_Roman_legionary_base%2C_used_by_XVI_Flavia_Firma_and_XV_Apollinaris%2C_Cappadocia%2C_Turkey_-_52933824022.jpg/1920px-Satala%2C_Roman_legionary_base%2C_used_by_XVI_Flavia_Firma_and_XV_Apollinaris%2C_Cappadocia%2C_Turkey_-_52933824022.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -1203,14 +1251,16 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'BSRF',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Laskaris_Palace_02.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Laskaris_Palace_02.jpg',
   ),
   'wd-q1528589-oylum-hoyuk': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e2/OylumH%C3%BCy%C3%BCk1.jpg/1920px-OylumH%C3%BCy%C3%BCk1.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Klaus-Peter Simon',
     license: 'CC BY-SA 3.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:OylumH%C3%BCy%C3%BCk1.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:OylumH%C3%BCy%C3%BCk1.jpg',
   ),
   'wd-q1397859-fasillar-aniti': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/d/d1/Fasillar.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled',
@@ -1231,7 +1281,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Magurale',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Olympos_Akropol%C3%BC.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Olympos_Akropol%C3%BC.jpg',
   ),
   'wd-q135582598-olympos-giris-yapilari': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/Olympos_Giri%C5%9F_Yap%C4%B1lar%C4%B1.jpg/1920px-Olympos_Giri%C5%9F_Yap%C4%B1lar%C4%B1.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -1252,7 +1303,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'HALUK COMERTEL',
     license: 'CC BY 3.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:DALYAN-KAUNOS_-_panoramio.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:DALYAN-KAUNOS_-_panoramio.jpg',
   ),
   'wd-q56388233-kanis': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/35/Kanis_03.jpg/1920px-Kanis_03.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -1266,7 +1318,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Klaus-Peter Simon',
     license: 'CC BY 3.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:AizanoiBr%C3%BCcke.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:AizanoiBr%C3%BCcke.jpg',
   ),
   'wd-q6100614-seyitomer-hoyugu': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/K%C3%BCtahya_archaeological_museum_Seyit%C3%B6mer_H%C3%B6y%C3%BC%C4%9F%C3%BC_find_8893.jpg/1920px-K%C3%BCtahya_archaeological_museum_Seyit%C3%B6mer_H%C3%B6y%C3%BC%C4%9F%C3%BC_find_8893.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -1301,7 +1354,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Jastrow (2010)',
     license: 'Public domain',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Stater_Zeus_Lampsacus_CdM.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Stater_Zeus_Lampsacus_CdM.jpg',
   ),
   'wd-q6366659-kapilikaya-kaya-mezari': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/K%C4%B1rkdilim_kap%C4%B1l%C4%B1kaya.jpg/1920px-K%C4%B1rkdilim_kap%C4%B1l%C4%B1kaya.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -1322,7 +1376,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Klaus-Peter Simon',
     license: 'CC BY-SA 3.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:MalatyaMuseumCafer.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:MalatyaMuseumCafer.jpg',
   ),
   'wd-q124618113-tyche-tapinagi-side': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/2/2b/Side_Handelsagora.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled',
@@ -1399,7 +1454,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Nedim Ardoğa',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Donukta%C5%9F_gate.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Donukta%C5%9F_gate.jpg',
   ),
   'wd-q1324870-elaiussa-sebaste': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/95/Elaiussa_Sebaste%2C_Cilicia%2C_Turkey_%2839344774672%29.jpg/1920px-Elaiussa_Sebaste%2C_Cilicia%2C_Turkey_%2839344774672%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -1413,7 +1469,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Nedim Ardoğa',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:G%C3%B6zne_Castle_(east).JPG',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:G%C3%B6zne_Castle_(east).JPG',
   ),
   'wd-q6671120-hancerkale': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/Han%C3%A7erkale.JPG/1920px-Han%C3%A7erkale.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -1434,7 +1491,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Nedim Ardoğa',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Karaduvar_aqueduct.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Karaduvar_aqueduct.jpg',
   ),
   'wd-q138781023-korykos-necropolis-i': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/K%C4%B1zkalesi_to_Ayas_inland_walk_-_Necropolis_I_soldier_relief_1194.jpg/1920px-K%C4%B1zkalesi_to_Ayas_inland_walk_-_Necropolis_I_soldier_relief_1194.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -1483,14 +1541,16 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Cobija',
     license: 'CC0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Tekir_Ambar%C4%B1_(3).jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Tekir_Ambar%C4%B1_(3).jpg',
   ),
   'wd-q15638524-tekkadin': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/79/TekkadinStadtmauer1.jpg/1920px-TekkadinStadtmauer1.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Klaus-Peter Simon',
     license: 'CC BY-SA 3.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:TekkadinStadtmauer1.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:TekkadinStadtmauer1.jpg',
   ),
   'wd-q51078176-yeniyurt-kalesi': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d1/Yeniyurt_Kale_03.jpg/1920px-Yeniyurt_Kale_03.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -1630,7 +1690,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'balepc',
     license: 'CC BY 3.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Bozuk_Kale_-_panoramio.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Bozuk_Kale_-_panoramio.jpg',
   ),
   'wd-q18823111-myndos': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/Myndos_%28Tav%C5%9Fan_Adas%C4%B1%29.jpg/1920px-Myndos_%28Tav%C5%9Fan_Adas%C4%B1%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -1679,7 +1740,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Klaus-Peter Simon',
     license: 'CC BY 3.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:JohannesAlteFresken.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:JohannesAlteFresken.jpg',
   ),
   'wd-q189263-zelve-oren-yeri': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/Zelve_Cappadocia.JPG/1920px-Zelve_Cappadocia.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -1714,7 +1776,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Klaus-Peter Simon',
     license: 'CC BY-SA 3.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:K%C3%B6skH%C3%BCy%C3%BCk1.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:K%C3%B6skH%C3%BCy%C3%BCk1.jpg',
   ),
   'wd-q22085863-kinik-hoyuk': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/K%C4%B1n%C4%B1k_H%C3%B6y%C3%BCk_09.jpg/1920px-K%C4%B1n%C4%B1k_H%C3%B6y%C3%BCk_09.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -1728,7 +1791,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Ingeborg Simon',
     license: 'CC BY-SA 3.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Porsuk_H%C3%B6y%C3%BCk02.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Porsuk_H%C3%B6y%C3%BCk02.jpg',
   ),
   'wd-q137170075-hadrianoi': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Hadrianoi_2026-06-05_15.34.15_1783188465.jpeg/1920px-Hadrianoi_2026-06-05_15.34.15_1783188465.jpeg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -1763,7 +1827,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Dosseman',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Hierapolis_necropolis_39.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Hierapolis_necropolis_39.jpg',
   ),
   'wd-q7818606-amintas-kaya-mezari': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0f/Amynthas_rock_tomb_August_2011.jpg/1920px-Amynthas_rock_tomb_August_2011.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -1777,7 +1842,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Dosseman',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Kadyanda_Theatre_7563.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Kadyanda_Theatre_7563.jpg',
   ),
   'wd-q16330562-amisos': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Amisos_Tepesi%27nde_kuzey_t%C3%BCm%C3%BCl%C3%BCs%C3%BC.JPG/1920px-Amisos_Tepesi%27nde_kuzey_t%C3%BCm%C3%BCl%C3%BCs%C3%BC.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -1826,7 +1892,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Austrian Archaeological Institute',
     license: 'CC BY-SA 3.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Great_Theatre,_Ephesus.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Great_Theatre,_Ephesus.jpg',
   ),
   'wd-q14540869-efes-varius-hamami': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/08/11.2_Scholastikia_Baths_in_Ephesus.JPG/1920px-11.2_Scholastikia_Baths_in_Ephesus.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -1840,7 +1907,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'michael clarke stuff',
     license: 'CC BY-SA 2.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Ephesus_11_(7698471384).jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Ephesus_11_(7698471384).jpg',
   ),
   'wd-q2581040-hadrianus-tapinagi-embolos': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/af/Efeso%2C_tempio_di_adriano_05.JPG/1920px-Efeso%2C_tempio_di_adriano_05.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -1868,7 +1936,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Matthias Holländer',
     license: 'Public domain',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Marienkirche_Ephesos_2.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Marienkirche_Ephesos_2.jpg',
   ),
   'wd-q930613-st-jean-bazilikasi': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/72/Basilica_of_St._John_in_Ephesus_01.jpg/1920px-Basilica_of_St._John_in_Ephesus_01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -1889,21 +1958,24 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Bernard Gagnon',
     license: 'CC BY-SA 3.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Ephesus_-_Terrace_Houses.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Ephesus_-_Terrace_Houses.jpg',
   ),
-  'wd-q16934218-imparatorlar-tapinagi-ve-sunagi-ile-domitianus-t': SpotImageInfo(
-    networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/00/Ephesus_Temple_of_Domitian.jpg/1920px-Ephesus_Temple_of_Domitian.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
-    sourceName: 'Wikimedia Commons (Wikidata P18)',
-    author: 'Dosseman',
-    license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Ephesus_Temple_of_Domitian.jpg',
-  ),
+  'wd-q16934218-imparatorlar-tapinagi-ve-sunagi-ile-domitianus-t':
+      SpotImageInfo(
+        networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/00/Ephesus_Temple_of_Domitian.jpg/1920px-Ephesus_Temple_of_Domitian.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
+        sourceName: 'Wikimedia Commons (Wikidata P18)',
+        author: 'Dosseman',
+        license: 'CC BY-SA 4.0',
+        sourcePage: 'https://commons.wikimedia.org/wiki/File:Ephesus_Temple_of_Domitian.jpg',
+      ),
   'wd-q135582498-sillyon-antik-tiyatrosu': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f7/Sillyon_Antik_Tiyatrosu.jpg/1920px-Sillyon_Antik_Tiyatrosu.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Me Mike Göl',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Sillyon_Antik_Tiyatrosu.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Sillyon_Antik_Tiyatrosu.jpg',
   ),
   'wd-q626773-araxa': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/21/Lykisches_Felsengrab_bei_Araxa._02.jpg/1920px-Lykisches_Felsengrab_bei_Araxa._02.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -1966,7 +2038,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Ingeborg Simon',
     license: 'CC BY-SA 3.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Kayal%C4%B1p%C4%B1nar_01.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Kayal%C4%B1p%C4%B1nar_01.jpg',
   ),
   'wd-q1040082-sarissa': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/08/KusakliH%C3%BCgel.JPG/1920px-KusakliH%C3%BCgel.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -1980,7 +2053,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Raicem',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Pessinus_Ancient_City_-_2.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Pessinus_Ancient_City_-_2.jpg',
   ),
   'wd-q114635661-usakli-hoyuk': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7c/U%C5%9Fakl%C4%B1_H%C3%B6y%C3%BCk_07.jpg/1920px-U%C5%9Fakl%C4%B1_H%C3%B6y%C3%BCk_07.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -1994,21 +2068,24 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Kaya Elifnur 72',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Hefsel_Bah%C3%A7esii.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Hefsel_Bah%C3%A7esii.jpg',
   ),
   'wd-q77073495-alexandreion-priene': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Alexandreion_Priene_1.jpg/1920px-Alexandreion_Priene_1.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Tomisti',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Alexandreion_Priene_1.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Alexandreion_Priene_1.jpg',
   ),
   'wd-q3983229-athena-tapinagi-priene': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4f/Athena_temple_at_Priene.jpg/1920px-Athena_temple_at_Priene.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Zigomar',
     license: 'CC BY-SA 3.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Athena_temple_at_Priene.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Athena_temple_at_Priene.jpg',
   ),
   'wd-q97341091-misir-tanrilari-tapinagi': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/af/Temple_of_the_Egyptian_Gods%2C_Priene_%282%29.jpg/1920px-Temple_of_the_Egyptian_Gods%2C_Priene_%282%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -2029,7 +2106,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Tomisti',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Athena_Temple_Priene_4.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Athena_Temple_Priene_4.jpg',
   ),
   'wd-q102482756-herakleia-salbace': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/f/f5/Heraclea_Salbace.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled',
@@ -2064,7 +2142,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Bernard Gagnon',
     license: 'CC BY-SA 3.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Ephesus_-_Celsus_Library.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Ephesus_-_Celsus_Library.jpg',
   ),
   'wd-q118900377-aslantas-yilantas': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2d/Aslanta%C5%9F.jpg/1920px-Aslanta%C5%9F.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -2127,7 +2206,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'QuartierLatin1968',
     license: 'CC BY-SA 2.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Troy_walls_VII_and_IX.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Troy_walls_VII_and_IX.jpg',
   ),
   'wd-q1360503-issos': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/Alexander_and_Bucephalus_-_Battle_of_Issus_mosaic_-_Museo_Archeologico_Nazionale_-_Naples_BW.jpg/1920px-Alexander_and_Bucephalus_-_Battle_of_Issus_mosaic_-_Museo_Archeologico_Nazionale_-_Naples_BW.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -2190,7 +2270,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Brian Dell',
     license: 'Public domain',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Citadel_of_Erzurum.JPG',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Citadel_of_Erzurum.JPG',
   ),
   'wd-q135582483-antiokheia-antik-tiyatrosu': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/1/1c/Antioch_in_Pisidia_Theatre_2965.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled',
@@ -2204,7 +2285,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'U.S. Air Force photo by Senior Airman Daniel Phelps/Released',
     license: 'Public domain',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Kanlidivane_sinkhole.JPG',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Kanlidivane_sinkhole.JPG',
   ),
   'wd-q9148422-alisar-hoyugu': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b1/Ali%C5%9Far_H%C3%B6y%C3%BCk_02.jpg/1920px-Ali%C5%9Far_H%C3%B6y%C3%BCk_02.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -2253,14 +2335,16 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Dosseman',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Troy_Bouleuterion_7862.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Troy_Bouleuterion_7862.jpg',
   ),
   'wd-q4822608-hamaxitos': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9c/Apollo_Smintheion_1.jpg/1920px-Apollo_Smintheion_1.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Leon petrosyan',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Apollo_Smintheion_1.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Apollo_Smintheion_1.jpg',
   ),
   'wd-q6103642-zeytinlik-hoyuk': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Ugurlu_vue_g%C3%A9n%C3%A9rale.jpg/1920px-Ugurlu_vue_g%C3%A9n%C3%A9rale.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -2274,7 +2358,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Moochocoogle (talk)',
     license: 'GFDL',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Erythrai_amphitheatre.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Erythrai_amphitheatre.jpg',
   ),
   'wd-q85763253-gerga': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/51/Gergas.jpg/1920px-Gergas.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -2288,7 +2373,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Bernard Gagnon',
     license: 'CC BY-SA 3.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Lion_Gate,_Hattusa_01.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Lion_Gate,_Hattusa_01.jpg',
   ),
   'wd-q6100895-eskiyapar-hoyugu': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Eskiyapar_05.jpg/1920px-Eskiyapar_05.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -2351,14 +2437,16 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Kaosmonaut',
     license: 'CC BY-SA 3.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Pergamon_Demeterheiligtum.JPG',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Pergamon_Demeterheiligtum.JPG',
   ),
   'wd-q77071662-devlet-agorasi': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7a/Ephesus_State_Agora_1981.jpg/1920px-Ephesus_State_Agora_1981.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Daniel VILLAFRUELA.',
     license: 'CC BY-SA 3.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Ephesus_State_Agora_1981.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Ephesus_State_Agora_1981.jpg',
   ),
   'wd-q105232430-dionysos-tapinagi-bergama': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/Pergamon_Dionysos_temple_0036.jpg/1920px-Pergamon_Dionysos_temple_0036.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -2379,7 +2467,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Ferit BAYCUMAN',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Gryneion_Antik_Kenti.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Gryneion_Antik_Kenti.jpg',
   ),
   'wd-q104772346-guney-kapisi-agora': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/Mazeus-Mithridates_Gate_in_Ephesus_1.jpg/1920px-Mazeus-Mithridates_Gate_in_Ephesus_1.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -2393,7 +2482,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Kaosmonaut',
     license: 'CC BY-SA 3.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Pergamon_Tempel_der_Hera.JPG',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Pergamon_Tempel_der_Hera.JPG',
   ),
   'wd-q1933754-klaros': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Klaros01.jpg/1920px-Klaros01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -2414,21 +2504,24 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Satirdan kahraman',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Harbor_Baths_(Ephesus)_19.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Harbor_Baths_(Ephesus)_19.jpg',
   ),
   'wd-q104641903-mermer-cadde': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Turkey-2801_%282217172440%29.jpg/1920px-Turkey-2801_%282217172440%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Dennis G. Jarvis',
     license: 'CC BY-SA 2.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Turkey-2801_(2217172440).jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Turkey-2801_(2217172440).jpg',
   ),
   'wd-q11938576-neonteikhos': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d8/Neonteikhos_Antik_Kenti.jpg/1920px-Neonteikhos_Antik_Kenti.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Ferit BAYCUMAN',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Neonteikhos_Antik_Kenti.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Neonteikhos_Antik_Kenti.jpg',
   ),
   'wd-q29002436-pergamon-amfitiyatrosu': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/95/The_remains_of_Roman_amphitheatre_%28view_from_the_Acropolis%29%2C_Pergamon_%287107158993%29.jpg/1920px-The_remains_of_Roman_amphitheatre_%28view_from_the_Acropolis%29%2C_Pergamon_%287107158993%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -2442,7 +2535,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Dosseman',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Pergamon_Gymnasium_0099.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Pergamon_Gymnasium_0099.jpg',
   ),
   'wd-q108608426-pers-mezar-aniti': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/57/Ta%C5%9F_Kule_1.jpg/1920px-Ta%C5%9F_Kule_1.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -2477,7 +2571,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Elelicht',
     license: 'CC BY-SA 3.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Ephesos_Theatergymnasion.JPG',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Ephesos_Theatergymnasion.JPG',
   ),
   'wd-q97341291-yamac-evler-2': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/58/13.9_Terrace_Houses_in_Ephesus.JPG/1920px-13.9_Terrace_Houses_in_Ephesus.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -2505,14 +2600,16 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Carlos Delgado',
     license: 'CC BY-SA 3.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:%C4%B0sa_Bey_Camii.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:%C4%B0sa_Bey_Camii.jpg',
   ),
   'wd-q739037-nikaia': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/58/Nicaea_theatre_990.jpg/1920px-Nicaea_theatre_990.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'QuartierLatin1968',
     license: 'CC BY-SA 3.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Nicaea_theatre_990.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Nicaea_theatre_990.jpg',
   ),
   'wd-q617520-apameia': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1e/Zeugma.jpg/1920px-Zeugma.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -2568,7 +2665,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Dosseman',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Adana_Alidede_Mosque_1625.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Adana_Alidede_Mosque_1625.jpg',
   ),
   'wd-q127643369-haci-mahmut-aga-camii': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7b/Adana_Mestenzade_Hac%C4%B1_Mahmut_A%C4%9Fa_Mosque_in_2005_01_4303.jpg/1920px-Adana_Mestenzade_Hac%C4%B1_Mahmut_A%C4%9Fa_Mosque_in_2005_01_4303.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -2596,7 +2694,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Marcello Casal Jr/ABr.',
     license: 'CC BY 3.0 br',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Sabancimosque19082006.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Sabancimosque19082006.jpg',
   ),
   'wd-q127788146-sefika-hatun-camii': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/cc/Adana_%C5%9Eefikahatun_Camii_in_2019_04_0661.jpg/1920px-Adana_%C5%9Eefikahatun_Camii_in_2019_04_0661.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -2659,7 +2758,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Bernard Gagnon',
     license: 'CC BY-SA 3.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Yenipinar_Mosque_02.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Yenipinar_Mosque_02.jpg',
   ),
   'wd-q127632802-adeyze-camii': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/01/Adeyze_Camii.jpg/1920px-Adeyze_Camii.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -2855,7 +2955,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Nabbegat',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:%C4%B0maret_Camii_28.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:%C4%B0maret_Camii_28.jpg',
   ),
   'wd-q6027114-emir-buhari-camii': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9c/Istanbul_Ahmed_Emir_Buhari_Mescidi_in_2015_8686.jpg/1920px-Istanbul_Ahmed_Emir_Buhari_Mescidi_in_2015_8686.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -2876,7 +2977,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Dosseman',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Alanya_Gemili_Mescit_7857.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Alanya_Gemili_Mescit_7857.jpg',
   ),
   'wd-q6449135-kuyularonu-camii': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/Alanya_Kuyularonu_Mosque_7963.jpg/1920px-Alanya_Kuyularonu_Mosque_7963.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -2904,7 +3006,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Dosseman',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Altun_Izade_Mosque_5758.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Altun_Izade_Mosque_5758.jpg',
   ),
   'wd-q127632856-ahi-elvan-camii': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Ahi_Elvan_Camii_Mihrap_ve_Minberi.jpg/1920px-Ahi_Elvan_Camii_Mihrap_ve_Minberi.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -3058,7 +3161,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'SAİT71',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Kara_Mustafa_Pasa_Mosque.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Kara_Mustafa_Pasa_Mosque.jpg',
   ),
   'wd-q127787982-pir-mehmet-celebi-camii': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/7/7d/Pir_Mehmet_%C3%87elebi_Camii%2C_Amasya_02.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled',
@@ -3135,7 +3239,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Görkem Yavuz',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Zincirli_Cami,_2019_04.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Zincirli_Cami,_2019_04.jpg',
   ),
   'wd-q61072504-antakya-ulu-camii': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/39/Antakya%2C_Enteke_-_panoramio.jpg/1920px-Antakya%2C_Enteke_-_panoramio.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -3219,14 +3324,16 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Bluetime93',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Akseki_Central_Mosque_2.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Akseki_Central_Mosque_2.jpg',
   ),
   'wd-q127634807-bali-bey-camii': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/35/Antalya_Balbey_Mosque.jpg/1920px-Antalya_Balbey_Mosque.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Interfase',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Antalya_Balbey_Mosque.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Antalya_Balbey_Mosque.jpg',
   ),
   'wd-q127788127-suleyman-cavus-camii': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7f/S%C3%BCleyman_%C3%87avu%C5%9F_Mosque.jpg/1920px-S%C3%BCleyman_%C3%87avu%C5%9F_Mosque.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -3240,7 +3347,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Sarialioglu',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Ali_Ku%C5%9F%C3%A7u_Cami.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Ali_Ku%C5%9F%C3%A7u_Cami.jpg',
   ),
   'wd-q134590911-dinari-pamuk-camii': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/27/Mardin_Dinari_Pamuk_Mosque_in_2025_0880.jpg/1920px-Mardin_Dinari_Pamuk_Mosque_in_2025_0880.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -3268,7 +3376,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Wienerschmäh',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Avc%C4%B1lar_Merkez_Cami.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Avc%C4%B1lar_Merkez_Cami.jpg',
   ),
   'wd-q127643146-ayas-ulu-cami': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/Aya%C5%9F_31_2011.jpg/1920px-Aya%C5%9F_31_2011.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -3380,28 +3489,32 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Ali Osman Dilekoğlu',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Karasakal_Camii_IMG_7585.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Karasakal_Camii_IMG_7585.jpg',
   ),
   'wd-q133803400-tuzcuzade-camii-bayburt': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/69/Tuzcuzade_Camii_%28Bayburt%29.jpg/1920px-Tuzcuzade_Camii_%28Bayburt%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Ali Osman Dilekoğlu',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Tuzcuzade_Camii_(Bayburt).jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Tuzcuzade_Camii_(Bayburt).jpg',
   ),
   'wd-q127788299-veysel-efendi-camii': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8d/Veysel_Efendi_Camii.jpg/1920px-Veysel_Efendi_Camii.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Ali Osman Dilekoğlu',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Veysel_Efendi_Camii.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Veysel_Efendi_Camii.jpg',
   ),
   'wd-q132133904-yakutiye-camii-bayburt': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/29/Yakutiye_Camii_%28Bayburt%29.jpg/1920px-Yakutiye_Camii_%28Bayburt%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Ali Osman Dilekoğlu',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Yakutiye_Camii_(Bayburt).jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Yakutiye_Camii_(Bayburt).jpg',
   ),
   'wd-q132133907-taskopru-camii': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/Bayrami%C3%A7_Ta%C5%9F_K%C3%B6pr%C3%BC_Camii_%2828072023%29_-_53077224920.jpg/1920px-Bayrami%C3%A7_Ta%C5%9F_K%C3%B6pr%C3%BC_Camii_%2828072023%29_-_53077224920.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -3415,14 +3528,16 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Canercangul',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Hac%C4%B1_Sinan_Camii.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Hac%C4%B1_Sinan_Camii.jpg',
   ),
   'wd-q25475872-bergama-kursunlu-cami': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c0/Kursunlu_Mosque%2C_Bergama.jpg/1920px-Kursunlu_Mosque%2C_Bergama.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Bernard Gagnon',
     license: 'CC BY-SA 3.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Kursunlu_Mosque,_Bergama.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Kursunlu_Mosque,_Bergama.jpg',
   ),
   'wd-q132134461-kizil-avlu-kuzey-kule': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/Pergamon_k%C4%B1z%C4%B1l_avlu.jpg/1920px-Pergamon_k%C4%B1z%C4%B1l_avlu.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -3436,7 +3551,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Ali Osman Dilekoğlu',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Abd%C3%BCsselam_Camii.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Abd%C3%BCsselam_Camii.jpg',
   ),
   'wd-q115847840-bayezid-i-cedid-camii': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f4/Beyo%C4%9Flu_Bayezid-i_Cedid_Camii.jpg/1920px-Beyo%C4%9Flu_Bayezid-i_Cedid_Camii.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -3450,7 +3566,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Sadrettin',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Bedrettin_Camii_05.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Bedrettin_Camii_05.jpg',
   ),
   'wd-q31189160-bereketzade-ali-efendi-cami': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/Bereketzade_Ali_Efendi_Mosque.jpg/1920px-Bereketzade_Ali_Efendi_Mosque.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -3485,7 +3602,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Ali Osman Dilekoğlu',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Fatma_Hatun_Camii_1.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Fatma_Hatun_Camii_1.jpg',
   ),
   'wd-q127418248-firuz-aga-mescidi': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Beyo%C4%9Flu_Firuza%C4%9Fa_mosque.jpg/1920px-Beyo%C4%9Flu_Firuza%C4%9Fa_mosque.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -3597,7 +3715,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Sadrettin',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Yusuf_Agah_Camii_02.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Yusuf_Agah_Camii_02.jpg',
   ),
   'wd-q127418546-saban-kaptan-camii': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Saban_Kaptan_Camii_in_2015_0489.jpg/1920px-Saban_Kaptan_Camii_in_2015_0489.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -3611,7 +3730,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Vano111ru',
     license: 'CC BY 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:%C5%9Eahkulu_Camii.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:%C5%9Eahkulu_Camii.jpg',
   ),
   'wd-q127418555-sehsuvar-camii': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Istanbul_city_Photos-_Urban_38.jpg/1920px-Istanbul_city_Photos-_Urban_38.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -3625,14 +3745,16 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Nevit Dilmen',
     license: 'CC BY-SA 3.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Beypazari_Tasmektep_06065.JPG',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Beypazari_Tasmektep_06065.JPG',
   ),
   'wd-q132133920-sultan-alaeddin-camii-beypazari': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/92/Beypazar%C4%B1%2C_2017_06.jpg/1920px-Beypazar%C4%B1%2C_2017_06.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Gargarapalvin',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Beypazar%C4%B1,_2017_06.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Beypazar%C4%B1,_2017_06.jpg',
   ),
   'wd-q2494934-esrefoglu-camii': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/06/Esrefoglu7.jpg/1920px-Esrefoglu7.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -3667,7 +3789,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Karakalem',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Kaptan-ibrahim-aga-camii.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Kaptan-ibrahim-aga-camii.jpg',
   ),
   'wd-q127418366-kayalar-mescidi': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9d/Istanbul_%2847%29.jpg/1920px-Istanbul_%2847%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -3709,14 +3832,16 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Sadrettin',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Yahya_Efendi_Mosque_01.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Yahya_Efendi_Mosque_01.jpg',
   ),
   'wd-q127418557-senlik-dede-mescidi': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/%C5%9Eenlik_Dede_Mescidi.jpg/1920px-%C5%9Eenlik_Dede_Mescidi.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Ali Osman Dilekoğlu',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:%C5%9Eenlik_Dede_Mescidi.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:%C5%9Eenlik_Dede_Mescidi.jpg',
   ),
   'wd-q6029758-orhan-gazi-camii': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/bd/Bilecik_Orhan_Gazi_Cami_1757.jpg/1920px-Bilecik_Orhan_Gazi_Cami_1757.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -3730,7 +3855,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Dosseman',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Birecik_Ulu_Camii_7287.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Birecik_Ulu_Camii_7287.jpg',
   ),
   'wd-q127633005-alemdar-camii': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/Bitlis_Alemdar_Camii_minaret_3787.jpg/1920px-Bitlis_Alemdar_Camii_minaret_3787.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -3744,7 +3870,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Dosseman',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Bitlis_Ulu_Camii_1663.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Bitlis_Ulu_Camii_1663.jpg',
   ),
   'wd-q127634905-bitlis-serefiye-camii': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/Bitlis_%C5%9Eerefiye_Mosque_1689.jpg/1920px-Bitlis_%C5%9Eerefiye_Mosque_1689.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -3779,7 +3906,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Dosseman',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Bitlis_Meydan_Cami_3718.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Bitlis_Meydan_Cami_3718.jpg',
   ),
   'wd-q127788119-sultaniye-camii': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/Bitlis_%C5%9Eey_Garip_T%C3%BCrbesi_and_Sultaniye_mosque_3819.jpg/1920px-Bitlis_%C5%9Eey_Garip_T%C3%BCrbesi_and_Sultaniye_mosque_3819.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -3807,7 +3935,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Vano111ru',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Bodrum_Kale_Mosque.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Bodrum_Kale_Mosque.jpg',
   ),
   'wd-q98091570-bor-ulu-camii': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Bor_Sultan_Alaaddin_mosque_1085.jpg/1920px-Bor_Sultan_Alaaddin_mosque_1085.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -3842,7 +3971,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Taoklarjeteli',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Khertvisi_Mosque_02.png',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Khertvisi_Mosque_02.png',
   ),
   'wd-q118956572-muratli-koyu-camisi': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/Muratl%C4%B1_K%C3%B6y%C3%BC_Camisi.jpg/1920px-Muratl%C4%B1_K%C3%B6y%C3%BC_Camisi.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -3870,21 +4000,24 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Ibrahim Husain Meraj',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Mosque_in_Istanbul_00.JPG',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Mosque_in_Istanbul_00.JPG',
   ),
   'wd-q127632758-abdal-mehmet-camii': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/dc/Bursa_Abdal_Mosque_2424.jpg/1920px-Bursa_Abdal_Mosque_2424.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Dosseman',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Bursa_Abdal_Mosque_2424.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Bursa_Abdal_Mosque_2424.jpg',
   ),
   'wd-q127632793-acem-reis-camii': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f7/20241204_Acem_Reis_Camisi.jpg/1920px-20241204_Acem_Reis_Camisi.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Nastenka225',
     license: 'CC BY 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:20241204_Acem_Reis_Camisi.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:20241204_Acem_Reis_Camisi.jpg',
   ),
   'wd-q127632982-alaeddin-pasa-camii': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a1/Ala%C3%BCddin_pa%C5%9Fa_camisi_bursa_-_panoramio_%281%29.jpg/1920px-Ala%C3%BCddin_pa%C5%9Fa_camisi_bursa_-_panoramio_%281%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -3926,7 +4059,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Dosseman',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Emir_Sultan_Camii_7067.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Emir_Sultan_Camii_7067.jpg',
   ),
   'wd-q127643002-ertugrul-bey-camii': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/db/Ertu%C4%9Frul_Bey_Mosque_9820.jpg/1920px-Ertu%C4%9Frul_Bey_Mosque_9820.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -4010,14 +4144,16 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Dosseman',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Hudavendigar_Mosque_6044.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Hudavendigar_Mosque_6044.jpg',
   ),
   'wd-q127786985-koca-naip-camii': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/Bursa_Koca_Naip_Cami_1400.jpg/1920px-Bursa_Koca_Naip_Cami_1400.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Dosseman',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Bursa_Koca_Naip_Cami_1400.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Bursa_Koca_Naip_Cami_1400.jpg',
   ),
   'wd-q127787054-lala-sahin-pasa-camii': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9b/Lala_%C5%9Eahin_Pa%C5%9Fa_Camii_Minaresi_04.jpg/1920px-Lala_%C5%9Eahin_Pa%C5%9Fa_Camii_Minaresi_04.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -4122,7 +4258,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Sait Can Kutsal',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Veledi_yani%C3%A7_kubbe_2.JPG',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Veledi_yani%C3%A7_kubbe_2.JPG',
   ),
   'wd-q127788340-yerkapi-camii': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5d/Yer_kap%C4%B1_camii_bursa_-_panoramio_%283%29.jpg/1920px-Yer_kap%C4%B1_camii_bursa_-_panoramio_%283%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -4136,7 +4273,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Brücke-Osteuropa',
     license: 'Public domain',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Green_Mosque_in_Bursa.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Green_Mosque_in_Bursa.jpg',
   ),
   'wd-q127788348-yigit-cedid-camii': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/Bursa_Yi%C4%9Fid_Cedid_Mosque_7358.jpg/1920px-Bursa_Yi%C4%9Fid_Cedid_Mosque_7358.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -4248,7 +4386,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Mark Ahsmann',
     license: 'CC BY-SA 3.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:20131207_Istanbul_098.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:20131207_Istanbul_098.jpg',
   ),
   'wd-q61072477-cizre-ulu-camii': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/04/Mizgefta_Mezin_a_Ciz%C3%AEra_Botan_2009_2.JPG/1920px-Mizgefta_Mezin_a_Ciz%C3%AEra_Botan_2009_2.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -4276,7 +4415,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Wolfgang Glock',
     license: 'Public domain',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Mosque_Ilyas_Bey_exterior.JPG',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Mosque_Ilyas_Bey_exterior.JPG',
   ),
   'wd-q3675542-behram-pasa-camii': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Diyarbak%C4%B1r_Behram_Pa%C5%9Fa_Camisi.jpg/1920px-Diyarbak%C4%B1r_Behram_Pa%C5%9Fa_Camisi.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -4297,7 +4437,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Chansey',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:HzSuleymanCamiDiyarbakir1.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:HzSuleymanCamiDiyarbakir1.jpg',
   ),
   'wd-q87272209-husrev-pasa-camii': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5d/Diyarbak%C4%B1r_H%C3%BCsrev_Pa%C5%9Fa_Mosque7956.jpg/1920px-Diyarbak%C4%B1r_H%C3%BCsrev_Pa%C5%9Fa_Mosque7956.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -4332,7 +4473,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'KediÇobanı',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Nasuh_Pa%C5%9Fa_Camisi.png',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Nasuh_Pa%C5%9Fa_Camisi.png',
   ),
   'wd-q15076283-parli-safa-camii': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/80/Diyarbak%C4%B1r_Safa_Camii_7732.jpg/1920px-Diyarbak%C4%B1r_Safa_Camii_7732.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -4353,7 +4495,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Cemallamec',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Great_Mosque,_Diyarbakir.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Great_Mosque,_Diyarbakir.jpg',
   ),
   'wd-q88653543-omer-seddat-camii': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/69/Diyarbak%C4%B1r_Hazreti_%C3%96mer_Camii_Exterior_in_2024_7115.jpg/1920px-Diyarbak%C4%B1r_Hazreti_%C3%96mer_Camii_Exterior_in_2024_7115.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -4423,7 +4566,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Ahmet Yurtbakan',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Merkez_Cedidiye_Camii.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Merkez_Cedidiye_Camii.jpg',
   ),
   'wd-q61072508-edincik-ulu-camii': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/Edincik_Ulu_Camii.jpg/1920px-Edincik_Ulu_Camii.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -4437,7 +4581,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Sadrettin',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Arif_A%C4%9Fa_Camii_30.JPG',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Arif_A%C4%9Fa_Camii_30.JPG',
   ),
   'wd-q131421548-atik-ali-pasa-camii': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/06/Atik_Ali_Pa%C5%9Fa_Camii%2C_Edirne_22.JPG/1920px-Atik_Ali_Pa%C5%9Fa_Camii%2C_Edirne_22.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -4472,7 +4617,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'İmmortalance',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Baturhane_Camii-2025.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Baturhane_Camii-2025.jpg',
   ),
   'wd-q131582980-bedevizade-ahmed-bey-mescidi': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Bedevizade_Ahmed_Bey_Mescidi44.JPG/1920px-Bedevizade_Ahmed_Bey_Mescidi44.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -4514,7 +4660,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Sadrettin',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Gazi_Mihal_Bey_Camii39.JPG',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Gazi_Mihal_Bey_Camii39.JPG',
   ),
   'wd-q127643432-haci-suleyman-efendi-camii': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f4/Edirne_Province_-_Hac%C4%B1_S%C3%BCleyman_Efendi_Mosque_-_20250601110945.jpg/1920px-Edirne_Province_-_Hac%C4%B1_S%C3%BCleyman_Efendi_Mosque_-_20250601110945.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -4584,7 +4731,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'İmmortalance',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Mezitbey_Camii_-_2025.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Mezitbey_Camii_-_2025.jpg',
   ),
   'wd-q127787120-molla-mustafa-pasa-camii': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/61/Molla_Mustafa_Pa%C5%9Fa_Camii_-2025_D%C4%B1%C5%9F.jpg/1920px-Molla_Mustafa_Pa%C5%9Fa_Camii_-2025_D%C4%B1%C5%9F.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -4598,7 +4746,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Dosseman',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Muradiye_mosque_3468.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Muradiye_mosque_3468.jpg',
   ),
   'wd-q127788042-sarica-pasa-camii': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/9/91/Sar%C4%B1capa%C5%9Fa_Camii_2025c.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled',
@@ -4619,7 +4768,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Sadrettin',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Sitti_Sultan_Camii_22.JPG',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Sitti_Sultan_Camii_22.JPG',
   ),
   'wd-q127788124-sule-celebi-camii': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/81/S%C3%BCle_%C3%87elebi_mosque_in_2024_6224.jpg/1920px-S%C3%BCle_%C3%87elebi_mosque_in_2024_6224.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -4640,14 +4790,16 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'İmmortalance',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Tamburac%C4%B1lar_Camii.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Tamburac%C4%B1lar_Camii.jpg',
   ),
   'wd-q127788220-taslik-camii': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2d/Ta%C5%9Fl%C4%B1k_Camii.jpg/1920px-Ta%C5%9Fl%C4%B1k_Camii.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Ali Osman Dilekoğlu',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Ta%C5%9Fl%C4%B1k_Camii.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Ta%C5%9Fl%C4%B1k_Camii.jpg',
   ),
   'wd-q127788241-timurtas-pasa-camii': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/Timurta%C5%9F_Pa%C5%9Fa_Camii%2C_30.JPG/1920px-Timurta%C5%9F_Pa%C5%9Fa_Camii%2C_30.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -4661,7 +4813,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Sadrettin',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Yahya_Bey_Camii_22.JPG',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Yahya_Bey_Camii_22.JPG',
   ),
   'wd-q131832703-yildirim-bayezid-camii': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/Y%C4%B1ld%C4%B1r%C4%B1m_Beyaz%C4%B1t_Mosque_Remote_view_in_2024_5653.jpg/1920px-Y%C4%B1ld%C4%B1r%C4%B1m_Beyaz%C4%B1t_Mosque_Remote_view_in_2024_5653.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -4682,7 +4835,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'KLMircea',
     license: 'CC BY-SA 2.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Edirne_(15466208355).jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Edirne_(15466208355).jpg',
   ),
   'wd-q127788133-sah-melek-camii': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/%C5%9Eah_Melek_mosque_in_2024_0132.jpg/1920px-%C5%9Eah_Melek_mosque_in_2024_0132.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -4745,7 +4899,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Ingeborg Simon',
     license: 'CC BY-SA 3.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Minarett_Ulu_Camii_Harput.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Minarett_Ulu_Camii_Harput.jpg',
   ),
   'wd-q28221529-izzet-pasa-camii': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b6/Elazig_Izzetpascha-Moschee.jpg/1920px-Elazig_Izzetpascha-Moschee.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -4773,14 +4928,16 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Dosseman',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Ermenek_Ulu_Cami_5116.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Ermenek_Ulu_Cami_5116.jpg',
   ),
   'wd-q127788217-tasdibi-camii': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/Ta%C5%9Fdibi_camii.jpg/1920px-Ta%C5%9Fdibi_camii.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Arif miletli',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Ta%C5%9Fdibi_camii.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Ta%C5%9Fdibi_camii.jpg',
   ),
   'wd-q127632769-abdurrahman-gazi-camii': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/21/Abdurrahmangazi_Camii_-_Abdurrahmangazi_Mosque.jpg/1920px-Abdurrahmangazi_Camii_-_Abdurrahmangazi_Mosque.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -4794,7 +4951,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'No machine-readable author provided. Eğitmen Mahmut assumed (based on copyright claims).',
     license: 'CC BY-SA 3.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Erzurum_Caferiye_Camii.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Erzurum_Caferiye_Camii.jpg',
   ),
   'wd-q6104508-erzurum-ulu-camii': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c9/Erzurum_Ulu_Camii_d%C4%B1%C5%9F_g%C3%B6r%C3%BCn%C3%BCm.jpg/1920px-Erzurum_Ulu_Camii_d%C4%B1%C5%9F_g%C3%B6r%C3%BCn%C3%BCm.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -4829,14 +4987,16 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Dosseman',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Sivrihisar_Ulu_Camii_2041.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Sivrihisar_Ulu_Camii_2041.jpg',
   ),
   'wd-q60581196-etiler-camii': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1f/Istanbul_Etiler_Mosque_2.jpg/1920px-Istanbul_Etiler_Mosque_2.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Reise Reise',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Istanbul_Etiler_Mosque_2.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Istanbul_Etiler_Mosque_2.jpg',
   ),
   'wd-q132134476-mevlevihane-camii': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f4/Urfa_Mevlevihane_Mosque_3706.jpg/1920px-Urfa_Mevlevihane_Mosque_3706.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -4906,7 +5066,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'User:Darwinek',
     license: 'CC BY-SA 3.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:%C4%B0stanbul_5054.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:%C4%B0stanbul_5054.jpg',
   ),
   'wd-q123934315-davud-pasa-camii': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/Istanbul_Davut_Pa%C5%9Fa_Mosque_front_0968.jpg/1920px-Istanbul_Davut_Pa%C5%9Fa_Mosque_front_0968.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -4962,7 +5123,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Uğur Başak',
     license: 'CC BY-SA 3.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Zeynep_Sultan_Camii.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Zeynep_Sultan_Camii.jpg',
   ),
   'wd-q25477410-fatih-camii': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/83/Foca_%C4%B0zmir.jpg/1920px-Foca_%C4%B0zmir.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -5053,7 +5215,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Dosseman',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:%C3%96meriye_Camii_1616.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:%C3%96meriye_Camii_1616.jpg',
   ),
   'wd-q127786804-ihsan-bey-camii': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/54/Gaziantep_Ihsan_Bey_Camii_in_2011_1784.jpg/1920px-Gaziantep_Ihsan_Bey_Camii_in_2011_1784.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -5144,7 +5307,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Arif miletli',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Sar%C4%B1_selim_camii.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Sar%C4%B1_selim_camii.jpg',
   ),
   'wd-q132134035-mahmut-pasa-camii-haskoy': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9c/Havsa_-_Mahmut_Pa%C5%9Fa_Camii%2C_Hask%C3%B6y_-_20250601122946.jpg/1920px-Havsa_-_Mahmut_Pa%C5%9Fa_Camii%2C_Hask%C3%B6y_-_20250601122946.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -5165,7 +5329,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Hekataios von Milet',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Didyma_mosque_church.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Didyma_mosque_church.jpg',
   ),
   'wd-q6070623-hurrem-cavus-camii': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/Istanbul_Hurrem_Cavus_Mosque_2015_9127.jpg/1920px-Istanbul_Hurrem_Cavus_Mosque_2015_9127.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -5200,7 +5365,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Nedim Ardoğa',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Kadirli_Ala_Mosque.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Kadirli_Ala_Mosque.jpg',
   ),
   'wd-q6024259-erenkoy-istasyon-camii': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/Erenk%C3%B6y_%C4%B0stasyon_Camii.jpg/1920px-Erenk%C3%B6y_%C4%B0stasyon_Camii.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -5284,7 +5450,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Dosseman',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Zincirli_Kuyu_mosque_9319.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Zincirli_Kuyu_mosque_9319.jpg',
   ),
   'wd-q120907725-aktekke-camii': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Karaman_4776.jpg/1920px-Karaman_4776.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -5375,7 +5542,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Dosseman',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Balikesir_june_2008_1555.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Balikesir_june_2008_1555.jpg',
   ),
   'wd-q132134089-ibrahim-bey-camii-balikesir': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/21/Bal%C4%B1kesir_Ibrahim_Bey_Mosque.jpg/1920px-Bal%C4%B1kesir_Ibrahim_Bey_Mosque.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -5487,7 +5655,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'R Prazeres',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Kayseri_Ulu_Cami_DSCF1080.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Kayseri_Ulu_Cami_DSCF1080.jpg',
   ),
   'wd-q127788181-seyh-tennuri-camii': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/Kayseri_%C5%9Eeyh_camii_Exterior_in_2005_008.jpg/1920px-Kayseri_%C5%9Eeyh_camii_Exterior_in_2005_008.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -5529,7 +5698,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Canercangul',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Ali_A%C4%9Fa_Camii.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Ali_A%C4%9Fa_Camii.jpg',
   ),
   'wd-q125636383-damlacik-camii': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/Izmir_Aug_2023_12_05_53_194000.jpeg/1920px-Izmir_Aug_2023_12_05_53_194000.jpeg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -5599,14 +5769,16 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Fabienkhan modified by Ewan ar Born',
     license: 'CC BY-SA 2.5',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Ince_minare_door_2.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Ince_minare_door_2.jpg',
   ),
   'wd-q127642989-erdemsah-mescidi': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1f/Erdem%C5%9Fah_Mesciti_3.jpg/1920px-Erdem%C5%9Fah_Mesciti_3.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Imperissionist',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Erdem%C5%9Fah_Mesciti_3.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Erdem%C5%9Fah_Mesciti_3.jpg',
   ),
   'wd-q127643453-haci-veyis-camii': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/b/ba/Hac_Veyis_Camii_2025-10-19_1760884258.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled',
@@ -5732,7 +5904,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Alicembasli',
     license: 'CC BY 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Kirklareli_pasa_camii_01.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Kirklareli_pasa_camii_01.jpg',
   ),
   'wd-q132134112-hizir-bey-camii': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/8/8a/H%C4%B1z%C4%B1rbey_Mosque%2C_K%C4%B1rklareli.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled',
@@ -5760,14 +5933,16 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Alicembasli',
     license: 'CC BY 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Kirklareli_kapan_camii_01.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Kirklareli_kapan_camii_01.jpg',
   ),
   'wd-q133319341-karakas-bey-camii': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5d/Karaka%C5%9Fbey_Camii_01.jpg/1920px-Karaka%C5%9Fbey_Camii_01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Alicembasli',
     license: 'CC BY 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Karaka%C5%9Fbey_Camii_01.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Karaka%C5%9Fbey_Camii_01.jpg',
   ),
   'wd-q20472639-kirikkale-nur-camii': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/51/K%C4%B1r%C4%B1kkale_Merkez_Nur_Camii.jpg/1920px-K%C4%B1r%C4%B1kkale_Merkez_Nur_Camii.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -5781,7 +5956,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'hüsamettin_alpaslan',
     license: 'CC BY 3.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Nurbaba_Cami_-_panoramio.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Nurbaba_Cami_-_panoramio.jpg',
   ),
   'wd-q138035827-efendi-camii': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Efendi_Mosque_04.jpg/1920px-Efendi_Mosque_04.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -5830,7 +6006,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Koray',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Karaosmano%C4%9Flu_Mosque.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Karaosmano%C4%9Flu_Mosque.jpg',
   ),
   'wd-q127787002-kofunlu-cami': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/04/K%C3%B6f%C3%BCnl%C3%BC_Mosque_04.jpg/1920px-K%C3%B6f%C3%BCnl%C3%BC_Mosque_04.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -5858,14 +6035,16 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Koray',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Sar%C4%B1_Hoca_Mosque.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Sar%C4%B1_Hoca_Mosque.jpg',
   ),
   'wd-q127643140-ulu-cami': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/cc/Ulu_Cami%2C_Akhisar%2C_Manisa.JPG/1920px-Ulu_Cami%2C_Akhisar%2C_Manisa.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Ahmet Akkın',
     license: 'GFDL',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Ulu_Cami,_Akhisar,_Manisa.JPG',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Ulu_Cami,_Akhisar,_Manisa.JPG',
   ),
   'wd-q127788172-seyh-isa-cami': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/5/58/%C5%9Eeyh_%C4%B0sa_Mosque_01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled',
@@ -5879,14 +6058,16 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Taoklarjeteli',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:%C4%B0remit_Mosque_05.png',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:%C4%B0remit_Mosque_05.png',
   ),
   'wd-q127787059-latifiye-camii': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4a/Latifiye_Cami_Avlu_2.jpg/1920px-Latifiye_Cami_Avlu_2.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Chansey',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Latifiye_Cami_Avlu_2.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Latifiye_Cami_Avlu_2.jpg',
   ),
   'wd-q127787084-melik-mahmut-camii': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8f/Mardin_-_unidentified_mosque_in_2000-2001_084.jpg/1920px-Mardin_-_unidentified_mosque_in_2000-2001_084.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -5907,7 +6088,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'R Prazeres',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Sehidiye_Mosque_DSCF9549.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Sehidiye_Mosque_DSCF9549.jpg',
   ),
   'wd-q127788164-seyh-cabuk-camii': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2d/Seyh_Cabuk_Mosque_DSCF0120.jpg/1920px-Seyh_Cabuk_Mosque_DSCF0120.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -6005,7 +6187,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Sayginer',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Old_Mosque_of_Mersin.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Old_Mosque_of_Mersin.jpg',
   ),
   'wd-q61072933-celebi-mehmet-medresesi-camii': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9d/%C3%87elebi_Sultan_Mehmet_Medresesi_Camii.jpg/1920px-%C3%87elebi_Sultan_Mehmet_Medresesi_Camii.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -6026,7 +6209,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Dosseman',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Milas_Aga_Mosque_4945.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Milas_Aga_Mosque_4945.jpg',
   ),
   'wd-q6006036-firuzbey-camii': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/3/39/Milas_Firuz_Pa%C5%9Fa_Camii_5205.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled',
@@ -6040,7 +6224,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Dosseman',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Milas_Ulu_Camii_5013.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Milas_Ulu_Camii_5013.jpg',
   ),
   'wd-q132134483-yelli-camii-becin': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fe/Be%C3%A7in_07_05_2014_Ruine_der_Yelli-Moschee.jpg/1920px-Be%C3%A7in_07_05_2014_Ruine_der_Yelli-Moschee.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -6089,7 +6274,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Bernard Gagnon',
     license: 'CC BY-SA 3.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Karakas_Camii,_Antalya.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Karakas_Camii,_Antalya.jpg',
   ),
   'wd-q6395079-kesik-minare': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Antalya_-_Kesik_Minare_-_Temple.jpg/1920px-Antalya_-_Kesik_Minare_-_Temple.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -6131,7 +6317,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Dosseman',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Milas_Belen_Camii_4922.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Milas_Belen_Camii_4922.jpg',
   ),
   'wd-q127786973-kizilhisarli-mustafa-pasa-camii': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/81/K%C4%B1z%C4%B1lhisarl%C4%B1_Mustafa_Pasha_Mosque.jpg/1920px-K%C4%B1z%C4%B1lhisarl%C4%B1_Mustafa_Pasha_Mosque.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -6271,14 +6458,16 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Nidayi',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Selahi_Mehmed_Bey_Cami.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Selahi_Mehmed_Bey_Cami.jpg',
   ),
   'wd-q127632944-akoglan-camii': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/Ako%C4%9Flan_Camii.jpg/1920px-Ako%C4%9Flan_Camii.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Ozlmktv',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Ako%C4%9Flan_Camii.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Ako%C4%9Flan_Camii.jpg',
   ),
   'wd-q135684406-kursunlu-camii-eskisehir': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/98/Eski%C5%9Fehir_Kur%C5%9Funlu_K%C3%BClliyesi1716b.jpg/1920px-Eski%C5%9Fehir_Kur%C5%9Funlu_K%C3%BClliyesi1716b.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -6334,7 +6523,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'User:Darwinek',
     license: 'CC BY-SA 3.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Bedrettin_Mosque,_Bursa.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Bedrettin_Mosque,_Bursa.jpg',
   ),
   'wd-q65219967-bursa-muradiye-camii': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/Bursa_Muradiye_Mosque_Exterior_8037.jpg/1920px-Bursa_Muradiye_Mosque_Exterior_8037.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -6418,14 +6608,16 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Vano111ru',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Rasim_Pa%C5%9Fa_Camii.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Rasim_Pa%C5%9Fa_Camii.jpg',
   ),
   'wd-q137584527-asiye-hatun-camii-safranbolu': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Asiye_Hatun_Camii_%2846118%29.jpg/1920px-Asiye_Hatun_Camii_%2846118%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'İmmortalance',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Asiye_Hatun_Camii_(46118).jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Asiye_Hatun_Camii_(46118).jpg',
   ),
   'wd-q127642791-dagdelen-camii': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a6/Safranbolu_Da%C4%9Fdelen_Camii_8274.jpg/1920px-Safranbolu_Da%C4%9Fdelen_Camii_8274.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -6446,7 +6638,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'İmmortalance',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Hamidiye_Camii_(75583).jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Hamidiye_Camii_(75583).jpg',
   ),
   'wd-q3409633-kazdagli-camii': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/be/Safranbolu_Kazda%C4%9Fl%C4%B1_Camii_in_2006_8244.jpg/1920px-Safranbolu_Kazda%C4%9Fl%C4%B1_Camii_in_2006_8244.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -6481,14 +6674,16 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Tereqeme',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Safranbolu_Ulu_Camii.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Safranbolu_Ulu_Camii.jpg',
   ),
   'wd-q127788211-tas-minare-camii': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c0/Ta%C5%9F_Minare_Camii.jpg/1920px-Ta%C5%9F_Minare_Camii.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Tereqeme',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Ta%C5%9F_Minare_Camii.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Ta%C5%9F_Minare_Camii.jpg',
   ),
   'wd-q137690847-tekbir-camii-safranbolu': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/Tekbir_Mosque%2C_Safranbolu_01.jpg/1920px-Tekbir_Mosque%2C_Safranbolu_01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -6523,7 +6718,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Karakalem',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Salacak_Fatih_Mosque.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Salacak_Fatih_Mosque.jpg',
   ),
   'wd-q6049169-imrahor-camii-uskudar': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/43/%C4%B0mrahor_Mosque%2C_%C3%9Csk%C3%BCdar.jpg/1920px-%C4%B0mrahor_Mosque%2C_%C3%9Csk%C3%BCdar.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -6572,7 +6768,8 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Dosseman',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Adana_Yeni_Camii_2213.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Adana_Yeni_Camii_2213.jpg',
   ),
   'wd-q127632917-akca-mescit': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/Adana_A%C4%9Fca_Mescit_Exterior_in_2008_16_4990.jpg/1920px-Adana_A%C4%9Fca_Mescit_Exterior_in_2008_16_4990.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -6607,14 +6804,16 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Markustrust',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Akbaba_mehmed_efendi_cami.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Akbaba_mehmed_efendi_cami.jpg',
   ),
   'wd-q127788300-veysel-karani-camii': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d9/Weysel_Qaran%C3%AE.jpg/1920px-Weysel_Qaran%C3%AE.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
     sourceName: 'Wikimedia Commons (Wikidata P18)',
     author: 'Dûrzan',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Weysel_Qaran%C3%AE.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Weysel_Qaran%C3%AE.jpg',
   ),
   'wd-q5626500-gokmedrese': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/1/19/G%C3%B6k_Medrese.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled',

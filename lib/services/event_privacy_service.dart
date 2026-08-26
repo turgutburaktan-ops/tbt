@@ -17,11 +17,15 @@ class EventPrivacyService {
     final user = _auth.currentUser;
     if (user == null) throw Exception('Gizlilik ayarı için giriş yapmalısın.');
 
-    if (visibility == EventVisibility.public || visibility == EventVisibility.private) {
+    if (visibility == EventVisibility.public ||
+        visibility == EventVisibility.private) {
       return const [];
     }
     if (visibility == EventVisibility.selectedPeople) {
-      return selectedUserIds.where((id) => id.isNotEmpty && id != user.uid).toSet().toList();
+      return selectedUserIds
+          .where((id) => id.isNotEmpty && id != user.uid)
+          .toSet()
+          .toList();
     }
 
     final userRef = _firestore.collection('users').doc(user.uid);
@@ -33,7 +37,10 @@ class EventPrivacyService {
       final followers = await userRef.collection('followers').get();
       final following = await userRef.collection('following').get();
       final followerIds = followers.docs.map((d) => d.id).toSet();
-      return following.docs.map((d) => d.id).where(followerIds.contains).toList();
+      return following.docs
+          .map((d) => d.id)
+          .where(followerIds.contains)
+          .toList();
     }
     if (visibility == EventVisibility.closeFriends) {
       final snap = await userRef.collection('close_friends').get();

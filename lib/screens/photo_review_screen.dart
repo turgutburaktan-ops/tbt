@@ -28,7 +28,10 @@ class PhotoReviewScreen extends StatelessWidget {
               padding: const EdgeInsets.only(right: 14),
               child: Center(
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 5,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFF1A1D20),
                     borderRadius: BorderRadius.circular(14),
@@ -89,9 +92,8 @@ class PhotoReviewScreen extends StatelessWidget {
                       onPressed: () => Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => CreatePostScreen(
-                            initialImagePath: imagePath,
-                          ),
+                          builder: (_) =>
+                              CreatePostScreen(initialImagePath: imagePath),
                         ),
                       ),
                       style: FilledButton.styleFrom(

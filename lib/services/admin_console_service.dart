@@ -4,10 +4,14 @@ class AdminConsoleService {
   AdminConsoleService._();
   static final instance = AdminConsoleService._();
 
-  final FirebaseFunctions _functions = FirebaseFunctions.instanceFor(region: 'europe-west1');
+  final FirebaseFunctions _functions = FirebaseFunctions.instanceFor(
+    region: 'europe-west1',
+  );
 
   Future<List<Map<String, dynamic>>> businessClaims() async {
-    final result = await _functions.httpsCallable('getAdminBusinessClaims').call();
+    final result = await _functions
+        .httpsCallable('getAdminBusinessClaims')
+        .call();
     final data = Map<String, dynamic>.from(result.data as Map);
     final raw = (data['items'] as List?) ?? const [];
     return raw.map((e) => Map<String, dynamic>.from(e as Map)).toList();
@@ -16,7 +20,9 @@ class AdminConsoleService {
   Future<AdminInsightsData> insights() async {
     final result = await _functions.httpsCallable('getAdminInsights').call();
     final data = Map<String, dynamic>.from(result.data as Map);
-    final counts = Map<String, dynamic>.from((data['counts'] as Map?) ?? const {});
+    final counts = Map<String, dynamic>.from(
+      (data['counts'] as Map?) ?? const {},
+    );
     final errors = ((data['errors'] as List?) ?? const [])
         .map((e) => Map<String, dynamic>.from(e as Map))
         .toList();

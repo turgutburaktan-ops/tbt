@@ -83,7 +83,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   Future<Map<String, dynamic>> _actor(String actorId) async {
     if (actorId.trim().isEmpty) return const <String, dynamic>{};
-    final doc = await FirebaseFirestore.instance.collection('users').doc(actorId).get();
+    final doc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(actorId)
+        .get();
     return doc.data() ?? const <String, dynamic>{};
   }
 
@@ -97,7 +100,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     if (sourceId.isNotEmpty && _opensEvent(item.type)) {
       await Navigator.push(
         context,
-        MaterialPageRoute(builder: (_) => EventDeepLinkScreen(eventId: sourceId)),
+        MaterialPageRoute(
+          builder: (_) => EventDeepLinkScreen(eventId: sourceId),
+        ),
       );
       return;
     }
@@ -105,27 +110,30 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     if (item.type == 'message' && actorId.isNotEmpty) {
       final actor = await _actor(actorId);
       if (!mounted) return;
-      final displayName = (actor['displayName'] ?? actor['username'] ?? 'Kullanıcı').toString();
+      final displayName =
+          (actor['displayName'] ?? actor['username'] ?? 'Kullanıcı').toString();
       await Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => ChatScreen(
-            otherUserId: actorId,
-            otherDisplayName: displayName,
-          ),
+          builder: (_) =>
+              ChatScreen(otherUserId: actorId, otherDisplayName: displayName),
         ),
       );
       return;
     }
 
     if (item.type.startsWith('post_') && sourceId.isNotEmpty) {
-      final doc = await FirebaseFirestore.instance.collection('posts').doc(sourceId).get();
+      final doc = await FirebaseFirestore.instance
+          .collection('posts')
+          .doc(sourceId)
+          .get();
       if (!mounted) return;
       if (doc.exists) {
         await Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) => PostDetailScreen(post: {...?doc.data(), 'id': doc.id}),
+            builder: (_) =>
+                PostDetailScreen(post: {...?doc.data(), 'id': doc.id}),
           ),
         );
       } else {
@@ -136,7 +144,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       return;
     }
 
-    if ((item.type == 'follow' || item.type.startsWith('story_')) && actorId.isNotEmpty) {
+    if ((item.type == 'follow' || item.type.startsWith('story_')) &&
+        actorId.isNotEmpty) {
       await Navigator.push(
         context,
         MaterialPageRoute(builder: (_) => UserProfileScreen(userId: actorId)),
@@ -186,7 +195,11 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     return ChoiceChip(
       selected: selected,
       showCheckmark: false,
-      avatar: Icon(icon, size: 17, color: selected ? Colors.black : Colors.white60),
+      avatar: Icon(
+        icon,
+        size: 17,
+        color: selected ? Colors.black : Colors.white60,
+      ),
       label: Text(label),
       labelStyle: TextStyle(
         color: selected ? Colors.black : Colors.white70,
@@ -194,7 +207,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       ),
       selectedColor: const Color(0xFFD7DADF),
       backgroundColor: const Color(0xFF14171A),
-      side: BorderSide(color: selected ? const Color(0xFFD7DADF) : const Color(0xFF2A2E33)),
+      side: BorderSide(
+        color: selected ? const Color(0xFFD7DADF) : const Color(0xFF2A2E33),
+      ),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       onSelected: (_) => setState(() => _filter = key),
     );
@@ -223,7 +238,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   fit: BoxFit.cover,
                   errorWidget: const ColoredBox(
                     color: Color(0xFF1A1D20),
-                    child: Center(child: Icon(Icons.person_rounded, color: Colors.white54)),
+                    child: Center(
+                      child: Icon(Icons.person_rounded, color: Colors.white54),
+                    ),
                   ),
                 ),
               ),
@@ -263,7 +280,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   }
 
   Widget _itemCard(AppNotificationItem item) {
-    final actionable = _opensEvent(item.type) ||
+    final actionable =
+        _opensEvent(item.type) ||
         item.type == 'message' ||
         item.type == 'follow' ||
         item.type.startsWith('post_') ||
@@ -279,7 +297,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(18),
             border: Border.all(
-              color: item.read ? const Color(0xFF24282D) : const Color(0xFF3A4047),
+              color: item.read
+                  ? const Color(0xFF24282D)
+                  : const Color(0xFF3A4047),
             ),
           ),
           child: Row(
@@ -301,7 +321,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                             style: TextStyle(
                               fontSize: 14.5,
                               height: 1.25,
-                              fontWeight: item.read ? FontWeight.w700 : FontWeight.w900,
+                              fontWeight: item.read
+                                  ? FontWeight.w700
+                                  : FontWeight.w900,
                             ),
                           ),
                         ),
@@ -324,13 +346,21 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                         item.body,
                         maxLines: 3,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(color: Colors.white60, height: 1.35, fontSize: 13),
+                        style: const TextStyle(
+                          color: Colors.white60,
+                          height: 1.35,
+                          fontSize: 13,
+                        ),
                       ),
                     ],
                     const SizedBox(height: 7),
                     Text(
                       _timeLabel(item.createdAt),
-                      style: const TextStyle(color: Colors.white38, fontSize: 11.5, fontWeight: FontWeight.w600),
+                      style: const TextStyle(
+                        color: Colors.white38,
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ],
                 ),
@@ -338,7 +368,11 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               if (actionable)
                 const Padding(
                   padding: EdgeInsets.only(left: 5, top: 13),
-                  child: Icon(Icons.chevron_right_rounded, color: Colors.white30, size: 22),
+                  child: Icon(
+                    Icons.chevron_right_rounded,
+                    color: Colors.white30,
+                    size: 22,
+                  ),
                 ),
             ],
           ),
@@ -355,7 +389,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         backgroundColor: const Color(0xFF090A0C),
         foregroundColor: Colors.white,
         elevation: 0,
-        title: const Text('Bildirimler', style: TextStyle(fontWeight: FontWeight.w900)),
+        title: const Text(
+          'Bildirimler',
+          style: TextStyle(fontWeight: FontWeight.w900),
+        ),
         actions: [
           PopupMenuButton<String>(
             tooltip: 'Bildirim seçenekleri',
@@ -401,8 +438,14 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 child: Row(
                   children: [
                     Text(
-                      unread == 0 ? 'Her şey güncel' : '$unread okunmamış bildirim',
-                      style: const TextStyle(color: Colors.white54, fontSize: 12.5, fontWeight: FontWeight.w700),
+                      unread == 0
+                          ? 'Her şey güncel'
+                          : '$unread okunmamış bildirim',
+                      style: const TextStyle(
+                        color: Colors.white54,
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ],
                 ),
@@ -413,13 +456,21 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   scrollDirection: Axis.horizontal,
                   children: [
-                    _filterChip('all', 'Tümü', Icons.notifications_none_rounded),
+                    _filterChip(
+                      'all',
+                      'Tümü',
+                      Icons.notifications_none_rounded,
+                    ),
                     const SizedBox(width: 7),
                     _filterChip('social', 'Sosyal', Icons.people_alt_outlined),
                     const SizedBox(width: 7),
                     _filterChip('events', 'Etkinlik', Icons.event_outlined),
                     const SizedBox(width: 7),
-                    _filterChip('messages', 'Mesajlar', Icons.chat_bubble_outline_rounded),
+                    _filterChip(
+                      'messages',
+                      'Mesajlar',
+                      Icons.chat_bubble_outline_rounded,
+                    ),
                   ],
                 ),
               ),
@@ -432,17 +483,29 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(Icons.notifications_none_rounded, size: 58, color: Colors.white24),
+                              const Icon(
+                                Icons.notifications_none_rounded,
+                                size: 58,
+                                color: Colors.white24,
+                              ),
                               const SizedBox(height: 12),
                               Text(
-                                allItems.isEmpty ? 'Henüz bildirimin yok' : 'Bu bölümde yeni bildirim yok',
-                                style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
+                                allItems.isEmpty
+                                    ? 'Henüz bildirimin yok'
+                                    : 'Bu bölümde yeni bildirim yok',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w900,
+                                  fontSize: 16,
+                                ),
                               ),
                               const SizedBox(height: 6),
                               const Text(
                                 'Mesajlar, sosyal hareketler ve etkinlik gelişmeleri burada toplanacak.',
                                 textAlign: TextAlign.center,
-                                style: TextStyle(color: Colors.white54, height: 1.4),
+                                style: TextStyle(
+                                  color: Colors.white54,
+                                  height: 1.4,
+                                ),
                               ),
                             ],
                           ),
@@ -454,16 +517,27 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                         itemBuilder: (context, index) {
                           final item = items[index];
                           final group = _groupLabel(item.createdAt);
-                          final previousGroup = index == 0 ? null : _groupLabel(items[index - 1].createdAt);
+                          final previousGroup = index == 0
+                              ? null
+                              : _groupLabel(items[index - 1].createdAt);
                           return Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               if (group != previousGroup)
                                 Padding(
-                                  padding: EdgeInsets.fromLTRB(4, index == 0 ? 5 : 18, 4, 8),
+                                  padding: EdgeInsets.fromLTRB(
+                                    4,
+                                    index == 0 ? 5 : 18,
+                                    4,
+                                    8,
+                                  ),
                                   child: Text(
                                     group,
-                                    style: const TextStyle(color: Colors.white54, fontSize: 12.5, fontWeight: FontWeight.w900),
+                                    style: const TextStyle(
+                                      color: Colors.white54,
+                                      fontSize: 12.5,
+                                      fontWeight: FontWeight.w900,
+                                    ),
                                   ),
                                 ),
                               _itemCard(item),

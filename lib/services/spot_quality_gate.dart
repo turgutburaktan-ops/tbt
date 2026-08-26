@@ -26,7 +26,8 @@ class SpotQualityGate {
     final valid = input.where(_basicCoordinateCheck).toList();
     final byCoordinate = <String, List<PhotoSpot>>{};
     for (final spot in valid) {
-      final key = '${spot.latitude.toStringAsFixed(5)}|'
+      final key =
+          '${spot.latitude.toStringAsFixed(5)}|'
           '${spot.longitude.toStringAsFixed(5)}';
       byCoordinate.putIfAbsent(key, () => <PhotoSpot>[]).add(spot);
     }
@@ -46,16 +47,20 @@ class SpotQualityGate {
         continue;
       }
 
-      final placeKeys =
-          group.map((spot) => _placeKey(spot.city, spot.name)).toSet();
+      final placeKeys = group
+          .map((spot) => _placeKey(spot.city, spot.name))
+          .toSet();
       if (placeKeys.length > 1) {
         suspiciousIds.addAll(group.map((spot) => spot.id));
       }
     }
 
     return valid
-        .where((spot) =>
-            !blockedSpotIds.contains(spot.id) && !suspiciousIds.contains(spot.id))
+        .where(
+          (spot) =>
+              !blockedSpotIds.contains(spot.id) &&
+              !suspiciousIds.contains(spot.id),
+        )
         .toList(growable: false);
   }
 

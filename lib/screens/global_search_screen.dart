@@ -32,25 +32,49 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
       final users = await _db.collection('users').limit(40).get();
       for (final doc in users.docs) {
         final d = doc.data();
-        final hay = '${d['username'] ?? ''} ${d['displayName'] ?? ''} ${d['city'] ?? ''}'.toLowerCase();
+        final hay =
+            '${d['username'] ?? ''} ${d['displayName'] ?? ''} ${d['city'] ?? ''}'
+                .toLowerCase();
         if (hay.contains(q)) {
-          output.add({'type': 'Kullanıcı', 'id': doc.id, 'title': d['displayName'] ?? d['username'] ?? 'Kullanıcı', 'subtitle': '@${d['username'] ?? ''}'});
+          output.add({
+            'type': 'Kullanıcı',
+            'id': doc.id,
+            'title': d['displayName'] ?? d['username'] ?? 'Kullanıcı',
+            'subtitle': '@${d['username'] ?? ''}',
+          });
         }
       }
-      final events = await _db.collection('social_events').where('status', isEqualTo: 'open').limit(50).get();
+      final events = await _db
+          .collection('social_events')
+          .where('status', isEqualTo: 'open')
+          .limit(50)
+          .get();
       for (final doc in events.docs) {
         final d = doc.data();
-        final hay = '${d['title'] ?? ''} ${d['description'] ?? ''} ${d['city'] ?? ''} ${d['category'] ?? ''}'.toLowerCase();
+        final hay =
+            '${d['title'] ?? ''} ${d['description'] ?? ''} ${d['city'] ?? ''} ${d['category'] ?? ''}'
+                .toLowerCase();
         if (hay.contains(q)) {
-          output.add({'type': 'Etkinlik', 'id': doc.id, 'title': d['title'] ?? 'Etkinlik', 'subtitle': d['city'] ?? ''});
+          output.add({
+            'type': 'Etkinlik',
+            'id': doc.id,
+            'title': d['title'] ?? 'Etkinlik',
+            'subtitle': d['city'] ?? '',
+          });
         }
       }
       final venues = await _db.collection('business_venues').limit(50).get();
       for (final doc in venues.docs) {
         final d = doc.data();
-        final hay = '${d['venueName'] ?? ''} ${d['category'] ?? ''}'.toLowerCase();
+        final hay = '${d['venueName'] ?? ''} ${d['category'] ?? ''}'
+            .toLowerCase();
         if (hay.contains(q)) {
-          output.add({'type': 'Mekan', 'id': doc.id, 'title': d['venueName'] ?? 'Mekan', 'subtitle': d['category'] ?? ''});
+          output.add({
+            'type': 'Mekan',
+            'id': doc.id,
+            'title': d['venueName'] ?? 'Mekan',
+            'subtitle': d['category'] ?? '',
+          });
         }
       }
       if (mounted) setState(() => _results = output.take(60).toList());
@@ -74,7 +98,10 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
               decoration: InputDecoration(
                 hintText: 'Kullanıcı, etkinlik, şehir veya mekan ara',
                 prefixIcon: const Icon(Icons.search_rounded),
-                suffixIcon: IconButton(onPressed: _search, icon: const Icon(Icons.arrow_forward_rounded)),
+                suffixIcon: IconButton(
+                  onPressed: _search,
+                  icon: const Icon(Icons.arrow_forward_rounded),
+                ),
               ),
             ),
           ),
@@ -88,8 +115,13 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
                     itemBuilder: (context, index) {
                       final item = _results[index];
                       return ListTile(
-                        leading: CircleAvatar(child: Text((item['type'] as String).substring(0, 1))),
-                        title: Text(item['title'].toString(), style: const TextStyle(fontWeight: FontWeight.w800)),
+                        leading: CircleAvatar(
+                          child: Text((item['type'] as String).substring(0, 1)),
+                        ),
+                        title: Text(
+                          item['title'].toString(),
+                          style: const TextStyle(fontWeight: FontWeight.w800),
+                        ),
                         subtitle: Text('${item['type']} • ${item['subtitle']}'),
                       );
                     },

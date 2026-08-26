@@ -96,6 +96,7 @@ const verifiedTravelImageRegistryBatch10 = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons',
     author: 'Klaus-Peter Simon',
     license: 'CC BY 3.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:ViransehirS%C3%A4ulen.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:ViransehirS%C3%A4ulen.jpg',
   ),
 };

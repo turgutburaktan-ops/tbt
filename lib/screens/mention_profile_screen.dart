@@ -5,10 +5,7 @@ import 'user_profile_screen.dart';
 class MentionProfileScreen extends StatelessWidget {
   final String userId;
 
-  const MentionProfileScreen({
-    super.key,
-    required this.userId,
-  });
+  const MentionProfileScreen({super.key, required this.userId});
 
   @override
   Widget build(BuildContext context) {

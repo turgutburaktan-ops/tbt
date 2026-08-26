@@ -25,7 +25,8 @@ class TrustSafetyService {
     final limitedDetails = cleanDetails.length > 1000
         ? cleanDetails.substring(0, 1000)
         : cleanDetails;
-    if (cleanReason.length < 3) throw ArgumentError('Geçerli bir şikâyet nedeni gerekli.');
+    if (cleanReason.length < 3)
+      throw ArgumentError('Geçerli bir şikâyet nedeni gerekli.');
     await _db.collection('moderation_reports').add({
       'reporterId': _uid,
       'targetType': targetType.trim(),
@@ -41,14 +42,21 @@ class TrustSafetyService {
 
   Future<void> blockUser(String targetUid) async {
     if (targetUid.isEmpty || targetUid == _uid) return;
-    await _db.collection('users').doc(_uid).collection('blocked').doc(targetUid).set({
-      'userId': targetUid,
-      'blockedAt': FieldValue.serverTimestamp(),
-    });
+    await _db
+        .collection('users')
+        .doc(_uid)
+        .collection('blocked')
+        .doc(targetUid)
+        .set({'userId': targetUid, 'blockedAt': FieldValue.serverTimestamp()});
   }
 
   Future<void> unblockUser(String targetUid) async {
-    await _db.collection('users').doc(_uid).collection('blocked').doc(targetUid).delete();
+    await _db
+        .collection('users')
+        .doc(_uid)
+        .collection('blocked')
+        .doc(targetUid)
+        .delete();
   }
 
   Future<void> updateNotificationPreferences(Map<String, bool> prefs) async {
@@ -66,7 +74,8 @@ class TrustSafetyService {
     await _db.collection('users').doc(_uid).set({
       'privacy': {
         'locationVisibility': locationVisibility,
-        'preciseEventLocationOnlyForAttendees': preciseEventLocationOnlyForAttendees,
+        'preciseEventLocationOnlyForAttendees':
+            preciseEventLocationOnlyForAttendees,
         'analyticsConsent': analyticsConsent,
       },
       'privacyUpdatedAt': FieldValue.serverTimestamp(),
@@ -112,24 +121,35 @@ class EventSafetyService {
   Future<void> requestWaitlist(String eventId) async {
     final uid = _auth.currentUser?.uid;
     if (uid == null) throw StateError('Giriş gerekli.');
-    await _db.collection('social_events').doc(eventId).collection('waitlist').doc(uid).set({
-      'userId': uid,
-      'status': 'waiting',
-      'createdAt': FieldValue.serverTimestamp(),
-    });
+    await _db
+        .collection('social_events')
+        .doc(eventId)
+        .collection('waitlist')
+        .doc(uid)
+        .set({
+          'userId': uid,
+          'status': 'waiting',
+          'createdAt': FieldValue.serverTimestamp(),
+        });
   }
 
   Future<void> recordNoShow(String eventId, String participantUid) async {
     final uid = _auth.currentUser?.uid;
     if (uid == null) return;
     final event = await _db.collection('social_events').doc(eventId).get();
-    if (event.data()?['hostId'] != uid) throw StateError('Yalnız organizatör işlem yapabilir.');
-    await _db.collection('users').doc(participantUid).collection('event_reliability').doc(eventId).set({
-      'eventId': eventId,
-      'status': 'no_show',
-      'recordedBy': uid,
-      'createdAt': FieldValue.serverTimestamp(),
-    });
+    if (event.data()?['hostId'] != uid)
+      throw StateError('Yalnız organizatör işlem yapabilir.');
+    await _db
+        .collection('users')
+        .doc(participantUid)
+        .collection('event_reliability')
+        .doc(eventId)
+        .set({
+          'eventId': eventId,
+          'status': 'no_show',
+          'recordedBy': uid,
+          'createdAt': FieldValue.serverTimestamp(),
+        });
   }
 }
 
@@ -138,14 +158,21 @@ class BusinessTrustService {
   static final instance = BusinessTrustService._();
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
-  Future<void> flagVenue({required String venueKey, required String reason}) async {
+  Future<void> flagVenue({
+    required String venueKey,
+    required String reason,
+  }) async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) throw StateError('Giriş gerekli.');
-    await _db.collection('business_venues').doc(venueKey).collection('trust_reports').add({
-      'reporterId': uid,
-      'reason': reason.trim(),
-      'status': 'open',
-      'createdAt': FieldValue.serverTimestamp(),
-    });
+    await _db
+        .collection('business_venues')
+        .doc(venueKey)
+        .collection('trust_reports')
+        .add({
+          'reporterId': uid,
+          'reason': reason.trim(),
+          'status': 'open',
+          'createdAt': FieldValue.serverTimestamp(),
+        });
   }
 }

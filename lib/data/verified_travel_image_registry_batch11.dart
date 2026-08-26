@@ -40,7 +40,8 @@ const verifiedTravelImageRegistryBatch11 = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons',
     author: 'Bernard Gagnon',
     license: 'CC BY-SA 3.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Tumulus_of_Karakus_01.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Tumulus_of_Karakus_01.jpg',
   ),
   'yeni-kale-kahta': SpotImageInfo(
     assetPath: 'assets/spots/yeni-kale-kahta.jpg',

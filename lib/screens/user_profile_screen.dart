@@ -15,25 +15,17 @@ import 'post_detail_screen.dart';
 class UserProfileScreen extends StatelessWidget {
   final String userId;
 
-  const UserProfileScreen({
-    super.key,
-    required this.userId,
-  });
+  const UserProfileScreen({super.key, required this.userId});
 
-  Future<void> _openChat(
-    BuildContext context,
-    String displayName,
-  ) async {
+  Future<void> _openChat(BuildContext context, String displayName) async {
     try {
       await ChatService.instance.ensureDirectThread(userId);
       if (!context.mounted) return;
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => ChatScreen(
-            otherUserId: userId,
-            otherDisplayName: displayName,
-          ),
+          builder: (_) =>
+              ChatScreen(otherUserId: userId, otherDisplayName: displayName),
         ),
       );
     } catch (e) {
@@ -48,9 +40,7 @@ class UserProfileScreen extends StatelessWidget {
     if (stories.isEmpty) return;
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (_) => StoryViewerScreen(stories: stories),
-      ),
+      MaterialPageRoute(builder: (_) => StoryViewerScreen(stories: stories)),
     );
   }
 
@@ -67,7 +57,8 @@ class UserProfileScreen extends StatelessWidget {
         elevation: 0,
         title: const Text('Profil'),
         actions: [
-          if (!isOwnProfile && currentUser != null) UserSafetyActions(userId: userId),
+          if (!isOwnProfile && currentUser != null)
+            UserSafetyActions(userId: userId),
         ],
       ),
       body: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
@@ -123,8 +114,8 @@ class UserProfileScreen extends StatelessWidget {
                                 stream: StoryService.instance
                                     .watchActiveForUser(userId),
                                 builder: (context, storySnapshot) {
-                                  final stories = storySnapshot.data ??
-                                      const <AppStory>[];
+                                  final stories =
+                                      storySnapshot.data ?? const <AppStory>[];
                                   final hasStory = stories.isNotEmpty;
                                   return GestureDetector(
                                     onTap: hasStory
@@ -145,12 +136,13 @@ class UserProfileScreen extends StatelessWidget {
                                         border: hasStory
                                             ? null
                                             : Border.all(
-                                                color:
-                                                    const Color(0xFF555B62),
+                                                color: const Color(0xFF555B62),
                                               ),
                                       ),
                                       child: Container(
-                                        padding: EdgeInsets.all(hasStory ? 2 : 0),
+                                        padding: EdgeInsets.all(
+                                          hasStory ? 2 : 0,
+                                        ),
                                         decoration: const BoxDecoration(
                                           shape: BoxShape.circle,
                                           color: Color(0xFF090A0C),
@@ -163,8 +155,8 @@ class UserProfileScreen extends StatelessWidget {
                                               imageUrl: photoUrl,
                                               fallbackStoragePaths:
                                                   FirebaseMediaImage.avatarPaths(
-                                                userId,
-                                              ),
+                                                    userId,
+                                                  ),
                                               errorWidget: const ColoredBox(
                                                 color: Color(0xFF1A1D20),
                                                 child: Center(
@@ -260,8 +252,9 @@ class UserProfileScreen extends StatelessWidget {
                               children: [
                                 Expanded(
                                   child: StreamBuilder<bool>(
-                                    stream: SocialService.instance
-                                        .isFollowing(userId),
+                                    stream: SocialService.instance.isFollowing(
+                                      userId,
+                                    ),
                                     builder: (_, snapshot) {
                                       final following = snapshot.data ?? false;
                                       return SizedBox(
@@ -286,8 +279,9 @@ class UserProfileScreen extends StatelessWidget {
                                                   .toggleFollow(userId);
                                             } catch (e) {
                                               if (!context.mounted) return;
-                                              ScaffoldMessenger.of(context)
-                                                  .showSnackBar(
+                                              ScaffoldMessenger.of(
+                                                context,
+                                              ).showSnackBar(
                                                 SnackBar(
                                                   content: Text(e.toString()),
                                                 ),
@@ -327,10 +321,7 @@ class UserProfileScreen extends StatelessWidget {
                     ),
                   ),
                   const SliverToBoxAdapter(
-                    child: Divider(
-                      height: 1,
-                      color: Color(0xFF2A2E33),
-                    ),
+                    child: Divider(height: 1, color: Color(0xFF2A2E33)),
                   ),
                   if (postsSnapshot.connectionState == ConnectionState.waiting)
                     const SliverFillRemaining(
@@ -352,49 +343,45 @@ class UserProfileScreen extends StatelessWidget {
                       sliver: SliverGrid(
                         gridDelegate:
                             const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 3,
-                          crossAxisSpacing: 2,
-                          mainAxisSpacing: 2,
-                          childAspectRatio: 1,
-                        ),
-                        delegate: SliverChildBuilderDelegate(
-                          (context, index) {
-                            final doc = docs[index];
-                            final post = {...doc.data(), 'id': doc.id};
-                            final imageUrl =
-                                (post['imageUrl'] ?? '').toString();
-                            final storagePath =
-                                (post['storagePath'] ?? '').toString();
-                            return GestureDetector(
-                              onTap: () => Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => PostDetailScreen(post: post),
-                                ),
+                              crossAxisCount: 3,
+                              crossAxisSpacing: 2,
+                              mainAxisSpacing: 2,
+                              childAspectRatio: 1,
+                            ),
+                        delegate: SliverChildBuilderDelegate((context, index) {
+                          final doc = docs[index];
+                          final post = {...doc.data(), 'id': doc.id};
+                          final imageUrl = (post['imageUrl'] ?? '').toString();
+                          final storagePath = (post['storagePath'] ?? '')
+                              .toString();
+                          return GestureDetector(
+                            onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => PostDetailScreen(post: post),
                               ),
-                              child: Container(
-                                color: const Color(0xFF121416),
-                                child: imageUrl.isEmpty && storagePath.isEmpty
-                                    ? const Icon(
-                                        Icons.image_outlined,
-                                        color: Colors.white24,
-                                      )
-                                    : FirebaseMediaImage(
-                                        imageUrl: imageUrl,
-                                        storagePath: storagePath,
-                                        fit: BoxFit.cover,
-                                        errorWidget: const Center(
-                                          child: Icon(
-                                            Icons.broken_image_outlined,
-                                            color: Colors.white24,
-                                          ),
+                            ),
+                            child: Container(
+                              color: const Color(0xFF121416),
+                              child: imageUrl.isEmpty && storagePath.isEmpty
+                                  ? const Icon(
+                                      Icons.image_outlined,
+                                      color: Colors.white24,
+                                    )
+                                  : FirebaseMediaImage(
+                                      imageUrl: imageUrl,
+                                      storagePath: storagePath,
+                                      fit: BoxFit.cover,
+                                      errorWidget: const Center(
+                                        child: Icon(
+                                          Icons.broken_image_outlined,
+                                          color: Colors.white24,
                                         ),
                                       ),
-                              ),
-                            );
-                          },
-                          childCount: docs.length,
-                        ),
+                                    ),
+                            ),
+                          );
+                        }, childCount: docs.length),
                       ),
                     ),
                 ],

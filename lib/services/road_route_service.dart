@@ -58,13 +58,15 @@ class RoadRouteService {
       final coordinatesList = geometry?['coordinates'] as List<dynamic>?;
       if (coordinatesList == null || coordinatesList.length < 2) return null;
 
-      final points = coordinatesList.map((raw) {
-        final pair = raw as List<dynamic>;
-        return LatLng(
-          (pair[1] as num).toDouble(),
-          (pair[0] as num).toDouble(),
-        );
-      }).toList(growable: false);
+      final points = coordinatesList
+          .map((raw) {
+            final pair = raw as List<dynamic>;
+            return LatLng(
+              (pair[1] as num).toDouble(),
+              (pair[0] as num).toDouble(),
+            );
+          })
+          .toList(growable: false);
 
       return RoadRouteResult(
         points: points,

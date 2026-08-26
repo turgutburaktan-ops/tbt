@@ -111,7 +111,10 @@ class _VenueReviewsSectionState extends State<VenueReviewsSection> {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<VenueRatingSummary>(
-      stream: VenueRatingService.instance.watchSummary(widget.category, widget.venueId),
+      stream: VenueRatingService.instance.watchSummary(
+        widget.category,
+        widget.venueId,
+      ),
       initialData: VenueRatingSummary.empty,
       builder: (context, summarySnapshot) {
         final summary = summarySnapshot.data ?? VenueRatingSummary.empty;
@@ -120,13 +123,20 @@ class _VenueReviewsSectionState extends State<VenueReviewsSection> {
           children: [
             Row(
               children: [
-                const Icon(Icons.star_rounded, color: Color(0xFFFFC857), size: 24),
+                const Icon(
+                  Icons.star_rounded,
+                  color: Color(0xFFFFC857),
+                  size: 24,
+                ),
                 const SizedBox(width: 7),
                 Text(
                   summary.count == 0
                       ? 'Henüz değerlendirme yok'
                       : '${summary.average.toStringAsFixed(1)} · ${summary.count} değerlendirme',
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w900,
+                  ),
                 ),
               ],
             ),
@@ -142,18 +152,26 @@ class _VenueReviewsSectionState extends State<VenueReviewsSection> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(summary.mine == null ? 'Puan ver ve yorum yaz' : 'Değerlendirmeni güncelle',
-                      style: const TextStyle(fontWeight: FontWeight.w900)),
+                  Text(
+                    summary.mine == null
+                        ? 'Puan ver ve yorum yaz'
+                        : 'Değerlendirmeni güncelle',
+                    style: const TextStyle(fontWeight: FontWeight.w900),
+                  ),
                   const SizedBox(height: 8),
                   Row(
                     children: List.generate(5, (index) {
                       final star = index + 1;
-                      final active = star <= (_rating == 0 ? (summary.mine ?? 0) : _rating);
+                      final active =
+                          star <=
+                          (_rating == 0 ? (summary.mine ?? 0) : _rating);
                       return IconButton(
                         visualDensity: VisualDensity.compact,
                         onPressed: () => setState(() => _rating = star),
                         icon: Icon(
-                          active ? Icons.star_rounded : Icons.star_border_rounded,
+                          active
+                              ? Icons.star_rounded
+                              : Icons.star_border_rounded,
                           color: const Color(0xFFFFC857),
                         ),
                       );
@@ -182,7 +200,9 @@ class _VenueReviewsSectionState extends State<VenueReviewsSection> {
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
                           : const Icon(Icons.send_rounded, size: 18),
-                      label: Text(_saving ? 'Kaydediliyor…' : 'Değerlendirmeyi Yayınla'),
+                      label: Text(
+                        _saving ? 'Kaydediliyor…' : 'Değerlendirmeyi Yayınla',
+                      ),
                     ),
                   ),
                 ],
@@ -192,7 +212,10 @@ class _VenueReviewsSectionState extends State<VenueReviewsSection> {
             Row(
               children: [
                 const Expanded(
-                  child: Text('Yorumlar', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w900)),
+                  child: Text(
+                    'Yorumlar',
+                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.w900),
+                  ),
                 ),
                 TextButton(
                   onPressed: () => setState(() => _sortHelpful = !_sortHelpful),
@@ -201,19 +224,29 @@ class _VenueReviewsSectionState extends State<VenueReviewsSection> {
               ],
             ),
             StreamBuilder<List<VenueReview>>(
-              stream: VenueRatingService.instance.watchReviews(widget.category, widget.venueId),
+              stream: VenueRatingService.instance.watchReviews(
+                widget.category,
+                widget.venueId,
+              ),
               initialData: const [],
               builder: (context, snapshot) {
-                final reviews = List<VenueReview>.from(snapshot.data ?? const []);
+                final reviews = List<VenueReview>.from(
+                  snapshot.data ?? const [],
+                );
                 if (_sortHelpful) {
-                  reviews.sort((a, b) => b.helpfulCount.compareTo(a.helpfulCount));
+                  reviews.sort(
+                    (a, b) => b.helpfulCount.compareTo(a.helpfulCount),
+                  );
                 } else {
                   reviews.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
                 }
                 if (reviews.isEmpty) {
                   return const Padding(
                     padding: EdgeInsets.symmetric(vertical: 18),
-                    child: Text('İlk yorumu sen yaz.', style: TextStyle(color: Colors.white54)),
+                    child: Text(
+                      'İlk yorumu sen yaz.',
+                      style: TextStyle(color: Colors.white54),
+                    ),
                   );
                 }
                 return Column(
@@ -233,11 +266,20 @@ class _VenueReviewsSectionState extends State<VenueReviewsSection> {
                           Row(
                             children: [
                               Expanded(
-                                child: Text(review.userName,
-                                    style: const TextStyle(fontWeight: FontWeight.w900)),
+                                child: Text(
+                                  review.userName,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w900,
+                                  ),
+                                ),
                               ),
-                              Text(_dateLabel(review.updatedAt),
-                                  style: const TextStyle(color: Colors.white38, fontSize: 10.5)),
+                              Text(
+                                _dateLabel(review.updatedAt),
+                                style: const TextStyle(
+                                  color: Colors.white38,
+                                  fontSize: 10.5,
+                                ),
+                              ),
                               PopupMenuButton<String>(
                                 onSelected: (value) {
                                   if (value == 'delete') _deleteMine();
@@ -245,9 +287,15 @@ class _VenueReviewsSectionState extends State<VenueReviewsSection> {
                                 },
                                 itemBuilder: (_) => [
                                   if (review.mine)
-                                    const PopupMenuItem(value: 'delete', child: Text('Yorumumu sil'))
+                                    const PopupMenuItem(
+                                      value: 'delete',
+                                      child: Text('Yorumumu sil'),
+                                    )
                                   else
-                                    const PopupMenuItem(value: 'report', child: Text('Şikâyet et')),
+                                    const PopupMenuItem(
+                                      value: 'report',
+                                      child: Text('Şikâyet et'),
+                                    ),
                                 ],
                               ),
                             ],
@@ -256,24 +304,35 @@ class _VenueReviewsSectionState extends State<VenueReviewsSection> {
                             children: List.generate(
                               5,
                               (index) => Icon(
-                                index < review.rating ? Icons.star_rounded : Icons.star_border_rounded,
+                                index < review.rating
+                                    ? Icons.star_rounded
+                                    : Icons.star_border_rounded,
                                 size: 15,
                                 color: const Color(0xFFFFC857),
                               ),
                             ),
                           ),
                           const SizedBox(height: 8),
-                          Text(review.comment, style: const TextStyle(height: 1.4)),
+                          Text(
+                            review.comment,
+                            style: const TextStyle(height: 1.4),
+                          ),
                           const SizedBox(height: 8),
                           TextButton.icon(
-                            onPressed: review.mine ? null : () => _helpful(review),
+                            onPressed: review.mine
+                                ? null
+                                : () => _helpful(review),
                             icon: Icon(
-                              review.helpfulByMe ? Icons.thumb_up_rounded : Icons.thumb_up_outlined,
+                              review.helpfulByMe
+                                  ? Icons.thumb_up_rounded
+                                  : Icons.thumb_up_outlined,
                               size: 17,
                             ),
-                            label: Text(review.helpfulCount == 0
-                                ? 'Faydalı'
-                                : 'Faydalı · ${review.helpfulCount}'),
+                            label: Text(
+                              review.helpfulCount == 0
+                                  ? 'Faydalı'
+                                  : 'Faydalı · ${review.helpfulCount}',
+                            ),
                           ),
                         ],
                       ),

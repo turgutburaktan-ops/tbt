@@ -25,8 +25,11 @@ class StoryService {
   void _enforceStoryCreateCooldown() {
     final now = DateTime.now();
     final previous = _lastStoryCreateAt;
-    if (previous != null && now.difference(previous) < const Duration(seconds: 3)) {
-      throw Exception('Çok hızlı story paylaşımı yapıyorsun. Birkaç saniye bekle.');
+    if (previous != null &&
+        now.difference(previous) < const Duration(seconds: 3)) {
+      throw Exception(
+        'Çok hızlı story paylaşımı yapıyorsun. Birkaç saniye bekle.',
+      );
     }
     _lastStoryCreateAt = now;
   }
@@ -35,7 +38,8 @@ class StoryService {
     final now = DateTime.now();
     final key = '$storyId:$action';
     final previous = _lastInteractionAt[key];
-    if (previous != null && now.difference(previous) < const Duration(milliseconds: 700)) {
+    if (previous != null &&
+        now.difference(previous) < const Duration(milliseconds: 700)) {
       throw Exception('Çok hızlı işlem yapıyorsun. Lütfen tekrar dene.');
     }
     _lastInteractionAt[key] = now;
@@ -54,13 +58,13 @@ class StoryService {
         .limit(150)
         .snapshots()
         .map((snapshot) {
-      final stories = snapshot.docs
-          .map(AppStory.fromDocument)
-          .where((story) => story.userId.isNotEmpty && story.isActive)
-          .toList();
-      stories.sort((a, b) => a.createdAt.compareTo(b.createdAt));
-      return stories;
-    });
+          final stories = snapshot.docs
+              .map(AppStory.fromDocument)
+              .where((story) => story.userId.isNotEmpty && story.isActive)
+              .toList();
+          stories.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+          return stories;
+        });
   }
 
   Stream<List<AppStory>> watchActiveForUser(String userId) {
@@ -98,9 +102,9 @@ class StoryService {
 
     final storyRef = _firestore.collection('stories').doc();
     final extension = image.path.toLowerCase().endsWith('.png') ? 'png' : 'jpg';
-    final storageRef = _storage
-        .ref()
-        .child('users/${user.uid}/stories/${storyRef.id}.$extension');
+    final storageRef = _storage.ref().child(
+      'users/${user.uid}/stories/${storyRef.id}.$extension',
+    );
     final metadata = SettableMetadata(
       contentType: extension == 'png' ? 'image/png' : 'image/jpeg',
     );
@@ -132,12 +136,12 @@ class StoryService {
       maxDuration: const Duration(seconds: 15),
     );
     final storyRef = _firestore.collection('stories').doc();
-    final videoRef = _storage
-        .ref()
-        .child('users/${user.uid}/stories/${storyRef.id}.mp4');
-    final thumbRef = _storage
-        .ref()
-        .child('users/${user.uid}/stories/${storyRef.id}_thumb.jpg');
+    final videoRef = _storage.ref().child(
+      'users/${user.uid}/stories/${storyRef.id}.mp4',
+    );
+    final thumbRef = _storage.ref().child(
+      'users/${user.uid}/stories/${storyRef.id}_thumb.jpg',
+    );
 
     final videoUpload = await videoRef.putFile(
       prepared.video,
@@ -184,12 +188,12 @@ class StoryService {
   }
 
   Map<String, dynamic> _actorData(User user) => {
-        'userId': user.uid,
-        'userName': user.displayName?.trim().isNotEmpty == true
-            ? user.displayName!.trim()
-            : 'TBT kullanıcısı',
-        'userPhotoUrl': user.photoURL ?? '',
-      };
+    'userId': user.uid,
+    'userName': user.displayName?.trim().isNotEmpty == true
+        ? user.displayName!.trim()
+        : 'TBT kullanıcısı',
+    'userPhotoUrl': user.photoURL ?? '',
+  };
 
   String _actorName(User user) => (user.displayName ?? '').trim().isNotEmpty
       ? user.displayName!.trim()
@@ -208,9 +212,10 @@ class StoryService {
   Stream<Map<String, dynamic>> watchMyInteraction(String storyId) {
     final user = _auth.currentUser;
     if (user == null) return Stream.value(const <String, dynamic>{});
-    return _interactionRef(storyId, user.uid).snapshots().map(
-          (doc) => doc.data() ?? const <String, dynamic>{},
-        );
+    return _interactionRef(
+      storyId,
+      user.uid,
+    ).snapshots().map((doc) => doc.data() ?? const <String, dynamic>{});
   }
 
   Stream<List<Map<String, dynamic>>> watchInteractions(AppStory story) {
@@ -224,19 +229,19 @@ class StoryService {
         .collection('interactions')
         .snapshots()
         .map((snapshot) {
-      final items = snapshot.docs.map((doc) {
-        final data = Map<String, dynamic>.from(doc.data());
-        data['id'] = doc.id;
-        return data;
-      }).toList();
-      items.sort((a, b) {
-        final at = a['updatedAt'];
-        final bt = b['updatedAt'];
-        if (at is Timestamp && bt is Timestamp) return bt.compareTo(at);
-        return 0;
-      });
-      return items;
-    });
+          final items = snapshot.docs.map((doc) {
+            final data = Map<String, dynamic>.from(doc.data());
+            data['id'] = doc.id;
+            return data;
+          }).toList();
+          items.sort((a, b) {
+            final at = a['updatedAt'];
+            final bt = b['updatedAt'];
+            if (at is Timestamp && bt is Timestamp) return bt.compareTo(at);
+            return 0;
+          });
+          return items;
+        });
   }
 
   Future<void> setLiked(AppStory story, bool liked) async {

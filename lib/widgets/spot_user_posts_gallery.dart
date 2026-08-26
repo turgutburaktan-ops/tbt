@@ -36,8 +36,11 @@ class SpotUserPostsGallery extends StatelessWidget {
             }
 
             final docs = snapshot.data?.docs ?? const [];
-            final matches = docs.where((doc) => _matches(doc.data(), spot)).toList()
-              ..sort((a, b) => _score(b.data(), spot).compareTo(_score(a.data(), spot)));
+            final matches =
+                docs.where((doc) => _matches(doc.data(), spot)).toList()..sort(
+                  (a, b) =>
+                      _score(b.data(), spot).compareTo(_score(a.data(), spot)),
+                );
             final top = matches.take(9).toList(growable: false);
 
             if (top.isEmpty) {
@@ -96,7 +99,10 @@ class SpotUserPostsGallery extends StatelessWidget {
                     Expanded(
                       child: Text(
                         'Bu Noktadan Paylaşımlar',
-                        style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          fontSize: 19,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ],
@@ -127,7 +133,10 @@ class SpotUserPostsGallery extends StatelessWidget {
                         child: Container(
                           color: const Color(0xFF121416),
                           child: url.isEmpty && storagePath.isEmpty
-                              ? const Icon(Icons.image_outlined, color: Colors.white30)
+                              ? const Icon(
+                                  Icons.image_outlined,
+                                  color: Colors.white30,
+                                )
                               : FirebaseMediaImage(
                                   imageUrl: url,
                                   storagePath: storagePath,
@@ -152,7 +161,11 @@ class SpotUserPostsGallery extends StatelessWidget {
         const SizedBox(height: 28),
         const Row(
           children: [
-            Icon(Icons.rate_review_outlined, size: 21, color: Color(0xFFB7BCC2)),
+            Icon(
+              Icons.rate_review_outlined,
+              size: 21,
+              color: Color(0xFFB7BCC2),
+            ),
             SizedBox(width: 8),
             Expanded(
               child: Text(
@@ -179,12 +192,14 @@ class SpotUserPostsGallery extends StatelessWidget {
     var score = likes * 3.0 + comments * 5.0;
 
     if (createdAt is Timestamp) {
-      final ageDays = DateTime.now().difference(createdAt.toDate()).inHours / 24.0;
+      final ageDays =
+          DateTime.now().difference(createdAt.toDate()).inHours / 24.0;
       score += 12.0 / (1.0 + (ageDays / 14.0));
     }
 
     final postName = _normalize(
-      (post['spotName'] ?? post['locationName'] ?? post['location'] ?? '').toString(),
+      (post['spotName'] ?? post['locationName'] ?? post['location'] ?? '')
+          .toString(),
     );
     final spotName = _normalize(spot.name);
     if (postName == spotName && postName.isNotEmpty) {
@@ -212,7 +227,8 @@ class SpotUserPostsGallery extends StatelessWidget {
 
   static bool _matches(Map<String, dynamic> post, PhotoSpot spot) {
     final postName = _normalize(
-      (post['spotName'] ?? post['locationName'] ?? post['location'] ?? '').toString(),
+      (post['spotName'] ?? post['locationName'] ?? post['location'] ?? '')
+          .toString(),
     );
     final spotName = _normalize(spot.name);
 
@@ -224,7 +240,8 @@ class SpotUserPostsGallery extends StatelessWidget {
       }
       final postTokens = postName.split(' ').where((e) => e.length > 2).toSet();
       final spotTokens = spotName.split(' ').where((e) => e.length > 2).toSet();
-      if (postTokens.intersection(spotTokens).length >= math.min(2, spotTokens.length)) {
+      if (postTokens.intersection(spotTokens).length >=
+          math.min(2, spotTokens.length)) {
         return true;
       }
     }
@@ -256,7 +273,8 @@ class SpotUserPostsGallery extends StatelessWidget {
     const r = 6371000.0;
     final dLat = _rad(lat2 - lat1);
     final dLon = _rad(lon2 - lon1);
-    final a = math.sin(dLat / 2) * math.sin(dLat / 2) +
+    final a =
+        math.sin(dLat / 2) * math.sin(dLat / 2) +
         math.cos(_rad(lat1)) *
             math.cos(_rad(lat2)) *
             math.sin(dLon / 2) *
@@ -273,13 +291,13 @@ class _Shell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(15),
-        decoration: BoxDecoration(
-          color: const Color(0xFF121416),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white10),
-        ),
-        child: child,
-      );
+    width: double.infinity,
+    padding: const EdgeInsets.all(15),
+    decoration: BoxDecoration(
+      color: const Color(0xFF121416),
+      borderRadius: BorderRadius.circular(16),
+      border: Border.all(color: Colors.white10),
+    ),
+    child: child,
+  );
 }

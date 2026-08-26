@@ -19,9 +19,7 @@ class ChatThread {
     this.sourceId,
   });
 
-  factory ChatThread.fromDocument(
-    DocumentSnapshot<Map<String, dynamic>> doc,
-  ) {
+  factory ChatThread.fromDocument(DocumentSnapshot<Map<String, dynamic>> doc) {
     final data = doc.data() ?? const <String, dynamic>{};
     final rawMembers = data['memberIds'];
     return ChatThread(
@@ -53,9 +51,7 @@ class ChatMessage {
     required this.deleted,
   });
 
-  factory ChatMessage.fromDocument(
-    DocumentSnapshot<Map<String, dynamic>> doc,
-  ) {
+  factory ChatMessage.fromDocument(DocumentSnapshot<Map<String, dynamic>> doc) {
     final data = doc.data() ?? const <String, dynamic>{};
     return ChatMessage(
       id: doc.id,

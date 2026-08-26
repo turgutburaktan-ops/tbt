@@ -105,8 +105,9 @@ class _SearchableSelectionFieldState extends State<SearchableSelectionField> {
           decoration: InputDecoration(
             labelText: widget.labelText,
             hintText: widget.hintText,
-            prefixIcon:
-                widget.prefixIcon == null ? null : Icon(widget.prefixIcon),
+            prefixIcon: widget.prefixIcon == null
+                ? null
+                : Icon(widget.prefixIcon),
             suffixIcon: focusNode.hasFocus && controller.text.isNotEmpty
                 ? IconButton(
                     tooltip: 'Temizle',

@@ -57,21 +57,22 @@ class AppNotificationService {
           .orderBy('createdAt', descending: true)
           .limit(limit)
           .snapshots()
-          .map((snapshot) => snapshot.docs
-              .map(AppNotificationItem.fromDocument)
-              .toList(growable: false));
+          .map(
+            (snapshot) => snapshot.docs
+                .map(AppNotificationItem.fromDocument)
+                .toList(growable: false),
+          );
     });
   }
 
-  Stream<int> unreadCount() => watchMine().map(
-        (items) => items.where((item) => !item.read).length,
-      );
+  Stream<int> unreadCount() =>
+      watchMine().map((items) => items.where((item) => !item.read).length);
 
   Stream<int> unreadMessageCount() => watchMine().map(
-        (items) => items
-            .where((item) => !item.read && item.type.toLowerCase() == 'message')
-            .length,
-      );
+    (items) => items
+        .where((item) => !item.read && item.type.toLowerCase() == 'message')
+        .length,
+  );
 
   Future<void> notifyUser({
     required String userId,
@@ -104,18 +105,24 @@ class AppNotificationService {
     String? sourceId,
     String? actorId,
   }) async {
-    final unique =
-        userIds.map((e) => e.trim()).where((e) => e.isNotEmpty).toSet();
+    final unique = userIds
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty)
+        .toSet();
     if (unique.isEmpty) return;
 
-    await Future.wait(unique.map((userId) => notifyUser(
+    await Future.wait(
+      unique.map(
+        (userId) => notifyUser(
           userId: userId,
           type: type,
           title: title,
           body: body,
           sourceId: sourceId,
           actorId: actorId,
-        )));
+        ),
+      ),
+    );
   }
 
   Future<void> notifyMeOnce({
@@ -149,7 +156,9 @@ class AppNotificationService {
     if (user == null) return;
     try {
       final profile = await _firestore.collection('users').doc(user.uid).get();
-      final university = (profile.data()?['university'] ?? '').toString().trim();
+      final university = (profile.data()?['university'] ?? '')
+          .toString()
+          .trim();
       if (university.isEmpty) return;
 
       final communities = await _firestore
@@ -179,7 +188,8 @@ class AppNotificationService {
       }).toList();
 
       if (tonight.isEmpty) return;
-      final dayKey = '${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}';
+      final dayKey =
+          '${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}';
       final firstId = tonight.first.id;
       await notifyMeOnce(
         dedupeKey: 'campus_evening_${university.hashCode}_$dayKey',
@@ -207,19 +217,18 @@ class AppNotificationService {
   Future<void> markAllRead() async {
     final user = _auth.currentUser;
     if (user == null) return;
-    final snapshot =
-        await _items(user.uid).where('read', isEqualTo: false).limit(100).get();
+    final snapshot = await _items(user.uid)
+        .where('read', isEqualTo: false)
+        .limit(100)
+        .get();
     if (snapshot.docs.isEmpty) return;
 
     final batch = _firestore.batch();
     for (final doc in snapshot.docs) {
-      batch.set(
-          doc.reference,
-          {
-            'read': true,
-            'readAt': FieldValue.serverTimestamp(),
-          },
-          SetOptions(merge: true));
+      batch.set(doc.reference, {
+        'read': true,
+        'readAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
     }
     await batch.commit();
   }

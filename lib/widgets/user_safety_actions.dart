@@ -21,16 +21,31 @@ class UserSafetyActions extends StatelessWidget {
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Vazgeç')),
-          FilledButton(onPressed: () => Navigator.pop(dialogContext, controller.text.trim()), child: const Text('Gönder')),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Vazgeç'),
+          ),
+          FilledButton(
+            onPressed: () =>
+                Navigator.pop(dialogContext, controller.text.trim()),
+            child: const Text('Gönder'),
+          ),
         ],
       ),
     );
     controller.dispose();
     if (reason == null || reason.length < 3) return;
-    await TrustSafetyService.instance.report(targetType: 'user', targetId: userId, reason: reason);
+    await TrustSafetyService.instance.report(
+      targetType: 'user',
+      targetId: userId,
+      reason: reason,
+    );
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Şikâyetin moderasyon ekibine gönderildi.')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Şikâyetin moderasyon ekibine gönderildi.'),
+        ),
+      );
     }
   }
 
@@ -39,10 +54,18 @@ class UserSafetyActions extends StatelessWidget {
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Kullanıcıyı engelle?'),
-        content: const Text('Bu kullanıcıyla sosyal etkileşimlerini sınırlandıracağız.'),
+        content: const Text(
+          'Bu kullanıcıyla sosyal etkileşimlerini sınırlandıracağız.',
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('Vazgeç')),
-          FilledButton(onPressed: () => Navigator.pop(dialogContext, true), child: const Text('Engelle')),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Vazgeç'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Engelle'),
+          ),
         ],
       ),
     );
@@ -60,8 +83,20 @@ class UserSafetyActions extends StatelessWidget {
         if (value == 'block') _block(context);
       },
       itemBuilder: (_) => const [
-        PopupMenuItem(value: 'report', child: ListTile(leading: Icon(Icons.flag_outlined), title: Text('Şikâyet et'))),
-        PopupMenuItem(value: 'block', child: ListTile(leading: Icon(Icons.block_rounded), title: Text('Engelle'))),
+        PopupMenuItem(
+          value: 'report',
+          child: ListTile(
+            leading: Icon(Icons.flag_outlined),
+            title: Text('Şikâyet et'),
+          ),
+        ),
+        PopupMenuItem(
+          value: 'block',
+          child: ListTile(
+            leading: Icon(Icons.block_rounded),
+            title: Text('Engelle'),
+          ),
+        ),
       ],
     );
   }

@@ -55,8 +55,10 @@ class EventTicket {
       userName: (data['userName'] ?? 'Katılımcı').toString(),
       status: status,
       isPaidEvent: data['isPaidEvent'] == true,
-      priceMinor:
-          ((data['priceMinor'] as num?)?.toInt() ?? 0).clamp(0, 1000000000),
+      priceMinor: ((data['priceMinor'] as num?)?.toInt() ?? 0).clamp(
+        0,
+        1000000000,
+      ),
       currency: (data['currency'] ?? 'TRY').toString(),
       qrToken: (data['qrToken'] ?? '').toString(),
       issuedAt: readDate(data['issuedAt']),

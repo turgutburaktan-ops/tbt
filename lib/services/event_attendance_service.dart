@@ -24,7 +24,9 @@ class EventAttendanceService {
         .collection('attendance')
         .doc(user.uid)
         .snapshots()
-        .map((doc) => doc.exists ? (doc.data()?['status'] ?? '').toString() : null);
+        .map(
+          (doc) => doc.exists ? (doc.data()?['status'] ?? '').toString() : null,
+        );
   }
 
   Future<void> setChoice(String eventId, EventAttendanceChoice choice) async {
@@ -45,15 +47,18 @@ class EventAttendanceService {
     final user = _auth.currentUser;
     if (user == null) throw Exception('Etkinlik işlemi için giriş yapmalısın.');
 
-    final eventRef =
-        _firestore.collection(SocialEventService.collection).doc(eventId);
+    final eventRef = _firestore
+        .collection(SocialEventService.collection)
+        .doc(eventId);
     final attendanceRef = eventRef.collection('attendance').doc(user.uid);
-    final ticketRef = _firestore.collection(EventTicketService.collection).doc(
-          EventTicketService.instance.ticketIdFor(eventId, user.uid),
-        );
+    final ticketRef = _firestore
+        .collection(EventTicketService.collection)
+        .doc(EventTicketService.instance.ticketIdFor(eventId, user.uid));
     final qrToken = EventTicketService.instance.createSecureQrToken();
 
-    final result = await _firestore.runTransaction<Map<String, String>>((tx) async {
+    final result = await _firestore.runTransaction<Map<String, String>>((
+      tx,
+    ) async {
       final eventSnap = await tx.get(eventRef);
       if (!eventSnap.exists) throw Exception('Etkinlik artık mevcut değil.');
       final data = eventSnap.data() ?? const <String, dynamic>{};
@@ -65,8 +70,8 @@ class EventAttendanceService {
         throw Exception('Bu etkinlik katılıma kapalı.');
       }
 
-      final visibility =
-          (data['visibility'] ?? EventVisibility.public.name).toString();
+      final visibility = (data['visibility'] ?? EventVisibility.public.name)
+          .toString();
       final allowed = (data['allowedUserIds'] as List? ?? const [])
           .map((e) => e.toString())
           .toList();
@@ -75,8 +80,8 @@ class EventAttendanceService {
         throw Exception('Bu etkinlik sadece davet edilen kullanıcılar için.');
       }
 
-      final accessType =
-          (data['accessType'] ?? EventAccessType.free.name).toString();
+      final accessType = (data['accessType'] ?? EventAccessType.free.name)
+          .toString();
       final paymentStatus =
           (data['paymentStatus'] ?? EventPaymentStatus.notRequired.name)
               .toString();
@@ -100,19 +105,22 @@ class EventAttendanceService {
       final participants = (data['participantIds'] as List? ?? const [])
           .map((e) => e.toString())
           .toList();
-      var interestedCount =
-          ((data['interestedCount'] as num?)?.toInt() ?? 0)
-              .clamp(0, 2147483647);
+      var interestedCount = ((data['interestedCount'] as num?)?.toInt() ?? 0)
+          .clamp(0, 2147483647);
       var privateCount =
-          ((data['privateParticipantCount'] as num?)?.toInt() ?? 0)
-              .clamp(0, 2147483647);
+          ((data['privateParticipantCount'] as num?)?.toInt() ?? 0).clamp(
+            0,
+            2147483647,
+          );
 
       participants.remove(user.uid);
       if (previous == 'interested' && interestedCount > 0) interestedCount--;
       if (previous == 'private' && privateCount > 0) privateCount--;
 
-      final capacity =
-          ((data['capacity'] as num?)?.toInt() ?? 1).clamp(1, 2147483647);
+      final capacity = ((data['capacity'] as num?)?.toInt() ?? 1).clamp(
+        1,
+        2147483647,
+      );
       if ((status == 'going' || status == 'private') &&
           participants.length + privateCount >= capacity) {
         throw Exception('Bu etkinlikte boş yer kalmadı.');
@@ -132,52 +140,44 @@ class EventAttendanceService {
       if (status == 'none') {
         if (attendanceSnap.exists) tx.delete(attendanceRef);
       } else {
-        tx.set(
-          attendanceRef,
-          {
-            'userId': user.uid,
-            'userName': (user.displayName ?? '').trim().isEmpty
-                ? 'Katılımcı'
-                : user.displayName!.trim(),
-            'status': status,
-            'updatedAt': FieldValue.serverTimestamp(),
-          },
-          SetOptions(merge: true),
-        );
+        tx.set(attendanceRef, {
+          'userId': user.uid,
+          'userName': (user.displayName ?? '').trim().isEmpty
+              ? 'Katılımcı'
+              : user.displayName!.trim(),
+          'status': status,
+          'updatedAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
       }
 
       final ticketSnap = await tx.get(ticketRef);
       if (status == 'going' || status == 'private') {
         final paid = accessType == EventAccessType.paid.name;
-        tx.set(
-          ticketRef,
-          {
-            'id': ticketRef.id,
-            'eventId': eventId,
-            'eventTitle': (data['title'] ?? 'Etkinlik').toString(),
-            'userId': user.uid,
-            'userName': (user.displayName ?? '').trim().isEmpty
-                ? 'Katılımcı'
-                : user.displayName!.trim(),
-            'status': paid
-                ? EventTicketStatus.pendingPayment.name
-                : EventTicketStatus.active.name,
-            'isPaidEvent': paid,
-            'priceMinor': ((data['ticketPriceMinor'] as num?)?.toInt() ?? 0),
-            'currency': (data['currency'] ?? 'TRY').toString(),
-            'qrToken': ticketSnap.exists &&
-                    (ticketSnap.data()?['qrToken'] ?? '').toString().isNotEmpty
-                ? ticketSnap.data()!['qrToken']
-                : qrToken,
-            'issuedAt': ticketSnap.exists
-                ? (ticketSnap.data()?['issuedAt'] ??
-                    FieldValue.serverTimestamp())
-                : FieldValue.serverTimestamp(),
-            'usedAt': null,
-            'updatedAt': FieldValue.serverTimestamp(),
-          },
-          SetOptions(merge: true),
-        );
+        tx.set(ticketRef, {
+          'id': ticketRef.id,
+          'eventId': eventId,
+          'eventTitle': (data['title'] ?? 'Etkinlik').toString(),
+          'userId': user.uid,
+          'userName': (user.displayName ?? '').trim().isEmpty
+              ? 'Katılımcı'
+              : user.displayName!.trim(),
+          'status': paid
+              ? EventTicketStatus.pendingPayment.name
+              : EventTicketStatus.active.name,
+          'isPaidEvent': paid,
+          'priceMinor': ((data['ticketPriceMinor'] as num?)?.toInt() ?? 0),
+          'currency': (data['currency'] ?? 'TRY').toString(),
+          'qrToken':
+              ticketSnap.exists &&
+                  (ticketSnap.data()?['qrToken'] ?? '').toString().isNotEmpty
+              ? ticketSnap.data()!['qrToken']
+              : qrToken,
+          'issuedAt': ticketSnap.exists
+              ? (ticketSnap.data()?['issuedAt'] ?? FieldValue.serverTimestamp())
+              : FieldValue.serverTimestamp(),
+          'usedAt': null,
+          'updatedAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
       } else if (ticketSnap.exists) {
         tx.update(ticketRef, {
           'status': EventTicketStatus.cancelled.name,

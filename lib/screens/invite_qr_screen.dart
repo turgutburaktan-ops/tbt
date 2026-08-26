@@ -19,7 +19,9 @@ class InviteQrScreen extends StatelessWidget {
     if (!context.mounted) return;
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(const SnackBar(content: Text('Davet bağlantısı kopyalandı.')));
+      ..showSnackBar(
+        const SnackBar(content: Text('Davet bağlantısı kopyalandı.')),
+      );
   }
 
   @override
@@ -40,7 +42,10 @@ class InviteQrScreen extends StatelessWidget {
                 Text(
                   title,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900),
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w900,
+                  ),
                 ),
                 if (subtitle.trim().isNotEmpty) ...[
                   const SizedBox(height: 8),

@@ -46,8 +46,9 @@ class ShootingGuide {
       lightDirection: (data['lightDirection'] ?? '').toString().trim(),
       portraitTip: (data['portraitTip'] ?? '').toString().trim(),
       compositionTip: (data['compositionTip'] ?? '').toString().trim(),
-      recommendedSettings:
-          (data['recommendedSettings'] ?? '').toString().trim(),
+      recommendedSettings: (data['recommendedSettings'] ?? '')
+          .toString()
+          .trim(),
       accessibilityNote: (data['accessibilityNote'] ?? '').toString().trim(),
       shotIdeas: list(data['shotIdeas']),
     );

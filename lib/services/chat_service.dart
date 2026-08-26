@@ -52,7 +52,8 @@ class ChatService {
     }
 
     final fingerprint = text.trim().toLowerCase();
-    final repeatedTooFast = _lastMessageFingerprint == fingerprint &&
+    final repeatedTooFast =
+        _lastMessageFingerprint == fingerprint &&
         _lastMessageAt != null &&
         now.difference(_lastMessageAt!) < const Duration(seconds: 4);
     if (repeatedTooFast) {
@@ -123,14 +124,16 @@ class ChatService {
           .where('memberIds', arrayContains: user.uid)
           .snapshots()
           .map((snapshot) {
-        final items = snapshot.docs.map(ChatThread.fromDocument).toList();
-        items.sort((a, b) {
-          final ad = a.lastMessageAt ?? DateTime.fromMillisecondsSinceEpoch(0);
-          final bd = b.lastMessageAt ?? DateTime.fromMillisecondsSinceEpoch(0);
-          return bd.compareTo(ad);
-        });
-        return items;
-      });
+            final items = snapshot.docs.map(ChatThread.fromDocument).toList();
+            items.sort((a, b) {
+              final ad =
+                  a.lastMessageAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+              final bd =
+                  b.lastMessageAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+              return bd.compareTo(ad);
+            });
+            return items;
+          });
     });
   }
 
@@ -147,10 +150,12 @@ class ChatService {
           .orderBy('createdAt', descending: true)
           .limit(100)
           .snapshots()
-          .map((snapshot) => snapshot.docs
-              .map(ChatMessage.fromDocument)
-              .where((message) => !message.deleted)
-              .toList(growable: false));
+          .map(
+            (snapshot) => snapshot.docs
+                .map(ChatMessage.fromDocument)
+                .where((message) => !message.deleted)
+                .toList(growable: false),
+          );
     });
   }
 
@@ -182,7 +187,8 @@ class ChatService {
 
     final threadRef = _firestore.collection('chat_threads').doc(threadId);
     final thread = await threadRef.get();
-    final members = (thread.data()?['memberIds'] as List?)
+    final members =
+        (thread.data()?['memberIds'] as List?)
             ?.map((e) => e.toString())
             .toList() ??
         const <String>[];
@@ -200,15 +206,12 @@ class ChatService {
       'createdAt': FieldValue.serverTimestamp(),
       'deleted': false,
     });
-    batch.set(
-        threadRef,
-        {
-          'lastMessage': clean,
-          'lastSenderId': user.uid,
-          'lastMessageAt': FieldValue.serverTimestamp(),
-          'updatedAt': FieldValue.serverTimestamp(),
-        },
-        SetOptions(merge: true));
+    batch.set(threadRef, {
+      'lastMessage': clean,
+      'lastSenderId': user.uid,
+      'lastMessageAt': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
     await batch.commit();
 
     final senderName = (user.displayName ?? '').trim().isNotEmpty
@@ -238,9 +241,9 @@ class ChatService {
         .collection('blocked')
         .doc(otherUserId)
         .set({
-      'userId': otherUserId,
-      'createdAt': FieldValue.serverTimestamp(),
-    });
+          'userId': otherUserId,
+          'createdAt': FieldValue.serverTimestamp(),
+        });
   }
 
   Future<void> unblockUser(String otherUserId) async {

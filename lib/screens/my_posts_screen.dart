@@ -19,20 +19,14 @@ class MyPostsScreen extends StatelessWidget {
         iconTheme: const IconThemeData(color: Colors.white),
         title: const Text(
           'Çekimlerim',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
       ),
       body: user == null
           ? const Center(
               child: Text(
                 'Çekimlerini görmek için giriş yapmalısın.',
-                style: TextStyle(
-                  color: Colors.white70,
-                  fontSize: 16,
-                ),
+                style: TextStyle(color: Colors.white70, fontSize: 16),
               ),
             )
           : StreamBuilder<QuerySnapshot>(
@@ -43,9 +37,7 @@ class MyPostsScreen extends StatelessWidget {
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(
-                    child: CircularProgressIndicator(
-                      color: Color(0xFFB7BCC2),
-                    ),
+                    child: CircularProgressIndicator(color: Color(0xFFB7BCC2)),
                   );
                 }
 
@@ -56,9 +48,7 @@ class MyPostsScreen extends StatelessWidget {
                       child: Text(
                         'Çekimler yüklenirken bir hata oluştu.\n${snapshot.error}',
                         textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          color: Colors.white70,
-                        ),
+                        style: const TextStyle(color: Colors.white70),
                       ),
                     ),
                   );
@@ -89,10 +79,7 @@ class MyPostsScreen extends StatelessWidget {
                         Text(
                           'Paylaştığın fotoğraflar burada görünecek.',
                           textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: Colors.white54,
-                            fontSize: 14,
-                          ),
+                          style: TextStyle(color: Colors.white54, fontSize: 14),
                         ),
                       ],
                     ),
@@ -130,8 +117,7 @@ class MyPostsScreen extends StatelessWidget {
                     final data = document.data() as Map<String, dynamic>;
 
                     final imageUrl = (data['imageUrl'] ?? '').toString();
-                    final storagePath =
-                        (data['storagePath'] ?? '').toString();
+                    final storagePath = (data['storagePath'] ?? '').toString();
 
                     final title = (data['title'] ?? 'Çekim').toString();
 
@@ -220,10 +206,7 @@ class MyPostsScreen extends StatelessWidget {
                                 color: Colors.redAccent,
                               ),
                               onPressed: () {
-                                _confirmDelete(
-                                  context,
-                                  document.id,
-                                );
+                                _confirmDelete(context, document.id);
                               },
                             ),
                           ),
@@ -237,10 +220,7 @@ class MyPostsScreen extends StatelessWidget {
     );
   }
 
-  Future<void> _confirmDelete(
-    BuildContext context,
-    String documentId,
-  ) async {
+  Future<void> _confirmDelete(BuildContext context, String documentId) async {
     final shouldDelete = await showDialog<bool>(
       context: context,
       builder: (dialogContext) {
@@ -288,19 +268,13 @@ class MyPostsScreen extends StatelessWidget {
 
       if (!context.mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Çekim silindi.'),
-        ),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Çekim silindi.')));
     } catch (e) {
       if (!context.mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Silinemedi: $e'),
-        ),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Silinemedi: $e')));
     }
   }
 }

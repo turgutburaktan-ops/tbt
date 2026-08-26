@@ -48,24 +48,24 @@ class EventTrustService {
     if (age < const Duration(hours: 24)) {
       return EventTrustEligibility(
         allowed: false,
-        reason:
-            'Yeni hesaplarda ücretli etkinlik 24 saat sonra açılır. Bu sürede ücretsiz etkinlik oluşturabilirsin.',
+        reason: 'Yeni hesaplarda ücretli etkinlik 24 saat sonra açılır. Bu sürede ücretsiz etkinlik oluşturabilirsin.',
         accountAgeHours: ageHours,
       );
     }
 
     final profile = await _firestore.collection('users').doc(user.uid).get();
     final data = profile.data() ?? const <String, dynamic>{};
-    final displayName =
-        (data['displayName'] ?? user.displayName ?? '').toString().trim();
-    final photoUrl =
-        (data['photoUrl'] ?? user.photoURL ?? '').toString().trim();
+    final displayName = (data['displayName'] ?? user.displayName ?? '')
+        .toString()
+        .trim();
+    final photoUrl = (data['photoUrl'] ?? user.photoURL ?? '')
+        .toString()
+        .trim();
 
     if (displayName.length < 3 || photoUrl.isEmpty) {
       return EventTrustEligibility(
         allowed: false,
-        reason:
-            'Ücretli etkinlik için profil adını ve profil fotoğrafını tamamlamalısın.',
+        reason: 'Ücretli etkinlik için profil adını ve profil fotoğrafını tamamlamalısın.',
         accountAgeHours: ageHours,
       );
     }

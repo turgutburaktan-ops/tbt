@@ -58,12 +58,18 @@ class _SpotSuggestionScreenState extends State<SpotSuggestionScreen> {
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
       }
-      if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) {
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
         _message('Konum izni olmadan harita konumu seçilemez.');
         return;
       }
-      final p = await Geolocator.getCurrentPosition(locationSettings: const LocationSettings(accuracy: LocationAccuracy.high));
-      if (mounted) setState(() => _pickedLocation = LatLng(p.latitude, p.longitude));
+      final p = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+        ),
+      );
+      if (mounted)
+        setState(() => _pickedLocation = LatLng(p.latitude, p.longitude));
     } catch (_) {
       _message('Konum alınamadı.');
     } finally {
@@ -92,8 +98,11 @@ class _SpotSuggestionScreenState extends State<SpotSuggestionScreen> {
       _message('Yer adı ve şehir bilgilerini doldur.');
       return;
     }
-    if (_description.text.trim().length < 10 || _whyVisit.text.trim().length < 5) {
-      _message('Açıklama ve neden görülmeli alanlarını biraz daha detaylandır.');
+    if (_description.text.trim().length < 10 ||
+        _whyVisit.text.trim().length < 5) {
+      _message(
+        'Açıklama ve neden görülmeli alanlarını biraz daha detaylandır.',
+      );
       return;
     }
     if (_pickedLocation == null) {
@@ -116,16 +125,16 @@ class _SpotSuggestionScreenState extends State<SpotSuggestionScreen> {
       final result = await FirebaseFunctions.instanceFor(region: 'europe-west1')
           .httpsCallable('submitSpotSuggestion')
           .call({
-        'name': _name.text.trim(),
-        'city': _city.text.trim(),
-        'district': _district.text.trim(),
-        'description': _description.text.trim(),
-        'whyVisit': _whyVisit.text.trim(),
-        'latitude': _pickedLocation!.latitude,
-        'longitude': _pickedLocation!.longitude,
-        'imageUrl': imageUrl,
-        'imageStoragePath': storagePath,
-      });
+            'name': _name.text.trim(),
+            'city': _city.text.trim(),
+            'district': _district.text.trim(),
+            'description': _description.text.trim(),
+            'whyVisit': _whyVisit.text.trim(),
+            'latitude': _pickedLocation!.latitude,
+            'longitude': _pickedLocation!.longitude,
+            'imageUrl': imageUrl,
+            'imageStoragePath': storagePath,
+          });
       final data = Map<String, dynamic>.from(result.data as Map);
       if (!mounted) return;
       final duplicate = data['duplicateWarning'] == true;
@@ -133,10 +142,17 @@ class _SpotSuggestionScreenState extends State<SpotSuggestionScreen> {
         context: context,
         builder: (context) => AlertDialog(
           title: const Text('Önerin alındı'),
-          content: Text(duplicate
-              ? 'Yer önerin incelemeye gönderildi. Benzer bir kayıt bulunduğu için admin kontrolünde ayrıca karşılaştırılacak.'
-              : 'Yer önerin incelemeye gönderildi. Onaylandıktan sonra Gezilecek Yerler ve haritada görünecek.'),
-          actions: [FilledButton(onPressed: () => Navigator.pop(context), child: const Text('Tamam'))],
+          content: Text(
+            duplicate
+                ? 'Yer önerin incelemeye gönderildi. Benzer bir kayıt bulunduğu için admin kontrolünde ayrıca karşılaştırılacak.'
+                : 'Yer önerin incelemeye gönderildi. Onaylandıktan sonra Gezilecek Yerler ve haritada görünecek.',
+          ),
+          actions: [
+            FilledButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Tamam'),
+            ),
+          ],
         ),
       );
       if (mounted) Navigator.pop(context, true);
@@ -158,66 +174,166 @@ class _SpotSuggestionScreenState extends State<SpotSuggestionScreen> {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 14, 16, 32),
         children: [
-          const Text('Topluluğa yeni bir yer kazandır', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900)),
+          const Text(
+            'Topluluğa yeni bir yer kazandır',
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
+          ),
           const SizedBox(height: 5),
-          const Text('Sadece gezilecek yer önerileri kabul edilir. Kafe, restoran ve otel ekleme bu alandan yapılamaz.', style: TextStyle(color: Colors.white60, height: 1.4)),
+          const Text(
+            'Sadece gezilecek yer önerileri kabul edilir. Kafe, restoran ve otel ekleme bu alandan yapılamaz.',
+            style: TextStyle(color: Colors.white60, height: 1.4),
+          ),
           const SizedBox(height: 16),
-          TextField(controller: _name, textCapitalization: TextCapitalization.words, decoration: const InputDecoration(labelText: 'Yer adı')),
+          TextField(
+            controller: _name,
+            textCapitalization: TextCapitalization.words,
+            decoration: const InputDecoration(labelText: 'Yer adı'),
+          ),
           const SizedBox(height: 10),
-          Row(children: [
-            Expanded(child: TextField(controller: _city, textCapitalization: TextCapitalization.words, decoration: const InputDecoration(labelText: 'Şehir'))),
-            const SizedBox(width: 9),
-            Expanded(child: TextField(controller: _district, textCapitalization: TextCapitalization.words, decoration: const InputDecoration(labelText: 'İlçe'))),
-          ]),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _city,
+                  textCapitalization: TextCapitalization.words,
+                  decoration: const InputDecoration(labelText: 'Şehir'),
+                ),
+              ),
+              const SizedBox(width: 9),
+              Expanded(
+                child: TextField(
+                  controller: _district,
+                  textCapitalization: TextCapitalization.words,
+                  decoration: const InputDecoration(labelText: 'İlçe'),
+                ),
+              ),
+            ],
+          ),
           const SizedBox(height: 10),
-          TextField(controller: _description, maxLines: 4, decoration: const InputDecoration(labelText: 'Kısa açıklama', hintText: 'Burası nasıl bir yer?')),
+          TextField(
+            controller: _description,
+            maxLines: 4,
+            decoration: const InputDecoration(
+              labelText: 'Kısa açıklama',
+              hintText: 'Burası nasıl bir yer?',
+            ),
+          ),
           const SizedBox(height: 10),
-          TextField(controller: _whyVisit, maxLines: 3, decoration: const InputDecoration(labelText: 'Neden görülmeli?')),
+          TextField(
+            controller: _whyVisit,
+            maxLines: 3,
+            decoration: const InputDecoration(labelText: 'Neden görülmeli?'),
+          ),
           const SizedBox(height: 16),
-          Row(children: [
-            const Expanded(child: Text('Konum', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900))),
-            TextButton.icon(onPressed: _locating ? null : _useCurrentLocation, icon: const Icon(Icons.my_location_rounded), label: Text(_locating ? 'Alınıyor…' : 'Konumumu kullan')),
-          ]),
+          Row(
+            children: [
+              const Expanded(
+                child: Text(
+                  'Konum',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
+                ),
+              ),
+              TextButton.icon(
+                onPressed: _locating ? null : _useCurrentLocation,
+                icon: const Icon(Icons.my_location_rounded),
+                label: Text(_locating ? 'Alınıyor…' : 'Konumumu kullan'),
+              ),
+            ],
+          ),
           Container(
             height: 230,
             clipBehavior: Clip.antiAlias,
-            decoration: BoxDecoration(borderRadius: BorderRadius.circular(18), border: Border.all(color: AppColors.border)),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: AppColors.border),
+            ),
             child: GoogleMap(
-              initialCameraPosition: CameraPosition(target: initial, zoom: _pickedLocation == null ? 5.2 : 15),
+              initialCameraPosition: CameraPosition(
+                target: initial,
+                zoom: _pickedLocation == null ? 5.2 : 15,
+              ),
               zoomControlsEnabled: false,
               myLocationButtonEnabled: false,
               compassEnabled: false,
-              markers: _pickedLocation == null ? const {} : {Marker(markerId: const MarkerId('picked'), position: _pickedLocation!)},
+              markers: _pickedLocation == null
+                  ? const {}
+                  : {
+                      Marker(
+                        markerId: const MarkerId('picked'),
+                        position: _pickedLocation!,
+                      ),
+                    },
               onTap: (point) => setState(() => _pickedLocation = point),
             ),
           ),
           const SizedBox(height: 7),
-          const Text('Haritada yerin tam noktasına dokun.', style: TextStyle(color: Colors.white54, fontSize: 11.5)),
+          const Text(
+            'Haritada yerin tam noktasına dokun.',
+            style: TextStyle(color: Colors.white54, fontSize: 11.5),
+          ),
           const SizedBox(height: 16),
           OutlinedButton.icon(
             onPressed: _pickPhoto,
             icon: const Icon(Icons.add_photo_alternate_outlined),
-            label: Text(_photo == null ? 'Fotoğraf Ekle' : 'Fotoğraf seçildi ✓'),
+            label: Text(
+              _photo == null ? 'Fotoğraf Ekle' : 'Fotoğraf seçildi ✓',
+            ),
           ),
           if (_photo != null) ...[
             const SizedBox(height: 10),
-            ClipRRect(borderRadius: BorderRadius.circular(16), child: Image.file(_photo!, height: 190, width: double.infinity, fit: BoxFit.cover)),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: Image.file(
+                _photo!,
+                height: 190,
+                width: double.infinity,
+                fit: BoxFit.cover,
+              ),
+            ),
           ],
           const SizedBox(height: 18),
           Container(
             padding: const EdgeInsets.all(13),
-            decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.border)),
-            child: const Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Icon(Icons.fact_check_outlined, color: AppColors.cyan, size: 20),
-              SizedBox(width: 9),
-              Expanded(child: Text('Gönderdiğin yer hemen yayınlanmaz. Admin incelemesinden sonra onaylanır; mükerrer veya uygun olmayan öneriler reddedilir.', style: TextStyle(color: Colors.white60, fontSize: 12, height: 1.4))),
-            ]),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: const Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  Icons.fact_check_outlined,
+                  color: AppColors.cyan,
+                  size: 20,
+                ),
+                SizedBox(width: 9),
+                Expanded(
+                  child: Text(
+                    'Gönderdiğin yer hemen yayınlanmaz. Admin incelemesinden sonra onaylanır; mükerrer veya uygun olmayan öneriler reddedilir.',
+                    style: TextStyle(
+                      color: Colors.white60,
+                      fontSize: 12,
+                      height: 1.4,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 16),
           FilledButton.icon(
             onPressed: _submitting ? null : _submit,
-            icon: _submitting ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.send_rounded),
-            label: Text(_submitting ? 'İncelemeye gönderiliyor…' : 'İncelemeye Gönder'),
+            icon: _submitting
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.send_rounded),
+            label: Text(
+              _submitting ? 'İncelemeye gönderiliyor…' : 'İncelemeye Gönder',
+            ),
           ),
         ],
       ),

@@ -205,9 +205,13 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
               child: Row(
                 children: [
                   const Expanded(
-                    child: Text('Açıklamaya kişi etiketle',
-                        style: TextStyle(
-                            fontSize: 20, fontWeight: FontWeight.w900)),
+                    child: Text(
+                      'Açıklamaya kişi etiketle',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
                   ),
                   IconButton(
                     onPressed: () => Navigator.pop(sheetContext),
@@ -223,15 +227,18 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                 builder: (_, snapshot) {
                   if (snapshot.hasError) {
                     return Center(
-                      child: Text('Kullanıcılar yüklenemedi.\n${snapshot.error}',
-                          textAlign: TextAlign.center),
+                      child: Text(
+                        'Kullanıcılar yüklenemedi.\n${snapshot.error}',
+                        textAlign: TextAlign.center,
+                      ),
                     );
                   }
                   if (!snapshot.hasData) {
                     return const Center(child: CircularProgressIndicator());
                   }
-                  final users =
-                      snapshot.data!.docs.where((d) => d.id != me).toList();
+                  final users = snapshot.data!.docs
+                      .where((d) => d.id != me)
+                      .toList();
                   return ListView.builder(
                     itemCount: users.length,
                     itemBuilder: (_, index) {
@@ -245,28 +252,27 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                           (data['username'] ?? data['usernameNormalized'] ?? '')
                               .toString()
                               .trim();
-                      final mentionName =
-                          username.isNotEmpty ? username : displayName.replaceAll(' ', '');
+                      final mentionName = username.isNotEmpty
+                          ? username
+                          : displayName.replaceAll(' ', '');
                       final photo = (data['photoUrl'] ?? '').toString();
                       return ListTile(
                         leading: CircleAvatar(
                           backgroundColor: const Color(0xFF1A1D20),
-                          backgroundImage:
-                              photo.isEmpty ? null : NetworkImage(photo),
-                          child:
-                              photo.isEmpty ? const Icon(Icons.person_outline) : null,
+                          backgroundImage: photo.isEmpty
+                              ? null
+                              : NetworkImage(photo),
+                          child: photo.isEmpty
+                              ? const Icon(Icons.person_outline)
+                              : null,
                         ),
                         title: Text(displayName),
-                        subtitle:
-                            username.isEmpty ? null : Text('@$username'),
-                        onTap: () => Navigator.pop(
-                          sheetContext,
-                          {
-                            'id': doc.id,
-                            'name': displayName,
-                            'mention': mentionName,
-                          },
-                        ),
+                        subtitle: username.isEmpty ? null : Text('@$username'),
+                        onTap: () => Navigator.pop(sheetContext, {
+                          'id': doc.id,
+                          'name': displayName,
+                          'mention': mentionName,
+                        }),
                       );
                     },
                   );
@@ -283,11 +289,13 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     if (id.isEmpty || _taggedUsers.any((u) => u['id'] == id)) return;
     setState(() {
       _taggedUsers.add(selected);
-      final mention = '@${selected['mention'] ?? selected['name'] ?? 'kullanici'}';
+      final mention =
+          '@${selected['mention'] ?? selected['name'] ?? 'kullanici'}';
       final current = _captionController.text.trimRight();
       _captionController.text = current.isEmpty ? mention : '$current $mention';
-      _captionController.selection =
-          TextSelection.collapsed(offset: _captionController.text.length);
+      _captionController.selection = TextSelection.collapsed(
+        offset: _captionController.text.length,
+      );
     });
   }
 
@@ -300,8 +308,9 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
             .replaceAll('@$mentionValue', '')
             .replaceAll(RegExp(r'\s{2,}'), ' ')
             .trim();
-        _captionController.selection =
-            TextSelection.collapsed(offset: _captionController.text.length);
+        _captionController.selection = TextSelection.collapsed(
+          offset: _captionController.text.length,
+        );
       }
     });
   }
@@ -356,9 +365,11 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
         );
       }
       if (!mounted) return;
-      _message(_isVideo
-          ? 'Video başarıyla paylaşıldı! 🎬'
-          : 'Fotoğraf başarıyla paylaşıldı! 📸');
+      _message(
+        _isVideo
+            ? 'Video başarıyla paylaşıldı! 🎬'
+            : 'Fotoğraf başarıyla paylaşıldı! 📸',
+      );
       Navigator.pop(context, true);
     } catch (e) {
       if (mounted) {
@@ -400,14 +411,17 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     return const Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Icon(Icons.add_to_photos_outlined,
-            color: Color(0xFFB7BCC2), size: 68),
+        Icon(Icons.add_to_photos_outlined, color: Color(0xFFB7BCC2), size: 68),
         SizedBox(height: 14),
-        Text('Fotoğraf veya video ekle',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        Text(
+          'Fotoğraf veya video ekle',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
         SizedBox(height: 6),
-        Text('Video en fazla 30 saniye',
-            style: TextStyle(color: Colors.white54)),
+        Text(
+          'Video en fazla 30 saniye',
+          style: TextStyle(color: Colors.white54),
+        ),
       ],
     );
   }
@@ -420,9 +434,11 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       appBar: AppBar(
         backgroundColor: const Color(0xFF090A0C),
         foregroundColor: Colors.white,
-        title: Text(widget.businessVenueName.isEmpty
-            ? 'Paylaş'
-            : '${widget.businessVenueName} adına paylaş'),
+        title: Text(
+          widget.businessVenueName.isEmpty
+              ? 'Paylaş'
+              : '${widget.businessVenueName} adına paylaş',
+        ),
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(18, 16, 18, 40),
@@ -456,7 +472,9 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                 TextButton.icon(
                   onPressed: _loading ? null : _chooseSource,
                   icon: const Icon(Icons.edit),
-                  label: Text(_isVideo ? 'Videoyu değiştir' : 'Fotoğrafı değiştir'),
+                  label: Text(
+                    _isVideo ? 'Videoyu değiştir' : 'Fotoğrafı değiştir',
+                  ),
                 ),
               ],
             ),
@@ -490,15 +508,17 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                   controller: _captionController,
                   maxLines: 4,
                   maxLength: 500,
-                  buildCounter: (_,
-                          {required currentLength,
-                          required isFocused,
-                          maxLength}) =>
-                      null,
+                  buildCounter: (
+                    _, {
+                    required currentLength,
+                    required isFocused,
+                    maxLength,
+                  }) => null,
                   style: const TextStyle(color: Colors.white),
                   decoration: const InputDecoration(
                     labelText: 'Açıklama',
-                    hintText: 'Paylaşımını anlat, istersen arkadaşını etiketle…',
+                    hintText:
+                        'Paylaşımını anlat, istersen arkadaşını etiketle…',
                     prefixIcon: Padding(
                       padding: EdgeInsets.only(bottom: 70),
                       child: Icon(Icons.notes, color: accent),
@@ -512,13 +532,20 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                     children: [
                       OutlinedButton.icon(
                         onPressed: _loading ? null : _addTag,
-                        icon: const Icon(Icons.alternate_email_rounded, size: 18),
+                        icon: const Icon(
+                          Icons.alternate_email_rounded,
+                          size: 18,
+                        ),
                         label: const Text('Kişi etiketle'),
                       ),
                       const Spacer(),
-                      Text('${_captionController.text.length}/500',
-                          style: const TextStyle(
-                              color: Colors.white30, fontSize: 11)),
+                      Text(
+                        '${_captionController.text.length}/500',
+                        style: const TextStyle(
+                          color: Colors.white30,
+                          fontSize: 11,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -531,12 +558,16 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
               spacing: 8,
               runSpacing: 8,
               children: _taggedUsers
-                  .map((user) => InputChip(
-                        avatar: const Icon(Icons.alternate_email_rounded,
-                            size: 16),
-                        label: Text(user['name'] ?? 'Kullanıcı'),
-                        onDeleted: _loading ? null : () => _removeTag(user),
-                      ))
+                  .map(
+                    (user) => InputChip(
+                      avatar: const Icon(
+                        Icons.alternate_email_rounded,
+                        size: 16,
+                      ),
+                      label: Text(user['name'] ?? 'Kullanıcı'),
+                      onDeleted: _loading ? null : () => _removeTag(user),
+                    ),
+                  )
                   .toList(),
             ),
           ],
@@ -551,11 +582,14 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                       height: 20,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : Icon(_latitude != null
-                      ? Icons.location_on
-                      : Icons.location_on_outlined),
+                  : Icon(
+                      _latitude != null
+                          ? Icons.location_on
+                          : Icons.location_on_outlined,
+                    ),
               label: Text(
-                  _latitude == null ? 'Konumumu Ekle' : 'Konum Eklendi ✓'),
+                _latitude == null ? 'Konumumu Ekle' : 'Konum Eklendi ✓',
+              ),
             ),
           ),
           const SizedBox(height: 26),
@@ -568,14 +602,18 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                       width: 22,
                       height: 22,
                       child: CircularProgressIndicator(
-                          strokeWidth: 2, color: Colors.black),
+                        strokeWidth: 2,
+                        color: Colors.black,
+                      ),
                     )
-                  : Icon(_isVideo
-                      ? Icons.video_call_rounded
-                      : Icons.send_rounded),
-              label: Text(_loading
-                  ? (_isVideo ? 'Video hazırlanıyor…' : 'Paylaşılıyor…')
-                  : 'Paylaş'),
+                  : Icon(
+                      _isVideo ? Icons.video_call_rounded : Icons.send_rounded,
+                    ),
+              label: Text(
+                _loading
+                    ? (_isVideo ? 'Video hazırlanıyor…' : 'Paylaşılıyor…')
+                    : 'Paylaş',
+              ),
             ),
           ),
         ],

@@ -29,7 +29,10 @@ class AppObservabilityService {
     }
   }
 
-  Future<void> logEvent(String name, [Map<String, Object?> params = const {}]) async {
+  Future<void> logEvent(
+    String name, [
+    Map<String, Object?> params = const {},
+  ]) async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) return;
     try {
@@ -45,12 +48,20 @@ class AppObservabilityService {
     } catch (_) {}
   }
 
-  Future<void> recordError(Object error, StackTrace stack, {String context = ''}) async {
+  Future<void> recordError(
+    Object error,
+    StackTrace stack, {
+    String context = '',
+  }) async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     final rawError = error.toString();
     final rawStack = stack.toString();
-    final safeError = rawError.length > 1200 ? rawError.substring(0, 1200) : rawError;
-    final safeStack = rawStack.length > 5000 ? rawStack.substring(0, 5000) : rawStack;
+    final safeError = rawError.length > 1200
+        ? rawError.substring(0, 1200)
+        : rawError;
+    final safeStack = rawStack.length > 5000
+        ? rawStack.substring(0, 5000)
+        : rawStack;
     try {
       await _db.collection('app_errors').add({
         'uid': uid,

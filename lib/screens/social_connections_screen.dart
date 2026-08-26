@@ -81,13 +81,16 @@ class _UserTile extends StatelessWidget {
         final photoUrl = (data['photoUrl'] ?? '').toString();
 
         return ListTile(
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 5,
+          ),
           leading: CircleAvatar(
             radius: 25,
             backgroundColor: const Color(0xFF1A1D20),
-            backgroundImage:
-                photoUrl.isNotEmpty ? NetworkImage(photoUrl) : null,
+            backgroundImage: photoUrl.isNotEmpty
+                ? NetworkImage(photoUrl)
+                : null,
             child: photoUrl.isEmpty
                 ? const Icon(Icons.person, color: Colors.white54)
                 : null,

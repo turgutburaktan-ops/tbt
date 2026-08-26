@@ -64,7 +64,9 @@ class NearbyVenueService {
         'countrycodes': 'tr',
         'addressdetails': '1',
       });
-      final response = await http.get(uri, headers: _headers).timeout(const Duration(seconds: 12));
+      final response = await http
+          .get(uri, headers: _headers)
+          .timeout(const Duration(seconds: 12));
       if (response.statusCode != 200) return null;
       final raw = jsonDecode(response.body);
       if (raw is! List || raw.isEmpty) return null;
@@ -73,7 +75,9 @@ class NearbyVenueService {
         final data = Map<String, dynamic>.from(item);
         final type = (data['type'] ?? '').toString();
         final addresstype = (data['addresstype'] ?? '').toString();
-        if (type == 'administrative' || addresstype == 'city' || addresstype == 'province') {
+        if (type == 'administrative' ||
+            addresstype == 'city' ||
+            addresstype == 'province') {
           chosen = data;
           break;
         }
@@ -84,13 +88,19 @@ class NearbyVenueService {
       final bbox = (chosen['boundingbox'] as List?)
           ?.map((e) => double.tryParse(e.toString()))
           .toList();
-      if (lat == null || lon == null || bbox == null || bbox.length < 4 || bbox.any((e) => e == null)) {
+      if (lat == null ||
+          lon == null ||
+          bbox == null ||
+          bbox.length < 4 ||
+          bbox.any((e) => e == null)) {
         return null;
       }
       final address = chosen['address'] is Map
           ? Map<String, dynamic>.from(chosen['address'] as Map)
           : const <String, dynamic>{};
-      final cleanName = (address['province'] ?? address['city'] ?? address['town'] ?? query).toString();
+      final cleanName =
+          (address['province'] ?? address['city'] ?? address['town'] ?? query)
+              .toString();
       return CityVenueArea(
         name: cleanName,
         latitude: lat,
@@ -143,12 +153,22 @@ class NearbyVenueService {
     final queryLatitude = _cityLatitude ?? latitude;
     final queryLongitude = _cityLongitude ?? longitude;
     final prefs = await SharedPreferences.getInstance();
-    final cacheKey = _cacheKey(category, queryLatitude, queryLongitude, radiusMeters);
+    final cacheKey = _cacheKey(
+      category,
+      queryLatitude,
+      queryLongitude,
+      radiusMeters,
+    );
     final cached = _readCache(prefs, cacheKey);
     if (!forceRefresh && cached != null && !cached.isExpired) {
       return _merge(
         cached.venues,
-        await _tbtBusinesses(category, queryLatitude, queryLongitude, radiusMeters),
+        await _tbtBusinesses(
+          category,
+          queryLatitude,
+          queryLongitude,
+          radiusMeters,
+        ),
       );
     }
 
@@ -159,7 +179,14 @@ class NearbyVenueService {
             .post(
               Uri.parse(endpoint),
               headers: _headers,
-              body: {'data': _query(category, queryLatitude, queryLongitude, radiusMeters)},
+              body: {
+                'data': _query(
+                  category,
+                  queryLatitude,
+                  queryLongitude,
+                  radiusMeters,
+                ),
+              },
             )
             .timeout(const Duration(seconds: 32));
         if (response.statusCode != 200) {
@@ -176,17 +203,29 @@ class NearbyVenueService {
         );
         return _merge(
           osm,
-          await _tbtBusinesses(category, queryLatitude, queryLongitude, radiusMeters),
+          await _tbtBusinesses(
+            category,
+            queryLatitude,
+            queryLongitude,
+            radiusMeters,
+          ),
         );
       } catch (error) {
         lastError = error;
       }
     }
 
-    final tbt = await _tbtBusinesses(category, queryLatitude, queryLongitude, radiusMeters);
+    final tbt = await _tbtBusinesses(
+      category,
+      queryLatitude,
+      queryLongitude,
+      radiusMeters,
+    );
     if (cached != null) return _merge(cached.venues, tbt);
     if (tbt.isNotEmpty) return tbt;
-    throw Exception('Mekan verisi alınamadı: ${lastError ?? 'bağlantı hatası'}');
+    throw Exception(
+      'Mekan verisi alınamadı: ${lastError ?? 'bağlantı hatası'}',
+    );
   }
 
   Future<List<NearbyVenue>> _tbtBusinesses(
@@ -214,7 +253,8 @@ class NearbyVenueService {
         if (lat == null || lon == null) continue;
         if (hasSelectedCity && _hasBounds) {
           if (!_insideBounds(lat, lon)) continue;
-        } else if (_distanceMeters(latitude, longitude, lat, lon) > radiusMeters) {
+        } else if (_distanceMeters(latitude, longitude, lat, lon) >
+            radiusMeters) {
           continue;
         }
         final name = (d['venueName'] ?? '').toString().trim();
@@ -239,16 +279,19 @@ class NearbyVenueService {
     }
   }
 
-  bool get _hasBounds => _south != null && _west != null && _north != null && _east != null;
+  bool get _hasBounds =>
+      _south != null && _west != null && _north != null && _east != null;
 
   bool _insideBounds(double lat, double lon) =>
-      !_hasBounds || (lat >= _south! && lat <= _north! && lon >= _west! && lon <= _east!);
+      !_hasBounds ||
+      (lat >= _south! && lat <= _north! && lon >= _west! && lon <= _east!);
 
   List<NearbyVenue> _merge(List<NearbyVenue> base, List<NearbyVenue> manual) {
     final out = <NearbyVenue>[];
     final seen = <String>{};
     for (final venue in [...manual, ...base]) {
-      final key = '${venue.name.toLowerCase().trim()}_${venue.latitude.toStringAsFixed(4)}_${venue.longitude.toStringAsFixed(4)}';
+      final key =
+          '${venue.name.toLowerCase().trim()}_${venue.latitude.toStringAsFixed(4)}_${venue.longitude.toStringAsFixed(4)}';
       if (seen.add(key)) out.add(venue);
       if (out.length >= 600) break;
     }
@@ -260,8 +303,12 @@ class NearbyVenueService {
     double rad(double v) => v * math.pi / 180.0;
     final dLat = rad(lat2 - lat1);
     final dLon = rad(lon2 - lon1);
-    final a = math.sin(dLat / 2) * math.sin(dLat / 2) +
-        math.cos(rad(lat1)) * math.cos(rad(lat2)) * math.sin(dLon / 2) * math.sin(dLon / 2);
+    final a =
+        math.sin(dLat / 2) * math.sin(dLat / 2) +
+        math.cos(rad(lat1)) *
+            math.cos(rad(lat2)) *
+            math.sin(dLon / 2) *
+            math.sin(dLon / 2);
     return earth * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
   }
 
@@ -304,12 +351,14 @@ class NearbyVenueService {
     double longitude,
     int radiusMeters,
   ) {
-    final filters = category.osmFilters.map((filter) {
-      if (hasSelectedCity && _hasBounds) {
-        return '  nwr(${_south!},${_west!},${_north!},${_east!})$filter["name"];';
-      }
-      return '  nwr(around:$radiusMeters,$latitude,$longitude)$filter["name"];';
-    }).join('\n');
+    final filters = category.osmFilters
+        .map((filter) {
+          if (hasSelectedCity && _hasBounds) {
+            return '  nwr(${_south!},${_west!},${_north!},${_east!})$filter["name"];';
+          }
+          return '  nwr(around:$radiusMeters,$latitude,$longitude)$filter["name"];';
+        })
+        .join('\n');
     return '''
 [out:json][timeout:28];
 (
@@ -332,15 +381,23 @@ out center tags;
       final name = (tags['name:tr'] ?? tags['name'] ?? '').toString().trim();
       if (name.isEmpty) continue;
       final center = item['center'] as Map?;
-      final latitude = (item['lat'] as num?)?.toDouble() ?? (center?['lat'] as num?)?.toDouble();
-      final longitude = (item['lon'] as num?)?.toDouble() ?? (center?['lon'] as num?)?.toDouble();
+      final latitude =
+          (item['lat'] as num?)?.toDouble() ??
+          (center?['lat'] as num?)?.toDouble();
+      final longitude =
+          (item['lon'] as num?)?.toDouble() ??
+          (center?['lon'] as num?)?.toDouble();
       if (latitude == null || longitude == null) continue;
-      if (hasSelectedCity && _hasBounds && !_insideBounds(latitude, longitude)) continue;
-      final dedupeKey = '${name.toLowerCase()}_${latitude.toStringAsFixed(4)}_${longitude.toStringAsFixed(4)}';
+      if (hasSelectedCity && _hasBounds && !_insideBounds(latitude, longitude))
+        continue;
+      final dedupeKey =
+          '${name.toLowerCase()}_${latitude.toStringAsFixed(4)}_${longitude.toStringAsFixed(4)}';
       if (!seen.add(dedupeKey)) continue;
       final street = (tags['addr:street'] ?? '').toString().trim();
       final number = (tags['addr:housenumber'] ?? '').toString().trim();
-      final district = (tags['addr:district'] ?? tags['addr:suburb'] ?? '').toString().trim();
+      final district = (tags['addr:district'] ?? tags['addr:suburb'] ?? '')
+          .toString()
+          .trim();
       final city = (tags['addr:city'] ?? '').toString().trim();
       final address = [
         [street, number].where((part) => part.isNotEmpty).join(' '),
@@ -357,7 +414,8 @@ out center tags;
           address: address,
           openingHours: (tags['opening_hours'] ?? '').toString(),
           phone: (tags['contact:phone'] ?? tags['phone'] ?? '').toString(),
-          website: (tags['contact:website'] ?? tags['website'] ?? '').toString(),
+          website: (tags['contact:website'] ?? tags['website'] ?? '')
+              .toString(),
         ),
       );
       if (venues.length >= 600) break;
@@ -370,5 +428,6 @@ class _CachedVenues {
   final DateTime savedAt;
   final List<NearbyVenue> venues;
   const _CachedVenues({required this.savedAt, required this.venues});
-  bool get isExpired => DateTime.now().difference(savedAt) > NearbyVenueService._cacheLifetime;
+  bool get isExpired =>
+      DateTime.now().difference(savedAt) > NearbyVenueService._cacheLifetime;
 }

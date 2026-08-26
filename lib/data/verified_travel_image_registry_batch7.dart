@@ -65,7 +65,8 @@ const verifiedTravelImageRegistryBatch7 = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons',
     author: 'Ümit1991',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Ballica-magarasi_109064.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Ballica-magarasi_109064.jpg',
   ),
   'alacahoyuk': SpotImageInfo(
     assetPath: 'assets/spots/alacahoyuk.jpg',

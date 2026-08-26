@@ -56,9 +56,13 @@ class _RetentionHubQuickEntryState extends State<RetentionHubQuickEntry> {
             child: SafeArea(
               top: false,
               child: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-                stream: FirebaseFirestore.instance.collection('users').doc(uid).snapshots(),
+                stream: FirebaseFirestore.instance
+                    .collection('users')
+                    .doc(uid)
+                    .snapshots(),
                 builder: (context, snapshot) {
-                  final data = snapshot.data?.data() ?? const <String, dynamic>{};
+                  final data =
+                      snapshot.data?.data() ?? const <String, dynamic>{};
                   final xp = (data['xp'] as num?)?.toInt() ?? 0;
                   final level = (data['levelTitle'] ?? 'Gezgin').toString();
                   return Material(
@@ -67,23 +71,52 @@ class _RetentionHubQuickEntryState extends State<RetentionHubQuickEntry> {
                       borderRadius: BorderRadius.circular(999),
                       onTap: () => Navigator.of(context).pushNamed('/rewards'),
                       child: Ink(
-                        padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 11,
+                          vertical: 8,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xE60D1118),
                           borderRadius: BorderRadius.circular(999),
                           border: Border.all(color: Colors.white12),
-                          boxShadow: const [BoxShadow(color: Colors.black38, blurRadius: 10, offset: Offset(0, 4))],
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Colors.black38,
+                              blurRadius: 10,
+                              offset: Offset(0, 4),
+                            ),
+                          ],
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.bolt_rounded, size: 16, color: Color(0xFFFFD166)),
+                            const Icon(
+                              Icons.bolt_rounded,
+                              size: 16,
+                              color: Color(0xFFFFD166),
+                            ),
                             const SizedBox(width: 5),
-                            Text('$xp XP', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 11)),
+                            Text(
+                              '$xp XP',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w900,
+                                fontSize: 11,
+                              ),
+                            ),
                             const SizedBox(width: 5),
                             ConstrainedBox(
                               constraints: const BoxConstraints(maxWidth: 88),
-                              child: Text(level, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white54, fontSize: 10, fontWeight: FontWeight.w700)),
+                              child: Text(
+                                level,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: Colors.white54,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
                             ),
                           ],
                         ),
@@ -106,19 +139,40 @@ class _RetentionHubQuickEntryState extends State<RetentionHubQuickEntry> {
                   borderRadius: BorderRadius.circular(999),
                   onTap: () => Navigator.of(context).pushNamed('/admin'),
                   child: Ink(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xE60D1118),
                       borderRadius: BorderRadius.circular(999),
                       border: Border.all(color: const Color(0x8845E7F2)),
-                      boxShadow: const [BoxShadow(color: Colors.black38, blurRadius: 10, offset: Offset(0, 4))],
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Colors.black38,
+                          blurRadius: 10,
+                          offset: Offset(0, 4),
+                        ),
+                      ],
                     ),
                     child: const Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.admin_panel_settings_rounded, size: 16, color: Color(0xFF45E7F2)),
+                        Icon(
+                          Icons.admin_panel_settings_rounded,
+                          size: 16,
+                          color: Color(0xFF45E7F2),
+                        ),
                         SizedBox(width: 6),
-                        Text('Admin Paneli', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 11, letterSpacing: -.1)),
+                        Text(
+                          'Admin Paneli',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w900,
+                            fontSize: 11,
+                            letterSpacing: -.1,
+                          ),
+                        ),
                       ],
                     ),
                   ),

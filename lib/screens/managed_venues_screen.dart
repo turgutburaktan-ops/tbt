@@ -9,11 +9,11 @@ class ManagedVenuesScreen extends StatelessWidget {
   const ManagedVenuesScreen({super.key});
 
   String _categoryLabel(String value) => switch (value) {
-        'cafe' => 'Kafe',
-        'dining' => 'Lezzet',
-        'hotel' => 'Otel / Konaklama',
-        _ => 'Mekan',
-      };
+    'cafe' => 'Kafe',
+    'dining' => 'Lezzet',
+    'hotel' => 'Otel / Konaklama',
+    _ => 'Mekan',
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -50,13 +50,15 @@ class ManagedVenuesScreen extends StatelessWidget {
             return const Center(child: CircularProgressIndicator());
           }
 
-          final docs = snapshot.data!.docs
-              .where((doc) => doc.data()['verified'] == true)
-              .toList()
-            ..sort((a, b) =>
-                (a.data()['venueName'] ?? '')
-                    .toString()
-                    .compareTo((b.data()['venueName'] ?? '').toString()));
+          final docs =
+              snapshot.data!.docs
+                  .where((doc) => doc.data()['verified'] == true)
+                  .toList()
+                ..sort(
+                  (a, b) => (a.data()['venueName'] ?? '').toString().compareTo(
+                    (b.data()['venueName'] ?? '').toString(),
+                  ),
+                );
 
           if (docs.isEmpty) {
             return Center(
@@ -65,14 +67,19 @@ class ManagedVenuesScreen extends StatelessWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.storefront_outlined,
-                        size: 54, color: Colors.white30),
+                    const Icon(
+                      Icons.storefront_outlined,
+                      size: 54,
+                      color: Colors.white30,
+                    ),
                     const SizedBox(height: 14),
                     const Text(
                       'Henüz yönettiğin doğrulanmış bir mekan yok.',
                       textAlign: TextAlign.center,
-                      style:
-                          TextStyle(fontSize: 17, fontWeight: FontWeight.w900),
+                      style: TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w900,
+                      ),
                     ),
                     const SizedBox(height: 7),
                     const Text(
@@ -99,8 +106,8 @@ class ManagedVenuesScreen extends StatelessWidget {
             itemBuilder: (context, index) {
               final doc = docs[index];
               final data = doc.data();
-              final venueName =
-                  (data['venueName'] ?? data['name'] ?? 'Mekan').toString();
+              final venueName = (data['venueName'] ?? data['name'] ?? 'Mekan')
+                  .toString();
               final category = (data['category'] ?? '').toString();
               final venueId = (data['venueId'] ?? '').toString();
               final logoUrl = (data['logoUrl'] ?? '').toString().trim();
@@ -108,16 +115,21 @@ class ManagedVenuesScreen extends StatelessWidget {
               return Card(
                 margin: EdgeInsets.zero,
                 child: ListTile(
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 13,
+                    vertical: 7,
+                  ),
                   leading: CircleAvatar(
                     radius: 24,
                     backgroundColor: AppColors.surfaceStrong,
-                    backgroundImage:
-                        logoUrl.isEmpty ? null : NetworkImage(logoUrl),
+                    backgroundImage: logoUrl.isEmpty
+                        ? null
+                        : NetworkImage(logoUrl),
                     child: logoUrl.isEmpty
-                        ? const Icon(Icons.storefront_outlined,
-                            color: AppColors.cyan)
+                        ? const Icon(
+                            Icons.storefront_outlined,
+                            color: AppColors.cyan,
+                          )
                         : null,
                   ),
                   title: Row(
@@ -131,8 +143,11 @@ class ManagedVenuesScreen extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 5),
-                      const Icon(Icons.verified_rounded,
-                          size: 17, color: AppColors.cyan),
+                      const Icon(
+                        Icons.verified_rounded,
+                        size: 17,
+                        color: AppColors.cyan,
+                      ),
                     ],
                   ),
                   subtitle: Text(_categoryLabel(category)),
@@ -140,15 +155,15 @@ class ManagedVenuesScreen extends StatelessWidget {
                   onTap: venueId.isEmpty
                       ? null
                       : () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => BusinessHubScreen(
-                                initialCategory: category,
-                                initialVenueId: venueId,
-                                initialVenueName: venueName,
-                              ),
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => BusinessHubScreen(
+                              initialCategory: category,
+                              initialVenueId: venueId,
+                              initialVenueName: venueName,
                             ),
                           ),
+                        ),
                 ),
               );
             },

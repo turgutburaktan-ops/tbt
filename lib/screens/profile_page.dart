@@ -94,10 +94,8 @@ class _ProfileBodyState extends State<_ProfileBody> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => FollowListScreen(
-          userId: widget.user.uid,
-          followers: followers,
-        ),
+        builder: (_) =>
+            FollowListScreen(userId: widget.user.uid, followers: followers),
       ),
     );
   }
@@ -110,13 +108,14 @@ class _ProfileBodyState extends State<_ProfileBody> {
         builder: (context, profileSnapshot) {
           final profile =
               profileSnapshot.data?.data() ?? const <String, dynamic>{};
-          final displayName = (profile['displayName'] ??
-                  widget.user.displayName ??
-                  'Fotoğrafçı')
-              .toString();
+          final displayName =
+              (profile['displayName'] ??
+                      widget.user.displayName ??
+                      'Fotoğrafçı')
+                  .toString();
           final bio = (profile['bio'] ?? '').toString();
-          final photoUrl =
-              (profile['photoUrl'] ?? widget.user.photoURL ?? '').toString();
+          final photoUrl = (profile['photoUrl'] ?? widget.user.photoURL ?? '')
+              .toString();
 
           return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
             stream: SocialService.instance.userPosts(widget.user.uid),
@@ -146,18 +145,24 @@ class _ProfileBodyState extends State<_ProfileBody> {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
-                                  fontSize: 21, fontWeight: FontWeight.w900),
+                                fontSize: 21,
+                                fontWeight: FontWeight.w900,
+                              ),
                             ),
                           ),
                           IconButton(
                             onPressed: () => _editProfile(displayName, bio),
-                            icon: const Icon(Icons.edit_outlined,
-                                color: Color(0xFFB7BCC2)),
+                            icon: const Icon(
+                              Icons.edit_outlined,
+                              color: Color(0xFFB7BCC2),
+                            ),
                           ),
                           IconButton(
                             onPressed: () => AuthService.instance.logout(),
-                            icon: const Icon(Icons.logout_rounded,
-                                color: Colors.white60),
+                            icon: const Icon(
+                              Icons.logout_rounded,
+                              color: Colors.white60,
+                            ),
                           ),
                         ],
                       ),
@@ -176,20 +181,26 @@ class _ProfileBodyState extends State<_ProfileBody> {
                                 children: [
                                   GestureDetector(
                                     onTap: () => _openProfilePhoto(
-                                        photoUrl, displayName),
+                                      photoUrl,
+                                      displayName,
+                                    ),
                                     child: CircleAvatar(
                                       radius: 47,
                                       backgroundColor: const Color(0xFFB7BCC2),
                                       child: CircleAvatar(
                                         radius: 43,
-                                        backgroundColor:
-                                            const Color(0xFF121416),
+                                        backgroundColor: const Color(
+                                          0xFF121416,
+                                        ),
                                         backgroundImage: photoUrl.isNotEmpty
                                             ? NetworkImage(photoUrl)
                                             : null,
                                         child: photoUrl.isEmpty
-                                            ? const Icon(Icons.person,
-                                                size: 48, color: Colors.white54)
+                                            ? const Icon(
+                                                Icons.person,
+                                                size: 48,
+                                                color: Colors.white54,
+                                              )
                                             : null,
                                       ),
                                     ),
@@ -253,7 +264,9 @@ class _ProfileBodyState extends State<_ProfileBody> {
                           Text(
                             displayName,
                             style: const TextStyle(
-                                fontWeight: FontWeight.w800, fontSize: 16),
+                              fontWeight: FontWeight.w800,
+                              fontSize: 16,
+                            ),
                           ),
                           const SizedBox(height: 5),
                           Text(
@@ -288,8 +301,9 @@ class _ProfileBodyState extends State<_ProfileBody> {
                     const SliverFillRemaining(
                       hasScrollBody: false,
                       child: Center(
-                        child:
-                            CircularProgressIndicator(color: Color(0xFFB7BCC2)),
+                        child: CircularProgressIndicator(
+                          color: Color(0xFFB7BCC2),
+                        ),
                       ),
                     )
                   else if (posts.isEmpty)
@@ -304,7 +318,8 @@ class _ProfileBodyState extends State<_ProfileBody> {
                           onPressed: () => Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (_) => const CreatePostScreen()),
+                              builder: (_) => const CreatePostScreen(),
+                            ),
                           ),
                           icon: const Icon(Icons.add_a_photo_outlined),
                           label: const Text('İlk Fotoğrafını Paylaş'),
@@ -317,26 +332,23 @@ class _ProfileBodyState extends State<_ProfileBody> {
                       sliver: SliverGrid(
                         gridDelegate:
                             const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 3,
-                          crossAxisSpacing: 3,
-                          mainAxisSpacing: 3,
-                          childAspectRatio: .78,
-                        ),
-                        delegate: SliverChildBuilderDelegate(
-                          (context, index) {
-                            final data = posts[index].data();
-                            return _ProfilePostTile(
-                              post: data,
-                              onTap: () => Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (_) =>
-                                        PostDetailScreen(post: data)),
+                              crossAxisCount: 3,
+                              crossAxisSpacing: 3,
+                              mainAxisSpacing: 3,
+                              childAspectRatio: .78,
+                            ),
+                        delegate: SliverChildBuilderDelegate((context, index) {
+                          final data = posts[index].data();
+                          return _ProfilePostTile(
+                            post: data,
+                            onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => PostDetailScreen(post: data),
                               ),
-                            );
-                          },
-                          childCount: posts.length,
-                        ),
+                            ),
+                          );
+                        }, childCount: posts.length),
                       ),
                     ),
                 ],
@@ -386,7 +398,9 @@ class _ProfileBodyState extends State<_ProfileBody> {
                         child: Text(
                           'Profili Düzenle',
                           style: TextStyle(
-                              fontSize: 22, fontWeight: FontWeight.w900),
+                            fontSize: 22,
+                            fontWeight: FontWeight.w900,
+                          ),
                         ),
                       ),
                       IconButton(
@@ -412,13 +426,15 @@ class _ProfileBodyState extends State<_ProfileBody> {
                     ),
                   ),
                   TextButton(
-                      onPressed: pick,
-                      child: const Text('Profil fotoğrafı seç')),
+                    onPressed: pick,
+                    child: const Text('Profil fotoğrafı seç'),
+                  ),
                   const SizedBox(height: 8),
                   TextField(
                     controller: nameController,
-                    decoration:
-                        const InputDecoration(labelText: 'Ad / kullanıcı adı'),
+                    decoration: const InputDecoration(
+                      labelText: 'Ad / kullanıcı adı',
+                    ),
                   ),
                   const SizedBox(height: 12),
                   TextField(
@@ -454,14 +470,15 @@ class _ProfileBodyState extends State<_ProfileBody> {
                                 if (sheetContext.mounted) {
                                   ScaffoldMessenger.of(sheetContext)
                                       .showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        e
-                                            .toString()
-                                            .replaceFirst('Exception: ', ''),
-                                      ),
-                                    ),
-                                  );
+                                        SnackBar(
+                                          content: Text(
+                                            e.toString().replaceFirst(
+                                              'Exception: ',
+                                              '',
+                                            ),
+                                          ),
+                                        ),
+                                      );
                                 }
                               }
                             },
@@ -507,11 +524,12 @@ class _ProfilePostTileState extends State<_ProfilePostTile> {
   bool _previewActive = false;
 
   String get _imageUrl => (widget.post['imageUrl'] ?? '').toString();
-  String get _location => (widget.post['spotName'] ??
-          widget.post['locationName'] ??
-          widget.post['location'] ??
-          '')
-      .toString();
+  String get _location =>
+      (widget.post['spotName'] ??
+              widget.post['locationName'] ??
+              widget.post['location'] ??
+              '')
+          .toString();
   String get _caption =>
       (widget.post['caption'] ?? widget.post['description'] ?? '').toString();
 
@@ -586,16 +604,20 @@ class _ProfilePostTileState extends State<_ProfilePostTile> {
   void _beginPinchIfNeeded() {
     if (!_previewActive || _pointers.length < 2) return;
     final points = _pointers.values.take(2).toList();
-    _pinchStartDistance =
-        (points[0] - points[1]).distance.clamp(1.0, double.infinity);
+    _pinchStartDistance = (points[0] - points[1]).distance.clamp(
+      1.0,
+      double.infinity,
+    );
     _pinchStartFocal = (points[0] + points[1]) / 2;
   }
 
   void _updatePinch() {
     if (_pointers.length < 2) return;
     final points = _pointers.values.take(2).toList();
-    final distance =
-        (points[0] - points[1]).distance.clamp(1.0, double.infinity);
+    final distance = (points[0] - points[1]).distance.clamp(
+      1.0,
+      double.infinity,
+    );
     final focal = (points[0] + points[1]) / 2;
 
     _pinchStartDistance ??= distance;
@@ -641,8 +663,10 @@ class _ProfilePostTileState extends State<_ProfilePostTile> {
                       fit: BoxFit.cover,
                       filterQuality: FilterQuality.medium,
                       errorBuilder: (_, __, ___) => const Center(
-                        child: Icon(Icons.broken_image_outlined,
-                            color: Colors.white38),
+                        child: Icon(
+                          Icons.broken_image_outlined,
+                          color: Colors.white38,
+                        ),
                       ),
                     ),
                   ),
@@ -693,8 +717,10 @@ class _ProfilePostTileState extends State<_ProfilePostTile> {
                 child: _imageUrl.isEmpty
                     ? const ColoredBox(
                         color: Color(0xFF121416),
-                        child:
-                            Icon(Icons.image_outlined, color: Colors.white30),
+                        child: Icon(
+                          Icons.image_outlined,
+                          color: Colors.white30,
+                        ),
                       )
                     : Image.network(
                         _imageUrl,
@@ -702,8 +728,10 @@ class _ProfilePostTileState extends State<_ProfilePostTile> {
                         filterQuality: FilterQuality.low,
                         errorBuilder: (_, __, ___) => const ColoredBox(
                           color: Color(0xFF121416),
-                          child: Icon(Icons.broken_image_outlined,
-                              color: Colors.white30),
+                          child: Icon(
+                            Icons.broken_image_outlined,
+                            color: Colors.white30,
+                          ),
                         ),
                       ),
               ),
@@ -732,7 +760,9 @@ class _ProfilePostTileState extends State<_ProfilePostTile> {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
-                            fontSize: 8.5, color: Colors.white54),
+                          fontSize: 8.5,
+                          color: Colors.white54,
+                        ),
                       ),
                     ],
                   ],
@@ -756,11 +786,15 @@ class _Stat extends StatelessWidget {
     final child = Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(value,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
+        Text(
+          value,
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
+        ),
         const SizedBox(height: 2),
-        Text(label,
-            style: const TextStyle(color: Colors.white60, fontSize: 12)),
+        Text(
+          label,
+          style: const TextStyle(color: Colors.white60, fontSize: 12),
+        ),
       ],
     );
     return onTap == null

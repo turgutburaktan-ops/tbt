@@ -70,7 +70,9 @@ class _CampusProfileScreenState extends State<CampusProfileScreen> {
     if (!_isStudent) {
       setState(() => _saving = true);
       try {
-        await ProfileService.instance.updateStudentStatus(status: 'non_student');
+        await ProfileService.instance.updateStudentStatus(
+          status: 'non_student',
+        );
         if (!mounted) return;
         _message('Öğrenci durumu kaydedildi. Kampüs sekmesi kapalı kalacak.');
         Navigator.pop(context, true);
@@ -107,9 +109,11 @@ class _CampusProfileScreenState extends State<CampusProfileScreen> {
         showEducationOnProfile: _showEducation,
       );
       if (!mounted) return;
-      _message(_graduate
-          ? 'Eğitim bilgin kaydedildi. Mezun hesaplarda Kampüs kapalıdır.'
-          : 'Kampüs profilin kaydedildi.');
+      _message(
+        _graduate
+            ? 'Eğitim bilgin kaydedildi. Mezun hesaplarda Kampüs kapalıdır.'
+            : 'Kampüs profilin kaydedildi.',
+      );
       Navigator.pop(context, true);
     } catch (e) {
       _message(e.toString().replaceFirst('Exception: ', ''));
@@ -163,8 +167,14 @@ class _CampusProfileScreenState extends State<CampusProfileScreen> {
               prefixIcon: Icon(Icons.school_outlined),
             ),
             items: const [
-              DropdownMenuItem(value: 'student', child: Text('Üniversite öğrencisiyim')),
-              DropdownMenuItem(value: 'non_student', child: Text('Öğrenci değilim')),
+              DropdownMenuItem(
+                value: 'student',
+                child: Text('Üniversite öğrencisiyim'),
+              ),
+              DropdownMenuItem(
+                value: 'non_student',
+                child: Text('Öğrenci değilim'),
+              ),
             ],
             onChanged: (value) => setState(() {
               _studentStatus = value;
@@ -209,10 +219,12 @@ class _CampusProfileScreenState extends State<CampusProfileScreen> {
                 prefixIcon: Icon(Icons.badge_outlined),
               ),
               items: _classYears
-                  .map((value) => DropdownMenuItem(
-                        value: value,
-                        child: Text(_classLabel(value)),
-                      ))
+                  .map(
+                    (value) => DropdownMenuItem(
+                      value: value,
+                      child: Text(_classLabel(value)),
+                    ),
+                  )
                   .toList(),
               onChanged: (value) => setState(() => _classYear = value),
             ),

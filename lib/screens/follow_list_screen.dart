@@ -50,11 +50,8 @@ class FollowListScreen extends StatelessWidget {
           return ListView.separated(
             padding: const EdgeInsets.symmetric(vertical: 8),
             itemCount: docs.length,
-            separatorBuilder: (_, __) => const Divider(
-              height: 1,
-              indent: 74,
-              color: Colors.white10,
-            ),
+            separatorBuilder: (_, __) =>
+                const Divider(height: 1, indent: 74, color: Colors.white10),
             itemBuilder: (context, index) {
               final doc = docs[index];
               final data = doc.data();
@@ -65,23 +62,27 @@ class FollowListScreen extends StatelessWidget {
                 builder: (context, profileSnapshot) {
                   final profile =
                       profileSnapshot.data?.data() ?? const <String, dynamic>{};
-                  final name = (profile['displayName'] ??
-                          data['displayName'] ??
-                          'Fotoğrafçı')
-                      .toString();
+                  final name =
+                      (profile['displayName'] ??
+                              data['displayName'] ??
+                              'Fotoğrafçı')
+                          .toString();
                   final photoUrl =
                       (profile['photoUrl'] ?? data['photoUrl'] ?? '')
                           .toString();
                   final bio = (profile['bio'] ?? '').toString().trim();
 
                   return ListTile(
-                    contentPadding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 6,
+                    ),
                     leading: CircleAvatar(
                       radius: 25,
                       backgroundColor: const Color(0xFF1A1D20),
-                      backgroundImage:
-                          photoUrl.isNotEmpty ? NetworkImage(photoUrl) : null,
+                      backgroundImage: photoUrl.isNotEmpty
+                          ? NetworkImage(photoUrl)
+                          : null,
                       child: photoUrl.isEmpty
                           ? const Icon(Icons.person, color: Colors.white54)
                           : null,

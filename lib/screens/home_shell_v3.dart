@@ -33,7 +33,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _selectDestination(int index) async {
     if (index == 2) {
-      await Navigator.push(context, MaterialPageRoute(builder: (_) => const MainCameraScreen()));
+      await Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const MainCameraScreen()),
+      );
       return;
     }
     if (mounted) setState(() => _selectedIndex = index);
@@ -49,7 +52,9 @@ class _HomeScreenState extends State<HomeScreen> {
       return;
     }
     final now = DateTime.now();
-    final recent = _lastBackPressedAt != null && now.difference(_lastBackPressedAt!) <= const Duration(seconds: 2);
+    final recent =
+        _lastBackPressedAt != null &&
+        now.difference(_lastBackPressedAt!) <= const Duration(seconds: 2);
     if (recent) {
       SystemNavigator.pop();
       return;
@@ -57,7 +62,12 @@ class _HomeScreenState extends State<HomeScreen> {
     _lastBackPressedAt = now;
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(const SnackBar(duration: Duration(seconds: 2), content: Text('Uygulamadan çıkmak için geri tuşuna tekrar bas.')));
+      ..showSnackBar(
+        const SnackBar(
+          duration: Duration(seconds: 2),
+          content: Text('Uygulamadan çıkmak için geri tuşuna tekrar bas.'),
+        ),
+      );
   }
 
   @override
@@ -85,7 +95,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 width: 58,
                 height: 58,
                 padding: const EdgeInsets.all(2.5),
-                decoration: const BoxDecoration(shape: BoxShape.circle, gradient: AppColors.accentGradient),
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: AppColors.accentGradient,
+                ),
                 child: FloatingActionButton(
                   heroTag: 'main-camera-v3',
                   tooltip: 'Kamera',
@@ -97,7 +110,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: const Icon(Icons.photo_camera_rounded, size: 25),
                 ),
               ),
-        bottomNavigationBar: keyboardOpen ? null : _BottomNav(selectedIndex: _selectedIndex, onSelected: _selectDestination),
+        bottomNavigationBar: keyboardOpen
+            ? null
+            : _BottomNav(
+                selectedIndex: _selectedIndex,
+                onSelected: _selectDestination,
+              ),
       ),
     );
   }
@@ -132,7 +150,14 @@ class _BottomNav extends StatelessWidget {
               return const Expanded(
                 child: Align(
                   alignment: Alignment.bottomCenter,
-                  child: Text('Kamera', style: TextStyle(color: Color(0x75FFFFFF), fontSize: 9, fontWeight: FontWeight.w700)),
+                  child: Text(
+                    'Kamera',
+                    style: TextStyle(
+                      color: Color(0x75FFFFFF),
+                      fontSize: 9,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
                 ),
               );
             }
@@ -147,9 +172,25 @@ class _BottomNav extends StatelessWidget {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      _GradientIcon(icon: selected ? item.$2 : item.$1, active: selected, size: 21),
+                      _GradientIcon(
+                        icon: selected ? item.$2 : item.$1,
+                        active: selected,
+                        size: 21,
+                      ),
                       const SizedBox(height: 2),
-                      Text(item.$3, maxLines: 1, style: TextStyle(color: selected ? Colors.white : const Color(0x75FFFFFF), fontSize: 9.5, fontWeight: selected ? FontWeight.w900 : FontWeight.w600)),
+                      Text(
+                        item.$3,
+                        maxLines: 1,
+                        style: TextStyle(
+                          color: selected
+                              ? Colors.white
+                              : const Color(0x75FFFFFF),
+                          fontSize: 9.5,
+                          fontWeight: selected
+                              ? FontWeight.w900
+                              : FontWeight.w600,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -174,55 +215,56 @@ class _HomeFeedHubState extends State<_HomeFeedHub> {
 
   @override
   Widget build(BuildContext context) => ColoredBox(
-        color: AppColors.background,
-        child: SafeArea(
-          bottom: false,
-          child: Column(
-            children: [
-              const _HomeHeader(),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(14, 2, 14, 7),
-                child: _SegmentTabs(
-                  labels: const ['Ana Sayfa', 'Keşfet'],
-                  selected: _section,
-                  prominent: true,
-                  onChanged: (value) => setState(() => _section = value),
-                ),
-              ),
-              Expanded(
-                child: IndexedStack(
-                  index: _section,
+    color: AppColors.background,
+    child: SafeArea(
+      bottom: false,
+      child: Column(
+        children: [
+          const _HomeHeader(),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 2, 14, 7),
+            child: _SegmentTabs(
+              labels: const ['Ana Sayfa', 'Keşfet'],
+              selected: _section,
+              prominent: true,
+              onChanged: (value) => setState(() => _section = value),
+            ),
+          ),
+          Expanded(
+            child: IndexedStack(
+              index: _section,
+              children: [
+                Column(
                   children: [
-                    Column(
-                      children: [
-                        const StoryStrip(),
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(14, 3, 14, 5),
-                          child: _SegmentTabs(
-                            labels: const ['Sana Özel', 'Takip'],
-                            selected: _photoMode,
-                            onChanged: (value) => setState(() => _photoMode = value),
-                          ),
-                        ),
-                        Expanded(
-                          child: IndexedStack(
-                            index: _photoMode,
-                            children: const [
-                              _AuthAwareFeed(mode: FeedMode.forYou),
-                              _AuthAwareFeed(mode: FeedMode.following),
-                            ],
-                          ),
-                        ),
-                      ],
+                    const StoryStrip(),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(14, 3, 14, 5),
+                      child: _SegmentTabs(
+                        labels: const ['Sana Özel', 'Takip'],
+                        selected: _photoMode,
+                        onChanged: (value) =>
+                            setState(() => _photoMode = value),
+                      ),
                     ),
-                    const HomeDiscoverScreen(),
+                    Expanded(
+                      child: IndexedStack(
+                        index: _photoMode,
+                        children: const [
+                          _AuthAwareFeed(mode: FeedMode.forYou),
+                          _AuthAwareFeed(mode: FeedMode.following),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
-              ),
-            ],
+                const HomeDiscoverScreen(),
+              ],
+            ),
           ),
-        ),
-      );
+        ],
+      ),
+    ),
+  );
 }
 
 class _AuthAwareFeed extends StatelessWidget {
@@ -230,44 +272,73 @@ class _AuthAwareFeed extends StatelessWidget {
   const _AuthAwareFeed({required this.mode});
   @override
   Widget build(BuildContext context) => StreamBuilder<User?>(
-        stream: FirebaseAuth.instance.authStateChanges(),
-        initialData: FirebaseAuth.instance.currentUser,
-        builder: (_, snapshot) => FeedScreen(
-          key: ValueKey('${mode.name}-${snapshot.data?.uid ?? 'guest'}'),
-          mode: mode,
-          embedded: true,
-          includeEvents: false,
-        ),
-      );
+    stream: FirebaseAuth.instance.authStateChanges(),
+    initialData: FirebaseAuth.instance.currentUser,
+    builder: (_, snapshot) => FeedScreen(
+      key: ValueKey('${mode.name}-${snapshot.data?.uid ?? 'guest'}'),
+      mode: mode,
+      embedded: true,
+      includeEvents: false,
+    ),
+  );
 }
 
 class _HomeHeader extends StatelessWidget {
   const _HomeHeader();
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.fromLTRB(14, 8, 6, 5),
-        child: Row(
-          children: [
-            Container(
-              width: 34,
-              height: 34,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(borderRadius: BorderRadius.circular(11), gradient: AppColors.accentGradient),
-              child: const Text('TBT', style: TextStyle(color: Color(0xFF08090D), fontSize: 10.5, fontWeight: FontWeight.w900)),
+    padding: const EdgeInsets.fromLTRB(14, 8, 6, 5),
+    child: Row(
+      children: [
+        Container(
+          width: 34,
+          height: 34,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(11),
+            gradient: AppColors.accentGradient,
+          ),
+          child: const Text(
+            'TBT',
+            style: TextStyle(
+              color: Color(0xFF08090D),
+              fontSize: 10.5,
+              fontWeight: FontWeight.w900,
             ),
-            const SizedBox(width: 9),
-            const Expanded(child: Text('TBT', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, letterSpacing: -.35))),
-            StreamBuilder<int>(
-              stream: AppNotificationService.instance.unreadCount(),
-              builder: (_, s) => _HeaderAction(tooltip: 'Bildirimler', icon: Icons.notifications_none_rounded, count: s.data ?? 0, onTap: () => Navigator.pushNamed(context, '/notifications')),
-            ),
-            StreamBuilder<int>(
-              stream: AppNotificationService.instance.unreadMessageCount(),
-              builder: (_, s) => _HeaderAction(tooltip: 'Mesajlar', icon: Icons.chat_bubble_outline_rounded, count: s.data ?? 0, onTap: () => Navigator.pushNamed(context, '/messages')),
-            ),
-          ],
+          ),
         ),
-      );
+        const SizedBox(width: 9),
+        const Expanded(
+          child: Text(
+            'TBT',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w900,
+              letterSpacing: -.35,
+            ),
+          ),
+        ),
+        StreamBuilder<int>(
+          stream: AppNotificationService.instance.unreadCount(),
+          builder: (_, s) => _HeaderAction(
+            tooltip: 'Bildirimler',
+            icon: Icons.notifications_none_rounded,
+            count: s.data ?? 0,
+            onTap: () => Navigator.pushNamed(context, '/notifications'),
+          ),
+        ),
+        StreamBuilder<int>(
+          stream: AppNotificationService.instance.unreadMessageCount(),
+          builder: (_, s) => _HeaderAction(
+            tooltip: 'Mesajlar',
+            icon: Icons.chat_bubble_outline_rounded,
+            count: s.data ?? 0,
+            onTap: () => Navigator.pushNamed(context, '/messages'),
+          ),
+        ),
+      ],
+    ),
+  );
 }
 
 class _PlacesHub extends StatefulWidget {
@@ -282,15 +353,15 @@ class _PlacesHubState extends State<_PlacesHub> {
   bool _cityLoading = false;
 
   void _openMap() => Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => Scaffold(
-            backgroundColor: AppColors.background,
-            appBar: AppBar(title: const Text('Gezilecek Yerler Haritası')),
-            body: const MapScreen(),
-          ),
-        ),
-      );
+    context,
+    MaterialPageRoute(
+      builder: (_) => Scaffold(
+        backgroundColor: AppColors.background,
+        appBar: AppBar(title: const Text('Gezilecek Yerler Haritası')),
+        body: const MapScreen(),
+      ),
+    ),
+  );
 
   NearbyVenueCategory _nearbyCategory() {
     if (_category == 'Kafeler') return NearbyVenueCategory.cafe;
@@ -324,7 +395,8 @@ class _PlacesHubState extends State<_PlacesHub> {
             child: const Text('Konumumu kullan'),
           ),
           FilledButton(
-            onPressed: () => Navigator.pop(dialogContext, controller.text.trim()),
+            onPressed: () =>
+                Navigator.pop(dialogContext, controller.text.trim()),
             child: const Text('Şehri göster'),
           ),
         ],
@@ -344,7 +416,11 @@ class _PlacesHubState extends State<_PlacesHub> {
     setState(() => _cityLoading = false);
     if (city == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Şehir bulunamadı. Şehir adını kontrol edip tekrar dene.')),
+        const SnackBar(
+          content: Text(
+            'Şehir bulunamadı. Şehir adını kontrol edip tekrar dene.',
+          ),
+        ),
       );
       return;
     }
@@ -370,7 +446,9 @@ class _PlacesHubState extends State<_PlacesHub> {
       content = const SpotExploreScreen(embedded: true);
     } else {
       content = NearbyPlacesView(
-        key: ValueKey('${_category}_${NearbyVenueService.instance.selectedCityName ?? 'current'}'),
+        key: ValueKey(
+          '${_category}_${NearbyVenueService.instance.selectedCityName ?? 'current'}',
+        ),
         category: _nearbyCategory(),
       );
     }
@@ -387,7 +465,14 @@ class _PlacesHubState extends State<_PlacesHub> {
               child: Row(
                 children: [
                   const Expanded(
-                    child: Text('Mekanlar', style: TextStyle(fontSize: 23, fontWeight: FontWeight.w900, letterSpacing: -.4)),
+                    child: Text(
+                      'Mekanlar',
+                      style: TextStyle(
+                        fontSize: 23,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: -.4,
+                      ),
+                    ),
                   ),
                   if (_category == 'Gezilecek Yerler')
                     OutlinedButton.icon(
@@ -400,7 +485,10 @@ class _PlacesHubState extends State<_PlacesHub> {
             ),
             const Padding(
               padding: EdgeInsets.fromLTRB(14, 0, 14, 8),
-              child: Text('Lezzet, kahve, konaklama ve gezilecek yerler.', style: TextStyle(color: Color(0x75FFFFFF), fontSize: 11.5)),
+              child: Text(
+                'Lezzet, kahve, konaklama ve gezilecek yerler.',
+                style: TextStyle(color: Color(0x75FFFFFF), fontSize: 11.5),
+              ),
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(14, 0, 14, 8),
@@ -428,16 +516,33 @@ class _PlacesHubState extends State<_PlacesHub> {
                       child: OutlinedButton.icon(
                         onPressed: _cityLoading ? null : _pickCity,
                         icon: _cityLoading
-                            ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                            : const Icon(Icons.location_city_outlined, size: 18),
-                        label: Text(_cityLabel, maxLines: 1, overflow: TextOverflow.ellipsis),
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Icon(
+                                Icons.location_city_outlined,
+                                size: 18,
+                              ),
+                        label: Text(
+                          _cityLabel,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                     ),
                     const SizedBox(width: 8),
                     const Expanded(
                       child: Text(
                         'Şehrin tamamındaki sonuçlar gösterilir; yakınlık sadece sıralamada kullanılır.',
-                        style: TextStyle(color: Colors.white54, fontSize: 10.5, height: 1.25),
+                        style: TextStyle(
+                          color: Colors.white54,
+                          fontSize: 10.5,
+                          height: 1.25,
+                        ),
                       ),
                     ),
                   ],
@@ -469,28 +574,41 @@ class _NearbyUnifiedHubState extends State<_NearbyUnifiedHub> {
 
   Future<void> _createEvent() async {
     if (FirebaseAuth.instance.currentUser == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Etkinlik oluşturmak için giriş yapmalısın.')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Etkinlik oluşturmak için giriş yapmalısın.'),
+        ),
+      );
       return;
     }
-    await Navigator.push<bool>(context, MaterialPageRoute(builder: (_) => const EventPhotoCreateScreen()));
+    await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(builder: (_) => const EventPhotoCreateScreen()),
+    );
   }
 
   @override
   Widget build(BuildContext context) => StreamBuilder<User?>(
-        stream: FirebaseAuth.instance.authStateChanges(),
-        initialData: FirebaseAuth.instance.currentUser,
-        builder: (_, auth) {
-          final user = auth.data;
-          if (user == null) return _buildHub(false);
-          return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-            stream: FirebaseFirestore.instance.collection('users').doc(user.uid).snapshots(),
-            builder: (_, profile) => _buildHub(_campusEligible(profile.data?.data() ?? const {})),
-          );
-        },
+    stream: FirebaseAuth.instance.authStateChanges(),
+    initialData: FirebaseAuth.instance.currentUser,
+    builder: (_, auth) {
+      final user = auth.data;
+      if (user == null) return _buildHub(false);
+      return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+        stream: FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .snapshots(),
+        builder: (_, profile) =>
+            _buildHub(_campusEligible(profile.data?.data() ?? const {})),
       );
+    },
+  );
 
   Widget _buildHub(bool campusEligible) {
-    final labels = campusEligible ? const ['Çevrende', 'Kampüs'] : const ['Çevrende'];
+    final labels = campusEligible
+        ? const ['Çevrende', 'Kampüs']
+        : const ['Çevrende'];
     final index = _section >= labels.length ? 0 : _section;
     return ColoredBox(
       color: AppColors.background,
@@ -510,8 +628,20 @@ class _NearbyUnifiedHubState extends State<_NearbyUnifiedHub> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Çevrende', style: TextStyle(fontSize: 23, fontWeight: FontWeight.w900)),
-                            Text('Yakındaki planlar ve etkinlikler tek akışta.', style: TextStyle(color: Colors.white54, fontSize: 11.5)),
+                            Text(
+                              'Çevrende',
+                              style: TextStyle(
+                                fontSize: 23,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                            Text(
+                              'Yakındaki planlar ve etkinlikler tek akışta.',
+                              style: TextStyle(
+                                color: Colors.white54,
+                                fontSize: 11.5,
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -523,9 +653,22 @@ class _NearbyUnifiedHubState extends State<_NearbyUnifiedHub> {
                     height: 46,
                     child: FilledButton.icon(
                       onPressed: _createEvent,
-                      style: FilledButton.styleFrom(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15))),
-                      icon: const Icon(Icons.add_circle_outline_rounded, size: 20),
-                      label: const Text('Etkinlik oluştur', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14)),
+                      style: FilledButton.styleFrom(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                      ),
+                      icon: const Icon(
+                        Icons.add_circle_outline_rounded,
+                        size: 20,
+                      ),
+                      label: const Text(
+                        'Etkinlik oluştur',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w900,
+                          fontSize: 14,
+                        ),
+                      ),
                     ),
                   ),
                 ],
@@ -534,7 +677,11 @@ class _NearbyUnifiedHubState extends State<_NearbyUnifiedHub> {
             if (campusEligible)
               Padding(
                 padding: const EdgeInsets.fromLTRB(14, 0, 14, 7),
-                child: _SegmentTabs(labels: labels, selected: index, onChanged: (v) => setState(() => _section = v)),
+                child: _SegmentTabs(
+                  labels: labels,
+                  selected: index,
+                  onChanged: (v) => setState(() => _section = v),
+                ),
               ),
             Expanded(
               child: IndexedStack(
@@ -556,15 +703,20 @@ class _ProfileGate extends StatelessWidget {
   const _ProfileGate();
   @override
   Widget build(BuildContext context) => StreamBuilder<User?>(
-        stream: FirebaseAuth.instance.authStateChanges(),
-        initialData: FirebaseAuth.instance.currentUser,
-        builder: (_, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting && snapshot.data == null) {
-            return const SafeArea(child: Center(child: CircularProgressIndicator()));
-          }
-          return snapshot.data == null ? const LoginScreen(embedded: true) : const ProfilePage();
-        },
-      );
+    stream: FirebaseAuth.instance.authStateChanges(),
+    initialData: FirebaseAuth.instance.currentUser,
+    builder: (_, snapshot) {
+      if (snapshot.connectionState == ConnectionState.waiting &&
+          snapshot.data == null) {
+        return const SafeArea(
+          child: Center(child: CircularProgressIndicator()),
+        );
+      }
+      return snapshot.data == null
+          ? const LoginScreen(embedded: true)
+          : const ProfilePage();
+    },
+  );
 }
 
 class _SegmentTabs extends StatelessWidget {
@@ -572,40 +724,54 @@ class _SegmentTabs extends StatelessWidget {
   final int selected;
   final ValueChanged<int> onChanged;
   final bool prominent;
-  const _SegmentTabs({required this.labels, required this.selected, required this.onChanged, this.prominent = false});
+  const _SegmentTabs({
+    required this.labels,
+    required this.selected,
+    required this.onChanged,
+    this.prominent = false,
+  });
 
   @override
   Widget build(BuildContext context) => Container(
-        height: prominent ? 36 : 34,
-        padding: const EdgeInsets.all(2),
-        decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppColors.border)),
-        child: Row(
-          children: List.generate(labels.length, (index) {
-            final active = selected == index;
-            return Expanded(
-              child: InkWell(
-                onTap: () => onChanged(index),
+    height: prominent ? 36 : 34,
+    padding: const EdgeInsets.all(2),
+    decoration: BoxDecoration(
+      color: AppColors.surface,
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: AppColors.border),
+    ),
+    child: Row(
+      children: List.generate(labels.length, (index) {
+        final active = selected == index;
+        return Expanded(
+          child: InkWell(
+            onTap: () => onChanged(index),
+            borderRadius: BorderRadius.circular(9),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 160),
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: active ? AppColors.surfaceStrong : Colors.transparent,
                 borderRadius: BorderRadius.circular(9),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 160),
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(color: active ? AppColors.surfaceStrong : Colors.transparent, borderRadius: BorderRadius.circular(9)),
-                  child: Text(
-                    labels[index],
-                    textAlign: TextAlign.center,
-                    maxLines: 1,
-                    style: TextStyle(
-                      color: active ? Colors.white : Colors.white.withValues(alpha: .48),
-                      fontSize: prominent ? 12 : 10.5,
-                      fontWeight: active ? FontWeight.w900 : FontWeight.w700,
-                    ),
-                  ),
+              ),
+              child: Text(
+                labels[index],
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                style: TextStyle(
+                  color: active
+                      ? Colors.white
+                      : Colors.white.withValues(alpha: .48),
+                  fontSize: prominent ? 12 : 10.5,
+                  fontWeight: active ? FontWeight.w900 : FontWeight.w700,
                 ),
               ),
-            );
-          }),
-        ),
-      );
+            ),
+          ),
+        );
+      }),
+    ),
+  );
 }
 
 class _HeaderAction extends StatelessWidget {
@@ -613,20 +779,25 @@ class _HeaderAction extends StatelessWidget {
   final IconData icon;
   final VoidCallback onTap;
   final int count;
-  const _HeaderAction({required this.tooltip, required this.icon, required this.onTap, this.count = 0});
+  const _HeaderAction({
+    required this.tooltip,
+    required this.icon,
+    required this.onTap,
+    this.count = 0,
+  });
 
   @override
   Widget build(BuildContext context) => IconButton(
-        tooltip: tooltip,
-        onPressed: onTap,
-        visualDensity: VisualDensity.compact,
-        icon: Badge(
-          isLabelVisible: count > 0,
-          backgroundColor: AppColors.violet,
-          label: Text(count > 99 ? '99+' : '$count'),
-          child: Icon(icon, color: Colors.white70, size: 20),
-        ),
-      );
+    tooltip: tooltip,
+    onPressed: onTap,
+    visualDensity: VisualDensity.compact,
+    icon: Badge(
+      isLabelVisible: count > 0,
+      backgroundColor: AppColors.violet,
+      label: Text(count > 99 ? '99+' : '$count'),
+      child: Icon(icon, color: Colors.white70, size: 20),
+    ),
+  );
 }
 
 class _GradientIcon extends StatelessWidget {
@@ -637,10 +808,12 @@ class _GradientIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ShaderMask(
-        blendMode: BlendMode.srcIn,
-        shaderCallback: (bounds) => LinearGradient(
-          colors: active ? const [AppColors.cyan, AppColors.violet] : const [Color(0x75FFFFFF), Color(0x75FFFFFF)],
-        ).createShader(bounds),
-        child: Icon(icon, size: size),
-      );
+    blendMode: BlendMode.srcIn,
+    shaderCallback: (bounds) => LinearGradient(
+      colors: active
+          ? const [AppColors.cyan, AppColors.violet]
+          : const [Color(0x75FFFFFF), Color(0x75FFFFFF)],
+    ).createShader(bounds),
+    child: Icon(icon, size: size),
+  );
 }

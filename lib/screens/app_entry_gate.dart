@@ -23,9 +23,13 @@ class AppEntryGate extends StatelessWidget {
         if (user == null) return const GuestHomeScreen();
 
         return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-          stream: FirebaseFirestore.instance.collection('users').doc(user.uid).snapshots(),
+          stream: FirebaseFirestore.instance
+              .collection('users')
+              .doc(user.uid)
+              .snapshots(),
           builder: (context, profileSnapshot) {
-            if (profileSnapshot.connectionState == ConnectionState.waiting && !profileSnapshot.hasData) {
+            if (profileSnapshot.connectionState == ConnectionState.waiting &&
+                !profileSnapshot.hasData) {
               return const Scaffold(
                 backgroundColor: Color(0xFF090A0C),
                 body: Center(child: CircularProgressIndicator()),
@@ -33,7 +37,8 @@ class AppEntryGate extends StatelessWidget {
             }
 
             final data = profileSnapshot.data?.data();
-            final appOnboardingCompleted = data?['appOnboardingCompleted'] == true;
+            final appOnboardingCompleted =
+                data?['appOnboardingCompleted'] == true;
             Widget next;
             if (!appOnboardingCompleted) {
               next = const AppOnboardingScreen();

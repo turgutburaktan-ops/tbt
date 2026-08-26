@@ -30,25 +30,17 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFF090A0C),
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: pages,
-      ),
+      body: IndexedStack(index: _selectedIndex, children: pages),
       floatingActionButton: FloatingActionButton(
         backgroundColor: const Color(0xFFB7BCC2),
         foregroundColor: Colors.black,
         onPressed: () {
           Navigator.push(
             context,
-            MaterialPageRoute(
-              builder: (_) => const CameraScreen(),
-            ),
+            MaterialPageRoute(builder: (_) => const CameraScreen()),
           );
         },
-        child: const Icon(
-          Icons.camera_alt_rounded,
-          size: 28,
-        ),
+        child: const Icon(Icons.camera_alt_rounded, size: 28),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       bottomNavigationBar: NavigationBar(
@@ -111,12 +103,7 @@ class _DiscoverHubPageState extends State<_DiscoverHubPage> {
       child: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(
-              16,
-              14,
-              16,
-              10,
-            ),
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
             child: Container(
               padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
@@ -150,10 +137,7 @@ class _DiscoverHubPageState extends State<_DiscoverHubPage> {
           Expanded(
             child: IndexedStack(
               index: _selectedSection,
-              children: const [
-                FeedScreen(),
-                _ExplorePage(),
-              ],
+              children: const [FeedScreen(), _ExplorePage()],
             ),
           ),
         ],
@@ -188,10 +172,7 @@ class _HomeSectionButton extends StatelessWidget {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 180),
           curve: Curves.easeOut,
-          padding: const EdgeInsets.symmetric(
-            vertical: 12,
-            horizontal: 8,
-          ),
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -255,16 +236,15 @@ class _ExplorePageState extends State<_ExplorePage> {
   bool _containsTag(PhotoSpot spot, String value) {
     final query = value.toLowerCase();
 
-    return spot.tags.any(
-      (tag) => tag.toLowerCase().contains(query),
-    );
+    return spot.tags.any((tag) => tag.toLowerCase().contains(query));
   }
 
   List<PhotoSpot> get _filteredSpots {
     final query = _searchQuery.trim().toLowerCase();
 
     return demoSpots.where((spot) {
-      final matchesSearch = query.isEmpty ||
+      final matchesSearch =
+          query.isEmpty ||
           spot.name.toLowerCase().contains(query) ||
           spot.city.toLowerCase().contains(query) ||
           spot.category.toLowerCase().contains(query) ||
@@ -273,9 +253,7 @@ class _ExplorePageState extends State<_ExplorePage> {
           spot.angle.toLowerCase().contains(query) ||
           spot.recommendedLens.toLowerCase().contains(query) ||
           spot.difficulty.toLowerCase().contains(query) ||
-          spot.tags.any(
-            (tag) => tag.toLowerCase().contains(query),
-          );
+          spot.tags.any((tag) => tag.toLowerCase().contains(query));
 
       if (!matchesSearch) {
         return false;
@@ -336,36 +314,20 @@ class _ExplorePageState extends State<_ExplorePage> {
         slivers: [
           const SliverToBoxAdapter(
             child: Padding(
-              padding: EdgeInsets.fromLTRB(
-                20,
-                22,
-                20,
-                4,
-              ),
+              padding: EdgeInsets.fromLTRB(20, 22, 20, 4),
               child: Text(
                 'En İyi Çekim Noktası',
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.w800,
-                ),
+                style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800),
               ),
             ),
           ),
 
           const SliverToBoxAdapter(
             child: Padding(
-              padding: EdgeInsets.fromLTRB(
-                20,
-                0,
-                20,
-                18,
-              ),
+              padding: EdgeInsets.fromLTRB(20, 0, 20, 18),
               child: Text(
                 'Fotoğrafın için doğru yeri, ışığı ve açıyı keşfet.',
-                style: TextStyle(
-                  color: Colors.white60,
-                  fontSize: 14,
-                ),
+                style: TextStyle(color: Colors.white60, fontSize: 14),
               ),
             ),
           ),
@@ -373,9 +335,7 @@ class _ExplorePageState extends State<_ExplorePage> {
           // ARAMA
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 20,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 20),
               child: TextField(
                 controller: _searchController,
                 onChanged: (value) {
@@ -386,14 +346,10 @@ class _ExplorePageState extends State<_ExplorePage> {
                 textInputAction: TextInputAction.search,
                 decoration: InputDecoration(
                   hintText: 'Şehir, nokta, gün batımı, mimari...',
-                  prefixIcon: const Icon(
-                    Icons.search,
-                  ),
+                  prefixIcon: const Icon(Icons.search),
                   suffixIcon: _searchQuery.isNotEmpty
                       ? IconButton(
-                          icon: const Icon(
-                            Icons.clear,
-                          ),
+                          icon: const Icon(Icons.clear),
                           onPressed: _clearSearch,
                         )
                       : null,
@@ -413,12 +369,7 @@ class _ExplorePageState extends State<_ExplorePage> {
             child: SizedBox(
               height: 62,
               child: ListView.separated(
-                padding: const EdgeInsets.fromLTRB(
-                  20,
-                  14,
-                  20,
-                  8,
-                ),
+                padding: const EdgeInsets.fromLTRB(20, 14, 20, 8),
                 scrollDirection: Axis.horizontal,
                 itemCount: _filters.length,
                 separatorBuilder: (_, __) => const SizedBox(width: 8),
@@ -449,12 +400,7 @@ class _ExplorePageState extends State<_ExplorePage> {
 
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                20,
-                18,
-                20,
-                12,
-              ),
+              padding: const EdgeInsets.fromLTRB(20, 18, 20, 12),
               child: Row(
                 children: [
                   Expanded(
@@ -475,9 +421,7 @@ class _ExplorePageState extends State<_ExplorePage> {
                           _selectedFilter = 'Tümü';
                         });
                       },
-                      child: const Text(
-                        'Filtreyi temizle',
-                      ),
+                      child: const Text('Filtreyi temizle'),
                     ),
                 ],
               ),
@@ -490,11 +434,7 @@ class _ExplorePageState extends State<_ExplorePage> {
                 padding: EdgeInsets.all(40),
                 child: Column(
                   children: [
-                    Icon(
-                      Icons.search_off,
-                      size: 58,
-                      color: Colors.white38,
-                    ),
+                    Icon(Icons.search_off, size: 58, color: Colors.white38),
                     SizedBox(height: 16),
                     Text(
                       'Sonuç bulunamadı',
@@ -507,9 +447,7 @@ class _ExplorePageState extends State<_ExplorePage> {
                     Text(
                       'Farklı bir şehir, kategori veya çekim türü deneyin.',
                       textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Colors.white54,
-                      ),
+                      style: TextStyle(color: Colors.white54),
                     ),
                   ],
                 ),
@@ -517,21 +455,14 @@ class _ExplorePageState extends State<_ExplorePage> {
             )
           else
             SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  final spot = spots[index];
+              delegate: SliverChildBuilderDelegate((context, index) {
+                final spot = spots[index];
 
-                  return _ExploreSpotCard(
-                    spot: spot,
-                  );
-                },
-                childCount: spots.length,
-              ),
+                return _ExploreSpotCard(spot: spot);
+              }, childCount: spots.length),
             ),
 
-          const SliverToBoxAdapter(
-            child: SizedBox(height: 100),
-          ),
+          const SliverToBoxAdapter(child: SizedBox(height: 100)),
         ],
       ),
     );
@@ -541,19 +472,12 @@ class _ExplorePageState extends State<_ExplorePage> {
 class _ExploreSpotCard extends StatelessWidget {
   final PhotoSpot spot;
 
-  const _ExploreSpotCard({
-    required this.spot,
-  });
+  const _ExploreSpotCard({required this.spot});
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        20,
-        0,
-        20,
-        12,
-      ),
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
       child: Card(
         color: const Color(0xFF121416),
         clipBehavior: Clip.antiAlias,
@@ -561,11 +485,7 @@ class _ExploreSpotCard extends StatelessWidget {
           onTap: () {
             Navigator.push(
               context,
-              MaterialPageRoute(
-                builder: (_) => SpotDetailScreen(
-                  spot: spot,
-                ),
-              ),
+              MaterialPageRoute(builder: (_) => SpotDetailScreen(spot: spot)),
             );
           },
           child: Padding(
@@ -584,10 +504,7 @@ class _ExploreSpotCard extends StatelessWidget {
                         width: 88,
                         height: 88,
                         color: const Color(0xFF1A1D20),
-                        child: const Icon(
-                          Icons.photo,
-                          color: Colors.white38,
-                        ),
+                        child: const Icon(Icons.photo, color: Colors.white38),
                       );
                     },
                   ),
@@ -619,9 +536,7 @@ class _ExploreSpotCard extends StatelessWidget {
                         '⭐ ${spot.rating}   📸 ${spot.bestTime}',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 12,
-                        ),
+                        style: const TextStyle(fontSize: 12),
                       ),
                       const SizedBox(height: 6),
                       Text(
@@ -638,27 +553,19 @@ class _ExploreSpotCard extends StatelessWidget {
                 ),
                 ValueListenableBuilder<List<PhotoSpot>>(
                   valueListenable: FavoritesService.savedSpots,
-                  builder: (
-                    context,
-                    savedSpots,
-                    _,
-                  ) {
+                  builder: (context, savedSpots, _) {
                     final isSaved = savedSpots.any(
                       (item) => item.id == spot.id,
                     );
 
                     return IconButton(
                       onPressed: () {
-                        FavoritesService.toggle(
-                          spot,
-                        );
+                        FavoritesService.toggle(spot);
                       },
                       icon: Icon(
                         isSaved ? Icons.favorite : Icons.favorite_border,
                         color: isSaved
-                            ? const Color(
-                                0xFFB7BCC2,
-                              )
+                            ? const Color(0xFFB7BCC2)
                             : Colors.white54,
                       ),
                     );
@@ -685,11 +592,7 @@ class _SavedPage extends StatelessWidget {
     return SafeArea(
       child: ValueListenableBuilder<List<PhotoSpot>>(
         valueListenable: FavoritesService.savedSpots,
-        builder: (
-          context,
-          spots,
-          _,
-        ) {
+        builder: (context, spots, _) {
           if (spots.isEmpty) {
             return const Center(
               child: Padding(
@@ -714,9 +617,7 @@ class _SavedPage extends StatelessWidget {
                     Text(
                       'Keşfet ekranındaki kalp simgesine basarak çekim noktalarını kaydedebilirsin.',
                       textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Colors.white54,
-                      ),
+                      style: TextStyle(color: Colors.white54),
                     ),
                   ],
                 ),
@@ -725,34 +626,22 @@ class _SavedPage extends StatelessWidget {
           }
 
           return ListView(
-            padding: const EdgeInsets.fromLTRB(
-              20,
-              22,
-              20,
-              110,
-            ),
+            padding: const EdgeInsets.fromLTRB(20, 22, 20, 110),
             children: [
               const Text(
                 'Kaydedilenler',
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.w800,
-                ),
+                style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800),
               ),
               const SizedBox(height: 4),
               Text(
                 '${spots.length} çekim noktası',
-                style: const TextStyle(
-                  color: Colors.white54,
-                ),
+                style: const TextStyle(color: Colors.white54),
               ),
               const SizedBox(height: 18),
               ...spots.map(
                 (spot) => Card(
                   color: const Color(0xFF121416),
-                  margin: const EdgeInsets.only(
-                    bottom: 12,
-                  ),
+                  margin: const EdgeInsets.only(bottom: 12),
                   child: ListTile(
                     contentPadding: const EdgeInsets.all(10),
                     leading: ClipRRect(
@@ -766,9 +655,7 @@ class _SavedPage extends StatelessWidget {
                           return Container(
                             width: 70,
                             height: 70,
-                            color: const Color(
-                              0xFF1A1D20,
-                            ),
+                            color: const Color(0xFF1A1D20),
                             child: const Icon(
                               Icons.photo,
                               color: Colors.white38,
@@ -781,9 +668,7 @@ class _SavedPage extends StatelessWidget {
                       spot.name,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                     subtitle: Text(
                       '${spot.city} • ⭐ ${spot.rating}\n${spot.category}',
@@ -796,18 +681,14 @@ class _SavedPage extends StatelessWidget {
                         color: Color(0xFFB7BCC2),
                       ),
                       onPressed: () {
-                        FavoritesService.remove(
-                          spot,
-                        );
+                        FavoritesService.remove(spot);
                       },
                     ),
                     onTap: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => SpotDetailScreen(
-                            spot: spot,
-                          ),
+                          builder: (_) => SpotDetailScreen(spot: spot),
                         ),
                       );
                     },
@@ -830,10 +711,7 @@ class _ProfileStat extends StatelessWidget {
   final String value;
   final String label;
 
-  const _ProfileStat({
-    required this.value,
-    required this.label,
-  });
+  const _ProfileStat({required this.value, required this.label});
 
   @override
   Widget build(BuildContext context) {
@@ -850,10 +728,7 @@ class _ProfileStat extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           label,
-          style: const TextStyle(
-            color: Colors.white54,
-            fontSize: 12,
-          ),
+          style: const TextStyle(color: Colors.white54, fontSize: 12),
         ),
       ],
     );
@@ -876,15 +751,10 @@ class _ProfileMenuItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: const EdgeInsets.only(
-        bottom: 10,
-      ),
+      margin: const EdgeInsets.only(bottom: 10),
       color: const Color(0xFF121416),
       child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 6,
-        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
         leading: Container(
           width: 44,
           height: 44,
@@ -892,28 +762,14 @@ class _ProfileMenuItem extends StatelessWidget {
             color: const Color(0xFFB7BCC2).withOpacity(.12),
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Icon(
-            icon,
-            color: const Color(0xFFB7BCC2),
-          ),
+          child: Icon(icon, color: const Color(0xFFB7BCC2)),
         ),
-        title: Text(
-          title,
-          style: const TextStyle(
-            fontWeight: FontWeight.w600,
-          ),
-        ),
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
         subtitle: Text(
           subtitle,
-          style: const TextStyle(
-            color: Colors.white54,
-            fontSize: 12,
-          ),
+          style: const TextStyle(color: Colors.white54, fontSize: 12),
         ),
-        trailing: const Icon(
-          Icons.chevron_right,
-          color: Colors.white38,
-        ),
+        trailing: const Icon(Icons.chevron_right, color: Colors.white38),
         onTap: onTap,
       ),
     );

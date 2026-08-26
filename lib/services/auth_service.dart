@@ -93,7 +93,10 @@ class AuthService {
     }
   }
 
-  Future<void> _ensureSocialProfile(User? user, {required String provider}) async {
+  Future<void> _ensureSocialProfile(
+    User? user, {
+    required String provider,
+  }) async {
     if (user == null) return;
     final ref = _firestore.collection('users').doc(user.uid);
     final existing = await ref.get();
@@ -108,8 +111,12 @@ class AuthService {
           ? fallbackName
           : (data?['displayName'] ?? '').toString(),
       'authProvider': provider,
-      'onboardingRequired': data == null ? true : (data['onboardingRequired'] ?? false),
-      'onboardingCompleted': data == null ? false : (data['onboardingCompleted'] ?? false),
+      'onboardingRequired': data == null
+          ? true
+          : (data['onboardingRequired'] ?? false),
+      'onboardingCompleted': data == null
+          ? false
+          : (data['onboardingCompleted'] ?? false),
       if (data == null) 'createdAt': FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));

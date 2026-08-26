@@ -108,13 +108,13 @@ class NationwideSpotDirectoryService {
       (await load()).where((e) => e.mapReady).toList(growable: false);
 
   Future<List<NationwideSpotDirectoryEntry>>
-      sourceVerifiedWaitingForMap() async => (await load())
-          .where((e) => e.sourceVerified && !e.mapReady)
-          .toList(growable: false);
+  sourceVerifiedWaitingForMap() async => (await load())
+      .where((e) => e.sourceVerified && !e.mapReady)
+      .toList(growable: false);
 
   static bool _isTrustedTourismSource(OfficialSpotCandidate candidate) {
-    final source =
-        '${candidate.sourceName} ${candidate.sourcePage}'.toLowerCase();
+    final source = '${candidate.sourceName} ${candidate.sourcePage}'
+        .toLowerCase();
     return source.contains('gotürkiye') ||
         source.contains('goturkiye') ||
         source.contains('kültür ve turizm') ||

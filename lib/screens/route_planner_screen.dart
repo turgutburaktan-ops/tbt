@@ -13,22 +13,22 @@ enum RouteTravelMode { driving, walking, bicycling }
 
 extension RouteTravelModeX on RouteTravelMode {
   String get label => switch (this) {
-        RouteTravelMode.driving => 'Araç',
-        RouteTravelMode.walking => 'Yürüyüş',
-        RouteTravelMode.bicycling => 'Bisiklet',
-      };
+    RouteTravelMode.driving => 'Araç',
+    RouteTravelMode.walking => 'Yürüyüş',
+    RouteTravelMode.bicycling => 'Bisiklet',
+  };
 
   IconData get icon => switch (this) {
-        RouteTravelMode.driving => Icons.directions_car_outlined,
-        RouteTravelMode.walking => Icons.directions_walk_rounded,
-        RouteTravelMode.bicycling => Icons.directions_bike_rounded,
-      };
+    RouteTravelMode.driving => Icons.directions_car_outlined,
+    RouteTravelMode.walking => Icons.directions_walk_rounded,
+    RouteTravelMode.bicycling => Icons.directions_bike_rounded,
+  };
 
   String get googleValue => switch (this) {
-        RouteTravelMode.driving => 'driving',
-        RouteTravelMode.walking => 'walking',
-        RouteTravelMode.bicycling => 'bicycling',
-      };
+    RouteTravelMode.driving => 'driving',
+    RouteTravelMode.walking => 'walking',
+    RouteTravelMode.bicycling => 'bicycling',
+  };
 }
 
 class RoutePlannerScreen extends StatefulWidget {
@@ -111,17 +111,21 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
         return;
       }
       final position = await Geolocator.getCurrentPosition(
-        locationSettings:
-            const LocationSettings(accuracy: LocationAccuracy.high),
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+        ),
       );
       if (!mounted) return;
       setState(() {
         _currentPosition = position;
         _useCurrentLocation = true;
         _allSpots = _sortedFromCurrentPosition(_allSpots, position);
-        _stops
-          ..sort((a, b) => _distanceFromPosition(position, a)
-              .compareTo(_distanceFromPosition(position, b)));
+        _stops..sort(
+          (a, b) => _distanceFromPosition(
+            position,
+            a,
+          ).compareTo(_distanceFromPosition(position, b)),
+        );
       });
     } catch (_) {
       if (requestIfNeeded) _message('Konum alınamadı.');
@@ -143,8 +147,12 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
     Position position,
   ) {
     final sorted = spots.toList();
-    sorted.sort((a, b) => _distanceFromPosition(position, a)
-        .compareTo(_distanceFromPosition(position, b)));
+    sorted.sort(
+      (a, b) => _distanceFromPosition(
+        position,
+        a,
+      ).compareTo(_distanceFromPosition(position, b)),
+    );
     return sorted;
   }
 
@@ -156,12 +164,17 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
 
   List<PhotoSpot> get _nearbyMapSpots {
     final selectedIds = _stops.map((spot) => spot.id).toSet();
-    final candidates =
-        _allSpots.where((spot) => !selectedIds.contains(spot.id)).toList();
+    final candidates = _allSpots
+        .where((spot) => !selectedIds.contains(spot.id))
+        .toList();
     final current = _currentPosition;
     if (current != null) {
-      candidates.sort((a, b) => _distanceFromPosition(current, a)
-          .compareTo(_distanceFromPosition(current, b)));
+      candidates.sort(
+        (a, b) => _distanceFromPosition(
+          current,
+          a,
+        ).compareTo(_distanceFromPosition(current, b)),
+      );
     }
     return candidates.take(60).toList();
   }
@@ -172,8 +185,12 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
       _stops.add(spot);
       final current = _currentPosition;
       if (current != null) {
-        _stops.sort((a, b) => _distanceFromPosition(current, a)
-            .compareTo(_distanceFromPosition(current, b)));
+        _stops.sort(
+          (a, b) => _distanceFromPosition(
+            current,
+            a,
+          ).compareTo(_distanceFromPosition(current, b)),
+        );
       }
     });
     await Future<void>.delayed(const Duration(milliseconds: 70));
@@ -196,8 +213,9 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
         Marker(
           markerId: const MarkerId('route_origin'),
           position: LatLng(current.latitude, current.longitude),
-          icon:
-              BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
+          icon: BitmapDescriptor.defaultMarkerWithHue(
+            BitmapDescriptor.hueAzure,
+          ),
           infoWindow: const InfoWindow(title: 'Başlangıç • Konumum'),
         ),
       );
@@ -285,9 +303,9 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
       final current = _currentPosition!;
       points = [
         LatLng(current.latitude, current.longitude),
-        ..._nearbyMapSpots.take(12).map(
-              (spot) => LatLng(spot.latitude, spot.longitude),
-            ),
+        ..._nearbyMapSpots
+            .take(12)
+            .map((spot) => LatLng(spot.latitude, spot.longitude)),
       ];
     }
     if (points.isEmpty) return;
@@ -452,8 +470,12 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
       _stops.add(selected);
       final current = _currentPosition;
       if (current != null) {
-        _stops.sort((a, b) => _distanceFromPosition(current, a)
-            .compareTo(_distanceFromPosition(current, b)));
+        _stops.sort(
+          (a, b) => _distanceFromPosition(
+            current,
+            a,
+          ).compareTo(_distanceFromPosition(current, b)),
+        );
       }
     });
     await Future<void>.delayed(const Duration(milliseconds: 80));
@@ -544,8 +566,9 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
     }
 
     if (waypointSpots.isNotEmpty) {
-      params['waypoints'] =
-          waypointSpots.map((s) => '${s.latitude},${s.longitude}').join('|');
+      params['waypoints'] = waypointSpots
+          .map((s) => '${s.latitude},${s.longitude}')
+          .join('|');
     }
 
     final uri = Uri.https('www.google.com', '/maps/dir/', params);
@@ -679,7 +702,8 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
                                   await _fitRoute();
                                 } else {
                                   await _readCurrentLocation(
-                                      requestIfNeeded: true);
+                                    requestIfNeeded: true,
+                                  );
                                   await _fitRoute();
                                 }
                               },
@@ -687,8 +711,9 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
                             ? const SizedBox(
                                 width: 16,
                                 height: 16,
-                                child:
-                                    CircularProgressIndicator(strokeWidth: 2),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
                               )
                             : const Icon(Icons.my_location_rounded, size: 18),
                         label: Text(
@@ -725,90 +750,97 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
             child: _loading
                 ? const Center(child: CircularProgressIndicator())
                 : _stops.isEmpty
-                    ? _EmptyRoute(onAdd: _pickSpot)
-                    : ReorderableListView.builder(
-                        padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
-                        itemCount: _stops.length,
-                        onReorder: (oldIndex, newIndex) async {
-                          setState(() {
-                            if (newIndex > oldIndex) newIndex -= 1;
-                            final spot = _stops.removeAt(oldIndex);
-                            _stops.insert(newIndex, spot);
-                          });
-                          await Future<void>.delayed(
-                              const Duration(milliseconds: 60));
-                          await _fitRoute();
-                        },
-                        itemBuilder: (context, index) {
-                          final spot = _stops[index];
-                          return Container(
-                            key: ValueKey(spot.id),
-                            margin: const EdgeInsets.only(bottom: 8),
-                            decoration: BoxDecoration(
-                              color: _surface,
-                              borderRadius: BorderRadius.circular(15),
-                              border: Border.all(color: _border),
-                            ),
-                            child: ListTile(
-                              contentPadding:
-                                  const EdgeInsets.fromLTRB(10, 4, 4, 4),
-                              leading: CircleAvatar(
-                                radius: 18,
-                                backgroundColor: _surfaceAlt,
-                                child: Text(
-                                  '${index + 1}',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w900,
-                                  ),
-                                ),
+                ? _EmptyRoute(onAdd: _pickSpot)
+                : ReorderableListView.builder(
+                    padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+                    itemCount: _stops.length,
+                    onReorder: (oldIndex, newIndex) async {
+                      setState(() {
+                        if (newIndex > oldIndex) newIndex -= 1;
+                        final spot = _stops.removeAt(oldIndex);
+                        _stops.insert(newIndex, spot);
+                      });
+                      await Future<void>.delayed(
+                        const Duration(milliseconds: 60),
+                      );
+                      await _fitRoute();
+                    },
+                    itemBuilder: (context, index) {
+                      final spot = _stops[index];
+                      return Container(
+                        key: ValueKey(spot.id),
+                        margin: const EdgeInsets.only(bottom: 8),
+                        decoration: BoxDecoration(
+                          color: _surface,
+                          borderRadius: BorderRadius.circular(15),
+                          border: Border.all(color: _border),
+                        ),
+                        child: ListTile(
+                          contentPadding: const EdgeInsets.fromLTRB(
+                            10,
+                            4,
+                            4,
+                            4,
+                          ),
+                          leading: CircleAvatar(
+                            radius: 18,
+                            backgroundColor: _surfaceAlt,
+                            child: Text(
+                              '${index + 1}',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w900,
                               ),
-                              title: Text(
-                                spot.name,
+                            ),
+                          ),
+                          title: Text(
+                            spot.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontWeight: FontWeight.w800),
+                          ),
+                          subtitle: Builder(
+                            builder: (_) {
+                              final km = _distanceToMeKm(spot);
+                              final distanceLabel = km == null
+                                  ? ''
+                                  : ' • ${km < 10 ? km.toStringAsFixed(1) : km.toStringAsFixed(0)} km';
+                              return Text(
+                                '${spot.city}$distanceLabel • ${spot.bestTime}',
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w800,
+                                style: const TextStyle(color: Colors.white54),
+                              );
+                            },
+                          ),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                tooltip: 'Kaldır',
+                                onPressed: () async {
+                                  setState(() => _stops.removeAt(index));
+                                  await Future<void>.delayed(
+                                    const Duration(milliseconds: 60),
+                                  );
+                                  await _fitRoute();
+                                },
+                                icon: const Icon(
+                                  Icons.close_rounded,
+                                  color: Colors.white54,
                                 ),
                               ),
-                              subtitle: Builder(
-                                builder: (_) {
-                                  final km = _distanceToMeKm(spot);
-                                  final distanceLabel = km == null
-                                      ? ''
-                                      : ' • ${km < 10 ? km.toStringAsFixed(1) : km.toStringAsFixed(0)} km';
-                                  return Text(
-                                    '${spot.city}$distanceLabel • ${spot.bestTime}',
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style:
-                                        const TextStyle(color: Colors.white54),
-                                  );
-                                },
+                              const Icon(
+                                Icons.drag_handle_rounded,
+                                color: Colors.white38,
                               ),
-                              trailing: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  IconButton(
-                                    tooltip: 'Kaldır',
-                                    onPressed: () async {
-                                      setState(() => _stops.removeAt(index));
-                                      await Future<void>.delayed(
-                                          const Duration(milliseconds: 60));
-                                      await _fitRoute();
-                                    },
-                                    icon: const Icon(Icons.close_rounded,
-                                        color: Colors.white54),
-                                  ),
-                                  const Icon(Icons.drag_handle_rounded,
-                                      color: Colors.white38),
-                                  const SizedBox(width: 6),
-                                ],
-                              ),
-                            ),
-                          );
-                        },
-                      ),
+                              const SizedBox(width: 6),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
           ),
           SafeArea(
             top: false,
@@ -853,16 +885,15 @@ class _SummaryItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Column(
-        children: [
-          Text(
-            value,
-            style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900),
-          ),
-          const SizedBox(height: 2),
-          Text(label,
-              style: const TextStyle(color: Colors.white54, fontSize: 12)),
-        ],
-      );
+    children: [
+      Text(
+        value,
+        style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900),
+      ),
+      const SizedBox(height: 2),
+      Text(label, style: const TextStyle(color: Colors.white54, fontSize: 12)),
+    ],
+  );
 }
 
 class _EmptyRoute extends StatelessWidget {
@@ -872,31 +903,31 @@ class _EmptyRoute extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Center(
-        child: Padding(
-          padding: const EdgeInsets.all(28),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.route_outlined, size: 56, color: Colors.white24),
-              const SizedBox(height: 12),
-              const Text(
-                'Rotan henüz boş',
-                style: TextStyle(fontWeight: FontWeight.w900, fontSize: 17),
-              ),
-              const SizedBox(height: 6),
-              const Text(
-                'Gün içinde çekmek istediğin noktaları ekle, sırala ve tek dokunuşla Google Maps’te aç.',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.white54, height: 1.4),
-              ),
-              const SizedBox(height: 14),
-              FilledButton.icon(
-                onPressed: onAdd,
-                icon: const Icon(Icons.add_location_alt_outlined),
-                label: const Text('İlk noktayı ekle'),
-              ),
-            ],
+    child: Padding(
+      padding: const EdgeInsets.all(28),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.route_outlined, size: 56, color: Colors.white24),
+          const SizedBox(height: 12),
+          const Text(
+            'Rotan henüz boş',
+            style: TextStyle(fontWeight: FontWeight.w900, fontSize: 17),
           ),
-        ),
-      );
+          const SizedBox(height: 6),
+          const Text(
+            'Gün içinde çekmek istediğin noktaları ekle, sırala ve tek dokunuşla Google Maps’te aç.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.white54, height: 1.4),
+          ),
+          const SizedBox(height: 14),
+          FilledButton.icon(
+            onPressed: onAdd,
+            icon: const Icon(Icons.add_location_alt_outlined),
+            label: const Text('İlk noktayı ekle'),
+          ),
+        ],
+      ),
+    ),
+  );
 }

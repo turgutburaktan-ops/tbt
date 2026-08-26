@@ -110,7 +110,10 @@ class _EventsHubScreenState extends State<EventsHubScreen> {
                     borderRadius: BorderRadius.circular(13),
                     child: Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 9,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.surface,
                         borderRadius: BorderRadius.circular(13),
@@ -118,15 +121,26 @@ class _EventsHubScreenState extends State<EventsHubScreen> {
                       ),
                       child: const Row(
                         children: [
-                          Icon(Icons.bolt_rounded, size: 18, color: Color(0xFFFFD166)),
+                          Icon(
+                            Icons.bolt_rounded,
+                            size: 18,
+                            color: Color(0xFFFFD166),
+                          ),
                           SizedBox(width: 7),
                           Expanded(
                             child: Text(
                               'Etkinliğe katıl +15 XP  •  Etkinlik oluştur +50 XP',
-                              style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w800),
+                              style: TextStyle(
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w800,
+                              ),
                             ),
                           ),
-                          Icon(Icons.chevron_right_rounded, size: 18, color: Colors.white38),
+                          Icon(
+                            Icons.chevron_right_rounded,
+                            size: 18,
+                            color: Colors.white38,
+                          ),
                         ],
                       ),
                     ),
@@ -157,20 +171,20 @@ class _XpBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-        decoration: BoxDecoration(
-          color: const Color(0xFFFFD166),
-          borderRadius: BorderRadius.circular(999),
-        ),
-        child: Text(
-          text,
-          style: const TextStyle(
-            color: Colors.black,
-            fontWeight: FontWeight.w900,
-            fontSize: 8,
-          ),
-        ),
-      );
+    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+    decoration: BoxDecoration(
+      color: const Color(0xFFFFD166),
+      borderRadius: BorderRadius.circular(999),
+    ),
+    child: Text(
+      text,
+      style: const TextStyle(
+        color: Colors.black,
+        fontWeight: FontWeight.w900,
+        fontSize: 8,
+      ),
+    ),
+  );
 }
 
 class _EventTab extends StatelessWidget {

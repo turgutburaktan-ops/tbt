@@ -50,21 +50,40 @@ class _AdminQuickEntryState extends State<AdminQuickEntry> {
                 onTap: () => Navigator.of(context).pushNamed('/admin'),
                 borderRadius: BorderRadius.circular(999),
                 child: Ink(
-                  padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 11,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xEE11151B),
                     borderRadius: BorderRadius.circular(999),
-                    border: Border.all(color: AppColors.cyan.withValues(alpha: .7)),
+                    border: Border.all(
+                      color: AppColors.cyan.withValues(alpha: .7),
+                    ),
                     boxShadow: const [
-                      BoxShadow(color: Colors.black38, blurRadius: 12, offset: Offset(0, 4)),
+                      BoxShadow(
+                        color: Colors.black38,
+                        blurRadius: 12,
+                        offset: Offset(0, 4),
+                      ),
                     ],
                   ),
                   child: const Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.admin_panel_settings_rounded, size: 18, color: AppColors.cyan),
+                      Icon(
+                        Icons.admin_panel_settings_rounded,
+                        size: 18,
+                        color: AppColors.cyan,
+                      ),
                       SizedBox(width: 6),
-                      Text('Admin', style: TextStyle(fontWeight: FontWeight.w900, color: Colors.white)),
+                      Text(
+                        'Admin',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w900,
+                          color: Colors.white,
+                        ),
+                      ),
                     ],
                   ),
                 ),

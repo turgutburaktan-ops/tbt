@@ -43,7 +43,8 @@ class _GuestHomeScreenState extends State<GuestHomeScreen> {
     }
 
     final now = DateTime.now();
-    final pressedRecently = _lastBackPressedAt != null &&
+    final pressedRecently =
+        _lastBackPressedAt != null &&
         now.difference(_lastBackPressedAt!) <= const Duration(seconds: 2);
     if (pressedRecently) {
       SystemNavigator.pop();
@@ -52,10 +53,12 @@ class _GuestHomeScreenState extends State<GuestHomeScreen> {
     _lastBackPressedAt = now;
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(const SnackBar(
-        duration: Duration(seconds: 2),
-        content: Text('Uygulamadan çıkmak için geri tuşuna tekrar bas.'),
-      ));
+      ..showSnackBar(
+        const SnackBar(
+          duration: Duration(seconds: 2),
+          content: Text('Uygulamadan çıkmak için geri tuşuna tekrar bas.'),
+        ),
+      );
   }
 
   @override
@@ -168,16 +171,22 @@ class _GuestNavigationBar extends StatelessWidget {
                       Icon(
                         selected ? item.$2 : item.$1,
                         size: 21,
-                        color: selected ? Colors.white : const Color(0x75FFFFFF),
+                        color: selected
+                            ? Colors.white
+                            : const Color(0x75FFFFFF),
                       ),
                       const SizedBox(height: 2),
                       Text(
                         item.$3,
                         maxLines: 1,
                         style: TextStyle(
-                          color: selected ? Colors.white : const Color(0x75FFFFFF),
+                          color: selected
+                              ? Colors.white
+                              : const Color(0x75FFFFFF),
                           fontSize: 9.5,
-                          fontWeight: selected ? FontWeight.w900 : FontWeight.w600,
+                          fontWeight: selected
+                              ? FontWeight.w900
+                              : FontWeight.w600,
                         ),
                       ),
                     ],
@@ -264,7 +273,11 @@ class _GuestFeed extends StatelessWidget {
                       SizedBox(height: 3),
                       Text(
                         'Kayıt olmadan gezebilirsin. Beğeni, yorum, mesaj ve paylaşım için giriş isteriz.',
-                        style: TextStyle(color: Colors.white54, fontSize: 12, height: 1.35),
+                        style: TextStyle(
+                          color: Colors.white54,
+                          fontSize: 12,
+                          height: 1.35,
+                        ),
                       ),
                     ],
                   ),
@@ -310,9 +323,8 @@ class _GuestFeed extends StatelessWidget {
                   );
                 }
                 return RefreshIndicator(
-                  onRefresh: () async => Future<void>.delayed(
-                    const Duration(milliseconds: 350),
-                  ),
+                  onRefresh: () async =>
+                      Future<void>.delayed(const Duration(milliseconds: 350)),
                   child: ListView.builder(
                     physics: const AlwaysScrollableScrollPhysics(),
                     padding: const EdgeInsets.fromLTRB(10, 0, 10, 32),
@@ -351,15 +363,16 @@ class _GuestPostCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final userId = (data['userId'] ?? '').toString();
     final userName = (data['userName'] ?? 'Topluluk üyesi').toString();
-    final userPhotoUrl = (data['userPhotoUrl'] ?? data['photoUrl'] ?? '').toString();
+    final userPhotoUrl = (data['userPhotoUrl'] ?? data['photoUrl'] ?? '')
+        .toString();
     final caption = (data['caption'] ?? '').toString();
     final spotName = (data['spotName'] ?? '').toString();
     final imageUrl = (data['imageUrl'] ?? '').toString();
     final storagePath = (data['storagePath'] ?? '').toString();
     final videoUrl = (data['videoUrl'] ?? '').toString();
     final thumbnailUrl = (data['thumbnailUrl'] ?? imageUrl).toString();
-    final thumbnailPath =
-        (data['thumbnailStoragePath'] ?? storagePath).toString();
+    final thumbnailPath = (data['thumbnailStoragePath'] ?? storagePath)
+        .toString();
     final isVideo = videoUrl.isNotEmpty || data['mediaType'] == 'video';
 
     return Container(
@@ -383,7 +396,9 @@ class _GuestPostCard extends StatelessWidget {
                   child: ClipOval(
                     child: FirebaseMediaImage(
                       imageUrl: userPhotoUrl,
-                      fallbackStoragePaths: FirebaseMediaImage.avatarPaths(userId),
+                      fallbackStoragePaths: FirebaseMediaImage.avatarPaths(
+                        userId,
+                      ),
                       errorWidget: const ColoredBox(
                         color: Color(0xFF22262A),
                         child: Center(child: Icon(Icons.person_outline)),
@@ -407,7 +422,10 @@ class _GuestPostCard extends StatelessWidget {
                           spotName,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(color: Colors.white54, fontSize: 11),
+                          style: const TextStyle(
+                            color: Colors.white54,
+                            fontSize: 11,
+                          ),
                         ),
                     ],
                   ),
@@ -434,13 +452,19 @@ class _GuestPostCard extends StatelessWidget {
                 : FirebaseMediaImage(
                     imageUrl: imageUrl,
                     storagePath: storagePath,
-                    fallbackStoragePaths: FirebaseMediaImage.postPaths(userId, postId),
+                    fallbackStoragePaths: FirebaseMediaImage.postPaths(
+                      userId,
+                      postId,
+                    ),
                     fit: BoxFit.cover,
                     errorWidget: const ColoredBox(
                       color: Color(0xFF1A1D20),
                       child: Center(
-                        child: Icon(Icons.broken_image_outlined,
-                            color: Colors.white30, size: 52),
+                        child: Icon(
+                          Icons.broken_image_outlined,
+                          color: Colors.white30,
+                          size: 52,
+                        ),
                       ),
                     ),
                   ),
@@ -472,16 +496,21 @@ class _GuestPostCard extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.fromLTRB(13, 0, 13, 12),
               child: Text.rich(
-                TextSpan(children: [
-                  TextSpan(
-                    text: '$userName ',
-                    style: const TextStyle(fontWeight: FontWeight.w900),
-                  ),
-                  TextSpan(
-                    text: caption,
-                    style: const TextStyle(color: Colors.white70, height: 1.35),
-                  ),
-                ]),
+                TextSpan(
+                  children: [
+                    TextSpan(
+                      text: '$userName ',
+                      style: const TextStyle(fontWeight: FontWeight.w900),
+                    ),
+                    TextSpan(
+                      text: caption,
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        height: 1.35,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
         ],

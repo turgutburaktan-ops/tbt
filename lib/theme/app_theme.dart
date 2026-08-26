@@ -64,21 +64,22 @@ class AppTheme {
   AppTheme._();
 
   static ThemeData get dark {
-    final scheme = ColorScheme.fromSeed(
-      seedColor: AppColors.violet,
-      brightness: Brightness.dark,
-    ).copyWith(
-      primary: AppColors.violet,
-      secondary: AppColors.cyan,
-      tertiary: AppColors.violetBright,
-      surface: AppColors.surface,
-      surfaceContainerHighest: AppColors.surfaceAlt,
-      outline: AppColors.border,
-      outlineVariant: AppColors.borderStrong,
-      onPrimary: Colors.white,
-      onSecondary: const Color(0xFF031113),
-      error: AppColors.liked,
-    );
+    final scheme =
+        ColorScheme.fromSeed(
+          seedColor: AppColors.violet,
+          brightness: Brightness.dark,
+        ).copyWith(
+          primary: AppColors.violet,
+          secondary: AppColors.cyan,
+          tertiary: AppColors.violetBright,
+          surface: AppColors.surface,
+          surfaceContainerHighest: AppColors.surfaceAlt,
+          outline: AppColors.border,
+          outlineVariant: AppColors.borderStrong,
+          onPrimary: Colors.white,
+          onSecondary: const Color(0xFF031113),
+          error: AppColors.liked,
+        );
 
     return ThemeData(
       brightness: Brightness.dark,
@@ -165,7 +166,10 @@ class AppTheme {
         filled: true,
         isDense: true,
         fillColor: AppColors.surfaceAlt,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 15,
+          vertical: 14,
+        ),
         labelStyle: const TextStyle(color: AppColors.textMuted, fontSize: 13),
         floatingLabelStyle: const TextStyle(
           color: AppColors.violetBright,

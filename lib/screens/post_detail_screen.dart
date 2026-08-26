@@ -50,11 +50,16 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     if (_openingSpot || spotName.trim().isEmpty) return;
     setState(() => _openingSpot = true);
     try {
-      final results = await SpotRepository.instance.search(spotName, limit: 2000);
+      final results = await SpotRepository.instance.search(
+        spotName,
+        limit: 2000,
+      );
       if (!mounted) return;
       if (results.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Bu çekim noktası kartı henüz bulunamadı.')),
+          const SnackBar(
+            content: Text('Bu çekim noktası kartı henüz bulunamadı.'),
+          ),
         );
         return;
       }
@@ -99,8 +104,10 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Gönderiyi Düzenle',
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900)),
+              const Text(
+                'Gönderiyi Düzenle',
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900),
+              ),
               const SizedBox(height: 16),
               TextField(
                 controller: captionController,
@@ -112,8 +119,9 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
               const SizedBox(height: 12),
               TextField(
                 controller: spotController,
-                decoration:
-                    const InputDecoration(labelText: 'Konum / çekim noktası'),
+                decoration: const InputDecoration(
+                  labelText: 'Konum / çekim noktası',
+                ),
               ),
               const SizedBox(height: 18),
               SizedBox(
@@ -146,7 +154,9 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
+            SnackBar(
+              content: Text(e.toString().replaceFirst('Exception: ', '')),
+            ),
           );
         }
       }
@@ -181,8 +191,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
         postId: (_post['id'] ?? '').toString(),
         storagePath: (_post['storagePath'] ?? '').toString(),
         videoStoragePath: (_post['videoStoragePath'] ?? '').toString(),
-        thumbnailStoragePath:
-            (_post['thumbnailStoragePath'] ?? '').toString(),
+        thumbnailStoragePath: (_post['thumbnailStoragePath'] ?? '').toString(),
       );
       if (mounted) Navigator.pop(context, true);
     } catch (e) {
@@ -214,10 +223,14 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
               },
             ),
             ListTile(
-              leading:
-                  const Icon(Icons.delete_outline, color: Colors.redAccent),
-              title:
-                  const Text('Sil', style: TextStyle(color: Colors.redAccent)),
+              leading: const Icon(
+                Icons.delete_outline,
+                color: Colors.redAccent,
+              ),
+              title: const Text(
+                'Sil',
+                style: TextStyle(color: Colors.redAccent),
+              ),
               onTap: () {
                 Navigator.pop(sheetContext);
                 _delete();
@@ -234,8 +247,8 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     final storagePath = (_post['storagePath'] ?? '').toString();
     final videoUrl = (_post['videoUrl'] ?? '').toString();
     final thumbnailUrl = (_post['thumbnailUrl'] ?? imageUrl).toString();
-    final thumbnailStoragePath =
-        (_post['thumbnailStoragePath'] ?? storagePath).toString();
+    final thumbnailStoragePath = (_post['thumbnailStoragePath'] ?? storagePath)
+        .toString();
     final fallbackStoragePaths = FirebaseMediaImage.postPaths(
       (_post['userId'] ?? '').toString(),
       (_post['id'] ?? '').toString(),
@@ -269,8 +282,11 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
           fallbackStoragePaths: fallbackStoragePaths,
           fit: BoxFit.contain,
           errorWidget: const Center(
-            child: Icon(Icons.broken_image_outlined,
-                size: 70, color: Colors.white30),
+            child: Icon(
+              Icons.broken_image_outlined,
+              size: 70,
+              color: Colors.white30,
+            ),
           ),
         ),
       ),
@@ -322,8 +338,10 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                       const CircleAvatar(
                         radius: 19,
                         backgroundColor: Color(0xFF1A1D20),
-                        child: Icon(Icons.person_outline_rounded,
-                            color: Colors.white70),
+                        child: Icon(
+                          Icons.person_outline_rounded,
+                          color: Colors.white70,
+                        ),
                       ),
                       const SizedBox(width: 11),
                       Expanded(
@@ -333,37 +351,51 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                             Row(
                               children: [
                                 Flexible(
-                                  child: Text(userName,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
-                                          fontSize: 15,
-                                          fontWeight: FontWeight.w900)),
+                                  child: Text(
+                                    userName,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w900,
+                                    ),
+                                  ),
                                 ),
                                 if (_isVideo) ...[
                                   const SizedBox(width: 6),
-                                  const Icon(Icons.videocam_rounded,
-                                      size: 17, color: Colors.white54),
+                                  const Icon(
+                                    Icons.videocam_rounded,
+                                    size: 17,
+                                    color: Colors.white54,
+                                  ),
                                 ],
                               ],
                             ),
                             if (spot.isNotEmpty)
                               InkWell(
-                                onTap: _openingSpot ? null : () => _openSpot(spot),
+                                onTap: _openingSpot
+                                    ? null
+                                    : () => _openSpot(spot),
                                 child: Padding(
                                   padding: const EdgeInsets.only(top: 3),
                                   child: Row(
                                     children: [
-                                      const Icon(Icons.location_on_rounded,
-                                          size: 14, color: Colors.white54),
+                                      const Icon(
+                                        Icons.location_on_rounded,
+                                        size: 14,
+                                        color: Colors.white54,
+                                      ),
                                       const SizedBox(width: 3),
                                       Flexible(
-                                        child: Text(spot,
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: const TextStyle(
-                                                color: Colors.white54,
-                                                fontSize: 11.5)),
+                                        child: Text(
+                                          spot,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(
+                                            color: Colors.white54,
+                                            fontSize: 11.5,
+                                          ),
+                                        ),
                                       ),
                                     ],
                                   ),
@@ -405,7 +437,10 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                     MentionText(
                       text: caption,
                       style: const TextStyle(
-                          color: Colors.white, height: 1.5, fontSize: 14.5),
+                        color: Colors.white,
+                        height: 1.5,
+                        fontSize: 14.5,
+                      ),
                       mentionStyle: const TextStyle(
                         color: Color(0xFFD7DADF),
                         height: 1.5,
@@ -415,9 +450,13 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                     ),
                   if (date.isNotEmpty) ...[
                     const SizedBox(height: 10),
-                    Text(date,
-                        style: const TextStyle(
-                            color: Colors.white38, fontSize: 11)),
+                    Text(
+                      date,
+                      style: const TextStyle(
+                        color: Colors.white38,
+                        fontSize: 11,
+                      ),
+                    ),
                   ],
                 ],
               ),

@@ -25,7 +25,8 @@ const verifiedTravelImageRegistryBatch8 = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons',
     author: 'LeoniKalkis',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Sagalassos_Ancient_City.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Sagalassos_Ancient_City.jpg',
   ),
   'kibyra': SpotImageInfo(
     assetPath: 'assets/spots/kibyra.jpg',
@@ -33,7 +34,8 @@ const verifiedTravelImageRegistryBatch8 = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons',
     author: 'Dosseman',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Kibyra_Theatre_9919.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Kibyra_Theatre_9919.jpg',
   ),
   'phaselis': SpotImageInfo(
     assetPath: 'assets/spots/phaselis.jpg',
@@ -49,7 +51,8 @@ const verifiedTravelImageRegistryBatch8 = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons',
     author: 'Capyusuf',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Olympos_Ancient_City.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Olympos_Ancient_City.jpg',
   ),
   'termessos': SpotImageInfo(
     assetPath: 'assets/spots/termessos.jpg',
@@ -57,7 +60,8 @@ const verifiedTravelImageRegistryBatch8 = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons',
     author: 'Ingo Mehling',
     license: 'CC BY-SA 3.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Termessos_-_Theater.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Termessos_-_Theater.jpg',
   ),
   'side-antik-kenti': SpotImageInfo(
     assetPath: 'assets/spots/side-antik-kenti.jpg',
@@ -65,7 +69,8 @@ const verifiedTravelImageRegistryBatch8 = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons',
     author: 'Helen Simonsson',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Roman_theatre_Side_Turkey.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Roman_theatre_Side_Turkey.jpg',
   ),
   'aizanoi': SpotImageInfo(
     assetPath: 'assets/spots/aizanoi.jpg',
@@ -73,7 +78,8 @@ const verifiedTravelImageRegistryBatch8 = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons',
     author: 'China_Crisis',
     license: 'CC BY-SA 2.5',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Aizanoi.ZeusTemple.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Aizanoi.ZeusTemple.jpg',
   ),
   'priene': SpotImageInfo(
     assetPath: 'assets/spots/priene.jpg',
@@ -89,7 +95,8 @@ const verifiedTravelImageRegistryBatch8 = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons',
     author: 'Jiuguang Wang',
     license: 'CC BY-SA 2.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:The_Theater_of_Miletus.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:The_Theater_of_Miletus.jpg',
   ),
   'didyma-apollon': SpotImageInfo(
     assetPath: 'assets/spots/didyma-apollon.jpg',

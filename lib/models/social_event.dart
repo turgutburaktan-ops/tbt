@@ -1,71 +1,127 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-enum SocialEventType { photography, cycling, running, walking, hiking, camping, followerMeetup, trip, social, concert, party, theatre, seminar, workshop, festival, talk, exhibition, standUp, dance, cinema, gaming, foodDrink, networking, education, charity, other }
+enum SocialEventType {
+  photography,
+  cycling,
+  running,
+  walking,
+  hiking,
+  camping,
+  followerMeetup,
+  trip,
+  social,
+  concert,
+  party,
+  theatre,
+  seminar,
+  workshop,
+  festival,
+  talk,
+  exhibition,
+  standUp,
+  dance,
+  cinema,
+  gaming,
+  foodDrink,
+  networking,
+  education,
+  charity,
+  other,
+}
+
 enum EventAccessType { free, paid }
+
 enum EventPaymentStatus { notRequired, comingSoon, enabled }
-enum EventVisibility { public, followers, mutuals, closeFriends, selectedPeople, private }
+
+enum EventVisibility {
+  public,
+  followers,
+  mutuals,
+  closeFriends,
+  selectedPeople,
+  private,
+}
+
 enum EventAttendanceChoice { attending, interested, hidden }
 
 extension EventAttendanceChoiceX on EventAttendanceChoice {
   String get label => switch (this) {
-        EventAttendanceChoice.attending => 'Katılıyorum',
-        EventAttendanceChoice.interested => 'İlgileniyorum',
-        EventAttendanceChoice.hidden => 'Gizli katıl',
-      };
+    EventAttendanceChoice.attending => 'Katılıyorum',
+    EventAttendanceChoice.interested => 'İlgileniyorum',
+    EventAttendanceChoice.hidden => 'Gizli katıl',
+  };
 }
 
 extension EventVisibilityX on EventVisibility {
   String get label => switch (this) {
-        EventVisibility.public => 'Herkese Açık',
-        EventVisibility.followers => 'Takipçiler',
-        EventVisibility.mutuals => 'Karşılıklı Takip',
-        EventVisibility.closeFriends => 'Yakın Arkadaşlar',
-        EventVisibility.selectedPeople => 'Seçili Kişiler',
-        EventVisibility.private => 'Sadece Ben',
-      };
+    EventVisibility.public => 'Herkese Açık',
+    EventVisibility.followers => 'Takipçiler',
+    EventVisibility.mutuals => 'Karşılıklı Takip',
+    EventVisibility.closeFriends => 'Yakın Arkadaşlar',
+    EventVisibility.selectedPeople => 'Seçili Kişiler',
+    EventVisibility.private => 'Sadece Ben',
+  };
 }
 
 extension SocialEventTypeX on SocialEventType {
   String get label => switch (this) {
-        SocialEventType.photography => 'Fotoğraf',
-        SocialEventType.cycling => 'Bisiklet',
-        SocialEventType.running => 'Koşu',
-        SocialEventType.walking => 'Yürüyüş',
-        SocialEventType.hiking => 'Doğa Yürüyüşü',
-        SocialEventType.camping => 'Kamp',
-        SocialEventType.followerMeetup => 'Takipçi Buluşması',
-        SocialEventType.trip => 'Gezi',
-        SocialEventType.social => 'Sosyal Buluşma',
-        SocialEventType.concert => 'Konser',
-        SocialEventType.party => 'Parti',
-        SocialEventType.theatre => 'Tiyatro',
-        SocialEventType.seminar => 'Seminer',
-        SocialEventType.workshop => 'Workshop',
-        SocialEventType.festival => 'Festival',
-        SocialEventType.talk => 'Söyleşi',
-        SocialEventType.exhibition => 'Sergi',
-        SocialEventType.standUp => 'Stand-up',
-        SocialEventType.dance => 'Dans',
-        SocialEventType.cinema => 'Sinema',
-        SocialEventType.gaming => 'Oyun / E-spor',
-        SocialEventType.foodDrink => 'Yeme İçme',
-        SocialEventType.networking => 'Networking',
-        SocialEventType.education => 'Eğitim',
-        SocialEventType.charity => 'Sosyal Sorumluluk',
-        SocialEventType.other => 'Diğer',
-      };
+    SocialEventType.photography => 'Fotoğraf',
+    SocialEventType.cycling => 'Bisiklet',
+    SocialEventType.running => 'Koşu',
+    SocialEventType.walking => 'Yürüyüş',
+    SocialEventType.hiking => 'Doğa Yürüyüşü',
+    SocialEventType.camping => 'Kamp',
+    SocialEventType.followerMeetup => 'Takipçi Buluşması',
+    SocialEventType.trip => 'Gezi',
+    SocialEventType.social => 'Sosyal Buluşma',
+    SocialEventType.concert => 'Konser',
+    SocialEventType.party => 'Parti',
+    SocialEventType.theatre => 'Tiyatro',
+    SocialEventType.seminar => 'Seminer',
+    SocialEventType.workshop => 'Workshop',
+    SocialEventType.festival => 'Festival',
+    SocialEventType.talk => 'Söyleşi',
+    SocialEventType.exhibition => 'Sergi',
+    SocialEventType.standUp => 'Stand-up',
+    SocialEventType.dance => 'Dans',
+    SocialEventType.cinema => 'Sinema',
+    SocialEventType.gaming => 'Oyun / E-spor',
+    SocialEventType.foodDrink => 'Yeme İçme',
+    SocialEventType.networking => 'Networking',
+    SocialEventType.education => 'Eğitim',
+    SocialEventType.charity => 'Sosyal Sorumluluk',
+    SocialEventType.other => 'Diğer',
+  };
 }
 
 class SocialEvent {
-  final String id, title, customTypeLabel, hostId, hostName, description, city,
-      locationLabel, status, currency, trustStatus, salesStatus, riskLevel,
+  final String id,
+      title,
+      customTypeLabel,
+      hostId,
+      hostName,
+      description,
+      city,
+      locationLabel,
+      status,
+      currency,
+      trustStatus,
+      salesStatus,
+      riskLevel,
       paymentReleaseStatus;
   final SocialEventType type;
   final DateTime startsAt;
-  final int capacity, ticketPriceMinor, reportCount, interestedCount,
+  final int capacity,
+      ticketPriceMinor,
+      reportCount,
+      interestedCount,
       privateParticipantCount;
   final List<String> participantIds, allowedUserIds;
-  final String? spotId, spotName, communityId, communityName, paymentProvider,
+  final String? spotId,
+      spotName,
+      communityId,
+      communityName,
+      paymentProvider,
       externalProductId;
   final double? latitude, longitude;
   final bool approximateLocationOnly;
@@ -119,10 +175,12 @@ class SocialEvent {
   bool get isFull => participantCount >= capacity;
   bool get isOpen => status == 'open' && !isFull;
   bool get isPaid => accessType == EventAccessType.paid;
-  bool get paymentAvailable => isPaid && paymentStatus == EventPaymentStatus.enabled;
+  bool get paymentAvailable =>
+      isPaid && paymentStatus == EventPaymentStatus.enabled;
   bool get hasCoordinates => latitude != null && longitude != null;
   double get ticketPrice => ticketPriceMinor / 100.0;
-  String get typeLabel => type == SocialEventType.other && customTypeLabel.trim().isNotEmpty
+  String get typeLabel =>
+      type == SocialEventType.other && customTypeLabel.trim().isNotEmpty
       ? customTypeLabel.trim()
       : type.label;
 
@@ -147,7 +205,8 @@ class SocialEvent {
       orElse: () => EventAccessType.free,
     );
     final payment = EventPaymentStatus.values.firstWhere(
-      (e) => e.name ==
+      (e) =>
+          e.name ==
           (d['paymentStatus'] ??
               (access == EventAccessType.paid ? 'comingSoon' : 'notRequired')),
       orElse: () => EventPaymentStatus.notRequired,
@@ -174,35 +233,48 @@ class SocialEvent {
       spotName: d['spotName']?.toString(),
       communityId: d['communityId']?.toString(),
       communityName: d['communityName']?.toString(),
-      latitude: (d['latitude'] as num?)?.toDouble() ??
+      latitude:
+          (d['latitude'] as num?)?.toDouble() ??
           (geo is GeoPoint ? geo.latitude : null),
-      longitude: (d['longitude'] as num?)?.toDouble() ??
+      longitude:
+          (d['longitude'] as num?)?.toDouble() ??
           (geo is GeoPoint ? geo.longitude : null),
       status: (d['status'] ?? 'open').toString(),
       approximateLocationOnly: d['approximateLocationOnly'] != false,
       accessType: access,
-      ticketPriceMinor:
-          ((d['ticketPriceMinor'] as num?)?.toInt() ?? 0).clamp(0, 1000000000),
+      ticketPriceMinor: ((d['ticketPriceMinor'] as num?)?.toInt() ?? 0).clamp(
+        0,
+        1000000000,
+      ),
       currency: (d['currency'] ?? 'TRY').toString(),
-      ticketSalesEndAt:
-          d['ticketSalesEndAt'] == null ? null : date(d['ticketSalesEndAt']),
+      ticketSalesEndAt: d['ticketSalesEndAt'] == null
+          ? null
+          : date(d['ticketSalesEndAt']),
       paymentStatus: payment,
       paymentProvider: d['paymentProvider']?.toString(),
       externalProductId: d['externalProductId']?.toString(),
       trustStatus: (d['trustStatus'] ?? 'new_host').toString(),
       salesStatus: (d['salesStatus'] ?? 'blocked').toString(),
       riskLevel: (d['riskLevel'] ?? 'low').toString(),
-      reportCount:
-          ((d['reportCount'] as num?)?.toInt() ?? 0).clamp(0, 2147483647),
-      paymentReleaseStatus: (d['paymentReleaseStatus'] ??
-              (access == EventAccessType.paid ? 'held' : 'not_applicable'))
-          .toString(),
+      reportCount: ((d['reportCount'] as num?)?.toInt() ?? 0).clamp(
+        0,
+        2147483647,
+      ),
+      paymentReleaseStatus:
+          (d['paymentReleaseStatus'] ??
+                  (access == EventAccessType.paid ? 'held' : 'not_applicable'))
+              .toString(),
       visibility: visibility,
       allowedUserIds: list(d['allowedUserIds']),
-      interestedCount:
-          ((d['interestedCount'] as num?)?.toInt() ?? 0).clamp(0, 2147483647),
+      interestedCount: ((d['interestedCount'] as num?)?.toInt() ?? 0).clamp(
+        0,
+        2147483647,
+      ),
       privateParticipantCount:
-          ((d['privateParticipantCount'] as num?)?.toInt() ?? 0).clamp(0, 2147483647),
+          ((d['privateParticipantCount'] as num?)?.toInt() ?? 0).clamp(
+            0,
+            2147483647,
+          ),
     );
   }
 }

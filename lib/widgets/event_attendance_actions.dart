@@ -28,7 +28,8 @@ class _EventAttendanceActionsState extends State<EventAttendanceActions> {
     final uid = _uid;
     if (uid == null) return null;
     if (widget.event.isHidden(uid)) return EventAttendanceChoice.hidden;
-    if (widget.event.participantIds.contains(uid)) return EventAttendanceChoice.attending;
+    if (widget.event.participantIds.contains(uid))
+      return EventAttendanceChoice.attending;
     if (widget.event.isInterested(uid)) return EventAttendanceChoice.interested;
     return null;
   }
@@ -44,7 +45,8 @@ class _EventAttendanceActionsState extends State<EventAttendanceActions> {
       await EventAttendanceService.instance.setChoice(widget.event.id, choice);
       widget.onMessage?.call(switch (choice) {
         EventAttendanceChoice.attending => 'Etkinliğe katılıyorsun.',
-        EventAttendanceChoice.interested => 'Etkinlikle ilgilendiğin kaydedildi.',
+        EventAttendanceChoice.interested =>
+          'Etkinlikle ilgilendiğin kaydedildi.',
         EventAttendanceChoice.hidden => 'Gizli katılımın kaydedildi.',
       });
       if (mounted) Navigator.maybePop(context);
@@ -114,7 +116,8 @@ class _EventAttendanceActionsState extends State<EventAttendanceActions> {
             _ChoiceTile(
               icon: Icons.visibility_off_outlined,
               title: 'Gizli katıl',
-              subtitle: 'Yerin ayrılır fakat adın diğer katılımcılara gösterilmez.',
+              subtitle:
+                  'Yerin ayrılır fakat adın diğer katılımcılara gösterilmez.',
               onTap: () => _choose(EventAttendanceChoice.hidden),
             ),
           ],
@@ -178,45 +181,52 @@ class _ChoiceTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Material(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        child: InkWell(
-          onTap: onTap,
+    color: AppColors.surface,
+    borderRadius: BorderRadius.circular(16),
+    child: InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
-          child: Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.border),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 42,
-                  height: 42,
-                  decoration: BoxDecoration(
-                    color: AppColors.surfaceStrong,
-                    borderRadius: BorderRadius.circular(13),
-                  ),
-                  child: Icon(icon, color: AppColors.cyan),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(title, style: const TextStyle(fontWeight: FontWeight.w900)),
-                      const SizedBox(height: 3),
-                      Text(
-                        subtitle,
-                        style: const TextStyle(color: Colors.white60, fontSize: 12, height: 1.35),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
+          border: Border.all(color: AppColors.border),
         ),
-      );
+        child: Row(
+          children: [
+            Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                color: AppColors.surfaceStrong,
+                borderRadius: BorderRadius.circular(13),
+              ),
+              child: Icon(icon, color: AppColors.cyan),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(fontWeight: FontWeight.w900),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(
+                      color: Colors.white60,
+                      fontSize: 12,
+                      height: 1.35,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
 }

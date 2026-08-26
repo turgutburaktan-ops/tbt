@@ -120,8 +120,11 @@ class _TabChip extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Icon(icon,
-                    size: 18, color: selected ? Colors.white : Colors.white54),
+                Icon(
+                  icon,
+                  size: 18,
+                  color: selected ? Colors.white : Colors.white54,
+                ),
                 const SizedBox(width: 7),
                 Text(
                   label,
@@ -170,7 +173,8 @@ class _SavedSpotsTab extends StatelessWidget {
                 onTap: () => Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (_) => SpotDetailScreen(spot: spot)),
+                    builder: (_) => SpotDetailScreen(spot: spot),
+                  ),
                 ),
                 child: Container(
                   padding: const EdgeInsets.all(9),
@@ -196,7 +200,9 @@ class _SavedSpotsTab extends StatelessWidget {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
-                                  fontWeight: FontWeight.w800, fontSize: 16),
+                                fontWeight: FontWeight.w800,
+                                fontSize: 16,
+                              ),
                             ),
                             const SizedBox(height: 5),
                             Text(
@@ -206,16 +212,20 @@ class _SavedSpotsTab extends StatelessWidget {
                               style: const TextStyle(color: Colors.white54),
                             ),
                             const SizedBox(height: 5),
-                            Text('★ ${spot.rating}',
-                                style: const TextStyle(color: Colors.white70)),
+                            Text(
+                              '★ ${spot.rating}',
+                              style: const TextStyle(color: Colors.white70),
+                            ),
                           ],
                         ),
                       ),
                       IconButton(
                         tooltip: 'Kaydı kaldır',
                         onPressed: () => FavoritesService.toggle(spot),
-                        icon: const Icon(Icons.bookmark_rounded,
-                            color: Colors.white),
+                        icon: const Icon(
+                          Icons.bookmark_rounded,
+                          color: Colors.white,
+                        ),
                       ),
                     ],
                   ),
@@ -251,16 +261,16 @@ class _ActivityTab extends StatelessWidget {
   }
 
   String get _emptyTitle => switch (kind) {
-        _ActivityKind.likes => 'Henüz beğeni bildirimin yok',
-        _ActivityKind.comments => 'Henüz yorum bildirimin yok',
-        _ActivityKind.social => 'Henüz sosyal bildirimin yok',
-      };
+    _ActivityKind.likes => 'Henüz beğeni bildirimin yok',
+    _ActivityKind.comments => 'Henüz yorum bildirimin yok',
+    _ActivityKind.social => 'Henüz sosyal bildirimin yok',
+  };
 
   IconData get _emptyIcon => switch (kind) {
-        _ActivityKind.likes => Icons.favorite_border_rounded,
-        _ActivityKind.comments => Icons.chat_bubble_outline_rounded,
-        _ActivityKind.social => Icons.people_outline_rounded,
-      };
+    _ActivityKind.likes => Icons.favorite_border_rounded,
+    _ActivityKind.comments => Icons.chat_bubble_outline_rounded,
+    _ActivityKind.social => Icons.people_outline_rounded,
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -378,8 +388,10 @@ class _ActivityTile extends StatelessWidget {
         overflow: TextOverflow.ellipsis,
         style: const TextStyle(color: Colors.white54, height: 1.3),
       ),
-      trailing: Text(_timeLabel(),
-          style: const TextStyle(color: Colors.white38, fontSize: 11)),
+      trailing: Text(
+        _timeLabel(),
+        style: const TextStyle(color: Colors.white38, fontSize: 11),
+      ),
       onTap: () => _open(context),
     );
   }
@@ -390,8 +402,11 @@ class _EmptyState extends StatelessWidget {
   final String title;
   final String subtitle;
 
-  const _EmptyState(
-      {required this.icon, required this.title, required this.subtitle});
+  const _EmptyState({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -403,13 +418,17 @@ class _EmptyState extends StatelessWidget {
           children: [
             Icon(icon, size: 54, color: Colors.white24),
             const SizedBox(height: 14),
-            Text(title,
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontWeight: FontWeight.w800)),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontWeight: FontWeight.w800),
+            ),
             const SizedBox(height: 7),
-            Text(subtitle,
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.white54, height: 1.4)),
+            Text(
+              subtitle,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.white54, height: 1.4),
+            ),
           ],
         ),
       ),

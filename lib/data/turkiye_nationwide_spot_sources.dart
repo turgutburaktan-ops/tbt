@@ -10,20 +10,23 @@ class NationwideSpotSource {
 
 const nationwideSpotSources = <NationwideSpotSource>[
   NationwideSpotSource(
-      'Ankara', 'https://goturkiye.com/tr/ankara/ankara-rotalari', [
-    'Anıtkabir',
-    'Ankara Kalesi',
-    'Hamamönü',
-    'Hacı Bayram Veli Camii ve Augustus Tapınağı',
-    'Roma Hamamı',
-    'Julianus Sütunu',
-    'Beypazarı',
-    'Hıdırlık Tepesi',
-    'İnözü Vadisi',
-    'Nallıhan Kuş Cenneti',
-    'Gordion',
-    'Kızılcahamam Soğuksu Milli Parkı'
-  ]),
+    'Ankara',
+    'https://goturkiye.com/tr/ankara/ankara-rotalari',
+    [
+      'Anıtkabir',
+      'Ankara Kalesi',
+      'Hamamönü',
+      'Hacı Bayram Veli Camii ve Augustus Tapınağı',
+      'Roma Hamamı',
+      'Julianus Sütunu',
+      'Beypazarı',
+      'Hıdırlık Tepesi',
+      'İnözü Vadisi',
+      'Nallıhan Kuş Cenneti',
+      'Gordion',
+      'Kızılcahamam Soğuksu Milli Parkı',
+    ],
+  ),
   NationwideSpotSource('İzmir', 'https://goturkiye.com/tr/izmir/routes', [
     'Saat Kulesi',
     'Kemeraltı Çarşısı',
@@ -37,7 +40,7 @@ const nationwideSpotSources = <NationwideSpotSource>[
     'Teos',
     'Klazomenai',
     'Erythrai',
-    'Alaçatı'
+    'Alaçatı',
   ]),
   NationwideSpotSource('Bolu', 'https://goturkiye.com/tr/bolu/bolu-rotalari', [
     'Gölcük Tabiat Parkı',
@@ -50,7 +53,7 @@ const nationwideSpotSources = <NationwideSpotSource>[
     'Mudurnu',
     'Sülüklü Göl Tabiat Parkı',
     'Abant Gölü',
-    'Sünnet Gölü'
+    'Sünnet Gölü',
   ]),
   NationwideSpotSource('Ordu', 'https://goturkiye.com/tr/ordu/ordu-rotalari', [
     'Boztepe',
@@ -64,20 +67,23 @@ const nationwideSpotSources = <NationwideSpotSource>[
     'Yason Burnu',
     'Hoynat Adası',
     'Ünye Kalesi',
-    'Çakırtepe'
+    'Çakırtepe',
   ]),
   NationwideSpotSource(
-      'Iğdır', 'https://goturkiye.com/tr/igdir/igdir-rotalari', [
-    'İrem Bağları',
-    'Tekelti Dağı',
-    'Ağrı Dağı Milli Parkı',
-    'Tuz Mağarası',
-    'Üçkaya Vadisi',
-    'Üçkaya Gölü',
-    'Gökkuşağı Tepeleri',
-    'Aras Nehri Kuş Cenneti',
-    'Tuzluca Tuz Mağaraları'
-  ]),
+    'Iğdır',
+    'https://goturkiye.com/tr/igdir/igdir-rotalari',
+    [
+      'İrem Bağları',
+      'Tekelti Dağı',
+      'Ağrı Dağı Milli Parkı',
+      'Tuz Mağarası',
+      'Üçkaya Vadisi',
+      'Üçkaya Gölü',
+      'Gökkuşağı Tepeleri',
+      'Aras Nehri Kuş Cenneti',
+      'Tuzluca Tuz Mağaraları',
+    ],
+  ),
   NationwideSpotSource('Uşak', 'https://goturkiye.com/tr/usak/usak-rotalari', [
     'Blaundus',
     'Akmonia',
@@ -87,7 +93,7 @@ const nationwideSpotSources = <NationwideSpotSource>[
     'Lavanta Bahçeleri',
     'Ulubey Kanyonları',
     'Clandıras Köprüsü',
-    'Taşyaran Vadisi'
+    'Taşyaran Vadisi',
   ]),
   NationwideSpotSource('Bursa', 'https://goturkiye.com/tr/bursa/rotalar', [
     'Koza Han',
@@ -95,15 +101,18 @@ const nationwideSpotSources = <NationwideSpotSource>[
     'Uludağ',
     'Saitabat Şelalesi',
     'Oylat Mağarası',
-    'Suuçtu Şelalesi'
+    'Suuçtu Şelalesi',
   ]),
-  NationwideSpotSource('Isparta',
-      'https://isparta.ktb.gov.tr/Eklenti/80725%2Cegirdirbrosurpdf.pdf?0=', [
-    'Akpınar Köyü Seyir Terası',
-    'Boyalı Koyu',
-    'Kovada Gölü Milli Parkı',
-    'Altınkum Plajı'
-  ]),
+  NationwideSpotSource(
+    'Isparta',
+    'https://isparta.ktb.gov.tr/Eklenti/80725%2Cegirdirbrosurpdf.pdf?0=',
+    [
+      'Akpınar Köyü Seyir Terası',
+      'Boyalı Koyu',
+      'Kovada Gölü Milli Parkı',
+      'Altınkum Plajı',
+    ],
+  ),
 ];
 
 /// Ulusal tarama sırasında tüm şehirler bu sırayla ele alınır; kaynakta rota
@@ -189,5 +198,5 @@ const turkiye81Cities = <String>[
   'Van',
   'Yalova',
   'Yozgat',
-  'Zonguldak'
+  'Zonguldak',
 ];

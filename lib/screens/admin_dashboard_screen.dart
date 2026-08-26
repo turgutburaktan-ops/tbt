@@ -64,13 +64,41 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       final from = Timestamp.fromDate(_fromDate());
       final results = await Future.wait<int>([
         _count(_db.collection('users')),
-        _count(_db.collection('users').where('lastActiveAt', isGreaterThanOrEqualTo: from)),
-        _count(_db.collection('users').where('createdAt', isGreaterThanOrEqualTo: from)),
-        _count(_db.collection('posts').where('createdAt', isGreaterThanOrEqualTo: from)),
-        _count(_db.collection('stories').where('createdAt', isGreaterThanOrEqualTo: from)),
-        _count(_db.collection('social_events').where('createdAt', isGreaterThanOrEqualTo: from)),
-        _count(_db.collection('business_claims').where('status', isEqualTo: 'pending_review')),
-        _count(_db.collection('business_claims').where('status', isEqualTo: 'verified')),
+        _count(
+          _db
+              .collection('users')
+              .where('lastActiveAt', isGreaterThanOrEqualTo: from),
+        ),
+        _count(
+          _db
+              .collection('users')
+              .where('createdAt', isGreaterThanOrEqualTo: from),
+        ),
+        _count(
+          _db
+              .collection('posts')
+              .where('createdAt', isGreaterThanOrEqualTo: from),
+        ),
+        _count(
+          _db
+              .collection('stories')
+              .where('createdAt', isGreaterThanOrEqualTo: from),
+        ),
+        _count(
+          _db
+              .collection('social_events')
+              .where('createdAt', isGreaterThanOrEqualTo: from),
+        ),
+        _count(
+          _db
+              .collection('business_claims')
+              .where('status', isEqualTo: 'pending_review'),
+        ),
+        _count(
+          _db
+              .collection('business_claims')
+              .where('status', isEqualTo: 'verified'),
+        ),
       ]);
 
       final genderValues = <String, String>{
@@ -131,7 +159,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               child: const Text('Vazgeç'),
             ),
             FilledButton(
-              onPressed: () => Navigator.pop(dialogContext, controller.text.trim()),
+              onPressed: () =>
+                  Navigator.pop(dialogContext, controller.text.trim()),
               child: const Text('Reddet'),
             ),
           ],
@@ -169,11 +198,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
     final token = await user.getIdToken();
-    final body = Uri(queryParameters: {
-      'claimId': doc.id,
-      'action': approve ? 'approve' : 'reject',
-      if (reason.isNotEmpty) 'reason': reason,
-    }).query;
+    final body = Uri(
+      queryParameters: {
+        'claimId': doc.id,
+        'action': approve ? 'approve' : 'reject',
+        if (reason.isNotEmpty) 'reason': reason,
+      },
+    ).query;
 
     final launched = await launchUrl(
       callableUrl.replace(query: body),
@@ -240,10 +271,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             ),
             const SizedBox(height: 16),
             if (_loadingStats && _stats.isEmpty)
-              const Center(child: Padding(
-                padding: EdgeInsets.all(24),
-                child: CircularProgressIndicator(),
-              ))
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(24),
+                  child: CircularProgressIndicator(),
+                ),
+              )
             else
               GridView.count(
                 crossAxisCount: 2,
@@ -253,7 +286,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 crossAxisSpacing: 10,
                 childAspectRatio: 1.65,
                 children: _stats.entries
-                    .map((entry) => _MetricCard(label: entry.key, value: entry.value))
+                    .map(
+                      (entry) =>
+                          _MetricCard(label: entry.key, value: entry.value),
+                    )
                     .toList(),
               ),
             const SizedBox(height: 22),
@@ -274,7 +310,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 title: Text(entry.key),
                 trailing: Text(
                   visible ? '${entry.value}' : '<10',
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
               );
             }),
@@ -321,7 +360,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 return Column(
                   children: docs.map((doc) {
                     final d = doc.data();
-                    final legalName = (d['legalName'] ?? d['venueName'] ?? 'İşletme').toString();
+                    final legalName =
+                        (d['legalName'] ?? d['venueName'] ?? 'İşletme')
+                            .toString();
                     final proofUrl = (d['proofUrl'] ?? '').toString();
                     return Card(
                       margin: const EdgeInsets.only(bottom: 10),
@@ -330,16 +371,27 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(legalName, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900)),
+                            Text(
+                              legalName,
+                              style: const TextStyle(
+                                fontSize: 17,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
                             const SizedBox(height: 8),
                             Text('E-posta: ${d['businessEmail'] ?? '-'}'),
                             Text('Telefon: ${d['businessPhone'] ?? '-'}'),
                             Text('Vergi dairesi: ${d['taxOffice'] ?? '-'}'),
-                            Text('Vergi no son 4: ${d['taxNumberLast4'] ?? '-'}'),
+                            Text(
+                              'Vergi no son 4: ${d['taxNumberLast4'] ?? '-'}',
+                            ),
                             const SizedBox(height: 8),
                             if (proofUrl.isNotEmpty)
                               OutlinedButton.icon(
-                                onPressed: () => launchUrl(Uri.parse(proofUrl), mode: LaunchMode.externalApplication),
+                                onPressed: () => launchUrl(
+                                  Uri.parse(proofUrl),
+                                  mode: LaunchMode.externalApplication,
+                                ),
                                 icon: const Icon(Icons.description_outlined),
                                 label: const Text('Yetki kanıtını aç'),
                               ),
@@ -396,9 +448,16 @@ class _MetricCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('$value', style: const TextStyle(fontSize: 27, fontWeight: FontWeight.w900)),
+            Text(
+              '$value',
+              style: const TextStyle(fontSize: 27, fontWeight: FontWeight.w900),
+            ),
             const SizedBox(height: 3),
-            Text(label, maxLines: 2, style: const TextStyle(color: Colors.white60, fontSize: 12)),
+            Text(
+              label,
+              maxLines: 2,
+              style: const TextStyle(color: Colors.white60, fontSize: 12),
+            ),
           ],
         ),
       ),

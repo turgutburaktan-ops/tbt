@@ -68,8 +68,8 @@ class _EventCreateScreenV2State extends State<EventCreateScreenV2> {
     _location = TextEditingController(text: widget.initialLocationLabel);
     _description = TextEditingController(text: widget.initialDescription);
     _capacity = TextEditingController(text: widget.initialCapacity.toString());
-    _startsAt = widget.initialStartsAt ??
-        DateTime.now().add(const Duration(hours: 2));
+    _startsAt =
+        widget.initialStartsAt ?? DateTime.now().add(const Duration(hours: 2));
     _type = widget.initialType;
     if (widget.initialLatitude != null && widget.initialLongitude != null) {
       _selectedLocation = EventLocationSelection(
@@ -205,7 +205,10 @@ class _EventCreateScreenV2State extends State<EventCreateScreenV2> {
                     const Expanded(
                       child: Text(
                         'Kişileri Seç',
-                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w900,
+                        ),
                       ),
                     ),
                     TextButton(
@@ -225,13 +228,19 @@ class _EventCreateScreenV2State extends State<EventCreateScreenV2> {
                     if (!snapshot.hasData) {
                       return const Center(child: CircularProgressIndicator());
                     }
-                    final docs = snapshot.data!.docs.where((d) => d.id != me).toList();
+                    final docs = snapshot.data!.docs
+                        .where((d) => d.id != me)
+                        .toList();
                     return ListView.builder(
                       itemCount: docs.length,
                       itemBuilder: (_, index) {
                         final doc = docs[index];
                         final data = doc.data();
-                        final name = (data['displayName'] ?? data['email'] ?? 'Kullanıcı').toString();
+                        final name =
+                            (data['displayName'] ??
+                                    data['email'] ??
+                                    'Kullanıcı')
+                                .toString();
                         names[doc.id] = name;
                         final checked = selected.contains(doc.id);
                         return CheckboxListTile(
@@ -264,13 +273,13 @@ class _EventCreateScreenV2State extends State<EventCreateScreenV2> {
   }
 
   IconData _visibilityIcon(EventVisibility value) => switch (value) {
-        EventVisibility.public => Icons.public,
-        EventVisibility.followers => Icons.people_outline,
-        EventVisibility.mutuals => Icons.sync_alt,
-        EventVisibility.closeFriends => Icons.star_outline,
-        EventVisibility.selectedPeople => Icons.person_add_alt_1,
-        EventVisibility.private => Icons.lock_outline,
-      };
+    EventVisibility.public => Icons.public,
+    EventVisibility.followers => Icons.people_outline,
+    EventVisibility.mutuals => Icons.sync_alt,
+    EventVisibility.closeFriends => Icons.star_outline,
+    EventVisibility.selectedPeople => Icons.person_add_alt_1,
+    EventVisibility.private => Icons.lock_outline,
+  };
 
   Future<void> _save() async {
     if (_saving) return;
@@ -327,22 +336,19 @@ class _EventCreateScreenV2State extends State<EventCreateScreenV2> {
         allowedUserIds: allowed,
       );
 
-      final ref = FirebaseStorage.instance
-          .ref()
-          .child('users/${user.uid}/events/$eventId/cover.jpg');
-      uploadedPath = ref.fullPath;
-      await ref.putFile(
-        _image!,
-        SettableMetadata(contentType: 'image/jpeg'),
+      final ref = FirebaseStorage.instance.ref().child(
+        'users/${user.uid}/events/$eventId/cover.jpg',
       );
+      uploadedPath = ref.fullPath;
+      await ref.putFile(_image!, SettableMetadata(contentType: 'image/jpeg'));
       final url = await ref.getDownloadURL();
       await FirebaseFunctions.instanceFor(region: 'europe-west1')
           .httpsCallable('setSocialEventCover')
           .call({
-        'eventId': eventId,
-        'coverImageUrl': url,
-        'coverStoragePath': ref.fullPath,
-      });
+            'eventId': eventId,
+            'coverImageUrl': url,
+            'coverStoragePath': ref.fullPath,
+          });
 
       if (!mounted) return;
       Navigator.pop(context, true);
@@ -380,11 +386,21 @@ class _EventCreateScreenV2State extends State<EventCreateScreenV2> {
                   ? const Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.add_a_photo_outlined, size: 48, color: AppColors.violetBright),
+                        Icon(
+                          Icons.add_a_photo_outlined,
+                          size: 48,
+                          color: AppColors.violetBright,
+                        ),
                         SizedBox(height: 10),
-                        Text('Etkinlik kapak fotoğrafı ekle', style: TextStyle(fontWeight: FontWeight.w900)),
+                        Text(
+                          'Etkinlik kapak fotoğrafı ekle',
+                          style: TextStyle(fontWeight: FontWeight.w900),
+                        ),
                         SizedBox(height: 5),
-                        Text('Kameradan çek veya galeriden seç', style: TextStyle(color: Colors.white54)),
+                        Text(
+                          'Kameradan çek veya galeriden seç',
+                          style: TextStyle(color: Colors.white54),
+                        ),
                       ],
                     )
                   : Stack(
@@ -422,13 +438,16 @@ class _EventCreateScreenV2State extends State<EventCreateScreenV2> {
                 .toList(),
             onChanged: _saving
                 ? null
-                : (value) => setState(() => _type = value ?? SocialEventType.social),
+                : (value) =>
+                      setState(() => _type = value ?? SocialEventType.social),
           ),
           if (_type == SocialEventType.other) ...[
             const SizedBox(height: 12),
             TextField(
               controller: _customType,
-              decoration: const InputDecoration(labelText: 'Etkinlik türünün adı'),
+              decoration: const InputDecoration(
+                labelText: 'Etkinlik türünün adı',
+              ),
             ),
           ],
           const SizedBox(height: 12),
@@ -456,11 +475,11 @@ class _EventCreateScreenV2State extends State<EventCreateScreenV2> {
             onChanged: _saving
                 ? null
                 : (value) => setState(() {
-                      _visibility = value ?? EventVisibility.public;
-                      if (_visibility != EventVisibility.selectedPeople) {
-                        _selectedPeople = {};
-                      }
-                    }),
+                    _visibility = value ?? EventVisibility.public;
+                    if (_visibility != EventVisibility.selectedPeople) {
+                      _selectedPeople = {};
+                    }
+                  }),
           ),
           if (_visibility == EventVisibility.selectedPeople) ...[
             const SizedBox(height: 8),
@@ -468,7 +487,9 @@ class _EventCreateScreenV2State extends State<EventCreateScreenV2> {
               onPressed: _saving
                   ? null
                   : () async {
-                      final value = await _pickPeople(_selectedPeople.keys.toSet());
+                      final value = await _pickPeople(
+                        _selectedPeople.keys.toSet(),
+                      );
                       if (mounted) setState(() => _selectedPeople = value);
                     },
               icon: const Icon(Icons.person_add_alt_1),
@@ -496,9 +517,15 @@ class _EventCreateScreenV2State extends State<EventCreateScreenV2> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Ücretsiz etkinlik', style: TextStyle(fontWeight: FontWeight.w900)),
+                      Text(
+                        'Ücretsiz etkinlik',
+                        style: TextStyle(fontWeight: FontWeight.w900),
+                      ),
                       SizedBox(height: 2),
-                      Text('Ücretli etkinlikler şimdilik kapalı.', style: TextStyle(color: Colors.white54, fontSize: 11.5)),
+                      Text(
+                        'Ücretli etkinlikler şimdilik kapalı.',
+                        style: TextStyle(color: Colors.white54, fontSize: 11.5),
+                      ),
                     ],
                   ),
                 ),
@@ -566,10 +593,7 @@ class _EventCreateScreenV2State extends State<EventCreateScreenV2> {
           ),
           if (_error != null) ...[
             const SizedBox(height: 10),
-            Text(
-              _error!,
-              style: const TextStyle(color: Colors.redAccent),
-            ),
+            Text(_error!, style: const TextStyle(color: Colors.redAccent)),
           ],
           const SizedBox(height: 18),
           SizedBox(

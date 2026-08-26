@@ -120,8 +120,10 @@ class ContentEngagementBar extends StatelessWidget {
                   const Divider(color: Colors.white12),
                   Expanded(
                     child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-                      stream: ContentEngagementService.instance
-                          .comments(collection, contentId),
+                      stream: ContentEngagementService.instance.comments(
+                        collection,
+                        contentId,
+                      ),
                       builder: (_, snapshot) {
                         if (snapshot.hasError) {
                           return Center(
@@ -288,8 +290,9 @@ class ContentEngagementBar extends StatelessWidget {
                   if (!snapshot.hasData) {
                     return const Center(child: CircularProgressIndicator());
                   }
-                  final users =
-                      snapshot.data!.docs.where((d) => d.id != me).toList();
+                  final users = snapshot.data!.docs
+                      .where((d) => d.id != me)
+                      .toList();
                   return ListView.builder(
                     itemCount: users.length,
                     itemBuilder: (_, index) {
@@ -301,17 +304,18 @@ class ContentEngagementBar extends StatelessWidget {
                       final photo = (data['photoUrl'] ?? '').toString();
                       return ListTile(
                         leading: CircleAvatar(
-                          backgroundImage:
-                              photo.isEmpty ? null : NetworkImage(photo),
+                          backgroundImage: photo.isEmpty
+                              ? null
+                              : NetworkImage(photo),
                           child: photo.isEmpty
                               ? const Icon(Icons.person_outline)
                               : null,
                         ),
                         title: Text(name),
-                        onTap: () => Navigator.pop(
-                          sheetContext,
-                          {'id': doc.id, 'name': name},
-                        ),
+                        onTap: () => Navigator.pop(sheetContext, {
+                          'id': doc.id,
+                          'name': name,
+                        }),
                       );
                     },
                   );
@@ -331,11 +335,15 @@ class ContentEngagementBar extends StatelessWidget {
     return Row(
       children: [
         StreamBuilder<bool>(
-          stream:
-              ContentEngagementService.instance.isLiked(collection, contentId),
+          stream: ContentEngagementService.instance.isLiked(
+            collection,
+            contentId,
+          ),
           builder: (_, likedSnapshot) => StreamBuilder<int>(
-            stream: ContentEngagementService.instance
-                .likesCount(collection, contentId),
+            stream: ContentEngagementService.instance.likesCount(
+              collection,
+              contentId,
+            ),
             builder: (_, countSnapshot) {
               final liked = likedSnapshot.data ?? false;
               final count = countSnapshot.data ?? 0;
@@ -351,19 +359,18 @@ class ContentEngagementBar extends StatelessWidget {
                             try {
                               await ContentEngagementService.instance
                                   .toggleLike(
-                                collection: collection,
-                                id: contentId,
-                                ownerId: ownerId,
-                                title: title,
-                                sourceType: sourceType,
-                              );
+                                    collection: collection,
+                                    id: contentId,
+                                    ownerId: ownerId,
+                                    title: title,
+                                    sourceType: sourceType,
+                                  );
                             } catch (e) {
                               if (context.mounted) {
                                 _message(
-                                    context,
-                                    e
-                                        .toString()
-                                        .replaceFirst('Exception: ', ''));
+                                  context,
+                                  e.toString().replaceFirst('Exception: ', ''),
+                                );
                               }
                             }
                           },
@@ -378,9 +385,13 @@ class ContentEngagementBar extends StatelessWidget {
                   if (count > 0)
                     Padding(
                       padding: const EdgeInsets.only(right: 4),
-                      child: Text('$count',
-                          style: const TextStyle(
-                              fontSize: 12, fontWeight: FontWeight.w700)),
+                      child: Text(
+                        '$count',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
                     ),
                 ],
               );
@@ -414,11 +425,16 @@ class ContentEngagementBar extends StatelessWidget {
               } catch (e) {
                 if (context.mounted)
                   _message(
-                      context, e.toString().replaceFirst('Exception: ', ''));
+                    context,
+                    e.toString().replaceFirst('Exception: ', ''),
+                  );
               }
             },
-            icon: const Icon(Icons.alternate_email_rounded,
-                size: 25, color: accent),
+            icon: const Icon(
+              Icons.alternate_email_rounded,
+              size: 25,
+              color: accent,
+            ),
           ),
         const Spacer(),
         IconButton(

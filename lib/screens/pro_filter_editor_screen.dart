@@ -30,8 +30,9 @@ List<Uint8List> _prepareEditorTextures(String imagePath) {
       : decoded;
   // Rotate after downscaling so EXIF-oriented phone photos never create a
   // second sensor-sized bitmap just for the editor preview.
-  final preview =
-      _needsOrientationBake(resized) ? img.bakeOrientation(resized) : resized;
+  final preview = _needsOrientationBake(resized)
+      ? img.bakeOrientation(resized)
+      : resized;
   final thumb = img.copyResize(
     preview,
     width: preview.width >= preview.height ? 260 : null,
@@ -85,12 +86,12 @@ Uint8List _renderLocalEffect(Map<String, Object> job) {
       for (final pixel in output) {
         final glow = soft.getPixel(pixel.x, pixel.y);
         final maxValue = pixel.maxChannelValue;
-        final screenR = maxValue -
-            ((maxValue - pixel.r) * (maxValue - glow.r) / maxValue);
-        final screenG = maxValue -
-            ((maxValue - pixel.g) * (maxValue - glow.g) / maxValue);
-        final screenB = maxValue -
-            ((maxValue - pixel.b) * (maxValue - glow.b) / maxValue);
+        final screenR =
+            maxValue - ((maxValue - pixel.r) * (maxValue - glow.r) / maxValue);
+        final screenG =
+            maxValue - ((maxValue - pixel.g) * (maxValue - glow.g) / maxValue);
+        final screenB =
+            maxValue - ((maxValue - pixel.b) * (maxValue - glow.b) / maxValue);
         pixel
           ..r = pixel.r * .84 + screenR * .16
           ..g = pixel.g * .84 + screenG * .16
@@ -113,8 +114,9 @@ Uint8List _renderLocalEffect(Map<String, Object> job) {
     final vibrance = (job['vibrance']! as num).toDouble();
     final temperature = (job['temperature']! as num).toDouble();
     final tint = (job['tint']! as num).toDouble();
-    final combinedSaturation =
-        (saturation + vibrance * .22).clamp(0.0, 2.0).toDouble();
+    final combinedSaturation = (saturation + vibrance * .22)
+        .clamp(0.0, 2.0)
+        .toDouble();
 
     output = img.adjustColor(
       output,
@@ -330,8 +332,7 @@ class _ProFilterEditorScreenState extends State<ProFilterEditorScreen> {
   @override
   void initState() {
     super.initState();
-    _selectedLook =
-        widget.initialLookIndex.clamp(0, _looks.length - 1).toInt();
+    _selectedLook = widget.initialLookIndex.clamp(0, _looks.length - 1).toInt();
     _load();
   }
 
@@ -380,7 +381,9 @@ class _ProFilterEditorScreenState extends State<ProFilterEditorScreen> {
     final vibrance = VibranceShaderConfiguration()
       ..vibrance = (look.vibrance + _vibrance).clamp(-1.0, 1.0).toDouble();
     final whiteBalance = WhiteBalanceShaderConfiguration()
-      ..temperature = (look.temperature + _temperature).clamp(2800, 8200).toDouble()
+      ..temperature = (look.temperature + _temperature)
+          .clamp(2800, 8200)
+          .toDouble()
       ..tint = look.tint;
     final dynamicRange = HighlightShadowShaderConfiguration()
       ..shadows = look.shadows.clamp(0.0, 1.0).toDouble()
@@ -468,15 +471,12 @@ class _ProFilterEditorScreenState extends State<ProFilterEditorScreen> {
     final bytes = _previewBytes;
     if (bytes == null) return;
     try {
-      final rendered = await compute(
-        _renderLocalEffect,
-        <String, Object>{
-          'bytes': bytes,
-          'effect': effect.index,
-          'maxDimension': 0,
-          'quality': 96,
-        },
-      );
+      final rendered = await compute(_renderLocalEffect, <String, Object>{
+        'bytes': bytes,
+        'effect': effect.index,
+        'maxDimension': 0,
+        'quality': 96,
+      });
       final texture = await TextureSource.fromMemory(rendered);
       if (!mounted || revision != _effectRevision) return;
       setState(() {
@@ -498,7 +498,8 @@ class _ProFilterEditorScreenState extends State<ProFilterEditorScreen> {
         _configuration == null) {
       return;
     }
-    final untouchedOriginal = _selectedLook == 0 &&
+    final untouchedOriginal =
+        _selectedLook == 0 &&
         _exposure == 0 &&
         _contrast == 0 &&
         _saturation == 0 &&
@@ -522,31 +523,28 @@ class _ProFilterEditorScreenState extends State<ProFilterEditorScreen> {
       final sourceBytes = _sourceBytes;
       if (sourceBytes == null) throw Exception('Orijinal fotoğraf bulunamadı.');
       final look = _looks[_selectedLook];
-      final heavyEffect = look.effect == _LocalEffect.portrait ||
+      final heavyEffect =
+          look.effect == _LocalEffect.portrait ||
           look.effect == _LocalEffect.nightClean ||
           look.effect == _LocalEffect.softGlow;
-      final outputBytes = await compute(
-        _renderLocalEffect,
-        <String, Object>{
-          'bytes': sourceBytes,
-          'effect': look.effect.index,
-          // 12 MP-class output for lightweight effects; memory-heavy blur
-          // effects are bounded to roughly 8 MP to prevent Android OOM kills.
-          'maxDimension': heavyEffect ? 3200 : 4096,
-          'quality': 100,
-          'applyTone': true,
-          'exposure': (look.exposure + _exposure).clamp(-2.5, 2.5),
-          'contrast': (look.contrast + _contrast).clamp(.45, 2.2),
-          'saturation': (look.saturation + _saturation).clamp(0.0, 2.0),
-          'vibrance': (look.vibrance + _vibrance).clamp(-1.0, 1.0),
-          'temperature':
-              (look.temperature + _temperature).clamp(2800, 8200),
-          'tint': look.tint,
-          'monochrome': look.monochrome,
-          'vignetteStart': look.vignetteStart,
-          'vignetteEnd': look.vignetteEnd,
-        },
-      );
+      final outputBytes = await compute(_renderLocalEffect, <String, Object>{
+        'bytes': sourceBytes,
+        'effect': look.effect.index,
+        // 12 MP-class output for lightweight effects; memory-heavy blur
+        // effects are bounded to roughly 8 MP to prevent Android OOM kills.
+        'maxDimension': heavyEffect ? 3200 : 4096,
+        'quality': 100,
+        'applyTone': true,
+        'exposure': (look.exposure + _exposure).clamp(-2.5, 2.5),
+        'contrast': (look.contrast + _contrast).clamp(.45, 2.2),
+        'saturation': (look.saturation + _saturation).clamp(0.0, 2.0),
+        'vibrance': (look.vibrance + _vibrance).clamp(-1.0, 1.0),
+        'temperature': (look.temperature + _temperature).clamp(2800, 8200),
+        'tint': look.tint,
+        'monochrome': look.monochrome,
+        'vignetteStart': look.vignetteStart,
+        'vignetteEnd': look.vignetteEnd,
+      });
       final output = File(
         '${Directory.systemTemp.path}/tbt_pro_${DateTime.now().microsecondsSinceEpoch}.jpg',
       );
@@ -560,9 +558,8 @@ class _ProFilterEditorScreenState extends State<ProFilterEditorScreen> {
       );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Fotoğraf işlenemedi: $e')),
-        );
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Fotoğraf işlenemedi: $e')));
       }
     } finally {
       if (mounted) {
@@ -589,16 +586,16 @@ class _ProFilterEditorScreenState extends State<ProFilterEditorScreen> {
         child: _loading
             ? _loadingView()
             : _error != null
-                ? _errorView()
-                : Column(
-                    children: [
-                      _topBar(),
-                      Expanded(child: _mainPreview()),
-                      _lookStrip(),
-                      _adjustments(),
-                      _bottomBar(),
-                    ],
-                  ),
+            ? _errorView()
+            : Column(
+                children: [
+                  _topBar(),
+                  Expanded(child: _mainPreview()),
+                  _lookStrip(),
+                  _adjustments(),
+                  _bottomBar(),
+                ],
+              ),
       ),
     );
   }
@@ -742,7 +739,11 @@ class _ProFilterEditorScreenState extends State<ProFilterEditorScreen> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.zoom_in_rounded, color: Colors.white70, size: 14),
+                      Icon(
+                        Icons.zoom_in_rounded,
+                        color: Colors.white70,
+                        size: 14,
+                      ),
                       SizedBox(width: 5),
                       Text(
                         '1×–8×',
@@ -938,7 +939,8 @@ class _ProFilterEditorScreenState extends State<ProFilterEditorScreen> {
             max: 1800,
             onChanged: (v) => setState(() => _temperature = v),
             onChangeEnd: (_) => _rebuildConfiguration(),
-            valueText: '${_temperature >= 0 ? '+' : ''}${_temperature.round()}K',
+            valueText:
+                '${_temperature >= 0 ? '+' : ''}${_temperature.round()}K',
           ),
         ],
       ),
@@ -1016,8 +1018,9 @@ class _ProFilterEditorScreenState extends State<ProFilterEditorScreen> {
           const SizedBox(width: 10),
           Expanded(
             child: FilledButton.icon(
-              onPressed:
-                  _exporting || _processingEffect ? null : _exportAndContinue,
+              onPressed: _exporting || _processingEffect
+                  ? null
+                  : _exportAndContinue,
               style: FilledButton.styleFrom(
                 backgroundColor: Colors.white,
                 foregroundColor: Colors.black,

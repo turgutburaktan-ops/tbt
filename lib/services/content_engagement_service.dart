@@ -18,17 +18,16 @@ class ContentEngagementService {
   Stream<bool> isLiked(String collection, String id) {
     final uid = _auth.currentUser?.uid;
     if (uid == null) return Stream.value(false);
-    return _ref(collection, id)
-        .collection('likes')
-        .doc(uid)
-        .snapshots()
-        .map((s) => s.exists);
+    return _ref(
+      collection,
+      id,
+    ).collection('likes').doc(uid).snapshots().map((s) => s.exists);
   }
 
-  Stream<int> likesCount(String collection, String id) => _ref(collection, id)
-      .collection('likes')
-      .snapshots()
-      .map((s) => s.docs.length);
+  Stream<int> likesCount(String collection, String id) => _ref(
+    collection,
+    id,
+  ).collection('likes').snapshots().map((s) => s.docs.length);
 
   Future<void> toggleLike({
     required String collection,
@@ -68,11 +67,12 @@ class ContentEngagementService {
   }
 
   Stream<QuerySnapshot<Map<String, dynamic>>> comments(
-          String collection, String id) =>
-      _ref(collection, id)
-          .collection('comments')
-          .orderBy('createdAt', descending: false)
-          .snapshots();
+    String collection,
+    String id,
+  ) => _ref(
+    collection,
+    id,
+  ).collection('comments').orderBy('createdAt', descending: false).snapshots();
 
   Future<void> addComment({
     required String collection,
@@ -114,8 +114,9 @@ class ContentEngagementService {
   }
 
   Stream<QuerySnapshot<Map<String, dynamic>>> tags(
-          String collection, String id) =>
-      _ref(collection, id).collection('tags').snapshots();
+    String collection,
+    String id,
+  ) => _ref(collection, id).collection('tags').snapshots();
 
   Future<void> tagUser({
     required String collection,

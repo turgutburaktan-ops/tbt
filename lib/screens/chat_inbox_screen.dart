@@ -28,17 +28,12 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
 
   String _normalize(String value) => value.trim().toLowerCase();
 
-  void _startChat({
-    required String userId,
-    required String displayName,
-  }) {
+  void _startChat({required String userId, required String displayName}) {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => ChatScreen(
-          otherUserId: userId,
-          otherDisplayName: displayName,
-        ),
+        builder: (_) =>
+            ChatScreen(otherUserId: userId, otherDisplayName: displayName),
       ),
     );
   }
@@ -59,9 +54,13 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
     }
 
     return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-      stream: FirebaseFirestore.instance.collection('users').limit(120).snapshots(),
+      stream: FirebaseFirestore.instance
+          .collection('users')
+          .limit(120)
+          .snapshots(),
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
+        if (snapshot.connectionState == ConnectionState.waiting &&
+            !snapshot.hasData) {
           return const Center(
             child: CircularProgressIndicator(color: Color(0xFFB7BCC2)),
           );
@@ -72,15 +71,24 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
           );
         }
 
-        final docs = (snapshot.data?.docs ?? const <QueryDocumentSnapshot<Map<String, dynamic>>>[])
-            .where((doc) {
-          if (doc.id == myId) return false;
-          final data = doc.data();
-          final displayName = _normalize((data['displayName'] ?? '').toString());
-          final username = _normalize((data['username'] ?? data['handle'] ?? '').toString());
-          final email = _normalize((data['email'] ?? '').toString());
-          return displayName.contains(q) || username.contains(q) || email.contains(q);
-        }).toList(growable: false);
+        final docs =
+            (snapshot.data?.docs ??
+                    const <QueryDocumentSnapshot<Map<String, dynamic>>>[])
+                .where((doc) {
+                  if (doc.id == myId) return false;
+                  final data = doc.data();
+                  final displayName = _normalize(
+                    (data['displayName'] ?? '').toString(),
+                  );
+                  final username = _normalize(
+                    (data['username'] ?? data['handle'] ?? '').toString(),
+                  );
+                  final email = _normalize((data['email'] ?? '').toString());
+                  return displayName.contains(q) ||
+                      username.contains(q) ||
+                      email.contains(q);
+                })
+                .toList(growable: false);
 
         if (docs.isEmpty) {
           return const Center(
@@ -97,19 +105,33 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
         return ListView.separated(
           padding: const EdgeInsets.fromLTRB(8, 6, 8, 24),
           itemCount: docs.length,
-          separatorBuilder: (_, __) => const Divider(height: 1, indent: 72, color: Colors.white10),
+          separatorBuilder: (_, __) =>
+              const Divider(height: 1, indent: 72, color: Colors.white10),
           itemBuilder: (context, index) {
             final doc = docs[index];
             final data = doc.data();
-            final displayName = (data['displayName'] ?? data['username'] ?? data['email'] ?? 'Kullanıcı').toString().trim();
-            final username = (data['username'] ?? data['handle'] ?? '').toString().trim().replaceFirst(RegExp(r'^@'), '');
+            final displayName =
+                (data['displayName'] ??
+                        data['username'] ??
+                        data['email'] ??
+                        'Kullanıcı')
+                    .toString()
+                    .trim();
+            final username = (data['username'] ?? data['handle'] ?? '')
+                .toString()
+                .trim()
+                .replaceFirst(RegExp(r'^@'), '');
             final photoUrl = (data['photoUrl'] ?? '').toString().trim();
             return ListTile(
               leading: CircleAvatar(
                 radius: 24,
                 backgroundColor: const Color(0xFF1A1D20),
-                backgroundImage: photoUrl.isEmpty ? null : NetworkImage(photoUrl),
-                child: photoUrl.isEmpty ? const Icon(Icons.person_outline, color: Colors.white54) : null,
+                backgroundImage: photoUrl.isEmpty
+                    ? null
+                    : NetworkImage(photoUrl),
+                child: photoUrl.isEmpty
+                    ? const Icon(Icons.person_outline, color: Colors.white54)
+                    : null,
               ),
               title: Text(
                 displayName.isEmpty ? 'Kullanıcı' : displayName,
@@ -118,9 +140,18 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
                 style: const TextStyle(fontWeight: FontWeight.w800),
               ),
               subtitle: username.isEmpty
-                  ? const Text('Mesaj gönder', style: TextStyle(color: Colors.white54))
-                  : Text('@$username', style: const TextStyle(color: Colors.white54)),
-              trailing: const Icon(Icons.chat_bubble_outline_rounded, color: Colors.white54),
+                  ? const Text(
+                      'Mesaj gönder',
+                      style: TextStyle(color: Colors.white54),
+                    )
+                  : Text(
+                      '@$username',
+                      style: const TextStyle(color: Colors.white54),
+                    ),
+              trailing: const Icon(
+                Icons.chat_bubble_outline_rounded,
+                color: Colors.white54,
+              ),
               onTap: () => _startChat(
                 userId: doc.id,
                 displayName: displayName.isEmpty ? 'Kullanıcı' : displayName,
@@ -150,7 +181,11 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.chat_bubble_outline_rounded, size: 54, color: Colors.white24),
+                  const Icon(
+                    Icons.chat_bubble_outline_rounded,
+                    size: 54,
+                    color: Colors.white24,
+                  ),
                   const SizedBox(height: 14),
                   const Text(
                     'Henüz mesajın yok.',
@@ -177,14 +212,13 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
         return ListView.separated(
           padding: const EdgeInsets.symmetric(vertical: 8),
           itemCount: threads.length,
-          separatorBuilder: (_, __) => const Divider(
-            height: 1,
-            indent: 74,
-            color: Colors.white10,
-          ),
+          separatorBuilder: (_, __) =>
+              const Divider(height: 1, indent: 74, color: Colors.white10),
           itemBuilder: (context, index) {
             final thread = threads[index];
-            final otherIds = thread.memberIds.where((id) => id != myId).toList();
+            final otherIds = thread.memberIds
+                .where((id) => id != myId)
+                .toList();
             if (otherIds.isEmpty) return const SizedBox.shrink();
             return _ThreadTile(thread: thread, otherUserId: otherIds.first);
           },
@@ -261,7 +295,9 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
                   ),
                 ),
                 Expanded(
-                  child: _query.trim().isEmpty ? _threads(myId) : _searchResults(myId),
+                  child: _query.trim().isEmpty
+                      ? _threads(myId)
+                      : _searchResults(myId),
                 ),
               ],
             ),
@@ -273,34 +309,48 @@ class _ThreadTile extends StatelessWidget {
   final ChatThread thread;
   final String otherUserId;
 
-  const _ThreadTile({
-    required this.thread,
-    required this.otherUserId,
-  });
+  const _ThreadTile({required this.thread, required this.otherUserId});
 
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-      stream: FirebaseFirestore.instance.collection('users').doc(otherUserId).snapshots(),
+      stream: FirebaseFirestore.instance
+          .collection('users')
+          .doc(otherUserId)
+          .snapshots(),
       builder: (context, snapshot) {
         final data = snapshot.data?.data() ?? const <String, dynamic>{};
-        final name = (data['displayName'] ?? data['username'] ?? 'Topluluk üyesi').toString();
-        final username = (data['username'] ?? data['handle'] ?? '').toString().replaceFirst(RegExp(r'^@'), '');
+        final name =
+            (data['displayName'] ?? data['username'] ?? 'Topluluk üyesi')
+                .toString();
+        final username = (data['username'] ?? data['handle'] ?? '')
+            .toString()
+            .replaceFirst(RegExp(r'^@'), '');
         final photoUrl = (data['photoUrl'] ?? '').toString();
 
         return ListTile(
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 5,
+          ),
           leading: CircleAvatar(
             radius: 25,
             backgroundColor: const Color(0xFF1A1D20),
-            backgroundImage: photoUrl.isNotEmpty ? NetworkImage(photoUrl) : null,
-            child: photoUrl.isEmpty ? const Icon(Icons.person, color: Colors.white54) : null,
+            backgroundImage: photoUrl.isNotEmpty
+                ? NetworkImage(photoUrl)
+                : null,
+            child: photoUrl.isEmpty
+                ? const Icon(Icons.person, color: Colors.white54)
+                : null,
           ),
           title: Text(
             name,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w700,
+            ),
           ),
           subtitle: Text(
             thread.lastMessage.isEmpty

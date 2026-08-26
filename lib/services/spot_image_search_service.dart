@@ -95,11 +95,7 @@ class SpotImageSearchService {
     return null;
   }
 
-  Future<String?> _save(
-    String key,
-    String url,
-    SharedPreferences prefs,
-  ) async {
+  Future<String?> _save(String key, String url, SharedPreferences prefs) async {
     _cache[key] = url;
     await prefs.setString(_prefsKey(key), url);
     return url;
@@ -160,8 +156,9 @@ class SpotImageSearchService {
       pages.sort((a, b) {
         final scoreCompare = _score(b, spot).compareTo(_score(a, spot));
         if (scoreCompare != 0) return scoreCompare;
-        return (_distanceMeters(a, spot) ?? double.infinity)
-            .compareTo(_distanceMeters(b, spot) ?? double.infinity);
+        return (_distanceMeters(a, spot) ?? double.infinity).compareTo(
+          _distanceMeters(b, spot) ?? double.infinity,
+        );
       });
 
       for (final page in pages) {
@@ -178,10 +175,7 @@ class SpotImageSearchService {
     return null;
   }
 
-  Future<String?> _searchTurkishWikipedia(
-    String query,
-    PhotoSpot spot,
-  ) async {
+  Future<String?> _searchTurkishWikipedia(String query, PhotoSpot spot) async {
     try {
       final uri = Uri.https('tr.wikipedia.org', '/w/api.php', {
         'action': 'query',
@@ -215,15 +209,16 @@ class SpotImageSearchService {
 
   Future<Map<String, dynamic>?> _get(Uri uri) async {
     try {
-      final response = await http.get(
-        uri,
-        headers: const {
-          'User-Agent':
-              'BestPhotoSpot/1.0 (https://github.com/turgutburaktan-ops/tbt; contact: turgutburaktan@gmail.com)',
-          'Accept': 'application/json',
-          'Accept-Language': 'tr-TR,tr;q=0.9,en;q=0.7',
-        },
-      ).timeout(const Duration(seconds: 12));
+      final response = await http
+          .get(
+            uri,
+            headers: const {
+              'User-Agent': 'BestPhotoSpot/1.0 (https://github.com/turgutburaktan-ops/tbt; contact: turgutburaktan@gmail.com)',
+              'Accept': 'application/json',
+              'Accept-Language': 'tr-TR,tr;q=0.9,en;q=0.7',
+            },
+          )
+          .timeout(const Duration(seconds: 12));
       if (response.statusCode != 200) return null;
       final decoded = jsonDecode(response.body);
       return decoded is Map<String, dynamic> ? decoded : null;
@@ -325,7 +320,8 @@ class SpotImageSearchService {
     final nameTokens = _tokens(spot.name);
     final englishTokens = _tokens(_englishExpansion(spot.name));
     final aliasTokens = <String>{
-      for (final alias in _aliases[spot.id] ?? const <String>[]) ..._tokens(alias),
+      for (final alias in _aliases[spot.id] ?? const <String>[])
+        ..._tokens(alias),
     };
     final candidateTokens = <String>{
       ...nameTokens,
@@ -339,8 +335,9 @@ class SpotImageSearchService {
     }
     if (city.isNotEmpty && title.contains(city)) score += 2;
     if (title.contains('harput') &&
-        ((_aliases[spot.id] ?? const <String>[])
-                .any((alias) => _normalize(alias).contains('harput')) ||
+        ((_aliases[spot.id] ?? const <String>[]).any(
+              (alias) => _normalize(alias).contains('harput'),
+            ) ||
             _normalize(spot.tags.join(' ')).contains('harput'))) {
       score += 3;
     }
@@ -362,7 +359,8 @@ class SpotImageSearchService {
     final lat2 = _radians(lat);
     final dLat = _radians(lat - spot.latitude);
     final dLon = _radians(lon - spot.longitude);
-    final a = math.sin(dLat / 2) * math.sin(dLat / 2) +
+    final a =
+        math.sin(dLat / 2) * math.sin(dLat / 2) +
         math.cos(lat1) *
             math.cos(lat2) *
             math.sin(dLon / 2) *

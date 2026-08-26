@@ -92,15 +92,12 @@ class _MentionTextState extends State<MentionText> {
 
       await Navigator.push(
         context,
-        MaterialPageRoute(
-          builder: (_) => MentionProfileScreen(userId: userId),
-        ),
+        MaterialPageRoute(builder: (_) => MentionProfileScreen(userId: userId)),
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Profil açılamadı: $e')),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Profil açılamadı: $e')));
     }
   }
 
@@ -108,7 +105,8 @@ class _MentionTextState extends State<MentionText> {
   Widget build(BuildContext context) {
     _clearRecognizers();
     final base = widget.style ?? DefaultTextStyle.of(context).style;
-    final mention = widget.mentionStyle ??
+    final mention =
+        widget.mentionStyle ??
         base.copyWith(
           color: const Color(0xFFD7DADF),
           fontWeight: FontWeight.w800,

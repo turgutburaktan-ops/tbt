@@ -11,11 +11,7 @@ class TemporaryPinchZoom extends StatefulWidget {
   final Widget child;
   final double maxScale;
 
-  const TemporaryPinchZoom({
-    super.key,
-    required this.child,
-    this.maxScale = 4,
-  });
+  const TemporaryPinchZoom({super.key, required this.child, this.maxScale = 4});
 
   @override
   State<TemporaryPinchZoom> createState() => _TemporaryPinchZoomState();
@@ -28,7 +24,8 @@ class _TemporaryPinchZoomState extends State<TemporaryPinchZoom> {
   Offset _focal = Offset.zero;
   bool _active = false;
 
-  List<Offset> get _firstTwo => _pointers.values.take(2).toList(growable: false);
+  List<Offset> get _firstTwo =>
+      _pointers.values.take(2).toList(growable: false);
 
   double _distance(Offset a, Offset b) {
     final dx = a.dx - b.dx;
@@ -36,7 +33,8 @@ class _TemporaryPinchZoomState extends State<TemporaryPinchZoom> {
     return math.sqrt(dx * dx + dy * dy);
   }
 
-  Offset _midpoint(Offset a, Offset b) => Offset((a.dx + b.dx) / 2, (a.dy + b.dy) / 2);
+  Offset _midpoint(Offset a, Offset b) =>
+      Offset((a.dx + b.dx) / 2, (a.dy + b.dy) / 2);
 
   void _beginIfReady() {
     if (_pointers.length < 2) return;
@@ -55,7 +53,9 @@ class _TemporaryPinchZoomState extends State<TemporaryPinchZoom> {
     if (_pointers.length < 2 || _initialDistance <= 0) return;
     final points = _firstTwo;
     final currentDistance = _distance(points[0], points[1]);
-    final nextScale = (currentDistance / _initialDistance).clamp(1.0, widget.maxScale).toDouble();
+    final nextScale = (currentDistance / _initialDistance)
+        .clamp(1.0, widget.maxScale)
+        .toDouble();
     setState(() {
       _focal = _midpoint(points[0], points[1]);
       _scale = nextScale;
@@ -89,26 +89,26 @@ class _TemporaryPinchZoomState extends State<TemporaryPinchZoom> {
 
   @override
   Widget build(BuildContext context) => ClipRect(
-        child: Listener(
-          behavior: HitTestBehavior.translucent,
-          onPointerDown: (event) {
-            _pointers[event.pointer] = event.localPosition;
-            if (_pointers.length == 2) _beginIfReady();
-          },
-          onPointerMove: (event) {
-            if (!_pointers.containsKey(event.pointer)) return;
-            _pointers[event.pointer] = event.localPosition;
-            if (_pointers.length >= 2) _updateIfReady();
-          },
-          onPointerUp: (event) => _endPointer(event.pointer),
-          onPointerCancel: (event) => _endPointer(event.pointer),
-          child: AnimatedContainer(
-            duration: _active ? Duration.zero : const Duration(milliseconds: 150),
-            curve: Curves.easeOutCubic,
-            transform: _matrix(),
-            transformAlignment: Alignment.topLeft,
-            child: widget.child,
-          ),
-        ),
-      );
+    child: Listener(
+      behavior: HitTestBehavior.translucent,
+      onPointerDown: (event) {
+        _pointers[event.pointer] = event.localPosition;
+        if (_pointers.length == 2) _beginIfReady();
+      },
+      onPointerMove: (event) {
+        if (!_pointers.containsKey(event.pointer)) return;
+        _pointers[event.pointer] = event.localPosition;
+        if (_pointers.length >= 2) _updateIfReady();
+      },
+      onPointerUp: (event) => _endPointer(event.pointer),
+      onPointerCancel: (event) => _endPointer(event.pointer),
+      child: AnimatedContainer(
+        duration: _active ? Duration.zero : const Duration(milliseconds: 150),
+        curve: Curves.easeOutCubic,
+        transform: _matrix(),
+        transformAlignment: Alignment.topLeft,
+        child: widget.child,
+      ),
+    ),
+  );
 }

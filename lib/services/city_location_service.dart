@@ -35,13 +35,15 @@ class CityLocationService {
         'countrycodes': 'tr',
         'addressdetails': '1',
       });
-      final response = await http.get(
-        uri,
-        headers: const {
-          'User-Agent': 'TBT-mobile/0.1 (city selector)',
-          'Accept-Language': 'tr,en;q=0.7',
-        },
-      ).timeout(const Duration(seconds: 12));
+      final response = await http
+          .get(
+            uri,
+            headers: const {
+              'User-Agent': 'TBT-mobile/0.1 (city selector)',
+              'Accept-Language': 'tr,en;q=0.7',
+            },
+          )
+          .timeout(const Duration(seconds: 12));
       if (response.statusCode != 200) return null;
       final list = jsonDecode(response.body) as List<dynamic>;
       if (list.isEmpty || list.first is! Map) return null;
@@ -49,14 +51,17 @@ class CityLocationService {
       final lat = double.tryParse((data['lat'] ?? '').toString());
       final lon = double.tryParse((data['lon'] ?? '').toString());
       if (lat == null || lon == null) return null;
-      final address = Map<String, dynamic>.from(data['address'] as Map? ?? const {});
-      final resolvedName = (address['province'] ??
-              address['city'] ??
-              address['town'] ??
-              address['state'] ??
-              clean)
-          .toString()
-          .trim();
+      final address = Map<String, dynamic>.from(
+        data['address'] as Map? ?? const {},
+      );
+      final resolvedName =
+          (address['province'] ??
+                  address['city'] ??
+                  address['town'] ??
+                  address['state'] ??
+                  clean)
+              .toString()
+              .trim();
       final result = CityLocation(
         name: resolvedName.isEmpty ? clean : resolvedName,
         latitude: lat,

@@ -76,7 +76,9 @@ class PushNotificationService with WidgetsBindingObserver {
     _openedSub = FirebaseMessaging.onMessageOpenedApp.listen(_openMessage);
     final initial = await _messaging.getInitialMessage();
     if (initial != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _openMessage(initial));
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => _openMessage(initial),
+      );
     }
     if (_auth.currentUser != null) {
       await _markActive(force: true);
@@ -137,10 +139,10 @@ class PushNotificationService with WidgetsBindingObserver {
         .collection('push_tokens')
         .doc(token)
         .set({
-      'token': token,
-      'platform': _platformName,
-      'updatedAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
+          'token': token,
+          'platform': _platformName,
+          'updatedAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
     await _markActive(force: true);
   }
 
@@ -163,7 +165,9 @@ class PushNotificationService with WidgetsBindingObserver {
 
     if (eventId.isNotEmpty) {
       navigator.push(
-        MaterialPageRoute(builder: (_) => EventDeepLinkScreen(eventId: eventId)),
+        MaterialPageRoute(
+          builder: (_) => EventDeepLinkScreen(eventId: eventId),
+        ),
       );
       return;
     }
@@ -181,10 +185,8 @@ class PushNotificationService with WidgetsBindingObserver {
           (data['displayName'] ?? data['username'] ?? 'Kullanıcı').toString();
       navigator.push(
         MaterialPageRoute(
-          builder: (_) => ChatScreen(
-            otherUserId: actorId,
-            otherDisplayName: displayName,
-          ),
+          builder: (_) =>
+              ChatScreen(otherUserId: actorId, otherDisplayName: displayName),
         ),
       );
       return;
@@ -194,9 +196,8 @@ class PushNotificationService with WidgetsBindingObserver {
       if (doc.exists) {
         navigator.push(
           MaterialPageRoute(
-            builder: (_) => PostDetailScreen(
-              post: {...?doc.data(), 'id': doc.id},
-            ),
+            builder: (_) =>
+                PostDetailScreen(post: {...?doc.data(), 'id': doc.id}),
           ),
         );
       }

@@ -101,8 +101,11 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
     }).toList();
 
     if (_mode == _OpportunityMode.nearby && _position != null) {
-      next.sort((a, b) => (_distanceMeters(a) ?? double.infinity)
-          .compareTo(_distanceMeters(b) ?? double.infinity));
+      next.sort(
+        (a, b) => (_distanceMeters(a) ?? double.infinity).compareTo(
+          _distanceMeters(b) ?? double.infinity,
+        ),
+      );
     } else {
       next.sort((a, b) {
         final rating = b.rating.compareTo(a.rating);
@@ -151,10 +154,10 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
   Widget build(BuildContext context) {
     final subtitle = _mode == _OpportunityMode.nearby
         ? (_position != null
-            ? 'Sana en yakın çekim noktaları önce gösteriliyor.'
-            : (_locationChecked
-                ? 'Konum izni verirsen en yakın noktaları önce gösterebiliriz.'
-                : 'Konumun hazırlanıyor; yakındaki noktalar birazdan sıralanacak.'))
+              ? 'Sana en yakın çekim noktaları önce gösteriliyor.'
+              : (_locationChecked
+                    ? 'Konum izni verirsen en yakın noktaları önce gösterebiliriz.'
+                    : 'Konumun hazırlanıyor; yakındaki noktalar birazdan sıralanacak.'))
         : 'En yüksek puanlı çekim noktaları önce gösteriliyor.';
 
     return RefreshIndicator(
@@ -328,42 +331,42 @@ class _ModeButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => InkWell(
-        onTap: onTap,
+    onTap: onTap,
+    borderRadius: BorderRadius.circular(12),
+    child: AnimatedContainer(
+      duration: const Duration(milliseconds: 180),
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+      decoration: BoxDecoration(
+        color: selected ? const Color(0xFF20262B) : Colors.transparent,
         borderRadius: BorderRadius.circular(12),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
-          decoration: BoxDecoration(
-            color: selected ? const Color(0xFF20262B) : Colors.transparent,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: selected ? const Color(0xFF42F5E9) : Colors.transparent,
+        border: Border.all(
+          color: selected ? const Color(0xFF42F5E9) : Colors.transparent,
+        ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            icon,
+            size: 18,
+            color: selected ? const Color(0xFF42F5E9) : Colors.white54,
+          ),
+          const SizedBox(width: 7),
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontWeight: FontWeight.w800,
+                color: selected ? Colors.white : Colors.white60,
+              ),
             ),
           ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                icon,
-                size: 18,
-                color: selected ? const Color(0xFF42F5E9) : Colors.white54,
-              ),
-              const SizedBox(width: 7),
-              Flexible(
-                child: Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w800,
-                    color: selected ? Colors.white : Colors.white60,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
+        ],
+      ),
+    ),
+  );
 }
 
 class _SpotCard extends StatelessWidget {
@@ -499,24 +502,24 @@ class _ExploreState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, size: 54, color: Colors.white30),
-              const SizedBox(height: 14),
-              Text(
-                title,
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontWeight: FontWeight.w700),
-              ),
-              if (actionLabel != null && onAction != null) ...[
-                const SizedBox(height: 14),
-                TextButton(onPressed: onAction, child: Text(actionLabel!)),
-              ],
-            ],
+    child: Padding(
+      padding: const EdgeInsets.all(32),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 54, color: Colors.white30),
+          const SizedBox(height: 14),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontWeight: FontWeight.w700),
           ),
-        ),
-      );
+          if (actionLabel != null && onAction != null) ...[
+            const SizedBox(height: 14),
+            TextButton(onPressed: onAction, child: Text(actionLabel!)),
+          ],
+        ],
+      ),
+    ),
+  );
 }

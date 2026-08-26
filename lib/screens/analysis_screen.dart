@@ -43,9 +43,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
     });
 
     try {
-      final data = await AiService.analyzePhoto(
-        widget.image.path,
-      );
+      final data = await AiService.analyzePhoto(widget.image.path);
 
       if (!mounted) return;
 
@@ -63,28 +61,15 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
     }
   }
 
-  Widget _scoreRow(
-    String title,
-    int value,
-  ) {
+  Widget _scoreRow(String title, int value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 7),
       child: Row(
         children: [
-          Expanded(
-            child: Text(
-              title,
-              style: const TextStyle(
-                fontSize: 16,
-              ),
-            ),
-          ),
+          Expanded(child: Text(title, style: const TextStyle(fontSize: 16))),
           Text(
             '$value/10',
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
         ],
       ),
@@ -100,9 +85,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
       appBar: AppBar(
         backgroundColor: const Color(0xFF090D13),
         foregroundColor: Colors.white,
-        title: const Text(
-          'Fotoğraf Analizi',
-        ),
+        title: const Text('Fotoğraf Analizi'),
       ),
       body: ListView(
         padding: const EdgeInsets.all(18),
@@ -124,9 +107,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                 padding: EdgeInsets.all(24),
                 child: Column(
                   children: [
-                    CircularProgressIndicator(
-                      color: Color(0xFFB7BCC2),
-                    ),
+                    CircularProgressIndicator(color: Color(0xFFB7BCC2)),
                     SizedBox(height: 18),
                     Text(
                       'Fotoğraf AI tarafından analiz ediliyor...',
@@ -157,10 +138,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                       ),
                     ),
                     const SizedBox(height: 10),
-                    Text(
-                      errorMessage!,
-                      textAlign: TextAlign.center,
-                    ),
+                    Text(errorMessage!, textAlign: TextAlign.center),
                   ],
                 ),
               ),
@@ -186,28 +164,13 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                     const SizedBox(height: 4),
                     const Text(
                       'Fotoğraf Skoru',
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: Colors.white70,
-                      ),
+                      style: TextStyle(fontSize: 18, color: Colors.white70),
                     ),
                     const SizedBox(height: 24),
-                    _scoreRow(
-                      'Kompozisyon',
-                      analysis.composition,
-                    ),
-                    _scoreRow(
-                      'Işık',
-                      analysis.lighting,
-                    ),
-                    _scoreRow(
-                      'Perspektif',
-                      analysis.perspective,
-                    ),
-                    _scoreRow(
-                      'Netlik',
-                      analysis.sharpness,
-                    ),
+                    _scoreRow('Kompozisyon', analysis.composition),
+                    _scoreRow('Işık', analysis.lighting),
+                    _scoreRow('Perspektif', analysis.perspective),
+                    _scoreRow('Netlik', analysis.sharpness),
                   ],
                 ),
               ),
@@ -215,10 +178,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
             const SizedBox(height: 24),
             const Text(
               'AI Değerlendirmesi',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
             Card(
@@ -227,20 +187,14 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                 padding: const EdgeInsets.all(18),
                 child: Text(
                   analysis.summary,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    height: 1.5,
-                  ),
+                  style: const TextStyle(fontSize: 16, height: 1.5),
                 ),
               ),
             ),
             const SizedBox(height: 24),
             const Text(
               'Fotoğrafı İyileştirmek İçin',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
             ...analysis.suggestions.map(
@@ -255,12 +209,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                     Icons.auto_awesome,
                     color: Color(0xFFB7BCC2),
                   ),
-                  title: Text(
-                    suggestion,
-                    style: const TextStyle(
-                      height: 1.4,
-                    ),
-                  ),
+                  title: Text(suggestion, style: const TextStyle(height: 1.4)),
                 ),
               ),
             ),
@@ -273,30 +222,20 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
               padding: const EdgeInsets.all(17),
             ),
             onPressed: analyzing ? null : _analyze,
-            icon: const Icon(
-              Icons.auto_awesome,
-            ),
-            label: Text(
-              analyzing ? 'Analiz Ediliyor...' : 'Tekrar Analiz Et',
-            ),
+            icon: const Icon(Icons.auto_awesome),
+            label: Text(analyzing ? 'Analiz Ediliyor...' : 'Tekrar Analiz Et'),
           ),
           const SizedBox(height: 12),
           OutlinedButton.icon(
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                  content: Text(
-                    'Kaydetme özelliği yakında aktif olacak.',
-                  ),
+                  content: Text('Kaydetme özelliği yakında aktif olacak.'),
                 ),
               );
             },
-            icon: const Icon(
-              Icons.favorite_border,
-            ),
-            label: const Text(
-              'Kaydet',
-            ),
+            icon: const Icon(Icons.favorite_border),
+            label: const Text('Kaydet'),
           ),
           const SizedBox(height: 30),
         ],

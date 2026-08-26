@@ -65,9 +65,11 @@ class PostService {
     String businessVenueName = '',
   }) async {
     final user = _auth.currentUser;
-    if (user == null) throw Exception('Fotoğraf paylaşmak için giriş yapmalısın.');
+    if (user == null)
+      throw Exception('Fotoğraf paylaşmak için giriş yapmalısın.');
 
-    if (!await image.exists()) throw Exception('Paylaşılacak fotoğraf bulunamadı.');
+    if (!await image.exists())
+      throw Exception('Paylaşılacak fotoğraf bulunamadı.');
     final sourceBytes = await image.length();
     if (sourceBytes <= 0) throw Exception('Fotoğraf dosyası boş.');
     if (sourceBytes > 40 * 1024 * 1024) {
@@ -77,9 +79,9 @@ class PostService {
     final postRef = _firestore.collection('posts').doc();
     final lowerPath = image.path.toLowerCase();
     final extension = lowerPath.endsWith('.png') ? 'png' : 'jpg';
-    final storageRef = _storage
-        .ref()
-        .child('users/${user.uid}/posts/${postRef.id}.$extension');
+    final storageRef = _storage.ref().child(
+      'users/${user.uid}/posts/${postRef.id}.$extension',
+    );
     final metadata = SettableMetadata(
       contentType: extension == 'png' ? 'image/png' : 'image/jpeg',
     );
@@ -132,11 +134,12 @@ class PostService {
       maxDuration: const Duration(seconds: 60),
     );
     final postRef = _firestore.collection('posts').doc();
-    final videoRef =
-        _storage.ref().child('users/${user.uid}/posts/${postRef.id}.mp4');
-    final thumbRef = _storage
-        .ref()
-        .child('users/${user.uid}/posts/${postRef.id}_thumb.jpg');
+    final videoRef = _storage.ref().child(
+      'users/${user.uid}/posts/${postRef.id}.mp4',
+    );
+    final thumbRef = _storage.ref().child(
+      'users/${user.uid}/posts/${postRef.id}_thumb.jpg',
+    );
 
     final videoUpload = await videoRef.putFile(
       prepared.video,
@@ -185,7 +188,10 @@ class PostService {
   Future<Map<String, dynamic>> _eventContext(String eventId) async {
     final user = _auth.currentUser;
     if (user == null) throw Exception('Anı eklemek için giriş yapmalısın.');
-    final event = await _firestore.collection('social_events').doc(eventId).get();
+    final event = await _firestore
+        .collection('social_events')
+        .doc(eventId)
+        .get();
     final eventData = event.data();
     if (eventData == null) throw Exception('Etkinlik bulunamadı.');
     final participants = (eventData['participantIds'] as List? ?? const [])
@@ -204,11 +210,7 @@ class PostService {
     if ((eventData['status'] ?? 'open').toString() == 'cancelled') {
       throw Exception('İptal edilen etkinliğe anı eklenemez.');
     }
-    return {
-      'user': user,
-      'eventData': eventData,
-      'participants': participants,
-    };
+    return {'user': user, 'eventData': eventData, 'participants': participants};
   }
 
   Future<void> createEventMemory({
@@ -297,7 +299,8 @@ class PostService {
       prepared.thumbnail,
       SettableMetadata(contentType: 'image/jpeg'),
     );
-    if (videoUpload.bytesTransferred <= 0 || thumbUpload.bytesTransferred <= 0) {
+    if (videoUpload.bytesTransferred <= 0 ||
+        thumbUpload.bytesTransferred <= 0) {
       throw Exception('Etkinlik videosu yüklenemedi.');
     }
     final videoUrl = await videoUpload.ref.getDownloadURL();

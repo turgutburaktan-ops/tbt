@@ -78,7 +78,9 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _forgotPassword() async {
-    final controller = TextEditingController(text: _emailController.text.trim());
+    final controller = TextEditingController(
+      text: _emailController.text.trim(),
+    );
     final email = await showDialog<String>(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -87,7 +89,9 @@ class _LoginScreenState extends State<LoginScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Hesabına bağlı e-posta adresini yaz. Sıfırlama bağlantısı göndereceğiz.'),
+            const Text(
+              'Hesabına bağlı e-posta adresini yaz. Sıfırlama bağlantısı göndereceğiz.',
+            ),
             const SizedBox(height: 14),
             TextField(
               controller: controller,
@@ -101,7 +105,10 @@ class _LoginScreenState extends State<LoginScreen> {
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Vazgeç')),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Vazgeç'),
+          ),
           FilledButton(
             onPressed: () {
               final value = controller.text.trim();
@@ -151,7 +158,11 @@ class _LoginScreenState extends State<LoginScreen> {
                 borderRadius: BorderRadius.circular(22),
                 border: Border.all(color: Colors.white12),
               ),
-              child: const Icon(Icons.camera_alt_rounded, size: 36, color: accent),
+              child: const Icon(
+                Icons.camera_alt_rounded,
+                size: 36,
+                color: accent,
+              ),
             ),
             const SizedBox(height: 18),
             const Text(
@@ -172,9 +183,22 @@ class _LoginScreenState extends State<LoginScreen> {
               child: OutlinedButton.icon(
                 onPressed: _busy ? null : _googleLogin,
                 icon: _googleLoading
-                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                    : const Text('G', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900)),
-                label: const Text('Google ile devam et', style: TextStyle(fontWeight: FontWeight.w900)),
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Text(
+                        'G',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                label: const Text(
+                  'Google ile devam et',
+                  style: TextStyle(fontWeight: FontWeight.w900),
+                ),
               ),
             ),
             const SizedBox(height: 10),
@@ -184,28 +208,43 @@ class _LoginScreenState extends State<LoginScreen> {
               child: OutlinedButton.icon(
                 onPressed: _busy ? null : _appleLogin,
                 icon: _appleLoading
-                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
                     : const Icon(Icons.apple_rounded, size: 24),
-                label: const Text('Apple ile devam et', style: TextStyle(fontWeight: FontWeight.w900)),
+                label: const Text(
+                  'Apple ile devam et',
+                  style: TextStyle(fontWeight: FontWeight.w900),
+                ),
               ),
             ),
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 20),
-              child: Row(children: [
-                Expanded(child: Divider(color: Colors.white12)),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 12),
-                  child: Text('veya e-posta', style: TextStyle(color: Colors.white38, fontSize: 12)),
-                ),
-                Expanded(child: Divider(color: Colors.white12)),
-              ]),
+              child: Row(
+                children: [
+                  Expanded(child: Divider(color: Colors.white12)),
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 12),
+                    child: Text(
+                      'veya e-posta',
+                      style: TextStyle(color: Colors.white38, fontSize: 12),
+                    ),
+                  ),
+                  Expanded(child: Divider(color: Colors.white12)),
+                ],
+              ),
             ),
             TextField(
               controller: _emailController,
               keyboardType: TextInputType.emailAddress,
               autofillHints: const [AutofillHints.email],
               style: const TextStyle(color: Colors.white),
-              decoration: _decoration(label: 'E-posta', icon: Icons.email_outlined),
+              decoration: _decoration(
+                label: 'E-posta',
+                icon: Icons.email_outlined,
+              ),
             ),
             const SizedBox(height: 14),
             TextField(
@@ -219,8 +258,11 @@ class _LoginScreenState extends State<LoginScreen> {
                 icon: Icons.lock_outline,
                 suffix: IconButton(
                   tooltip: _hidePassword ? 'Şifreyi göster' : 'Şifreyi gizle',
-                  icon: Icon(_hidePassword ? Icons.visibility_off : Icons.visibility),
-                  onPressed: () => setState(() => _hidePassword = !_hidePassword),
+                  icon: Icon(
+                    _hidePassword ? Icons.visibility_off : Icons.visibility,
+                  ),
+                  onPressed: () =>
+                      setState(() => _hidePassword = !_hidePassword),
                 ),
               ),
             ),
@@ -236,23 +278,50 @@ class _LoginScreenState extends State<LoginScreen> {
               width: double.infinity,
               height: 56,
               child: FilledButton(
-                style: FilledButton.styleFrom(backgroundColor: accent, foregroundColor: Colors.black),
+                style: FilledButton.styleFrom(
+                  backgroundColor: accent,
+                  foregroundColor: Colors.black,
+                ),
                 onPressed: _busy ? null : _login,
                 child: _loading
-                    ? const SizedBox(width: 23, height: 23, child: CircularProgressIndicator(strokeWidth: 3, color: Colors.black))
-                    : const Text('E-posta ile Giriş Yap', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900)),
+                    ? const SizedBox(
+                        width: 23,
+                        height: 23,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 3,
+                          color: Colors.black,
+                        ),
+                      )
+                    : const Text(
+                        'E-posta ile Giriş Yap',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
               ),
             ),
             const SizedBox(height: 18),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text('Hesabın yok mu?', style: TextStyle(color: Colors.white54)),
+                const Text(
+                  'Hesabın yok mu?',
+                  style: TextStyle(color: Colors.white54),
+                ),
                 TextButton(
                   onPressed: _busy
                       ? null
-                      : () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RegisterScreen())),
-                  child: const Text('Kayıt Ol', style: TextStyle(fontWeight: FontWeight.bold)),
+                      : () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const RegisterScreen(),
+                          ),
+                        ),
+                  child: const Text(
+                    'Kayıt Ol',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
                 ),
               ],
             ),
@@ -261,7 +330,8 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
 
-    if (widget.embedded) return ColoredBox(color: const Color(0xFF090A0C), child: body);
+    if (widget.embedded)
+      return ColoredBox(color: const Color(0xFF090A0C), child: body);
     return Scaffold(
       backgroundColor: const Color(0xFF090A0C),
       appBar: AppBar(
@@ -278,13 +348,22 @@ class _LoginScreenState extends State<LoginScreen> {
     required IconData icon,
     Widget? suffix,
   }) => InputDecoration(
-        labelText: label,
-        prefixIcon: Icon(icon, color: const Color(0xFFB7BCC2)),
-        suffixIcon: suffix,
-        filled: true,
-        fillColor: const Color(0xFF121416),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(18), borderSide: BorderSide.none),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(18), borderSide: const BorderSide(color: Colors.white12)),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(18), borderSide: const BorderSide(color: Color(0xFFB7BCC2))),
-      );
+    labelText: label,
+    prefixIcon: Icon(icon, color: const Color(0xFFB7BCC2)),
+    suffixIcon: suffix,
+    filled: true,
+    fillColor: const Color(0xFF121416),
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(18),
+      borderSide: BorderSide.none,
+    ),
+    enabledBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(18),
+      borderSide: const BorderSide(color: Colors.white12),
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(18),
+      borderSide: const BorderSide(color: Color(0xFFB7BCC2)),
+    ),
+  );
 }

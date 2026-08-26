@@ -38,15 +38,9 @@ class SocialService {
     };
 
     if (!snapshot.exists) {
-      await userRef.set({
-        ...data,
-        'createdAt': FieldValue.serverTimestamp(),
-      });
+      await userRef.set({...data, 'createdAt': FieldValue.serverTimestamp()});
     } else {
-      await userRef.set(
-        data,
-        SetOptions(merge: true),
-      );
+      await userRef.set(data, SetOptions(merge: true));
     }
   }
 
@@ -54,9 +48,7 @@ class SocialService {
   // KULLANICI PROFİLİ
   // =========================================================
 
-  Stream<DocumentSnapshot<Map<String, dynamic>>> userProfile(
-    String userId,
-  ) {
+  Stream<DocumentSnapshot<Map<String, dynamic>>> userProfile(String userId) {
     return _firestore.collection('users').doc(userId).snapshots();
   }
 
@@ -64,9 +56,7 @@ class SocialService {
   // TAKİP EDİYOR MU?
   // =========================================================
 
-  Stream<bool> isFollowing(
-    String targetUserId,
-  ) {
+  Stream<bool> isFollowing(String targetUserId) {
     final user = _auth.currentUser;
 
     if (user == null) {
@@ -79,30 +69,22 @@ class SocialService {
         .collection('following')
         .doc(targetUserId)
         .snapshots()
-        .map(
-          (snapshot) => snapshot.exists,
-        );
+        .map((snapshot) => snapshot.exists);
   }
 
   // =========================================================
   // TAKİP ET
   // =========================================================
 
-  Future<void> followUser(
-    String targetUserId,
-  ) async {
+  Future<void> followUser(String targetUserId) async {
     final user = _auth.currentUser;
 
     if (user == null) {
-      throw Exception(
-        'Takip etmek için giriş yapmalısın.',
-      );
+      throw Exception('Takip etmek için giriş yapmalısın.');
     }
 
     if (user.uid == targetUserId) {
-      throw Exception(
-        'Kendini takip edemezsin.',
-      );
+      throw Exception('Kendini takip edemezsin.');
     }
 
     await ensureUserProfile();
@@ -127,25 +109,19 @@ class SocialService {
 
     final batch = _firestore.batch();
 
-    batch.set(
-      followingRef,
-      {
-        'userId': targetUserId,
-        'createdAt': FieldValue.serverTimestamp(),
-      },
-    );
+    batch.set(followingRef, {
+      'userId': targetUserId,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
 
-    batch.set(
-      followerRef,
-      {
-        'userId': user.uid,
-        'displayName': user.displayName?.trim().isNotEmpty == true
-            ? user.displayName
-            : 'Fotoğrafçı',
-        'photoUrl': user.photoURL ?? '',
-        'createdAt': FieldValue.serverTimestamp(),
-      },
-    );
+    batch.set(followerRef, {
+      'userId': user.uid,
+      'displayName': user.displayName?.trim().isNotEmpty == true
+          ? user.displayName
+          : 'Fotoğrafçı',
+      'photoUrl': user.photoURL ?? '',
+      'createdAt': FieldValue.serverTimestamp(),
+    });
 
     await batch.commit();
 
@@ -169,15 +145,11 @@ class SocialService {
   // TAKİBİ BIRAK
   // =========================================================
 
-  Future<void> unfollowUser(
-    String targetUserId,
-  ) async {
+  Future<void> unfollowUser(String targetUserId) async {
     final user = _auth.currentUser;
 
     if (user == null) {
-      throw Exception(
-        'Giriş yapmalısın.',
-      );
+      throw Exception('Giriş yapmalısın.');
     }
 
     if (user.uid == targetUserId) {
@@ -198,13 +170,9 @@ class SocialService {
 
     final batch = _firestore.batch();
 
-    batch.delete(
-      followingRef,
-    );
+    batch.delete(followingRef);
 
-    batch.delete(
-      followerRef,
-    );
+    batch.delete(followerRef);
 
     await batch.commit();
   }
@@ -213,15 +181,11 @@ class SocialService {
   // TAKİP ET / TAKİBİ BIRAK
   // =========================================================
 
-  Future<void> toggleFollow(
-    String targetUserId,
-  ) async {
+  Future<void> toggleFollow(String targetUserId) async {
     final user = _auth.currentUser;
 
     if (user == null) {
-      throw Exception(
-        'Giriş yapmalısın.',
-      );
+      throw Exception('Giriş yapmalısın.');
     }
 
     final followingRef = _firestore
@@ -233,13 +197,9 @@ class SocialService {
     final snapshot = await followingRef.get();
 
     if (snapshot.exists) {
-      await unfollowUser(
-        targetUserId,
-      );
+      await unfollowUser(targetUserId);
     } else {
-      await followUser(
-        targetUserId,
-      );
+      await followUser(targetUserId);
     }
   }
 
@@ -247,34 +207,26 @@ class SocialService {
   // TAKİPÇİ SAYISI
   // =========================================================
 
-  Stream<int> followersCount(
-    String userId,
-  ) {
+  Stream<int> followersCount(String userId) {
     return _firestore
         .collection('users')
         .doc(userId)
         .collection('followers')
         .snapshots()
-        .map(
-          (snapshot) => snapshot.docs.length,
-        );
+        .map((snapshot) => snapshot.docs.length);
   }
 
   // =========================================================
   // TAKİP EDİLEN SAYISI
   // =========================================================
 
-  Stream<int> followingCount(
-    String userId,
-  ) {
+  Stream<int> followingCount(String userId) {
     return _firestore
         .collection('users')
         .doc(userId)
         .collection('following')
         .snapshots()
-        .map(
-          (snapshot) => snapshot.docs.length,
-        );
+        .map((snapshot) => snapshot.docs.length);
   }
 
   // =========================================================
@@ -286,9 +238,7 @@ class SocialService {
     final user = _auth.currentUser;
 
     if (user == null) {
-      return Stream.value(
-        <String>[],
-      );
+      return Stream.value(<String>[]);
     }
 
     return _firestore
@@ -296,22 +246,14 @@ class SocialService {
         .doc(user.uid)
         .collection('following')
         .snapshots()
-        .map(
-          (snapshot) => snapshot.docs
-              .map(
-                (doc) => doc.id,
-              )
-              .toList(),
-        );
+        .map((snapshot) => snapshot.docs.map((doc) => doc.id).toList());
   }
 
   // =========================================================
   // TAKİPÇİLER
   // =========================================================
 
-  Stream<QuerySnapshot<Map<String, dynamic>>> followers(
-    String userId,
-  ) {
+  Stream<QuerySnapshot<Map<String, dynamic>>> followers(String userId) {
     return _firestore
         .collection('users')
         .doc(userId)
@@ -323,9 +265,7 @@ class SocialService {
   // TAKİP EDİLENLER
   // =========================================================
 
-  Stream<QuerySnapshot<Map<String, dynamic>>> following(
-    String userId,
-  ) {
+  Stream<QuerySnapshot<Map<String, dynamic>>> following(String userId) {
     return _firestore
         .collection('users')
         .doc(userId)
@@ -337,15 +277,10 @@ class SocialService {
   // KULLANICININ PAYLAŞIMLARI
   // =========================================================
 
-  Stream<QuerySnapshot<Map<String, dynamic>>> userPosts(
-    String userId,
-  ) {
+  Stream<QuerySnapshot<Map<String, dynamic>>> userPosts(String userId) {
     return _firestore
         .collection('posts')
-        .where(
-          'userId',
-          isEqualTo: userId,
-        )
+        .where('userId', isEqualTo: userId)
         .snapshots();
   }
 }

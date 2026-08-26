@@ -49,8 +49,9 @@ class RouteSelectionService {
         if (permission == LocationPermission.always ||
             permission == LocationPermission.whileInUse) {
           final position = await Geolocator.getCurrentPosition(
-            locationSettings:
-                const LocationSettings(accuracy: LocationAccuracy.medium),
+            locationSettings: const LocationSettings(
+              accuracy: LocationAccuracy.medium,
+            ),
           );
           params['origin'] = '${position.latitude},${position.longitude}';
         }

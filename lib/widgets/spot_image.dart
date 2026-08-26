@@ -39,7 +39,8 @@ class SpotImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final verified = verifiedTravelImageRegistryGenerated[spot.id] ??
+    final verified =
+        verifiedTravelImageRegistryGenerated[spot.id] ??
         verifiedTravelImageRegistryBatch12[spot.id] ??
         verifiedTravelImageRegistryBatch11[spot.id] ??
         verifiedTravelImageRegistryBatch10[spot.id] ??
@@ -129,27 +130,24 @@ class SpotImage extends StatelessWidget {
   }
 
   Widget _loadingPlaceholder() => Container(
-        width: width,
-        height: height,
-        color: const Color(0xFF1A1D20),
-        alignment: Alignment.center,
-        child: const SizedBox(
-          width: 22,
-          height: 22,
-          child: CircularProgressIndicator(
-            strokeWidth: 2,
-            color: Color(0xFFB7BCC2),
-          ),
-        ),
-      );
+    width: width,
+    height: height,
+    color: const Color(0xFF1A1D20),
+    alignment: Alignment.center,
+    child: const SizedBox(
+      width: 22,
+      height: 22,
+      child: CircularProgressIndicator(
+        strokeWidth: 2,
+        color: Color(0xFFB7BCC2),
+      ),
+    ),
+  );
 
   Widget _legacyOrSearch({bool preview = true}) {
     if (spot.imageUrl.trim().isNotEmpty) {
       final url = preview ? _previewUrl(spot.imageUrl) : spot.imageUrl;
-      return _cachedImage(
-        url,
-        onError: _searchedImage,
-      );
+      return _cachedImage(url, onError: _searchedImage);
     }
     return _searchedImage();
   }
@@ -166,10 +164,7 @@ class SpotImage extends StatelessWidget {
 
   String _previewUrl(String sourceUrl) {
     return sourceUrl
-        .replaceFirst(
-          RegExp(r'/(3840|2560|1920|1280|1000|960)px-'),
-          '/500px-',
-        )
+        .replaceFirst(RegExp(r'/(3840|2560|1920|1280|1000|960)px-'), '/500px-')
         .replaceFirst(
           RegExp(r'([?&])width=(3840|2560|1920|1280|1000|960)'),
           r'$1width=500',
@@ -178,45 +173,40 @@ class SpotImage extends StatelessWidget {
 
   Map<String, String>? _httpHeaders(String url) {
     final host = Uri.tryParse(url)?.host.toLowerCase() ?? '';
-    if (!host.endsWith('wikimedia.org') &&
-        !host.endsWith('wikipedia.org')) {
+    if (!host.endsWith('wikimedia.org') && !host.endsWith('wikipedia.org')) {
       return null;
     }
     return const <String, String>{
-      'User-Agent':
-          'BestPhotoSpot/1.0 (contact: turgutburaktan@gmail.com)',
+      'User-Agent': 'BestPhotoSpot/1.0 (contact: turgutburaktan@gmail.com)',
       'Accept': 'image/avif,image/webp,image/apng,image/*,*/*;q=0.8',
     };
   }
 
   Widget _searchedImage() => FutureBuilder<String?>(
-        future: SpotImageSearchService.instance.findImage(spot),
-        builder: (context, snapshot) {
-          final url = snapshot.data?.trim() ?? '';
-          if (url.isNotEmpty) {
-            return _cachedImage(
-              highResolution ? url : _previewUrl(url),
-              onError: () {
-                SpotImageSearchService.instance.invalidate(spot, url);
-                return _fallback();
-              },
-            );
-          }
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return _loadingPlaceholder();
-          }
-          return _fallback();
-        },
-      );
+    future: SpotImageSearchService.instance.findImage(spot),
+    builder: (context, snapshot) {
+      final url = snapshot.data?.trim() ?? '';
+      if (url.isNotEmpty) {
+        return _cachedImage(
+          highResolution ? url : _previewUrl(url),
+          onError: () {
+            SpotImageSearchService.instance.invalidate(spot, url);
+            return _fallback();
+          },
+        );
+      }
+      if (snapshot.connectionState == ConnectionState.waiting) {
+        return _loadingPlaceholder();
+      }
+      return _fallback();
+    },
+  );
 
   Widget _fallback() => Container(
-        width: width,
-        height: height,
-        color: const Color(0xFF1A1D20),
-        alignment: Alignment.center,
-        child: const Icon(
-          Icons.photo_camera_back_outlined,
-          color: Colors.white38,
-        ),
-      );
+    width: width,
+    height: height,
+    color: const Color(0xFF1A1D20),
+    alignment: Alignment.center,
+    child: const Icon(Icons.photo_camera_back_outlined, color: Colors.white38),
+  );
 }

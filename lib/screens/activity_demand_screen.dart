@@ -29,7 +29,14 @@ class _ActivityDemandScreenState extends State<ActivityDemandScreen> {
   bool _busy = false;
 
   static const activities = <String>[
-    'Fotoğraf', 'Kahve', 'Yürüyüş', 'Kamp', 'Spor', 'Oyun', 'Müzik', 'Gezi'
+    'Fotoğraf',
+    'Kahve',
+    'Yürüyüş',
+    'Kamp',
+    'Spor',
+    'Oyun',
+    'Müzik',
+    'Gezi',
   ];
 
   @override
@@ -38,7 +45,8 @@ class _ActivityDemandScreenState extends State<ActivityDemandScreen> {
     if ((widget.initialCity ?? '').trim().isNotEmpty) {
       _cityController.text = widget.initialCity!.trim();
     }
-    if (widget.initialActivity != null && activities.contains(widget.initialActivity)) {
+    if (widget.initialActivity != null &&
+        activities.contains(widget.initialActivity)) {
       _activity = widget.initialActivity!;
     }
   }
@@ -50,16 +58,16 @@ class _ActivityDemandScreenState extends State<ActivityDemandScreen> {
   }
 
   SocialEventType _eventType(String value) => switch (value) {
-        'Fotoğraf' => SocialEventType.photography,
-        'Yürüyüş' => SocialEventType.walking,
-        'Kamp' => SocialEventType.camping,
-        'Spor' => SocialEventType.social,
-        'Oyun' => SocialEventType.gaming,
-        'Müzik' => SocialEventType.social,
-        'Gezi' => SocialEventType.trip,
-        'Kahve' => SocialEventType.foodDrink,
-        _ => SocialEventType.social,
-      };
+    'Fotoğraf' => SocialEventType.photography,
+    'Yürüyüş' => SocialEventType.walking,
+    'Kamp' => SocialEventType.camping,
+    'Spor' => SocialEventType.social,
+    'Oyun' => SocialEventType.gaming,
+    'Müzik' => SocialEventType.social,
+    'Gezi' => SocialEventType.trip,
+    'Kahve' => SocialEventType.foodDrink,
+    _ => SocialEventType.social,
+  };
 
   DateTime _startForWindow() {
     final now = DateTime.now();
@@ -132,8 +140,7 @@ class _ActivityDemandScreenState extends State<ActivityDemandScreen> {
           initialCapacity: interestedCount.clamp(4, 50),
           initialCity: _cityController.text.trim(),
           initialLocationLabel: location.label,
-          initialDescription:
-              'Bu buluşma aynı aktiviteyi yapmak isteyen kullanıcıların talebinden oluşturuldu.',
+          initialDescription: 'Bu buluşma aynı aktiviteyi yapmak isteyen kullanıcıların talebinden oluşturuldu.',
           initialLatitude: location.latitude,
           initialLongitude: location.longitude,
         ),
@@ -165,12 +172,16 @@ class _ActivityDemandScreenState extends State<ActivityDemandScreen> {
         stream: ActivityDemandService.instance.watchActive(),
         builder: (context, snapshot) {
           final all = snapshot.data ?? const <ActivityDemand>[];
-          final matching = all.where((d) => ActivityDemandService.instance.matches(
-                d,
-                activity: _activity,
-                city: _cityController.text,
-                window: _window,
-              )).toList();
+          final matching = all
+              .where(
+                (d) => ActivityDemandService.instance.matches(
+                  d,
+                  activity: _activity,
+                  city: _cityController.text,
+                  window: _window,
+                ),
+              )
+              .toList();
           final selected = uid != null && matching.any((d) => d.userId == uid);
           final count = matching.length;
 
@@ -194,11 +205,15 @@ class _ActivityDemandScreenState extends State<ActivityDemandScreen> {
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
-                children: activities.map((item) => ChoiceChip(
-                  label: Text(item),
-                  selected: _activity == item,
-                  onSelected: (_) => setState(() => _activity = item),
-                )).toList(),
+                children: activities
+                    .map(
+                      (item) => ChoiceChip(
+                        label: Text(item),
+                        selected: _activity == item,
+                        onSelected: (_) => setState(() => _activity = item),
+                      ),
+                    )
+                    .toList(),
               ),
               const SizedBox(height: 18),
               SegmentedButton<String>(
@@ -208,7 +223,8 @@ class _ActivityDemandScreenState extends State<ActivityDemandScreen> {
                   ButtonSegment(value: 'weekend', label: Text('Hafta sonu')),
                 ],
                 selected: {_window},
-                onSelectionChanged: (value) => setState(() => _window = value.first),
+                onSelectionChanged: (value) =>
+                    setState(() => _window = value.first),
               ),
               const SizedBox(height: 24),
               Container(
@@ -221,11 +237,21 @@ class _ActivityDemandScreenState extends State<ActivityDemandScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('$_activity • ${_cityController.text.trim().isEmpty ? 'Şehir seç' : _cityController.text.trim()}',
-                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
+                    Text(
+                      '$_activity • ${_cityController.text.trim().isEmpty ? 'Şehir seç' : _cityController.text.trim()}',
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
                     const SizedBox(height: 8),
-                    Text('$count kişi aynı şeyi yapmak istiyor',
-                        style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900)),
+                    Text(
+                      '$count kişi aynı şeyi yapmak istiyor',
+                      style: const TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
                     const SizedBox(height: 6),
                     Text(
                       count >= 20
@@ -238,8 +264,14 @@ class _ActivityDemandScreenState extends State<ActivityDemandScreen> {
                       width: double.infinity,
                       child: FilledButton.icon(
                         onPressed: _busy ? null : () => _toggleDemand(selected),
-                        icon: Icon(selected ? Icons.check_circle : Icons.add_circle_outline),
-                        label: Text(selected ? 'Ben de istiyorum ✓' : 'Ben de istiyorum'),
+                        icon: Icon(
+                          selected
+                              ? Icons.check_circle
+                              : Icons.add_circle_outline,
+                        ),
+                        label: Text(
+                          selected ? 'Ben de istiyorum ✓' : 'Ben de istiyorum',
+                        ),
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -255,21 +287,29 @@ class _ActivityDemandScreenState extends State<ActivityDemandScreen> {
                 ),
               ),
               const SizedBox(height: 24),
-              const Text('Şu an popüler talepler',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
+              const Text(
+                'Şu an popüler talepler',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
+              ),
               const SizedBox(height: 10),
               ...activities.map((activity) {
-                final activityCount = all.where((d) => ActivityDemandService.instance.matches(
-                      d,
-                      activity: activity,
-                      city: _cityController.text,
-                      window: _window,
-                    )).length;
+                final activityCount = all
+                    .where(
+                      (d) => ActivityDemandService.instance.matches(
+                        d,
+                        activity: activity,
+                        city: _cityController.text,
+                        window: _window,
+                      ),
+                    )
+                    .length;
                 return ListTile(
                   contentPadding: EdgeInsets.zero,
                   title: Text(activity),
-                  trailing: Text('$activityCount kişi',
-                      style: const TextStyle(fontWeight: FontWeight.w800)),
+                  trailing: Text(
+                    '$activityCount kişi',
+                    style: const TextStyle(fontWeight: FontWeight.w800),
+                  ),
                   onTap: () => setState(() => _activity = activity),
                 );
               }),

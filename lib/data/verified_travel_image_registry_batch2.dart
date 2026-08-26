@@ -41,7 +41,8 @@ const verifiedTravelImageRegistryBatch2 = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons',
     author: 'Ingo Mehling',
     license: 'CC BY-SA 3.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Pergamon_Acropolis.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Pergamon_Acropolis.jpg',
   ),
   'aphrodisias': SpotImageInfo(
     assetPath: 'assets/spots/aphrodisias.jpg',
@@ -49,7 +50,8 @@ const verifiedTravelImageRegistryBatch2 = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons',
     author: 'Brocken Inaglory',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Aphrodisias_turkey.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Aphrodisias_turkey.jpg',
   ),
   'gobeklitepe': SpotImageInfo(
     assetPath: 'assets/spots/gobeklitepe.jpg',
@@ -57,7 +59,8 @@ const verifiedTravelImageRegistryBatch2 = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons',
     author: 'Teomancimit',
     license: 'CC BY-SA 3.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:G%C3%B6bekli_Tepe%2C_Urfa.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:G%C3%B6bekli_Tepe%2C_Urfa.jpg',
   ),
   'ani-oren-yeri': SpotImageInfo(
     assetPath: 'assets/spots/ani-oren-yeri.jpg',
@@ -97,6 +100,7 @@ const verifiedTravelImageRegistryBatch2 = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons',
     author: 'Bernard Gagnon',
     license: 'CC BY-SA 3.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Lion_Gate%2C_Hattusa_01.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Lion_Gate%2C_Hattusa_01.jpg',
   ),
 };

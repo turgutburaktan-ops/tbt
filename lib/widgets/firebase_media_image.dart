@@ -83,7 +83,10 @@ class _FirebaseMediaImageState extends State<FirebaseMediaImage> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.imageUrl != widget.imageUrl ||
         oldWidget.storagePath != widget.storagePath ||
-        !_samePaths(oldWidget.fallbackStoragePaths, widget.fallbackStoragePaths)) {
+        !_samePaths(
+          oldWidget.fallbackStoragePaths,
+          widget.fallbackStoragePaths,
+        )) {
       _recoveryAttempted = false;
       _recoveringBytes = false;
       _resolvedBytes = null;
@@ -183,22 +186,29 @@ class _FirebaseMediaImageState extends State<FirebaseMediaImage> {
         uri.host.endsWith('.firebasestorage.app');
   }
 
-  Widget _placeholder() => widget.placeholder ??
+  Widget _placeholder() =>
+      widget.placeholder ??
       const ColoredBox(
         color: Color(0xFF171A1D),
         child: Center(
           child: SizedBox(
             width: 22,
             height: 22,
-            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white24),
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: Colors.white24,
+            ),
           ),
         ),
       );
 
-  Widget _error() => widget.errorWidget ??
+  Widget _error() =>
+      widget.errorWidget ??
       const ColoredBox(
         color: Color(0xFF171A1D),
-        child: Center(child: Icon(Icons.broken_image_outlined, color: Colors.white30)),
+        child: Center(
+          child: Icon(Icons.broken_image_outlined, color: Colors.white30),
+        ),
       );
 
   Widget _memoryImage(Uint8List bytes) {
@@ -207,12 +217,13 @@ class _FirebaseMediaImageState extends State<FirebaseMediaImage> {
         final logicalWidth = widget.width != null && widget.width!.isFinite
             ? widget.width!
             : constraints.maxWidth.isFinite
-                ? constraints.maxWidth
-                : MediaQuery.sizeOf(context).width;
-        final deviceWidth = (logicalWidth * MediaQuery.devicePixelRatioOf(context))
-            .round()
-            .clamp(64, 2160)
-            .toInt();
+            ? constraints.maxWidth
+            : MediaQuery.sizeOf(context).width;
+        final deviceWidth =
+            (logicalWidth * MediaQuery.devicePixelRatioOf(context))
+                .round()
+                .clamp(64, 2160)
+                .toInt();
         return Image.memory(
           bytes,
           width: widget.width,
@@ -237,7 +248,8 @@ class _FirebaseMediaImageState extends State<FirebaseMediaImage> {
     return FutureBuilder<String?>(
       future: _resolvedUrl,
       builder: (context, snapshot) {
-        if (snapshot.connectionState != ConnectionState.done) return _placeholder();
+        if (snapshot.connectionState != ConnectionState.done)
+          return _placeholder();
         final url = snapshot.data;
         if (url == null || url.isEmpty) return _error();
         return _withPostZoom(

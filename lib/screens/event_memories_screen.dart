@@ -43,9 +43,11 @@ class _EventMemoriesScreenState extends State<EventMemoriesScreen> {
 
   Future<void> _addMemory() async {
     if (!_canAdd || _uploading) {
-      _message(!_started
-          ? 'Anılar etkinlik başladıktan sonra eklenebilir.'
-          : 'Yalnızca etkinlik katılımcıları anı ekleyebilir.');
+      _message(
+        !_started
+            ? 'Anılar etkinlik başladıktan sonra eklenebilir.'
+            : 'Yalnızca etkinlik katılımcıları anı ekleyebilir.',
+      );
       return;
     }
 
@@ -58,8 +60,10 @@ class _EventMemoriesScreenState extends State<EventMemoriesScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text('Etkinlik anısı ekle',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
+              const Text(
+                'Etkinlik anısı ekle',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
+              ),
               const SizedBox(height: 10),
               ListTile(
                 leading: const Icon(Icons.photo_library_outlined),
@@ -148,12 +152,14 @@ class _EventMemoriesScreenState extends State<EventMemoriesScreen> {
                 height: 50,
                 child: FilledButton.icon(
                   onPressed: () => Navigator.pop(sheet, true),
-                  icon: Icon(isVideo
-                      ? Icons.video_call_rounded
-                      : Icons.add_photo_alternate_outlined),
-                  label: Text(isVideo
-                      ? 'Video Anısını Ekle'
-                      : 'Etkinlik Anılarına Ekle'),
+                  icon: Icon(
+                    isVideo
+                        ? Icons.video_call_rounded
+                        : Icons.add_photo_alternate_outlined,
+                  ),
+                  label: Text(
+                    isVideo ? 'Video Anısını Ekle' : 'Etkinlik Anılarına Ekle',
+                  ),
                 ),
               ),
             ],
@@ -192,9 +198,11 @@ class _EventMemoriesScreenState extends State<EventMemoriesScreen> {
           eventTitle: widget.event.title,
         );
       }
-      _message(widget.event.visibility == EventVisibility.public
-          ? 'Anı eklendi ve sosyal akışta da paylaşıldı.'
-          : 'Anı eklendi. Bu özel etkinliğin görünürlüğü korunuyor.');
+      _message(
+        widget.event.visibility == EventVisibility.public
+            ? 'Anı eklendi ve sosyal akışta da paylaşıldı.'
+            : 'Anı eklendi. Bu özel etkinliğin görünürlüğü korunuyor.',
+      );
     } catch (e) {
       _message(e.toString().replaceFirst('Exception: ', ''));
     } finally {
@@ -210,8 +218,8 @@ class _EventMemoriesScreenState extends State<EventMemoriesScreen> {
     final image = (data['imageUrl'] ?? '').toString();
     final storagePath = (data['storagePath'] ?? '').toString();
     final thumbnailUrl = (data['thumbnailUrl'] ?? image).toString();
-    final thumbnailStorage =
-        (data['thumbnailStoragePath'] ?? storagePath).toString();
+    final thumbnailStorage = (data['thumbnailStoragePath'] ?? storagePath)
+        .toString();
 
     if (isVideo && videoUrl.isNotEmpty) {
       return AppVideoPlayer.network(
@@ -268,8 +276,10 @@ class _EventMemoriesScreenState extends State<EventMemoriesScreen> {
             return Center(
               child: Padding(
                 padding: const EdgeInsets.all(28),
-                child: Text('Anılar yüklenemedi.\n${snapshot.error}',
-                    textAlign: TextAlign.center),
+                child: Text(
+                  'Anılar yüklenemedi.\n${snapshot.error}',
+                  textAlign: TextAlign.center,
+                ),
               ),
             );
           }
@@ -294,21 +304,29 @@ class _EventMemoriesScreenState extends State<EventMemoriesScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(widget.event.title,
-                        style: const TextStyle(
-                            fontSize: 20, fontWeight: FontWeight.w900)),
+                    Text(
+                      widget.event.title,
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
                     const SizedBox(height: 5),
                     Text(
                       '${widget.event.participantCount} katılımcı • ${docs.length} anı',
                       style: const TextStyle(color: Colors.white60),
                     ),
                     const SizedBox(height: 5),
-                    const Text('Fotoğraf veya 30 sn video paylaşılabilir.',
-                        style: TextStyle(color: Colors.white38, fontSize: 12)),
+                    const Text(
+                      'Fotoğraf veya 30 sn video paylaşılabilir.',
+                      style: TextStyle(color: Colors.white38, fontSize: 12),
+                    ),
                     if (!_started) ...[
                       const SizedBox(height: 8),
-                      const Text('Anılar etkinlik başladıktan sonra açılacak.',
-                          style: TextStyle(color: Colors.white54)),
+                      const Text(
+                        'Anılar etkinlik başladıktan sonra açılacak.',
+                        style: TextStyle(color: Colors.white54),
+                      ),
                     ],
                   ],
                 ),
@@ -323,13 +341,14 @@ class _EventMemoriesScreenState extends State<EventMemoriesScreen> {
                   ),
                   child: Column(
                     children: [
-                      const Icon(Icons.photo_library_outlined,
-                          size: 48, color: Colors.white30),
+                      const Icon(
+                        Icons.photo_library_outlined,
+                        size: 48,
+                        color: Colors.white30,
+                      ),
                       const SizedBox(height: 10),
                       Text(
-                        _started
-                            ? 'Henüz anı eklenmemiş.'
-                            : 'Etkinlikten sonra fotoğraf ve videolar burada birikecek.',
+                        _started ? 'Henüz anı eklenmemiş.' : 'Etkinlikten sonra fotoğraf ve videolar burada birikecek.',
                         textAlign: TextAlign.center,
                         style: const TextStyle(color: Colors.white60),
                       ),
@@ -342,7 +361,8 @@ class _EventMemoriesScreenState extends State<EventMemoriesScreen> {
                   final caption = (d['caption'] ?? '').toString();
                   final name = (d['userName'] ?? 'Katılımcı').toString();
                   final uid = (d['userId'] ?? '').toString();
-                  final isVideo = (d['mediaType'] ?? '').toString() == 'video' ||
+                  final isVideo =
+                      (d['mediaType'] ?? '').toString() == 'video' ||
                       (d['videoUrl'] ?? '').toString().isNotEmpty;
                   return Container(
                     margin: const EdgeInsets.only(bottom: 14),
@@ -366,9 +386,12 @@ class _EventMemoriesScreenState extends State<EventMemoriesScreen> {
                               ),
                               const SizedBox(width: 9),
                               Expanded(
-                                child: Text(name,
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.w900)),
+                                child: Text(
+                                  name,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w900,
+                                  ),
+                                ),
                               ),
                               Icon(
                                 isVideo
@@ -378,24 +401,26 @@ class _EventMemoriesScreenState extends State<EventMemoriesScreen> {
                                 color: Colors.white54,
                               ),
                               const SizedBox(width: 5),
-                              const Text('Etkinlik anısı',
-                                  style: TextStyle(
-                                      fontSize: 11, color: Colors.white54)),
+                              const Text(
+                                'Etkinlik anısı',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: Colors.white54,
+                                ),
+                              ),
                             ],
                           ),
                         ),
-                        AspectRatio(
-                          aspectRatio: 4 / 5,
-                          child: _memoryMedia(d),
-                        ),
+                        AspectRatio(aspectRatio: 4 / 5, child: _memoryMedia(d)),
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 7),
                           child: ContentEngagementBar(
                             collection: 'event_memories',
                             contentId: doc.id,
                             ownerId: uid,
-                            title:
-                                caption.isEmpty ? widget.event.title : caption,
+                            title: caption.isEmpty
+                                ? widget.event.title
+                                : caption,
                             sourceType: 'event_memory',
                           ),
                         ),
@@ -403,16 +428,22 @@ class _EventMemoriesScreenState extends State<EventMemoriesScreen> {
                           Padding(
                             padding: const EdgeInsets.fromLTRB(13, 0, 13, 13),
                             child: Text.rich(
-                              TextSpan(children: [
-                                TextSpan(
+                              TextSpan(
+                                children: [
+                                  TextSpan(
                                     text: '$name ',
                                     style: const TextStyle(
-                                        fontWeight: FontWeight.w900)),
-                                TextSpan(
+                                      fontWeight: FontWeight.w900,
+                                    ),
+                                  ),
+                                  TextSpan(
                                     text: caption,
                                     style: const TextStyle(
-                                        color: Colors.white70)),
-                              ]),
+                                      color: Colors.white70,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                       ],

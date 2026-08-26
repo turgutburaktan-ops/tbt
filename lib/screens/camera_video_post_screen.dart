@@ -9,10 +9,7 @@ import '../widgets/app_video_player.dart';
 class CameraVideoPostScreen extends StatefulWidget {
   final File video;
 
-  const CameraVideoPostScreen({
-    super.key,
-    required this.video,
-  });
+  const CameraVideoPostScreen({super.key, required this.video});
 
   @override
   State<CameraVideoPostScreen> createState() => _CameraVideoPostScreenState();
@@ -178,9 +175,11 @@ class _CameraVideoPostScreenState extends State<CameraVideoPostScreen> {
                       height: 18,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : Icon(_latitude == null
-                      ? Icons.location_on_outlined
-                      : Icons.location_on_rounded),
+                  : Icon(
+                      _latitude == null
+                          ? Icons.location_on_outlined
+                          : Icons.location_on_rounded,
+                    ),
               label: Text(
                 _latitude == null ? 'Konumumu Ekle' : 'Konum Eklendi ✓',
               ),

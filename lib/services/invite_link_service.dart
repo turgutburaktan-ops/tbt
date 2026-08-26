@@ -23,16 +23,16 @@ class InviteLinkService {
       Uri.https(webHost, '/event/${_safeOutgoingId(eventId)}');
 
   Uri communityAppUri(String communityId) => Uri(
-        scheme: scheme,
-        host: 'community',
-        pathSegments: [_safeOutgoingId(communityId)],
-      );
+    scheme: scheme,
+    host: 'community',
+    pathSegments: [_safeOutgoingId(communityId)],
+  );
 
   Uri eventAppUri(String eventId) => Uri(
-        scheme: scheme,
-        host: 'event',
-        pathSegments: [_safeOutgoingId(eventId)],
-      );
+    scheme: scheme,
+    host: 'event',
+    pathSegments: [_safeOutgoingId(eventId)],
+  );
 
   String _safeOutgoingId(String value) {
     final id = value.trim();
@@ -54,7 +54,8 @@ class InviteLinkService {
       return InviteLinkTarget(type: type, id: id);
     }
 
-    final isWebInvite = incomingScheme == 'https' &&
+    final isWebInvite =
+        incomingScheme == 'https' &&
         (incomingHost == webHost || incomingHost == firebaseHost);
     if (!isWebInvite || uri.pathSegments.length != 2) return null;
 
@@ -87,9 +88,10 @@ class InviteLinkService {
     String hostName = '',
     String city = '',
   }) async {
-    final meta = [hostName.trim(), city.trim()]
-        .where((item) => item.isNotEmpty)
-        .join(' • ');
+    final meta = [
+      hostName.trim(),
+      city.trim(),
+    ].where((item) => item.isNotEmpty).join(' • ');
     await Share.share(
       '$eventTitle etkinliğine göz at.${meta.isEmpty ? '' : '\n$meta'}\n${eventUri(eventId)}',
       subject: eventTitle,

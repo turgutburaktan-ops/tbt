@@ -17,28 +17,18 @@ class FavoritesService {
     final savedIds = prefs.getStringList(_storageKey) ?? [];
 
     savedSpots.value = demoSpots
-        .where(
-          (spot) => savedIds.contains(spot.id),
-        )
+        .where((spot) => savedIds.contains(spot.id))
         .toList();
   }
 
   static bool isSaved(PhotoSpot spot) {
-    return savedSpots.value.any(
-      (item) => item.id == spot.id,
-    );
+    return savedSpots.value.any((item) => item.id == spot.id);
   }
 
-  static Future<void> toggle(
-    PhotoSpot spot,
-  ) async {
-    final current = List<PhotoSpot>.from(
-      savedSpots.value,
-    );
+  static Future<void> toggle(PhotoSpot spot) async {
+    final current = List<PhotoSpot>.from(savedSpots.value);
 
-    final index = current.indexWhere(
-      (item) => item.id == spot.id,
-    );
+    final index = current.indexWhere((item) => item.id == spot.id);
 
     if (index >= 0) {
       current.removeAt(index);
@@ -51,16 +41,10 @@ class FavoritesService {
     await _save();
   }
 
-  static Future<void> remove(
-    PhotoSpot spot,
-  ) async {
-    final current = List<PhotoSpot>.from(
-      savedSpots.value,
-    );
+  static Future<void> remove(PhotoSpot spot) async {
+    final current = List<PhotoSpot>.from(savedSpots.value);
 
-    current.removeWhere(
-      (item) => item.id == spot.id,
-    );
+    current.removeWhere((item) => item.id == spot.id);
 
     savedSpots.value = current;
 
@@ -78,9 +62,6 @@ class FavoritesService {
 
     final ids = savedSpots.value.map((spot) => spot.id).toList();
 
-    await prefs.setStringList(
-      _storageKey,
-      ids,
-    );
+    await prefs.setStringList(_storageKey, ids);
   }
 }

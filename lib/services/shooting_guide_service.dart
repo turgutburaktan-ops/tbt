@@ -15,8 +15,10 @@ class ShootingGuideService {
 
   Future<ShootingGuide> loadForSpot(PhotoSpot spot) async {
     try {
-      final spotDoc =
-          await _firestore.collection(spotsCollection).doc(spot.id).get();
+      final spotDoc = await _firestore
+          .collection(spotsCollection)
+          .doc(spot.id)
+          .get();
       final spotData = spotDoc.data();
       final embedded = spotData?['shootingGuide'];
       if (embedded is Map) {
@@ -29,8 +31,10 @@ class ShootingGuideService {
     } catch (_) {}
 
     try {
-      final guideDoc =
-          await _firestore.collection(guidesCollection).doc(spot.id).get();
+      final guideDoc = await _firestore
+          .collection(guidesCollection)
+          .doc(spot.id)
+          .get();
       final data = guideDoc.data();
       if (data != null) {
         final guide = ShootingGuide.fromMap(spot.id, data);
@@ -42,14 +46,13 @@ class ShootingGuideService {
   }
 
   ShootingGuide _fallbackFromSpot(PhotoSpot spot) {
-    final isPortrait = spot.category.toLowerCase().contains('portre') ||
+    final isPortrait =
+        spot.category.toLowerCase().contains('portre') ||
         spot.tags.any((tag) => tag.toLowerCase().contains('portre'));
 
     return ShootingGuide(
       spotId: spot.id,
-      shootingPosition: spot.angle.trim().isNotEmpty
-          ? spot.angle.trim()
-          : 'Ana manzarayi gorecek guvenli bir noktadan baslayip birkac metre sag ve solu dene.',
+      shootingPosition: spot.angle.trim().isNotEmpty ? spot.angle.trim() : 'Ana manzarayi gorecek guvenli bir noktadan baslayip birkac metre sag ve solu dene.',
       subjectPlacement: isPortrait
           ? 'Kisiyi kadrajin tam ortasina kilitlemek yerine ucte bir cizgilerinden birine yerlestir.'
           : 'Ana yapiyi veya manzarayi ucte bir kuralina gore konumlandir; on planda derinlik veren bir oge ara.',

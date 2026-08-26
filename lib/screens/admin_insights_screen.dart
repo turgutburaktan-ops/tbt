@@ -24,17 +24,37 @@ class _AdminInsightsScreenState extends State<AdminInsightsScreen> {
   }
 
   Future<void> _load() async {
-    if (mounted) setState(() { _loading = true; _error = null; });
+    if (mounted)
+      setState(() {
+        _loading = true;
+        _error = null;
+      });
     try {
-      final token = await FirebaseAuth.instance.currentUser?.getIdTokenResult(true);
+      final token = await FirebaseAuth.instance.currentUser?.getIdTokenResult(
+        true,
+      );
       if (token?.claims?['admin'] != true) {
-        if (mounted) setState(() { _allowed = false; _loading = false; });
+        if (mounted)
+          setState(() {
+            _allowed = false;
+            _loading = false;
+          });
         return;
       }
       final data = await AdminConsoleService.instance.insights();
-      if (mounted) setState(() { _allowed = true; _data = data; _loading = false; });
+      if (mounted)
+        setState(() {
+          _allowed = true;
+          _data = data;
+          _loading = false;
+        });
     } catch (_) {
-      if (mounted) setState(() { _allowed = true; _loading = false; _error = 'Sistem verileri şu anda yüklenemedi.'; });
+      if (mounted)
+        setState(() {
+          _allowed = true;
+          _loading = false;
+          _error = 'Sistem verileri şu anda yüklenemedi.';
+        });
     }
   }
 
@@ -71,7 +91,10 @@ class _AdminInsightsScreenState extends State<AdminInsightsScreen> {
               const _HeaderCard(),
               const SizedBox(height: 14),
               if (_loading && _data == null)
-                const SizedBox(height: 220, child: Center(child: CircularProgressIndicator()))
+                const SizedBox(
+                  height: 220,
+                  child: Center(child: CircularProgressIndicator()),
+                )
               else if (_error != null && _data == null)
                 _RetryCard(onRetry: _load)
               else if (_data != null) ...[
@@ -104,48 +127,48 @@ class _HeaderCard extends StatelessWidget {
   const _HeaderCard();
   @override
   Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppColors.cyan.withValues(alpha: .32)),
-        ),
-        child: const Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(Icons.monitor_heart_outlined, color: AppColors.cyan, size: 27),
-            SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Operasyon ve kalite',
-                    maxLines: 2,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 19,
-                      height: 1.15,
-                      fontWeight: FontWeight.w900,
-                      decoration: TextDecoration.none,
-                    ),
-                  ),
-                  SizedBox(height: 6),
-                  Text(
-                    'Güvenlik, veri talepleri ve uygulama sağlığını tek yerden takip et.',
-                    style: TextStyle(
-                      color: Colors.white60,
-                      fontSize: 13,
-                      height: 1.35,
-                      decoration: TextDecoration.none,
-                    ),
-                  ),
-                ],
+    padding: const EdgeInsets.all(16),
+    decoration: BoxDecoration(
+      color: AppColors.surface,
+      borderRadius: BorderRadius.circular(20),
+      border: Border.all(color: AppColors.cyan.withValues(alpha: .32)),
+    ),
+    child: const Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(Icons.monitor_heart_outlined, color: AppColors.cyan, size: 27),
+        SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Operasyon ve kalite',
+                maxLines: 2,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 19,
+                  height: 1.15,
+                  fontWeight: FontWeight.w900,
+                  decoration: TextDecoration.none,
+                ),
               ),
-            ),
-          ],
+              SizedBox(height: 6),
+              Text(
+                'Güvenlik, veri talepleri ve uygulama sağlığını tek yerden takip et.',
+                style: TextStyle(
+                  color: Colors.white60,
+                  fontSize: 13,
+                  height: 1.35,
+                  decoration: TextDecoration.none,
+                ),
+              ),
+            ],
+          ),
         ),
-      );
+      ],
+    ),
+  );
 }
 
 class _MetricsGrid extends StatelessWidget {
@@ -156,10 +179,22 @@ class _MetricsGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     final items = [
       ('Açık şikâyet', data.value('openReports'), Icons.report_outlined),
-      ('Silme talebi', data.value('deleteRequests'), Icons.person_remove_alt_1_outlined),
-      ('Analitik olayı', data.value('analyticsEvents'), Icons.analytics_outlined),
+      (
+        'Silme talebi',
+        data.value('deleteRequests'),
+        Icons.person_remove_alt_1_outlined,
+      ),
+      (
+        'Analitik olayı',
+        data.value('analyticsEvents'),
+        Icons.analytics_outlined,
+      ),
       ('Uygulama hatası', data.value('appErrors'), Icons.bug_report_outlined),
-      ('İşletme güven raporu', data.value('trustReports'), Icons.storefront_outlined),
+      (
+        'İşletme güven raporu',
+        data.value('trustReports'),
+        Icons.storefront_outlined,
+      ),
     ];
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -242,34 +277,41 @@ class _RetryCard extends StatelessWidget {
   const _RetryCard({required this.onRetry});
   @override
   Widget build(BuildContext context) => Card(
-        child: Padding(
-          padding: const EdgeInsets.all(18),
-          child: Column(
-            children: [
-              const Icon(Icons.cloud_off_rounded, size: 40, color: Colors.white54),
-              const SizedBox(height: 10),
-              const Text('Sistem verileri yüklenemedi', style: TextStyle(fontWeight: FontWeight.w900)),
-              const SizedBox(height: 12),
-              FilledButton.icon(onPressed: onRetry, icon: const Icon(Icons.refresh_rounded), label: const Text('Tekrar Dene')),
-            ],
+    child: Padding(
+      padding: const EdgeInsets.all(18),
+      child: Column(
+        children: [
+          const Icon(Icons.cloud_off_rounded, size: 40, color: Colors.white54),
+          const SizedBox(height: 10),
+          const Text(
+            'Sistem verileri yüklenemedi',
+            style: TextStyle(fontWeight: FontWeight.w900),
           ),
-        ),
-      );
+          const SizedBox(height: 12),
+          FilledButton.icon(
+            onPressed: onRetry,
+            icon: const Icon(Icons.refresh_rounded),
+            label: const Text('Tekrar Dene'),
+          ),
+        ],
+      ),
+    ),
+  );
 }
 
 class _HealthyCard extends StatelessWidget {
   const _HealthyCard();
   @override
   Widget build(BuildContext context) => const Card(
-        child: Padding(
-          padding: EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Icon(Icons.check_circle_outline_rounded, color: AppColors.success),
-              SizedBox(width: 10),
-              Expanded(child: Text('Kayıtlı uygulama hatası yok.')),
-            ],
-          ),
-        ),
-      );
+    child: Padding(
+      padding: EdgeInsets.all(16),
+      child: Row(
+        children: [
+          Icon(Icons.check_circle_outline_rounded, color: AppColors.success),
+          SizedBox(width: 10),
+          Expanded(child: Text('Kayıtlı uygulama hatası yok.')),
+        ],
+      ),
+    ),
+  );
 }

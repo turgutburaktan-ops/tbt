@@ -33,7 +33,8 @@ const verifiedTravelImageRegistryBatch9 = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons',
     author: 'Arif miletli',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:G%C3%B6lyaz%C4%B1_Evleri.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:G%C3%B6lyaz%C4%B1_Evleri.jpg',
   ),
   'dupnisa-magarasi': SpotImageInfo(
     assetPath: 'assets/spots/dupnisa-magarasi.jpg',
@@ -57,7 +58,8 @@ const verifiedTravelImageRegistryBatch9 = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons',
     author: 'Ollios',
     license: 'CC BY-SA 3.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Taksiyarhis_Kilisesi.JPG',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Taksiyarhis_Kilisesi.JPG',
   ),
   'acarlar-longozu': SpotImageInfo(
     assetPath: 'assets/spots/acarlar-longozu.jpg',
@@ -73,7 +75,8 @@ const verifiedTravelImageRegistryBatch9 = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons',
     author: 'Buse Şabançelebi',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Horma_Canyon-Turkey.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Horma_Canyon-Turkey.jpg',
   ),
   'valla-kanyonu': SpotImageInfo(
     assetPath: 'assets/spots/valla-kanyonu.jpg',

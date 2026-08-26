@@ -84,7 +84,10 @@ class _InviteQrScannerScreenState extends State<InviteQrScannerScreen> {
             child: Text(
               'Topluluk veya etkinlik davet QR kodunu çerçevenin içine getir.',
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.white70, fontWeight: FontWeight.w700),
+              style: TextStyle(
+                color: Colors.white70,
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ),
           if (_processing)

@@ -33,7 +33,8 @@ class FeedScreen extends StatelessWidget {
         : StreamBuilder<List<String>>(
             stream: SocialService.instance.followingIds(),
             builder: (context, followingSnapshot) {
-              if (followingSnapshot.connectionState == ConnectionState.waiting) {
+              if (followingSnapshot.connectionState ==
+                  ConnectionState.waiting) {
                 return const Center(child: CircularProgressIndicator());
               }
               final followingIds = followingSnapshot.data ?? <String>[];
@@ -44,7 +45,8 @@ class FeedScreen extends StatelessWidget {
                     .limit(120)
                     .snapshots(),
                 builder: (context, postsSnapshot) {
-                  if (postsSnapshot.connectionState == ConnectionState.waiting) {
+                  if (postsSnapshot.connectionState ==
+                      ConnectionState.waiting) {
                     return const Center(child: CircularProgressIndicator());
                   }
                   if (postsSnapshot.hasError) {
@@ -86,41 +88,58 @@ class FeedScreen extends StatelessWidget {
                   }
 
                   return StreamBuilder<List<SocialEvent>>(
-                    stream: SocialEventService.instance.watchUpcoming(limit: 50),
+                    stream: SocialEventService.instance.watchUpcoming(
+                      limit: 50,
+                    ),
                     builder: (context, eventsSnapshot) {
                       final now = DateTime.now();
-                      var events = (includeEvents
-                              ? eventsSnapshot.data ?? const <SocialEvent>[]
-                              : const <SocialEvent>[])
-                          .where((event) {
-                        final visible =
-                            event.visibility == EventVisibility.public ||
-                                event.hostId == currentUser.uid ||
-                                event.participantIds.contains(currentUser.uid) ||
-                                event.allowedUserIds.contains(currentUser.uid);
-                        if (!visible) return false;
-                        if (mode == FeedMode.following) {
-                          final social = followingIds.contains(event.hostId) ||
-                              event.participantIds.any(followingIds.contains);
-                          if (!social) return false;
-                        }
-                        return true;
-                      }).toList();
+                      var events =
+                          (includeEvents
+                                  ? eventsSnapshot.data ?? const <SocialEvent>[]
+                                  : const <SocialEvent>[])
+                              .where((event) {
+                                final visible =
+                                    event.visibility ==
+                                        EventVisibility.public ||
+                                    event.hostId == currentUser.uid ||
+                                    event.participantIds.contains(
+                                      currentUser.uid,
+                                    ) ||
+                                    event.allowedUserIds.contains(
+                                      currentUser.uid,
+                                    );
+                                if (!visible) return false;
+                                if (mode == FeedMode.following) {
+                                  final social =
+                                      followingIds.contains(event.hostId) ||
+                                      event.participantIds.any(
+                                        followingIds.contains,
+                                      );
+                                  if (!social) return false;
+                                }
+                                return true;
+                              })
+                              .toList();
                       events.sort((a, b) => a.startsAt.compareTo(b.startsAt));
 
-                      final tonight = events.where((event) {
-                        final d = event.startsAt.toLocal();
-                        return d.year == now.year &&
-                            d.month == now.month &&
-                            d.day == now.day;
-                      }).take(6).toList();
+                      final tonight = events
+                          .where((event) {
+                            final d = event.startsAt.toLocal();
+                            return d.year == now.year &&
+                                d.month == now.month &&
+                                d.day == now.day;
+                          })
+                          .take(6)
+                          .toList();
 
                       final feedItems = <Widget>[];
                       if (mode == FeedMode.forYou && tonight.isNotEmpty) {
-                        feedItems.add(_TonightStrip(
-                          events: tonight,
-                          followingIds: followingIds,
-                        ));
+                        feedItems.add(
+                          _TonightStrip(
+                            events: tonight,
+                            followingIds: followingIds,
+                          ),
+                        );
                       }
 
                       var eventIndex = 0;
@@ -129,46 +148,53 @@ class FeedScreen extends StatelessWidget {
                         final data = doc.data();
                         final videoUrl = (data['videoUrl'] ?? '').toString();
                         final mediaType = (data['mediaType'] ?? '').toString();
-                        feedItems.add(_FeedPostCard(
-                          postId: doc.id,
-                          userId: (data['userId'] ?? '').toString(),
-                          userName:
-                              (data['userName'] ?? 'Topluluk üyesi').toString(),
-                          userPhotoUrl:
-                              (data['userPhotoUrl'] ?? data['photoUrl'] ?? '')
-                                  .toString(),
-                          mediaType: mediaType == 'video' || videoUrl.isNotEmpty
-                              ? 'video'
-                              : 'image',
-                          imageUrl: (data['imageUrl'] ?? '').toString(),
-                          storagePath: (data['storagePath'] ?? '').toString(),
-                          videoUrl: videoUrl,
-                          thumbnailUrl:
-                              (data['thumbnailUrl'] ?? data['imageUrl'] ?? '')
-                                  .toString(),
-                          thumbnailStoragePath:
-                              (data['thumbnailStoragePath'] ??
-                                      data['storagePath'] ??
-                                      '')
-                                  .toString(),
-                          caption: (data['caption'] ?? '').toString(),
-                          spotName: (data['spotName'] ?? '').toString(),
-                          createdAt: data['createdAt'],
-                        ));
+                        feedItems.add(
+                          _FeedPostCard(
+                            postId: doc.id,
+                            userId: (data['userId'] ?? '').toString(),
+                            userName: (data['userName'] ?? 'Topluluk üyesi')
+                                .toString(),
+                            userPhotoUrl:
+                                (data['userPhotoUrl'] ?? data['photoUrl'] ?? '')
+                                    .toString(),
+                            mediaType:
+                                mediaType == 'video' || videoUrl.isNotEmpty
+                                ? 'video'
+                                : 'image',
+                            imageUrl: (data['imageUrl'] ?? '').toString(),
+                            storagePath: (data['storagePath'] ?? '').toString(),
+                            videoUrl: videoUrl,
+                            thumbnailUrl:
+                                (data['thumbnailUrl'] ?? data['imageUrl'] ?? '')
+                                    .toString(),
+                            thumbnailStoragePath:
+                                (data['thumbnailStoragePath'] ??
+                                        data['storagePath'] ??
+                                        '')
+                                    .toString(),
+                            caption: (data['caption'] ?? '').toString(),
+                            spotName: (data['spotName'] ?? '').toString(),
+                            createdAt: data['createdAt'],
+                          ),
+                        );
                         if ((i + 1) % 4 == 0 && eventIndex < events.length) {
-                          feedItems.add(_EventFeedCard(
-                            event: events[eventIndex++],
-                            followingIds: followingIds,
-                          ));
+                          feedItems.add(
+                            _EventFeedCard(
+                              event: events[eventIndex++],
+                              followingIds: followingIds,
+                            ),
+                          );
                         }
                       }
 
                       while (eventIndex < events.length &&
                           feedItems.length < 10) {
-                        feedItems.add(_EventFeedCard(
-                          event: events[eventIndex++],
-                          followingIds: followingIds,
-                        ));
+                        feedItems.add(
+                          _EventFeedCard(
+                            event: events[eventIndex++],
+                            followingIds: followingIds,
+                          ),
+                        );
                       }
 
                       if (docs.isEmpty && events.isEmpty) {
@@ -177,7 +203,8 @@ class FeedScreen extends StatelessWidget {
 
                       return RefreshIndicator(
                         onRefresh: () async => Future<void>.delayed(
-                            const Duration(milliseconds: 450)),
+                          const Duration(milliseconds: 450),
+                        ),
                         child: ListView(
                           physics: const AlwaysScrollableScrollPhysics(),
                           padding: const EdgeInsets.only(bottom: 34),
@@ -211,48 +238,48 @@ class _TonightStrip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.fromLTRB(10, 4, 0, 12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(right: 10, bottom: 8),
-              child: Row(
-                children: [
-                  const Expanded(
-                    child: Text('Bu Akşam 🔥',
-                        style: TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.w900)),
-                  ),
-                  TextButton(
-                    onPressed: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (_) => const SocialEventsScreen()),
-                    ),
-                    child: const Text('Tümünü gör'),
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(
-              height: 154,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: events.length,
-                separatorBuilder: (_, __) => const SizedBox(width: 9),
-                itemBuilder: (_, i) => SizedBox(
-                  width: 230,
-                  child: _CompactEventCard(
-                    event: events[i],
-                    followingIds: followingIds,
-                  ),
+    padding: const EdgeInsets.fromLTRB(10, 4, 0, 12),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(right: 10, bottom: 8),
+          child: Row(
+            children: [
+              const Expanded(
+                child: Text(
+                  'Bu Akşam 🔥',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
                 ),
               ),
-            ),
-          ],
+              TextButton(
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const SocialEventsScreen()),
+                ),
+                child: const Text('Tümünü gör'),
+              ),
+            ],
+          ),
         ),
-      );
+        SizedBox(
+          height: 154,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: events.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 9),
+            itemBuilder: (_, i) => SizedBox(
+              width: 230,
+              child: _CompactEventCard(
+                event: events[i],
+                followingIds: followingIds,
+              ),
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
 }
 
 class _CompactEventCard extends StatelessWidget {
@@ -263,7 +290,9 @@ class _CompactEventCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final friendCount = event.participantIds.where(followingIds.contains).length;
+    final friendCount = event.participantIds
+        .where(followingIds.contains)
+        .length;
     final local = event.startsAt.toLocal();
     final time =
         '${local.hour.toString().padLeft(2, '0')}:${local.minute.toString().padLeft(2, '0')}';
@@ -285,23 +314,31 @@ class _CompactEventCard extends StatelessWidget {
                   color: const Color(0xFF25292E),
                   borderRadius: BorderRadius.circular(20),
                 ),
-                child: Text(time,
-                    style: const TextStyle(fontWeight: FontWeight.w900)),
+                child: Text(
+                  time,
+                  style: const TextStyle(fontWeight: FontWeight.w900),
+                ),
               ),
               const Spacer(),
-              const Icon(Icons.groups_2_outlined,
-                  size: 16, color: Colors.white54),
+              const Icon(
+                Icons.groups_2_outlined,
+                size: 16,
+                color: Colors.white54,
+              ),
               const SizedBox(width: 4),
-              Text('${event.participantCount}',
-                  style: const TextStyle(fontSize: 12, color: Colors.white70)),
+              Text(
+                '${event.participantCount}',
+                style: const TextStyle(fontSize: 12, color: Colors.white70),
+              ),
             ],
           ),
           const SizedBox(height: 10),
-          Text(event.title,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style:
-                  const TextStyle(fontSize: 15, fontWeight: FontWeight.w900)),
+          Text(
+            event.title,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w900),
+          ),
           const SizedBox(height: 5),
           Text(
             event.locationLabel.isNotEmpty ? event.locationLabel : event.city,
@@ -311,11 +348,14 @@ class _CompactEventCard extends StatelessWidget {
           ),
           const Spacer(),
           if (friendCount > 0)
-            Text('$friendCount takip ettiğin kişi katılıyor',
-                style: const TextStyle(
-                    fontSize: 11,
-                    color: Color(0xFFB7BCC2),
-                    fontWeight: FontWeight.w800)),
+            Text(
+              '$friendCount takip ettiğin kişi katılıyor',
+              style: const TextStyle(
+                fontSize: 11,
+                color: Color(0xFFB7BCC2),
+                fontWeight: FontWeight.w800,
+              ),
+            ),
         ],
       ),
     );
@@ -332,7 +372,9 @@ class _EventFeedCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     final joined = uid != null && event.participantIds.contains(uid);
-    final friendCount = event.participantIds.where(followingIds.contains).length;
+    final friendCount = event.participantIds
+        .where(followingIds.contains)
+        .length;
     final local = event.startsAt.toLocal();
     final date =
         '${local.day.toString().padLeft(2, '0')}.${local.month.toString().padLeft(2, '0')} • ${local.hour.toString().padLeft(2, '0')}:${local.minute.toString().padLeft(2, '0')}';
@@ -341,13 +383,17 @@ class _EventFeedCard extends StatelessWidget {
       try {
         await SocialEventService.instance.join(event.id);
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Etkinliğe katıldın.')));
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Etkinliğe katıldın.')));
         }
       } catch (e) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: Text(e.toString().replaceFirst('Exception: ', ''))));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(e.toString().replaceFirst('Exception: ', '')),
+            ),
+          );
         }
       }
     }
@@ -379,89 +425,117 @@ class _EventFeedCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Yakınında bir etkinlik var',
-                        style: TextStyle(
-                            color: Colors.white54,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700)),
-                    Text(event.hostName,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontWeight: FontWeight.w900)),
+                    const Text(
+                      'Yakınında bir etkinlik var',
+                      style: TextStyle(
+                        color: Colors.white54,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    Text(
+                      event.hostName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontWeight: FontWeight.w900),
+                    ),
                   ],
                 ),
               ),
               if (friendCount > 0)
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 5,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFF23272B),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Text('$friendCount arkadaş',
-                      style: const TextStyle(
-                          fontSize: 10, fontWeight: FontWeight.w800)),
+                  child: Text(
+                    '$friendCount arkadaş',
+                    style: const TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
                 ),
             ],
           ),
           const SizedBox(height: 14),
-          Text(event.title,
-              style:
-                  const TextStyle(fontSize: 19, fontWeight: FontWeight.w900)),
+          Text(
+            event.title,
+            style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w900),
+          ),
           const SizedBox(height: 8),
-          Row(children: [
-            const Icon(Icons.schedule, size: 16, color: Colors.white54),
-            const SizedBox(width: 6),
-            Text(date, style: const TextStyle(color: Colors.white70)),
-          ]),
+          Row(
+            children: [
+              const Icon(Icons.schedule, size: 16, color: Colors.white54),
+              const SizedBox(width: 6),
+              Text(date, style: const TextStyle(color: Colors.white70)),
+            ],
+          ),
           const SizedBox(height: 6),
-          Row(children: [
-            const Icon(Icons.place_outlined, size: 16, color: Colors.white54),
-            const SizedBox(width: 6),
-            Expanded(
-              child: Text(
-                event.locationLabel.isNotEmpty
-                    ? '${event.locationLabel} • ${event.city}'
-                    : event.city,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+          Row(
+            children: [
+              const Icon(Icons.place_outlined, size: 16, color: Colors.white54),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  event.locationLabel.isNotEmpty
+                      ? '${event.locationLabel} • ${event.city}'
+                      : event.city,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(color: Colors.white70),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              const Icon(
+                Icons.groups_2_outlined,
+                size: 16,
+                color: Colors.white54,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                '${event.participantCount} kişi katılıyor',
                 style: const TextStyle(color: Colors.white70),
               ),
-            ),
-          ]),
-          const SizedBox(height: 6),
-          Row(children: [
-            const Icon(Icons.groups_2_outlined,
-                size: 16, color: Colors.white54),
-            const SizedBox(width: 6),
-            Text('${event.participantCount} kişi katılıyor',
-                style: const TextStyle(color: Colors.white70)),
-          ]),
+            ],
+          ),
           const SizedBox(height: 14),
-          Row(children: [
-            Expanded(
-              child: OutlinedButton(
-                onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (_) => const SocialEventsScreen()),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const SocialEventsScreen(),
+                    ),
+                  ),
+                  child: const Text('Etkinliği Gör'),
                 ),
-                child: const Text('Etkinliği Gör'),
               ),
-            ),
-            const SizedBox(width: 9),
-            Expanded(
-              child: FilledButton(
-                onPressed: joined || event.isFull ? null : join,
-                child: Text(joined
-                    ? 'Katıldın'
-                    : event.isFull
+              const SizedBox(width: 9),
+              Expanded(
+                child: FilledButton(
+                  onPressed: joined || event.isFull ? null : join,
+                  child: Text(
+                    joined
+                        ? 'Katıldın'
+                        : event.isFull
                         ? 'Dolu'
-                        : 'Katıl'),
+                        : 'Katıl',
+                  ),
+                ),
               ),
-            ),
-          ]),
+            ],
+          ),
           const SizedBox(height: 5),
           ContentEngagementBar(
             collection: 'social_events',
@@ -481,26 +555,27 @@ class _SignedOutFeed extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => const Center(
-        child: Padding(
-          padding: EdgeInsets.all(28),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.dynamic_feed_outlined,
-                  size: 62, color: Colors.white38),
-              SizedBox(height: 14),
-              Text('Sosyal akış için giriş yap',
-                  style: TextStyle(fontSize: 19, fontWeight: FontWeight.w900)),
-              SizedBox(height: 7),
-              Text(
-                'Takip ettiğin kişilerin fotoğraf ve videolarını, keşiflerini ve etkinlik anılarını burada göreceksin.',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.white60, height: 1.4),
-              ),
-            ],
+    child: Padding(
+      padding: EdgeInsets.all(28),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.dynamic_feed_outlined, size: 62, color: Colors.white38),
+          SizedBox(height: 14),
+          Text(
+            'Sosyal akış için giriş yap',
+            style: TextStyle(fontSize: 19, fontWeight: FontWeight.w900),
           ),
-        ),
-      );
+          SizedBox(height: 7),
+          Text(
+            'Takip ettiğin kişilerin fotoğraf ve videolarını, keşiflerini ve etkinlik anılarını burada göreceksin.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.white60, height: 1.4),
+          ),
+        ],
+      ),
+    ),
+  );
 }
 
 class _EmptyFeed extends StatelessWidget {
@@ -510,36 +585,36 @@ class _EmptyFeed extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.all(30),
-        child: Column(
-          children: [
-            const SizedBox(height: 36),
-            Icon(
-              mode == FeedMode.following
-                  ? Icons.people_outline_rounded
-                  : Icons.photo_library_outlined,
-              size: 66,
-              color: Colors.white30,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              mode == FeedMode.following
-                  ? 'Takip akışın henüz sakin'
-                  : 'Henüz paylaşım yok',
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w900),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              mode == FeedMode.following
-                  ? 'Yeni insanları takip ettikçe onların paylaşımları ve katıldıkları etkinlikler burada görünür.'
-                  : 'İlk fotoğraf, video ve etkinlik anıları geldikçe burası canlanacak.',
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.white54, height: 1.4),
-            ),
-          ],
+    padding: const EdgeInsets.all(30),
+    child: Column(
+      children: [
+        const SizedBox(height: 36),
+        Icon(
+          mode == FeedMode.following
+              ? Icons.people_outline_rounded
+              : Icons.photo_library_outlined,
+          size: 66,
+          color: Colors.white30,
         ),
-      );
+        const SizedBox(height: 16),
+        Text(
+          mode == FeedMode.following
+              ? 'Takip akışın henüz sakin'
+              : 'Henüz paylaşım yok',
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w900),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          mode == FeedMode.following
+              ? 'Yeni insanları takip ettikçe onların paylaşımları ve katıldıkları etkinlikler burada görünür.'
+              : 'İlk fotoğraf, video ve etkinlik anıları geldikçe burası canlanacak.',
+          textAlign: TextAlign.center,
+          style: const TextStyle(color: Colors.white54, height: 1.4),
+        ),
+      ],
+    ),
+  );
 }
 
 class _FeedPostCard extends StatelessWidget {
@@ -613,8 +688,11 @@ class _FeedPostCard extends StatelessWidget {
       errorWidget: const ColoredBox(
         color: Color(0xFF1A1D20),
         child: Center(
-          child: Icon(Icons.broken_image_outlined,
-              color: Colors.white30, size: 52),
+          child: Icon(
+            Icons.broken_image_outlined,
+            color: Colors.white30,
+            size: 52,
+          ),
         ),
       ),
     );
@@ -622,131 +700,153 @@ class _FeedPostCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        margin: const EdgeInsets.fromLTRB(8, 4, 8, 14),
-        decoration: BoxDecoration(
-          color: const Color(0xFF0E1012),
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: const Color(0xFF20242A)),
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            InkWell(
-              onTap: userId.isEmpty
-                  ? null
-                  : () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (_) => UserProfileScreen(userId: userId)),
+    margin: const EdgeInsets.fromLTRB(8, 4, 8, 14),
+    decoration: BoxDecoration(
+      color: const Color(0xFF0E1012),
+      borderRadius: BorderRadius.circular(18),
+      border: Border.all(color: const Color(0xFF20242A)),
+    ),
+    clipBehavior: Clip.antiAlias,
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        InkWell(
+          onTap: userId.isEmpty
+              ? null
+              : () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => UserProfileScreen(userId: userId),
+                  ),
+                ),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(12, 11, 8, 10),
+            child: Row(
+              children: [
+                SizedBox(
+                  width: 40,
+                  height: 40,
+                  child: ClipOval(
+                    child: FirebaseMediaImage(
+                      imageUrl: userPhotoUrl,
+                      fallbackStoragePaths: FirebaseMediaImage.avatarPaths(
+                        userId,
                       ),
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(12, 11, 8, 10),
-                child: Row(
-                  children: [
-                    SizedBox(
-                      width: 40,
-                      height: 40,
-                      child: ClipOval(
-                        child: FirebaseMediaImage(
-                          imageUrl: userPhotoUrl,
-                          fallbackStoragePaths:
-                              FirebaseMediaImage.avatarPaths(userId),
-                          errorWidget: const ColoredBox(
-                            color: Color(0xFF22262A),
-                            child: Center(
-                              child: Icon(Icons.person_outline,
-                                  color: Colors.white60),
-                            ),
+                      errorWidget: const ColoredBox(
+                        color: Color(0xFF22262A),
+                        child: Center(
+                          child: Icon(
+                            Icons.person_outline,
+                            color: Colors.white60,
                           ),
                         ),
                       ),
                     ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
                         children: [
-                          Row(
-                            children: [
-                              Flexible(
-                                child: Text(userName,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.w900,
-                                        fontSize: 15)),
+                          Flexible(
+                            child: Text(
+                              userName,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w900,
+                                fontSize: 15,
                               ),
-                              if (_isVideo) ...[
-                                const SizedBox(width: 6),
-                                const Icon(Icons.videocam_rounded,
-                                    size: 16, color: Colors.white54),
-                              ],
-                            ],
+                            ),
                           ),
-                          Row(
-                            children: [
-                              if (spotName.isNotEmpty) ...[
-                                const Icon(Icons.location_on_outlined,
-                                    size: 13, color: Colors.white54),
-                                const SizedBox(width: 2),
-                                Flexible(
-                                  child: Text(spotName,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
-                                          fontSize: 11,
-                                          color: Colors.white54)),
+                          if (_isVideo) ...[
+                            const SizedBox(width: 6),
+                            const Icon(
+                              Icons.videocam_rounded,
+                              size: 16,
+                              color: Colors.white54,
+                            ),
+                          ],
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          if (spotName.isNotEmpty) ...[
+                            const Icon(
+                              Icons.location_on_outlined,
+                              size: 13,
+                              color: Colors.white54,
+                            ),
+                            const SizedBox(width: 2),
+                            Flexible(
+                              child: Text(
+                                spotName,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  color: Colors.white54,
                                 ),
-                                const Text('  •  ',
-                                    style: TextStyle(color: Colors.white30)),
-                              ],
-                              Text(_timeLabel(),
-                                  style: const TextStyle(
-                                      fontSize: 11, color: Colors.white38)),
-                            ],
+                              ),
+                            ),
+                            const Text(
+                              '  •  ',
+                              style: TextStyle(color: Colors.white30),
+                            ),
+                          ],
+                          Text(
+                            _timeLabel(),
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: Colors.white38,
+                            ),
                           ),
                         ],
                       ),
-                    ),
-                    const Icon(Icons.more_horiz_rounded,
-                        color: Colors.white38),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
+                const Icon(Icons.more_horiz_rounded, color: Colors.white38),
+              ],
             ),
-            AspectRatio(aspectRatio: 4 / 5, child: _media()),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(8, 4, 8, 0),
-              child: ContentEngagementBar(
-                collection: 'posts',
-                contentId: postId,
-                ownerId: userId,
-                title: caption.trim().isEmpty
-                    ? (_isVideo ? 'Video paylaşımı' : 'Fotoğraf paylaşımı')
-                    : caption,
-                sourceType: 'post',
-              ),
-            ),
-            if (caption.trim().isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(13, 0, 13, 8),
-                child: Text.rich(
-                  TextSpan(children: [
-                    TextSpan(
-                      text: '$userName ',
-                      style: const TextStyle(fontWeight: FontWeight.w900),
-                    ),
-                    TextSpan(
-                      text: caption,
-                      style:
-                          const TextStyle(color: Colors.white70, height: 1.35),
-                    ),
-                  ]),
-                ),
-              ),
-            const SizedBox(height: 4),
-          ],
+          ),
         ),
-      );
+        AspectRatio(aspectRatio: 4 / 5, child: _media()),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(8, 4, 8, 0),
+          child: ContentEngagementBar(
+            collection: 'posts',
+            contentId: postId,
+            ownerId: userId,
+            title: caption.trim().isEmpty
+                ? (_isVideo ? 'Video paylaşımı' : 'Fotoğraf paylaşımı')
+                : caption,
+            sourceType: 'post',
+          ),
+        ),
+        if (caption.trim().isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(13, 0, 13, 8),
+            child: Text.rich(
+              TextSpan(
+                children: [
+                  TextSpan(
+                    text: '$userName ',
+                    style: const TextStyle(fontWeight: FontWeight.w900),
+                  ),
+                  TextSpan(
+                    text: caption,
+                    style: const TextStyle(color: Colors.white70, height: 1.35),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        const SizedBox(height: 4),
+      ],
+    ),
+  );
 }

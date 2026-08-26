@@ -90,14 +90,18 @@ class _ChatScreenState extends State<ChatScreen> {
           children: [
             ListTile(
               leading: const Icon(Icons.flag_outlined, color: Colors.orange),
-              title: const Text('Kullanıcıyı bildir',
-                  style: TextStyle(color: Colors.white)),
+              title: const Text(
+                'Kullanıcıyı bildir',
+                style: TextStyle(color: Colors.white),
+              ),
               onTap: () => Navigator.pop(context, 'report'),
             ),
             ListTile(
               leading: const Icon(Icons.block, color: Colors.redAccent),
-              title: const Text('Kullanıcıyı engelle',
-                  style: TextStyle(color: Colors.white)),
+              title: const Text(
+                'Kullanıcıyı engelle',
+                style: TextStyle(color: Colors.white),
+              ),
               onTap: () => Navigator.pop(context, 'block'),
             ),
           ],
@@ -147,137 +151,139 @@ class _ChatScreenState extends State<ChatScreen> {
       ),
       body: _loading
           ? const Center(
-              child: CircularProgressIndicator(color: Color(0xFFB7BCC2)))
+              child: CircularProgressIndicator(color: Color(0xFFB7BCC2)),
+            )
           : _error != null
-              ? Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Text(
-                      _error!,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(color: Colors.white70),
-                    ),
-                  ),
-                )
-              : Column(
-                  children: [
-                    Expanded(
-                      child: StreamBuilder<List<ChatMessage>>(
-                        stream: ChatService.instance.messages(_threadId!),
-                        builder: (context, snapshot) {
-                          final messages =
-                              snapshot.data ?? const <ChatMessage>[];
-                          if (snapshot.connectionState ==
-                              ConnectionState.waiting) {
-                            return const Center(
-                              child: CircularProgressIndicator(
-                                  color: Color(0xFFB7BCC2)),
-                            );
-                          }
-                          if (messages.isEmpty) {
-                            return const Center(
-                              child: Padding(
-                                padding: EdgeInsets.all(28),
-                                child: Text(
-                                  'İlk mesajı gönder. Buluşma detaylarını paylaşırken kişisel adres veya hassas bilgi göndermemeye dikkat et.',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                      color: Colors.white54, height: 1.4),
+          ? Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Text(
+                  _error!,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.white70),
+                ),
+              ),
+            )
+          : Column(
+              children: [
+                Expanded(
+                  child: StreamBuilder<List<ChatMessage>>(
+                    stream: ChatService.instance.messages(_threadId!),
+                    builder: (context, snapshot) {
+                      final messages = snapshot.data ?? const <ChatMessage>[];
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(
+                          child: CircularProgressIndicator(
+                            color: Color(0xFFB7BCC2),
+                          ),
+                        );
+                      }
+                      if (messages.isEmpty) {
+                        return const Center(
+                          child: Padding(
+                            padding: EdgeInsets.all(28),
+                            child: Text(
+                              'İlk mesajı gönder. Buluşma detaylarını paylaşırken kişisel adres veya hassas bilgi göndermemeye dikkat et.',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: Colors.white54,
+                                height: 1.4,
+                              ),
+                            ),
+                          ),
+                        );
+                      }
+                      return ListView.builder(
+                        reverse: true,
+                        padding: const EdgeInsets.fromLTRB(14, 18, 14, 12),
+                        itemCount: messages.length,
+                        itemBuilder: (context, index) {
+                          final message = messages[index];
+                          final mine = message.senderId == myId;
+                          return Align(
+                            alignment: mine
+                                ? Alignment.centerRight
+                                : Alignment.centerLeft,
+                            child: Container(
+                              constraints: const BoxConstraints(maxWidth: 310),
+                              margin: const EdgeInsets.only(bottom: 9),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 10,
+                              ),
+                              decoration: BoxDecoration(
+                                color: mine
+                                    ? const Color(0xFFB7BCC2)
+                                    : const Color(0xFF1C232D),
+                                borderRadius: BorderRadius.circular(18),
+                              ),
+                              child: Text(
+                                message.text,
+                                style: TextStyle(
+                                  color: mine ? Colors.black : Colors.white,
+                                  fontSize: 15,
                                 ),
                               ),
-                            );
-                          }
-                          return ListView.builder(
-                            reverse: true,
-                            padding: const EdgeInsets.fromLTRB(14, 18, 14, 12),
-                            itemCount: messages.length,
-                            itemBuilder: (context, index) {
-                              final message = messages[index];
-                              final mine = message.senderId == myId;
-                              return Align(
-                                alignment: mine
-                                    ? Alignment.centerRight
-                                    : Alignment.centerLeft,
-                                child: Container(
-                                  constraints:
-                                      const BoxConstraints(maxWidth: 310),
-                                  margin: const EdgeInsets.only(bottom: 9),
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 14, vertical: 10),
-                                  decoration: BoxDecoration(
-                                    color: mine
-                                        ? const Color(0xFFB7BCC2)
-                                        : const Color(0xFF1C232D),
-                                    borderRadius: BorderRadius.circular(18),
-                                  ),
-                                  child: Text(
-                                    message.text,
-                                    style: TextStyle(
-                                      color: mine ? Colors.black : Colors.white,
-                                      fontSize: 15,
-                                    ),
-                                  ),
-                                ),
-                              );
-                            },
+                            ),
                           );
                         },
-                      ),
-                    ),
-                    SafeArea(
-                      top: false,
-                      child: Container(
-                        padding: const EdgeInsets.fromLTRB(12, 10, 10, 10),
-                        decoration: const BoxDecoration(
-                          color: Color(0xFF121820),
-                          border:
-                              Border(top: BorderSide(color: Colors.white10)),
-                        ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: TextField(
-                                controller: _controller,
-                                minLines: 1,
-                                maxLines: 5,
-                                maxLength: 1500,
-                                style: const TextStyle(color: Colors.white),
-                                decoration: InputDecoration(
-                                  counterText: '',
-                                  hintText: 'Mesaj yaz...',
-                                  hintStyle:
-                                      const TextStyle(color: Colors.white38),
-                                  filled: true,
-                                  fillColor: const Color(0xFF1C232D),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(22),
-                                    borderSide: BorderSide.none,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            IconButton.filled(
-                              style: IconButton.styleFrom(
-                                backgroundColor: const Color(0xFFB7BCC2),
-                                foregroundColor: Colors.black,
-                              ),
-                              onPressed: _sending ? null : _send,
-                              icon: _sending
-                                  ? const SizedBox(
-                                      width: 18,
-                                      height: 18,
-                                      child: CircularProgressIndicator(
-                                          strokeWidth: 2),
-                                    )
-                                  : const Icon(Icons.send_rounded),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
+                      );
+                    },
+                  ),
                 ),
+                SafeArea(
+                  top: false,
+                  child: Container(
+                    padding: const EdgeInsets.fromLTRB(12, 10, 10, 10),
+                    decoration: const BoxDecoration(
+                      color: Color(0xFF121820),
+                      border: Border(top: BorderSide(color: Colors.white10)),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _controller,
+                            minLines: 1,
+                            maxLines: 5,
+                            maxLength: 1500,
+                            style: const TextStyle(color: Colors.white),
+                            decoration: InputDecoration(
+                              counterText: '',
+                              hintText: 'Mesaj yaz...',
+                              hintStyle: const TextStyle(color: Colors.white38),
+                              filled: true,
+                              fillColor: const Color(0xFF1C232D),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(22),
+                                borderSide: BorderSide.none,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        IconButton.filled(
+                          style: IconButton.styleFrom(
+                            backgroundColor: const Color(0xFFB7BCC2),
+                            foregroundColor: Colors.black,
+                          ),
+                          onPressed: _sending ? null : _send,
+                          icon: _sending
+                              ? const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Icon(Icons.send_rounded),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
     );
   }
 }

@@ -28,7 +28,8 @@ class UsernameService {
   String? validate(String value) {
     final clean = cleanDisplay(value);
     if (clean.length < 3) return 'Kullanıcı adı en az 3 karakter olmalı.';
-    if (clean.length > 30) return 'Kullanıcı adı en fazla 30 karakter olabilir.';
+    if (clean.length > 30)
+      return 'Kullanıcı adı en fazla 30 karakter olabilir.';
     if (!RegExp(r'^[A-Za-z0-9_.ÇĞİÖŞÜçğıöşü]+$').hasMatch(clean)) {
       return 'Kullanıcı adı yalnızca harf, sayı, nokta ve alt çizgi içerebilir.';
     }
@@ -52,7 +53,8 @@ class UsernameService {
 
   Future<void> reserveForCurrentUser(String value) async {
     final user = _auth.currentUser;
-    if (user == null) throw Exception('Kullanıcı adı seçmek için giriş yapmalısın.');
+    if (user == null)
+      throw Exception('Kullanıcı adı seçmek için giriş yapmalısın.');
 
     final validation = validate(value);
     if (validation != null) throw Exception(validation);
@@ -65,8 +67,8 @@ class UsernameService {
     await _firestore.runTransaction((transaction) async {
       final userSnapshot = await transaction.get(userRef);
       final usernameSnapshot = await transaction.get(usernameRef);
-      final oldNormalized =
-          (userSnapshot.data()?['usernameNormalized'] ?? '').toString();
+      final oldNormalized = (userSnapshot.data()?['usernameNormalized'] ?? '')
+          .toString();
 
       DocumentSnapshot<Map<String, dynamic>>? oldReservation;
       DocumentReference<Map<String, dynamic>>? oldRef;
@@ -80,28 +82,20 @@ class UsernameService {
         throw Exception('Bu kullanıcı adı zaten alınmış.');
       }
 
-      transaction.set(
-        usernameRef,
-        {
-          'uid': user.uid,
-          'username': username,
-          'normalized': normalized,
-          'updatedAt': FieldValue.serverTimestamp(),
-          if (!usernameSnapshot.exists) 'createdAt': FieldValue.serverTimestamp(),
-        },
-        SetOptions(merge: true),
-      );
+      transaction.set(usernameRef, {
+        'uid': user.uid,
+        'username': username,
+        'normalized': normalized,
+        'updatedAt': FieldValue.serverTimestamp(),
+        if (!usernameSnapshot.exists) 'createdAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
 
-      transaction.set(
-        userRef,
-        {
-          'uid': user.uid,
-          'username': username,
-          'usernameNormalized': normalized,
-          'updatedAt': FieldValue.serverTimestamp(),
-        },
-        SetOptions(merge: true),
-      );
+      transaction.set(userRef, {
+        'uid': user.uid,
+        'username': username,
+        'usernameNormalized': normalized,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
 
       if (oldRef != null &&
           oldReservation?.exists == true &&

@@ -16,7 +16,8 @@ const verifiedTravelImageRegistryBatch6 = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons',
     author: 'Girtab2828',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:G%C4%B0RESUN_KALES%C4%B0.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:G%C4%B0RESUN_KALES%C4%B0.jpg',
   ),
   'trabzon-ataturk-kosku': SpotImageInfo(
     assetPath: 'assets/spots/trabzon-ataturk-kosku.jpg',
@@ -88,7 +89,8 @@ const verifiedTravelImageRegistryBatch6 = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons',
     author: 'Jaba1977',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Tortum_Waterfall_%282%29.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Tortum_Waterfall_%282%29.jpg',
   ),
   'karanlik-kanyon': SpotImageInfo(
     assetPath: 'assets/spots/karanlik-kanyon.jpg',
@@ -96,6 +98,7 @@ const verifiedTravelImageRegistryBatch6 = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons',
     author: 'Engin Asil',
     license: 'CC BY-SA 3.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Canyone_2_%2832828345%29.jpeg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Canyone_2_%2832828345%29.jpeg',
   ),
 };

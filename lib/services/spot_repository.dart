@@ -73,7 +73,8 @@ class SpotRepository {
     final filtered = all.where((spot) {
       if (query.minRating > 0 && spot.rating < query.minRating) return false;
       if (cityKey.isNotEmpty && _key(spot.city) != cityKey) return false;
-      if (categoryKey.isNotEmpty && _key(spot.category) != categoryKey) return false;
+      if (categoryKey.isNotEmpty && _key(spot.category) != categoryKey)
+        return false;
       if (tagKey.isNotEmpty &&
           !spot.tags.any((tag) => _key(tag).contains(tagKey))) {
         return false;
@@ -105,14 +106,17 @@ class SpotRepository {
       .limit(limit)
       .snapshots()
       .map((snapshot) {
-        final remote =
-            snapshot.docs.map(_fromDocument).whereType<PhotoSpot>().toList();
+        final remote = snapshot.docs
+            .map(_fromDocument)
+            .whereType<PhotoSpot>()
+            .toList();
         final merged = NationwideCandidateSpotResolver.mergeInto(remote);
         return SpotQualityGate.filterSafe(merged);
       });
 
-  Future<List<PhotoSpot>> search(String input, {int limit = 2000}) =>
-      discover(query: SpotDiscoveryQuery(text: input, limit: limit));
+  Future<List<PhotoSpot>> search(String input, {int limit = 2000}) => discover(
+    query: SpotDiscoveryQuery(text: input, limit: limit),
+  );
 
   Future<String> submitCandidate({
     required String name,
@@ -156,8 +160,9 @@ class SpotRepository {
       'description': description.trim(),
       'bestTime': bestTime.trim(),
       'angle': angle.trim(),
-      'recommendedLens':
-          recommendedLens.trim().isEmpty ? '24-70mm' : recommendedLens.trim(),
+      'recommendedLens': recommendedLens.trim().isEmpty
+          ? '24-70mm'
+          : recommendedLens.trim(),
       'tags': tags.map((e) => e.trim()).where((e) => e.isNotEmpty).toList(),
       'imageUrl': imageUrl.trim(),
       'submittedBy': user.uid,
@@ -182,26 +187,25 @@ class SpotRepository {
     String imageUrl = '',
     double rating = 0,
     List<String> tags = const [],
-  }) =>
-      {
-        'externalId': externalId.trim(),
-        'sourceType': source.trim(),
-        'name': name.trim(),
-        'city': city.trim(),
-        'cityKey': _key(city),
-        'latitude': latitude,
-        'longitude': longitude,
-        'coordinateVerified': false,
-        'imageVerified': false,
-        'category': category.trim().isEmpty ? 'Genel' : category.trim(),
-        'categoryKey': _key(category.trim().isEmpty ? 'Genel' : category),
-        'description': description.trim(),
-        'imageUrl': imageUrl.trim(),
-        'rating': rating.clamp(0, 5),
-        'tags': tags.map((e) => e.trim()).where((e) => e.isNotEmpty).toList(),
-        'status': 'review',
-        'updatedAt': FieldValue.serverTimestamp(),
-      };
+  }) => {
+    'externalId': externalId.trim(),
+    'sourceType': source.trim(),
+    'name': name.trim(),
+    'city': city.trim(),
+    'cityKey': _key(city),
+    'latitude': latitude,
+    'longitude': longitude,
+    'coordinateVerified': false,
+    'imageVerified': false,
+    'category': category.trim().isEmpty ? 'Genel' : category.trim(),
+    'categoryKey': _key(category.trim().isEmpty ? 'Genel' : category),
+    'description': description.trim(),
+    'imageUrl': imageUrl.trim(),
+    'rating': rating.clamp(0, 5),
+    'tags': tags.map((e) => e.trim()).where((e) => e.isNotEmpty).toList(),
+    'status': 'review',
+    'updatedAt': FieldValue.serverTimestamp(),
+  };
 
   PhotoSpot? _fromDocument(DocumentSnapshot<Map<String, dynamic>> doc) {
     final data = doc.data();
@@ -245,28 +249,29 @@ class SpotRepository {
     List<PhotoSpot> items, {
     String? city,
     String? category,
-  }) =>
-      items
-          .where((spot) =>
-              (city == null ||
-                  city.trim().isEmpty ||
-                  _key(spot.city) == _key(city)) &&
-              (category == null ||
-                  category.trim().isEmpty ||
-                  _key(spot.category) == _key(category)))
-          .toList();
+  }) => items
+      .where(
+        (spot) =>
+            (city == null ||
+                city.trim().isEmpty ||
+                _key(spot.city) == _key(city)) &&
+            (category == null ||
+                category.trim().isEmpty ||
+                _key(spot.category) == _key(category)),
+      )
+      .toList();
 
   static String _searchableText(PhotoSpot spot) => [
-        spot.name,
-        spot.city,
-        spot.category,
-        spot.description,
-        spot.bestTime,
-        spot.angle,
-        spot.recommendedLens,
-        spot.difficulty,
-        ...spot.tags,
-      ].map(_key).join(' ');
+    spot.name,
+    spot.city,
+    spot.category,
+    spot.description,
+    spot.bestTime,
+    spot.angle,
+    spot.recommendedLens,
+    spot.difficulty,
+    ...spot.tags,
+  ].map(_key).join(' ');
 
   static List<String> _distinct(Iterable<String> values) {
     final byKey = <String, String>{};
@@ -278,11 +283,15 @@ class SpotRepository {
     return byKey.values.toList()..sort();
   }
 
-  static double? _asDouble(dynamic value) =>
-      value is num ? value.toDouble() : double.tryParse(value?.toString() ?? '');
+  static double? _asDouble(dynamic value) => value is num
+      ? value.toDouble()
+      : double.tryParse(value?.toString() ?? '');
 
   static List<String> _stringList(dynamic value) => value is List
-      ? value.map((e) => e.toString()).where((e) => e.trim().isNotEmpty).toList()
+      ? value
+            .map((e) => e.toString())
+            .where((e) => e.trim().isNotEmpty)
+            .toList()
       : const [];
 
   static String _key(String value) => value

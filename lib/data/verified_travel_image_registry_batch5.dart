@@ -32,7 +32,8 @@ const verifiedTravelImageRegistryBatch5 = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons',
     author: 'R Prazeres',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Divrigi_complex_DSCF3028.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Divrigi_complex_DSCF3028.jpg',
   ),
   'varda-koprusu': SpotImageInfo(
     assetPath: 'assets/spots/varda-koprusu.jpg',
@@ -40,7 +41,8 @@ const verifiedTravelImageRegistryBatch5 = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons',
     author: 'MUSTAFA TOR',
     license: 'CC BY-SA 2.5',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Varda_Demiryolu_Koprusu.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Varda_Demiryolu_Koprusu.jpg',
   ),
   'malabadi-koprusu': SpotImageInfo(
     assetPath: 'assets/spots/malabadi-koprusu.jpg',
@@ -64,7 +66,8 @@ const verifiedTravelImageRegistryBatch5 = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons',
     author: 'Basak',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Sinop_Tarihi_Cezaevi_1.JPG',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Sinop_Tarihi_Cezaevi_1.JPG',
   ),
   'izmir-saat': SpotImageInfo(
     assetPath: 'assets/spots/izmir-saat.jpg',
@@ -72,7 +75,8 @@ const verifiedTravelImageRegistryBatch5 = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons',
     author: 'Sailko',
     license: 'CC BY-SA 3.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Izmir_square_clock_tower.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Izmir_square_clock_tower.jpg',
   ),
   'canakkale-sehitler-abidesi': SpotImageInfo(
     assetPath: 'assets/spots/canakkale-sehitler-abidesi.jpg',
@@ -80,7 +84,8 @@ const verifiedTravelImageRegistryBatch5 = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons',
     author: 'Onder Kokturk',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Onderkokturk-canakkale01.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Onderkokturk-canakkale01.jpg',
   ),
   'bozcaada-kalesi': SpotImageInfo(
     assetPath: 'assets/spots/bozcaada-kalesi.jpg',
@@ -96,6 +101,7 @@ const verifiedTravelImageRegistryBatch5 = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons',
     author: 'Kaya Elifnur 72',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Diyarbakir_Ulu_Cami_2022.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Diyarbakir_Ulu_Cami_2022.jpg',
   ),
 };

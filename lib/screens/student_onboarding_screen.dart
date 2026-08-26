@@ -8,7 +8,8 @@ class StudentOnboardingScreen extends StatefulWidget {
   const StudentOnboardingScreen({super.key});
 
   @override
-  State<StudentOnboardingScreen> createState() => _StudentOnboardingScreenState();
+  State<StudentOnboardingScreen> createState() =>
+      _StudentOnboardingScreenState();
 }
 
 class _StudentOnboardingScreenState extends State<StudentOnboardingScreen> {
@@ -19,8 +20,18 @@ class _StudentOnboardingScreenState extends State<StudentOnboardingScreen> {
   final _classYear = TextEditingController();
 
   static const _interests = <String>[
-    'Fotoğraf', 'Kamp', 'Yürüyüş', 'Kahve', 'Gezi', 'Spor',
-    'Oyun', 'Müzik', 'Sanat', 'Yemek', 'Teknoloji', 'Sinema',
+    'Fotoğraf',
+    'Kamp',
+    'Yürüyüş',
+    'Kahve',
+    'Gezi',
+    'Spor',
+    'Oyun',
+    'Müzik',
+    'Sanat',
+    'Yemek',
+    'Teknoloji',
+    'Sinema',
   ];
 
   final Set<String> _selectedInterests = {};
@@ -181,9 +192,9 @@ class _StudentOnboardingScreenState extends State<StudentOnboardingScreen> {
                         onPressed: _saving
                             ? null
                             : () => _pageController.previousPage(
-                                  duration: const Duration(milliseconds: 220),
-                                  curve: Curves.easeOut,
-                                ),
+                                duration: const Duration(milliseconds: 220),
+                                curve: Curves.easeOut,
+                              ),
                         child: const Text('Geri'),
                       ),
                     ),
@@ -199,7 +210,9 @@ class _StudentOnboardingScreenState extends State<StudentOnboardingScreen> {
                             ? const SizedBox(
                                 width: 20,
                                 height: 20,
-                                child: CircularProgressIndicator(strokeWidth: 2),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
                               )
                             : Text(_page == 2 ? 'Kampüsüme Git' : 'Devam'),
                       ),
@@ -226,57 +239,57 @@ class _SchoolStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ListView(
-        padding: const EdgeInsets.fromLTRB(22, 34, 22, 24),
-        children: [
-          const Icon(Icons.school_outlined, size: 58, color: Color(0xFFB7BCC2)),
-          const SizedBox(height: 20),
-          const Text(
-            'Kampüsünü bulalım',
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 27, fontWeight: FontWeight.w900),
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Yazmaya başla, üniversite ve fakülteni listeden seç. Sana kendi kampüsündeki toplulukları ve etkinlikleri göstereceğiz.',
-            textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.white60, height: 1.4),
-          ),
-          const SizedBox(height: 30),
-          SearchableSelectionField(
-            controller: university,
-            options: turkeyUniversities,
-            labelText: 'Üniversite',
-            hintText: 'Örn. Fırat Üniversitesi',
-            prefixIcon: Icons.account_balance_outlined,
-          ),
-          const SizedBox(height: 12),
-          SearchableSelectionField(
-            controller: faculty,
-            options: turkeyFaculties,
-            labelText: 'Fakülte (isteğe bağlı)',
-            hintText: 'Örn. Mühendislik Fakültesi',
-            prefixIcon: Icons.apartment_outlined,
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: department,
-            decoration: const InputDecoration(
-              labelText: 'Bölüm',
-              hintText: 'Örn. Yazılım Mühendisliği',
-              prefixIcon: Icon(Icons.menu_book_outlined),
-            ),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: classYear,
-            decoration: const InputDecoration(
-              labelText: 'Sınıf (isteğe bağlı)',
-              hintText: 'Hazırlık, 1, 2, 3, 4…',
-              prefixIcon: Icon(Icons.badge_outlined),
-            ),
-          ),
-        ],
-      );
+    padding: const EdgeInsets.fromLTRB(22, 34, 22, 24),
+    children: [
+      const Icon(Icons.school_outlined, size: 58, color: Color(0xFFB7BCC2)),
+      const SizedBox(height: 20),
+      const Text(
+        'Kampüsünü bulalım',
+        textAlign: TextAlign.center,
+        style: TextStyle(fontSize: 27, fontWeight: FontWeight.w900),
+      ),
+      const SizedBox(height: 8),
+      const Text(
+        'Yazmaya başla, üniversite ve fakülteni listeden seç. Sana kendi kampüsündeki toplulukları ve etkinlikleri göstereceğiz.',
+        textAlign: TextAlign.center,
+        style: TextStyle(color: Colors.white60, height: 1.4),
+      ),
+      const SizedBox(height: 30),
+      SearchableSelectionField(
+        controller: university,
+        options: turkeyUniversities,
+        labelText: 'Üniversite',
+        hintText: 'Örn. Fırat Üniversitesi',
+        prefixIcon: Icons.account_balance_outlined,
+      ),
+      const SizedBox(height: 12),
+      SearchableSelectionField(
+        controller: faculty,
+        options: turkeyFaculties,
+        labelText: 'Fakülte (isteğe bağlı)',
+        hintText: 'Örn. Mühendislik Fakültesi',
+        prefixIcon: Icons.apartment_outlined,
+      ),
+      const SizedBox(height: 12),
+      TextField(
+        controller: department,
+        decoration: const InputDecoration(
+          labelText: 'Bölüm',
+          hintText: 'Örn. Yazılım Mühendisliği',
+          prefixIcon: Icon(Icons.menu_book_outlined),
+        ),
+      ),
+      const SizedBox(height: 12),
+      TextField(
+        controller: classYear,
+        decoration: const InputDecoration(
+          labelText: 'Sınıf (isteğe bağlı)',
+          hintText: 'Hazırlık, 1, 2, 3, 4…',
+          prefixIcon: Icon(Icons.badge_outlined),
+        ),
+      ),
+    ],
+  );
 }
 
 class _InterestStep extends StatelessWidget {
@@ -291,36 +304,36 @@ class _InterestStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ListView(
-        padding: const EdgeInsets.fromLTRB(22, 34, 22, 24),
-        children: [
-          const Icon(Icons.interests_outlined, size: 58, color: Color(0xFFB7BCC2)),
-          const SizedBox(height: 20),
-          const Text(
-            'Neler ilgini çekiyor?',
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 27, fontWeight: FontWeight.w900),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            '${selected.length}/3 seçildi • En az 3 tane seç',
-            textAlign: TextAlign.center,
-            style: const TextStyle(color: Colors.white60),
-          ),
-          const SizedBox(height: 28),
-          Wrap(
-            spacing: 9,
-            runSpacing: 9,
-            alignment: WrapAlignment.center,
-            children: interests.map((interest) {
-              return FilterChip(
-                selected: selected.contains(interest),
-                label: Text(interest),
-                onSelected: (_) => onToggle(interest),
-              );
-            }).toList(),
-          ),
-        ],
-      );
+    padding: const EdgeInsets.fromLTRB(22, 34, 22, 24),
+    children: [
+      const Icon(Icons.interests_outlined, size: 58, color: Color(0xFFB7BCC2)),
+      const SizedBox(height: 20),
+      const Text(
+        'Neler ilgini çekiyor?',
+        textAlign: TextAlign.center,
+        style: TextStyle(fontSize: 27, fontWeight: FontWeight.w900),
+      ),
+      const SizedBox(height: 8),
+      Text(
+        '${selected.length}/3 seçildi • En az 3 tane seç',
+        textAlign: TextAlign.center,
+        style: const TextStyle(color: Colors.white60),
+      ),
+      const SizedBox(height: 28),
+      Wrap(
+        spacing: 9,
+        runSpacing: 9,
+        alignment: WrapAlignment.center,
+        children: interests.map((interest) {
+          return FilterChip(
+            selected: selected.contains(interest),
+            label: Text(interest),
+            onSelected: (_) => onToggle(interest),
+          );
+        }).toList(),
+      ),
+    ],
+  );
 }
 
 class _ReadyStep extends StatelessWidget {
@@ -336,44 +349,52 @@ class _ReadyStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ListView(
-        padding: const EdgeInsets.fromLTRB(22, 44, 22, 24),
-        children: [
-          const Icon(Icons.rocket_launch_outlined, size: 64, color: Color(0xFFB7BCC2)),
-          const SizedBox(height: 22),
-          const Text(
-            'Hazırsın',
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 29, fontWeight: FontWeight.w900),
+    padding: const EdgeInsets.fromLTRB(22, 44, 22, 24),
+    children: [
+      const Icon(
+        Icons.rocket_launch_outlined,
+        size: 64,
+        color: Color(0xFFB7BCC2),
+      ),
+      const SizedBox(height: 22),
+      const Text(
+        'Hazırsın',
+        textAlign: TextAlign.center,
+        style: TextStyle(fontSize: 29, fontWeight: FontWeight.w900),
+      ),
+      const SizedBox(height: 10),
+      Text(
+        university,
+        textAlign: TextAlign.center,
+        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+      ),
+      if (department.isNotEmpty) ...[
+        const SizedBox(height: 4),
+        Text(
+          department,
+          textAlign: TextAlign.center,
+          style: const TextStyle(color: Colors.white60),
+        ),
+      ],
+      const SizedBox(height: 28),
+      Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        decoration: BoxDecoration(
+          color: const Color(0xFF121416),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: const Color(0xFF292D32)),
+        ),
+        child: SwitchListTile.adaptive(
+          contentPadding: EdgeInsets.zero,
+          value: newStudent2026,
+          onChanged: onNewStudentChanged,
+          title: const Text('2026 yeni öğrencisiyim'),
+          subtitle: const Text(
+            'Yeni öğrenci etkinlikleri ve kampüs rehberi önceliklensin.',
+            style: TextStyle(color: Colors.white54, fontSize: 12),
           ),
-          const SizedBox(height: 10),
-          Text(
-            university,
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
-          ),
-          if (department.isNotEmpty) ...[
-            const SizedBox(height: 4),
-            Text(department, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white60)),
-          ],
-          const SizedBox(height: 28),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-            decoration: BoxDecoration(
-              color: const Color(0xFF121416),
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: const Color(0xFF292D32)),
-            ),
-            child: SwitchListTile.adaptive(
-              contentPadding: EdgeInsets.zero,
-              value: newStudent2026,
-              onChanged: onNewStudentChanged,
-              title: const Text('2026 yeni öğrencisiyim'),
-              subtitle: const Text(
-                'Yeni öğrenci etkinlikleri ve kampüs rehberi önceliklensin.',
-                style: TextStyle(color: Colors.white54, fontSize: 12),
-              ),
-            ),
-          ),
-        ],
-      );
+        ),
+      ),
+    ],
+  );
 }

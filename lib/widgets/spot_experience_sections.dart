@@ -11,10 +11,7 @@ import 'meetup_chat_actions.dart';
 class ShootingGuideSection extends StatelessWidget {
   final PhotoSpot spot;
 
-  const ShootingGuideSection({
-    super.key,
-    required this.spot,
-  });
+  const ShootingGuideSection({super.key, required this.spot});
 
   @override
   Widget build(BuildContext context) {
@@ -49,43 +46,43 @@ class ShootingGuideSection extends StatelessWidget {
             (
               icon: Icons.place_outlined,
               title: 'Nerede dur?',
-              text: guide.shootingPosition
+              text: guide.shootingPosition,
             ),
           if (guide.subjectPlacement.trim().isNotEmpty)
             (
               icon: Icons.person_pin_circle_outlined,
               title: 'Özneyi yerleştir',
-              text: guide.subjectPlacement
+              text: guide.subjectPlacement,
             ),
           if (guide.lightDirection.trim().isNotEmpty)
             (
               icon: Icons.wb_sunny_outlined,
               title: 'Işığı kullan',
-              text: guide.lightDirection
+              text: guide.lightDirection,
             ),
           if (guide.compositionTip.trim().isNotEmpty)
             (
               icon: Icons.grid_3x3_outlined,
               title: 'Kadraj',
-              text: guide.compositionTip
+              text: guide.compositionTip,
             ),
           if (guide.portraitTip.trim().isNotEmpty)
             (
               icon: Icons.portrait_outlined,
               title: 'Portre',
-              text: guide.portraitTip
+              text: guide.portraitTip,
             ),
           if (guide.recommendedSettings.trim().isNotEmpty)
             (
               icon: Icons.tune,
               title: 'Başlangıç ayarları',
-              text: guide.recommendedSettings
+              text: guide.recommendedSettings,
             ),
           if (guide.accessibilityNote.trim().isNotEmpty)
             (
               icon: Icons.shield_outlined,
               title: 'Erişim ve güvenlik',
-              text: guide.accessibilityNote
+              text: guide.accessibilityNote,
             ),
         ];
 
@@ -99,20 +96,28 @@ class ShootingGuideSection extends StatelessWidget {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(rows[i].icon,
-                        size: 20, color: const Color(0xFFB7BCC2)),
+                    Icon(
+                      rows[i].icon,
+                      size: 20,
+                      color: const Color(0xFFB7BCC2),
+                    ),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(rows[i].title,
-                              style:
-                                  const TextStyle(fontWeight: FontWeight.w800)),
+                          Text(
+                            rows[i].title,
+                            style: const TextStyle(fontWeight: FontWeight.w800),
+                          ),
                           const SizedBox(height: 3),
-                          Text(rows[i].text,
-                              style: const TextStyle(
-                                  color: Colors.white70, height: 1.4)),
+                          Text(
+                            rows[i].text,
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              height: 1.4,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -125,8 +130,10 @@ class ShootingGuideSection extends StatelessWidget {
                 const SizedBox(height: 16),
                 const Align(
                   alignment: Alignment.centerLeft,
-                  child: Text('Denenecek kareler',
-                      style: TextStyle(fontWeight: FontWeight.w800)),
+                  child: Text(
+                    'Denenecek kareler',
+                    style: TextStyle(fontWeight: FontWeight.w800),
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Wrap(
@@ -136,14 +143,20 @@ class ShootingGuideSection extends StatelessWidget {
                       .map(
                         (idea) => Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 8),
+                            horizontal: 10,
+                            vertical: 8,
+                          ),
                           decoration: BoxDecoration(
                             color: const Color(0xFF202631),
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          child: Text(idea,
-                              style: const TextStyle(
-                                  color: Colors.white70, fontSize: 12.5)),
+                          child: Text(
+                            idea,
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 12.5,
+                            ),
+                          ),
                         ),
                       )
                       .toList(),
@@ -160,10 +173,7 @@ class ShootingGuideSection extends StatelessWidget {
 class TogetherGoSection extends StatelessWidget {
   final PhotoSpot spot;
 
-  const TogetherGoSection({
-    super.key,
-    required this.spot,
-  });
+  const TogetherGoSection({super.key, required this.spot});
 
   @override
   Widget build(BuildContext context) {
@@ -200,8 +210,7 @@ class TogetherGoSection extends StatelessWidget {
             return const _Notice(
               icon: Icons.group_add_outlined,
               title: 'İlk buluşmayı sen başlat',
-              text:
-                  'Tarih, saat ve kişi sayısını seç. Kesin canlı konum paylaşılmaz.',
+              text: 'Tarih, saat ve kişi sayısını seç. Kesin canlı konum paylaşılmaz.',
             );
           }
 
@@ -256,7 +265,12 @@ class TogetherGoSection extends StatelessWidget {
 
             setSheetState(() {
               selected = DateTime(
-                  date.year, date.month, date.day, time.hour, time.minute);
+                date.year,
+                date.month,
+                date.day,
+                time.hour,
+                time.minute,
+              );
             });
           }
 
@@ -295,7 +309,9 @@ class TogetherGoSection extends StatelessWidget {
                     Text(
                       '${spot.name} • Birlikte Git',
                       style: const TextStyle(
-                          fontSize: 20, fontWeight: FontWeight.w900),
+                        fontSize: 20,
+                        fontWeight: FontWeight.w900,
+                      ),
                     ),
                     const SizedBox(height: 6),
                     const Text(
@@ -305,42 +321,49 @@ class TogetherGoSection extends StatelessWidget {
                     const SizedBox(height: 16),
                     ListTile(
                       contentPadding: EdgeInsets.zero,
-                      leading: const Icon(Icons.event_outlined,
-                          color: Color(0xFFB7BCC2)),
+                      leading: const Icon(
+                        Icons.event_outlined,
+                        color: Color(0xFFB7BCC2),
+                      ),
                       title: const Text('Tarih ve saat'),
                       subtitle: Text(_dateTimeText(selected)),
                       trailing: const Icon(Icons.chevron_right),
                       onTap: chooseDateTime,
                     ),
                     const SizedBox(height: 8),
-                    const Text('Amaç',
-                        style: TextStyle(fontWeight: FontWeight.w800)),
+                    const Text(
+                      'Amaç',
+                      style: TextStyle(fontWeight: FontWeight.w800),
+                    ),
                     const SizedBox(height: 8),
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,
-                      children: [
-                        'Fotoğraf çekimi',
-                        'Gün batımı',
-                        'Portre',
-                        'Gece çekimi'
-                      ]
-                          .map(
-                            (item) => ChoiceChip(
-                              label: Text(item),
-                              selected: purpose == item,
-                              onSelected: (_) =>
-                                  setSheetState(() => purpose = item),
-                            ),
-                          )
-                          .toList(),
+                      children:
+                          [
+                                'Fotoğraf çekimi',
+                                'Gün batımı',
+                                'Portre',
+                                'Gece çekimi',
+                              ]
+                              .map(
+                                (item) => ChoiceChip(
+                                  label: Text(item),
+                                  selected: purpose == item,
+                                  onSelected: (_) =>
+                                      setSheetState(() => purpose = item),
+                                ),
+                              )
+                              .toList(),
                     ),
                     const SizedBox(height: 14),
                     Row(
                       children: [
                         const Expanded(
-                          child: Text('Toplam kişi sayısı',
-                              style: TextStyle(fontWeight: FontWeight.w800)),
+                          child: Text(
+                            'Toplam kişi sayısı',
+                            style: TextStyle(fontWeight: FontWeight.w800),
+                          ),
                         ),
                         IconButton(
                           onPressed: capacity > 2
@@ -348,9 +371,13 @@ class TogetherGoSection extends StatelessWidget {
                               : null,
                           icon: const Icon(Icons.remove_circle_outline),
                         ),
-                        Text('$capacity',
-                            style: const TextStyle(
-                                fontSize: 18, fontWeight: FontWeight.w900)),
+                        Text(
+                          '$capacity',
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
                         IconButton(
                           onPressed: capacity < 12
                               ? () => setSheetState(() => capacity++)
@@ -383,11 +410,14 @@ class TogetherGoSection extends StatelessWidget {
                                 width: 18,
                                 height: 18,
                                 child: CircularProgressIndicator(
-                                    strokeWidth: 2, color: Colors.black),
+                                  strokeWidth: 2,
+                                  color: Colors.black,
+                                ),
                               )
                             : const Icon(Icons.groups_2_outlined),
                         label: Text(
-                            saving ? 'Oluşturuluyor...' : 'Buluşmayı oluştur'),
+                          saving ? 'Oluşturuluyor...' : 'Buluşmayı oluştur',
+                        ),
                       ),
                     ),
                   ],
@@ -442,21 +472,27 @@ class _MeetupCardState extends State<_MeetupCard> {
                   shape: BoxShape.circle,
                   color: Color(0x228B5CF6),
                 ),
-                child: const Icon(Icons.people_alt_outlined,
-                    color: Color(0xFFB7BCC2)),
+                child: const Icon(
+                  Icons.people_alt_outlined,
+                  color: Color(0xFFB7BCC2),
+                ),
               ),
               const SizedBox(width: 11),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(meetup.purpose,
-                        style: const TextStyle(fontWeight: FontWeight.w900)),
+                    Text(
+                      meetup.purpose,
+                      style: const TextStyle(fontWeight: FontWeight.w900),
+                    ),
                     const SizedBox(height: 3),
                     Text(
                       '${meetup.hostName} • ${_dateTimeText(meetup.startsAt)}',
                       style: const TextStyle(
-                          color: Colors.white60, fontSize: 12.5),
+                        color: Colors.white60,
+                        fontSize: 12.5,
+                      ),
                     ),
                   ],
                 ),
@@ -465,8 +501,10 @@ class _MeetupCardState extends State<_MeetupCard> {
           ),
           if (meetup.note.trim().isNotEmpty) ...[
             const SizedBox(height: 10),
-            Text(meetup.note,
-                style: const TextStyle(color: Colors.white70, height: 1.35)),
+            Text(
+              meetup.note,
+              style: const TextStyle(color: Colors.white70, height: 1.35),
+            ),
           ],
           const SizedBox(height: 12),
           Row(
@@ -559,7 +597,9 @@ class _MeetupCardState extends State<_MeetupCard> {
       await MeetupService.instance.leave(widget.meetup.id);
       if (mounted) {
         _message(
-            context, isHost ? 'Buluşma iptal edildi.' : 'Buluşmadan ayrıldın.');
+          context,
+          isHost ? 'Buluşma iptal edildi.' : 'Buluşmadan ayrıldın.',
+        );
       }
     } catch (e) {
       if (mounted) _message(context, _cleanError(e));
@@ -614,14 +654,22 @@ class _Shell extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title,
-                        style: const TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.w900)),
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
                     if (subtitle != null) ...[
                       const SizedBox(height: 3),
-                      Text(subtitle!,
-                          style: const TextStyle(
-                              color: Colors.white60, fontSize: 12.5)),
+                      Text(
+                        subtitle!,
+                        style: const TextStyle(
+                          color: Colors.white60,
+                          fontSize: 12.5,
+                        ),
+                      ),
                     ],
                   ],
                 ),
@@ -642,11 +690,7 @@ class _Notice extends StatelessWidget {
   final String title;
   final String text;
 
-  const _Notice({
-    required this.icon,
-    required this.title,
-    required this.text,
-  });
+  const _Notice({required this.icon, required this.title, required this.text});
 
   @override
   Widget build(BuildContext context) {
@@ -660,12 +704,19 @@ class _Notice extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title,
-                    style: const TextStyle(fontWeight: FontWeight.w800)),
+                Text(
+                  title,
+                  style: const TextStyle(fontWeight: FontWeight.w800),
+                ),
                 const SizedBox(height: 3),
-                Text(text,
-                    style: const TextStyle(
-                        color: Colors.white60, fontSize: 12.5, height: 1.35)),
+                Text(
+                  text,
+                  style: const TextStyle(
+                    color: Colors.white60,
+                    fontSize: 12.5,
+                    height: 1.35,
+                  ),
+                ),
               ],
             ),
           ),

@@ -140,7 +140,10 @@ class _MainCameraScreenState extends State<MainCameraScreen> {
                     const Text(
                       'Ne çekmek istiyorsun?',
                       textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900),
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w900,
+                      ),
                     ),
                     const SizedBox(height: 6),
                     const Text(
@@ -161,7 +164,9 @@ class _MainCameraScreenState extends State<MainCameraScreen> {
                       width: double.infinity,
                       height: 54,
                       child: FilledButton.icon(
-                        onPressed: _busy ? null : () => _photo(ImageSource.camera),
+                        onPressed: _busy
+                            ? null
+                            : () => _photo(ImageSource.camera),
                         icon: const Icon(Icons.camera_alt_outlined),
                         label: const Text('Fotoğraf Çek'),
                       ),
@@ -171,7 +176,9 @@ class _MainCameraScreenState extends State<MainCameraScreen> {
                       width: double.infinity,
                       height: 54,
                       child: FilledButton.icon(
-                        onPressed: _busy ? null : () => _video(ImageSource.camera),
+                        onPressed: _busy
+                            ? null
+                            : () => _video(ImageSource.camera),
                         icon: const Icon(Icons.videocam_outlined),
                         label: const Text('Video / Reels Çek • 1 dk'),
                       ),

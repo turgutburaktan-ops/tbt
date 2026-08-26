@@ -99,11 +99,12 @@ class VenueRatingService {
     int limit = 80,
   }) {
     final uid = _auth.currentUser?.uid;
-    return _ratings(category, venueId)
-        .orderBy('updatedAt', descending: true)
-        .limit(limit)
-        .snapshots()
-        .asyncMap((snapshot) async {
+    return _ratings(
+      category,
+      venueId,
+    ).orderBy('updatedAt', descending: true).limit(limit).snapshots().asyncMap((
+      snapshot,
+    ) async {
       final result = <VenueReview>[];
       for (final doc in snapshot.docs) {
         final data = doc.data();
@@ -114,18 +115,21 @@ class VenueRatingService {
             ? false
             : (await helpfulCollection.doc(uid).get()).exists;
         final helpfulAggregate = await helpfulCollection.count().get();
-        result.add(VenueReview(
-          userId: doc.id,
-          userName: (data['userName'] ?? '').toString().trim().isEmpty
-              ? 'Kullanıcı'
-              : (data['userName'] ?? '').toString(),
-          rating: ((data['rating'] as num?)?.toInt() ?? 1).clamp(1, 5),
-          comment: comment,
-          helpfulCount: helpfulAggregate.count ?? 0,
-          mine: uid != null && doc.id == uid,
-          helpfulByMe: helpfulByMe,
-          updatedAt: (data['updatedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
-        ));
+        result.add(
+          VenueReview(
+            userId: doc.id,
+            userName: (data['userName'] ?? '').toString().trim().isEmpty
+                ? 'Kullanıcı'
+                : (data['userName'] ?? '').toString(),
+            rating: ((data['rating'] as num?)?.toInt() ?? 1).clamp(1, 5),
+            comment: comment,
+            helpfulCount: helpfulAggregate.count ?? 0,
+            mine: uid != null && doc.id == uid,
+            helpfulByMe: helpfulByMe,
+            updatedAt:
+                (data['updatedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+          ),
+        );
       }
       return result;
     });
@@ -137,12 +141,12 @@ class VenueRatingService {
     required String venueName,
     required int rating,
   }) => submitReview(
-        category: category,
-        venueId: venueId,
-        venueName: venueName,
-        rating: rating,
-        preserveExistingComment: true,
-      );
+    category: category,
+    venueId: venueId,
+    venueName: venueName,
+    rating: rating,
+    preserveExistingComment: true,
+  );
 
   Future<void> submitReview({
     required String category,
@@ -243,7 +247,8 @@ class VenueRatingService {
     if (cleanReason.length < 3 || cleanReason.length > 120) {
       throw Exception('Geçerli bir şikâyet nedeni seç.');
     }
-    final reportId = '${venueKey(category, venueId)}_${reviewUserId}_${user.uid}';
+    final reportId =
+        '${venueKey(category, venueId)}_${reviewUserId}_${user.uid}';
     await _firestore.collection('review_reports').doc(reportId).set({
       'venueKey': venueKey(category, venueId),
       'category': category,

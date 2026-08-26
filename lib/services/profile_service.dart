@@ -43,7 +43,9 @@ class ProfileService {
       final ref = _storage.ref().child('users/${user.uid}/profile/avatar.$ext');
       final task = await ref.putFile(
         photo,
-        SettableMetadata(contentType: ext == 'png' ? 'image/png' : 'image/jpeg'),
+        SettableMetadata(
+          contentType: ext == 'png' ? 'image/png' : 'image/jpeg',
+        ),
       );
       photoUrl = await task.ref.getDownloadURL();
     }
@@ -110,7 +112,8 @@ class ProfileService {
       '5',
       '6',
     };
-    final campusEligible = university.trim().isNotEmpty &&
+    final campusEligible =
+        university.trim().isNotEmpty &&
         activeStudentYears.contains(cleanClassYear);
 
     await _firestore.collection('users').doc(user.uid).set({
@@ -121,7 +124,8 @@ class ProfileService {
       'interests': cleanInterests,
       'newStudent2026': campusEligible ? newStudent2026 : false,
       'showEducationOnProfile': showEducationOnProfile,
-      'campusProfileCompleted': university.trim().isNotEmpty &&
+      'campusProfileCompleted':
+          university.trim().isNotEmpty &&
           department.trim().isNotEmpty &&
           cleanInterests.length >= 3,
       'campusEligible': campusEligible,

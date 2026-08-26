@@ -50,7 +50,9 @@ class AppStory {
       userId: (data['userId'] ?? '').toString(),
       userName: (data['userName'] ?? 'TBT kullanıcısı').toString(),
       userPhotoUrl: (data['userPhotoUrl'] ?? '').toString(),
-      mediaType: mediaType == 'video' || videoUrl.isNotEmpty ? 'video' : 'image',
+      mediaType: mediaType == 'video' || videoUrl.isNotEmpty
+          ? 'video'
+          : 'image',
       imageUrl: (data['imageUrl'] ?? '').toString(),
       storagePath: (data['storagePath'] ?? '').toString(),
       videoUrl: videoUrl,
@@ -59,7 +61,8 @@ class AppStory {
       thumbnailStoragePath: (data['thumbnailStoragePath'] ?? '').toString(),
       durationMs: _int(data['durationMs']),
       createdAt: _date(data['createdAt']) ?? DateTime.now(),
-      expiresAt: _date(data['expiresAt']) ??
+      expiresAt:
+          _date(data['expiresAt']) ??
           DateTime.now().add(const Duration(hours: 24)),
     );
   }

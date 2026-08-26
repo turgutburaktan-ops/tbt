@@ -17,7 +17,8 @@ const verifiedTravelImageRegistryBatch4 = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons',
     author: 'Saffron Blaze',
     license: 'CC BY-SA 3.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Perge_city_overview.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:Perge_city_overview.jpg',
   ),
   'patara': SpotImageInfo(
     assetPath: 'assets/spots/patara.jpg',
@@ -57,7 +58,8 @@ const verifiedTravelImageRegistryBatch4 = <String, SpotImageInfo>{
     sourceName: 'Wikimedia Commons',
     author: 'HALUK COMERTEL',
     license: 'CC BY 3.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:DALYAN-KAUNOS_-_panoramio.jpg',
+    sourcePage:
+        'https://commons.wikimedia.org/wiki/File:DALYAN-KAUNOS_-_panoramio.jpg',
   ),
   'knidos': SpotImageInfo(
     assetPath: 'assets/spots/knidos.jpg',

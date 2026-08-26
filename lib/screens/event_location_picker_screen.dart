@@ -62,8 +62,10 @@ class _EventLocationPickerScreenState extends State<EventLocationPickerScreen> {
             .where((spot) => spot.city.trim().toLowerCase() == city)
             .toList();
         if (matches.isNotEmpty) {
-          _initialTarget =
-              LatLng(matches.first.latitude, matches.first.longitude);
+          _initialTarget = LatLng(
+            matches.first.latitude,
+            matches.first.longitude,
+          );
         } else if (city == 'elazığ' || city == 'elazig') {
           _initialTarget = const LatLng(38.6743, 39.2232);
         }
@@ -73,8 +75,9 @@ class _EventLocationPickerScreenState extends State<EventLocationPickerScreen> {
     } finally {
       if (mounted) {
         setState(() => _loadingCity = false);
-        _controller
-            ?.animateCamera(CameraUpdate.newLatLngZoom(_initialTarget, 12));
+        _controller?.animateCamera(
+          CameraUpdate.newLatLngZoom(_initialTarget, 12),
+        );
       }
     }
   }
@@ -98,13 +101,13 @@ class _EventLocationPickerScreenState extends State<EventLocationPickerScreen> {
             onPressed: _selected == null
                 ? null
                 : () => Navigator.pop(
-                      context,
-                      EventLocationSelection(
-                        latitude: _selected!.latitude,
-                        longitude: _selected!.longitude,
-                        label: address.isEmpty ? cityLabel : address,
-                      ),
+                    context,
+                    EventLocationSelection(
+                      latitude: _selected!.latitude,
+                      longitude: _selected!.longitude,
+                      label: address.isEmpty ? cityLabel : address,
                     ),
+                  ),
             child: const Text('Kaydet'),
           ),
         ],
@@ -112,13 +115,16 @@ class _EventLocationPickerScreenState extends State<EventLocationPickerScreen> {
       body: Stack(
         children: [
           GoogleMap(
-            initialCameraPosition:
-                CameraPosition(target: _initialTarget, zoom: 6),
+            initialCameraPosition: CameraPosition(
+              target: _initialTarget,
+              zoom: 6,
+            ),
             onMapCreated: (controller) {
               _controller = controller;
               if (!_loadingCity) {
                 controller.animateCamera(
-                    CameraUpdate.newLatLngZoom(_initialTarget, 12));
+                  CameraUpdate.newLatLngZoom(_initialTarget, 12),
+                );
               }
             },
             onTap: _select,
@@ -152,19 +158,25 @@ class _EventLocationPickerScreenState extends State<EventLocationPickerScreen> {
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.location_city_outlined,
-                          color: Color(0xFFD7DADF)),
+                      const Icon(
+                        Icons.location_city_outlined,
+                        color: Color(0xFFD7DADF),
+                      ),
                       const SizedBox(width: 8),
                       Expanded(
-                          child: Text(cityLabel,
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.w800))),
+                        child: Text(
+                          cityLabel,
+                          style: const TextStyle(fontWeight: FontWeight.w800),
+                        ),
+                      ),
                     ],
                   ),
                   if (address.isNotEmpty) ...[
                     const SizedBox(height: 6),
-                    Text(address,
-                        style: const TextStyle(color: Colors.white70)),
+                    Text(
+                      address,
+                      style: const TextStyle(color: Colors.white70),
+                    ),
                   ],
                   const SizedBox(height: 8),
                   const Text(
