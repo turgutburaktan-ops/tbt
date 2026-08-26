@@ -25,6 +25,17 @@ jobs:
           cache: true
       - name: Install dependencies
         run: flutter pub get
+      - name: Install stable CI debug signing certificate
+        shell: bash
+        run: |
+          mkdir -p "$HOME/.android"
+          base64 --decode .github/ci/android-debug.keystore.b64 > "$HOME/.android/debug.keystore"
+          chmod 600 "$HOME/.android/debug.keystore"
+          keytool -list -v \
+            -keystore "$HOME/.android/debug.keystore" \
+            -alias androiddebugkey \
+            -storepass android \
+            -keypass android | grep -E 'SHA1:|SHA256:'
       - name: Preserve app manifest
         run: cp android/app/src/main/AndroidManifest.xml /tmp/AndroidManifest.xml
       - name: Generate disposable Android host project
@@ -47,8 +58,13 @@ jobs:
           grep -q '^package com.tbt.social$' "$main_activity"
       - name: Build debug APK
         run: flutter build apk --debug --no-pub
-      - name: Verify APK artifact
-        run: test -s build/app/outputs/flutter-apk/app-debug.apk
+      - name: Verify APK signing identity
+        shell: bash
+        run: |
+          APK=build/app/outputs/flutter-apk/app-debug.apk
+          test -s "$APK"
+          apksigner verify --print-certs "$APK" | tee /tmp/apk-signing.txt
+          grep -qi '75:8F:F2:13:89:03:3E:D2:63:75:41:5F:AD:30:E1:1F:9A:D1:F3:64' /tmp/apk-signing.txt
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
         with:
