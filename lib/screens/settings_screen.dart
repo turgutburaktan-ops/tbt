@@ -161,7 +161,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
       );
 
-  Widget _switch(IconData i, String t, String s, bool value, ValueChanged<bool> onChanged) => Card(
+  Widget _switch(
+    IconData i,
+    String t,
+    String s,
+    bool value,
+    Future<void> Function(bool) onChanged,
+  ) => Card(
         margin: const EdgeInsets.only(bottom: 7),
         child: SwitchListTile(
           secondary: Icon(i),
