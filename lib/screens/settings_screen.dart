@@ -76,28 +76,59 @@ class _SettingsScreenState extends State<SettingsScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Text('Profil bilgileri', style: TextStyle(fontSize: 21, fontWeight: FontWeight.w900)),
+              const Text(
+                'Profil bilgileri',
+                style: TextStyle(fontSize: 21, fontWeight: FontWeight.w900),
+              ),
               const SizedBox(height: 14),
-              TextField(controller: name, decoration: const InputDecoration(labelText: 'Görünen ad')),
+              TextField(
+                controller: name,
+                decoration: const InputDecoration(labelText: 'Görünen ad'),
+              ),
               const SizedBox(height: 10),
-              TextField(controller: bio, maxLines: 3, maxLength: 160, decoration: const InputDecoration(labelText: 'Biyografi')),
+              TextField(
+                controller: bio,
+                maxLines: 3,
+                maxLength: 160,
+                decoration: const InputDecoration(labelText: 'Biyografi'),
+              ),
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
                 value: type,
                 decoration: const InputDecoration(labelText: 'Profil türü'),
                 items: const [
                   DropdownMenuItem(value: 'personal', child: Text('Kişisel')),
-                  DropdownMenuItem(value: 'creator', child: Text('İçerik Üreticisi')),
-                  DropdownMenuItem(value: 'business_owner', child: Text('İşletme Sahibi')),
-                  DropdownMenuItem(value: 'venue_manager', child: Text('Mekan Yöneticisi')),
-                  DropdownMenuItem(value: 'organizer', child: Text('Organizatör')),
+                  DropdownMenuItem(
+                    value: 'creator',
+                    child: Text('İçerik Üreticisi'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'business_owner',
+                    child: Text('İşletme Sahibi'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'venue_manager',
+                    child: Text('Mekan Yöneticisi'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'organizer',
+                    child: Text('Organizatör'),
+                  ),
                 ],
-                onChanged: (v) { if (v != null) setSheet(() => type = v); },
+                onChanged: (v) {
+                  if (v != null) setSheet(() => type = v);
+                },
               ),
               const SizedBox(height: 8),
-              const Text('Profil türü seçimi hesap veya işletme doğrulaması vermez.', style: TextStyle(color: Colors.white54, fontSize: 11.5)),
+              const Text(
+                'Profil türü seçimi hesap veya işletme doğrulaması vermez.',
+                style: TextStyle(color: Colors.white54, fontSize: 11.5),
+              ),
               const SizedBox(height: 16),
-              FilledButton(onPressed: () => Navigator.pop(sheetContext, true), child: const Text('Kaydet')),
+              FilledButton(
+                onPressed: () => Navigator.pop(sheetContext, true),
+                child: const Text('Kaydet'),
+              ),
             ],
           ),
         ),
@@ -127,7 +158,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final user = _user;
     if (user == null) return;
     final email = (user.email ?? '').trim();
-    final passwordProvider = user.providerData.any((p) => p.providerId == 'password');
+    final passwordProvider = user.providerData.any(
+      (p) => p.providerId == 'password',
+    );
     final action = await showModalBottomSheet<String>(
       context: context,
       useSafeArea: true,
@@ -138,17 +171,33 @@ class _SettingsScreenState extends State<SettingsScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text('Şifre ve güvenlik', style: TextStyle(fontSize: 21, fontWeight: FontWeight.w900)),
+            const Text(
+              'Şifre ve güvenlik',
+              style: TextStyle(fontSize: 21, fontWeight: FontWeight.w900),
+            ),
             const SizedBox(height: 14),
             _infoRow('E-posta', email.isEmpty ? 'Bağlı değil' : email),
-            _infoRow('Telefon', (user.phoneNumber ?? '').isEmpty ? 'Bağlı değil' : user.phoneNumber!),
+            _infoRow(
+              'Telefon',
+              (user.phoneNumber ?? '').isEmpty
+                  ? 'Bağlı değil'
+                  : user.phoneNumber!,
+            ),
             if (passwordProvider && email.isNotEmpty) ...[
               const SizedBox(height: 14),
-              FilledButton.icon(onPressed: () => Navigator.pop(sheetContext, 'change'), icon: const Icon(Icons.lock_reset_rounded), label: const Text('Şifremi Değiştir')),
+              FilledButton.icon(
+                onPressed: () => Navigator.pop(sheetContext, 'change'),
+                icon: const Icon(Icons.lock_reset_rounded),
+                label: const Text('Şifremi Değiştir'),
+              ),
             ],
             if (email.isNotEmpty) ...[
               const SizedBox(height: 8),
-              OutlinedButton.icon(onPressed: () => Navigator.pop(sheetContext, 'reset'), icon: const Icon(Icons.mail_outline_rounded), label: const Text('Şifre sıfırlama e-postası gönder')),
+              OutlinedButton.icon(
+                onPressed: () => Navigator.pop(sheetContext, 'reset'),
+                icon: const Icon(Icons.mail_outline_rounded),
+                label: const Text('Şifre sıfırlama e-postası gönder'),
+              ),
             ],
           ],
         ),
@@ -177,43 +226,92 @@ class _SettingsScreenState extends State<SettingsScreen> {
       backgroundColor: AppColors.background,
       builder: (sheetContext) => StatefulBuilder(
         builder: (context, setSheet) => Padding(
-          padding: EdgeInsets.fromLTRB(18, 18, 18, 18 + MediaQuery.viewInsetsOf(context).bottom),
+          padding: EdgeInsets.fromLTRB(
+            18,
+            18,
+            18,
+            18 + MediaQuery.viewInsetsOf(context).bottom,
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Text('Şifre Değiştir', style: TextStyle(fontSize: 21, fontWeight: FontWeight.w900)),
+              const Text(
+                'Şifre Değiştir',
+                style: TextStyle(fontSize: 21, fontWeight: FontWeight.w900),
+              ),
               const SizedBox(height: 14),
-              TextField(controller: current, obscureText: true, decoration: const InputDecoration(labelText: 'Mevcut şifre')),
+              TextField(
+                controller: current,
+                obscureText: true,
+                decoration: const InputDecoration(labelText: 'Mevcut şifre'),
+              ),
               const SizedBox(height: 10),
-              TextField(controller: next, obscureText: true, decoration: const InputDecoration(labelText: 'Yeni şifre', helperText: 'En az 6 karakter')),
+              TextField(
+                controller: next,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  labelText: 'Yeni şifre',
+                  helperText: 'En az 6 karakter',
+                ),
+              ),
               const SizedBox(height: 10),
-              TextField(controller: confirm, obscureText: true, decoration: const InputDecoration(labelText: 'Yeni şifre tekrar')),
+              TextField(
+                controller: confirm,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  labelText: 'Yeni şifre tekrar',
+                ),
+              ),
               const SizedBox(height: 16),
               FilledButton.icon(
-                onPressed: saving ? null : () async {
-                  if (current.text.isEmpty) { _message('Mevcut şifreni gir.'); return; }
-                  if (next.text.length < 6) { _message('Yeni şifre en az 6 karakter olmalı.'); return; }
-                  if (next.text != confirm.text) { _message('Yeni şifreler aynı değil.'); return; }
-                  setSheet(() => saving = true);
-                  try {
-                    final user = FirebaseAuth.instance.currentUser;
-                    if (user == null) return;
-                    await user.reauthenticateWithCredential(EmailAuthProvider.credential(email: email, password: current.text));
-                    await user.updatePassword(next.text);
-                    if (sheetContext.mounted) Navigator.pop(sheetContext);
-                    _message('Şifren başarıyla değiştirildi.');
-                  } on FirebaseAuthException catch (e) {
-                    _message(switch (e.code) {
-                      'wrong-password' || 'invalid-credential' => 'Mevcut şifre yanlış.',
-                      'weak-password' => 'Yeni şifre çok zayıf.',
-                      'requires-recent-login' => 'Güvenlik için tekrar giriş yapıp yeniden dene.',
-                      _ => e.message ?? 'Şifre değiştirilemedi.',
-                    });
-                    setSheet(() => saving = false);
-                  }
-                },
-                icon: saving ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.check_rounded),
+                onPressed: saving
+                    ? null
+                    : () async {
+                        if (current.text.isEmpty) {
+                          _message('Mevcut şifreni gir.');
+                          return;
+                        }
+                        if (next.text.length < 6) {
+                          _message('Yeni şifre en az 6 karakter olmalı.');
+                          return;
+                        }
+                        if (next.text != confirm.text) {
+                          _message('Yeni şifreler aynı değil.');
+                          return;
+                        }
+                        setSheet(() => saving = true);
+                        try {
+                          final user = FirebaseAuth.instance.currentUser;
+                          if (user == null) return;
+                          await user.reauthenticateWithCredential(
+                            EmailAuthProvider.credential(
+                              email: email,
+                              password: current.text,
+                            ),
+                          );
+                          await user.updatePassword(next.text);
+                          if (sheetContext.mounted) Navigator.pop(sheetContext);
+                          _message('Şifren başarıyla değiştirildi.');
+                        } on FirebaseAuthException catch (e) {
+                          _message(switch (e.code) {
+                            'wrong-password' ||
+                            'invalid-credential' => 'Mevcut şifre yanlış.',
+                            'weak-password' => 'Yeni şifre çok zayıf.',
+                            'requires-recent-login' =>
+                              'Güvenlik için tekrar giriş yapıp yeniden dene.',
+                            _ => e.message ?? 'Şifre değiştirilemedi.',
+                          });
+                          setSheet(() => saving = false);
+                        }
+                      },
+                icon: saving
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.check_rounded),
                 label: Text(saving ? 'Değiştiriliyor…' : 'Şifreyi Değiştir'),
               ),
             ],
@@ -221,7 +319,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
       ),
     );
-    current.dispose(); next.dispose(); confirm.dispose();
+    current.dispose();
+    next.dispose();
+    confirm.dispose();
   }
 
   Future<void> _verification() async {
@@ -241,20 +341,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
               'E-posta',
               user!.emailVerified,
               actionLabel: user.emailVerified ? null : 'Şimdi Doğrula',
-              onAction: user.emailVerified ? null : () => Navigator.pop(dialogContext, 'email'),
+              onAction: user.emailVerified
+                  ? null
+                  : () => Navigator.pop(dialogContext, 'email'),
             ),
             const SizedBox(height: 10),
             _verificationRow(
               'Telefon',
               (user.phoneNumber ?? '').isNotEmpty,
-              actionLabel: (user.phoneNumber ?? '').isEmpty ? 'Şimdi Doğrula' : 'Değiştir',
+              actionLabel: (user.phoneNumber ?? '').isEmpty
+                  ? 'Şimdi Doğrula'
+                  : 'Değiştir',
               onAction: () => Navigator.pop(dialogContext, 'phone'),
             ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Kapat')),
-          OutlinedButton(onPressed: () => Navigator.pop(dialogContext, 'check'), child: const Text('Durumu Kontrol Et')),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Kapat'),
+          ),
+          OutlinedButton(
+            onPressed: () => Navigator.pop(dialogContext, 'check'),
+            child: const Text('Durumu Kontrol Et'),
+          ),
         ],
       ),
     );
@@ -268,7 +378,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
       }
     }
     if (action == 'phone') {
-      final changed = await Navigator.push<bool>(context, MaterialPageRoute(builder: (_) => const PhoneVerificationScreen()));
+      final changed = await Navigator.push<bool>(
+        context,
+        MaterialPageRoute(builder: (_) => const PhoneVerificationScreen()),
+      );
       if (changed == true) {
         await FirebaseAuth.instance.currentUser?.reload();
         _message('Telefon doğrulaması tamamlandı.');
@@ -284,8 +397,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _interests(Map<String, dynamic> settings) async {
-    const choices = ['Fotoğraf','Gezi','Doğa','Şehir','Etkinlik','Kafe','Lezzet','Sanat','Spor'];
-    final selected = <String>{...((settings['interests'] is List) ? (settings['interests'] as List).map((e) => e.toString()) : const <String>[])};
+    const choices = [
+      'Fotoğraf',
+      'Gezi',
+      'Doğa',
+      'Şehir',
+      'Etkinlik',
+      'Kafe',
+      'Lezzet',
+      'Sanat',
+      'Spor',
+    ];
+    final selected = <String>{
+      ...((settings['interests'] is List)
+          ? (settings['interests'] as List).map((e) => e.toString())
+          : const <String>[]),
+    };
     final save = await showModalBottomSheet<bool>(
       context: context,
       useSafeArea: true,
@@ -293,19 +420,48 @@ class _SettingsScreenState extends State<SettingsScreen> {
       builder: (sheetContext) => StatefulBuilder(
         builder: (context, setSheet) => Padding(
           padding: const EdgeInsets.fromLTRB(18, 16, 18, 24),
-          child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-            const Text('İlgi alanları', style: TextStyle(fontSize: 21, fontWeight: FontWeight.w900)),
-            const SizedBox(height: 14),
-            Wrap(spacing: 8, runSpacing: 8, children: choices.map((item) => FilterChip(label: Text(item), selected: selected.contains(item), onSelected: (v) => setSheet(() => v ? selected.add(item) : selected.remove(item)))).toList()),
-            const SizedBox(height: 18),
-            FilledButton(onPressed: () => Navigator.pop(sheetContext, true), child: const Text('Kaydet')),
-          ]),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Text(
+                'İlgi alanları',
+                style: TextStyle(fontSize: 21, fontWeight: FontWeight.w900),
+              ),
+              const SizedBox(height: 14),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: choices
+                    .map(
+                      (item) => FilterChip(
+                        label: Text(item),
+                        selected: selected.contains(item),
+                        onSelected: (v) => setSheet(
+                          () => v ? selected.add(item) : selected.remove(item),
+                        ),
+                      ),
+                    )
+                    .toList(),
+              ),
+              const SizedBox(height: 18),
+              FilledButton(
+                onPressed: () => Navigator.pop(sheetContext, true),
+                child: const Text('Kaydet'),
+              ),
+            ],
+          ),
         ),
       ),
     );
     if (save == true && _userRef != null) {
-      try { await _userRef!.update({'settings.interests': selected.toList()}); }
-      catch (_) { await _userRef!.set({'settings': {'interests': selected.toList()}}, SetOptions(merge: true)); }
+      try {
+        await _userRef!.update({'settings.interests': selected.toList()});
+      } catch (_) {
+        await _userRef!.set({
+          'settings': {'interests': selected.toList()},
+        }, SetOptions(merge: true));
+      }
       _message('İlgi alanların güncellendi.');
     }
   }
@@ -316,16 +472,60 @@ class _SettingsScreenState extends State<SettingsScreen> {
     backgroundColor: AppColors.background,
     builder: (sheetContext) => Padding(
       padding: const EdgeInsets.fromLTRB(18, 16, 18, 24),
-      child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        const Text('Veri ve depolama', style: TextStyle(fontSize: 21, fontWeight: FontWeight.w900)),
-        const SizedBox(height: 14),
-        OutlinedButton.icon(onPressed: () { PaintingBinding.instance.imageCache.clear(); PaintingBinding.instance.imageCache.clearLiveImages(); Navigator.pop(sheetContext); _message('Görsel önbelleği temizlendi.'); }, icon: const Icon(Icons.cleaning_services_outlined), label: const Text('Görsel önbelleğini temizle')),
-      ]),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Text(
+            'Veri ve depolama',
+            style: TextStyle(fontSize: 21, fontWeight: FontWeight.w900),
+          ),
+          const SizedBox(height: 14),
+          OutlinedButton.icon(
+            onPressed: () {
+              PaintingBinding.instance.imageCache.clear();
+              PaintingBinding.instance.imageCache.clearLiveImages();
+              Navigator.pop(sheetContext);
+              _message('Görsel önbelleği temizlendi.');
+            },
+            icon: const Icon(Icons.cleaning_services_outlined),
+            label: const Text('Görsel önbelleğini temizle'),
+          ),
+        ],
+      ),
     ),
   );
 
-  void _help() => showDialog<void>(context: context, builder: (c) => AlertDialog(title: const Text('Yardım ve destek'), content: const Text('Bir hesabı, içeriği veya mekanı şikayet etmek için ilgili içerikteki üç nokta menüsünü kullan. Hesap güvenliği için Gizlilik ve Güvenlik bölümünü kullanabilirsin.'), actions: [FilledButton(onPressed: () => Navigator.pop(c), child: const Text('Tamam'))]));
-  void _about() => showDialog<void>(context: context, builder: (c) => AlertDialog(title: const Text('TBT'), content: const Text('TBT; içerik, mekan, gezi noktası ve etkinlikleri tek sosyal keşif deneyiminde bir araya getirir.'), actions: [FilledButton(onPressed: () => Navigator.pop(c), child: const Text('Kapat'))]));
+  void _help() => showDialog<void>(
+    context: context,
+    builder: (c) => AlertDialog(
+      title: const Text('Yardım ve destek'),
+      content: const Text(
+        'Bir hesabı, içeriği veya mekanı şikayet etmek için ilgili içerikteki üç nokta menüsünü kullan. Hesap güvenliği için Gizlilik ve Güvenlik bölümünü kullanabilirsin.',
+      ),
+      actions: [
+        FilledButton(
+          onPressed: () => Navigator.pop(c),
+          child: const Text('Tamam'),
+        ),
+      ],
+    ),
+  );
+  void _about() => showDialog<void>(
+    context: context,
+    builder: (c) => AlertDialog(
+      title: const Text('TBT'),
+      content: const Text(
+        'TBT; içerik, mekan, gezi noktası ve etkinlikleri tek sosyal keşif deneyiminde bir araya getirir.',
+      ),
+      actions: [
+        FilledButton(
+          onPressed: () => Navigator.pop(c),
+          child: const Text('Kapat'),
+        ),
+      ],
+    ),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -333,77 +533,237 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(title: const Text('Ayarlar')),
-      body: user == null ? const Center(child: Text('Ayarlar için giriş yapmalısın.')) : StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-        stream: _userRef!.snapshots(),
-        builder: (context, snapshot) {
-          final data = snapshot.data?.data() ?? const <String, dynamic>{};
-          final settings = Map<String, dynamic>.from(data['settings'] is Map ? data['settings'] as Map : {});
-          final type = (data['profileType'] ?? 'personal').toString();
-          return ListView(
-            padding: const EdgeInsets.fromLTRB(14, 8, 14, 32),
-            children: [
-              _profile(data, user, type),
-              _section('Hesap'),
-              _tile(Icons.person_outline_rounded, 'Profil bilgileri', 'Ad, biyografi ve profil türü', () => _editProfile(data)),
-              _tile(Icons.lock_outline_rounded, 'Şifre ve güvenlik', 'Mevcut şifrenle yeni şifre oluştur veya sıfırlama bağlantısı al', _security),
-              _tile(Icons.verified_user_outlined, 'Doğrulama', 'E-posta ve telefon doğrulamasını yönet', _verification),
-              _section('Gizlilik'),
-              _switchTile(Icons.lock_person_outlined, 'Gizli hesap', 'Yeni takipçileri sen onayla', settings['privateAccount'] == true, (v) => _setBool('privateAccount', v)),
-              _switchTile(Icons.location_off_outlined, 'Konum görünürlüğü', 'Konumunu sosyal içeriklerde göster', settings['locationVisible'] == true, (v) => _setBool('locationVisible', v)),
-              _tile(Icons.shield_outlined, 'Gizlilik ve güvenlik', 'Mesaj, etiketleme, yorum ve engellenen hesaplar', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SafetyPrivacyCenterScreen()))),
-              _section('Bildirimler'),
-              _switchTile(Icons.chat_bubble_outline_rounded, 'Mesajlar', 'Yeni mesaj bildirimleri', settings['notifyMessages'] != false, (v) => _setBool('notifyMessages', v)),
-              _switchTile(Icons.favorite_border_rounded, 'Beğeni ve yorumlar', 'İçerik etkileşimlerini bildir', settings['notifyEngagement'] != false, (v) => _setBool('notifyEngagement', v)),
-              _switchTile(Icons.event_outlined, 'Etkinlikler', 'Daveti, katılımı ve hatırlatmaları bildir', settings['notifyEvents'] != false, (v) => _setBool('notifyEvents', v)),
-              _switchTile(Icons.emoji_events_outlined, 'XP ve görevler', 'Puan, seviye ve görev gelişmelerini bildir', settings['notifyRewards'] != false, (v) => _setBool('notifyRewards', v)),
-              _section('İçerik ve Keşif'),
-              _switchTile(Icons.play_circle_outline_rounded, 'Videoları otomatik oynat', 'Akış ve keşifte videolar otomatik başlasın', settings['autoplayVideos'] != false, (v) => _setBool('autoplayVideos', v)),
-              _switchTile(Icons.visibility_off_outlined, 'Hassas içerik filtresi', 'Hassas olabilecek içerikleri azalt', settings['sensitiveFilter'] != false, (v) => _setBool('sensitiveFilter', v)),
-              _tile(Icons.interests_outlined, 'İlgi alanları', 'Önerilerini şekillendiren konuları yönet', () => _interests(settings)),
-              if (type == 'business_owner' || type == 'venue_manager') ...[
-                _section('Mekanlar ve Yönetim'),
-                _tile(Icons.storefront_outlined, 'Yönettiğim Mekanlar', 'Yetkili olduğun mekanları tek yerden yönet', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ManagedVenuesScreen()))),
-              ],
-              if (type == 'organizer') ...[
-                _section('Organizatör'),
-                _tile(Icons.event_available_outlined, 'Etkinlik yönetimi', 'Etkinliklerini görüntüle ve katılımı takip et', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SocialEventsScreen()))),
-              ],
-              _section('Uygulama'),
-              _staticTile(Icons.language_rounded, 'Dil', 'Türkçe'),
-              _tile(Icons.storage_outlined, 'Veri ve depolama', 'Önbellek ve veri tercihleri', _storage),
-              _tile(Icons.help_outline_rounded, 'Yardım ve destek', 'Güvenlik, şikayet ve yardım yolları', _help),
-              _tile(Icons.info_outline_rounded, 'TBT hakkında', 'Uygulama ve topluluk bilgileri', _about),
-              const SizedBox(height: 16),
-              OutlinedButton.icon(
-                style: OutlinedButton.styleFrom(foregroundColor: Colors.redAccent, minimumSize: const Size.fromHeight(52)),
-                onPressed: () async { await AuthService.instance.logout(); if (context.mounted) Navigator.of(context).popUntil((r) => r.isFirst); },
-                icon: const Icon(Icons.logout_rounded),
-                label: const Text('Çıkış Yap'),
-              ),
-            ],
-          );
-        },
-      ),
+      body: user == null
+          ? const Center(child: Text('Ayarlar için giriş yapmalısın.'))
+          : StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+              stream: _userRef!.snapshots(),
+              builder: (context, snapshot) {
+                final data = snapshot.data?.data() ?? const <String, dynamic>{};
+                final settings = Map<String, dynamic>.from(
+                  data['settings'] is Map ? data['settings'] as Map : {},
+                );
+                final type = (data['profileType'] ?? 'personal').toString();
+                return ListView(
+                  padding: const EdgeInsets.fromLTRB(14, 8, 14, 32),
+                  children: [
+                    _profile(data, user, type),
+                    _section('Hesap'),
+                    _tile(
+                      Icons.person_outline_rounded,
+                      'Profil bilgileri',
+                      'Ad, biyografi ve profil türü',
+                      () => _editProfile(data),
+                    ),
+                    _tile(
+                      Icons.lock_outline_rounded,
+                      'Şifre ve güvenlik',
+                      'Mevcut şifrenle yeni şifre oluştur veya sıfırlama bağlantısı al',
+                      _security,
+                    ),
+                    _tile(
+                      Icons.verified_user_outlined,
+                      'Doğrulama',
+                      'E-posta ve telefon doğrulamasını yönet',
+                      _verification,
+                    ),
+                    _section('Gizlilik'),
+                    _switchTile(
+                      Icons.lock_person_outlined,
+                      'Gizli hesap',
+                      'Yeni takipçileri sen onayla',
+                      settings['privateAccount'] == true,
+                      (v) => _setBool('privateAccount', v),
+                    ),
+                    _switchTile(
+                      Icons.location_off_outlined,
+                      'Konum görünürlüğü',
+                      'Konumunu sosyal içeriklerde göster',
+                      settings['locationVisible'] == true,
+                      (v) => _setBool('locationVisible', v),
+                    ),
+                    _tile(
+                      Icons.shield_outlined,
+                      'Gizlilik ve güvenlik',
+                      'Mesaj, etiketleme, yorum ve engellenen hesaplar',
+                      () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const SafetyPrivacyCenterScreen(),
+                        ),
+                      ),
+                    ),
+                    _section('Bildirimler'),
+                    _switchTile(
+                      Icons.chat_bubble_outline_rounded,
+                      'Mesajlar',
+                      'Yeni mesaj bildirimleri',
+                      settings['notifyMessages'] != false,
+                      (v) => _setBool('notifyMessages', v),
+                    ),
+                    _switchTile(
+                      Icons.favorite_border_rounded,
+                      'Beğeni ve yorumlar',
+                      'İçerik etkileşimlerini bildir',
+                      settings['notifyEngagement'] != false,
+                      (v) => _setBool('notifyEngagement', v),
+                    ),
+                    _switchTile(
+                      Icons.event_outlined,
+                      'Etkinlikler',
+                      'Daveti, katılımı ve hatırlatmaları bildir',
+                      settings['notifyEvents'] != false,
+                      (v) => _setBool('notifyEvents', v),
+                    ),
+                    _switchTile(
+                      Icons.emoji_events_outlined,
+                      'XP ve görevler',
+                      'Puan, seviye ve görev gelişmelerini bildir',
+                      settings['notifyRewards'] != false,
+                      (v) => _setBool('notifyRewards', v),
+                    ),
+                    _section('İçerik ve Keşif'),
+                    _switchTile(
+                      Icons.play_circle_outline_rounded,
+                      'Videoları otomatik oynat',
+                      'Akış ve keşifte videolar otomatik başlasın',
+                      settings['autoplayVideos'] != false,
+                      (v) => _setBool('autoplayVideos', v),
+                    ),
+                    _switchTile(
+                      Icons.visibility_off_outlined,
+                      'Hassas içerik filtresi',
+                      'Hassas olabilecek içerikleri azalt',
+                      settings['sensitiveFilter'] != false,
+                      (v) => _setBool('sensitiveFilter', v),
+                    ),
+                    _tile(
+                      Icons.interests_outlined,
+                      'İlgi alanları',
+                      'Önerilerini şekillendiren konuları yönet',
+                      () => _interests(settings),
+                    ),
+                    if (type == 'business_owner' ||
+                        type == 'venue_manager') ...[
+                      _section('Mekanlar ve Yönetim'),
+                      _tile(
+                        Icons.storefront_outlined,
+                        'Yönettiğim Mekanlar',
+                        'Yetkili olduğun mekanları tek yerden yönet',
+                        () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const ManagedVenuesScreen(),
+                          ),
+                        ),
+                      ),
+                    ],
+                    if (type == 'organizer') ...[
+                      _section('Organizatör'),
+                      _tile(
+                        Icons.event_available_outlined,
+                        'Etkinlik yönetimi',
+                        'Etkinliklerini görüntüle ve katılımı takip et',
+                        () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const SocialEventsScreen(),
+                          ),
+                        ),
+                      ),
+                    ],
+                    _section('Uygulama'),
+                    _staticTile(Icons.language_rounded, 'Dil', 'Türkçe'),
+                    _tile(
+                      Icons.storage_outlined,
+                      'Veri ve depolama',
+                      'Önbellek ve veri tercihleri',
+                      _storage,
+                    ),
+                    _tile(
+                      Icons.help_outline_rounded,
+                      'Yardım ve destek',
+                      'Güvenlik, şikayet ve yardım yolları',
+                      _help,
+                    ),
+                    _tile(
+                      Icons.info_outline_rounded,
+                      'TBT hakkında',
+                      'Uygulama ve topluluk bilgileri',
+                      _about,
+                    ),
+                    const SizedBox(height: 16),
+                    OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.redAccent,
+                        minimumSize: const Size.fromHeight(52),
+                      ),
+                      onPressed: () async {
+                        await AuthService.instance.logout();
+                        if (context.mounted)
+                          Navigator.of(context).popUntil((r) => r.isFirst);
+                      },
+                      icon: const Icon(Icons.logout_rounded),
+                      label: const Text('Çıkış Yap'),
+                    ),
+                  ],
+                );
+              },
+            ),
     );
   }
 
   Widget _profile(Map<String, dynamic> data, User user, String type) {
-    final name = (data['displayName'] ?? user.displayName ?? 'TBT Kullanıcısı').toString();
+    final name = (data['displayName'] ?? user.displayName ?? 'TBT Kullanıcısı')
+        .toString();
     final username = (data['username'] ?? '').toString();
     final photo = (data['photoUrl'] ?? user.photoURL ?? '').toString();
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(20), border: Border.all(color: AppColors.border)),
-      child: Row(children: [
-        CircleAvatar(radius: 27, backgroundColor: AppColors.surfaceStrong, backgroundImage: photo.isEmpty ? null : NetworkImage(photo), child: photo.isEmpty ? const Icon(Icons.person_outline_rounded) : null),
-        const SizedBox(width: 13),
-        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(name, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900)),
-          if (username.isNotEmpty) Text(username.startsWith('@') ? username : '@$username', style: const TextStyle(color: Colors.white60)),
-          const SizedBox(height: 3),
-          Text(_profileTypeLabel(type), style: const TextStyle(color: AppColors.cyan, fontWeight: FontWeight.w700)),
-        ])),
-      ]),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 27,
+            backgroundColor: AppColors.surfaceStrong,
+            backgroundImage: photo.isEmpty ? null : NetworkImage(photo),
+            child: photo.isEmpty
+                ? const Icon(Icons.person_outline_rounded)
+                : null,
+          ),
+          const SizedBox(width: 13),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name,
+                  style: const TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                if (username.isNotEmpty)
+                  Text(
+                    username.startsWith('@') ? username : '@$username',
+                    style: const TextStyle(color: Colors.white60),
+                  ),
+                const SizedBox(height: 3),
+                Text(
+                  _profileTypeLabel(type),
+                  style: const TextStyle(
+                    color: AppColors.cyan,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -415,14 +775,35 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _ => 'Kişisel',
   };
 
-  Widget _verificationRow(String label, bool verified, {String? actionLabel, VoidCallback? onAction}) => Row(
+  Widget _verificationRow(
+    String label,
+    bool verified, {
+    String? actionLabel,
+    VoidCallback? onAction,
+  }) => Row(
     children: [
-      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
-        const SizedBox(height: 2),
-        Text(verified ? 'Doğrulandı' : 'Doğrulanmadı', style: TextStyle(color: verified ? AppColors.cyan : Colors.white54)),
-      ])),
-      Icon(verified ? Icons.verified_rounded : Icons.error_outline_rounded, color: verified ? AppColors.cyan : Colors.white38),
+      Expanded(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              verified ? 'Doğrulandı' : 'Doğrulanmadı',
+              style: TextStyle(
+                color: verified ? AppColors.cyan : Colors.white54,
+              ),
+            ),
+          ],
+        ),
+      ),
+      Icon(
+        verified ? Icons.verified_rounded : Icons.error_outline_rounded,
+        color: verified ? AppColors.cyan : Colors.white38,
+      ),
       if (actionLabel != null) ...[
         const SizedBox(width: 8),
         TextButton(onPressed: onAction, child: Text(actionLabel)),
@@ -430,9 +811,74 @@ class _SettingsScreenState extends State<SettingsScreen> {
     ],
   );
 
-  Widget _section(String title) => Padding(padding: const EdgeInsets.fromLTRB(4, 22, 4, 8), child: Text(title, style: const TextStyle(color: Colors.white54, fontWeight: FontWeight.w800, fontSize: 13)));
-  Widget _tile(IconData icon, String title, String subtitle, VoidCallback onTap) => Card(margin: const EdgeInsets.only(bottom: 7), child: ListTile(leading: Icon(icon), title: Text(title, style: const TextStyle(fontWeight: FontWeight.w800)), subtitle: Text(subtitle), trailing: const Icon(Icons.chevron_right_rounded), onTap: onTap));
-  Widget _staticTile(IconData icon, String title, String subtitle) => Card(margin: const EdgeInsets.only(bottom: 7), child: ListTile(leading: Icon(icon), title: Text(title, style: const TextStyle(fontWeight: FontWeight.w800)), subtitle: Text(subtitle)));
-  Widget _switchTile(IconData icon, String title, String subtitle, bool value, Future<void> Function(bool) onChanged) => Card(margin: const EdgeInsets.only(bottom: 7), child: SwitchListTile(secondary: Icon(icon), title: Text(title, style: const TextStyle(fontWeight: FontWeight.w800)), subtitle: Text(subtitle), value: value, onChanged: (next) async { await onChanged(next); if (mounted) setState(() {}); }));
-  Widget _infoRow(String label, String value) => Padding(padding: const EdgeInsets.symmetric(vertical: 6), child: Row(children: [SizedBox(width: 82, child: Text(label, style: const TextStyle(color: Colors.white54))), Expanded(child: Text(value, style: const TextStyle(fontWeight: FontWeight.w700)))]));
+  Widget _section(String title) => Padding(
+    padding: const EdgeInsets.fromLTRB(4, 22, 4, 8),
+    child: Text(
+      title,
+      style: const TextStyle(
+        color: Colors.white54,
+        fontWeight: FontWeight.w800,
+        fontSize: 13,
+      ),
+    ),
+  );
+  Widget _tile(
+    IconData icon,
+    String title,
+    String subtitle,
+    VoidCallback onTap,
+  ) => Card(
+    margin: const EdgeInsets.only(bottom: 7),
+    child: ListTile(
+      leading: Icon(icon),
+      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w800)),
+      subtitle: Text(subtitle),
+      trailing: const Icon(Icons.chevron_right_rounded),
+      onTap: onTap,
+    ),
+  );
+  Widget _staticTile(IconData icon, String title, String subtitle) => Card(
+    margin: const EdgeInsets.only(bottom: 7),
+    child: ListTile(
+      leading: Icon(icon),
+      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w800)),
+      subtitle: Text(subtitle),
+    ),
+  );
+  Widget _switchTile(
+    IconData icon,
+    String title,
+    String subtitle,
+    bool value,
+    Future<void> Function(bool) onChanged,
+  ) => Card(
+    margin: const EdgeInsets.only(bottom: 7),
+    child: SwitchListTile(
+      secondary: Icon(icon),
+      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w800)),
+      subtitle: Text(subtitle),
+      value: value,
+      onChanged: (next) async {
+        await onChanged(next);
+        if (mounted) setState(() {});
+      },
+    ),
+  );
+  Widget _infoRow(String label, String value) => Padding(
+    padding: const EdgeInsets.symmetric(vertical: 6),
+    child: Row(
+      children: [
+        SizedBox(
+          width: 82,
+          child: Text(label, style: const TextStyle(color: Colors.white54)),
+        ),
+        Expanded(
+          child: Text(
+            value,
+            style: const TextStyle(fontWeight: FontWeight.w700),
+          ),
+        ),
+      ],
+    ),
+  );
 }
