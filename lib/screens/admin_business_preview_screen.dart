@@ -28,7 +28,9 @@ class _AdminBusinessPreviewScreenState
 
   Future<void> _load() async {
     if (mounted) setState(() => _loading = true);
-    final token = await FirebaseAuth.instance.currentUser?.getIdTokenResult(true);
+    final token = await FirebaseAuth.instance.currentUser?.getIdTokenResult(
+      true,
+    );
     final allowed = token?.claims?['admin'] == true;
     if (!allowed) {
       if (mounted) {
@@ -62,7 +64,8 @@ class _AdminBusinessPreviewScreenState
   void _openSandbox(Map<String, dynamic> data) {
     final category = (data['category'] ?? 'cafe').toString();
     final venueName =
-        (data['venueName'] ?? data['legalName'] ?? 'TBT Demo İşletme').toString();
+        (data['venueName'] ?? data['legalName'] ?? 'TBT Demo İşletme')
+            .toString();
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -139,9 +142,7 @@ class _AdminBusinessPreviewScreenState
           Card(
             margin: const EdgeInsets.fromLTRB(14, 0, 14, 10),
             child: ListTile(
-              leading: const CircleAvatar(
-                child: Icon(Icons.science_outlined),
-              ),
+              leading: const CircleAvatar(child: Icon(Icons.science_outlined)),
               title: const Text(
                 'TBT Demo İşletme',
                 style: TextStyle(fontWeight: FontWeight.w900),

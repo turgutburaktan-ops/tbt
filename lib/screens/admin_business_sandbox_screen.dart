@@ -64,7 +64,9 @@ class _AdminBusinessSandboxScreenState
               TextField(
                 controller: d,
                 maxLines: 4,
-                decoration: const InputDecoration(labelText: 'İşletme hakkında'),
+                decoration: const InputDecoration(
+                  labelText: 'İşletme hakkında',
+                ),
               ),
               const SizedBox(height: 10),
               TextField(
@@ -160,10 +162,7 @@ class _AdminBusinessSandboxScreenState
     }
   }
 
-  Future<void> _editContent(
-    String type, {
-    int? index,
-  }) async {
+  Future<void> _editContent(String type, {int? index}) async {
     final list = switch (type) {
       'menu' => _menu,
       'campaign' => _campaigns,
@@ -218,8 +217,9 @@ class _AdminBusinessSandboxScreenState
                 const SizedBox(height: 8),
                 TextField(
                   controller: extra,
-                  keyboardType:
-                      type == 'menu' ? TextInputType.number : TextInputType.text,
+                  keyboardType: type == 'menu'
+                      ? TextInputType.number
+                      : TextInputType.text,
                   decoration: InputDecoration(
                     labelText: type == 'menu'
                         ? 'Fiyat (TL)'
@@ -373,9 +373,15 @@ class _AdminBusinessSandboxScreenState
               const SizedBox(height: 8),
               Text(
                 widget.venueName,
-                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w900,
+                ),
               ),
-              Text(_categoryLabel, style: const TextStyle(color: Colors.white60)),
+              Text(
+                _categoryLabel,
+                style: const TextStyle(color: Colors.white60),
+              ),
               const SizedBox(height: 8),
               const Text(
                 'Burada işletme sahibinin yapabildiği işlemleri deneyebilirsin. Eklediğin menü, kampanya, etkinlik ve profil değişiklikleri yalnızca bu ekran açıkken bellekte tutulur; Firebase veya gerçek işletmeye yazılmaz.',
@@ -388,7 +394,9 @@ class _AdminBusinessSandboxScreenState
         _tile(
           Icons.store_mall_directory_outlined,
           'Profil Bilgileri',
-          _description.isEmpty ? 'Açıklama, telefon ve web sitesini dene' : 'Demo profil değiştirildi',
+          _description.isEmpty
+              ? 'Açıklama, telefon ve web sitesini dene'
+              : 'Demo profil değiştirildi',
           _editProfile,
         ),
         _tile(
@@ -435,11 +443,26 @@ class _AdminBusinessSandboxScreenState
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Business Pro • Demo', style: TextStyle(fontSize: 21, fontWeight: FontWeight.w900)),
+                  Text(
+                    'Business Pro • Demo',
+                    style: TextStyle(fontSize: 21, fontWeight: FontWeight.w900),
+                  ),
                   SizedBox(height: 12),
-                  ListTile(leading: Icon(Icons.insights_rounded), title: Text('İstatistikler'), subtitle: Text('1.284 profil görüntülenmesi • demo veri')),
-                  ListTile(leading: Icon(Icons.event_seat_outlined), title: Text('Rezervasyonlar'), subtitle: Text('12 bekleyen • demo veri')),
-                  ListTile(leading: Icon(Icons.rocket_launch_outlined), title: Text('Boost'), subtitle: Text('Kampanya görünürlüğünü artır • demo')),
+                  ListTile(
+                    leading: Icon(Icons.insights_rounded),
+                    title: Text('İstatistikler'),
+                    subtitle: Text('1.284 profil görüntülenmesi • demo veri'),
+                  ),
+                  ListTile(
+                    leading: Icon(Icons.event_seat_outlined),
+                    title: Text('Rezervasyonlar'),
+                    subtitle: Text('12 bekleyen • demo veri'),
+                  ),
+                  ListTile(
+                    leading: Icon(Icons.rocket_launch_outlined),
+                    title: Text('Boost'),
+                    subtitle: Text('Kampanya görünürlüğünü artır • demo'),
+                  ),
                 ],
               ),
             ),
@@ -500,10 +523,14 @@ class _SandboxListScreenState extends State<_SandboxListScreen> {
             itemCount: widget.items.length,
             itemBuilder: (context, index) {
               final item = widget.items[index];
-              final title = (item[widget.type == 'menu' ? 'name' : 'title'] ?? '').toString();
+              final title =
+                  (item[widget.type == 'menu' ? 'name' : 'title'] ?? '')
+                      .toString();
               final subtitle = [
                 (item['description'] ?? '').toString(),
-                if (widget.type == 'menu' && (item['price'] ?? '').toString().isNotEmpty) '${item['price']} ₺',
+                if (widget.type == 'menu' &&
+                    (item['price'] ?? '').toString().isNotEmpty)
+                  '${item['price']} ₺',
                 if (widget.type != 'menu') (item['date'] ?? '').toString(),
               ].where((e) => e.isNotEmpty).join(' • ');
               return Card(
@@ -519,7 +546,10 @@ class _SandboxListScreenState extends State<_SandboxListScreen> {
                         : Icons.photo_library_outlined,
                     color: AppColors.cyan,
                   ),
-                  title: Text(title, style: const TextStyle(fontWeight: FontWeight.w900)),
+                  title: Text(
+                    title,
+                    style: const TextStyle(fontWeight: FontWeight.w900),
+                  ),
                   subtitle: Text(subtitle.isEmpty ? 'Demo içerik' : subtitle),
                   trailing: PopupMenuButton<String>(
                     onSelected: (value) async {

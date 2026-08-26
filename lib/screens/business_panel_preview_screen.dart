@@ -13,8 +13,6 @@ class BusinessPanelPreviewScreen extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) => AdminBusinessSandboxScreen(
-    venueName: venueName,
-    category: category,
-  );
+  Widget build(BuildContext context) =>
+      AdminBusinessSandboxScreen(venueName: venueName, category: category);
 }
