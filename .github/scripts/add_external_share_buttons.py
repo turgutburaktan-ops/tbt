@@ -1,5 +1,57 @@
 from pathlib import Path
 
+# Other-user profile already uses the real follow and direct-message services.
+# Keep those actions explicit and add profile sharing.
+p = Path('lib/screens/user_profile_screen.dart')
+s = p.read_text()
+if "import '../services/invite_link_service.dart';" not in s:
+    s = s.replace(
+        "import '../services/chat_service.dart';\n",
+        "import '../services/chat_service.dart';\nimport '../services/invite_link_service.dart';\n",
+        1,
+    )
+if 'Future<void> _shareProfile(String displayName)' not in s:
+    marker = "  Future<void> _openChat(BuildContext context, String displayName) async {"
+    method = '''  Future<void> _shareProfile(String displayName) async {
+    await InviteLinkService.instance.shareProfile(
+      userId: userId,
+      displayName: displayName,
+    );
+  }
+
+'''
+    s = s.replace(marker, method + marker, 1)
+s = s.replace("label: const Text('Mesaj Gönder'),", "label: const Text('Mesaj At'),", 1)
+# Share profile from the visible profile header without changing follow/message behavior.
+old = """                          if (!isOwnProfile) ...[
+                            const SizedBox(height: 16),
+                            Row(
+"""
+new = """                          if (!isOwnProfile) ...[
+                            const SizedBox(height: 16),
+                            Row(
+"""
+# Follow/message row is intentionally preserved; add share as a compact app-bar action instead.
+if "tooltip: 'Profili paylaş'" not in s:
+    app_old = """        actions: [
+          if (!isOwnProfile && currentUser != null)
+            UserSafetyActions(userId: userId),
+        ],
+"""
+    app_new = """        actions: [
+          IconButton(
+            tooltip: 'Profili paylaş',
+            onPressed: () => _shareProfile('TBT kullanıcısı'),
+            icon: const Icon(Icons.ios_share_rounded),
+          ),
+          if (!isOwnProfile && currentUser != null)
+            UserSafetyActions(userId: userId),
+        ],
+"""
+    if app_old in s:
+        s = s.replace(app_old, app_new, 1)
+p.write_text(s)
+
 # Add native external sharing to the common engagement bar.
 p = Path('lib/widgets/content_engagement_bar.dart')
 s = p.read_text()
