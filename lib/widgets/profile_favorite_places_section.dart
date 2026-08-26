@@ -35,10 +35,15 @@ class ProfileFavoritePlacesSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-      stream: FirebaseFirestore.instance.collection('users').doc(userId).snapshots(),
+      stream: FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .snapshots(),
       builder: (context, snapshot) {
         final raw = snapshot.data?.data()?['favoritePlaces'];
-        final favorites = raw is Map ? Map<String, dynamic>.from(raw) : <String, dynamic>{};
+        final favorites = raw is Map
+            ? Map<String, dynamic>.from(raw)
+            : <String, dynamic>{};
         final hasAny = _types.any((type) => favorites[type.key] is Map);
         if (!editable && !hasAny) return const SizedBox.shrink();
 
@@ -50,16 +55,27 @@ class ProfileFavoritePlacesSection extends StatelessWidget {
               Row(
                 children: [
                   const Expanded(
-                    child: Text('Favori Mekanlar', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w900)),
+                    child: Text(
+                      'Favori Mekanlar',
+                      style: TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
                   ),
                   if (editable)
-                    const Text('Profilinde görünür', style: TextStyle(color: Colors.white38, fontSize: 11)),
+                    const Text(
+                      'Profilinde görünür',
+                      style: TextStyle(color: Colors.white38, fontSize: 11),
+                    ),
                 ],
               ),
               const SizedBox(height: 10),
               ..._types.map((type) {
                 final value = favorites[type.key];
-                final data = value is Map ? Map<String, dynamic>.from(value) : null;
+                final data = value is Map
+                    ? Map<String, dynamic>.from(value)
+                    : null;
                 if (!editable && data == null) return const SizedBox.shrink();
                 final name = (data?['name'] ?? '').toString().trim();
                 final subtitle = (data?['subtitle'] ?? '').toString().trim();
@@ -80,30 +96,60 @@ class ProfileFavoritePlacesSection extends StatelessWidget {
                           Container(
                             width: 42,
                             height: 42,
-                            decoration: BoxDecoration(color: const Color(0xFF1A1F28), borderRadius: BorderRadius.circular(13)),
-                            child: Icon(type.icon, color: const Color(0xFFB8A1FF)),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF1A1F28),
+                              borderRadius: BorderRadius.circular(13),
+                            ),
+                            child: Icon(
+                              type.icon,
+                              color: const Color(0xFFB8A1FF),
+                            ),
                           ),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(type.label, style: const TextStyle(color: Colors.white54, fontSize: 11.5, fontWeight: FontWeight.w700)),
+                                Text(
+                                  type.label,
+                                  style: const TextStyle(
+                                    color: Colors.white54,
+                                    fontSize: 11.5,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
                                 const SizedBox(height: 3),
                                 Text(
                                   name.isEmpty ? 'Favorini seç' : name,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(fontWeight: FontWeight.w900, color: name.isEmpty ? Colors.white38 : Colors.white),
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w900,
+                                    color: name.isEmpty
+                                        ? Colors.white38
+                                        : Colors.white,
+                                  ),
                                 ),
                                 if (subtitle.isNotEmpty) ...[
                                   const SizedBox(height: 2),
-                                  Text(subtitle, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white54, fontSize: 11.5)),
+                                  Text(
+                                    subtitle,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      color: Colors.white54,
+                                      fontSize: 11.5,
+                                    ),
+                                  ),
                                 ],
                               ],
                             ),
                           ),
-                          if (editable) const Icon(Icons.chevron_right_rounded, color: Colors.white38),
+                          if (editable)
+                            const Icon(
+                              Icons.chevron_right_rounded,
+                              color: Colors.white38,
+                            ),
                         ],
                       ),
                     ),
@@ -145,7 +191,9 @@ class ProfileFavoritePlacesSection extends StatelessWidget {
       }
     } catch (_) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Favori mekan güncellenemedi.')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Favori mekan güncellenemedi.')),
+        );
       }
     }
   }
@@ -193,14 +241,25 @@ class _FavoritePlacePickerState extends State<_FavoritePlacePicker> {
           byId[spot.id] = spot;
         }
       }
-      final spots = NationwideCandidateSpotResolver.mergeInto(byId.values.toList());
+      final spots = NationwideCandidateSpotResolver.mergeInto(
+        byId.values.toList(),
+      );
       return spots
-          .map((spot) => _PlaceChoice(id: spot.id, name: spot.name, subtitle: spot.city, source: 'photo_spots'))
+          .map(
+            (spot) => _PlaceChoice(
+              id: spot.id,
+              name: spot.name,
+              subtitle: spot.city,
+              source: 'photo_spots',
+            ),
+          )
           .toList()
         ..sort((a, b) => a.name.compareTo(b.name));
     }
 
-    final category = widget.type.key == 'cafe' ? NearbyVenueCategory.cafe : NearbyVenueCategory.dining;
+    final category = widget.type.key == 'cafe'
+        ? NearbyVenueCategory.cafe
+        : NearbyVenueCategory.dining;
     double latitude = 39;
     double longitude = 35;
     try {
@@ -237,7 +296,8 @@ class _FavoritePlacePickerState extends State<_FavoritePlacePicker> {
         title: Text(widget.type.label),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, const _PlaceChoice.remove()),
+            onPressed: () =>
+                Navigator.pop(context, const _PlaceChoice.remove()),
             child: const Text('Kaldır'),
           ),
         ],
@@ -249,14 +309,18 @@ class _FavoritePlacePickerState extends State<_FavoritePlacePicker> {
             child: TextField(
               controller: _search,
               onChanged: (_) => setState(() {}),
-              decoration: const InputDecoration(prefixIcon: Icon(Icons.search_rounded), hintText: 'Mekan ara...'),
+              decoration: const InputDecoration(
+                prefixIcon: Icon(Icons.search_rounded),
+                hintText: 'Mekan ara...',
+              ),
             ),
           ),
           Expanded(
             child: FutureBuilder<List<_PlaceChoice>>(
               future: _future,
               builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
+                if (snapshot.connectionState == ConnectionState.waiting)
+                  return const Center(child: CircularProgressIndicator());
                 if (snapshot.hasError) {
                   return Center(
                     child: Column(
@@ -264,7 +328,11 @@ class _FavoritePlacePickerState extends State<_FavoritePlacePicker> {
                       children: [
                         const Padding(
                           padding: EdgeInsets.symmetric(horizontal: 28),
-                          child: Text('Mekanlar yüklenemedi. Konum iznini veya bağlantını kontrol et.', textAlign: TextAlign.center, style: TextStyle(color: Colors.white54)),
+                          child: Text(
+                            'Mekanlar yüklenemedi. Konum iznini veya bağlantını kontrol et.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(color: Colors.white54),
+                          ),
                         ),
                         const SizedBox(height: 10),
                         FilledButton.icon(
@@ -278,21 +346,46 @@ class _FavoritePlacePickerState extends State<_FavoritePlacePicker> {
                 }
                 final q = _search.text.trim().toLowerCase();
                 final items = (snapshot.data ?? const <_PlaceChoice>[])
-                    .where((item) => q.isEmpty || '${item.name} ${item.subtitle}'.toLowerCase().contains(q))
+                    .where(
+                      (item) =>
+                          q.isEmpty ||
+                          '${item.name} ${item.subtitle}'
+                              .toLowerCase()
+                              .contains(q),
+                    )
                     .toList();
                 if (items.isEmpty) {
-                  return const Center(child: Text('Bu kategoride eşleşen mekan yok.', style: TextStyle(color: Colors.white54)));
+                  return const Center(
+                    child: Text(
+                      'Bu kategoride eşleşen mekan yok.',
+                      style: TextStyle(color: Colors.white54),
+                    ),
+                  );
                 }
                 return ListView.separated(
                   padding: const EdgeInsets.fromLTRB(12, 0, 12, 24),
                   itemCount: items.length,
-                  separatorBuilder: (_, __) => const Divider(height: 1, color: Color(0xFF242831)),
+                  separatorBuilder: (_, __) =>
+                      const Divider(height: 1, color: Color(0xFF242831)),
                   itemBuilder: (context, index) {
                     final item = items[index];
                     return ListTile(
-                      leading: Icon(widget.type.icon, color: const Color(0xFFB8A1FF)),
-                      title: Text(item.name, maxLines: 1, overflow: TextOverflow.ellipsis),
-                      subtitle: item.subtitle.isEmpty ? null : Text(item.subtitle, maxLines: 1, overflow: TextOverflow.ellipsis),
+                      leading: Icon(
+                        widget.type.icon,
+                        color: const Color(0xFFB8A1FF),
+                      ),
+                      title: Text(
+                        item.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      subtitle: item.subtitle.isEmpty
+                          ? null
+                          : Text(
+                              item.subtitle,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                       trailing: const Icon(Icons.add_circle_outline_rounded),
                       onTap: () => Navigator.pop(context, item),
                     );
@@ -321,12 +414,17 @@ class _PlaceChoice {
   final String source;
   final bool remove;
 
-  const _PlaceChoice({required this.id, required this.name, required this.subtitle, required this.source}) : remove = false;
+  const _PlaceChoice({
+    required this.id,
+    required this.name,
+    required this.subtitle,
+    required this.source,
+  }) : remove = false;
 
   const _PlaceChoice.remove()
-      : id = '',
-        name = '',
-        subtitle = '',
-        source = '',
-        remove = true;
+    : id = '',
+      name = '',
+      subtitle = '',
+      source = '',
+      remove = true;
 }
