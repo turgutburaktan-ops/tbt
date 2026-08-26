@@ -2,6 +2,9 @@ name: Android APK Build Check
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - feature/video-v1
 
 permissions:
   contents: read
@@ -63,7 +66,9 @@ jobs:
         run: |
           APK=build/app/outputs/flutter-apk/app-debug.apk
           test -s "$APK"
-          apksigner verify --print-certs "$APK" | tee /tmp/apk-signing.txt
+          APKSIGNER=$(find "$ANDROID_HOME/build-tools" -type f -name apksigner | sort -V | tail -1)
+          test -n "$APKSIGNER"
+          "$APKSIGNER" verify --print-certs "$APK" | tee /tmp/apk-signing.txt
           grep -qi '75:8F:F2:13:89:03:3E:D2:63:75:41:5F:AD:30:E1:1F:9A:D1:F3:64' /tmp/apk-signing.txt
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
