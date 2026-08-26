@@ -13,3 +13,4 @@ Object.assign(exports, require('./admin_console'));
 Object.assign(exports, require('./early_business_access'));
 Object.assign(exports, require('./event_cover'));
 Object.assign(exports, require('./retention'));
+Object.assign(exports, require('./spot_submission'));
