@@ -99,10 +99,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 decoration: const InputDecoration(labelText: 'Profil türü'),
                 items: const [
                   DropdownMenuItem(value: 'personal', child: Text('Kişisel')),
-                  DropdownMenuItem(value: 'creator', child: Text('İçerik Üreticisi')),
-                  DropdownMenuItem(value: 'business_owner', child: Text('İşletme Sahibi')),
-                  DropdownMenuItem(value: 'venue_manager', child: Text('Mekan Yöneticisi')),
-                  DropdownMenuItem(value: 'organizer', child: Text('Organizatör')),
+                  DropdownMenuItem(
+                    value: 'creator',
+                    child: Text('İçerik Üreticisi'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'business_owner',
+                    child: Text('İşletme Sahibi'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'venue_manager',
+                    child: Text('Mekan Yöneticisi'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'organizer',
+                    child: Text('Organizatör'),
+                  ),
                 ],
                 onChanged: (value) {
                   if (value != null) setSheetState(() => type = value);
@@ -169,7 +181,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             _infoRow('E-posta', email.isEmpty ? 'Bağlı değil' : email),
             _infoRow(
               'Telefon',
-              (user.phoneNumber ?? '').isEmpty ? 'Bağlı değil' : user.phoneNumber!,
+              (user.phoneNumber ?? '').isEmpty
+                  ? 'Bağlı değil'
+                  : user.phoneNumber!,
             ),
             if (passwordProvider && email.isNotEmpty) ...[
               const SizedBox(height: 14),
@@ -190,7 +204,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
               const SizedBox(height: 10),
               const Text(
                 'Bu hesap Google/Apple gibi harici bir sağlayıcıyla açılmış. Uygulama içinden mevcut şifreyle değiştirme yalnızca e-posta ve şifre ile giriş yapan hesaplarda kullanılabilir.',
-                style: TextStyle(color: Colors.white54, fontSize: 12, height: 1.35),
+                style: TextStyle(
+                  color: Colors.white54,
+                  fontSize: 12,
+                  height: 1.35,
+                ),
               ),
             ],
           ],
@@ -253,11 +271,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 decoration: InputDecoration(
                   labelText: 'Mevcut şifre',
                   suffixIcon: IconButton(
-                    onPressed: () => setSheetState(
-                      () => obscureCurrent = !obscureCurrent,
-                    ),
+                    onPressed: () =>
+                        setSheetState(() => obscureCurrent = !obscureCurrent),
                     icon: Icon(
-                      obscureCurrent ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                      obscureCurrent
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
                     ),
                   ),
                 ),
@@ -271,9 +290,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   labelText: 'Yeni şifre',
                   helperText: 'En az 6 karakter',
                   suffixIcon: IconButton(
-                    onPressed: () => setSheetState(() => obscureNew = !obscureNew),
+                    onPressed: () =>
+                        setSheetState(() => obscureNew = !obscureNew),
                     icon: Icon(
-                      obscureNew ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                      obscureNew
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
                     ),
                   ),
                 ),
@@ -283,7 +305,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 controller: confirmPassword,
                 obscureText: obscureNew,
                 textInputAction: TextInputAction.done,
-                decoration: const InputDecoration(labelText: 'Yeni şifre tekrar'),
+                decoration: const InputDecoration(
+                  labelText: 'Yeni şifre tekrar',
+                ),
               ),
               const SizedBox(height: 16),
               FilledButton.icon(
@@ -323,9 +347,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           _message('Şifren başarıyla değiştirildi.');
                         } on FirebaseAuthException catch (error) {
                           final text = switch (error.code) {
-                            'wrong-password' || 'invalid-credential' => 'Mevcut şifre yanlış.',
+                            'wrong-password' ||
+                            'invalid-credential' => 'Mevcut şifre yanlış.',
                             'weak-password' => 'Yeni şifre çok zayıf.',
-                            'requires-recent-login' => 'Güvenlik için tekrar giriş yapıp yeniden dene.',
+                            'requires-recent-login' =>
+                              'Güvenlik için tekrar giriş yapıp yeniden dene.',
                             _ => error.message ?? 'Şifre değiştirilemedi.',
                           };
                           _message(text);
@@ -372,10 +398,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
             _statusRow('Telefon', (fresh.phoneNumber ?? '').isNotEmpty),
             const SizedBox(height: 12),
             Text(
-              fresh.emailVerified
-                  ? 'E-posta hesabın doğrulanmış durumda.'
-                  : 'Şimdi Doğrula ile e-posta adresine doğrulama bağlantısı gönderilir. Bağlantıya dokunduktan sonra Durumu Kontrol Et ile sonucu yenileyebilirsin.',
-              style: const TextStyle(color: Colors.white60, fontSize: 12, height: 1.4),
+              fresh.emailVerified ? 'E-posta hesabın doğrulanmış durumda.' : 'Şimdi Doğrula ile e-posta adresine doğrulama bağlantısı gönderilir. Bağlantıya dokunduktan sonra Durumu Kontrol Et ile sonucu yenileyebilirsin.',
+              style: const TextStyle(
+                color: Colors.white60,
+                fontSize: 12,
+                height: 1.4,
+              ),
             ),
           ],
         ),
@@ -401,7 +429,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (action == 'send') {
       try {
         await fresh.sendEmailVerification();
-        _message('Doğrulama e-postası gönderildi. Bağlantıya dokunduktan sonra durumu kontrol et.');
+        _message(
+          'Doğrulama e-postası gönderildi. Bağlantıya dokunduktan sonra durumu kontrol et.',
+        );
       } on FirebaseAuthException catch (error) {
         _message(error.message ?? 'Doğrulama e-postası gönderilemedi.');
       }
@@ -447,9 +477,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Text('İlgi alanları', style: TextStyle(fontSize: 21, fontWeight: FontWeight.w900)),
+              const Text(
+                'İlgi alanları',
+                style: TextStyle(fontSize: 21, fontWeight: FontWeight.w900),
+              ),
               const SizedBox(height: 5),
-              const Text('Keşfet ve öneriler bu seçimlerden yararlanır.', style: TextStyle(color: Colors.white60)),
+              const Text(
+                'Keşfet ve öneriler bu seçimlerden yararlanır.',
+                style: TextStyle(color: Colors.white60),
+              ),
               const SizedBox(height: 14),
               Wrap(
                 spacing: 8,
@@ -499,9 +535,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text('Veri ve depolama', style: TextStyle(fontSize: 21, fontWeight: FontWeight.w900)),
+            const Text(
+              'Veri ve depolama',
+              style: TextStyle(fontSize: 21, fontWeight: FontWeight.w900),
+            ),
             const SizedBox(height: 8),
-            const Text('Video otomatik oynatma tercihini İçerik ve Keşif bölümünden değiştirebilirsin.', style: TextStyle(color: Colors.white60, height: 1.4)),
+            const Text(
+              'Video otomatik oynatma tercihini İçerik ve Keşif bölümünden değiştirebilirsin.',
+              style: TextStyle(color: Colors.white60, height: 1.4),
+            ),
             const SizedBox(height: 16),
             OutlinedButton.icon(
               onPressed: () {
@@ -528,7 +570,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
           'Bir hesabı, içeriği veya mekanı şikayet etmek için ilgili içerikteki üç nokta menüsünü kullan. Hesap güvenliği için Gizlilik ve Güvenlik bölümüne, işletme yönetimi için Yönettiğim Mekanlar bölümüne gidebilirsin.',
           style: TextStyle(height: 1.45),
         ),
-        actions: [FilledButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Tamam'))],
+        actions: [
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Tamam'),
+          ),
+        ],
       ),
     );
   }
@@ -542,7 +589,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
           'TBT; içerik, mekan, gezi noktası ve etkinlikleri tek sosyal keşif deneyiminde bir araya getirir.\n\nKullanıcı yer önerileri ve işletme sahiplikleri doğrulama süreçlerinden geçer.',
           style: TextStyle(height: 1.45),
         ),
-        actions: [FilledButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Kapat'))],
+        actions: [
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Kapat'),
+          ),
+        ],
       ),
     );
   }
@@ -569,46 +621,157 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   children: [
                     _profile(data, user, type),
                     _section('Hesap'),
-                    _tile(Icons.person_outline_rounded, 'Profil bilgileri', 'Ad, biyografi ve profil türü', () => _editProfile(data)),
-                    _tile(Icons.lock_outline_rounded, 'Şifre ve güvenlik', 'Mevcut şifrenle yeni şifre oluştur veya sıfırlama bağlantısı al', _security),
+                    _tile(
+                      Icons.person_outline_rounded,
+                      'Profil bilgileri',
+                      'Ad, biyografi ve profil türü',
+                      () => _editProfile(data),
+                    ),
+                    _tile(
+                      Icons.lock_outline_rounded,
+                      'Şifre ve güvenlik',
+                      'Mevcut şifrenle yeni şifre oluştur veya sıfırlama bağlantısı al',
+                      _security,
+                    ),
                     _tile(
                       Icons.verified_user_outlined,
                       'Doğrulama',
-                      user.emailVerified ? 'E-posta doğrulandı' : 'Doğrulanmadı • Şimdi Doğrula',
+                      user.emailVerified
+                          ? 'E-posta doğrulandı'
+                          : 'Doğrulanmadı • Şimdi Doğrula',
                       _verification,
                     ),
                     _section('Gizlilik'),
-                    _switchTile(Icons.lock_person_outlined, 'Gizli hesap', 'Yeni takipçileri sen onayla', settings['privateAccount'] == true, (value) => _setBool('privateAccount', value)),
-                    _switchTile(Icons.location_off_outlined, 'Konum görünürlüğü', 'Konumunu sosyal içeriklerde göster', settings['locationVisible'] == true, (value) => _setBool('locationVisible', value)),
-                    _tile(Icons.shield_outlined, 'Gizlilik ve güvenlik', 'Mesaj, etiketleme, yorum ve engellenen hesaplar', () {
-                      Navigator.push(context, MaterialPageRoute(builder: (_) => const SafetyPrivacyCenterScreen()));
-                    }),
+                    _switchTile(
+                      Icons.lock_person_outlined,
+                      'Gizli hesap',
+                      'Yeni takipçileri sen onayla',
+                      settings['privateAccount'] == true,
+                      (value) => _setBool('privateAccount', value),
+                    ),
+                    _switchTile(
+                      Icons.location_off_outlined,
+                      'Konum görünürlüğü',
+                      'Konumunu sosyal içeriklerde göster',
+                      settings['locationVisible'] == true,
+                      (value) => _setBool('locationVisible', value),
+                    ),
+                    _tile(
+                      Icons.shield_outlined,
+                      'Gizlilik ve güvenlik',
+                      'Mesaj, etiketleme, yorum ve engellenen hesaplar',
+                      () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const SafetyPrivacyCenterScreen(),
+                          ),
+                        );
+                      },
+                    ),
                     _section('Bildirimler'),
-                    _switchTile(Icons.chat_bubble_outline_rounded, 'Mesajlar', 'Yeni mesaj bildirimleri', settings['notifyMessages'] != false, (value) => _setBool('notifyMessages', value)),
-                    _switchTile(Icons.favorite_border_rounded, 'Beğeni ve yorumlar', 'İçerik etkileşimlerini bildir', settings['notifyEngagement'] != false, (value) => _setBool('notifyEngagement', value)),
-                    _switchTile(Icons.event_outlined, 'Etkinlikler', 'Daveti, katılımı ve hatırlatmaları bildir', settings['notifyEvents'] != false, (value) => _setBool('notifyEvents', value)),
-                    _switchTile(Icons.emoji_events_outlined, 'XP ve görevler', 'Puan, seviye ve görev gelişmelerini bildir', settings['notifyRewards'] != false, (value) => _setBool('notifyRewards', value)),
+                    _switchTile(
+                      Icons.chat_bubble_outline_rounded,
+                      'Mesajlar',
+                      'Yeni mesaj bildirimleri',
+                      settings['notifyMessages'] != false,
+                      (value) => _setBool('notifyMessages', value),
+                    ),
+                    _switchTile(
+                      Icons.favorite_border_rounded,
+                      'Beğeni ve yorumlar',
+                      'İçerik etkileşimlerini bildir',
+                      settings['notifyEngagement'] != false,
+                      (value) => _setBool('notifyEngagement', value),
+                    ),
+                    _switchTile(
+                      Icons.event_outlined,
+                      'Etkinlikler',
+                      'Daveti, katılımı ve hatırlatmaları bildir',
+                      settings['notifyEvents'] != false,
+                      (value) => _setBool('notifyEvents', value),
+                    ),
+                    _switchTile(
+                      Icons.emoji_events_outlined,
+                      'XP ve görevler',
+                      'Puan, seviye ve görev gelişmelerini bildir',
+                      settings['notifyRewards'] != false,
+                      (value) => _setBool('notifyRewards', value),
+                    ),
                     _section('İçerik ve Keşif'),
-                    _switchTile(Icons.play_circle_outline_rounded, 'Videoları otomatik oynat', 'Akış ve keşifte videolar otomatik başlasın', settings['autoplayVideos'] != false, (value) => _setBool('autoplayVideos', value)),
-                    _switchTile(Icons.visibility_off_outlined, 'Hassas içerik filtresi', 'Hassas olabilecek içerikleri azalt', settings['sensitiveFilter'] != false, (value) => _setBool('sensitiveFilter', value)),
-                    _tile(Icons.interests_outlined, 'İlgi alanları', 'Önerilerini şekillendiren konuları yönet', () => _interests(settings)),
-                    if (type == 'business_owner' || type == 'venue_manager') ...[
+                    _switchTile(
+                      Icons.play_circle_outline_rounded,
+                      'Videoları otomatik oynat',
+                      'Akış ve keşifte videolar otomatik başlasın',
+                      settings['autoplayVideos'] != false,
+                      (value) => _setBool('autoplayVideos', value),
+                    ),
+                    _switchTile(
+                      Icons.visibility_off_outlined,
+                      'Hassas içerik filtresi',
+                      'Hassas olabilecek içerikleri azalt',
+                      settings['sensitiveFilter'] != false,
+                      (value) => _setBool('sensitiveFilter', value),
+                    ),
+                    _tile(
+                      Icons.interests_outlined,
+                      'İlgi alanları',
+                      'Önerilerini şekillendiren konuları yönet',
+                      () => _interests(settings),
+                    ),
+                    if (type == 'business_owner' ||
+                        type == 'venue_manager') ...[
                       _section('Mekanlar ve Yönetim'),
-                      _tile(Icons.storefront_outlined, 'Yönettiğim Mekanlar', 'Yetkili olduğun mekanları tek yerden yönet', () {
-                        Navigator.push(context, MaterialPageRoute(builder: (_) => const ManagedVenuesScreen()));
-                      }),
+                      _tile(
+                        Icons.storefront_outlined,
+                        'Yönettiğim Mekanlar',
+                        'Yetkili olduğun mekanları tek yerden yönet',
+                        () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const ManagedVenuesScreen(),
+                            ),
+                          );
+                        },
+                      ),
                     ],
                     if (type == 'organizer') ...[
                       _section('Organizatör'),
-                      _tile(Icons.event_available_outlined, 'Etkinlik yönetimi', 'Etkinliklerini görüntüle ve katılımı takip et', () {
-                        Navigator.push(context, MaterialPageRoute(builder: (_) => const SocialEventsScreen()));
-                      }),
+                      _tile(
+                        Icons.event_available_outlined,
+                        'Etkinlik yönetimi',
+                        'Etkinliklerini görüntüle ve katılımı takip et',
+                        () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const SocialEventsScreen(),
+                            ),
+                          );
+                        },
+                      ),
                     ],
                     _section('Uygulama'),
                     _staticTile(Icons.language_rounded, 'Dil', 'Türkçe'),
-                    _tile(Icons.storage_outlined, 'Veri ve depolama', 'Önbellek ve veri tercihleri', _storage),
-                    _tile(Icons.help_outline_rounded, 'Yardım ve destek', 'Güvenlik, şikayet ve yardım yolları', _help),
-                    _tile(Icons.info_outline_rounded, 'TBT hakkında', 'Uygulama ve topluluk bilgileri', _about),
+                    _tile(
+                      Icons.storage_outlined,
+                      'Veri ve depolama',
+                      'Önbellek ve veri tercihleri',
+                      _storage,
+                    ),
+                    _tile(
+                      Icons.help_outline_rounded,
+                      'Yardım ve destek',
+                      'Güvenlik, şikayet ve yardım yolları',
+                      _help,
+                    ),
+                    _tile(
+                      Icons.info_outline_rounded,
+                      'TBT hakkında',
+                      'Uygulama ve topluluk bilgileri',
+                      _about,
+                    ),
                     const SizedBox(height: 16),
                     OutlinedButton.icon(
                       style: OutlinedButton.styleFrom(
@@ -618,7 +781,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       onPressed: () async {
                         await AuthService.instance.logout();
                         if (context.mounted) {
-                          Navigator.of(context).popUntil((route) => route.isFirst);
+                          Navigator.of(context)
+                              .popUntil((route) => route.isFirst);
                         }
                       },
                       icon: const Icon(Icons.logout_rounded),
@@ -632,7 +796,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _profile(Map<String, dynamic> data, User user, String type) {
-    final name = (data['displayName'] ?? user.displayName ?? 'TBT Kullanıcısı').toString();
+    final name = (data['displayName'] ?? user.displayName ?? 'TBT Kullanıcısı')
+        .toString();
     final username = (data['username'] ?? '').toString();
     final photo = (data['photoUrl'] ?? user.photoURL ?? '').toString();
     return Container(
@@ -648,18 +813,35 @@ class _SettingsScreenState extends State<SettingsScreen> {
             radius: 27,
             backgroundColor: AppColors.surfaceStrong,
             backgroundImage: photo.isEmpty ? null : NetworkImage(photo),
-            child: photo.isEmpty ? const Icon(Icons.person_outline_rounded) : null,
+            child: photo.isEmpty
+                ? const Icon(Icons.person_outline_rounded)
+                : null,
           ),
           const SizedBox(width: 13),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(name, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900)),
+                Text(
+                  name,
+                  style: const TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
                 if (username.isNotEmpty)
-                  Text(username.startsWith('@') ? username : '@$username', style: const TextStyle(color: Colors.white60)),
+                  Text(
+                    username.startsWith('@') ? username : '@$username',
+                    style: const TextStyle(color: Colors.white60),
+                  ),
                 const SizedBox(height: 3),
-                Text(_profileTypeLabel(type), style: const TextStyle(color: AppColors.cyan, fontWeight: FontWeight.w700)),
+                Text(
+                  _profileTypeLabel(type),
+                  style: const TextStyle(
+                    color: AppColors.cyan,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
               ],
             ),
           ),
@@ -678,10 +860,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Widget _section(String title) => Padding(
     padding: const EdgeInsets.fromLTRB(4, 22, 4, 8),
-    child: Text(title, style: const TextStyle(color: Colors.white54, fontWeight: FontWeight.w800, fontSize: 13)),
+    child: Text(
+      title,
+      style: const TextStyle(
+        color: Colors.white54,
+        fontWeight: FontWeight.w800,
+        fontSize: 13,
+      ),
+    ),
   );
 
-  Widget _tile(IconData icon, String title, String subtitle, VoidCallback onTap) => Card(
+  Widget _tile(
+    IconData icon,
+    String title,
+    String subtitle,
+    VoidCallback onTap,
+  ) => Card(
     margin: const EdgeInsets.only(bottom: 7),
     child: ListTile(
       leading: Icon(icon),
@@ -726,8 +920,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
     child: Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SizedBox(width: 82, child: Text(label, style: const TextStyle(color: Colors.white54))),
-        Expanded(child: Text(value, style: const TextStyle(fontWeight: FontWeight.w700))),
+        SizedBox(
+          width: 82,
+          child: Text(label, style: const TextStyle(color: Colors.white54)),
+        ),
+        Expanded(
+          child: Text(
+            value,
+            style: const TextStyle(fontWeight: FontWeight.w700),
+          ),
+        ),
       ],
     ),
   );
