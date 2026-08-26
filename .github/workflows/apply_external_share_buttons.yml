@@ -1,0 +1,39 @@
+name: Apply External Share Buttons
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feature/video-v1
+
+permissions:
+  contents: write
+
+concurrency:
+  group: apply-external-share-buttons-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  apply:
+    if: github.actor != 'tbt-build-bot'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/video-v1
+          fetch-depth: 0
+      - name: Apply share buttons
+        run: python3 .github/scripts/add_external_share_buttons.py
+      - name: Commit changes
+        shell: bash
+        run: |
+          if git diff --quiet; then
+            echo 'No share button changes needed.'
+            exit 0
+          fi
+          git config user.name 'tbt-build-bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add lib
+          git commit -m 'feat: share posts and venues outside TBT'
+          git push origin HEAD:feature/video-v1
