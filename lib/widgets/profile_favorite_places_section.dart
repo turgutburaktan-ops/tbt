@@ -123,7 +123,7 @@ class ProfileFavoritePlacesSection extends StatelessWidget {
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                     style: const TextStyle(
-                                      color: Colors.white46,
+                                      color: Colors.white54,
                                       fontSize: 11.5,
                                     ),
                                   ),
