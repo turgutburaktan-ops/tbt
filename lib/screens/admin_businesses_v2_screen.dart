@@ -7,202 +7,87 @@ import 'business_hub_screen.dart';
 
 class AdminBusinessesV2Screen extends StatefulWidget {
   const AdminBusinessesV2Screen({super.key});
-
-  @override
-  State<AdminBusinessesV2Screen> createState() => _AdminBusinessesV2ScreenState();
+  @override State<AdminBusinessesV2Screen> createState()=>_AdminBusinessesV2ScreenState();
 }
 
-class _AdminBusinessesV2ScreenState extends State<AdminBusinessesV2Screen> {
-  bool? _allowed;
-  bool _loading = true;
-  String _filter = 'all';
-  String _query = '';
-  String? _error;
-  List<Map<String, dynamic>> _items = const [];
+class _AdminBusinessesV2ScreenState extends State<AdminBusinessesV2Screen>{
+  bool? _allowed; bool _loading=true; String _filter='all',_query=''; String? _error; List<Map<String,dynamic>> _items=const[];
+  @override void initState(){super.initState();_load();}
 
-  @override
-  void initState() {
-    super.initState();
-    _load();
+  Future<void> _load()async{
+    if(mounted)setState((){_loading=true;_error=null;});
+    try{
+      final token=await FirebaseAuth.instance.currentUser?.getIdTokenResult(true);
+      if(token?.claims?['admin']!=true){if(mounted)setState((){_allowed=false;_loading=false;});return;}
+      final items=await AdminConsoleService.instance.businessClaims();
+      if(mounted)setState((){_allowed=true;_items=items;_loading=false;});
+    }catch(e){if(mounted)setState((){_allowed=true;_loading=false;_error=e.toString();});}
   }
 
-  Future<void> _load() async {
-    if (mounted) setState(() { _loading = true; _error = null; });
-    try {
-      final token = await FirebaseAuth.instance.currentUser?.getIdTokenResult(true);
-      final allowed = token?.claims?['admin'] == true;
-      if (!allowed) {
-        if (mounted) setState(() { _allowed = false; _loading = false; });
-        return;
-      }
-      final items = await AdminConsoleService.instance.businessClaims();
-      if (mounted) setState(() { _allowed = true; _items = items; _loading = false; });
-    } catch (e) {
-      if (mounted) setState(() { _allowed = true; _loading = false; _error = e.toString(); });
-    }
+  void _preview(Map<String,dynamic>d){
+    final category=(d['category']??'cafe').toString();
+    final id=(d['venueId']??'admin_preview').toString();
+    final name=(d['venueName']??d['legalName']??'TBT Demo İşletme').toString();
+    Navigator.push(context,MaterialPageRoute(builder:(_)=>BusinessHubScreen(initialCategory:category,initialVenueId:id.isEmpty?'admin_preview':id,initialVenueName:name,previewMode:true)));
   }
 
-  void _preview(Map<String, dynamic> data) {
-    final category = (data['category'] ?? 'cafe').toString();
-    final venueId = (data['venueId'] ?? '').toString();
-    final venueName = (data['venueName'] ?? data['legalName'] ?? 'İşletme').toString();
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => BusinessHubScreen(
-          initialCategory: category,
-          initialVenueId: venueId.isEmpty ? 'admin_preview' : venueId,
-          initialVenueName: venueName,
-          previewMode: true,
-        ),
-      ),
-    );
-  }
-
-  void _details(Map<String, dynamic> data) {
-    showModalBottomSheet<void>(
-      context: context,
-      useSafeArea: true,
-      showDragHandle: true,
-      builder: (_) => ListView(
-        shrinkWrap: true,
-        padding: const EdgeInsets.fromLTRB(18, 4, 18, 28),
-        children: [
-          Text((data['venueName'] ?? data['legalName'] ?? 'İşletme').toString(), style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900)),
-          const SizedBox(height: 14),
-          _Info('Durum', (data['status'] ?? '-').toString()),
-          _Info('Kategori', (data['category'] ?? '-').toString()),
-          _Info('E-posta', (data['businessEmail'] ?? '-').toString()),
-          _Info('Telefon', (data['businessPhone'] ?? '-').toString()),
-          _Info('Yetkili UID', (data['applicantUid'] ?? '-').toString()),
-          const SizedBox(height: 14),
-          FilledButton.icon(
-            onPressed: () { Navigator.pop(context); _preview(data); },
-            icon: const Icon(Icons.visibility_rounded),
-            label: const Text('İşletme Panelini Önizle'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  List<Map<String, dynamic>> get _filtered => _items.where((d) {
-    final status = (d['status'] ?? '').toString();
-    if (_filter != 'all' && status != _filter) return false;
-    if (_query.isEmpty) return true;
-    final text = '${d['venueName'] ?? ''} ${d['legalName'] ?? ''} ${d['businessEmail'] ?? ''} ${d['category'] ?? ''}'.toLowerCase();
-    return text.contains(_query);
+  List<Map<String,dynamic>> get _filtered=>_items.where((d){
+    final status=(d['status']??'').toString();
+    if(_filter!='all'&&status!=_filter)return false;
+    if(_query.isEmpty)return true;
+    return '${d['venueName']??''} ${d['legalName']??''} ${d['businessEmail']??''} ${d['category']??''}'.toLowerCase().contains(_query);
   }).toList();
 
-  @override
-  Widget build(BuildContext context) {
-    if (_allowed == false) return const Scaffold(backgroundColor: AppColors.background, body: Center(child: Text('Yönetici yetkisi gerekli.')));
+  int _count(String status)=>status=='all'?_items.length:_items.where((e)=>(e['status']??'').toString()==status).length;
+  String _statusLabel(String s)=>switch(s){'verified'=>'Onaylı','pending_review'=>'Bekleyen','rejected'=>'Reddedildi',_=>'Başvuru yok'};
+  String _cat(String c)=>switch(c){'cafe'=>'Kafe','dining'=>'Lezzet','hotel'=>'Otel',_=>'İşletme'};
+
+  @override Widget build(BuildContext context){
+    if(_allowed==false)return const Scaffold(backgroundColor:AppColors.background,body:Center(child:Text('Yönetici yetkisi gerekli.')));
     return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('İşletme Kontrol Merkezi', maxLines: 1, overflow: TextOverflow.ellipsis),
-        actions: [IconButton(onPressed: _load, tooltip: 'Yenile', icon: const Icon(Icons.refresh_rounded))],
-      ),
-      body: Column(
-        children: [
-          Container(
-            margin: const EdgeInsets.fromLTRB(14, 10, 14, 8),
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(18), border: Border.all(color: AppColors.cyan.withValues(alpha: .4))),
-            child: const Row(children: [
-              Icon(Icons.touch_app_rounded, color: AppColors.cyan),
-              SizedBox(width: 10),
-              Expanded(child: Text('İşletmeye dokununca sahibi gibi panel önizlemesi açılır. Bilgi simgesi kayıt detaylarını gösterir.', style: TextStyle(color: Colors.white70, height: 1.35))),
-            ]),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(14, 4, 14, 8),
-            child: TextField(onChanged: (v) => setState(() => _query = v.trim().toLowerCase()), decoration: const InputDecoration(prefixIcon: Icon(Icons.search_rounded), hintText: 'İşletme ara')),
-          ),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 14),
-            child: SegmentedButton<String>(
-              segments: const [
-                ButtonSegment(value: 'all', label: Text('Tümü')),
-                ButtonSegment(value: 'pending_review', label: Text('Bekleyen')),
-                ButtonSegment(value: 'verified', label: Text('Onaylı')),
-                ButtonSegment(value: 'rejected', label: Text('Red')),
-              ],
-              selected: {_filter},
-              onSelectionChanged: (v) => setState(() => _filter = v.first),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Expanded(child: _body()),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _preview({'category': 'cafe', 'venueId': 'admin_demo', 'venueName': 'TBT Demo İşletme'}),
-        icon: const Icon(Icons.visibility_rounded),
-        label: const Text('Demo Panel'),
-      ),
+      backgroundColor:AppColors.background,
+      appBar:AppBar(title:const Text('İşletmeler'),actions:[IconButton(onPressed:_load,tooltip:'Yenile',icon:const Icon(Icons.refresh_rounded))]),
+      body:RefreshIndicator(onRefresh:_load,child:ListView(padding:const EdgeInsets.fromLTRB(14,8,14,24),children:[
+        _summary(),
+        const SizedBox(height:14),
+        TextField(onChanged:(v)=>setState(()=>_query=v.trim().toLowerCase()),decoration:InputDecoration(prefixIcon:const Icon(Icons.search_rounded),hintText:'İşletme adı, e-posta veya kategori ara',filled:true,fillColor:AppColors.surface,border:OutlineInputBorder(borderRadius:BorderRadius.circular(16)))),
+        const SizedBox(height:12),
+        SingleChildScrollView(scrollDirection:Axis.horizontal,child:Row(children:[
+          _chip('all','Tümü',_count('all')),_chip('pending_review','Bekleyen',_count('pending_review')),_chip('verified','Onaylı',_count('verified')),_chip('rejected','Reddedilen',_count('rejected')),
+        ])),
+        const SizedBox(height:14),
+        if(_loading)const Padding(padding:EdgeInsets.only(top:70),child:Center(child:CircularProgressIndicator()))
+        else if(_error!=null)_errorCard()
+        else if(_filtered.isEmpty)_empty()
+        else ..._filtered.map(_businessCard),
+      ])),
     );
   }
 
-  Widget _body() {
-    if (_loading) return const Center(child: CircularProgressIndicator());
-    if (_error != null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(mainAxisSize: MainAxisSize.min, children: [
-            const Icon(Icons.cloud_off_rounded, size: 44, color: Colors.white54),
-            const SizedBox(height: 12),
-            const Text('İşletmeler yüklenemedi', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
-            const SizedBox(height: 6),
-            const Text('Admin veri servisiyle bağlantı kurulamadı.', textAlign: TextAlign.center, style: TextStyle(color: Colors.white60)),
-            const SizedBox(height: 14),
-            FilledButton.icon(onPressed: _load, icon: const Icon(Icons.refresh_rounded), label: const Text('Tekrar Dene')),
-          ]),
-        ),
-      );
-    }
-    final docs = _filtered;
-    if (docs.isEmpty) return const Center(child: Text('Bu filtrede işletme yok.'));
-    return RefreshIndicator(
-      onRefresh: _load,
-      child: ListView.builder(
-        padding: const EdgeInsets.fromLTRB(14, 0, 14, 90),
-        itemCount: docs.length,
-        itemBuilder: (context, index) {
-          final d = docs[index];
-          final status = (d['status'] ?? '').toString();
-          final name = (d['venueName'] ?? d['legalName'] ?? 'İşletme').toString();
-          return Card(
-            child: ListTile(
-              contentPadding: const EdgeInsets.fromLTRB(14, 7, 6, 7),
-              leading: CircleAvatar(
-                backgroundColor: status == 'verified' ? AppColors.cyan.withValues(alpha: .12) : AppColors.surfaceStrong,
-                child: Icon(status == 'verified' ? Icons.verified_rounded : Icons.storefront_rounded, color: status == 'verified' ? AppColors.cyan : Colors.white70),
-              ),
-              title: Text(name, style: const TextStyle(fontWeight: FontWeight.w900)),
-              subtitle: Text('${d['category'] ?? 'işletme'} • ${status.isEmpty ? 'başvuru yok' : status}'),
-              onTap: () => _preview(d),
-              trailing: IconButton(tooltip: 'İşletme detayları', onPressed: () => _details(d), icon: const Icon(Icons.info_outline_rounded)),
-            ),
-          );
-        },
-      ),
-    );
-  }
-}
+  Widget _summary()=>Container(padding:const EdgeInsets.all(16),decoration:BoxDecoration(color:AppColors.surface,borderRadius:BorderRadius.circular(20),border:Border.all(color:AppColors.border)),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+    const Row(children:[Icon(Icons.storefront_rounded,color:AppColors.cyan),SizedBox(width:10),Text('İşletme yönetimi',style:TextStyle(fontSize:18,fontWeight:FontWeight.w900))]),
+    const SizedBox(height:7),const Text('Başvuruları kontrol et, doğrulanan mekanların panelini görüntüle ve yönetim durumlarını tek ekrandan takip et.',style:TextStyle(color:Colors.white60,height:1.35)),
+    const SizedBox(height:14),Row(children:[Expanded(child:_mini('Toplam',_count('all'))),const SizedBox(width:8),Expanded(child:_mini('Bekleyen',_count('pending_review'))),const SizedBox(width:8),Expanded(child:_mini('Onaylı',_count('verified')))]),
+  ]));
 
-class _Info extends StatelessWidget {
-  final String label;
-  final String value;
-  const _Info(this.label, this.value);
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: 6),
-    child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      SizedBox(width: 110, child: Text(label, style: const TextStyle(color: Colors.white54))),
-      Expanded(child: Text(value, style: const TextStyle(fontWeight: FontWeight.w700))),
-    ]),
-  );
+  Widget _mini(String label,int n)=>Container(padding:const EdgeInsets.symmetric(vertical:12,horizontal:10),decoration:BoxDecoration(color:AppColors.surfaceStrong,borderRadius:BorderRadius.circular(14)),child:Column(children:[Text('$n',style:const TextStyle(fontSize:19,fontWeight:FontWeight.w900)),const SizedBox(height:2),Text(label,style:const TextStyle(color:Colors.white54,fontSize:11))]));
+  Widget _chip(String value,String label,int n)=>Padding(padding:const EdgeInsets.only(right:8),child:ChoiceChip(selected:_filter==value,onSelected:(_)=>setState(()=>_filter=value),label:Text('$label  $n')));
+
+  Widget _businessCard(Map<String,dynamic>d){
+    final status=(d['status']??'').toString(),name=(d['venueName']??d['legalName']??'İşletme').toString(),category=(d['category']??'').toString();
+    return Card(margin:const EdgeInsets.only(bottom:9),child:InkWell(borderRadius:BorderRadius.circular(16),onTap:()=>_preview(d),child:Padding(padding:const EdgeInsets.all(14),child:Row(children:[
+      CircleAvatar(radius:24,backgroundColor:status=='verified'?AppColors.cyan.withValues(alpha:.12):AppColors.surfaceStrong,child:Icon(status=='verified'?Icons.verified_rounded:Icons.storefront_outlined,color:status=='verified'?AppColors.cyan:Colors.white70)),
+      const SizedBox(width:12),Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(name,maxLines:1,overflow:TextOverflow.ellipsis,style:const TextStyle(fontWeight:FontWeight.w900,fontSize:15)),const SizedBox(height:4),Text('${_cat(category)} • ${_statusLabel(status)}',style:const TextStyle(color:Colors.white60)),if((d['businessEmail']??'').toString().isNotEmpty)...[const SizedBox(height:3),Text((d['businessEmail']??'').toString(),maxLines:1,overflow:TextOverflow.ellipsis,style:const TextStyle(color:Colors.white38,fontSize:12))]])),
+      IconButton(tooltip:'Detay',onPressed:()=>_details(d),icon:const Icon(Icons.info_outline_rounded)),const Icon(Icons.chevron_right_rounded,color:Colors.white38)
+    ]))));
+  }
+
+  void _details(Map<String,dynamic>d)=>showModalBottomSheet<void>(context:context,useSafeArea:true,showDragHandle:true,builder:(_)=>Padding(padding:const EdgeInsets.fromLTRB(18,4,18,28),child:Column(mainAxisSize:MainAxisSize.min,crossAxisAlignment:CrossAxisAlignment.start,children:[
+    Text((d['venueName']??d['legalName']??'İşletme').toString(),style:const TextStyle(fontSize:21,fontWeight:FontWeight.w900)),const SizedBox(height:14),
+    _info('Durum',_statusLabel((d['status']??'').toString())),_info('Kategori',_cat((d['category']??'').toString())),_info('E-posta',(d['businessEmail']??'-').toString()),_info('Telefon',(d['businessPhone']??'-').toString()),
+    const SizedBox(height:14),FilledButton.icon(onPressed:(){Navigator.pop(context);_preview(d);},icon:const Icon(Icons.dashboard_customize_outlined),label:const Text('Paneli Görüntüle')),
+  ])));
+  Widget _info(String a,String b)=>Padding(padding:const EdgeInsets.symmetric(vertical:5),child:Row(children:[SizedBox(width:90,child:Text(a,style:const TextStyle(color:Colors.white54))),Expanded(child:Text(b,style:const TextStyle(fontWeight:FontWeight.w700)))]));
+  Widget _empty()=>Padding(padding:const EdgeInsets.only(top:74),child:Column(children:[const Icon(Icons.storefront_outlined,size:48,color:Colors.white24),const SizedBox(height:12),Text(_query.isNotEmpty?'Aramana uygun işletme yok.':'Bu bölümde henüz işletme yok.',style:const TextStyle(fontWeight:FontWeight.w800)),const SizedBox(height:5),const Text('Yeni başvurular geldiğinde burada görünecek.',style:TextStyle(color:Colors.white45))]));
+  Widget _errorCard()=>Padding(padding:const EdgeInsets.only(top:50),child:Column(children:[const Icon(Icons.cloud_off_rounded,size:46,color:Colors.white38),const SizedBox(height:10),const Text('İşletmeler yüklenemedi',style:TextStyle(fontWeight:FontWeight.w900)),const SizedBox(height:12),OutlinedButton.icon(onPressed:_load,icon:const Icon(Icons.refresh_rounded),label:const Text('Tekrar Dene'))]));
 }
