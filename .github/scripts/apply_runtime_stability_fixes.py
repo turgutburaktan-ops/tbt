@@ -141,6 +141,31 @@ if 'NationwideCandidateSpotResolver.mergeInto' not in s:
     if old_spot_load not in s:
         raise SystemExit('Missing patch target: favorite spot catalogue')
     s = s.replace(old_spot_load, new_spot_load, 1)
+
+# LocationService may legitimately return null when permission/location is not
+# available. Keep the selected-city fallback instead of dereferencing null.
+old_position = """    try {
+      final position = await LocationService.getCurrentPosition();
+      latitude = position.latitude;
+      longitude = position.longitude;
+    } catch (_) {
+      if (!NearbyVenueService.instance.hasSelectedCity) rethrow;
+    }"""
+new_position = """    try {
+      final position = await LocationService.getCurrentPosition();
+      if (position != null) {
+        latitude = position.latitude;
+        longitude = position.longitude;
+      } else if (!NearbyVenueService.instance.hasSelectedCity) {
+        throw StateError('Konum alınamadı ve seçili şehir yok.');
+      }
+    } catch (_) {
+      if (!NearbyVenueService.instance.hasSelectedCity) rethrow;
+    }"""
+if 'if (position != null)' not in s:
+    if old_position not in s:
+        raise SystemExit('Missing patch target: favorite venue nullable location')
+    s = s.replace(old_position, new_position, 1)
 p.write_text(s)
 
 # 4) Guest home must expose Discover just like the signed-in home.
