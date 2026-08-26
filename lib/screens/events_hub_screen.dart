@@ -24,71 +24,114 @@ class _EventsHubScreenState extends State<EventsHubScreen> {
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(14, 6, 14, 8),
-            child: Row(
+            child: Column(
               children: [
-                Expanded(
-                  child: Container(
-                    padding: const EdgeInsets.all(3),
-                    decoration: BoxDecoration(
-                      color: AppColors.surface,
-                      borderRadius: BorderRadius.circular(13),
-                      border: Border.all(color: AppColors.border),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.all(3),
+                        decoration: BoxDecoration(
+                          color: AppColors.surface,
+                          borderRadius: BorderRadius.circular(13),
+                          border: Border.all(color: AppColors.border),
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: _EventTab(
+                                icon: Icons.event_available_outlined,
+                                label: 'Yaklaşan',
+                                selected: _tab == 0,
+                                onTap: () => setState(() => _tab = 0),
+                              ),
+                            ),
+                            Expanded(
+                              child: _EventTab(
+                                icon: Icons.photo_album_outlined,
+                                label: 'Anılarım',
+                                selected: _tab == 1,
+                                onTap: () => setState(() => _tab = 1),
+                              ),
+                            ),
+                            Expanded(
+                              child: _EventTab(
+                                icon: Icons.smart_display_outlined,
+                                label: 'Reels',
+                                selected: _tab == 2,
+                                onTap: () => setState(() => _tab = 2),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: _EventTab(
-                            icon: Icons.event_available_outlined,
-                            label: 'Yaklaşan',
-                            selected: _tab == 0,
-                            onTap: () => setState(() => _tab = 0),
+                    const SizedBox(width: 8),
+                    Tooltip(
+                      message: 'Etkinlik oluştur • +50 XP',
+                      child: Material(
+                        color: AppColors.surfaceStrong,
+                        borderRadius: BorderRadius.circular(13),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(13),
+                          onTap: () async {
+                            await Navigator.push<bool>(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const EventPhotoCreateScreen(),
+                              ),
+                            );
+                            if (mounted) setState(() => _tab = 0);
+                          },
+                          child: const SizedBox(
+                            width: 54,
+                            height: 46,
+                            child: Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                Center(child: Icon(Icons.add_a_photo_outlined)),
+                                Positioned(
+                                  right: 2,
+                                  top: 2,
+                                  child: _XpBadge(text: '+50'),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                        Expanded(
-                          child: _EventTab(
-                            icon: Icons.photo_album_outlined,
-                            label: 'Anılarım',
-                            selected: _tab == 1,
-                            onTap: () => setState(() => _tab = 1),
-                          ),
-                        ),
-                        Expanded(
-                          child: _EventTab(
-                            icon: Icons.smart_display_outlined,
-                            label: 'Reels',
-                            selected: _tab == 2,
-                            onTap: () => setState(() => _tab = 2),
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
-                  ),
+                  ],
                 ),
-                const SizedBox(width: 8),
-                Tooltip(
-                  message: 'Fotoğraflı etkinlik oluştur',
-                  child: Material(
-                    color: AppColors.surfaceStrong,
+                if (_tab == 0) ...[
+                  const SizedBox(height: 8),
+                  InkWell(
+                    onTap: () => Navigator.pushNamed(context, '/rewards'),
                     borderRadius: BorderRadius.circular(13),
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(13),
-                      onTap: () async {
-                        await Navigator.push<bool>(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const EventPhotoCreateScreen(),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: BorderRadius.circular(13),
+                        border: Border.all(color: AppColors.border),
+                      ),
+                      child: const Row(
+                        children: [
+                          Icon(Icons.bolt_rounded, size: 18, color: Color(0xFFFFD166)),
+                          SizedBox(width: 7),
+                          Expanded(
+                            child: Text(
+                              'Etkinliğe katıl +15 XP  •  Etkinlik oluştur +50 XP',
+                              style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w800),
+                            ),
                           ),
-                        );
-                        if (mounted) setState(() => _tab = 0);
-                      },
-                      child: const SizedBox(
-                        width: 46,
-                        height: 46,
-                        child: Icon(Icons.add_a_photo_outlined),
+                          Icon(Icons.chevron_right_rounded, size: 18, color: Colors.white38),
+                        ],
                       ),
                     ),
                   ),
-                ),
+                ],
               ],
             ),
           ),
@@ -106,6 +149,28 @@ class _EventsHubScreenState extends State<EventsHubScreen> {
       ),
     );
   }
+}
+
+class _XpBadge extends StatelessWidget {
+  final String text;
+  const _XpBadge({required this.text});
+
+  @override
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFFD166),
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: Text(
+          text,
+          style: const TextStyle(
+            color: Colors.black,
+            fontWeight: FontWeight.w900,
+            fontSize: 8,
+          ),
+        ),
+      );
 }
 
 class _EventTab extends StatelessWidget {
