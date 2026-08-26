@@ -36,7 +36,6 @@ jobs:
         run: |
           set -euo pipefail
           python3 .github/scripts/apply_requested_ui_fixes.py
-          python3 .github/scripts/strengthen_account_security_v1.py
           dart format \
             lib/screens/home_shell_screen.dart \
             lib/screens/radar_screen.dart \
@@ -48,14 +47,12 @@ jobs:
             lib/screens/social_events_screen.dart \
             lib/screens/event_photo_create_screen.dart \
             lib/screens/selected_route_map_screen.dart \
-            lib/screens/account_security_gate.dart \
-            lib/screens/register_screen.dart \
-            lib/services/biometric_auth_service.dart
+            lib/screens/register_screen.dart
           if ! git diff --quiet; then
             git config user.name 'tbt-build-bot'
             git config user.email 'actions@users.noreply.github.com'
             git add lib pubspec.yaml
-            git commit -m 'fix: enforce email phone and biometric account security'
+            git commit -m 'fix: apply requested product UI fixes'
             git push origin HEAD:feature/video-v1
           fi
       - name: Resolve build commit
@@ -124,9 +121,6 @@ jobs:
           rm -rf android
           flutter create --platforms=android --org com.tbt --project-name best_photo_spot .
 
-          # Flutter 3.47 creates an AGP 9 host. Several current project plugins
-          # still use the legacy Kotlin Gradle Plugin. Keep AGP 9's compatibility
-          # mode until every plugin has migrated to built-in Kotlin.
           printf '\nandroid.builtInKotlin=false\nandroid.newDsl=false\n' >> android/gradle.properties
 
           cp /tmp/tbt-AndroidManifest.xml android/app/src/main/AndroidManifest.xml
@@ -207,14 +201,8 @@ jobs:
           else:
               s = "platform :ios, '15.0'\n" + s
           p.write_text(s)
-          plist = Path('ios/Runner/Info.plist')
-          t = plist.read_text()
-          if 'NSFaceIDUsageDescription' not in t:
-              t = t.replace('</dict>', '\t<key>NSFaceIDUsageDescription</key>\n\t<string>TBT hesabını güvenli şekilde açmak için Face ID kullanılır.</string>\n</dict>')
-              plist.write_text(t)
           PY
           grep -q "platform :ios, '15.0'" ios/Podfile
-          grep -q 'NSFaceIDUsageDescription' ios/Runner/Info.plist
           rm -rf ios/Pods ios/Podfile.lock
       - name: iOS Build
         run: >-
