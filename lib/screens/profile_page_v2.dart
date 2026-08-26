@@ -343,7 +343,7 @@ class _ProfileBodyState extends State<_ProfileBody> {
             const SizedBox(height: 10),
             const Text('Henüz içerik yok', style: TextStyle(fontWeight: FontWeight.w900)),
             const SizedBox(height: 5),
-            const Text('Fotoğraf veya video paylaşarak profilini oluşturmaya başla.', textAlign: TextAlign.center, style: TextStyle(color: Colors.white45)),
+            const Text('Fotoğraf veya video paylaşarak profilini oluşturmaya başla.', textAlign: TextAlign.center, style: TextStyle(color: Colors.white54)),
             const SizedBox(height: 14),
             FilledButton.icon(onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CreatePostScreen())), icon: const Icon(Icons.add_a_photo_outlined), label: const Text('İçerik Paylaş')),
           ]),
