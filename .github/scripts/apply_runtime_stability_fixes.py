@@ -195,7 +195,9 @@ p.write_text(s)
 # 5) Mekanlar had two independent city selectors. The parent selector rebuilt
 # the child while its dialog route was being disposed, which can trigger the
 # Flutter _dependents assertion. Keep only NearbyPlacesView's lifecycle-safe
-# city selector.
+# city selector. Also do not key NearbyPlacesView by selected city: changing
+# that key disposes the embedded GoogleMap while the location picker route is
+# closing, which is another path to the same _dependents assertion.
 p = Path('lib/screens/home_shell_v3.dart')
 s = p.read_text()
 s = s.replace("import '../services/city_location_service.dart';\n", '')
@@ -210,6 +212,13 @@ s = re.sub(
 s = re.sub(
     r"\n            if \(_category != 'Gezilecek Yerler'\)\n              Padding\(.*?\n              \),\n            Expanded\(child: content\),",
     "\n            Expanded(child: content),",
+    s,
+    count=1,
+    flags=re.S,
+)
+s = re.sub(
+    r"NearbyPlacesView\(\s*key:\s*ValueKey\(\s*'\$\{_category\}_\$\{NearbyVenueService\.instance\.selectedCityName \?\? 'current'\}',\s*\),\s*category:",
+    "NearbyPlacesView(\n        category:",
     s,
     count=1,
     flags=re.S,
