@@ -93,11 +93,20 @@ jobs:
           distribution: temurin
           java-version: '24'
       - run: flutter pub get
-      - name: Restore stable Android debug signing key
-        uses: actions/cache@v4
-        with:
-          path: ~/.android/debug.keystore
-          key: tbt-android-debug-keystore-v1
+      - name: Install stable Android debug signing certificate
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$HOME/.android"
+          base64 --decode .github/ci/android-debug.keystore.b64 > "$HOME/.android/debug.keystore"
+          chmod 600 "$HOME/.android/debug.keystore"
+          keytool -list -v \
+            -keystore "$HOME/.android/debug.keystore" \
+            -alias androiddebugkey \
+            -storepass android \
+            -keypass android | tee /tmp/tbt-debug-key.txt
+          grep -Fq '75:8F:F2:13:89:03:3E:D2:63:75:41:5F:AD:30:E1:1F:9A:D1:F3:64' /tmp/tbt-debug-key.txt
+          grep -Fq '3F:9A:A4:96:CA:F1:37:EA:C1:48:CD:94:29:23:95:6D:3D:6A:2A:DA:FF:9C:DB:10:51:DE:02:40:62:81:96:25' /tmp/tbt-debug-key.txt
       - name: Prepare Android host
         shell: bash
         env:
@@ -113,6 +122,12 @@ jobs:
           from pathlib import Path
           gradle = Path('android/app/build.gradle.kts')
           text = gradle.read_text().replace('minSdk = flutter.minSdkVersion', 'minSdk = 26').replace('com.tbt.best_photo_spot', 'com.tbt.social')
+          marker = '    buildTypes {\n'
+          signing = '''    signingConfigs {\n        getByName("debug") {\n            storeFile = file(System.getProperty("user.home") + "/.android/debug.keystore")\n            storePassword = "android"\n            keyAlias = "androiddebugkey"\n            keyPassword = "android"\n        }\n    }\n\n'''
+          if signing not in text:
+              text = text.replace(marker, signing + marker, 1)
+          debug_block = '''    buildTypes {\n        getByName("debug") {\n            signingConfig = signingConfigs.getByName("debug")\n        }\n'''
+          text = text.replace(marker, debug_block, 1)
           gradle.write_text(text)
           for activity in Path('android/app/src/main/kotlin').rglob('MainActivity.kt'):
               source = activity.read_text().replace('package com.tbt.best_photo_spot', 'package com.tbt.social').replace('import io.flutter.embedding.android.FlutterActivity', 'import io.flutter.embedding.android.FlutterFragmentActivity').replace('FlutterActivity()', 'FlutterFragmentActivity()')
@@ -128,15 +143,18 @@ jobs:
           fi
       - name: Android APK Build
         run: flutter build apk --debug --no-pub
-      - name: Report Android auth certificate fingerprints
+      - name: Verify Android APK signing identity
         shell: bash
         run: |
           set -euo pipefail
-          test -f "$HOME/.android/debug.keystore"
-          echo 'Register these SHA fingerprints for Android package com.tbt.social in Firebase Authentication:'
-          keytool -list -v -alias androiddebugkey -keystore "$HOME/.android/debug.keystore" -storepass android -keypass android | grep -E 'SHA1:|SHA256:'
-      - name: Verify Android APK
-        run: test -s build/app/outputs/flutter-apk/app-debug.apk
+          APK=build/app/outputs/flutter-apk/app-debug.apk
+          test -s "$APK"
+          APKSIGNER=$(find "$ANDROID_HOME/build-tools" -type f -name apksigner | sort -V | tail -1)
+          test -n "$APKSIGNER"
+          "$APKSIGNER" verify --print-certs "$APK" | tee /tmp/apk-signing.txt
+          tr '[:lower:]' '[:upper:]' < /tmp/apk-signing.txt | tr -d ':' > /tmp/apk-signing-normalized.txt
+          grep -q '758FF21389033ED26375415FAD30E11F9AD1F364' /tmp/apk-signing-normalized.txt
+          grep -q '3F9AA496CAF137EAC148CD942923956D3D6A2ADAFF9CDB1051DE024062819625' /tmp/apk-signing-normalized.txt
       - name: Upload Android APK
         uses: actions/upload-artifact@v4
         with:
