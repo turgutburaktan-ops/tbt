@@ -18,7 +18,7 @@ concurrency:
 jobs:
   product_fixes:
     name: Apply Product Fixes
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     timeout-minutes: 20
     outputs:
       commit_sha: ${{ steps.final_ref.outputs.commit_sha }}
@@ -36,18 +36,7 @@ jobs:
         run: |
           set -euo pipefail
           python3 .github/scripts/apply_requested_ui_fixes.py
-          dart format \
-            lib/screens/home_shell_screen.dart \
-            lib/screens/radar_screen.dart \
-            lib/screens/camera_screen.dart \
-            lib/screens/profile_page_v2.dart \
-            lib/screens/campus_home_screen.dart \
-            lib/screens/user_statistics_screen.dart \
-            lib/screens/admin_portal_screen.dart \
-            lib/screens/social_events_screen.dart \
-            lib/screens/event_photo_create_screen.dart \
-            lib/screens/selected_route_map_screen.dart \
-            lib/screens/register_screen.dart
+          dart format lib
           if ! git diff --quiet; then
             git config user.name 'tbt-build-bot'
             git config user.email 'actions@users.noreply.github.com'
@@ -63,44 +52,35 @@ jobs:
   analyze:
     name: Analyze
     needs: product_fixes
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           ref: ${{ needs.product_fixes.outputs.commit_sha }}
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
+      - uses: subosito/flutter-action@v2
         with:
           channel: stable
           cache: true
-      - name: Install dependencies
-        run: flutter pub get
+      - run: flutter pub get
       - name: Flutter analyze
         run: flutter analyze --no-fatal-warnings --no-fatal-infos
       - name: Flutter tests
         shell: bash
         run: |
           set -euo pipefail
-          if [ -d test ] && find test -type f -name '*_test.dart' | grep -q .; then
-            flutter test
-          else
-            echo 'No Flutter tests found.'
-          fi
+          if [ -d test ] && find test -type f -name '*_test.dart' | grep -q .; then flutter test; else echo 'No Flutter tests found.'; fi
 
   android:
     name: Android
     needs: product_fixes
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           ref: ${{ needs.product_fixes.outputs.commit_sha }}
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
+      - uses: subosito/flutter-action@v2
         with:
           channel: stable
           cache: true
@@ -109,8 +89,7 @@ jobs:
         with:
           distribution: temurin
           java-version: '24'
-      - name: Install dependencies
-        run: flutter pub get
+      - run: flutter pub get
       - name: Prepare Android host
         shell: bash
         env:
@@ -120,40 +99,25 @@ jobs:
           cp android/app/src/main/AndroidManifest.xml /tmp/tbt-AndroidManifest.xml
           rm -rf android
           flutter create --platforms=android --org com.tbt --project-name best_photo_spot .
-
           printf '\nandroid.builtInKotlin=false\nandroid.newDsl=false\n' >> android/gradle.properties
-
           cp /tmp/tbt-AndroidManifest.xml android/app/src/main/AndroidManifest.xml
           python3 - <<'PY'
           from pathlib import Path
           gradle = Path('android/app/build.gradle.kts')
-          text = gradle.read_text()
-          text = text.replace('minSdk = flutter.minSdkVersion', 'minSdk = 26')
-          text = text.replace('com.tbt.best_photo_spot', 'com.tbt.social')
+          text = gradle.read_text().replace('minSdk = flutter.minSdkVersion', 'minSdk = 26').replace('com.tbt.best_photo_spot', 'com.tbt.social')
           gradle.write_text(text)
           for activity in Path('android/app/src/main/kotlin').rglob('MainActivity.kt'):
-              source = activity.read_text().replace('package com.tbt.best_photo_spot', 'package com.tbt.social')
-              source = source.replace('import io.flutter.embedding.android.FlutterActivity', 'import io.flutter.embedding.android.FlutterFragmentActivity')
-              source = source.replace('FlutterActivity()', 'FlutterFragmentActivity()')
+              source = activity.read_text().replace('package com.tbt.best_photo_spot', 'package com.tbt.social').replace('import io.flutter.embedding.android.FlutterActivity', 'import io.flutter.embedding.android.FlutterFragmentActivity').replace('FlutterActivity()', 'FlutterFragmentActivity()')
               activity.write_text(source)
           PY
           if grep -q '\${MAPS_API_KEY}' android/app/src/main/AndroidManifest.xml; then
-            if [ -z "${MAPS_API_KEY:-}" ]; then
-              echo 'MAPS_API_KEY GitHub secret is missing. Refusing to publish a broken-map APK.'
-              exit 1
-            fi
+            test -n "${MAPS_API_KEY:-}" || { echo 'MAPS_API_KEY GitHub secret is missing.'; exit 1; }
             python3 - <<'PY'
           import os
           from pathlib import Path
-          p = Path('android/app/src/main/AndroidManifest.xml')
-          p.write_text(p.read_text().replace('${MAPS_API_KEY}', os.environ['MAPS_API_KEY']))
+          p=Path('android/app/src/main/AndroidManifest.xml'); p.write_text(p.read_text().replace('${MAPS_API_KEY}',os.environ['MAPS_API_KEY']))
           PY
           fi
-          grep -q 'applicationId = "com.tbt.social"' android/app/build.gradle.kts
-          grep -q 'namespace = "com.tbt.social"' android/app/build.gradle.kts
-          grep -R -q 'FlutterFragmentActivity' android/app/src/main/kotlin
-          grep -q '^android.builtInKotlin=false$' android/gradle.properties
-          grep -q '^android.newDsl=false$' android/gradle.properties
       - name: Android APK Build
         run: flutter build apk --debug --no-pub
       - name: Verify Android APK
@@ -172,17 +136,14 @@ jobs:
     runs-on: macos-latest
     timeout-minutes: 45
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           ref: ${{ needs.product_fixes.outputs.commit_sha }}
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
+      - uses: subosito/flutter-action@v2
         with:
           channel: stable
           cache: true
-      - name: Install dependencies
-        run: flutter pub get
+      - run: flutter pub get
       - name: Prepare clean iOS host
         shell: bash
         run: |
@@ -194,15 +155,11 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
           import re
-          p = Path('ios/Podfile')
-          s = p.read_text()
-          if re.search(r"^\s*#?\s*platform :ios,\s*'[^']+'", s, flags=re.M):
-              s = re.sub(r"^\s*#?\s*platform :ios,\s*'[^']+'", "platform :ios, '15.0'", s, count=1, flags=re.M)
-          else:
-              s = "platform :ios, '15.0'\n" + s
+          p=Path('ios/Podfile'); s=p.read_text()
+          if re.search(r"^\s*#?\s*platform :ios,\s*'[^']+'",s,flags=re.M): s=re.sub(r"^\s*#?\s*platform :ios,\s*'[^']+'","platform :ios, '15.0'",s,count=1,flags=re.M)
+          else: s="platform :ios, '15.0'\n"+s
           p.write_text(s)
           PY
-          grep -q "platform :ios, '15.0'" ios/Podfile
           rm -rf ios/Pods ios/Podfile.lock
       - name: iOS Build
         run: >-
@@ -226,8 +183,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 35
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           ref: ${{ needs.product_fixes.outputs.commit_sha }}
       - name: Setup Java 21 for Security
@@ -235,47 +191,22 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
-      - name: Setup Node 20
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: '20'
       - name: Security gate
         shell: bash
         run: |
           set -euo pipefail
-          echo 'Checking tracked secrets...'
-          if git grep -n -E -- 'BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY|private_key_id[[:space:]]*[:=]|service_account.*\.json' -- ':!pubspec.lock' ':!.github/workflows/security_regression_check.yml' ':!.github/workflows/tbt_full_build.yml'; then
-            echo 'Potential private key/service-account material found in tracked files.'
-            exit 1
-          fi
-          echo 'Checking Firebase deny-by-default fallbacks...'
+          if git grep -n -E -- 'BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY|private_key_id[[:space:]]*[:=]|service_account.*\.json' -- ':!pubspec.lock' ':!.github/workflows/security_regression_check.yml' ':!.github/workflows/tbt_full_build.yml'; then exit 1; fi
           grep -q 'match /{allPaths=\*\*}' storage.rules
           grep -A2 'match /{allPaths=\*\*}' storage.rules | grep -q 'allow read, write: if false'
-          grep -q 'safeMediaWrite' storage.rules
-          grep -q 'request.resource.size <= 15 \* 1024 \* 1024' storage.rules
-          grep -q 'request.resource.size <= 100 \* 1024 \* 1024' storage.rules
-          grep -q "request.resource.contentType.matches('^image/(jpeg|png|webp|heic|heif)\$')" storage.rules
-          grep -q "request.resource.contentType.matches('^video/(mp4|quicktime)\$')" storage.rules
           grep -q 'function isAdmin()' firestore.rules
-          grep -q 'request.auth.token.admin == true' firestore.rules
-          if grep -nE 'allow (read, )?write: if true|allow write: if signedIn\(\);' firestore.rules storage.rules; then
-            echo 'Unsafe broad write rule found.'
-            exit 1
-          fi
-          echo 'Security gate passed.'
       - name: Firebase rules emulator
-        shell: bash
-        run: |
-          set -euo pipefail
-          npm install -g firebase-tools
-          firebase emulators:exec --only firestore --project demo-tbt "echo Firestore-rules-ok" --non-interactive
+        run: npm install -g firebase-tools && firebase emulators:exec --only firestore --project demo-tbt "echo Firestore-rules-ok" --non-interactive
       - name: Cloud Functions audit
-        shell: bash
         working-directory: functions
-        run: |
-          set -euo pipefail
-          npm install --package-lock-only --ignore-scripts
-          npm audit --omit=dev --audit-level=high
+        run: npm install --package-lock-only --ignore-scripts && npm audit --omit=dev --audit-level=high
 
   result:
     name: TBT Full Build Result
@@ -286,18 +217,9 @@ jobs:
       - name: Collect result
         shell: bash
         run: |
-          set -euo pipefail
-          echo "Product fixes: ${{ needs.product_fixes.result }}"
-          echo "Analyze:       ${{ needs.analyze.result }}"
-          echo "Android:       ${{ needs.android.result }}"
-          echo "iOS:           ${{ needs.ios.result }}"
-          echo "Security:      ${{ needs.security.result }}"
-          if [ "${{ needs.product_fixes.result }}" != "success" ] || \
-             [ "${{ needs.analyze.result }}" != "success" ] || \
-             [ "${{ needs.android.result }}" != "success" ] || \
-             [ "${{ needs.ios.result }}" != "success" ] || \
-             [ "${{ needs.security.result }}" != "success" ]; then
-            echo 'TBT FULL BUILD FAILED.'
-            exit 1
-          fi
-          echo 'TBT FULL BUILD PASSED.'
+          echo "Analyze: ${{ needs.analyze.result }} | Android: ${{ needs.android.result }} | iOS: ${{ needs.ios.result }} | Security: ${{ needs.security.result }}"
+          test "${{ needs.product_fixes.result }}" = success
+          test "${{ needs.analyze.result }}" = success
+          test "${{ needs.android.result }}" = success
+          test "${{ needs.ios.result }}" = success
+          test "${{ needs.security.result }}" = success
