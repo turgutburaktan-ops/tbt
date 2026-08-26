@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -247,6 +249,11 @@ class _SpotSuggestionScreenState extends State<SpotSuggestionScreen> {
             ),
             child: GoogleMap(
               onMapCreated: (c) => _mapController = c,
+              gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
+                Factory<OneSequenceGestureRecognizer>(
+                  () => EagerGestureRecognizer(),
+                ),
+              },
               initialCameraPosition: CameraPosition(
                 target: initial,
                 zoom: _pickedLocation == null ? 5.2 : 16,

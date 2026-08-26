@@ -11,6 +11,7 @@ import '../services/profile_service.dart';
 import '../services/social_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/firebase_media_image.dart';
+import '../widgets/profile_favorite_places_section.dart';
 import 'camera_screen.dart';
 import 'create_post_screen.dart';
 import 'follow_list_screen.dart';
@@ -214,6 +215,12 @@ class _ProfileBodyState extends State<_ProfileBody> {
                     ),
                   ),
                   SliverToBoxAdapter(child: _typeModule(type)),
+                  SliverToBoxAdapter(
+                    child: ProfileFavoritePlacesSection(
+                      userId: widget.user.uid,
+                      editable: true,
+                    ),
+                  ),
                   SliverToBoxAdapter(child: _contentTabs()),
                   if (postSnapshot.connectionState == ConnectionState.waiting)
                     const SliverFillRemaining(
