@@ -6,7 +6,6 @@ import '../widgets/retention_hub_quick_entry.dart';
 import '../widgets/retention_now_overlay.dart';
 import 'account_security_gate_v2.dart';
 import 'app_onboarding_screen.dart';
-import 'guest_home_screen.dart';
 import 'home_shell_v3.dart';
 import 'student_onboarding_screen.dart';
 
@@ -20,7 +19,12 @@ class AppEntryGate extends StatelessWidget {
       initialData: FirebaseAuth.instance.currentUser,
       builder: (context, authSnapshot) {
         final user = authSnapshot.data;
-        if (user == null) return const GuestHomeScreen();
+
+        // Guest users use the same navigation shell as signed-in users so the
+        // Ana Sayfa / Keşfet split and public Mekanlar / Çevrende experiences
+        // stay visible. Auth-gated actions inside the shell already redirect
+        // to login where required.
+        if (user == null) return const HomeScreen();
 
         return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
           stream: FirebaseFirestore.instance
