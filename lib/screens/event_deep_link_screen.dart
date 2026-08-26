@@ -2,6 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import 'create_post_screen.dart';
+
 import '../models/social_event.dart';
 import '../services/invite_link_service.dart';
 import '../services/post_service.dart';

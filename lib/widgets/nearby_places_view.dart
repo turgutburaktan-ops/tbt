@@ -31,7 +31,7 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
   bool _loading = true;
   bool _citySearching = false;
   String? _error;
-  String _sort = 'rating';
+  String _sort = 'popular';
 
   @override
   void initState() {
