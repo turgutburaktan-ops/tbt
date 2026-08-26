@@ -117,6 +117,17 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
           .contains(key);
     }).toList();
     next.sort((a, b) {
+      if (key.isEmpty) {
+        final aPinned = a.name
+            .toLowerCase()
+            .replaceAll('ı', 'i')
+            .contains('anitkabir');
+        final bPinned = b.name
+            .toLowerCase()
+            .replaceAll('ı', 'i')
+            .contains('anitkabir');
+        if (aPinned != bPinned) return aPinned ? -1 : 1;
+      }
       if (_position != null) {
         final distanceOrder = _distance(a).compareTo(_distance(b));
         if (distanceOrder != 0) return distanceOrder;

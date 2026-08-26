@@ -416,12 +416,6 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
           child: Row(
             children: [
               _SortChip(
-                label: 'En iyi',
-                selected: _sort == 'rating',
-                onTap: () => setState(() => _sort = 'rating'),
-              ),
-              const SizedBox(width: 7),
-              _SortChip(
                 label: 'Popüler',
                 selected: _sort == 'popular',
                 onTap: () => setState(() => _sort = 'popular'),
