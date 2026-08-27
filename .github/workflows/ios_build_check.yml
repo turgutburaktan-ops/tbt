@@ -1,9 +1,6 @@
 name: iOS Build Check
 
 on:
-  push:
-    branches:
-      - feature/video-v1
   workflow_dispatch:
 
 permissions:
