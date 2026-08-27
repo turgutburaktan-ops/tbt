@@ -499,8 +499,17 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   }
 
   Widget _shareCard(ChatMessage message, bool mine) {
-    final title = (message.sharedTitle ?? message.text).trim();
+    final legacyTitle = message.text
+        .split('\n')
+        .first
+        .replaceAll('📷', '')
+        .replaceAll('▶️', '')
+        .trim();
+    final title =
+        (message.sharedTitle ?? (message.isLegacyShare ? legacyTitle : message.text))
+            .trim();
     final imageUrl = message.sharedImageUrl?.trim() ?? '';
+    final canOpen = (message.sharedId?.trim().isNotEmpty ?? false);
     final icon = message.sharedType == 'event'
         ? Icons.event_rounded
         : message.sharedType == 'reel'
@@ -513,13 +522,13 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         : 'Gönderi';
     return InkWell(
       borderRadius: BorderRadius.circular(15),
-      onTap: () => _openSharedContent(message),
+      onTap: canOpen ? () => _openSharedContent(message) : null,
       child: Container(
-        width: 250,
+        width: 270,
         decoration: BoxDecoration(
           color: mine
-              ? Colors.black.withValues(alpha: 0.08)
-              : const Color(0xFF121820),
+              ? const Color(0xFF5045B8)
+              : const Color(0xFF151A22),
           borderRadius: BorderRadius.circular(15),
           border: Border.all(color: mine ? Colors.black12 : Colors.white10),
         ),
@@ -529,13 +538,26 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           children: [
             if (imageUrl.isNotEmpty)
               SizedBox(
-                height: 150,
+                height: 164,
                 width: double.infinity,
                 child: FirebaseMediaImage(
                   imageUrl: imageUrl,
                   fit: BoxFit.cover,
                   errorWidget: const ColoredBox(color: Color(0xFF20252C)),
                 ),
+              )
+            else
+              Container(
+                height: 96,
+                width: double.infinity,
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFF302A68), Color(0xFF171B25)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
+                child: Icon(icon, size: 40, color: Colors.white70),
               ),
             Padding(
               padding: const EdgeInsets.fromLTRB(11, 10, 11, 6),
@@ -544,7 +566,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                   Icon(
                     icon,
                     size: 19,
-                    color: mine ? Colors.black54 : Colors.white60,
+                    color: Colors.white70,
                   ),
                   const SizedBox(width: 8),
                   Expanded(
@@ -553,7 +575,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        color: mine ? Colors.black87 : Colors.white,
+                        color: Colors.white,
                         fontWeight: FontWeight.w800,
                       ),
                     ),
@@ -564,9 +586,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
             Padding(
               padding: const EdgeInsets.fromLTRB(38, 0, 11, 10),
               child: Text(
-                '$typeLabel · Açmak için dokun',
+                canOpen ? '$typeLabel · Görüntülemek için dokun' : typeLabel,
                 style: TextStyle(
-                  color: mine ? Colors.black45 : Colors.white38,
+                  color: Colors.white54,
                   fontSize: 10.5,
                   fontWeight: FontWeight.w700,
                 ),
@@ -659,13 +681,13 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                 : CrossAxisAlignment.start,
             children: [
               Container(
-                padding: message.isImage
+                padding: (message.isImage || message.isShare)
                     ? const EdgeInsets.all(4)
-                    : const EdgeInsets.fromLTRB(13, 10, 11, 7),
+                    : const EdgeInsets.fromLTRB(13, 9, 11, 6),
                 decoration: BoxDecoration(
                   color: mine
-                      ? const Color(0xFFD7DADF)
-                      : const Color(0xFF1B222B),
+                      ? const Color(0xFF6256D9)
+                      : const Color(0xFF191E27),
                   borderRadius: BorderRadius.only(
                     topLeft: const Radius.circular(20),
                     topRight: const Radius.circular(20),
@@ -721,7 +743,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                         child: Text(
                           message.text,
                           style: TextStyle(
-                            color: mine ? Colors.black : Colors.white,
+                            color: Colors.white,
                             fontSize: 15.5,
                             height: 1.25,
                           ),
@@ -737,7 +759,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                           Text(
                             time,
                             style: TextStyle(
-                              color: mine ? Colors.black45 : Colors.white38,
+                              color: Colors.white54,
                               fontSize: 10.5,
                               fontWeight: FontWeight.w600,
                             ),
@@ -750,8 +772,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                                   : Icons.done_rounded,
                               size: 14,
                               color: seen
-                                  ? const Color(0xFF2878B5)
-                                  : Colors.black38,
+                                  ? const Color(0xFF75D7FF)
+                                  : Colors.white54,
                             ),
                           ],
                         ],
@@ -1009,7 +1031,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                         hintText: 'Mesaj yaz...',
                         hintStyle: const TextStyle(color: Colors.white38),
                         filled: true,
-                        fillColor: const Color(0xFF1B222B),
+                        fillColor: const Color(0xFF171C24),
                         contentPadding: const EdgeInsets.symmetric(
                           horizontal: 17,
                           vertical: 12,
@@ -1036,8 +1058,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                       }
                       return IconButton.filled(
                         style: IconButton.styleFrom(
-                          backgroundColor: const Color(0xFFD7DADF),
-                          foregroundColor: Colors.black,
+                          backgroundColor: const Color(0xFF6256D9),
+                          foregroundColor: Colors.white,
                         ),
                         onPressed: (_sending || _sendingMedia) ? null : _send,
                         icon: _sending
@@ -1118,10 +1140,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     final myId = FirebaseAuth.instance.currentUser?.uid ?? '';
     return Scaffold(
-      backgroundColor: const Color(0xFF090A0C),
+      backgroundColor: const Color(0xFF0B0D12),
       appBar: AppBar(
         toolbarHeight: 64,
-        backgroundColor: const Color(0xFF090A0C),
+        backgroundColor: const Color(0xFF0B0D12),
         foregroundColor: Colors.white,
         titleSpacing: 0,
         title: _conversationHeader(),
