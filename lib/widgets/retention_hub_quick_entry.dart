@@ -32,15 +32,35 @@ class _RetentionHubQuickEntryState extends State<RetentionHubQuickEntry> {
   Future<void> _refresh() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
-      if (mounted) setState(() => _isAdmin = false);
+      if (mounted && _isAdmin) setState(() => _isAdmin = false);
       return;
     }
     try {
-      final token = await user.getIdTokenResult(true);
-      if (mounted) setState(() => _isAdmin = token.claims?['admin'] == true);
+      // Never force-refresh a token from inside idTokenChanges. A forced token
+      // refresh can itself emit idTokenChanges and create a needless loop.
+      final token = await user
+          .getIdTokenResult()
+          .timeout(const Duration(seconds: 6));
+      final next = token.claims?['admin'] == true;
+      if (mounted && next != _isAdmin) setState(() => _isAdmin = next);
     } catch (_) {
-      if (mounted) setState(() => _isAdmin = false);
+      if (mounted && _isAdmin) setState(() => _isAdmin = false);
     }
+  }
+
+  Stream<_RewardSummary> _rewardStream(String uid) {
+    return FirebaseFirestore.instance
+        .collection('users')
+        .doc(uid)
+        .snapshots()
+        .map((snapshot) {
+          final data = snapshot.data() ?? const <String, dynamic>{};
+          return _RewardSummary(
+            xp: (data['xp'] as num?)?.toInt() ?? 0,
+            level: (data['levelTitle'] ?? 'Gezgin').toString(),
+          );
+        })
+        .distinct();
   }
 
   @override
@@ -55,16 +75,10 @@ class _RetentionHubQuickEntryState extends State<RetentionHubQuickEntry> {
             bottom: 122,
             child: SafeArea(
               top: false,
-              child: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-                stream: FirebaseFirestore.instance
-                    .collection('users')
-                    .doc(uid)
-                    .snapshots(),
+              child: StreamBuilder<_RewardSummary>(
+                stream: _rewardStream(uid),
                 builder: (context, snapshot) {
-                  final data =
-                      snapshot.data?.data() ?? const <String, dynamic>{};
-                  final xp = (data['xp'] as num?)?.toInt() ?? 0;
-                  final level = (data['levelTitle'] ?? 'Gezgin').toString();
+                  final reward = snapshot.data ?? const _RewardSummary();
                   return Material(
                     color: Colors.transparent,
                     child: InkWell(
@@ -97,7 +111,7 @@ class _RetentionHubQuickEntryState extends State<RetentionHubQuickEntry> {
                             ),
                             const SizedBox(width: 5),
                             Text(
-                              '$xp XP',
+                              '${reward.xp} XP',
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.w900,
@@ -108,7 +122,7 @@ class _RetentionHubQuickEntryState extends State<RetentionHubQuickEntry> {
                             ConstrainedBox(
                               constraints: const BoxConstraints(maxWidth: 88),
                               child: Text(
-                                level,
+                                reward.level,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(
@@ -183,4 +197,18 @@ class _RetentionHubQuickEntryState extends State<RetentionHubQuickEntry> {
       ],
     );
   }
+}
+
+class _RewardSummary {
+  final int xp;
+  final String level;
+
+  const _RewardSummary({this.xp = 0, this.level = 'Gezgin'});
+
+  @override
+  bool operator ==(Object other) =>
+      other is _RewardSummary && other.xp == xp && other.level == level;
+
+  @override
+  int get hashCode => Object.hash(xp, level);
 }
