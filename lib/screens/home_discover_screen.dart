@@ -339,16 +339,17 @@ class _HomeDiscoverScreenState extends State<HomeDiscoverScreen> {
                   const ColoredBox(color: Color(0xFF171A1F)),
             );
           }
-          final docs = snapshot.data!.docs
-              .where((doc) => _hasMediaCandidate(doc.data()))
-              .toList()
-            ..sort((a, b) {
-              final av = a.data()['createdAt'];
-              final bv = b.data()['createdAt'];
-              final at = av is Timestamp ? av.millisecondsSinceEpoch : 0;
-              final bt = bv is Timestamp ? bv.millisecondsSinceEpoch : 0;
-              return bt.compareTo(at);
-            });
+          final docs =
+              snapshot.data!.docs
+                  .where((doc) => _hasMediaCandidate(doc.data()))
+                  .toList()
+                ..sort((a, b) {
+                  final av = a.data()['createdAt'];
+                  final bv = b.data()['createdAt'];
+                  final at = av is Timestamp ? av.millisecondsSinceEpoch : 0;
+                  final bt = bv is Timestamp ? bv.millisecondsSinceEpoch : 0;
+                  return bt.compareTo(at);
+                });
           if (docs.isEmpty) {
             return const Center(
               child: Text(
