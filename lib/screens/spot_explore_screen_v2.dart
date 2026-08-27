@@ -17,6 +17,7 @@ import '../services/nationwide_candidate_spot_resolver.dart';
 import '../services/route_selection_service.dart';
 import '../services/spot_repository.dart';
 import '../theme/app_theme.dart';
+import '../widgets/chat_share_sheet.dart';
 import '../widgets/route_selection_button.dart';
 import '../widgets/spot_image.dart';
 import 'spot_detail_screen.dart';
@@ -301,6 +302,13 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
                   ),
                 ),
                 onToggleRoute: () => _toggleRoute(spot),
+                onShare: () => shareCardToChat(
+                  context,
+                  sharedType: 'spot',
+                  sharedId: '${spot.latitude},${spot.longitude}',
+                  title: spot.name,
+                  imageUrl: spot.imageUrl,
+                ),
               );
             },
           ),
@@ -318,6 +326,7 @@ class _SpotVenueCard extends StatelessWidget {
   final String distanceLabel;
   final VoidCallback onOpen;
   final VoidCallback onToggleRoute;
+  final VoidCallback onShare;
   const _SpotVenueCard({
     required this.spot,
     required this.pinned,
@@ -325,6 +334,7 @@ class _SpotVenueCard extends StatelessWidget {
     required this.distanceLabel,
     required this.onOpen,
     required this.onToggleRoute,
+    required this.onShare,
   });
 
   @override
@@ -448,21 +458,34 @@ class _SpotVenueCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 6),
-              IconButton(
-                tooltip: selected ? 'Rotadan çıkar' : 'Rotaya ekle',
-                onPressed: onToggleRoute,
-                style: IconButton.styleFrom(
-                  backgroundColor: selected
-                      ? AppColors.cyan
-                      : AppColors.surfaceStrong,
-                  foregroundColor: selected
-                      ? const Color(0xFF041311)
-                      : Colors.white70,
-                ),
-                icon: Icon(
-                  selected ? Icons.check_rounded : Icons.add_rounded,
-                  size: 20,
-                ),
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    tooltip: 'Mesaj olarak gönder',
+                    onPressed: onShare,
+                    icon: const Icon(
+                      Icons.send_outlined,
+                      color: Colors.white54,
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: selected ? 'Rotadan çıkar' : 'Rotaya ekle',
+                    onPressed: onToggleRoute,
+                    style: IconButton.styleFrom(
+                      backgroundColor: selected
+                          ? AppColors.cyan
+                          : AppColors.surfaceStrong,
+                      foregroundColor: selected
+                          ? const Color(0xFF041311)
+                          : Colors.white70,
+                    ),
+                    icon: Icon(
+                      selected ? Icons.check_rounded : Icons.add_rounded,
+                      size: 20,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
