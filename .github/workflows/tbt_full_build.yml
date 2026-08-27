@@ -39,6 +39,7 @@ jobs:
           python3 .github/scripts/apply_ui_polish.py
           python3 .github/scripts/apply_retention_loop.py
           python3 .github/scripts/apply_runtime_stability_fixes.py
+          python3 .github/scripts/apply_video_qa_fixes.py
           dart format lib
           if ! git diff --quiet; then
             git config user.name 'tbt-build-bot'
