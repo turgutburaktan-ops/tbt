@@ -49,12 +49,12 @@ jobs:
               raise SystemExit('spot card constructor block not found')
           s = s.replace(old, new, 1)
 
-          # Place a send action immediately before the existing route bookmark.
-          marker = "                    IconButton(\n                      tooltip: selected ? 'Rotadan çıkar' : 'Rotaya ekle',\n"
-          insert = "                    IconButton(\n                      tooltip: 'Mesaj olarak gönder',\n                      onPressed: onShare,\n                      icon: const Icon(\n                        Icons.send_outlined,\n                        color: Colors.white54,\n                      ),\n                    ),\n" + marker
-          if marker not in s:
-              raise SystemExit('spot route action marker not found')
-          s = s.replace(marker, insert, 1)
+          marker = "              IconButton(\n                tooltip: selected ? 'Rotadan çıkar' : 'Rotaya ekle',\n"
+          insert = "              Column(\n                mainAxisSize: MainAxisSize.min,\n                children: [\n                  IconButton(\n                    tooltip: 'Mesaj olarak gönder',\n                    onPressed: onShare,\n                    icon: const Icon(\n                      Icons.send_outlined,\n                      color: Colors.white54,\n                    ),\n                  ),\n                  IconButton(\n                    tooltip: selected ? 'Rotadan çıkar' : 'Rotaya ekle',\n                    onPressed: onToggleRoute,\n                    style: IconButton.styleFrom(\n                      backgroundColor: selected\n                          ? AppColors.cyan\n                          : AppColors.surfaceStrong,\n                      foregroundColor: selected\n                          ? const Color(0xFF041311)\n                          : Colors.white70,\n                    ),\n                    icon: Icon(\n                      selected ? Icons.check_rounded : Icons.add_rounded,\n                      size: 20,\n                    ),\n                  ),\n                ],\n              ),\n"
+          old_action = "              IconButton(\n                tooltip: selected ? 'Rotadan çıkar' : 'Rotaya ekle',\n                onPressed: onToggleRoute,\n                style: IconButton.styleFrom(\n                  backgroundColor: selected\n                      ? AppColors.cyan\n                      : AppColors.surfaceStrong,\n                  foregroundColor: selected\n                      ? const Color(0xFF041311)\n                      : Colors.white70,\n                ),\n                icon: Icon(\n                  selected ? Icons.check_rounded : Icons.add_rounded,\n                  size: 20,\n                ),\n              ),\n"
+          if old_action not in s:
+              raise SystemExit('spot route action block not found')
+          s = s.replace(old_action, insert, 1)
           p.write_text(s)
           PY
           git config user.name 'tbt-fix-bot'
