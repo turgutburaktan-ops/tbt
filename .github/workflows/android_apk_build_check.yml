@@ -28,10 +28,11 @@ jobs:
           cache: true
       - name: Install dependencies
         run: flutter pub get
-      - name: Verify Google OAuth configuration
+      - name: Verify runtime secrets
         shell: bash
         env:
           GOOGLE_SERVER_CLIENT_ID: ${{ secrets.GOOGLE_SERVER_CLIENT_ID }}
+          MAPS_API_KEY: ${{ secrets.MAPS_API_KEY }}
         run: |
           set -euo pipefail
           test -n "${GOOGLE_SERVER_CLIENT_ID:-}" || { echo 'GOOGLE_SERVER_CLIENT_ID GitHub secret is missing.'; exit 1; }
@@ -39,6 +40,7 @@ jobs:
             *.apps.googleusercontent.com) ;;
             *) echo 'GOOGLE_SERVER_CLIENT_ID has an invalid format.'; exit 1 ;;
           esac
+          test -n "${MAPS_API_KEY:-}" || { echo 'MAPS_API_KEY GitHub secret is missing.'; exit 1; }
       - name: Install stable CI debug signing certificate
         shell: bash
         run: |
@@ -54,11 +56,25 @@ jobs:
         run: cp android/app/src/main/AndroidManifest.xml /tmp/AndroidManifest.xml
       - name: Generate disposable Android host project
         shell: bash
+        env:
+          MAPS_API_KEY: ${{ secrets.MAPS_API_KEY }}
         run: |
+          set -euo pipefail
           rm -rf android
           flutter create --platforms=android --org com.tbt --project-name best_photo_spot .
           cp /tmp/AndroidManifest.xml android/app/src/main/AndroidManifest.xml
-          sed -i 's/${MAPS_API_KEY}/CI_DUMMY_MAPS_KEY/g' android/app/src/main/AndroidManifest.xml
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+
+          manifest = Path('android/app/src/main/AndroidManifest.xml')
+          maps_key = os.environ['MAPS_API_KEY']
+          text = manifest.read_text()
+          placeholder = '${MAPS_API_KEY}'
+          if placeholder not in text:
+              raise SystemExit('MAPS_API_KEY placeholder is missing from AndroidManifest.xml')
+          manifest.write_text(text.replace(placeholder, maps_key))
+          PY
           sed -i 's/minSdk = flutter.minSdkVersion/minSdk = 26/' android/app/build.gradle.kts
           sed -i 's/com.tbt.best_photo_spot/com.tbt.social/g' android/app/build.gradle.kts
           main_activity=$(find android/app/src/main/kotlin -name MainActivity.kt -print -quit)
@@ -75,12 +91,15 @@ jobs:
           s = s.replace(marker, debug_block, 1)
           p.write_text(s)
           PY
-      - name: Verify package identity
+      - name: Verify package identity and maps wiring
         shell: bash
         run: |
+          set -euo pipefail
           grep -q 'applicationId = "com.tbt.social"' android/app/build.gradle.kts
           grep -q 'namespace = "com.tbt.social"' android/app/build.gradle.kts
           grep -q 'storeFile = file(System.getProperty("user.home") + "/.android/debug.keystore")' android/app/build.gradle.kts
+          ! grep -q '\${MAPS_API_KEY}' android/app/src/main/AndroidManifest.xml
+          ! grep -q 'CI_DUMMY_MAPS_KEY' android/app/src/main/AndroidManifest.xml
           main_activity=$(find android/app/src/main/kotlin -name MainActivity.kt -print -quit)
           grep -q '^package com.tbt.social$' "$main_activity"
       - name: Build debug APK
