@@ -10,6 +10,7 @@ import '../theme/app_theme.dart';
 import '../widgets/nearby_places_view.dart';
 import '../widgets/story_strip.dart';
 import 'campus_home_screen.dart';
+import 'chat_inbox_screen.dart';
 import 'event_photo_create_screen.dart';
 import 'feed_screen.dart';
 import 'home_discover_screen.dart';
@@ -202,6 +203,8 @@ class _BottomNav extends StatelessWidget {
   }
 }
 
+enum _HomeChromeMode { full, quick, compact }
+
 class _HomeFeedHub extends StatefulWidget {
   const _HomeFeedHub();
   @override
@@ -211,59 +214,125 @@ class _HomeFeedHub extends StatefulWidget {
 class _HomeFeedHubState extends State<_HomeFeedHub> {
   int _section = 0;
   int _photoMode = 0;
+  _HomeChromeMode _chromeMode = _HomeChromeMode.full;
+
+  void _setSection(int value) {
+    setState(() {
+      _section = value;
+      _chromeMode = _HomeChromeMode.full;
+    });
+  }
+
+  bool _handleFeedScroll(ScrollNotification notification) {
+    if (_section != 0 || notification.metrics.axis != Axis.vertical) {
+      return false;
+    }
+
+    var next = _chromeMode;
+    final pixels = notification.metrics.pixels;
+    if (pixels <= 4) {
+      next = _HomeChromeMode.full;
+    } else if (notification is ScrollUpdateNotification) {
+      final delta = notification.scrollDelta ?? 0;
+      if (delta > 1.5) {
+        next = _HomeChromeMode.compact;
+      } else if (delta < -1.5) {
+        next = _HomeChromeMode.quick;
+      }
+    } else if (notification is OverscrollNotification &&
+        notification.overscroll < 0) {
+      next = _HomeChromeMode.full;
+    }
+
+    if (next != _chromeMode && mounted) {
+      setState(() => _chromeMode = next);
+    }
+    return false;
+  }
+
+  Widget _animatedChrome({required bool visible, required Widget child}) {
+    return AnimatedSize(
+      duration: const Duration(milliseconds: 190),
+      curve: Curves.easeOutCubic,
+      alignment: Alignment.topCenter,
+      child: visible
+          ? AnimatedOpacity(
+              opacity: 1,
+              duration: const Duration(milliseconds: 150),
+              child: child,
+            )
+          : const SizedBox.shrink(),
+    );
+  }
 
   @override
-  Widget build(BuildContext context) => ColoredBox(
-    color: AppColors.background,
-    child: SafeArea(
-      bottom: false,
-      child: Column(
-        children: [
-          const _HomeHeader(),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(14, 2, 14, 7),
-            child: _SegmentTabs(
-              labels: const ['Ana Sayfa', 'Keşfet'],
-              selected: _section,
-              prominent: true,
-              onChanged: (value) => setState(() => _section = value),
+  Widget build(BuildContext context) {
+    final full = _chromeMode == _HomeChromeMode.full;
+    final compact = _chromeMode == _HomeChromeMode.compact;
+    return ColoredBox(
+      color: AppColors.background,
+      child: SafeArea(
+        bottom: false,
+        child: Column(
+          children: [
+            _HomeHeader(showBrand: !compact),
+            _animatedChrome(
+              visible: full,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(14, 2, 14, 7),
+                child: _SegmentTabs(
+                  labels: const ['Ana Sayfa', 'Keşfet'],
+                  selected: _section,
+                  prominent: true,
+                  onChanged: _setSection,
+                ),
+              ),
             ),
-          ),
-          Expanded(
-            child: IndexedStack(
-              index: _section,
-              children: [
-                Column(
+            Expanded(
+              child: NotificationListener<ScrollNotification>(
+                onNotification: _handleFeedScroll,
+                child: IndexedStack(
+                  index: _section,
                   children: [
-                    const StoryStrip(),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(14, 3, 14, 5),
-                      child: _SegmentTabs(
-                        labels: const ['Sana Özel', 'Takip'],
-                        selected: _photoMode,
-                        onChanged: (value) =>
-                            setState(() => _photoMode = value),
-                      ),
+                    Column(
+                      children: [
+                        _animatedChrome(
+                          visible: full,
+                          child: const StoryStrip(),
+                        ),
+                        _animatedChrome(
+                          visible: !compact,
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(14, 3, 14, 5),
+                            child: _SegmentTabs(
+                              labels: const ['Sana Özel', 'Takip'],
+                              selected: _photoMode,
+                              onChanged: (value) =>
+                                  setState(() => _photoMode = value),
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: IndexedStack(
+                            index: _photoMode,
+                            children: const [
+                              _AuthAwareFeed(mode: FeedMode.forYou),
+                              _AuthAwareFeed(mode: FeedMode.following),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
-                    Expanded(
-                      child: IndexedStack(
-                        index: _photoMode,
-                        children: const [
-                          _AuthAwareFeed(mode: FeedMode.forYou),
-                          _AuthAwareFeed(mode: FeedMode.following),
-                        ],
-                      ),
-                    ),
+                    const HomeDiscoverScreen(),
                   ],
                 ),
-                const HomeDiscoverScreen(),
-              ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 class _AuthAwareFeed extends StatelessWidget {
@@ -283,40 +352,47 @@ class _AuthAwareFeed extends StatelessWidget {
 }
 
 class _HomeHeader extends StatelessWidget {
-  const _HomeHeader();
+  final bool showBrand;
+  const _HomeHeader({this.showBrand = true});
+
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.fromLTRB(14, 8, 6, 5),
+  Widget build(BuildContext context) => AnimatedContainer(
+    duration: const Duration(milliseconds: 180),
+    curve: Curves.easeOutCubic,
+    padding: EdgeInsets.fromLTRB(showBrand ? 14 : 6, 8, 6, 5),
     child: Row(
       children: [
-        Container(
-          width: 34,
-          height: 34,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(11),
-            gradient: AppColors.accentGradient,
-          ),
-          child: const Text(
-            'TBT',
-            style: TextStyle(
-              color: Color(0xFF08090D),
-              fontSize: 10.5,
-              fontWeight: FontWeight.w900,
+        if (showBrand) ...[
+          Container(
+            width: 34,
+            height: 34,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(11),
+              gradient: AppColors.accentGradient,
+            ),
+            child: const Text(
+              'TBT',
+              style: TextStyle(
+                color: Color(0xFF08090D),
+                fontSize: 10.5,
+                fontWeight: FontWeight.w900,
+              ),
             ),
           ),
-        ),
-        const SizedBox(width: 9),
-        const Expanded(
-          child: Text(
-            'TBT',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w900,
-              letterSpacing: -.35,
+          const SizedBox(width: 9),
+          const Expanded(
+            child: Text(
+              'TBT',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w900,
+                letterSpacing: -.35,
+              ),
             ),
           ),
-        ),
+        ] else
+          const Spacer(),
         StreamBuilder<int>(
           stream: AppNotificationService.instance.unreadCount(),
           builder: (_, s) => _HeaderAction(
@@ -332,7 +408,10 @@ class _HomeHeader extends StatelessWidget {
             tooltip: 'Mesajlar',
             icon: Icons.chat_bubble_outline_rounded,
             count: s.data ?? 0,
-            onTap: () => Navigator.pushNamed(context, '/messages'),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const ChatInboxScreen()),
+            ),
           ),
         ),
       ],
