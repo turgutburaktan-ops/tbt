@@ -441,12 +441,13 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
         ),
       ),
       body: ListView(
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
         padding: const EdgeInsets.fromLTRB(18, 16, 18, 40),
         children: [
           GestureDetector(
             onTap: _chooseSource,
             child: Container(
-              height: 330,
+              height: 260,
               decoration: BoxDecoration(
                 color: const Color(0xFF121416),
                 borderRadius: BorderRadius.circular(24),

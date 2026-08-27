@@ -35,7 +35,7 @@ class FeedScreen extends StatelessWidget {
             builder: (context, followingSnapshot) {
               if (followingSnapshot.connectionState ==
                   ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
+                return const _FeedLoading();
               }
               final followingIds = followingSnapshot.data ?? <String>[];
               return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
@@ -47,7 +47,7 @@ class FeedScreen extends StatelessWidget {
                 builder: (context, postsSnapshot) {
                   if (postsSnapshot.connectionState ==
                       ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
+                    return const _FeedLoading();
                   }
                   if (postsSnapshot.hasError) {
                     return Center(
@@ -847,6 +847,49 @@ class _FeedPostCard extends StatelessWidget {
           ),
         const SizedBox(height: 4),
       ],
+    ),
+  );
+}
+
+class _FeedLoading extends StatelessWidget {
+  const _FeedLoading();
+
+  @override
+  Widget build(BuildContext context) => ListView.separated(
+    physics: const NeverScrollableScrollPhysics(),
+    padding: const EdgeInsets.fromLTRB(14, 10, 14, 28),
+    itemCount: 3,
+    separatorBuilder: (_, __) => const SizedBox(height: 14),
+    itemBuilder: (_, __) => Container(
+      height: 290,
+      decoration: BoxDecoration(
+        color: const Color(0xFF121416),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: Colors.white10),
+      ),
+      child: const Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: EdgeInsets.all(14),
+            child: Row(
+              children: [
+                CircleAvatar(radius: 18, backgroundColor: Color(0xFF25292D)),
+                SizedBox(width: 10),
+                Expanded(
+                  child: SizedBox(
+                    height: 12,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(color: Color(0xFF25292D)),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Expanded(child: ColoredBox(color: Color(0xFF1A1D20))),
+        ],
+      ),
     ),
   );
 }

@@ -282,67 +282,6 @@ class BusinessProfileScreen extends StatelessWidget {
                                   return const SizedBox.shrink();
                                 return Container(
                                   width: double.infinity,
-                                  padding: const EdgeInsets.all(12),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.surface,
-                                    borderRadius: BorderRadius.circular(14),
-                                    border: Border.all(color: AppColors.border),
-                                  ),
-                                  child: Wrap(
-                                    spacing: 14,
-                                    runSpacing: 7,
-                                    children: [
-                                      if (favoriteCount > 0)
-                                        Text(
-                                          '♥ $favoriteCount TBT kullanıcısının favorilerinde',
-                                          style: const TextStyle(
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w800,
-                                          ),
-                                        ),
-                                      if (postCount > 0)
-                                        Text(
-                                          '▣ $postCount topluluk paylaşımı',
-                                          style: const TextStyle(
-                                            fontSize: 12,
-                                            color: Colors.white70,
-                                            fontWeight: FontWeight.w700,
-                                          ),
-                                        ),
-                                    ],
-                                  ),
-                                );
-                              },
-                            );
-                          },
-                        ),
-                        const SizedBox(height: 14),
-                        StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-                          stream: FirebaseFirestore.instance
-                              .collection('posts')
-                              .where('venueKey', isEqualTo: _key)
-                              .limit(20)
-                              .snapshots(),
-                          builder: (context, postSnap) {
-                            final postCount = postSnap.data?.docs.length ?? 0;
-                            return StreamBuilder<
-                              QuerySnapshot<Map<String, dynamic>>
-                            >(
-                              stream: FirebaseFirestore.instance
-                                  .collection('users')
-                                  .where(
-                                    'favoriteVenueKeys',
-                                    arrayContains: _key,
-                                  )
-                                  .limit(20)
-                                  .snapshots(),
-                              builder: (context, favSnap) {
-                                final favoriteCount =
-                                    favSnap.data?.docs.length ?? 0;
-                                if (postCount == 0 && favoriteCount == 0)
-                                  return const SizedBox.shrink();
-                                return Container(
-                                  width: double.infinity,
                                   padding: const EdgeInsets.all(14),
                                   decoration: BoxDecoration(
                                     color: AppColors.surface,
