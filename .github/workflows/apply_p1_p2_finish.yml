@@ -2,12 +2,6 @@ name: Apply P1 P2 Finish
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - feature/video-v1
-    paths:
-      - .github/workflows/apply_p1_p2_finish.yml
-      - .github/scripts/apply_p1_p2_finish.py
 
 permissions:
   contents: write
