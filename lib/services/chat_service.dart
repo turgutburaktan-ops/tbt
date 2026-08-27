@@ -64,8 +64,18 @@ class ChatService {
   Future<bool> isBlockedBetween(String otherUserId) async {
     final me = (await _requiredUser()).uid;
     final refs = await Future.wait([
-      _firestore.collection('users').doc(me).collection('blocked').doc(otherUserId).get(),
-      _firestore.collection('users').doc(otherUserId).collection('blocked').doc(me).get(),
+      _firestore
+          .collection('users')
+          .doc(me)
+          .collection('blocked')
+          .doc(otherUserId)
+          .get(),
+      _firestore
+          .collection('users')
+          .doc(otherUserId)
+          .collection('blocked')
+          .doc(me)
+          .get(),
     ]);
     return refs.any((doc) => doc.exists);
   }
@@ -76,7 +86,8 @@ class ChatService {
     String? sourceId,
   }) async {
     final user = await _requiredUser();
-    if (otherUserId == user.uid) throw Exception('Kendine mesaj gönderemezsin.');
+    if (otherUserId == user.uid)
+      throw Exception('Kendine mesaj gönderemezsin.');
     if (await isBlockedBetween(otherUserId)) {
       throw Exception('Bu kullanıcıyla mesajlaşma kullanılamıyor.');
     }
@@ -89,7 +100,8 @@ class ChatService {
       final members = (data['memberIds'] as List? ?? const <dynamic>[])
           .map((value) => value.toString())
           .toList(growable: false);
-      final valid = (data['type'] ?? '').toString() == 'direct' &&
+      final valid =
+          (data['type'] ?? '').toString() == 'direct' &&
           members.length == 2 &&
           members.contains(user.uid) &&
           members.contains(otherUserId);
@@ -122,8 +134,10 @@ class ChatService {
           .map((snapshot) {
             final items = snapshot.docs.map(ChatThread.fromDocument).toList();
             items.sort((a, b) {
-              final ad = a.lastMessageAt ?? DateTime.fromMillisecondsSinceEpoch(0);
-              final bd = b.lastMessageAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+              final ad =
+                  a.lastMessageAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+              final bd =
+                  b.lastMessageAt ?? DateTime.fromMillisecondsSinceEpoch(0);
               return bd.compareTo(ad);
             });
             return items;
@@ -149,9 +163,11 @@ class ChatService {
           .orderBy('createdAt', descending: true)
           .limit(150)
           .snapshots()
-          .map((snapshot) => snapshot.docs
-              .map(ChatMessage.fromDocument)
-              .toList(growable: false));
+          .map(
+            (snapshot) => snapshot.docs
+                .map(ChatMessage.fromDocument)
+                .toList(growable: false),
+          );
     });
   }
 
@@ -192,7 +208,8 @@ class ChatService {
     final members = (data['memberIds'] as List? ?? const <dynamic>[])
         .map((e) => e.toString())
         .toList(growable: false);
-    if (!members.contains(user.uid)) throw Exception('Bu sohbete erişimin yok.');
+    if (!members.contains(user.uid))
+      throw Exception('Bu sohbete erişimin yok.');
     final deletedIds = (data['deletedMessageIds'] as List? ?? const <dynamic>[])
         .map((e) => e.toString())
         .toSet();
@@ -203,8 +220,9 @@ class ChatService {
       current = (raw[messageId] as Map)[user.uid]?.toString();
     }
     await threadRef.update({
-      'messageReactions.$messageId.${user.uid}':
-          current == emoji ? FieldValue.delete() : emoji,
+      'messageReactions.$messageId.${user.uid}': current == emoji
+          ? FieldValue.delete()
+          : emoji,
     });
   }
 
@@ -238,8 +256,10 @@ class ChatService {
     final user = await _requiredUser();
     final clean = text.trim();
     if (clean.isEmpty) return;
-    if (clean.length > 1500) throw Exception('Mesaj en fazla 1500 karakter olabilir.');
-    if (otherUserId == user.uid) throw Exception('Kendine mesaj gönderemezsin.');
+    if (clean.length > 1500)
+      throw Exception('Mesaj en fazla 1500 karakter olabilir.');
+    if (otherUserId == user.uid)
+      throw Exception('Kendine mesaj gönderemezsin.');
     if (threadId != directThreadId(user.uid, otherUserId)) {
       throw Exception('Geçersiz sohbet kimliği.');
     }
@@ -280,8 +300,8 @@ class ChatService {
     final ext = contentType.contains('png')
         ? 'png'
         : contentType.contains('webp')
-            ? 'webp'
-            : 'jpg';
+        ? 'webp'
+        : 'jpg';
     final storageRef = _storage.ref(
       'users/${user.uid}/chat/$threadId/${messageRef.id}.$ext',
     );
@@ -309,8 +329,8 @@ class ChatService {
     final label = sharedType == 'event'
         ? '📅 Etkinlik'
         : sharedType == 'reel'
-            ? '▶️ Reels'
-            : '📷 Gönderi';
+        ? '▶️ Reels'
+        : '📷 Gönderi';
     await _sendPreparedMessage(
       threadId: threadId,
       otherUserId: otherUserId,
@@ -339,7 +359,8 @@ class ChatService {
     final user = await _requiredUser();
     final threadRef = _firestore.collection('chat_threads').doc(threadId);
     final thread = await threadRef.get();
-    final members = (thread.data()?['memberIds'] as List?)
+    final members =
+        (thread.data()?['memberIds'] as List?)
             ?.map((e) => e.toString())
             .toList() ??
         const <String>[];
@@ -349,7 +370,8 @@ class ChatService {
       throw Exception('Bu sohbete erişimin yok.');
     }
 
-    final messageRef = forcedMessageRef ?? threadRef.collection('messages').doc();
+    final messageRef =
+        forcedMessageRef ?? threadRef.collection('messages').doc();
     final batch = _firestore.batch();
     batch.set(messageRef, {
       'senderId': user.uid,
@@ -386,8 +408,8 @@ class ChatService {
     final preview = type == 'image'
         ? 'Sana bir fotoğraf gönderdi'
         : type == 'share'
-            ? 'Seninle bir içerik paylaştı'
-            : (text.length > 90 ? '${text.substring(0, 90)}…' : text);
+        ? 'Seninle bir içerik paylaştı'
+        : (text.length > 90 ? '${text.substring(0, 90)}…' : text);
     try {
       await AppNotificationService.instance.notifyUser(
         userId: otherUserId,
@@ -408,7 +430,10 @@ class ChatService {
         .doc(user.uid)
         .collection('blocked')
         .doc(otherUserId)
-        .set({'userId': otherUserId, 'createdAt': FieldValue.serverTimestamp()});
+        .set({
+          'userId': otherUserId,
+          'createdAt': FieldValue.serverTimestamp(),
+        });
   }
 
   Future<void> unblockUser(String otherUserId) async {
