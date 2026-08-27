@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -11,14 +12,39 @@ class ProfileService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseStorage _storage = FirebaseStorage.instance;
+  Future<void>? _profileUpdateInFlight;
 
   Stream<DocumentSnapshot<Map<String, dynamic>>> watchMine() {
-    final user = _auth.currentUser;
-    if (user == null) return const Stream.empty();
-    return _firestore.collection('users').doc(user.uid).snapshots();
+    return _auth.authStateChanges().asyncExpand((user) {
+      if (user == null) {
+        return const Stream<DocumentSnapshot<Map<String, dynamic>>>.empty();
+      }
+      return _firestore.collection('users').doc(user.uid).snapshots();
+    });
   }
 
   Future<void> updateProfile({
+    required String displayName,
+    required String bio,
+    File? photo,
+  }) {
+    final running = _profileUpdateInFlight;
+    if (running != null) return running;
+
+    final request = _updateProfileInternal(
+      displayName: displayName,
+      bio: bio,
+      photo: photo,
+    );
+    _profileUpdateInFlight = request;
+    return request.whenComplete(() {
+      if (identical(_profileUpdateInFlight, request)) {
+        _profileUpdateInFlight = null;
+      }
+    });
+  }
+
+  Future<void> _updateProfileInternal({
     required String displayName,
     required String bio,
     File? photo,
@@ -38,27 +64,54 @@ class ProfileService {
 
     String photoUrl = user.photoURL ?? '';
     if (photo != null) {
+      final size = await photo.length();
+      if (size <= 0 || size > 15 * 1024 * 1024) {
+        throw Exception('Profil fotoğrafı en fazla 15 MB olabilir.');
+      }
       final lower = photo.path.toLowerCase();
       final ext = lower.endsWith('.png') ? 'png' : 'jpg';
       final ref = _storage.ref().child('users/${user.uid}/profile/avatar.$ext');
-      final task = await ref.putFile(
-        photo,
-        SettableMetadata(
-          contentType: ext == 'png' ? 'image/png' : 'image/jpeg',
-        ),
-      );
-      photoUrl = await task.ref.getDownloadURL();
+      await ref
+          .putFile(
+            photo,
+            SettableMetadata(
+              contentType: ext == 'png' ? 'image/png' : 'image/jpeg',
+            ),
+          )
+          .timeout(const Duration(seconds: 30));
+      photoUrl = await ref
+          .getDownloadURL()
+          .timeout(const Duration(seconds: 8));
     }
 
-    await user.updateDisplayName(cleanName);
-    if (photoUrl.isNotEmpty) await user.updatePhotoURL(photoUrl);
+    // Firestore is the profile source used by the app. Persist it first so a
+    // temporary Auth profile sync failure cannot make the UI look half-saved.
     await _firestore.collection('users').doc(user.uid).set({
       'uid': user.uid,
       'displayName': cleanName,
       'bio': cleanBio,
       'photoUrl': photoUrl,
       'updatedAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
+    }, SetOptions(merge: true)).timeout(const Duration(seconds: 8));
+
+    unawaited(_syncAuthProfileQuietly(user, cleanName, photoUrl));
+  }
+
+  Future<void> _syncAuthProfileQuietly(
+    User user,
+    String displayName,
+    String photoUrl,
+  ) async {
+    try {
+      if ((user.displayName ?? '') != displayName) {
+        await user
+            .updateDisplayName(displayName)
+            .timeout(const Duration(seconds: 6));
+      }
+      if (photoUrl.isNotEmpty && (user.photoURL ?? '') != photoUrl) {
+        await user.updatePhotoURL(photoUrl).timeout(const Duration(seconds: 6));
+      }
+    } catch (_) {}
   }
 
   Future<void> updateStudentStatus({required String status}) async {
@@ -79,7 +132,7 @@ class ProfileService {
         'classYear': '',
       },
       'updatedAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
+    }, SetOptions(merge: true)).timeout(const Duration(seconds: 8));
   }
 
   Future<void> updateCampusProfile({
@@ -133,7 +186,7 @@ class ProfileService {
           ? 'student'
           : (cleanClassYear == 'Mezun' ? 'graduate' : 'unknown'),
       'updatedAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
+    }, SetOptions(merge: true)).timeout(const Duration(seconds: 8));
   }
 
   Future<void> completeOnboarding({required bool skipped}) async {
@@ -145,6 +198,6 @@ class ProfileService {
       'onboardingSkipped': skipped,
       'onboardingCompletedAt': FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
+    }, SetOptions(merge: true)).timeout(const Duration(seconds: 8));
   }
 }
