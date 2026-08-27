@@ -45,8 +45,14 @@ class ActivityDemandService {
 
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final Map<String, Future<void>> _inFlight = <String, Future<void>>{};
+
+  String? _cachedUniversity;
+  String? _cachedUniversityUserId;
+  DateTime? _cachedUniversityAt;
 
   static const collection = 'activity_demands';
+  static const Duration _profileCacheLifetime = Duration(minutes: 10);
 
   String _key(String value) => value
       .trim()
@@ -89,7 +95,7 @@ class ActivityDemandService {
       return snap.docs
           .map(ActivityDemand.fromDocument)
           .where((d) => d.expiresAt.isAfter(now))
-          .toList();
+          .toList(growable: false);
     });
   }
 
@@ -97,31 +103,48 @@ class ActivityDemandService {
     required String activity,
     required String city,
     required String window,
-  }) async {
+  }) {
     final user = _auth.currentUser;
     if (user == null) {
-      throw Exception('Katılmak için giriş yapmalısın.');
+      return Future.error(Exception('Katılmak için giriş yapmalısın.'));
     }
     final cleanCity = city.trim();
     if (cleanCity.length < 2) {
-      throw Exception('Şehir seçmelisin.');
+      return Future.error(Exception('Şehir seçmelisin.'));
     }
 
-    String university = '';
-    try {
-      final profile = await _firestore.collection('users').doc(user.uid).get();
-      university = (profile.data()?['university'] ?? '').toString().trim();
-    } catch (_) {}
+    final docId = _docId(user.uid, activity, cleanCity, window);
+    final running = _inFlight[docId];
+    if (running != null) return running;
 
-    final ref = _firestore
-        .collection(collection)
-        .doc(_docId(user.uid, activity, cleanCity, window));
+    final request = _setDemandInternal(
+      userId: user.uid,
+      activity: activity,
+      city: cleanCity,
+      window: window,
+      docId: docId,
+    );
+    _inFlight[docId] = request;
+    return request.whenComplete(() {
+      if (identical(_inFlight[docId], request)) _inFlight.remove(docId);
+    });
+  }
+
+  Future<void> _setDemandInternal({
+    required String userId,
+    required String activity,
+    required String city,
+    required String window,
+    required String docId,
+  }) async {
+    final university = await _universityFor(userId);
+    final ref = _firestore.collection(collection).doc(docId);
     await ref.set({
-      'userId': user.uid,
+      'userId': userId,
       'activity': activity.trim(),
       'activityKey': _key(activity),
-      'city': cleanCity,
-      'cityKey': _key(cleanCity),
+      'city': city,
+      'cityKey': _key(city),
       'university': university,
       'universityKey': _key(university),
       'window': window,
@@ -131,6 +154,29 @@ class ActivityDemandService {
     }, SetOptions(merge: true));
   }
 
+  Future<String> _universityFor(String userId) async {
+    final cachedAt = _cachedUniversityAt;
+    if (_cachedUniversityUserId == userId &&
+        cachedAt != null &&
+        DateTime.now().difference(cachedAt) < _profileCacheLifetime) {
+      return _cachedUniversity ?? '';
+    }
+    try {
+      final profile = await _firestore
+          .collection('users')
+          .doc(userId)
+          .get()
+          .timeout(const Duration(seconds: 3));
+      final university = (profile.data()?['university'] ?? '').toString().trim();
+      _cachedUniversityUserId = userId;
+      _cachedUniversity = university;
+      _cachedUniversityAt = DateTime.now();
+      return university;
+    } catch (_) {
+      return _cachedUniversityUserId == userId ? _cachedUniversity ?? '' : '';
+    }
+  }
+
   Future<void> removeDemand({
     required String activity,
     required String city,
@@ -138,10 +184,10 @@ class ActivityDemandService {
   }) async {
     final user = _auth.currentUser;
     if (user == null) return;
-    await _firestore
-        .collection(collection)
-        .doc(_docId(user.uid, activity, city, window))
-        .delete();
+    final docId = _docId(user.uid, activity, city, window);
+    final running = _inFlight[docId];
+    if (running != null) await running;
+    await _firestore.collection(collection).doc(docId).delete();
   }
 
   bool matches(
