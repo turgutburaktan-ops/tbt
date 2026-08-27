@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -21,6 +22,7 @@ class StoryService {
 
   DateTime? _lastStoryCreateAt;
   final Map<String, DateTime> _lastInteractionAt = <String, DateTime>{};
+  final Map<String, DateTime> _recentViews = <String, DateTime>{};
 
   void _enforceStoryCreateCooldown() {
     final now = DateTime.now();
@@ -46,9 +48,7 @@ class StoryService {
   }
 
   void _ensureActiveStory(AppStory story) {
-    if (!story.isActive) {
-      throw Exception('Bu story artık aktif değil.');
-    }
+    if (!story.isActive) throw Exception('Bu story artık aktif değil.');
   }
 
   Stream<List<AppStory>> watchActive() {
@@ -105,25 +105,36 @@ class StoryService {
     final storageRef = _storage.ref().child(
       'users/${user.uid}/stories/${storyRef.id}.$extension',
     );
-    final metadata = SettableMetadata(
-      contentType: extension == 'png' ? 'image/png' : 'image/jpeg',
-    );
-    final upload = await storageRef.putFile(image, metadata);
-    if (upload.bytesTransferred <= 0) {
-      throw Exception('Story fotoğrafı yüklenemedi.');
+    try {
+      final upload = await storageRef
+          .putFile(
+            image,
+            SettableMetadata(
+              contentType: extension == 'png' ? 'image/png' : 'image/jpeg',
+            ),
+          )
+          .timeout(const Duration(seconds: 30));
+      if (upload.bytesTransferred <= 0) {
+        throw Exception('Story fotoğrafı yüklenemedi.');
+      }
+      final imageUrl = await storageRef
+          .getDownloadURL()
+          .timeout(const Duration(seconds: 8));
+      await storyRef.set({
+        ..._baseStoryData(user, storyRef.id),
+        'mediaType': 'image',
+        'imageUrl': imageUrl,
+        'storagePath': storageRef.fullPath,
+        'videoUrl': '',
+        'videoStoragePath': '',
+        'thumbnailUrl': '',
+        'thumbnailStoragePath': '',
+        'durationMs': 0,
+      }).timeout(const Duration(seconds: 8));
+    } catch (_) {
+      unawaited(_deleteStorageQuietly(storageRef));
+      rethrow;
     }
-    final imageUrl = await upload.ref.getDownloadURL();
-    await storyRef.set({
-      ..._baseStoryData(user, storyRef.id),
-      'mediaType': 'image',
-      'imageUrl': imageUrl,
-      'storagePath': storageRef.fullPath,
-      'videoUrl': '',
-      'videoStoragePath': '',
-      'thumbnailUrl': '',
-      'thumbnailStoragePath': '',
-      'durationMs': 0,
-    });
   }
 
   Future<void> createVideoStory(File sourceVideo) async {
@@ -131,10 +142,9 @@ class StoryService {
     if (user == null) throw Exception('Story paylaşmak için giriş yapmalısın.');
     _enforceStoryCreateCooldown();
 
-    final prepared = await VideoMediaService.instance.prepare(
-      sourceVideo,
-      maxDuration: const Duration(seconds: 15),
-    );
+    final prepared = await VideoMediaService.instance
+        .prepare(sourceVideo, maxDuration: const Duration(seconds: 15))
+        .timeout(const Duration(seconds: 45));
     final storyRef = _firestore.collection('stories').doc();
     final videoRef = _storage.ref().child(
       'users/${user.uid}/stories/${storyRef.id}.mp4',
@@ -143,37 +153,52 @@ class StoryService {
       'users/${user.uid}/stories/${storyRef.id}_thumb.jpg',
     );
 
-    final videoUpload = await videoRef.putFile(
-      prepared.video,
-      SettableMetadata(contentType: 'video/mp4'),
-    );
-    if (videoUpload.bytesTransferred <= 0) {
-      throw Exception('Story videosu yüklenemedi.');
-    }
-    final thumbUpload = await thumbRef.putFile(
-      prepared.thumbnail,
-      SettableMetadata(contentType: 'image/jpeg'),
-    );
-    if (thumbUpload.bytesTransferred <= 0) {
-      try {
-        await videoRef.delete();
-      } catch (_) {}
-      throw Exception('Story video önizlemesi yüklenemedi.');
-    }
+    try {
+      final videoUpload = await videoRef
+          .putFile(prepared.video, SettableMetadata(contentType: 'video/mp4'))
+          .timeout(const Duration(seconds: 45));
+      if (videoUpload.bytesTransferred <= 0) {
+        throw Exception('Story videosu yüklenemedi.');
+      }
 
-    final videoUrl = await videoUpload.ref.getDownloadURL();
-    final thumbnailUrl = await thumbUpload.ref.getDownloadURL();
-    await storyRef.set({
-      ..._baseStoryData(user, storyRef.id),
-      'mediaType': 'video',
-      'imageUrl': thumbnailUrl,
-      'storagePath': thumbRef.fullPath,
-      'videoUrl': videoUrl,
-      'videoStoragePath': videoRef.fullPath,
-      'thumbnailUrl': thumbnailUrl,
-      'thumbnailStoragePath': thumbRef.fullPath,
-      'durationMs': prepared.durationMs,
-    });
+      final thumbUpload = await thumbRef
+          .putFile(
+            prepared.thumbnail,
+            SettableMetadata(contentType: 'image/jpeg'),
+          )
+          .timeout(const Duration(seconds: 20));
+      if (thumbUpload.bytesTransferred <= 0) {
+        throw Exception('Story video önizlemesi yüklenemedi.');
+      }
+
+      final urls = await Future.wait([
+        videoRef.getDownloadURL().timeout(const Duration(seconds: 8)),
+        thumbRef.getDownloadURL().timeout(const Duration(seconds: 8)),
+      ]);
+      final videoUrl = urls[0];
+      final thumbnailUrl = urls[1];
+      await storyRef.set({
+        ..._baseStoryData(user, storyRef.id),
+        'mediaType': 'video',
+        'imageUrl': thumbnailUrl,
+        'storagePath': thumbRef.fullPath,
+        'videoUrl': videoUrl,
+        'videoStoragePath': videoRef.fullPath,
+        'thumbnailUrl': thumbnailUrl,
+        'thumbnailStoragePath': thumbRef.fullPath,
+        'durationMs': prepared.durationMs,
+      }).timeout(const Duration(seconds: 8));
+    } catch (_) {
+      unawaited(_deleteStorageQuietly(videoRef));
+      unawaited(_deleteStorageQuietly(thumbRef));
+      rethrow;
+    }
+  }
+
+  Future<void> _deleteStorageQuietly(Reference reference) async {
+    try {
+      await reference.delete().timeout(const Duration(seconds: 6));
+    } catch (_) {}
   }
 
   DocumentReference<Map<String, dynamic>> _interactionRef(
@@ -202,11 +227,23 @@ class StoryService {
   Future<void> recordView(AppStory story) async {
     final user = _auth.currentUser;
     if (user == null || user.uid == story.userId || !story.isActive) return;
-    await _interactionRef(story.id, user.uid).set({
-      ..._actorData(user),
-      'viewedAt': FieldValue.serverTimestamp(),
-      'updatedAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
+    final key = '${user.uid}:${story.id}';
+    final now = DateTime.now();
+    final previous = _recentViews[key];
+    if (previous != null &&
+        now.difference(previous) < const Duration(minutes: 10)) {
+      return;
+    }
+    _recentViews[key] = now;
+    try {
+      await _interactionRef(story.id, user.uid).set({
+        ..._actorData(user),
+        'viewedAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true)).timeout(const Duration(seconds: 6));
+    } catch (_) {
+      _recentViews.remove(key);
+    }
   }
 
   Stream<Map<String, dynamic>> watchMyInteraction(String storyId) {
@@ -255,18 +292,16 @@ class StoryService {
       'liked': liked,
       'viewedAt': FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
+    }, SetOptions(merge: true)).timeout(const Duration(seconds: 7));
     if (liked) {
-      try {
-        await AppNotificationService.instance.notifyUser(
-          userId: story.userId,
-          type: 'story_like',
-          title: '${_actorName(user)} storyini beğendi',
-          body: 'Story etkileşimlerini görmek için dokun.',
-          sourceId: story.id,
-          actorId: user.uid,
-        );
-      } catch (_) {}
+      unawaited(_notifyQuietly(
+        userId: story.userId,
+        type: 'story_like',
+        title: '${_actorName(user)} storyini beğendi',
+        body: 'Story etkileşimlerini görmek için dokun.',
+        sourceId: story.id,
+        actorId: user.uid,
+      ));
     }
   }
 
@@ -283,16 +318,36 @@ class StoryService {
       'reaction': clean,
       'viewedAt': FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
+    }, SetOptions(merge: true)).timeout(const Duration(seconds: 7));
+    unawaited(_notifyQuietly(
+      userId: story.userId,
+      type: 'story_reaction',
+      title: '${_actorName(user)} storyine tepki verdi',
+      body: clean,
+      sourceId: story.id,
+      actorId: user.uid,
+    ));
+  }
+
+  Future<void> _notifyQuietly({
+    required String userId,
+    required String type,
+    required String title,
+    required String body,
+    required String sourceId,
+    required String actorId,
+  }) async {
     try {
-      await AppNotificationService.instance.notifyUser(
-        userId: story.userId,
-        type: 'story_reaction',
-        title: '${_actorName(user)} storyine tepki verdi',
-        body: clean,
-        sourceId: story.id,
-        actorId: user.uid,
-      );
+      await AppNotificationService.instance
+          .notifyUser(
+            userId: userId,
+            type: type,
+            title: title,
+            body: body,
+            sourceId: sourceId,
+            actorId: actorId,
+          )
+          .timeout(const Duration(seconds: 6));
     } catch (_) {}
   }
 
@@ -309,14 +364,6 @@ class StoryService {
     }
     ContentModerationService.instance.enforce(clean);
 
-    await _interactionRef(story.id, user.uid).set({
-      ..._actorData(user),
-      'message': clean,
-      'messageAt': FieldValue.serverTimestamp(),
-      'viewedAt': FieldValue.serverTimestamp(),
-      'updatedAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
-
     final threadId = await ChatService.instance.ensureDirectThread(
       story.userId,
       sourceType: 'story',
@@ -327,21 +374,33 @@ class StoryService {
       otherUserId: story.userId,
       text: 'Story yanıtı: $clean',
     );
+
+    try {
+      await _interactionRef(story.id, user.uid).set({
+        ..._actorData(user),
+        'message': clean,
+        'messageAt': FieldValue.serverTimestamp(),
+        'viewedAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true)).timeout(const Duration(seconds: 6));
+    } catch (_) {}
   }
 
   Future<void> deleteStory(AppStory story) async {
     final user = _auth.currentUser;
     if (user == null || story.userId != user.uid) return;
-    await _firestore.collection('stories').doc(story.id).delete();
+    await _firestore
+        .collection('stories')
+        .doc(story.id)
+        .delete()
+        .timeout(const Duration(seconds: 7));
     final paths = <String>{
       story.storagePath,
       story.videoStoragePath,
       story.thumbnailStoragePath,
     }..removeWhere((path) => path.trim().isEmpty);
-    for (final path in paths) {
-      try {
-        await _storage.ref().child(path).delete();
-      } catch (_) {}
-    }
+    await Future.wait(
+      paths.map((path) => _deleteStorageQuietly(_storage.ref().child(path))),
+    );
   }
 }
