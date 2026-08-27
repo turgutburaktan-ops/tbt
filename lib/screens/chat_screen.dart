@@ -506,7 +506,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         .replaceAll('▶️', '')
         .trim();
     final title =
-        (message.sharedTitle ?? (message.isLegacyShare ? legacyTitle : message.text))
+        (message.sharedTitle ??
+                (message.isLegacyShare ? legacyTitle : message.text))
             .trim();
     final imageUrl = message.sharedImageUrl?.trim() ?? '';
     final canOpen = (message.sharedId?.trim().isNotEmpty ?? false);
@@ -526,9 +527,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       child: Container(
         width: 270,
         decoration: BoxDecoration(
-          color: mine
-              ? const Color(0xFF5045B8)
-              : const Color(0xFF151A22),
+          color: mine ? const Color(0xFF5045B8) : const Color(0xFF151A22),
           borderRadius: BorderRadius.circular(15),
           border: Border.all(color: mine ? Colors.black12 : Colors.white10),
         ),
@@ -563,11 +562,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               padding: const EdgeInsets.fromLTRB(11, 10, 11, 6),
               child: Row(
                 children: [
-                  Icon(
-                    icon,
-                    size: 19,
-                    color: Colors.white70,
-                  ),
+                  Icon(icon, size: 19, color: Colors.white70),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
