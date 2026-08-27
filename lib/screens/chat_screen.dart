@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -8,7 +9,10 @@ import 'package:image_picker/image_picker.dart';
 
 import '../models/chat_message.dart';
 import '../services/chat_service.dart';
+import '../widgets/chat_voice_message.dart';
 import '../widgets/firebase_media_image.dart';
+import 'post_detail_screen.dart';
+import 'social_events_screen.dart';
 
 class ChatScreen extends StatefulWidget {
   final String otherUserId;
@@ -144,6 +148,26 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     }
   }
 
+  Future<void> _sendVoice(Uint8List bytes, int durationMs) async {
+    final id = _threadId;
+    if (id == null || _sending || _sendingMedia) return;
+    setState(() => _sendingMedia = true);
+    try {
+      await ChatService.instance.sendAudioMessage(
+        threadId: id,
+        otherUserId: widget.otherUserId,
+        bytes: bytes,
+        durationMs: durationMs,
+        replyTo: _replyTo,
+      );
+      if (mounted) setState(() => _replyTo = null);
+    } catch (e) {
+      _showError(e);
+    } finally {
+      if (mounted) setState(() => _sendingMedia = false);
+    }
+  }
+
   Future<void> _pickAndSendImage(ImageSource source) async {
     final id = _threadId;
     if (id == null || _sending || _sendingMedia) return;
@@ -272,10 +296,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                         onTap: () => Navigator.pop(context, 'react:$emoji'),
                         child: Padding(
                           padding: const EdgeInsets.all(9),
-                          child: Text(
-                            emoji,
-                            style: const TextStyle(fontSize: 25),
-                          ),
+                          child: Text(emoji, style: const TextStyle(fontSize: 25)),
                         ),
                       ),
                     )
@@ -287,7 +308,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               title: const Text('Yanıtla'),
               onTap: () => Navigator.pop(context, 'reply'),
             ),
-            if (!message.isImage && !message.isShare)
+            if (!message.isImage && !message.isShare && !message.isAudio)
               ListTile(
                 leading: const Icon(Icons.copy_rounded),
                 title: const Text('Kopyala'),
@@ -295,14 +316,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               ),
             if (mine)
               ListTile(
-                leading: const Icon(
-                  Icons.delete_outline_rounded,
-                  color: Colors.redAccent,
-                ),
-                title: const Text(
-                  'Herkesten geri al',
-                  style: TextStyle(color: Colors.redAccent),
-                ),
+                leading: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent),
+                title: const Text('Herkesten geri al', style: TextStyle(color: Colors.redAccent)),
                 onTap: () => Navigator.pop(context, 'delete'),
               ),
           ],
@@ -318,8 +333,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     } else if (action == 'copy') {
       await Clipboard.setData(ClipboardData(text: message.text));
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text('Mesaj kopyalandı.')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Mesaj kopyalandı.')),
+        );
       }
     } else if (action == 'delete') {
       try {
@@ -378,10 +394,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       MaterialPageRoute(
         builder: (_) => Scaffold(
           backgroundColor: Colors.black,
-          appBar: AppBar(
-            backgroundColor: Colors.black,
-            foregroundColor: Colors.white,
-          ),
+          appBar: AppBar(backgroundColor: Colors.black, foregroundColor: Colors.white),
           body: Center(
             child: InteractiveViewer(
               minScale: 0.8,
@@ -389,10 +402,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               child: FirebaseMediaImage(
                 imageUrl: imageUrl,
                 fit: BoxFit.contain,
-                errorWidget: const Icon(
-                  Icons.broken_image_outlined,
-                  color: Colors.white54,
-                ),
+                errorWidget: const Icon(Icons.broken_image_outlined, color: Colors.white54),
               ),
             ),
           ),
@@ -401,10 +411,38 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     );
   }
 
+  Future<void> _openSharedContent(ChatMessage message) async {
+    final id = message.sharedId?.trim() ?? '';
+    if (id.isEmpty) {
+      _showError(Exception('Paylaşılan içeriğin kimliği bulunamadı.'));
+      return;
+    }
+    if (message.sharedType == 'event') {
+      await Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const SocialEventsScreen()),
+      );
+      return;
+    }
+    try {
+      final snap = await FirebaseFirestore.instance.collection('posts').doc(id).get();
+      if (!snap.exists || snap.data() == null) {
+        throw Exception('Bu gönderi artık mevcut değil.');
+      }
+      if (!mounted) return;
+      final post = <String, dynamic>{...snap.data()!, 'id': snap.id};
+      await Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => PostDetailScreen(post: post)),
+      );
+    } catch (e) {
+      _showError(e);
+    }
+  }
+
   Widget _replyPreview(ChatMessage message, bool mine) {
     if (!message.hasReply) return const SizedBox.shrink();
-    final repliedToMe =
-        message.replySenderId == FirebaseAuth.instance.currentUser?.uid;
+    final repliedToMe = message.replySenderId == FirebaseAuth.instance.currentUser?.uid;
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.only(bottom: 7),
@@ -412,9 +450,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       decoration: BoxDecoration(
         color: mine ? Colors.black12 : Colors.white.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(10),
-        border: const Border(
-          left: BorderSide(color: Colors.white54, width: 2.5),
-        ),
+        border: const Border(left: BorderSide(color: Colors.white54, width: 2.5)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -432,10 +468,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
             message.replyText ?? 'Mesaj',
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 12,
-              color: mine ? Colors.black54 : Colors.white54,
-            ),
+            style: TextStyle(fontSize: 12, color: mine ? Colors.black54 : Colors.white54),
           ),
         ],
       ),
@@ -448,56 +481,70 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     final icon = message.sharedType == 'event'
         ? Icons.event_rounded
         : message.sharedType == 'reel'
-        ? Icons.play_circle_fill_rounded
-        : Icons.photo_library_rounded;
-    return Container(
-      width: 250,
-      decoration: BoxDecoration(
-        color: mine
-            ? Colors.black.withValues(alpha: 0.08)
-            : const Color(0xFF121820),
-        borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: mine ? Colors.black12 : Colors.white10),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (imageUrl.isNotEmpty)
-            SizedBox(
-              height: 150,
-              width: double.infinity,
-              child: FirebaseMediaImage(
-                imageUrl: imageUrl,
-                fit: BoxFit.cover,
-                errorWidget: const ColoredBox(color: Color(0xFF20252C)),
-              ),
-            ),
-          Padding(
-            padding: const EdgeInsets.all(11),
-            child: Row(
-              children: [
-                Icon(
-                  icon,
-                  size: 19,
-                  color: mine ? Colors.black54 : Colors.white60,
+            ? Icons.play_circle_fill_rounded
+            : Icons.photo_library_rounded;
+    final typeLabel = message.sharedType == 'event'
+        ? 'Etkinlik'
+        : message.sharedType == 'reel'
+            ? 'Reels'
+            : 'Gönderi';
+    return InkWell(
+      borderRadius: BorderRadius.circular(15),
+      onTap: () => _openSharedContent(message),
+      child: Container(
+        width: 250,
+        decoration: BoxDecoration(
+          color: mine ? Colors.black.withValues(alpha: 0.08) : const Color(0xFF121820),
+          borderRadius: BorderRadius.circular(15),
+          border: Border.all(color: mine ? Colors.black12 : Colors.white10),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (imageUrl.isNotEmpty)
+              SizedBox(
+                height: 150,
+                width: double.infinity,
+                child: FirebaseMediaImage(
+                  imageUrl: imageUrl,
+                  fit: BoxFit.cover,
+                  errorWidget: const ColoredBox(color: Color(0xFF20252C)),
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    title,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: mine ? Colors.black87 : Colors.white,
-                      fontWeight: FontWeight.w800,
+              ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(11, 10, 11, 6),
+              child: Row(
+                children: [
+                  Icon(icon, size: 19, color: mine ? Colors.black54 : Colors.white60),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: mine ? Colors.black87 : Colors.white,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+            Padding(
+              padding: const EdgeInsets.fromLTRB(38, 0, 11, 10),
+              child: Text(
+                '$typeLabel · Açmak için dokun',
+                style: TextStyle(
+                  color: mine ? Colors.black45 : Colors.white38,
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -554,13 +601,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
             children: [
               Icon(Icons.block_rounded, size: 14, color: Colors.white38),
               SizedBox(width: 6),
-              Text(
-                'Mesaj geri alındı',
-                style: TextStyle(
-                  color: Colors.white38,
-                  fontStyle: FontStyle.italic,
-                ),
-              ),
+              Text('Mesaj geri alındı', style: TextStyle(color: Colors.white38, fontStyle: FontStyle.italic)),
             ],
           ),
         ),
@@ -573,23 +614,17 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         onDoubleTap: () => _react(message, '❤️'),
         onLongPress: () => _showMessageActions(message, mine),
         child: Container(
-          constraints: BoxConstraints(
-            maxWidth: MediaQuery.sizeOf(context).width * 0.79,
-          ),
+          constraints: BoxConstraints(maxWidth: MediaQuery.sizeOf(context).width * 0.79),
           margin: EdgeInsets.only(bottom: reactions.isEmpty ? 8 : 4),
           child: Column(
-            crossAxisAlignment: mine
-                ? CrossAxisAlignment.end
-                : CrossAxisAlignment.start,
+            crossAxisAlignment: mine ? CrossAxisAlignment.end : CrossAxisAlignment.start,
             children: [
               Container(
                 padding: message.isImage
                     ? const EdgeInsets.all(4)
                     : const EdgeInsets.fromLTRB(13, 10, 11, 7),
                 decoration: BoxDecoration(
-                  color: mine
-                      ? const Color(0xFFD7DADF)
-                      : const Color(0xFF1B222B),
+                  color: mine ? const Color(0xFFD7DADF) : const Color(0xFF1B222B),
                   borderRadius: BorderRadius.only(
                     topLeft: const Radius.circular(20),
                     topRight: const Radius.circular(20),
@@ -602,9 +637,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                   children: [
                     if (message.hasReply)
                       Padding(
-                        padding: message.isImage
-                            ? const EdgeInsets.fromLTRB(5, 5, 5, 0)
-                            : EdgeInsets.zero,
+                        padding: message.isImage ? const EdgeInsets.fromLTRB(5, 5, 5, 0) : EdgeInsets.zero,
                         child: _replyPreview(message, mine),
                       ),
                     if (message.isImage)
@@ -621,15 +654,18 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                               errorWidget: const ColoredBox(
                                 color: Color(0xFF15191E),
                                 child: Center(
-                                  child: Icon(
-                                    Icons.broken_image_outlined,
-                                    color: Colors.white54,
-                                  ),
+                                  child: Icon(Icons.broken_image_outlined, color: Colors.white54),
                                 ),
                               ),
                             ),
                           ),
                         ),
+                      )
+                    else if (message.isAudio)
+                      ChatAudioBubble(
+                        url: message.mediaUrl!,
+                        durationMs: message.durationMs,
+                        mine: mine,
                       )
                     else if (message.isShare)
                       _shareCard(message, mine)
@@ -663,13 +699,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                           if (mine) ...[
                             const SizedBox(width: 4),
                             Icon(
-                              seen
-                                  ? Icons.done_all_rounded
-                                  : Icons.done_rounded,
+                              seen ? Icons.done_all_rounded : Icons.done_rounded,
                               size: 14,
-                              color: seen
-                                  ? const Color(0xFF2878B5)
-                                  : Colors.black38,
+                              color: seen ? const Color(0xFF2878B5) : Colors.black38,
                             ),
                           ],
                         ],
@@ -692,10 +724,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   Widget _conversationHeader() {
     return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-      stream: FirebaseFirestore.instance
-          .collection('users')
-          .doc(widget.otherUserId)
-          .snapshots(),
+      stream: FirebaseFirestore.instance.collection('users').doc(widget.otherUserId).snapshots(),
       builder: (context, snapshot) {
         final data = snapshot.data?.data() ?? const <String, dynamic>{};
         final photoUrl = (data['photoUrl'] ?? '').toString();
@@ -713,15 +742,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                   child: ClipOval(
                     child: FirebaseMediaImage(
                       imageUrl: photoUrl,
-                      fallbackStoragePaths: FirebaseMediaImage.avatarPaths(
-                        widget.otherUserId,
-                      ),
+                      fallbackStoragePaths: FirebaseMediaImage.avatarPaths(widget.otherUserId),
                       fit: BoxFit.cover,
                       errorWidget: const ColoredBox(
                         color: Color(0xFF20252B),
-                        child: Center(
-                          child: Icon(Icons.person_rounded, size: 21),
-                        ),
+                        child: Center(child: Icon(Icons.person_rounded, size: 21)),
                       ),
                     ),
                   ),
@@ -736,10 +761,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                       decoration: BoxDecoration(
                         color: const Color(0xFF55D68B),
                         shape: BoxShape.circle,
-                        border: Border.all(
-                          color: const Color(0xFF090A0C),
-                          width: 2,
-                        ),
+                        border: Border.all(color: const Color(0xFF090A0C), width: 2),
                       ),
                     ),
                   ),
@@ -755,10 +777,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                     widget.otherDisplayName,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 15.5,
-                      fontWeight: FontWeight.w900,
-                    ),
+                    style: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.w900),
                   ),
                   Text(
                     online ? 'çevrimiçi' : _lastSeenLabel(lastSeen),
@@ -848,31 +867,24 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                 ),
                 child: Row(
                   children: [
-                    const Icon(
-                      Icons.reply_rounded,
-                      size: 18,
-                      color: Colors.white54,
-                    ),
+                    const Icon(Icons.reply_rounded, size: 18, color: Colors.white54),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'Yanıtlıyorsun',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w900,
-                            ),
-                          ),
+                          const Text('Yanıtlıyorsun', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900)),
                           Text(
-                            _replyTo!.isImage ? '📷 Fotoğraf' : _replyTo!.text,
+                            _replyTo!.isImage
+                                ? '📷 Fotoğraf'
+                                : _replyTo!.isAudio
+                                    ? '🎙️ Sesli mesaj'
+                                    : _replyTo!.isShare
+                                        ? (_replyTo!.sharedTitle ?? 'Paylaşım')
+                                        : _replyTo!.text,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: Colors.white54,
-                              fontSize: 12,
-                            ),
+                            style: const TextStyle(color: Colors.white54, fontSize: 12),
                           ),
                         ],
                       ),
@@ -912,20 +924,14 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                       maxLines: 5,
                       maxLength: 1500,
                       textCapitalization: TextCapitalization.sentences,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 15.5,
-                      ),
+                      style: const TextStyle(color: Colors.white, fontSize: 15.5),
                       decoration: InputDecoration(
                         counterText: '',
                         hintText: 'Mesaj yaz...',
                         hintStyle: const TextStyle(color: Colors.white38),
                         filled: true,
                         fillColor: const Color(0xFF1B222B),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 17,
-                          vertical: 12,
-                        ),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 17, vertical: 12),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(24),
                           borderSide: BorderSide.none,
@@ -935,19 +941,32 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                     ),
                   ),
                   const SizedBox(width: 6),
-                  IconButton.filled(
-                    style: IconButton.styleFrom(
-                      backgroundColor: const Color(0xFFD7DADF),
-                      foregroundColor: Colors.black,
-                    ),
-                    onPressed: (_sending || _sendingMedia) ? null : _send,
-                    icon: _sending
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.arrow_upward_rounded),
+                  ValueListenableBuilder<TextEditingValue>(
+                    valueListenable: _controller,
+                    builder: (context, value, _) {
+                      final hasText = value.text.trim().isNotEmpty;
+                      if (!hasText) {
+                        return ChatVoiceRecordButton(
+                          disabled: _sending || _sendingMedia,
+                          onRecorded: _sendVoice,
+                          onError: _showError,
+                        );
+                      }
+                      return IconButton.filled(
+                        style: IconButton.styleFrom(
+                          backgroundColor: const Color(0xFFD7DADF),
+                          foregroundColor: Colors.black,
+                        ),
+                        onPressed: (_sending || _sendingMedia) ? null : _send,
+                        icon: _sending
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : const Icon(Icons.arrow_upward_rounded),
+                      );
+                    },
                   ),
                 ],
               ),
@@ -1028,127 +1047,102 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
             onPressed: () => setState(() => _searching = !_searching),
             icon: const Icon(Icons.search_rounded),
           ),
-          IconButton(
-            onPressed: _showSafetyMenu,
-            icon: const Icon(Icons.more_vert),
-          ),
+          IconButton(onPressed: _showSafetyMenu, icon: const Icon(Icons.more_vert)),
         ],
       ),
       body: _loading
-          ? const Center(
-              child: CircularProgressIndicator(color: Color(0xFFB7BCC2)),
-            )
+          ? const Center(child: CircularProgressIndicator(color: Color(0xFFB7BCC2)))
           : _error != null
-          ? Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Text(
-                  _error!,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(color: Colors.white70),
-                ),
-              ),
-            )
-          : StreamBuilder<ChatThread?>(
-              stream: ChatService.instance.watchThread(_threadId!),
-              builder: (context, threadSnapshot) {
-                final thread = threadSnapshot.data;
-                return Column(
-                  children: [
-                    _searchBar(),
-                    Expanded(
-                      child: StreamBuilder<List<ChatMessage>>(
-                        stream: ChatService.instance.messages(_threadId!),
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState ==
-                              ConnectionState.waiting) {
-                            return const Center(
-                              child: CircularProgressIndicator(
-                                color: Color(0xFFB7BCC2),
-                              ),
-                            );
-                          }
-                          final allMessages =
-                              snapshot.data ?? const <ChatMessage>[];
-                          _markReadFromMessages(allMessages, myId);
-                          final query = _searchController.text
-                              .trim()
-                              .toLowerCase();
-                          final messages = query.isEmpty
-                              ? allMessages
-                              : allMessages
-                                    .where((message) {
-                                      final haystack =
-                                          '${message.text} ${message.sharedTitle ?? ''}'
-                                              .toLowerCase();
-                                      return haystack.contains(query);
-                                    })
-                                    .toList(growable: false);
-                          if (messages.isEmpty) {
-                            return Center(
-                              child: Padding(
-                                padding: const EdgeInsets.all(28),
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(
-                                      query.isEmpty
-                                          ? Icons.chat_bubble_outline_rounded
-                                          : Icons.search_off_rounded,
-                                      size: 46,
-                                      color: Colors.white24,
+              ? Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Text(
+                      _error!,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: Colors.white70),
+                    ),
+                  ),
+                )
+              : StreamBuilder<ChatThread?>(
+                  stream: ChatService.instance.watchThread(_threadId!),
+                  builder: (context, threadSnapshot) {
+                    final thread = threadSnapshot.data;
+                    return Column(
+                      children: [
+                        _searchBar(),
+                        Expanded(
+                          child: StreamBuilder<List<ChatMessage>>(
+                            stream: ChatService.instance.messages(_threadId!),
+                            builder: (context, snapshot) {
+                              if (snapshot.connectionState == ConnectionState.waiting) {
+                                return const Center(
+                                  child: CircularProgressIndicator(color: Color(0xFFB7BCC2)),
+                                );
+                              }
+                              final allMessages = snapshot.data ?? const <ChatMessage>[];
+                              _markReadFromMessages(allMessages, myId);
+                              final query = _searchController.text.trim().toLowerCase();
+                              final messages = query.isEmpty
+                                  ? allMessages
+                                  : allMessages
+                                      .where((message) {
+                                        final haystack = '${message.text} ${message.sharedTitle ?? ''}'.toLowerCase();
+                                        return haystack.contains(query);
+                                      })
+                                      .toList(growable: false);
+                              if (messages.isEmpty) {
+                                return Center(
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(28),
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          query.isEmpty
+                                              ? Icons.chat_bubble_outline_rounded
+                                              : Icons.search_off_rounded,
+                                          size: 46,
+                                          color: Colors.white24,
+                                        ),
+                                        const SizedBox(height: 12),
+                                        Text(
+                                          query.isEmpty ? 'Sohbeti başlat' : 'Eşleşen mesaj yok',
+                                          style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900),
+                                        ),
+                                      ],
                                     ),
-                                    const SizedBox(height: 12),
-                                    Text(
-                                      query.isEmpty
-                                          ? 'Sohbeti başlat'
-                                          : 'Eşleşen mesaj yok',
-                                      style: const TextStyle(
-                                        fontSize: 17,
-                                        fontWeight: FontWeight.w900,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          }
-                          return ListView.builder(
-                            reverse: true,
-                            keyboardDismissBehavior:
-                                ScrollViewKeyboardDismissBehavior.onDrag,
-                            padding: const EdgeInsets.fromLTRB(12, 14, 12, 10),
-                            itemCount: messages.length,
-                            itemBuilder: (context, index) {
-                              final message = messages[index];
-                              final mine = message.senderId == myId;
-                              final removed =
-                                  message.deleted ||
-                                  (thread?.deletedMessageIds.contains(
-                                        message.id,
-                                      ) ??
-                                      false);
-                              final reactions =
-                                  thread?.messageReactions[message.id] ??
-                                  message.reactions;
-                              return _messageBubble(
-                                message: message,
-                                mine: mine,
-                                seen: mine && _isSeen(message, thread),
-                                removed: removed,
-                                reactions: reactions,
+                                  ),
+                                );
+                              }
+                              return ListView.builder(
+                                reverse: true,
+                                keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                                padding: const EdgeInsets.fromLTRB(12, 14, 12, 10),
+                                itemCount: messages.length,
+                                itemBuilder: (context, index) {
+                                  final message = messages[index];
+                                  final mine = message.senderId == myId;
+                                  final removed = message.deleted ||
+                                      (thread?.deletedMessageIds.contains(message.id) ?? false);
+                                  final reactions = thread?.messageReactions[message.id] ?? message.reactions;
+                                  return _messageBubble(
+                                    message: message,
+                                    mine: mine,
+                                    seen: mine && _isSeen(message, thread),
+                                    removed: removed,
+                                    reactions: reactions,
+                                  );
+                                },
                               );
                             },
-                          );
-                        },
-                      ),
-                    ),
-                    _typingIndicator(thread),
-                    _composer(),
-                  ],
-                );
-              },
-            ),
+                          ),
+                        ),
+                        _typingIndicator(thread),
+                        _composer(),
+                      ],
+                    );
+                  },
+                ),
     );
   }
 }
