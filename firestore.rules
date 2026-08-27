@@ -235,7 +235,13 @@ service cloud.firestore {
       allow delete: if signedIn() && resource.data.uid == request.auth.uid;
     }
     match /chat_threads/{threadId} {
-      allow read: if signedIn() && resource.data.memberIds.hasAny([request.auth.uid]);
+      // A deterministic DM id is checked before its document exists. Permit
+      // that empty get, while keeping existing threads private to members.
+      allow get: if signedIn() && (
+        !exists(/databases/$(database)/documents/chat_threads/$(threadId)) ||
+        resource.data.memberIds.hasAny([request.auth.uid])
+      );
+      allow list: if signedIn() && resource.data.memberIds.hasAny([request.auth.uid]);
       allow create: if validDirectThreadCreate();
       allow update: if signedIn() && resource.data.memberIds.hasAny([request.auth.uid]) && request.resource.data.memberIds == resource.data.memberIds && request.resource.data.type == resource.data.type && threadUnblocked(threadId);
       allow delete: if false;
