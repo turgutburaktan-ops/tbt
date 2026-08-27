@@ -8,6 +8,7 @@ class ChatThread {
   final DateTime? lastMessageAt;
   final String? sourceType;
   final String? sourceId;
+  final Map<String, DateTime?> lastReadAt;
 
   const ChatThread({
     required this.id,
@@ -17,11 +18,20 @@ class ChatThread {
     required this.lastMessageAt,
     this.sourceType,
     this.sourceId,
+    this.lastReadAt = const <String, DateTime?>{},
   });
 
   factory ChatThread.fromDocument(DocumentSnapshot<Map<String, dynamic>> doc) {
     final data = doc.data() ?? const <String, dynamic>{};
     final rawMembers = data['memberIds'];
+    final rawReadAt = data['lastReadAt'];
+    final readAt = <String, DateTime?>{};
+    if (rawReadAt is Map) {
+      for (final entry in rawReadAt.entries) {
+        final value = entry.value;
+        readAt[entry.key.toString()] = value is Timestamp ? value.toDate() : null;
+      }
+    }
     return ChatThread(
       id: doc.id,
       memberIds: rawMembers is List
@@ -32,6 +42,7 @@ class ChatThread {
       lastMessageAt: (data['lastMessageAt'] as Timestamp?)?.toDate(),
       sourceType: data['sourceType']?.toString(),
       sourceId: data['sourceId']?.toString(),
+      lastReadAt: readAt,
     );
   }
 }
@@ -40,6 +51,11 @@ class ChatMessage {
   final String id;
   final String senderId;
   final String text;
+  final String type;
+  final String? mediaUrl;
+  final String? replyToId;
+  final String? replyText;
+  final String? replySenderId;
   final DateTime? createdAt;
   final bool deleted;
 
@@ -47,9 +63,17 @@ class ChatMessage {
     required this.id,
     required this.senderId,
     required this.text,
+    this.type = 'text',
+    this.mediaUrl,
+    this.replyToId,
+    this.replyText,
+    this.replySenderId,
     required this.createdAt,
     required this.deleted,
   });
+
+  bool get isImage => type == 'image' && (mediaUrl?.isNotEmpty ?? false);
+  bool get hasReply => (replyToId?.isNotEmpty ?? false);
 
   factory ChatMessage.fromDocument(DocumentSnapshot<Map<String, dynamic>> doc) {
     final data = doc.data() ?? const <String, dynamic>{};
@@ -57,6 +81,11 @@ class ChatMessage {
       id: doc.id,
       senderId: (data['senderId'] ?? '').toString(),
       text: (data['text'] ?? '').toString(),
+      type: (data['type'] ?? 'text').toString(),
+      mediaUrl: data['mediaUrl']?.toString(),
+      replyToId: data['replyToId']?.toString(),
+      replyText: data['replyText']?.toString(),
+      replySenderId: data['replySenderId']?.toString(),
       createdAt: (data['createdAt'] as Timestamp?)?.toDate(),
       deleted: data['deleted'] == true,
     );
