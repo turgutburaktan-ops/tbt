@@ -36,12 +36,40 @@ class SpotRepository {
 
   static const String spotsCollection = 'photo_spots';
   static const String submissionsCollection = 'spot_submissions';
+  static const Duration _cacheLifetime = Duration(minutes: 5);
+
+  List<PhotoSpot>? _cachedSafeSpots;
+  DateTime? _cachedAt;
+  Future<List<PhotoSpot>>? _loadInFlight;
 
   Future<List<PhotoSpot>> loadSpots({
     String? city,
     String? category,
     int limit = 2000,
   }) async {
+    final cached = _cachedSafeSpots;
+    final cachedAt = _cachedAt;
+    if (cached != null &&
+        cachedAt != null &&
+        DateTime.now().difference(cachedAt) < _cacheLifetime) {
+      return _filterLocal(cached, city: city, category: category);
+    }
+
+    final running = _loadInFlight;
+    final all = running ?? _startLoad(limit);
+    final result = await all;
+    return _filterLocal(result, city: city, category: category);
+  }
+
+  Future<List<PhotoSpot>> _startLoad(int limit) {
+    final request = _loadRemoteSafe(limit);
+    _loadInFlight = request;
+    return request.whenComplete(() {
+      if (identical(_loadInFlight, request)) _loadInFlight = null;
+    });
+  }
+
+  Future<List<PhotoSpot>> _loadRemoteSafe(int limit) async {
     var remote = <PhotoSpot>[];
     try {
       final snapshot = await _firestore
@@ -49,16 +77,19 @@ class SpotRepository {
           .where('status', isEqualTo: 'published')
           .where('coordinateVerified', isEqualTo: true)
           .limit(limit)
-          .get();
+          .get()
+          .timeout(const Duration(seconds: 7));
       remote = snapshot.docs.map(_fromDocument).whereType<PhotoSpot>().toList();
-    } catch (_) {}
+    } catch (_) {
+      final stale = _cachedSafeSpots;
+      if (stale != null && stale.isNotEmpty) return stale;
+    }
 
-    // Yerel eski curated/demo listeler artık kullanıcı kataloğuna doğrudan
-    // karıştırılmaz. Resolver, doğrulanmış gezi çekirdeğini bu güvenilir uzak
-    // kayıtların üzerine ekler.
     final verified = NationwideCandidateSpotResolver.mergeInto(remote);
     final safe = SpotQualityGate.filterSafe(verified);
-    return _filterLocal(safe, city: city, category: category);
+    _cachedSafeSpots = List<PhotoSpot>.unmodifiable(safe);
+    _cachedAt = DateTime.now();
+    return _cachedSafeSpots!;
   }
 
   Future<List<PhotoSpot>> discover({
@@ -73,8 +104,9 @@ class SpotRepository {
     final filtered = all.where((spot) {
       if (query.minRating > 0 && spot.rating < query.minRating) return false;
       if (cityKey.isNotEmpty && _key(spot.city) != cityKey) return false;
-      if (categoryKey.isNotEmpty && _key(spot.category) != categoryKey)
+      if (categoryKey.isNotEmpty && _key(spot.category) != categoryKey) {
         return false;
+      }
       if (tagKey.isNotEmpty &&
           !spot.tags.any((tag) => _key(tag).contains(tagKey))) {
         return false;
@@ -111,7 +143,10 @@ class SpotRepository {
             .whereType<PhotoSpot>()
             .toList();
         final merged = NationwideCandidateSpotResolver.mergeInto(remote);
-        return SpotQualityGate.filterSafe(merged);
+        final safe = SpotQualityGate.filterSafe(merged);
+        _cachedSafeSpots = List<PhotoSpot>.unmodifiable(safe);
+        _cachedAt = DateTime.now();
+        return safe;
       });
 
   Future<List<PhotoSpot>> search(String input, {int limit = 2000}) => discover(
@@ -171,7 +206,7 @@ class SpotRepository {
       'sourceType': 'user',
       'createdAt': FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
-    });
+    }).timeout(const Duration(seconds: 8));
     return ref.id;
   }
 
@@ -209,9 +244,6 @@ class SpotRepository {
 
   PhotoSpot? _fromDocument(DocumentSnapshot<Map<String, dynamic>> doc) {
     final data = doc.data();
-    // Kullanıcı kataloğuna uzak kayıt ancak hem koordinatı hem görseli manuel
-    // olarak doğrulanmışsa girebilir. Eksik görsel doğrulaması olan kayıt review
-    // havuzunda kalır, otomatik image-search ile kullanıcıya sunulmaz.
     if (data == null ||
         data['coordinateVerified'] != true ||
         data['imageVerified'] != true) {
