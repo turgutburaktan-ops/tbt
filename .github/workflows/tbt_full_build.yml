@@ -93,7 +93,16 @@ jobs:
         with:
           distribution: temurin
           java-version: '24'
-      - run: flutter pub get
+      - name: Reset pub.dev credentials
+        shell: bash
+        env:
+          PUB_HOSTED_URL: https://pub.dev
+        run: |
+          set -euo pipefail
+          dart pub token remove https://pub.dev >/dev/null 2>&1 || true
+          rm -f "$HOME/.config/dart/pub-credentials.json"
+          rm -f "$HOME/.pub-cache/credentials.json"
+          flutter pub get
       - name: Verify Google OAuth configuration
         shell: bash
         env:
