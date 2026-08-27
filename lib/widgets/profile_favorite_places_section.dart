@@ -48,7 +48,7 @@ class ProfileFavoritePlacesSection extends StatelessWidget {
         if (!editable && !hasAny) return const SizedBox.shrink();
 
         return Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+          padding: const EdgeInsets.fromLTRB(16, 6, 16, 10),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -70,7 +70,7 @@ class ProfileFavoritePlacesSection extends StatelessWidget {
                     ),
                 ],
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 7),
               ..._types.map((type) {
                 final value = favorites[type.key];
                 final data = value is Map
@@ -80,12 +80,15 @@ class ProfileFavoritePlacesSection extends StatelessWidget {
                 final name = (data?['name'] ?? '').toString().trim();
                 final subtitle = (data?['subtitle'] ?? '').toString().trim();
                 return Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.only(bottom: 5),
                   child: InkWell(
                     borderRadius: BorderRadius.circular(16),
                     onTap: editable ? () => _pick(context, type) : null,
                     child: Container(
-                      padding: const EdgeInsets.all(13),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 11,
+                        vertical: 9,
+                      ),
                       decoration: BoxDecoration(
                         color: const Color(0xFF11141A),
                         borderRadius: BorderRadius.circular(16),
@@ -323,8 +326,25 @@ class _FavoritePlacePickerState extends State<_FavoritePlacePicker> {
             child: FutureBuilder<List<_PlaceChoice>>(
               future: _future,
               builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting)
-                  return const Center(child: CircularProgressIndicator());
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SizedBox(
+                          width: 26,
+                          height: 26,
+                          child: CircularProgressIndicator(strokeWidth: 2.5),
+                        ),
+                        SizedBox(height: 12),
+                        Text(
+                          'Yakındaki mekanlar hazırlanıyor…',
+                          style: TextStyle(color: Colors.white54),
+                        ),
+                      ],
+                    ),
+                  );
+                }
                 if (snapshot.hasError) {
                   return Center(
                     child: Column(

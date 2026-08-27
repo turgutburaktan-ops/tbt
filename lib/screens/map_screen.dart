@@ -29,6 +29,8 @@ class MapScreen extends StatefulWidget {
 
 class _MapScreenState extends State<MapScreen> {
   GoogleMapController? _mapController;
+  bool _mapDisposed = false;
+  double _mapZoom = 5;
   PhotoSpot? _selectedSpot;
   SocialEvent? _selectedEvent;
   UserMapPoint? _selectedUserPoint;
@@ -61,6 +63,27 @@ class _MapScreenState extends State<MapScreen> {
     super.initState();
     _loadSpots();
     _prepareLocation();
+  }
+
+  @override
+  void dispose() {
+    _mapDisposed = true;
+    // The GoogleMap widget owns the underlying platform view disposal. Drop our
+    // reference immediately so late async route/location callbacks cannot use it.
+    _mapController = null;
+    super.dispose();
+  }
+
+  Future<void> _animateMap(CameraUpdate update) async {
+    if (!mounted || _mapDisposed) return;
+    final controller = _mapController;
+    if (controller == null) return;
+    try {
+      await controller.animateCamera(update);
+    } catch (_) {
+      // Platform view may already be tearing down while a route is popped.
+      if (identical(_mapController, controller)) _mapController = null;
+    }
   }
 
   Future<void> _loadSpots() async {
@@ -107,7 +130,12 @@ class _MapScreenState extends State<MapScreen> {
 
     if (_filter == _MapContentFilter.all ||
         _filter == _MapContentFilter.spots) {
-      for (final spot in _spots) {
+      final visibleSpots = _mapZoom < 7
+          ? _spots.take(140)
+          : _mapZoom < 9
+          ? _spots.take(360)
+          : _spots;
+      for (final spot in visibleSpots) {
         final inRoute = _routeSpots.any((item) => item.id == spot.id);
         markers.add(
           Marker(
@@ -277,7 +305,7 @@ class _MapScreenState extends State<MapScreen> {
         _roadRoute = null;
       });
       unawaited(_loadNearbyVenues(position));
-      await _mapController?.animateCamera(
+      await _animateMap(
         CameraUpdate.newLatLngZoom(
           LatLng(position.latitude, position.longitude),
           15,
@@ -297,6 +325,7 @@ class _MapScreenState extends State<MapScreen> {
     UserMapPoint? userPoint,
     NearbyVenue? venue,
   }) async {
+    if (!mounted || _mapDisposed) return;
     setState(() {
       _selectedSpot = spot;
       _selectedEvent = event;
@@ -305,9 +334,7 @@ class _MapScreenState extends State<MapScreen> {
       _roadRoute = null;
       _loadingRoadRoute = _currentPosition != null;
     });
-    await _mapController?.animateCamera(
-      CameraUpdate.newLatLngZoom(destination, 15),
-    );
+    await _animateMap(CameraUpdate.newLatLngZoom(destination, 15));
 
     final current = _currentPosition;
     if (current == null) return;
@@ -322,9 +349,7 @@ class _MapScreenState extends State<MapScreen> {
     });
     if (route != null && route.points.length > 1) {
       final bounds = _boundsFor(route.points);
-      await _mapController?.animateCamera(
-        CameraUpdate.newLatLngBounds(bounds, 54),
-      );
+      await _animateMap(CameraUpdate.newLatLngBounds(bounds, 54));
     }
   }
 
@@ -360,6 +385,7 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   void _clearSelection() {
+    if (!mounted || _mapDisposed) return;
     setState(() {
       _selectedSpot = null;
       _selectedEvent = null;
@@ -415,16 +441,14 @@ class _MapScreenState extends State<MapScreen> {
         );
         return aDistance.compareTo(bDistance);
       });
-      return venues.take(120).toList(growable: false);
+      return venues.take(40).toList(growable: false);
     } catch (_) {
       return const <NearbyVenue>[];
     }
   }
 
   void _showAll() {
-    _mapController?.animateCamera(
-      CameraUpdate.newLatLngZoom(_defaultLocation, 5),
-    );
+    _animateMap(CameraUpdate.newLatLngZoom(_defaultLocation, 5));
     _clearSelection();
   }
 
@@ -680,15 +704,22 @@ class _MapScreenState extends State<MapScreen> {
                     compassEnabled: true,
                     onLongPress: _addPointAt,
                     onMapCreated: (controller) async {
+                      if (!mounted || _mapDisposed) return;
                       _mapController = controller;
                       final position = _currentPosition;
                       if (position != null) {
-                        await controller.animateCamera(
+                        await _animateMap(
                           CameraUpdate.newLatLngZoom(
                             LatLng(position.latitude, position.longitude),
                             15,
                           ),
                         );
+                      }
+                    },
+                    onCameraMove: (position) {
+                      if (!mounted || _mapDisposed) return;
+                      if ((position.zoom - _mapZoom).abs() >= .75) {
+                        setState(() => _mapZoom = position.zoom);
                       }
                     },
                   ),

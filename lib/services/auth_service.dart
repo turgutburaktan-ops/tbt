@@ -66,15 +66,11 @@ class AuthService {
         await _ensureSocialProfile(result.user, provider: 'google');
         return result;
       } catch (e) {
-        debugPrint(
-          'Native Google sign-in failed, trying Firebase provider: $e',
-        );
+        debugPrint('Native Google sign-in failed: $e');
         try {
           await _googleSignIn.signOut();
         } catch (_) {}
-        final result = await _auth.signInWithProvider(GoogleAuthProvider());
-        await _ensureSocialProfile(result.user, provider: 'google');
-        return result;
+        rethrow;
       }
     } on FirebaseAuthException catch (e) {
       _logAuthFailure('google-login', e);
