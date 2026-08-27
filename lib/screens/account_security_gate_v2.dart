@@ -18,8 +18,7 @@ class AccountSecurityGateV2 extends StatefulWidget {
   });
 
   @override
-  State<AccountSecurityGateV2> createState() =>
-      _AccountSecurityGateV2State();
+  State<AccountSecurityGateV2> createState() => _AccountSecurityGateV2State();
 }
 
 class _AccountSecurityGateV2State extends State<AccountSecurityGateV2> {
