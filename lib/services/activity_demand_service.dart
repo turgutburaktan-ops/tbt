@@ -88,15 +88,19 @@ class ActivityDemandService {
       '${uid}_${_key(activity)}_${_key(city)}_$window';
 
   Stream<List<ActivityDemand>> watchActive({int limit = 600}) {
-    return _firestore.collection(collection).limit(limit).snapshots().map((
-      snap,
-    ) {
-      final now = DateTime.now();
-      return snap.docs
-          .map(ActivityDemand.fromDocument)
-          .where((d) => d.expiresAt.isAfter(now))
-          .toList(growable: false);
-    });
+    final openedAt = DateTime.now();
+    return _firestore
+        .collection(collection)
+        .where('expiresAt', isGreaterThan: Timestamp.fromDate(openedAt))
+        .limit(limit)
+        .snapshots()
+        .map((snap) {
+          final now = DateTime.now();
+          return snap.docs
+              .map(ActivityDemand.fromDocument)
+              .where((d) => d.expiresAt.isAfter(now))
+              .toList(growable: false);
+        });
   }
 
   Future<void> setDemand({
