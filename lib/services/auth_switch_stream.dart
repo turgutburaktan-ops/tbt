@@ -10,6 +10,31 @@ Stream<T> switchAuthStream<T>({
   required Stream<T> Function(User user) signedIn,
   required T signedOutValue,
 }) {
+  return _switchAuthStreamInternal<T>(
+    auth: auth,
+    signedIn: signedIn,
+    onSignedOut: (subscriber) => subscriber.add(signedOutValue),
+  );
+}
+
+/// Same switching behavior while preserving the old "no event while signed
+/// out" contract for APIs that historically returned Stream.empty().
+Stream<T> switchAuthStreamOrEmpty<T>({
+  required FirebaseAuth auth,
+  required Stream<T> Function(User user) signedIn,
+}) {
+  return _switchAuthStreamInternal<T>(
+    auth: auth,
+    signedIn: signedIn,
+    onSignedOut: (_) {},
+  );
+}
+
+Stream<T> _switchAuthStreamInternal<T>({
+  required FirebaseAuth auth,
+  required Stream<T> Function(User user) signedIn,
+  required void Function(MultiStreamController<T> subscriber) onSignedOut,
+}) {
   return Stream<T>.multi((subscriber) {
     StreamSubscription<T>? inner;
     var generation = 0;
@@ -22,7 +47,7 @@ Stream<T> switchAuthStream<T>({
         if (previous != null) unawaited(previous.cancel());
 
         if (user == null) {
-          subscriber.add(signedOutValue);
+          onSignedOut(subscriber);
           return;
         }
 
