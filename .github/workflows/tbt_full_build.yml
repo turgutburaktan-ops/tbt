@@ -94,6 +94,17 @@ jobs:
           distribution: temurin
           java-version: '24'
       - run: flutter pub get
+      - name: Verify Google OAuth configuration
+        shell: bash
+        env:
+          GOOGLE_SERVER_CLIENT_ID: ${{ secrets.GOOGLE_SERVER_CLIENT_ID }}
+        run: |
+          set -euo pipefail
+          test -n "${GOOGLE_SERVER_CLIENT_ID:-}" || { echo 'GOOGLE_SERVER_CLIENT_ID GitHub secret is missing.'; exit 1; }
+          case "$GOOGLE_SERVER_CLIENT_ID" in
+            *.apps.googleusercontent.com) ;;
+            *) echo 'GOOGLE_SERVER_CLIENT_ID has an invalid format.'; exit 1 ;;
+          esac
       - name: Install stable Android debug signing certificate
         shell: bash
         run: |
@@ -143,7 +154,9 @@ jobs:
           PY
           fi
       - name: Android APK Build
-        run: flutter build apk --debug --no-pub
+        env:
+          GOOGLE_SERVER_CLIENT_ID: ${{ secrets.GOOGLE_SERVER_CLIENT_ID }}
+        run: flutter build apk --debug --no-pub --dart-define=GOOGLE_SERVER_CLIENT_ID="$GOOGLE_SERVER_CLIENT_ID"
       - name: Verify Android APK signing identity
         shell: bash
         run: |
