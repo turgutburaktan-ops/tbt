@@ -1,0 +1,95 @@
+name: Finalize P1 live map venue messaging UX
+
+on:
+  push:
+    paths:
+      - '.github/workflows/p1_finalize.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Apply final P1 patches
+        shell: python
+        run: |
+          from pathlib import Path
+
+          def replace_once(path, old, new):
+              p = Path(path)
+              text = p.read_text()
+              if old not in text:
+                  raise SystemExit(f'Expected block not found: {path}')
+              p.write_text(text.replace(old, new, 1))
+
+          # Populate the metadata fields consumed by the new venue cards.
+          replace_once(
+              'lib/services/nearby_venue_service.dart',
+              """      venues.add(\n        NearbyVenue(\n""",
+              """      final rawImage = (tags['image'] ?? tags['contact:image'] ?? '').toString().trim();\n      final imageUrl = rawImage.startsWith('https://') || rawImage.startsWith('http://')\n          ? rawImage\n          : '';\n      final cuisine = (tags['cuisine'] ?? '').toString().trim().replaceAll(';', ' • ');\n\n      venues.add(\n        NearbyVenue(\n""",
+          )
+          replace_once(
+              'lib/services/nearby_venue_service.dart',
+              """          website:\n              (tags['contact:website'] ?? tags['website'] ?? '').toString(),\n        ),\n""",
+              """          website:\n              (tags['contact:website'] ?? tags['website'] ?? '').toString(),\n          imageUrl: imageUrl,\n          cuisine: cuisine,\n        ),\n""",
+          )
+
+          # Live Map: expose privacy-safe community signal count without publishing user coordinates.
+          replace_once(
+              'lib/screens/map_screen.dart',
+              """import 'package:flutter/material.dart';\n""",
+              """import 'dart:async';\n\nimport 'package:flutter/material.dart';\n""",
+          )
+          replace_once(
+              'lib/screens/map_screen.dart',
+              """import '../services/social_event_service.dart';\n""",
+              """import '../services/activity_demand_service.dart';\nimport '../services/social_event_service.dart';\n""",
+          )
+          replace_once(
+              'lib/screens/map_screen.dart',
+              """  _MapContentFilter _filter = _MapContentFilter.all;\n\n  static const LatLng _defaultLocation = LatLng(38.9637, 35.2433);\n""",
+              """  _MapContentFilter _filter = _MapContentFilter.all;\n  StreamSubscription<List<ActivityDemand>>? _demandSubscription;\n  int _activeDemandCount = 0;\n\n  static const LatLng _defaultLocation = LatLng(38.9637, 35.2433);\n""",
+          )
+          replace_once(
+              'lib/screens/map_screen.dart',
+              """  void initState() {\n    super.initState();\n    _loadSpots();\n    _prepareLocation();\n  }\n""",
+              """  void initState() {\n    super.initState();\n    _loadSpots();\n    _prepareLocation();\n    _demandSubscription = ActivityDemandService.instance.watchActive().listen((items) {\n      if (!mounted) return;\n      setState(() => _activeDemandCount = items.map((item) => item.userId).toSet().length);\n    });\n  }\n\n  @override\n  void dispose() {\n    _demandSubscription?.cancel();\n    _mapController?.dispose();\n    super.dispose();\n  }\n""",
+          )
+          replace_once(
+              'lib/screens/map_screen.dart',
+              """                        const Expanded(\n                            child: Text('Noktalar ve Etkinlikler',\n                                style: TextStyle(\n                                    fontSize: 17,\n                                    fontWeight: FontWeight.w900))),\n""",
+              """                        Expanded(\n                          child: Column(\n                            crossAxisAlignment: CrossAxisAlignment.start,\n                            children: [\n                              const Text(\n                                'Noktalar ve Etkinlikler',\n                                style: TextStyle(fontSize: 17, fontWeight: FontWeight.w900),\n                              ),\n                              Text(\n                                '$_activeDemandCount topluluk sinyali • kişi konumu gösterilmez',\n                                style: const TextStyle(color: Colors.white54, fontSize: 10.5),\n                              ),\n                            ],\n                          ),\n                        ),\n""",
+          )
+
+          # Inbox: add last-message time and per-thread unread indication.
+          replace_once(
+              'lib/screens/chat_inbox_screen.dart',
+              """  const _ThreadTile({\n    required this.thread,\n    required this.otherUserId,\n  });\n\n  @override\n""",
+              """  const _ThreadTile({\n    required this.thread,\n    required this.otherUserId,\n  });\n\n  String _timeLabel(DateTime? value) {\n    if (value == null) return '';\n    final local = value.toLocal();\n    final now = DateTime.now();\n    final sameDay = local.year == now.year && local.month == now.month && local.day == now.day;\n    if (sameDay) {\n      return '${local.hour.toString().padLeft(2, '0')}:${local.minute.toString().padLeft(2, '0')}';\n    }\n    return '${local.day.toString().padLeft(2, '0')}.${local.month.toString().padLeft(2, '0')}';\n  }\n\n  @override\n""",
+          )
+          replace_once(
+              'lib/screens/chat_inbox_screen.dart',
+              """        final photoUrl = (data['photoUrl'] ?? '').toString();\n\n        return ListTile(\n""",
+              """        final photoUrl = (data['photoUrl'] ?? '').toString();\n        final myId = FirebaseAuth.instance.currentUser?.uid ?? '';\n        final readAt = thread.lastReadAt[myId];\n        final lastAt = thread.lastMessageAt;\n        final unread = myId.isNotEmpty &&\n            thread.lastSenderId.isNotEmpty &&\n            thread.lastSenderId != myId &&\n            lastAt != null &&\n            (readAt == null || lastAt.isAfter(readAt));\n\n        return ListTile(\n""",
+          )
+          replace_once(
+              'lib/screens/chat_inbox_screen.dart',
+              """          trailing: const Icon(Icons.chevron_right, color: Colors.white38),\n""",
+              """          trailing: Column(\n            mainAxisAlignment: MainAxisAlignment.center,\n            crossAxisAlignment: CrossAxisAlignment.end,\n            children: [\n              Text(\n                _timeLabel(thread.lastMessageAt),\n                style: TextStyle(\n                  color: unread ? const Color(0xFF42F5E9) : Colors.white38,\n                  fontSize: 10.5,\n                  fontWeight: unread ? FontWeight.w800 : FontWeight.w500,\n                ),\n              ),\n              const SizedBox(height: 5),\n              if (unread)\n                Container(\n                  width: 9,\n                  height: 9,\n                  decoration: const BoxDecoration(\n                    color: Color(0xFF42F5E9),\n                    shape: BoxShape.circle,\n                  ),\n                )\n              else\n                const Icon(Icons.chevron_right, color: Colors.white38, size: 18),\n            ],\n          ),\n""",
+          )
+      - name: Commit final P1 patches
+        run: |
+          git config user.name "tbt-fix-bot"
+          git config user.email "actions@github.com"
+          git add lib/services/nearby_venue_service.dart lib/screens/map_screen.dart lib/screens/chat_inbox_screen.dart
+          if git diff --cached --quiet; then
+            echo "No changes"
+          else
+            git commit -m "feat: finalize P1 live map venue and inbox UX"
+            git push origin HEAD:main
+          fi
