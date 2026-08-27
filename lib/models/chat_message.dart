@@ -123,7 +123,14 @@ class ChatMessage {
 
   bool get isImage => type == 'image' && (mediaUrl?.isNotEmpty ?? false);
   bool get isAudio => type == 'audio' && (mediaUrl?.isNotEmpty ?? false);
-  bool get isShare => type == 'share';
+  bool get isLegacyShare {
+    if (type != 'text') return false;
+    final normalized = text.toLowerCase();
+    return normalized.contains('paylaşımı') &&
+        normalized.contains('uygulama içinden paylaşıldı');
+  }
+
+  bool get isShare => type == 'share' || isLegacyShare;
   bool get hasReply => (replyToId?.isNotEmpty ?? false);
 
   factory ChatMessage.fromDocument(DocumentSnapshot<Map<String, dynamic>> doc) {
