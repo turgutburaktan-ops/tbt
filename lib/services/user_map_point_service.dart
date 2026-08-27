@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import '../models/user_map_point.dart';
+import 'auth_switch_stream.dart';
 
 class UserMapPointService {
   UserMapPointService._();
@@ -18,17 +19,18 @@ class UserMapPointService {
       _firestore.collection('users').doc(uid).collection('map_points');
 
   Stream<List<UserMapPoint>> watchMine() {
-    return _auth.authStateChanges().asyncExpand((user) {
-      if (user == null) return Stream.value(const <UserMapPoint>[]);
-      return _points(user.uid)
+    return switchAuthStream<List<UserMapPoint>>(
+      auth: _auth,
+      signedOutValue: const <UserMapPoint>[],
+      signedIn: (user) => _points(user.uid)
           .orderBy('createdAt', descending: true)
           .snapshots()
           .map(
             (snapshot) => snapshot.docs
                 .map(UserMapPoint.fromDoc)
                 .toList(growable: false),
-          );
-    });
+          ),
+    );
   }
 
   Future<String> addPoint({
@@ -81,8 +83,6 @@ class UserMapPointService {
     };
     await doc.set(data).timeout(const Duration(seconds: 8));
 
-    // The private point is the primary user action. A moderation/suggestion
-    // mirror must never make a successfully saved personal point look failed.
     if (communitySuggested) {
       unawaited(_mirrorSuggestionQuietly(doc.id, user.uid, data));
     }
