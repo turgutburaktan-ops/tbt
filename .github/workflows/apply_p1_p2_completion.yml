@@ -2,12 +2,6 @@ name: Apply P1 P2 Completion
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - feature/video-v1
-    paths:
-      - .github/workflows/apply_p1_p2_completion.yml
-      - .github/scripts/apply_p1_p2_completion.py
 
 permissions:
   contents: write
