@@ -227,6 +227,33 @@ class _RadarScreenState extends State<RadarScreen> {
                       _header(),
                       const SizedBox(height: 14),
                       _summaryCard(demands, events),
+                      const SizedBox(height: 14),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: FilledButton.icon(
+                              onPressed: () => _openActivity('Buradayım'),
+                              icon: const Icon(Icons.my_location_rounded),
+                              label: const Text('Buradayım'),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: () => _openActivity('Buluşalım'),
+                              icon: const Icon(Icons.group_add_outlined),
+                              label: const Text('Buluşalım'),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const Padding(
+                        padding: EdgeInsets.only(top: 7),
+                        child: Text(
+                          'Konumun açık adres olarak paylaşılmaz; yalnızca seçtiğin şehir ve aktivite görünür.',
+                          style: TextStyle(color: Colors.white38, fontSize: 10.5, height: 1.3),
+                        ),
+                      ),
                       const SizedBox(height: 25),
                       _sectionTitle(
                         'Şu an hareketli',

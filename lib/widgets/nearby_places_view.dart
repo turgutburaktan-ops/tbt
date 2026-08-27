@@ -317,6 +317,20 @@ class _VenueCard extends StatelessWidget {
         NearbyVenueCategory.hotel => Icons.hotel_rounded,
       };
 
+  Widget _venuePlaceholder() => Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              const Color(0xFF42F5E9).withValues(alpha: .18),
+              const Color(0xFF8B5CF6).withValues(alpha: .18),
+            ],
+          ),
+        ),
+        child: Center(
+          child: Icon(_icon, color: const Color(0xFFB7BCC2), size: 27),
+        ),
+      );
+
   @override
   Widget build(BuildContext context) => Container(
         margin: const EdgeInsets.only(bottom: 9),
@@ -330,20 +344,20 @@ class _VenueCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                Container(
-              width: 46,
-              height: 46,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(14),
-                gradient: LinearGradient(
-                  colors: [
-                    const Color(0xFF42F5E9).withValues(alpha: .22),
-                    const Color(0xFF8B5CF6).withValues(alpha: .22),
-                  ],
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(14),
+                  child: SizedBox(
+                    width: 64,
+                    height: 64,
+                    child: venue.imageUrl.trim().isNotEmpty
+                        ? Image.network(
+                            venue.imageUrl,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => _venuePlaceholder(),
+                          )
+                        : _venuePlaceholder(),
+                  ),
                 ),
-              ),
-              child: Icon(_icon, color: const Color(0xFF42F5E9)),
-            ),
                 const SizedBox(width: 12),
                 Expanded(
               child: Column(
@@ -365,6 +379,15 @@ class _VenueCard extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(color: Colors.white54, fontSize: 11.5),
                   ),
+                  if (venue.cuisine.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      venue.cuisine,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(color: Colors.white54, fontSize: 10.5),
+                    ),
+                  ],
                   if (venue.openingHours.isNotEmpty) ...[
                     const SizedBox(height: 4),
                     Text(

@@ -146,9 +146,6 @@ class _ProfileBodyState extends State<_ProfileBody> {
       case 'share':
         await _shareProfile(displayName);
         return;
-      case 'messages':
-        if (mounted) Navigator.pushNamed(context, '/messages');
-        return;
       case 'campus':
         if (mounted) Navigator.pushNamed(context, '/campus');
         return;
@@ -281,14 +278,6 @@ class _ProfileBodyState extends State<_ProfileBody> {
                                 child: ListTile(
                                   leading: Icon(Icons.share_outlined),
                                   title: Text('Profili paylaş'),
-                                ),
-                              ),
-                              PopupMenuItem(
-                                value: 'messages',
-                                child: ListTile(
-                                  leading:
-                                      Icon(Icons.chat_bubble_outline_rounded),
-                                  title: Text('Mesajlar'),
                                 ),
                               ),
                               PopupMenuItem(
