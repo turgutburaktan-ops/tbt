@@ -40,10 +40,12 @@ Stream<T> switchAuthStream<T>({
       onError: subscriber.addError,
     );
 
-    subscriber.onCancel = () async {
+    subscriber.onCancel = () {
       generation++;
-      await inner?.cancel();
-      await authSubscription.cancel();
+      final currentInner = inner;
+      inner = null;
+      if (currentInner != null) unawaited(currentInner.cancel());
+      unawaited(authSubscription.cancel());
     };
   });
 }
