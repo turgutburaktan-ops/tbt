@@ -15,7 +15,9 @@ class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   late final GoogleSignIn _googleSignIn = GoogleSignIn(
-    serverClientId: _googleServerClientId.isEmpty ? null : _googleServerClientId,
+    serverClientId: _googleServerClientId.isEmpty
+        ? null
+        : _googleServerClientId,
   );
 
   User? get currentUser => _auth.currentUser;
