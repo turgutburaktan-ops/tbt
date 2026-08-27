@@ -54,7 +54,7 @@ Future<void> main() async {
       debugPrint('Unhandled platform error: $error');
       debugPrintStack(stackTrace: stack);
     }
-    if (Firebase.apps.isNotEmpty)
+    if (Firebase.apps.isNotEmpty) {
       unawaited(
         AppObservabilityService.instance.recordError(
           error,
@@ -62,8 +62,10 @@ Future<void> main() async {
           context: 'platform_error',
         ),
       );
+    }
     return true;
   };
+
   await runZonedGuarded(
     () async {
       Object? bootstrapError;
@@ -71,30 +73,56 @@ Future<void> main() async {
         await Firebase.initializeApp(
           options: AppFirebaseOptions.currentPlatform,
         ).timeout(const Duration(seconds: 15));
+      } catch (error, stackTrace) {
+        bootstrapError = error;
+        if (kDebugMode) {
+          debugPrint('Firebase bootstrap failed: $error');
+          debugPrintStack(stackTrace: stackTrace);
+        }
+      }
+
+      if (bootstrapError == null) {
         try {
-          await FirebaseAppCheck.instance.activate(
-            providerAndroid: kDebugMode
-                ? const AndroidDebugProvider()
-                : const AndroidPlayIntegrityProvider(),
-            providerApple: kDebugMode
-                ? const AppleDebugProvider()
-                : const AppleAppAttestWithDeviceCheckFallbackProvider(),
-          );
+          await FirebaseAppCheck.instance
+              .activate(
+                providerAndroid: kDebugMode
+                    ? const AndroidDebugProvider()
+                    : const AndroidPlayIntegrityProvider(),
+                providerApple: kDebugMode
+                    ? const AppleDebugProvider()
+                    : const AppleAppAttestWithDeviceCheckFallbackProvider(),
+              )
+              .timeout(const Duration(seconds: 8));
         } catch (error, stackTrace) {
           if (kDebugMode) {
             debugPrint('App Check activation failed: $error');
             debugPrintStack(stackTrace: stackTrace);
           }
         }
-        await FavoritesService.initialize();
-        await AppObservabilityService.instance.initialize();
-      } catch (error, stackTrace) {
-        bootstrapError = error;
-        if (kDebugMode) {
-          debugPrint('Application bootstrap failed: $error');
-          debugPrintStack(stackTrace: stackTrace);
+
+        try {
+          await FavoritesService.initialize().timeout(
+            const Duration(seconds: 4),
+          );
+        } catch (error, stackTrace) {
+          if (kDebugMode) {
+            debugPrint('Favorites initialization skipped: $error');
+            debugPrintStack(stackTrace: stackTrace);
+          }
+        }
+
+        try {
+          await AppObservabilityService.instance.initialize().timeout(
+            const Duration(seconds: 4),
+          );
+        } catch (error, stackTrace) {
+          if (kDebugMode) {
+            debugPrint('Observability initialization skipped: $error');
+            debugPrintStack(stackTrace: stackTrace);
+          }
         }
       }
+
       runApp(
         bootstrapError == null
             ? const BestPhotoSpotApp()
@@ -108,7 +136,7 @@ Future<void> main() async {
         debugPrint('Uncaught zone error: $error');
         debugPrintStack(stackTrace: stack);
       }
-      if (Firebase.apps.isNotEmpty)
+      if (Firebase.apps.isNotEmpty) {
         unawaited(
           AppObservabilityService.instance.recordError(
             error,
@@ -116,6 +144,7 @@ Future<void> main() async {
             context: 'zone_error',
           ),
         );
+      }
     },
   );
 }
@@ -123,6 +152,7 @@ Future<void> main() async {
 class BootstrapFailureApp extends StatelessWidget {
   final String? debugError;
   const BootstrapFailureApp({super.key, this.debugError});
+
   @override
   Widget build(BuildContext context) => MaterialApp(
     debugShowCheckedModeBanner: false,
@@ -174,20 +204,46 @@ class BootstrapFailureApp extends StatelessWidget {
 
 class BestPhotoSpotApp extends StatefulWidget {
   const BestPhotoSpotApp({super.key});
+
   @override
   State<BestPhotoSpotApp> createState() => _BestPhotoSpotAppState();
 }
 
 class _BestPhotoSpotAppState extends State<BestPhotoSpotApp> {
   final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
+
   @override
   void initState() {
     super.initState();
-    DeepLinkService.instance.start(_navigatorKey);
+    try {
+      DeepLinkService.instance.start(_navigatorKey);
+    } catch (error, stackTrace) {
+      if (kDebugMode) {
+        debugPrint('Deep link startup skipped: $error');
+        debugPrintStack(stackTrace: stackTrace);
+      }
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      PushNotificationService.instance.initialize(_navigatorKey);
-      AppObservabilityService.instance.logEvent('app_open');
+      unawaited(_initializePostFrameServices());
     });
+  }
+
+  Future<void> _initializePostFrameServices() async {
+    try {
+      await PushNotificationService.instance.initialize(_navigatorKey).timeout(
+        const Duration(seconds: 8),
+      );
+    } catch (error, stackTrace) {
+      if (kDebugMode) {
+        debugPrint('Push initialization skipped: $error');
+        debugPrintStack(stackTrace: stackTrace);
+      }
+    }
+    try {
+      await AppObservabilityService.instance
+          .logEvent('app_open')
+          .timeout(const Duration(seconds: 3));
+    } catch (_) {}
   }
 
   @override
