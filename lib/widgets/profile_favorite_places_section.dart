@@ -266,7 +266,9 @@ class _FavoritePlacePickerState extends State<_FavoritePlacePicker> {
     double latitude = 39;
     double longitude = 35;
     try {
-      final position = await LocationService.getCurrentPosition();
+      final position = await LocationService.getCurrentPosition().timeout(
+        const Duration(seconds: 8),
+      );
       if (position != null) {
         latitude = position.latitude;
         longitude = position.longitude;
@@ -277,11 +279,9 @@ class _FavoritePlacePickerState extends State<_FavoritePlacePicker> {
       if (!NearbyVenueService.instance.hasSelectedCity) rethrow;
     }
 
-    final venues = await NearbyVenueService.instance.nearby(
-      category: category,
-      latitude: latitude,
-      longitude: longitude,
-    );
+    final venues = await NearbyVenueService.instance
+        .nearby(category: category, latitude: latitude, longitude: longitude)
+        .timeout(const Duration(seconds: 12));
     return venues
         .map(
           (venue) => _PlaceChoice(

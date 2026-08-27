@@ -131,9 +131,11 @@ class _MapScreenState extends State<MapScreen> {
     if (_filter == _MapContentFilter.all ||
         _filter == _MapContentFilter.spots) {
       final visibleSpots = _mapZoom < 7
-          ? _spots.take(140)
+          ? _spots.take(48)
           : _mapZoom < 9
-          ? _spots.take(360)
+          ? _spots.take(140)
+          : _mapZoom < 11
+          ? _spots.take(420)
           : _spots;
       for (final spot in visibleSpots) {
         final inRoute = _routeSpots.any((item) => item.id == spot.id);
@@ -441,7 +443,7 @@ class _MapScreenState extends State<MapScreen> {
         );
         return aDistance.compareTo(bDistance);
       });
-      return venues.take(40).toList(growable: false);
+      return venues.take(20).toList(growable: false);
     } catch (_) {
       return const <NearbyVenue>[];
     }
