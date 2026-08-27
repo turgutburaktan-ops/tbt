@@ -88,6 +88,7 @@ class ChatMessage {
   final String text;
   final String type;
   final String? mediaUrl;
+  final int? durationMs;
   final String? replyToId;
   final String? replyText;
   final String? replySenderId;
@@ -106,6 +107,7 @@ class ChatMessage {
     required this.text,
     this.type = 'text',
     this.mediaUrl,
+    this.durationMs,
     this.replyToId,
     this.replyText,
     this.replySenderId,
@@ -134,12 +136,14 @@ class ChatMessage {
         if (emoji.isNotEmpty) reactions[entry.key.toString()] = emoji;
       }
     }
+    final rawDuration = data['durationMs'];
     return ChatMessage(
       id: doc.id,
       senderId: (data['senderId'] ?? '').toString(),
       text: (data['text'] ?? '').toString(),
       type: (data['type'] ?? 'text').toString(),
       mediaUrl: data['mediaUrl']?.toString(),
+      durationMs: rawDuration is num ? rawDuration.toInt() : null,
       replyToId: data['replyToId']?.toString(),
       replyText: data['replyText']?.toString(),
       replySenderId: data['replySenderId']?.toString(),
