@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -42,14 +44,16 @@ class AppNotificationItem {
 
 class AppNotificationService {
   AppNotificationService._() {
-    _sharedMine = _buildMineStream(80).asBroadcastStream();
+    _sharedMine = _ReplayLatest<List<AppNotificationItem>>(
+      _buildMineStream(80),
+    );
   }
 
   static final AppNotificationService instance = AppNotificationService._();
 
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  late final Stream<List<AppNotificationItem>> _sharedMine;
+  late final _ReplayLatest<List<AppNotificationItem>> _sharedMine;
 
   CollectionReference<Map<String, dynamic>> _items(String userId) =>
       _firestore.collection('users').doc(userId).collection('notifications');
@@ -70,15 +74,15 @@ class AppNotificationService {
   }
 
   Stream<List<AppNotificationItem>> watchMine({int limit = 80}) {
-    if (limit == 80) return _sharedMine;
+    if (limit == 80) return _sharedMine.stream;
     return _buildMineStream(limit);
   }
 
-  Stream<int> unreadCount() => _sharedMine
+  Stream<int> unreadCount() => _sharedMine.stream
       .map((items) => items.where((item) => !item.read).length)
       .distinct();
 
-  Stream<int> unreadMessageCount() => _sharedMine
+  Stream<int> unreadMessageCount() => _sharedMine.stream
       .map(
         (items) => items
             .where(
@@ -144,9 +148,7 @@ class AppNotificationService {
               sourceId: sourceId,
               actorId: actorId,
             );
-          } catch (_) {
-            // One recipient failure must not abort the rest of the fanout.
-          }
+          } catch (_) {}
         }),
       );
     }
@@ -233,9 +235,7 @@ class AppNotificationService {
             : '${(tonight.first.data()['title'] ?? 'Etkinlik')} ve ${tonight.length - 1} etkinlik daha',
         sourceId: firstId,
       );
-    } catch (_) {
-      // Akıllı özet ana uygulama akışını hiçbir zaman engellememeli.
-    }
+    } catch (_) {}
   }
 
   Future<void> markRead(String notificationId) async {
@@ -276,4 +276,31 @@ class AppNotificationService {
       cursor = snapshot.docs.last;
     }
   }
+}
+
+class _ReplayLatest<T> {
+  final StreamController<T> _controller = StreamController<T>.broadcast();
+  late final StreamSubscription<T> _sourceSubscription;
+  T? _lastValue;
+  bool _hasValue = false;
+
+  _ReplayLatest(Stream<T> source) {
+    _sourceSubscription = source.listen(
+      (value) {
+        _lastValue = value;
+        _hasValue = true;
+        _controller.add(value);
+      },
+      onError: _controller.addError,
+    );
+  }
+
+  Stream<T> get stream => Stream<T>.multi((subscriber) {
+    final subscription = _controller.stream.listen(
+      subscriber.add,
+      onError: subscriber.addError,
+    );
+    if (_hasValue) subscriber.add(_lastValue as T);
+    subscriber.onCancel = subscription.cancel;
+  });
 }
