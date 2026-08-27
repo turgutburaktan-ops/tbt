@@ -21,7 +21,14 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(AppNotificationService.instance.refreshCampusDigest);
+    Future.microtask(() async {
+      await AppNotificationService.instance.refreshCampusDigest();
+      try {
+        await AppNotificationService.instance.markAllRead();
+      } catch (_) {
+        // Bildirim ekranı yine açılabilsin; stream bir sonraki değişimi yansıtır.
+      }
+    });
   }
 
   static const _eventTypes = <String>{
