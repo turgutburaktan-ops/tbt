@@ -12,13 +12,6 @@ class SocialService {
 
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
-
-  final Map<String, Stream<DocumentSnapshot<Map<String, dynamic>>>>
-      _profileStreams = {};
-  final Map<String, Stream<QuerySnapshot<Map<String, dynamic>>>>
-      _postStreams = {};
-  final Map<String, Stream<int>> _followersCountStreams = {};
-  final Map<String, Stream<int>> _followingCountStreams = {};
   final Map<String, Future<void>> _followMutations = {};
   Future<void>? _ensureProfileInFlight;
 
@@ -59,8 +52,9 @@ class SocialService {
       return;
     }
 
-    // Opening a profile must not rewrite the user document every time. That
-    // used to fan out a fresh snapshot to every screen listening to the user.
+    // Merely opening a profile must not rewrite the user document. Rewriting
+    // updatedAt on every visit used to fan out unnecessary snapshots across
+    // profile, nearby and social screens.
     final patch = <String, dynamic>{};
     if ((existing['uid'] ?? '').toString().isEmpty) patch['uid'] = user.uid;
     if ((existing['displayName'] ?? '').toString().trim().isEmpty &&
@@ -84,14 +78,7 @@ class SocialService {
   }
 
   Stream<DocumentSnapshot<Map<String, dynamic>>> userProfile(String userId) {
-    return _profileStreams.putIfAbsent(
-      userId,
-      () => _firestore
-          .collection('users')
-          .doc(userId)
-          .snapshots()
-          .asBroadcastStream(),
-    );
+    return _firestore.collection('users').doc(userId).snapshots();
   }
 
   Stream<bool> isFollowing(String targetUserId) {
@@ -237,31 +224,23 @@ class SocialService {
   }
 
   Stream<int> followersCount(String userId) {
-    return _followersCountStreams.putIfAbsent(
-      userId,
-      () => _firestore
-          .collection('users')
-          .doc(userId)
-          .collection('followers')
-          .snapshots()
-          .map((snapshot) => snapshot.docs.length)
-          .distinct()
-          .asBroadcastStream(),
-    );
+    return _firestore
+        .collection('users')
+        .doc(userId)
+        .collection('followers')
+        .snapshots()
+        .map((snapshot) => snapshot.docs.length)
+        .distinct();
   }
 
   Stream<int> followingCount(String userId) {
-    return _followingCountStreams.putIfAbsent(
-      userId,
-      () => _firestore
-          .collection('users')
-          .doc(userId)
-          .collection('following')
-          .snapshots()
-          .map((snapshot) => snapshot.docs.length)
-          .distinct()
-          .asBroadcastStream(),
-    );
+    return _firestore
+        .collection('users')
+        .doc(userId)
+        .collection('following')
+        .snapshots()
+        .map((snapshot) => snapshot.docs.length)
+        .distinct();
   }
 
   Stream<List<String>> followingIds() {
@@ -293,14 +272,10 @@ class SocialService {
   }
 
   Stream<QuerySnapshot<Map<String, dynamic>>> userPosts(String userId) {
-    return _postStreams.putIfAbsent(
-      userId,
-      () => _firestore
-          .collection('posts')
-          .where('userId', isEqualTo: userId)
-          .snapshots()
-          .asBroadcastStream(),
-    );
+    return _firestore
+        .collection('posts')
+        .where('userId', isEqualTo: userId)
+        .snapshots();
   }
 
   Future<void> _notifyQuietly({
