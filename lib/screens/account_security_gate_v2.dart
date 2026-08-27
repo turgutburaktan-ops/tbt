@@ -7,7 +7,7 @@ import '../theme/app_theme.dart';
 /// Account security gate without device biometrics.
 /// E-mail and SMS verification remain in place; once verified the app opens
 /// directly without fingerprint/Face ID prompts.
-class AccountSecurityGateV2 extends StatelessWidget {
+class AccountSecurityGateV2 extends StatefulWidget {
   final Widget child;
   final Map<String, dynamic>? profile;
 
@@ -18,15 +18,42 @@ class AccountSecurityGateV2 extends StatelessWidget {
   });
 
   @override
+  State<AccountSecurityGateV2> createState() =>
+      _AccountSecurityGateV2State();
+}
+
+class _AccountSecurityGateV2State extends State<AccountSecurityGateV2> {
+  bool _phoneDeferredForSession = false;
+
+  Future<void> _deferPhoneVerification() async {
+    if (mounted) setState(() => _phoneDeferredForSession = true);
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+    try {
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+        'phoneVerificationDeferred': true,
+        'phoneVerificationDeferredAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    } catch (_) {
+      // The session-level state still lets the user continue. They can verify
+      // later from Settings > Verification even if persistence is unavailable.
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null && user.email != null && !user.emailVerified) {
       return const _EmailVerificationScreen();
     }
-    if (profile?['phoneVerified'] != true) {
-      return const _PhoneVerificationScreen();
+    final phoneDeferred =
+        _phoneDeferredForSession ||
+        widget.profile?['phoneVerificationDeferred'] == true;
+    if (widget.profile?['phoneVerified'] != true && !phoneDeferred) {
+      return _PhoneVerificationScreen(onSkip: _deferPhoneVerification);
     }
-    return child;
+    return widget.child;
   }
 }
 
@@ -156,7 +183,9 @@ class _EmailVerificationScreenState extends State<_EmailVerificationScreen> {
 }
 
 class _PhoneVerificationScreen extends StatefulWidget {
-  const _PhoneVerificationScreen();
+  final Future<void> Function() onSkip;
+
+  const _PhoneVerificationScreen({required this.onSkip});
   @override
   State<_PhoneVerificationScreen> createState() =>
       _PhoneVerificationScreenState();
@@ -253,6 +282,7 @@ class _PhoneVerificationScreenState extends State<_PhoneVerificationScreen> {
         'phoneNumber': phone,
         'phoneVerified': true,
         'phoneVerifiedAt': FieldValue.serverTimestamp(),
+        'phoneVerificationDeferred': false,
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
       if (mounted) setState(() => _busy = false);
@@ -342,6 +372,10 @@ class _PhoneVerificationScreenState extends State<_PhoneVerificationScreen> {
                       codeSent ? Icons.verified_outlined : Icons.sms_outlined,
                     ),
               label: Text(codeSent ? 'Kodu doğrula' : 'Kod gönder'),
+            ),
+            TextButton(
+              onPressed: _busy ? null : widget.onSkip,
+              child: const Text('Şimdi Değil / Atla'),
             ),
           ],
         ),

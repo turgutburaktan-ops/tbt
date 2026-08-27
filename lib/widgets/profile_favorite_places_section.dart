@@ -86,13 +86,10 @@ class ProfileFavoritePlacesSection extends StatelessWidget {
             children: [
               if (editable || xp > 0) ...[
                 _ProgressCard(
-                  profile: profile,
-                  userId: userId,
                   xp: xp,
                   level: _levelName(xp),
                   nextLevelXp: _nextLevelXp(xp),
                   levelFloor: _levelFloor(xp),
-                  favoritesReady: hasAny,
                   editable: editable,
                 ),
                 const SizedBox(height: 14),
@@ -233,53 +230,22 @@ class ProfileFavoritePlacesSection extends StatelessWidget {
 }
 
 class _ProgressCard extends StatelessWidget {
-  final Map<String, dynamic> profile;
-  final String userId;
   final int xp;
   final String level;
   final int nextLevelXp;
   final int levelFloor;
-  final bool favoritesReady;
   final bool editable;
 
   const _ProgressCard({
-    required this.profile,
-    required this.userId,
     required this.xp,
     required this.level,
     required this.nextLevelXp,
     required this.levelFloor,
-    required this.favoritesReady,
     required this.editable,
   });
 
   @override
   Widget build(BuildContext context) {
-    final currentUser = FirebaseAuth.instance.currentUser;
-    final isSelf = currentUser?.uid == userId;
-    final settings = profile['settings'] is Map
-        ? Map<String, dynamic>.from(profile['settings'] as Map)
-        : const <String, dynamic>{};
-    final interests = settings['interests'] is List
-        ? settings['interests'] as List
-        : const [];
-    final displayName = (profile['displayName'] ?? '').toString().trim();
-    final bio = (profile['bio'] ?? '').toString().trim();
-    final photo = (profile['photoUrl'] ?? currentUser?.photoURL ?? '')
-        .toString()
-        .trim();
-    final profileReady =
-        displayName.length >= 2 && (bio.isNotEmpty || photo.isNotEmpty);
-    final phoneReady = isSelf && (currentUser?.phoneNumber ?? '').isNotEmpty;
-    final emailReady = isSelf && (currentUser?.emailVerified ?? false);
-    final completed = [
-      profileReady,
-      interests.isNotEmpty,
-      favoritesReady,
-      phoneReady,
-      emailReady,
-    ].where((value) => value).length;
-
     final target = nextLevelXp == levelFloor ? 1 : nextLevelXp - levelFloor;
     final progress = nextLevelXp == levelFloor
         ? 1.0
@@ -287,10 +253,10 @@ class _ProgressCard extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.fromLTRB(11, 10, 11, 9),
       decoration: BoxDecoration(
         color: const Color(0xFF13161C),
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(15),
         border: Border.all(color: const Color(0xFF2C3240)),
       ),
       child: Column(
@@ -299,8 +265,8 @@ class _ProgressCard extends StatelessWidget {
           Row(
             children: [
               Container(
-                width: 44,
-                height: 44,
+                width: 36,
+                height: 36,
                 decoration: BoxDecoration(
                   color: const Color(0xFFB8A1FF).withValues(alpha: .12),
                   shape: BoxShape.circle,
@@ -308,9 +274,10 @@ class _ProgressCard extends StatelessWidget {
                 child: const Icon(
                   Icons.workspace_premium_rounded,
                   color: Color(0xFFB8A1FF),
+                  size: 20,
                 ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 9),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -318,16 +285,16 @@ class _ProgressCard extends StatelessWidget {
                     Text(
                       level,
                       style: const TextStyle(
-                        fontSize: 16,
+                        fontSize: 14.5,
                         fontWeight: FontWeight.w900,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      '$xp XP • Başlangıç $completed/5',
+                      '$xp XP',
                       style: const TextStyle(
                         color: Colors.white54,
-                        fontSize: 11,
+                        fontSize: 10.5,
                       ),
                     ),
                   ],
@@ -343,49 +310,18 @@ class _ProgressCard extends StatelessWidget {
                   icon: const Icon(
                     Icons.chevron_right_rounded,
                     color: Colors.white54,
+                    size: 20,
                   ),
                 ),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 7),
           ClipRRect(
             borderRadius: BorderRadius.circular(20),
-            child: LinearProgressIndicator(value: progress, minHeight: 7),
-          ),
-          const SizedBox(height: 10),
-          Wrap(
-            spacing: 6,
-            runSpacing: 6,
-            children: [
-              if (profileReady)
-                const _Badge(icon: Icons.person_rounded, label: 'Profil Hazır'),
-              if (favoritesReady)
-                const _Badge(icon: Icons.place_rounded, label: 'Mekan Kaşifi'),
-              if (interests.isNotEmpty)
-                const _Badge(
-                  icon: Icons.auto_awesome_rounded,
-                  label: 'İlgi Alanları',
-                ),
-              if (emailReady)
-                const _Badge(
-                  icon: Icons.verified_outlined,
-                  label: 'E-posta Doğrulandı',
-                ),
-              if (phoneReady)
-                const _Badge(
-                  icon: Icons.phone_iphone_rounded,
-                  label: 'Telefon Doğrulandı',
-                ),
-              if (profile['badges'] is Map &&
-                  (profile['badges'] as Map)['first1000'] == true)
-                const _Badge(
-                  icon: Icons.emoji_events_rounded,
-                  label: 'TBT İlk 1000',
-                ),
-            ],
+            child: LinearProgressIndicator(value: progress, minHeight: 5),
           ),
           if (editable) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             Row(
               children: [
                 Expanded(
@@ -398,6 +334,9 @@ class _ProgressCard extends StatelessWidget {
                     ),
                     icon: const Icon(Icons.task_alt_rounded, size: 18),
                     label: const Text('Görevler'),
+                    style: OutlinedButton.styleFrom(
+                      visualDensity: VisualDensity.compact,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -414,6 +353,9 @@ class _ProgressCard extends StatelessWidget {
                       size: 18,
                     ),
                     label: const Text('Bugün TBT'),
+                    style: FilledButton.styleFrom(
+                      visualDensity: VisualDensity.compact,
+                    ),
                   ),
                 ),
               ],
@@ -423,33 +365,6 @@ class _ProgressCard extends StatelessWidget {
       ),
     );
   }
-}
-
-class _Badge extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  const _Badge({required this.icon, required this.label});
-
-  @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-    decoration: BoxDecoration(
-      color: Colors.white.withValues(alpha: .05),
-      borderRadius: BorderRadius.circular(20),
-      border: Border.all(color: Colors.white10),
-    ),
-    child: Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 13, color: const Color(0xFFB8A1FF)),
-        const SizedBox(width: 4),
-        Text(
-          label,
-          style: const TextStyle(fontSize: 9.5, fontWeight: FontWeight.w800),
-        ),
-      ],
-    ),
-  );
 }
 
 class _FavoritePlacePicker extends StatefulWidget {

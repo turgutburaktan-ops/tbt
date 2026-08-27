@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -189,6 +190,14 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
         await user.updatePhoneNumber(credential);
       }
       await user.reload();
+      final refreshed = FirebaseAuth.instance.currentUser;
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+        'phoneNumber': refreshed?.phoneNumber ?? user.phoneNumber,
+        'phoneVerified': true,
+        'phoneVerifiedAt': FieldValue.serverTimestamp(),
+        'phoneVerificationDeferred': false,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
       if (!mounted) return;
       Navigator.pop(context, true);
     } on FirebaseAuthException catch (error) {
