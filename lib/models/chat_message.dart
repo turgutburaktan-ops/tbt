@@ -10,6 +10,8 @@ class ChatThread {
   final String? sourceId;
   final Map<String, DateTime?> lastReadAt;
   final Map<String, DateTime?> typingAt;
+  final Map<String, Map<String, String>> messageReactions;
+  final Set<String> deletedMessageIds;
 
   const ChatThread({
     required this.id,
@@ -21,6 +23,8 @@ class ChatThread {
     this.sourceId,
     this.lastReadAt = const <String, DateTime?>{},
     this.typingAt = const <String, DateTime?>{},
+    this.messageReactions = const <String, Map<String, String>>{},
+    this.deletedMessageIds = const <String>{},
   });
 
   static Map<String, DateTime?> _timestampMap(dynamic raw) {
@@ -34,9 +38,28 @@ class ChatThread {
     return result;
   }
 
+  static Map<String, Map<String, String>> _reactionMap(dynamic raw) {
+    final result = <String, Map<String, String>>{};
+    if (raw is Map) {
+      for (final messageEntry in raw.entries) {
+        final byUser = <String, String>{};
+        final value = messageEntry.value;
+        if (value is Map) {
+          for (final userEntry in value.entries) {
+            final emoji = userEntry.value?.toString() ?? '';
+            if (emoji.isNotEmpty) byUser[userEntry.key.toString()] = emoji;
+          }
+        }
+        if (byUser.isNotEmpty) result[messageEntry.key.toString()] = byUser;
+      }
+    }
+    return result;
+  }
+
   factory ChatThread.fromDocument(DocumentSnapshot<Map<String, dynamic>> doc) {
     final data = doc.data() ?? const <String, dynamic>{};
     final rawMembers = data['memberIds'];
+    final rawDeleted = data['deletedMessageIds'];
     return ChatThread(
       id: doc.id,
       memberIds: rawMembers is List
@@ -49,6 +72,10 @@ class ChatThread {
       sourceId: data['sourceId']?.toString(),
       lastReadAt: _timestampMap(data['lastReadAt']),
       typingAt: _timestampMap(data['typingAt']),
+      messageReactions: _reactionMap(data['messageReactions']),
+      deletedMessageIds: rawDeleted is List
+          ? rawDeleted.map((e) => e.toString()).toSet()
+          : const <String>{},
     );
   }
 }
