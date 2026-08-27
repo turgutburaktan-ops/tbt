@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -14,6 +16,7 @@ class EventAttendanceService {
 
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final Map<String, Future<void>> _inFlight = <String, Future<void>>{};
 
   Stream<String?> watchMine(String eventId) {
     final user = _auth.currentUser;
@@ -40,7 +43,19 @@ class EventAttendanceService {
 
   Future<void> clearChoice(String eventId) => setStatus(eventId, 'none');
 
-  Future<void> setStatus(String eventId, String status) async {
+  Future<void> setStatus(String eventId, String status) {
+    final key = '${_auth.currentUser?.uid ?? 'guest'}:$eventId';
+    final running = _inFlight[key];
+    if (running != null) return running;
+
+    final request = _setStatusInternal(eventId, status);
+    _inFlight[key] = request;
+    return request.whenComplete(() {
+      if (identical(_inFlight[key], request)) _inFlight.remove(key);
+    });
+  }
+
+  Future<void> _setStatusInternal(String eventId, String status) async {
     const valid = {'going', 'interested', 'private', 'none'};
     if (!valid.contains(status)) throw Exception('Geçersiz katılım seçimi.');
 
@@ -150,10 +165,6 @@ class EventAttendanceService {
         }, SetOptions(merge: true));
       }
 
-      // Do not read the ticket document before creation. A first-time attendee
-      // has no ticket yet and Firestore read rules intentionally protect
-      // missing ticket documents. Creating/upserting it from the already
-      // validated event transaction keeps first join reliable.
       if (status == 'going' || status == 'private') {
         final paid = accessType == EventAccessType.paid.name;
         tx.set(ticketRef, {
@@ -183,39 +194,61 @@ class EventAttendanceService {
       };
     });
 
-    // Ticket cancellation is intentionally best-effort and outside the
-    // attendance transaction. When no ticket exists there is nothing to
-    // cancel, and that must never make "İlgileniyorum" or choice clearing fail.
     if (status != 'going' && status != 'private') {
       try {
         await ticketRef.update({
           'status': EventTicketStatus.cancelled.name,
           'updatedAt': FieldValue.serverTimestamp(),
-        });
+        }).timeout(const Duration(seconds: 4));
       } catch (_) {}
     }
 
     final hostId = result['hostId'] ?? '';
     if (hostId.isNotEmpty && (status == 'going' || status == 'private')) {
-      try {
-        await ChatService.instance.ensureDirectThread(
-          hostId,
-          sourceType: 'social_event',
-          sourceId: eventId,
-        );
-      } catch (_) {}
-      try {
-        await AppNotificationService.instance.notifyUser(
-          userId: hostId,
-          type: 'event_join',
-          title: status == 'private'
-              ? 'Bir kullanıcı etkinliğine gizli katıldı'
-              : '${user.displayName ?? 'Bir kullanıcı'} etkinliğine katıldı',
-          body: result['title'] ?? 'Etkinlik',
-          sourceId: eventId,
-          actorId: status == 'private' ? null : user.uid,
-        );
-      } catch (_) {}
+      unawaited(
+        _runJoinSideEffects(
+          hostId: hostId,
+          eventId: eventId,
+          title: result['title'] ?? 'Etkinlik',
+          status: status,
+          userId: user.uid,
+          displayName: user.displayName,
+        ),
+      );
     }
+  }
+
+  Future<void> _runJoinSideEffects({
+    required String hostId,
+    required String eventId,
+    required String title,
+    required String status,
+    required String userId,
+    required String? displayName,
+  }) async {
+    try {
+      await ChatService.instance
+          .ensureDirectThread(
+            hostId,
+            sourceType: 'social_event',
+            sourceId: eventId,
+          )
+          .timeout(const Duration(seconds: 4));
+    } catch (_) {}
+
+    try {
+      await AppNotificationService.instance
+          .notifyUser(
+            userId: hostId,
+            type: 'event_join',
+            title: status == 'private'
+                ? 'Bir kullanıcı etkinliğine gizli katıldı'
+                : '${displayName ?? 'Bir kullanıcı'} etkinliğine katıldı',
+            body: title,
+            sourceId: eventId,
+            actorId: status == 'private' ? null : userId,
+          )
+          .timeout(const Duration(seconds: 4));
+    } catch (_) {}
   }
 }
