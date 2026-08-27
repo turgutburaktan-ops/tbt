@@ -98,7 +98,6 @@ class EventAttendanceService {
       }
 
       final attendanceSnap = await tx.get(attendanceRef);
-      final ticketSnap = await tx.get(ticketRef);
       final previous = attendanceSnap.exists
           ? (attendanceSnap.data()?['status'] ?? '').toString()
           : '';
@@ -151,6 +150,10 @@ class EventAttendanceService {
         }, SetOptions(merge: true));
       }
 
+      // Do not read the ticket document before creation. A first-time attendee
+      // has no ticket yet and Firestore read rules intentionally protect
+      // missing ticket documents. Creating/upserting it from the already
+      // validated event transaction keeps first join reliable.
       if (status == 'going' || status == 'private') {
         final paid = accessType == EventAccessType.paid.name;
         tx.set(ticketRef, {
@@ -167,22 +170,11 @@ class EventAttendanceService {
           'isPaidEvent': paid,
           'priceMinor': ((data['ticketPriceMinor'] as num?)?.toInt() ?? 0),
           'currency': (data['currency'] ?? 'TRY').toString(),
-          'qrToken':
-              ticketSnap.exists &&
-                  (ticketSnap.data()?['qrToken'] ?? '').toString().isNotEmpty
-              ? ticketSnap.data()!['qrToken']
-              : qrToken,
-          'issuedAt': ticketSnap.exists
-              ? (ticketSnap.data()?['issuedAt'] ?? FieldValue.serverTimestamp())
-              : FieldValue.serverTimestamp(),
+          'qrToken': qrToken,
+          'issuedAt': FieldValue.serverTimestamp(),
           'usedAt': null,
           'updatedAt': FieldValue.serverTimestamp(),
         }, SetOptions(merge: true));
-      } else if (ticketSnap.exists) {
-        tx.update(ticketRef, {
-          'status': EventTicketStatus.cancelled.name,
-          'updatedAt': FieldValue.serverTimestamp(),
-        });
       }
 
       return {
@@ -190,6 +182,18 @@ class EventAttendanceService {
         'title': (data['title'] ?? 'Etkinlik').toString(),
       };
     });
+
+    // Ticket cancellation is intentionally best-effort and outside the
+    // attendance transaction. When no ticket exists there is nothing to
+    // cancel, and that must never make "İlgileniyorum" or choice clearing fail.
+    if (status != 'going' && status != 'private') {
+      try {
+        await ticketRef.update({
+          'status': EventTicketStatus.cancelled.name,
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+      } catch (_) {}
+    }
 
     final hostId = result['hostId'] ?? '';
     if (hostId.isNotEmpty && (status == 'going' || status == 'private')) {
