@@ -9,8 +9,7 @@ class PhoneVerificationScreen extends StatefulWidget {
   const PhoneVerificationScreen({super.key});
 
   @override
-  State<PhoneVerificationScreen> createState() =>
-      _PhoneVerificationScreenState();
+  State<PhoneVerificationScreen> createState() => _PhoneVerificationScreenState();
 }
 
 class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
@@ -38,19 +37,28 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
       ..showSnackBar(SnackBar(content: Text(text)));
   }
 
+  void _resetSession({bool keepPhone = true}) {
+    _timer?.cancel();
+    if (!mounted) return;
+    setState(() {
+      _seconds = 0;
+      _verificationId = null;
+      _resendToken = null;
+      _sending = false;
+      _verifying = false;
+      _code.clear();
+      if (!keepPhone) _phone.text = '+90';
+    });
+  }
+
   String _authError(FirebaseAuthException error, {bool sending = false}) {
     return switch (error.code) {
       'invalid-phone-number' => 'Telefon numarası geçersiz.',
-      'too-many-requests' =>
-        'Çok fazla deneme yapıldı. Bir süre sonra tekrar dene.',
+      'too-many-requests' => 'Çok fazla deneme yapıldı. Bir süre sonra tekrar dene.',
       'quota-exceeded' => 'SMS kotası geçici olarak dolu.',
-      'app-not-authorized' ||
-      'captcha-check-failed' ||
-      'missing-client-identifier' ||
-      'invalid-app-credential' => 'Uygulama güvenlik sertifikası doğrulanamadı. TBT’yi güncelleyip tekrar dene.',
-      _ =>
-        error.message ??
-            (sending ? 'SMS gönderilemedi.' : 'Telefon doğrulanamadı.'),
+      'app-not-authorized' || 'captcha-check-failed' || 'missing-client-identifier' || 'invalid-app-credential' =>
+        'Uygulama güvenlik sertifikası doğrulanamadı. TBT’yi güncelleyip tekrar dene.',
+      _ => error.message ?? (sending ? 'SMS gönderilemedi.' : 'Telefon doğrulanamadı.'),
     };
   }
 
@@ -88,9 +96,7 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
       await FirebaseAuth.instance.verifyPhoneNumber(
         phoneNumber: phone,
         forceResendingToken: resend ? _resendToken : null,
-        verificationCompleted: (credential) async {
-          await _applyCredential(credential);
-        },
+        verificationCompleted: (credential) async => _applyCredential(credential),
         verificationFailed: (error) {
           _message(_authError(error, sending: true));
           if (mounted) setState(() => _sending = false);
@@ -109,14 +115,15 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
           if (mounted) setState(() => _verificationId = verificationId);
         },
         timeout: const Duration(seconds: 60),
-      );
+      ).timeout(const Duration(seconds: 75));
+    } on TimeoutException {
+      _resetSession();
+      _message('Doğrulama isteği zaman aşımına uğradı. Tekrar dene.');
     } on FirebaseAuthException catch (error) {
       _message(_authError(error, sending: true));
       if (mounted) setState(() => _sending = false);
     } catch (_) {
-      _message(
-        'SMS gönderilemedi. İnternet bağlantını kontrol edip tekrar dene.',
-      );
+      _message('SMS gönderilemedi. İnternet bağlantını kontrol edip tekrar dene.');
       if (mounted) setState(() => _sending = false);
     }
   }
@@ -135,17 +142,15 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
     }
     setState(() => _verifying = true);
     try {
-      final credential = PhoneAuthProvider.credential(
-        verificationId: verificationId,
-        smsCode: code,
-      );
+      final credential = PhoneAuthProvider.credential(verificationId: verificationId, smsCode: code);
       await _applyCredential(credential);
     } on FirebaseAuthException catch (error) {
-      _message(switch (error.code) {
-        'invalid-verification-code' => 'SMS kodu yanlış.',
-        'session-expired' => 'Kodun süresi doldu. Yeni kod iste.',
-        _ => _authError(error),
-      });
+      if (error.code == 'session-expired') {
+        _resetSession();
+        _message('Kodun süresi doldu. Yeni bir SMS kodu iste.');
+        return;
+      }
+      _message(error.code == 'invalid-verification-code' ? 'SMS kodu yanlış.' : _authError(error));
     } finally {
       if (mounted) setState(() => _verifying = false);
     }
@@ -167,12 +172,15 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
       if (!mounted) return;
       Navigator.pop(context, true);
     } on FirebaseAuthException catch (error) {
+      if (error.code == 'session-expired') {
+        _resetSession();
+        _message('Doğrulama oturumu sona erdi. Yeni kod iste.');
+        return;
+      }
       _message(switch (error.code) {
-        'credential-already-in-use' =>
-          'Bu telefon başka bir TBT hesabına bağlı.',
+        'credential-already-in-use' => 'Bu telefon başka bir TBT hesabına bağlı.',
         'provider-already-linked' => 'Bu hesaba zaten bir telefon bağlı.',
-        'requires-recent-login' =>
-          'Güvenlik için tekrar giriş yapıp yeniden dene.',
+        'requires-recent-login' => 'Güvenlik için tekrar giriş yapıp yeniden dene.',
         _ => _authError(error),
       });
     }
@@ -188,105 +196,26 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
         padding: const EdgeInsets.fromLTRB(18, 18, 18, 32),
         keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
         children: [
-          const Icon(
-            Icons.phone_android_rounded,
-            size: 54,
-            color: AppColors.cyan,
-          ),
+          const Icon(Icons.phone_android_rounded, size: 54, color: AppColors.cyan),
           const SizedBox(height: 14),
-          const Text(
-            'Telefon doğrulama',
-            style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900),
-          ),
+          const Text('Telefon doğrulama', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900)),
           const SizedBox(height: 6),
-          const Text(
-            'Telefon numaranı gir. Sana SMS ile 6 haneli bir doğrulama kodu göndereceğiz.',
-            style: TextStyle(color: Colors.white60, height: 1.4),
-          ),
+          const Text('Telefon numaranı gir. Sana SMS ile 6 haneli bir doğrulama kodu göndereceğiz.', style: TextStyle(color: Colors.white60, height: 1.4)),
           const SizedBox(height: 18),
-          TextField(
-            controller: _phone,
-            enabled: !sent,
-            keyboardType: TextInputType.phone,
-            autofillHints: const [AutofillHints.telephoneNumber],
-            decoration: const InputDecoration(
-              labelText: 'Telefon numarası',
-              hintText: '+90 5xx xxx xx xx',
-            ),
-          ),
+          TextField(controller: _phone, enabled: !sent, keyboardType: TextInputType.phone, autofillHints: const [AutofillHints.telephoneNumber], decoration: const InputDecoration(labelText: 'Telefon numarası', hintText: '+90 5xx xxx xx xx')),
           const SizedBox(height: 12),
           if (!sent)
-            FilledButton.icon(
-              onPressed: _sending ? null : _sendCode,
-              icon: _sending
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.sms_outlined),
-              label: Text(_sending ? 'Gönderiliyor…' : 'SMS Kodu Gönder'),
-            ),
+            FilledButton.icon(onPressed: _sending ? null : _sendCode, icon: _sending ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.sms_outlined), label: Text(_sending ? 'Gönderiliyor…' : 'SMS Kodu Gönder')),
           if (sent) ...[
-            TextField(
-              controller: _code,
-              autofocus: true,
-              keyboardType: TextInputType.number,
-              autofillHints: const [AutofillHints.oneTimeCode],
-              maxLength: 6,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 6,
-              ),
-              decoration: const InputDecoration(
-                labelText: 'SMS doğrulama kodu',
-                counterText: '',
-              ),
-            ),
+            TextField(controller: _code, autofocus: true, keyboardType: TextInputType.number, autofillHints: const [AutofillHints.oneTimeCode], maxLength: 6, textAlign: TextAlign.center, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900, letterSpacing: 6), decoration: const InputDecoration(labelText: 'SMS doğrulama kodu', counterText: '')),
             const SizedBox(height: 12),
-            FilledButton.icon(
-              onPressed: _verifying ? null : _verifyCode,
-              icon: _verifying
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.verified_rounded),
-              label: Text(_verifying ? 'Doğrulanıyor…' : 'Telefonu Doğrula'),
-            ),
+            FilledButton.icon(onPressed: _verifying ? null : _verifyCode, icon: _verifying ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.verified_rounded), label: Text(_verifying ? 'Doğrulanıyor…' : 'Telefonu Doğrula')),
             const SizedBox(height: 8),
-            TextButton(
-              onPressed: _seconds > 0 || _sending
-                  ? null
-                  : () => _sendCode(resend: true),
-              child: Text(
-                _seconds > 0
-                    ? 'Yeni kod için $_seconds sn'
-                    : 'Kodu tekrar gönder',
-              ),
-            ),
-            TextButton(
-              onPressed: () => setState(() {
-                _timer?.cancel();
-                _seconds = 0;
-                _verificationId = null;
-                _code.clear();
-              }),
-              child: const Text('Telefon numarasını değiştir'),
-            ),
+            TextButton(onPressed: _seconds > 0 || _sending ? null : () => _sendCode(resend: true), child: Text(_seconds > 0 ? 'Yeni kod için $_seconds sn' : 'Kodu tekrar gönder')),
+            TextButton(onPressed: () => _resetSession(keepPhone: false), child: const Text('Telefon numarasını değiştir')),
           ],
           const SizedBox(height: 18),
-          const Text(
-            'SMS ücretleri operatörüne göre değişebilir. Doğrulama tamamlandığında telefon numarası TBT hesabına bağlanır.',
-            style: TextStyle(
-              color: Colors.white38,
-              fontSize: 11.5,
-              height: 1.4,
-            ),
-          ),
+          const Text('SMS ücretleri operatörüne göre değişebilir. Doğrulama tamamlandığında telefon numarası TBT hesabına bağlanır.', style: TextStyle(color: Colors.white38, fontSize: 11.5, height: 1.4)),
         ],
       ),
     );
