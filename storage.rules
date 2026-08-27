@@ -25,13 +25,20 @@ service firebase.storage {
         request.resource.contentType.matches('^video/(mp4|quicktime)$');
     }
 
+    function safeAudioWrite() {
+      return request.resource != null &&
+        request.resource.size > 0 &&
+        request.resource.size <= 20 * 1024 * 1024 &&
+        request.resource.contentType != null &&
+        request.resource.contentType.matches('^audio/(mp4|m4a|aac|mpeg|ogg|wav|x-m4a)$');
+    }
+
     function safeMediaWrite() {
-      return safeImageWrite() || safeVideoWrite();
+      return safeImageWrite() || safeVideoWrite() || safeAudioWrite();
     }
 
     // User media stays namespaced by Firebase Auth uid. This keeps existing
-    // public feed/profile rendering intact while preventing cross-account writes.
-    // SVG and arbitrary image/video MIME types are intentionally rejected.
+    // public feed/profile/chat rendering intact while preventing cross-account writes.
     match /users/{uid}/{allPaths=**} {
       allow read: if true;
       allow create, update: if isOwner(uid) && safeMediaWrite();
