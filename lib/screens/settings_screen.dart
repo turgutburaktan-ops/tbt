@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import '../theme/app_theme.dart';
 import 'managed_venues_screen.dart';
+import 'password_change_screen.dart';
 import 'phone_verification_screen.dart';
 import 'safety_privacy_center_screen.dart';
 import 'social_events_screen.dart';
@@ -215,113 +216,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _changePassword(String email) async {
-    final current = TextEditingController();
-    final next = TextEditingController();
-    final confirm = TextEditingController();
-    var saving = false;
-    await showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      backgroundColor: AppColors.background,
-      builder: (sheetContext) => StatefulBuilder(
-        builder: (context, setSheet) => Padding(
-          padding: EdgeInsets.fromLTRB(
-            18,
-            18,
-            18,
-            18 + MediaQuery.viewInsetsOf(context).bottom,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const Text(
-                'Şifre Değiştir',
-                style: TextStyle(fontSize: 21, fontWeight: FontWeight.w900),
-              ),
-              const SizedBox(height: 14),
-              TextField(
-                controller: current,
-                obscureText: true,
-                decoration: const InputDecoration(labelText: 'Mevcut şifre'),
-              ),
-              const SizedBox(height: 10),
-              TextField(
-                controller: next,
-                obscureText: true,
-                decoration: const InputDecoration(
-                  labelText: 'Yeni şifre',
-                  helperText: 'En az 6 karakter',
-                ),
-              ),
-              const SizedBox(height: 10),
-              TextField(
-                controller: confirm,
-                obscureText: true,
-                decoration: const InputDecoration(
-                  labelText: 'Yeni şifre tekrar',
-                ),
-              ),
-              const SizedBox(height: 16),
-              FilledButton.icon(
-                onPressed: saving
-                    ? null
-                    : () async {
-                        if (current.text.isEmpty) {
-                          _message('Mevcut şifreni gir.');
-                          return;
-                        }
-                        if (next.text.length < 6) {
-                          _message('Yeni şifre en az 6 karakter olmalı.');
-                          return;
-                        }
-                        if (next.text != confirm.text) {
-                          _message('Yeni şifreler aynı değil.');
-                          return;
-                        }
-                        setSheet(() => saving = true);
-                        try {
-                          final user = FirebaseAuth.instance.currentUser;
-                          if (user == null) return;
-                          await user.reauthenticateWithCredential(
-                            EmailAuthProvider.credential(
-                              email: email,
-                              password: current.text,
-                            ),
-                          );
-                          await user.updatePassword(next.text);
-                          if (sheetContext.mounted) Navigator.pop(sheetContext);
-                          _message('Şifren başarıyla değiştirildi.');
-                        } on FirebaseAuthException catch (e) {
-                          _message(switch (e.code) {
-                            'wrong-password' ||
-                            'invalid-credential' => 'Mevcut şifre yanlış.',
-                            'weak-password' => 'Yeni şifre çok zayıf.',
-                            'requires-recent-login' =>
-                              'Güvenlik için tekrar giriş yapıp yeniden dene.',
-                            _ => e.message ?? 'Şifre değiştirilemedi.',
-                          });
-                          setSheet(() => saving = false);
-                        }
-                      },
-                icon: saving
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.check_rounded),
-                label: Text(saving ? 'Değiştiriliyor…' : 'Şifreyi Değiştir'),
-              ),
-            ],
-          ),
-        ),
-      ),
+    final changed = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(builder: (_) => PasswordChangeScreen(email: email)),
     );
-    current.dispose();
-    next.dispose();
-    confirm.dispose();
+    if (changed == true) {
+      _message('Şifren başarıyla değiştirildi.');
+    }
   }
 
   Future<void> _verification() async {
@@ -699,8 +600,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                       onPressed: () async {
                         await AuthService.instance.logout();
-                        if (context.mounted)
+                        if (context.mounted) {
                           Navigator.of(context).popUntil((r) => r.isFirst);
+                        }
                       },
                       icon: const Icon(Icons.logout_rounded),
                       label: const Text('Çıkış Yap'),
