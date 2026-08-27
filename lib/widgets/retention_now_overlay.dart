@@ -192,8 +192,7 @@ class _NowSheet extends StatelessWidget {
                           final posts = (postsSnapshot.data?.docs ?? const [])
                               .where((doc) {
                                 final t = doc.data()['createdAt'];
-                                return t is Timestamp &&
-                                    t.toDate().isAfter(cutoff);
+                                return t is Timestamp && t.toDate().isAfter(cutoff);
                               })
                               .toList();
                           final events = (eventsSnapshot.data?.docs ?? const [])
@@ -201,12 +200,8 @@ class _NowSheet extends StatelessWidget {
                                 final t = doc.data()['startsAt'];
                                 if (t is! Timestamp) return false;
                                 final date = t.toDate();
-                                return date.isAfter(
-                                      now.subtract(const Duration(hours: 1)),
-                                    ) &&
-                                    date.isBefore(
-                                      now.add(const Duration(hours: 24)),
-                                    );
+                                return date.isAfter(now.subtract(const Duration(hours: 1))) &&
+                                    date.isBefore(now.add(const Duration(hours: 24)));
                               })
                               .toList();
                           final creators = posts
@@ -217,44 +212,23 @@ class _NowSheet extends StatelessWidget {
                           return ListView(
                             padding: const EdgeInsets.fromLTRB(16, 10, 16, 30),
                             children: [
-                              _StatsCard(
-                                creators: creators,
-                                posts: posts.length,
-                                events: events.length,
-                              ),
+                              _StatsCard(creators: creators, posts: posts.length, events: events.length),
                               const SizedBox(height: 18),
-                              const _Section(
-                                icon: Icons.bolt_rounded,
-                                title: 'Son 3 saat',
-                              ),
+                              const _Section(icon: Icons.bolt_rounded, title: 'Son 3 saat'),
                               const SizedBox(height: 8),
                               if (posts.isEmpty)
-                                const _Empty(
-                                  'Henüz yeni hareket yok. İlk paylaşımı sen yapabilirsin.',
-                                )
+                                const _Empty('Henüz yeni hareket yok. İlk paylaşımı sen yapabilirsin.')
                               else
-                                ...posts
-                                    .take(4)
-                                    .map((d) => _PostTile(d.data())),
+                                ...posts.take(4).map((d) => _PostTile(d.data())),
                               const SizedBox(height: 18),
-                              const _Section(
-                                icon: Icons.event_available_rounded,
-                                title: 'Önümüzdeki 24 saat',
-                              ),
+                              const _Section(icon: Icons.event_available_rounded, title: 'Önümüzdeki 24 saat'),
                               const SizedBox(height: 8),
                               if (events.isEmpty)
-                                const _Empty(
-                                  'Yaklaşan herkese açık etkinlik görünmüyor.',
-                                )
+                                const _Empty('Yaklaşan herkese açık etkinlik görünmüyor.')
                               else
-                                ...events
-                                    .take(4)
-                                    .map((d) => _EventTile(d.data())),
+                                ...events.take(4).map((d) => _EventTile(d.data())),
                               const SizedBox(height: 18),
-                              const _Section(
-                                icon: Icons.people_alt_rounded,
-                                title: 'Arkadaş hareketi',
-                              ),
+                              const _Section(icon: Icons.people_alt_rounded, title: 'Arkadaş hareketi'),
                               const SizedBox(height: 8),
                               const _FriendActivity(),
                             ],
@@ -284,11 +258,7 @@ class _NowActions extends StatelessWidget {
             child: FilledButton.icon(
               onPressed: () => Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (_) => const ActivityDemandScreen(
-                    initialActivity: 'Sosyal',
-                  ),
-                ),
+                MaterialPageRoute(builder: (_) => const ActivityDemandScreen(initialActivity: 'Sosyal')),
               ),
               icon: const Icon(Icons.near_me_rounded),
               label: const Text('Buradayım'),
@@ -315,7 +285,7 @@ class _NowActions extends StatelessWidget {
       const SizedBox(height: 6),
       const Text(
         'Buradayım yalnızca seçtiğin şehir ve aktivite sinyalini paylaşır; kesin konum yayınlanmaz.',
-        style: TextStyle(color: Colors.white46, fontSize: 10.5, height: 1.3),
+        style: TextStyle(color: Colors.white54, fontSize: 10.5, height: 1.3),
       ),
     ],
   );
@@ -338,11 +308,7 @@ class _RadarBadge extends StatelessWidget {
 
 class _StatsCard extends StatelessWidget {
   final int creators, posts, events;
-  const _StatsCard({
-    required this.creators,
-    required this.posts,
-    required this.events,
-  });
+  const _StatsCard({required this.creators, required this.posts, required this.events});
   @override
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.symmetric(vertical: 13),
@@ -369,23 +335,9 @@ class _Stat extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Column(
     children: [
-      Text(
-        value,
-        style: const TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.w900,
-          color: Color(0xFF45E7F2),
-        ),
-      ),
+      Text(value, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Color(0xFF45E7F2))),
       const SizedBox(height: 2),
-      Text(
-        label,
-        textAlign: TextAlign.center,
-        style: TextStyle(
-          fontSize: 10,
-          color: Colors.white.withValues(alpha: .46),
-        ),
-      ),
+      Text(label, textAlign: TextAlign.center, style: TextStyle(fontSize: 10, color: Colors.white.withValues(alpha: .46))),
     ],
   );
 }
@@ -393,8 +345,7 @@ class _Stat extends StatelessWidget {
 class _Divider extends StatelessWidget {
   const _Divider();
   @override
-  Widget build(BuildContext context) =>
-      Container(width: 1, height: 30, color: Colors.white10);
+  Widget build(BuildContext context) => Container(width: 1, height: 30, color: Colors.white10);
 }
 
 class _Section extends StatelessWidget {
@@ -406,10 +357,7 @@ class _Section extends StatelessWidget {
     children: [
       Icon(icon, size: 18, color: Colors.white60),
       const SizedBox(width: 7),
-      Text(
-        title,
-        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
-      ),
+      Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900)),
     ],
   );
 }
@@ -420,17 +368,8 @@ class _Empty extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.all(14),
-    decoration: BoxDecoration(
-      color: const Color(0xFF111620),
-      borderRadius: BorderRadius.circular(16),
-    ),
-    child: Text(
-      text,
-      style: TextStyle(
-        color: Colors.white.withValues(alpha: .50),
-        height: 1.35,
-      ),
-    ),
+    decoration: BoxDecoration(color: const Color(0xFF111620), borderRadius: BorderRadius.circular(16)),
+    child: Text(text, style: TextStyle(color: Colors.white.withValues(alpha: .50), height: 1.35)),
   );
 }
 
@@ -445,9 +384,7 @@ class _PostTile extends StatelessWidget {
     return _InfoTile(
       icon: Icons.photo_camera_back_rounded,
       title: name,
-      subtitle: spot.isNotEmpty
-          ? '$spot konumundan yeni paylaşım'
-          : (caption.isNotEmpty ? caption : 'Yeni paylaşım yaptı'),
+      subtitle: spot.isNotEmpty ? '$spot konumundan yeni paylaşım' : (caption.isNotEmpty ? caption : 'Yeni paylaşım yaptı'),
     );
   }
 }
@@ -460,19 +397,14 @@ class _EventTile extends StatelessWidget {
     final title = (data['title'] ?? data['name'] ?? 'Etkinlik').toString();
     final raw = data['startsAt'];
     final date = raw is Timestamp ? raw.toDate().toLocal() : null;
-    final time = date == null
-        ? ''
-        : '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+    final time = date == null ? '' : '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
     final location = [data['locationLabel'], data['venueName'], data['city']]
         .map((e) => (e ?? '').toString().trim())
         .firstWhere((e) => e.isNotEmpty, orElse: () => '');
     return _InfoTile(
       icon: Icons.event_rounded,
       title: title,
-      subtitle: [
-        if (time.isNotEmpty) time,
-        if (location.isNotEmpty) location,
-      ].join(' • '),
+      subtitle: [if (time.isNotEmpty) time, if (location.isNotEmpty) location].join(' • '),
     );
   }
 }
@@ -480,28 +412,18 @@ class _EventTile extends StatelessWidget {
 class _InfoTile extends StatelessWidget {
   final IconData icon;
   final String title, subtitle;
-  const _InfoTile({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-  });
+  const _InfoTile({required this.icon, required this.title, required this.subtitle});
   @override
   Widget build(BuildContext context) => Container(
     margin: const EdgeInsets.only(bottom: 7),
     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
-    decoration: BoxDecoration(
-      color: const Color(0xFF111620),
-      borderRadius: BorderRadius.circular(15),
-    ),
+    decoration: BoxDecoration(color: const Color(0xFF111620), borderRadius: BorderRadius.circular(15)),
     child: Row(
       children: [
         Container(
           width: 36,
           height: 36,
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: .05),
-            borderRadius: BorderRadius.circular(11),
-          ),
+          decoration: BoxDecoration(color: Colors.white.withValues(alpha: .05), borderRadius: BorderRadius.circular(11)),
           child: Icon(icon, size: 18, color: Colors.white60),
         ),
         const SizedBox(width: 10),
@@ -509,26 +431,10 @@ class _InfoTile extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w800,
-                  fontSize: 13,
-                ),
-              ),
+              Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13)),
               if (subtitle.isNotEmpty) ...[
                 const SizedBox(height: 2),
-                Text(
-                  subtitle,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: .46),
-                    fontSize: 11.5,
-                  ),
-                ),
+                Text(subtitle, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(color: Colors.white.withValues(alpha: .50), fontSize: 11.5)),
               ],
             ],
           ),
@@ -543,48 +449,25 @@ class _FriendActivity extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null)
-      return const _Empty('Arkadaş hareketini görmek için giriş yap.');
-    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-      stream: FirebaseFirestore.instance
-          .collection('users')
-          .doc(uid)
-          .collection('following')
-          .limit(50)
-          .snapshots(),
-      builder: (context, following) {
-        final ids = following.data?.docs.map((d) => d.id).toSet() ?? <String>{};
-        if (ids.isEmpty)
-          return const _Empty(
-            'Takip ettiğin kişiler paylaşım yaptığında burada görünecek.',
-          );
+    if (uid == null) return const _Empty('Arkadaş hareketi için giriş yap.');
+    return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+      stream: FirebaseFirestore.instance.collection('users').doc(uid).snapshots(),
+      builder: (context, userSnapshot) {
+        final data = userSnapshot.data?.data() ?? const <String, dynamic>{};
+        final raw = data['followingIds'] ?? data['following'] ?? data['friends'];
+        final ids = raw is Iterable ? raw.map((e) => e.toString()).where((e) => e.isNotEmpty).take(10).toList() : <String>[];
+        if (ids.isEmpty) return const _Empty('Takip ettiğin kişilerin yeni hareketleri burada görünecek.');
         return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
           stream: FirebaseFirestore.instance
               .collection('posts')
+              .where('userId', whereIn: ids)
               .orderBy('createdAt', descending: true)
-              .limit(80)
+              .limit(8)
               .snapshots(),
-          builder: (context, posts) {
-            final items = (posts.data?.docs ?? const [])
-                .where(
-                  (d) => ids.contains((d.data()['userId'] ?? '').toString()),
-                )
-                .take(4)
-                .toList();
-            if (items.isEmpty)
-              return const _Empty('Takip ettiklerinden yeni hareket yok.');
-            return Column(
-              children: items.map((d) {
-                final x = d.data();
-                return _InfoTile(
-                  icon: Icons.people_rounded,
-                  title: (x['userName'] ?? 'Takip ettiğin biri').toString(),
-                  subtitle: (x['spotName'] ?? '').toString().isNotEmpty
-                      ? '${x['spotName']} konumundan paylaşım yaptı'
-                      : 'Yeni paylaşım yaptı',
-                );
-              }).toList(),
-            );
+          builder: (context, snapshot) {
+            final docs = snapshot.data?.docs ?? const [];
+            if (snapshot.hasError || docs.isEmpty) return const _Empty('Arkadaşlarından henüz yeni hareket yok.');
+            return Column(children: docs.take(3).map((d) => _PostTile(d.data())).toList());
           },
         );
       },
