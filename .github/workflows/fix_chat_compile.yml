@@ -1,0 +1,41 @@
+name: Repair Chat Compile
+
+on:
+  push:
+    branches:
+      - feature/video-v1
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/video-v1
+      - name: Repair invalid Flutter color constant
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('lib/screens/chat_screen.dart')
+          s = p.read_text()
+          old = 'Colors.white46'
+          if old not in s:
+              print('No invalid white46 constant remains.')
+              raise SystemExit(0)
+          p.write_text(s.replace(old, 'Colors.white54'))
+          PY
+          dart format lib/screens/chat_screen.dart
+          if git diff --quiet; then
+            exit 0
+          fi
+          git config user.name 'tbt-build-bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add lib/screens/chat_screen.dart
+          git commit -m 'fix: repair chat presence color compile error'
+          git push origin HEAD:feature/video-v1
