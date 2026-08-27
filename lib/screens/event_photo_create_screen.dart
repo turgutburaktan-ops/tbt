@@ -8,12 +8,54 @@ class EventPhotoCreateScreen extends StatelessWidget {
   const EventPhotoCreateScreen({super.key});
 
   static const _templates = <_EventTemplate>[
-    _EventTemplate('Kahve içelim', 'Yakında buluş, kahve iç, sohbet et', Icons.local_cafe_outlined, SocialEventType.foodDrink, 6, Duration(hours: 1)),
-    _EventTemplate('Fotoğraf çekelim', 'Birlikte çekim için hızlı plan oluştur', Icons.photo_camera_outlined, SocialEventType.photography, 8, Duration(hours: 2)),
-    _EventTemplate('Yürüyüşe çıkalım', 'Kısa bir yürüyüş planı başlat', Icons.directions_walk_rounded, SocialEventType.walking, 10, Duration(hours: 1)),
-    _EventTemplate('Birlikte gezelim', 'Yeni bir yer keşfetmek için ekip kur', Icons.route_outlined, SocialEventType.trip, 8, Duration(hours: 3)),
-    _EventTemplate('Kampa gidelim', 'Kamp planını birkaç dokunuşla başlat', Icons.cabin_outlined, SocialEventType.camping, 8, Duration(days: 1)),
-    _EventTemplate('Koşuya çıkalım', 'Yakındaki koşucularla plan yap', Icons.directions_run_rounded, SocialEventType.running, 10, Duration(hours: 1)),
+    _EventTemplate(
+      'Kahve içelim',
+      'Yakında buluş, kahve iç, sohbet et',
+      Icons.local_cafe_outlined,
+      SocialEventType.foodDrink,
+      6,
+      Duration(hours: 1),
+    ),
+    _EventTemplate(
+      'Fotoğraf çekelim',
+      'Birlikte çekim için hızlı plan oluştur',
+      Icons.photo_camera_outlined,
+      SocialEventType.photography,
+      8,
+      Duration(hours: 2),
+    ),
+    _EventTemplate(
+      'Yürüyüşe çıkalım',
+      'Kısa bir yürüyüş planı başlat',
+      Icons.directions_walk_rounded,
+      SocialEventType.walking,
+      10,
+      Duration(hours: 1),
+    ),
+    _EventTemplate(
+      'Birlikte gezelim',
+      'Yeni bir yer keşfetmek için ekip kur',
+      Icons.route_outlined,
+      SocialEventType.trip,
+      8,
+      Duration(hours: 3),
+    ),
+    _EventTemplate(
+      'Kampa gidelim',
+      'Kamp planını birkaç dokunuşla başlat',
+      Icons.cabin_outlined,
+      SocialEventType.camping,
+      8,
+      Duration(days: 1),
+    ),
+    _EventTemplate(
+      'Koşuya çıkalım',
+      'Yakındaki koşucularla plan yap',
+      Icons.directions_run_rounded,
+      SocialEventType.running,
+      10,
+      Duration(hours: 1),
+    ),
   ];
 
   void _open(BuildContext context, _EventTemplate template) {
@@ -39,7 +81,10 @@ class EventPhotoCreateScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 14, 16, 32),
         children: [
-          const Text('Bugün ne yapmak istersin?', style: TextStyle(fontSize: 23, fontWeight: FontWeight.w900)),
+          const Text(
+            'Bugün ne yapmak istersin?',
+            style: TextStyle(fontSize: 23, fontWeight: FontWeight.w900),
+          ),
           const SizedBox(height: 6),
           const Text(
             'Bir şablon seç. Başlık, tür, saat ve kişi sayısını hazırlayalım; sen sadece konumu ve kapak fotoğrafını tamamla.',
@@ -81,13 +126,22 @@ class EventPhotoCreateScreen extends StatelessWidget {
                         child: Icon(template.icon, color: AppColors.cyan),
                       ),
                       const Spacer(),
-                      Text(template.title, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w900)),
+                      Text(
+                        template.title,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontWeight: FontWeight.w900),
+                      ),
                       const SizedBox(height: 5),
                       Text(
                         template.subtitle,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(color: Colors.white54, fontSize: 11.5, height: 1.25),
+                        style: const TextStyle(
+                          color: Colors.white54,
+                          fontSize: 11.5,
+                          height: 1.25,
+                        ),
                       ),
                     ],
                   ),
@@ -97,7 +151,10 @@ class EventPhotoCreateScreen extends StatelessWidget {
           ),
           const SizedBox(height: 14),
           OutlinedButton.icon(
-            onPressed: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const EventCreateScreenV2())),
+            onPressed: () => Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const EventCreateScreenV2()),
+            ),
             icon: const Icon(Icons.tune_rounded),
             label: const Text('Detaylı etkinlik oluştur'),
           ),
@@ -114,5 +171,12 @@ class _EventTemplate {
   final SocialEventType type;
   final int capacity;
   final Duration startsAfter;
-  const _EventTemplate(this.title, this.subtitle, this.icon, this.type, this.capacity, this.startsAfter);
+  const _EventTemplate(
+    this.title,
+    this.subtitle,
+    this.icon,
+    this.type,
+    this.capacity,
+    this.startsAfter,
+  );
 }
