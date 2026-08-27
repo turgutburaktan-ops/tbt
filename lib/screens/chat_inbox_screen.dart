@@ -278,6 +278,17 @@ class _ThreadTile extends StatelessWidget {
     required this.otherUserId,
   });
 
+  String _timeLabel(DateTime? value) {
+    if (value == null) return '';
+    final local = value.toLocal();
+    final now = DateTime.now();
+    final sameDay = local.year == now.year && local.month == now.month && local.day == now.day;
+    if (sameDay) {
+      return '${local.hour.toString().padLeft(2, '0')}:${local.minute.toString().padLeft(2, '0')}';
+    }
+    return '${local.day.toString().padLeft(2, '0')}.${local.month.toString().padLeft(2, '0')}';
+  }
+
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
@@ -287,6 +298,14 @@ class _ThreadTile extends StatelessWidget {
         final name = (data['displayName'] ?? data['username'] ?? 'Topluluk üyesi').toString();
         final username = (data['username'] ?? data['handle'] ?? '').toString().replaceFirst(RegExp(r'^@'), '');
         final photoUrl = (data['photoUrl'] ?? '').toString();
+        final myId = FirebaseAuth.instance.currentUser?.uid ?? '';
+        final readAt = thread.lastReadAt[myId];
+        final lastAt = thread.lastMessageAt;
+        final unread = myId.isNotEmpty &&
+            thread.lastSenderId.isNotEmpty &&
+            thread.lastSenderId != myId &&
+            lastAt != null &&
+            (readAt == null || lastAt.isAfter(readAt));
 
         return ListTile(
           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
@@ -310,7 +329,32 @@ class _ThreadTile extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(color: Colors.white54),
           ),
-          trailing: const Icon(Icons.chevron_right, color: Colors.white38),
+          trailing: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                _timeLabel(thread.lastMessageAt),
+                style: TextStyle(
+                  color: unread ? const Color(0xFF42F5E9) : Colors.white38,
+                  fontSize: 10.5,
+                  fontWeight: unread ? FontWeight.w800 : FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 5),
+              if (unread)
+                Container(
+                  width: 9,
+                  height: 9,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF42F5E9),
+                    shape: BoxShape.circle,
+                  ),
+                )
+              else
+                const Icon(Icons.chevron_right, color: Colors.white38, size: 18),
+            ],
+          ),
           onTap: () {
             Navigator.push(
               context,

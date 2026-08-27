@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '../models/photo_spot.dart';
 import '../models/social_event.dart';
+import '../services/activity_demand_service.dart';
 import '../services/social_event_service.dart';
 import '../services/spot_repository.dart';
 import '../widgets/spot_image.dart';
@@ -32,6 +35,8 @@ class _MapScreenState extends State<MapScreen> {
   bool _gettingLocation = false;
   Position? _currentPosition;
   _MapContentFilter _filter = _MapContentFilter.all;
+  StreamSubscription<List<ActivityDemand>>? _demandSubscription;
+  int _activeDemandCount = 0;
 
   static const LatLng _defaultLocation = LatLng(38.9637, 35.2433);
 
@@ -40,6 +45,17 @@ class _MapScreenState extends State<MapScreen> {
     super.initState();
     _loadSpots();
     _prepareLocation();
+    _demandSubscription = ActivityDemandService.instance.watchActive().listen((items) {
+      if (!mounted) return;
+      setState(() => _activeDemandCount = items.map((item) => item.userId).toSet().length);
+    });
+  }
+
+  @override
+  void dispose() {
+    _demandSubscription?.cancel();
+    _mapController?.dispose();
+    super.dispose();
   }
 
   Future<void> _loadSpots() async {
@@ -289,11 +305,21 @@ class _MapScreenState extends State<MapScreen> {
                         const Icon(Icons.explore_outlined,
                             color: Color(0xFFB7BCC2)),
                         const SizedBox(width: 9),
-                        const Expanded(
-                            child: Text('Noktalar ve Etkinlikler',
-                                style: TextStyle(
-                                    fontSize: 17,
-                                    fontWeight: FontWeight.w900))),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Noktalar ve Etkinlikler',
+                                style: TextStyle(fontSize: 17, fontWeight: FontWeight.w900),
+                              ),
+                              Text(
+                                '$_activeDemandCount topluluk sinyali • kişi konumu gösterilmez',
+                                style: const TextStyle(color: Colors.white54, fontSize: 10.5),
+                              ),
+                            ],
+                          ),
+                        ),
                         if (_loadingSpots)
                           const SizedBox(
                               width: 18,

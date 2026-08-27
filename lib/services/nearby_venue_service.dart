@@ -158,6 +158,12 @@ out center tags;
         city,
       ].where((part) => part.isNotEmpty).join(', ');
 
+      final rawImage = (tags['image'] ?? tags['contact:image'] ?? '').toString().trim();
+      final imageUrl = rawImage.startsWith('https://') || rawImage.startsWith('http://')
+          ? rawImage
+          : '';
+      final cuisine = (tags['cuisine'] ?? '').toString().trim().replaceAll(';', ' • ');
+
       venues.add(
         NearbyVenue(
           id: '${item['type'] ?? 'node'}-${item['id'] ?? dedupeKey}',
@@ -170,6 +176,8 @@ out center tags;
           phone: (tags['contact:phone'] ?? tags['phone'] ?? '').toString(),
           website:
               (tags['contact:website'] ?? tags['website'] ?? '').toString(),
+          imageUrl: imageUrl,
+          cuisine: cuisine,
         ),
       );
       if (venues.length >= 180) break;
