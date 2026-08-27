@@ -301,6 +301,7 @@ class SocialEventService {
       final title = (data['title'] ?? 'Etkinlik').toString();
       if (hostId.isEmpty)
         throw Exception('Etkinliği düzenleyen kullanıcı bulunamadı.');
+      final existingTicket = await transaction.get(ticketRef);
       if (!participants.contains(user.uid)) {
         if (participants.length >= capacity)
           throw Exception('Bu etkinlikte boş yer kalmadı.');
@@ -310,7 +311,6 @@ class SocialEventService {
           'updatedAt': FieldValue.serverTimestamp(),
         });
       }
-      final existingTicket = await transaction.get(ticketRef);
       if (!existingTicket.exists ||
           (existingTicket.data()?['status'] ?? '').toString() ==
               EventTicketStatus.cancelled.name) {
@@ -389,6 +389,7 @@ class SocialEventService {
       final participants = (data['participantIds'] as List? ?? const [])
           .map((item) => item.toString())
           .toList();
+      final ticket = await transaction.get(ticketRef);
       if (currentHostId == user.uid) {
         transaction.update(ref, {
           'status': 'cancelled',
@@ -401,7 +402,6 @@ class SocialEventService {
         'participantIds': participants,
         'updatedAt': FieldValue.serverTimestamp(),
       });
-      final ticket = await transaction.get(ticketRef);
       if (ticket.exists)
         transaction.update(ticketRef, {
           'status': EventTicketStatus.cancelled.name,
