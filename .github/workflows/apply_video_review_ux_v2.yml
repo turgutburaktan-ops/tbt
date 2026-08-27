@@ -1,0 +1,42 @@
+name: Apply Video Review UX V2
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feature/video-v1
+    paths:
+      - '.github/scripts/apply_video_review_ux_v2.py'
+      - '.github/workflows/apply_video_review_ux_v2.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: apply-video-review-ux-v2-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  apply:
+    if: github.actor != 'tbt-build-bot'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/video-v1
+          fetch-depth: 0
+      - name: Apply UX fixes
+        run: python3 .github/scripts/apply_video_review_ux_v2.py
+      - name: Commit changes
+        shell: bash
+        run: |
+          if git diff --quiet; then
+            echo 'No UX changes needed.'
+            exit 0
+          fi
+          git config user.name 'tbt-build-bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add lib
+          git commit -m 'fix: polish video review ux flows'
+          git push origin HEAD:feature/video-v1
