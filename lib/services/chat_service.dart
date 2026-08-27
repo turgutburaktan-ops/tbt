@@ -7,6 +7,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 
 import '../models/chat_message.dart';
 import 'app_notification_service.dart';
+import 'auth_switch_stream.dart';
 import 'content_moderation_service.dart';
 
 class ChatService {
@@ -19,8 +20,12 @@ class ChatService {
   final FirebaseStorage _storage = FirebaseStorage.instance;
 
   final List<DateTime> _recentSends = <DateTime>[];
+  final Map<String, bool> _typingState = <String, bool>{};
+  final Map<String, Future<void>> _reactionInFlight = <String, Future<void>>{};
   String? _lastMessageFingerprint;
   DateTime? _lastMessageAt;
+  bool? _lastPresenceValue;
+  DateTime? _lastPresenceAt;
 
   Future<User> _requiredUser() async {
     final current = _auth.currentUser;
@@ -146,9 +151,10 @@ class ChatService {
   }
 
   Stream<List<ChatThread>> myThreads() {
-    return _auth.authStateChanges().asyncExpand((user) {
-      if (user == null) return Stream.value(const <ChatThread>[]);
-      return _firestore
+    return switchAuthStream<List<ChatThread>>(
+      auth: _auth,
+      signedOutValue: const <ChatThread>[],
+      signedIn: (user) => _firestore
           .collection('chat_threads')
           .where('memberIds', arrayContains: user.uid)
           .snapshots()
@@ -162,22 +168,27 @@ class ChatService {
               return bd.compareTo(ad);
             });
             return items;
-          });
-    });
+          }),
+    );
   }
 
   Stream<ChatThread?> watchThread(String threadId) {
-    return _firestore
-        .collection('chat_threads')
-        .doc(threadId)
-        .snapshots()
-        .map((doc) => doc.exists ? ChatThread.fromDocument(doc) : null);
+    return switchAuthStream<ChatThread?>(
+      auth: _auth,
+      signedOutValue: null,
+      signedIn: (_) => _firestore
+          .collection('chat_threads')
+          .doc(threadId)
+          .snapshots()
+          .map((doc) => doc.exists ? ChatThread.fromDocument(doc) : null),
+    );
   }
 
   Stream<List<ChatMessage>> messages(String threadId) {
-    return _auth.authStateChanges().asyncExpand((user) {
-      if (user == null) return Stream.value(const <ChatMessage>[]);
-      return _firestore
+    return switchAuthStream<List<ChatMessage>>(
+      auth: _auth,
+      signedOutValue: const <ChatMessage>[],
+      signedIn: (_) => _firestore
           .collection('chat_threads')
           .doc(threadId)
           .collection('messages')
@@ -188,8 +199,8 @@ class ChatService {
             (snapshot) => snapshot.docs
                 .map(ChatMessage.fromDocument)
                 .toList(growable: false),
-          );
-    });
+          ),
+    );
   }
 
   Future<void> markThreadRead(String threadId) async {
@@ -203,23 +214,40 @@ class ChatService {
 
   Future<void> setTyping(String threadId, bool typing) async {
     final user = await _requiredUser();
+    final key = '${user.uid}:$threadId';
+    if (_typingState[key] == typing) return;
+    _typingState[key] = typing;
     try {
       await _firestore.collection('chat_threads').doc(threadId).update({
         'typingAt.${user.uid}': typing
             ? FieldValue.serverTimestamp()
             : FieldValue.delete(),
       }).timeout(const Duration(seconds: 5));
-    } catch (_) {}
+    } catch (_) {
+      if (_typingState[key] == typing) _typingState.remove(key);
+    }
   }
 
   Future<void> setPresence(bool online) async {
     final user = _auth.currentUser;
-    if (user == null) return;
+    if (user == null) {
+      _lastPresenceValue = null;
+      _lastPresenceAt = null;
+      return;
+    }
+    final now = DateTime.now();
+    if (_lastPresenceValue == online &&
+        _lastPresenceAt != null &&
+        now.difference(_lastPresenceAt!) < const Duration(minutes: 2)) {
+      return;
+    }
     try {
       await _firestore.collection('users').doc(user.uid).set({
         'isOnline': online,
         'lastSeenAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true)).timeout(const Duration(seconds: 5));
+      _lastPresenceValue = online;
+      _lastPresenceAt = now;
     } catch (_) {}
   }
 
@@ -227,31 +255,55 @@ class ChatService {
     required String threadId,
     required String messageId,
     required String emoji,
+  }) {
+    final key = '$threadId:$messageId';
+    final running = _reactionInFlight[key];
+    if (running != null) return running;
+    final request = _toggleReactionInternal(
+      threadId: threadId,
+      messageId: messageId,
+      emoji: emoji,
+    );
+    _reactionInFlight[key] = request;
+    return request.whenComplete(() {
+      if (identical(_reactionInFlight[key], request)) {
+        _reactionInFlight.remove(key);
+      }
+    });
+  }
+
+  Future<void> _toggleReactionInternal({
+    required String threadId,
+    required String messageId,
+    required String emoji,
   }) async {
     final user = await _requiredUser();
     final threadRef = _firestore.collection('chat_threads').doc(threadId);
-    final thread = await threadRef.get().timeout(const Duration(seconds: 6));
-    final data = thread.data() ?? const <String, dynamic>{};
-    final members = (data['memberIds'] as List? ?? const <dynamic>[])
-        .map((e) => e.toString())
-        .toList(growable: false);
-    if (!members.contains(user.uid)) {
-      throw Exception('Bu sohbete erişimin yok.');
-    }
-    final deletedIds = (data['deletedMessageIds'] as List? ?? const <dynamic>[])
-        .map((e) => e.toString())
-        .toSet();
-    if (deletedIds.contains(messageId)) return;
-    final raw = data['messageReactions'];
-    String? current;
-    if (raw is Map && raw[messageId] is Map) {
-      current = (raw[messageId] as Map)[user.uid]?.toString();
-    }
-    await threadRef.update({
-      'messageReactions.$messageId.${user.uid}': current == emoji
-          ? FieldValue.delete()
-          : emoji,
-    }).timeout(const Duration(seconds: 6));
+    await _firestore.runTransaction((transaction) async {
+      final thread = await transaction.get(threadRef);
+      final data = thread.data() ?? const <String, dynamic>{};
+      final members = (data['memberIds'] as List? ?? const <dynamic>[])
+          .map((e) => e.toString())
+          .toList(growable: false);
+      if (!members.contains(user.uid)) {
+        throw Exception('Bu sohbete erişimin yok.');
+      }
+      final deletedIds =
+          (data['deletedMessageIds'] as List? ?? const <dynamic>[])
+              .map((e) => e.toString())
+              .toSet();
+      if (deletedIds.contains(messageId)) return;
+      final raw = data['messageReactions'];
+      String? current;
+      if (raw is Map && raw[messageId] is Map) {
+        current = (raw[messageId] as Map)[user.uid]?.toString();
+      }
+      transaction.update(threadRef, {
+        'messageReactions.$messageId.${user.uid}': current == emoji
+            ? FieldValue.delete()
+            : emoji,
+      });
+    }).timeout(const Duration(seconds: 7));
   }
 
   Future<void> deleteForEveryone({
