@@ -2,9 +2,6 @@ name: Android APK Build Check
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - feature/video-v1
 
 permissions:
   contents: read
