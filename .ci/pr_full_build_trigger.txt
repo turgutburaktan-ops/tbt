@@ -1,3 +1,4 @@
 TBT Full Build pull_request visibility trigger.
 No runtime code.
 Final five-item product fix pass: 2026-08-24.
+Showcase-ready verification after password, optional phone verification, missions, badges and daily TBT: 2026-08-27.
