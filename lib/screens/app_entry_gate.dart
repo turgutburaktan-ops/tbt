@@ -12,6 +12,15 @@ import 'student_onboarding_screen.dart';
 class AppEntryGate extends StatelessWidget {
   const AppEntryGate({super.key});
 
+  Stream<_EntryGateState> _gateStream(String userId) {
+    return FirebaseFirestore.instance
+        .collection('users')
+        .doc(userId)
+        .snapshots()
+        .map((snapshot) => _EntryGateState.from(snapshot.data()))
+        .distinct();
+  }
+
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<User?>(
@@ -19,49 +28,88 @@ class AppEntryGate extends StatelessWidget {
       initialData: FirebaseAuth.instance.currentUser,
       builder: (context, authSnapshot) {
         final user = authSnapshot.data;
-
-        // Guest users use the same navigation shell as signed-in users so the
-        // Ana Sayfa / Keşfet split and public Mekanlar / Çevrende experiences
-        // stay visible. Auth-gated actions inside the shell already redirect
-        // to login where required.
         if (user == null) return const HomeScreen();
 
-        return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-          stream: FirebaseFirestore.instance
-              .collection('users')
-              .doc(user.uid)
-              .snapshots(),
-          builder: (context, profileSnapshot) {
-            if (profileSnapshot.connectionState == ConnectionState.waiting &&
-                !profileSnapshot.hasData) {
+        return StreamBuilder<_EntryGateState>(
+          stream: _gateStream(user.uid),
+          builder: (context, gateSnapshot) {
+            if (gateSnapshot.connectionState == ConnectionState.waiting &&
+                !gateSnapshot.hasData) {
               return const Scaffold(
                 backgroundColor: Color(0xFF090A0C),
                 body: Center(child: CircularProgressIndicator()),
               );
             }
 
-            final data = profileSnapshot.data?.data();
-            final appOnboardingCompleted =
-                data?['appOnboardingCompleted'] == true;
+            final gate = gateSnapshot.data ?? const _EntryGateState();
             Widget next;
-            if (!appOnboardingCompleted) {
+            if (!gate.appOnboardingCompleted) {
               next = const AppOnboardingScreen();
+            } else if (gate.onboardingRequired && !gate.onboardingCompleted) {
+              next = const StudentOnboardingScreen();
             } else {
-              final onboardingRequired = data?['onboardingRequired'] == true;
-              final onboardingCompleted = data?['onboardingCompleted'] == true;
-              if (onboardingRequired && !onboardingCompleted) {
-                next = const StudentOnboardingScreen();
-              } else {
-                next = const RetentionHubQuickEntry(
-                  child: RetentionNowOverlay(child: HomeScreen()),
-                );
-              }
+              next = const RetentionHubQuickEntry(
+                child: RetentionNowOverlay(child: HomeScreen()),
+              );
             }
 
-            return AccountSecurityGateV2(profile: data, child: next);
+            return AccountSecurityGateV2(
+              profile: gate.securityProfile,
+              child: next,
+            );
           },
         );
       },
     );
   }
+}
+
+class _EntryGateState {
+  final bool appOnboardingCompleted;
+  final bool onboardingRequired;
+  final bool onboardingCompleted;
+  final bool phoneVerified;
+  final bool phoneVerificationDeferred;
+
+  const _EntryGateState({
+    this.appOnboardingCompleted = false,
+    this.onboardingRequired = false,
+    this.onboardingCompleted = false,
+    this.phoneVerified = false,
+    this.phoneVerificationDeferred = false,
+  });
+
+  factory _EntryGateState.from(Map<String, dynamic>? data) {
+    return _EntryGateState(
+      appOnboardingCompleted: data?['appOnboardingCompleted'] == true,
+      onboardingRequired: data?['onboardingRequired'] == true,
+      onboardingCompleted: data?['onboardingCompleted'] == true,
+      phoneVerified: data?['phoneVerified'] == true,
+      phoneVerificationDeferred: data?['phoneVerificationDeferred'] == true,
+    );
+  }
+
+  Map<String, dynamic> get securityProfile => <String, dynamic>{
+    'phoneVerified': phoneVerified,
+    'phoneVerificationDeferred': phoneVerificationDeferred,
+  };
+
+  @override
+  bool operator ==(Object other) {
+    return other is _EntryGateState &&
+        other.appOnboardingCompleted == appOnboardingCompleted &&
+        other.onboardingRequired == onboardingRequired &&
+        other.onboardingCompleted == onboardingCompleted &&
+        other.phoneVerified == phoneVerified &&
+        other.phoneVerificationDeferred == phoneVerificationDeferred;
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    appOnboardingCompleted,
+    onboardingRequired,
+    onboardingCompleted,
+    phoneVerified,
+    phoneVerificationDeferred,
+  );
 }
