@@ -1,0 +1,46 @@
+name: Repair event transaction read order
+
+on:
+  push:
+    branches: [feature/video-v1]
+    paths:
+      - '.github/workflows/fix_event_transaction_order.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/video-v1
+          fetch-depth: 0
+      - name: Patch Firestore transaction ordering
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('lib/services/social_event_service.dart')
+          s = p.read_text()
+          old = """      if (!participants.contains(user.uid)) {\n        if (participants.length >= capacity)\n          throw Exception('Bu etkinlikte boş yer kalmadı.');\n        participants.add(user.uid);\n        transaction.update(ref, {\n          'participantIds': participants,\n          'updatedAt': FieldValue.serverTimestamp(),\n        });\n      }\n      final existingTicket = await transaction.get(ticketRef);\n"""
+          new = """      final existingTicket = await transaction.get(ticketRef);\n      if (!participants.contains(user.uid)) {\n        if (participants.length >= capacity)\n          throw Exception('Bu etkinlikte boş yer kalmadı.');\n        participants.add(user.uid);\n        transaction.update(ref, {\n          'participantIds': participants,\n          'updatedAt': FieldValue.serverTimestamp(),\n        });\n      }\n"""
+          if old not in s:
+              raise SystemExit('join transaction pattern not found')
+          s = s.replace(old, new, 1)
+
+          old2 = """      if (currentHostId == user.uid) {\n        transaction.update(ref, {\n          'status': 'cancelled',\n          'updatedAt': FieldValue.serverTimestamp(),\n        });\n        return;\n      }\n      participants.remove(user.uid);\n      transaction.update(ref, {\n        'participantIds': participants,\n        'updatedAt': FieldValue.serverTimestamp(),\n      });\n      final ticket = await transaction.get(ticketRef);\n"""
+          new2 = """      final ticket = await transaction.get(ticketRef);\n      if (currentHostId == user.uid) {\n        transaction.update(ref, {\n          'status': 'cancelled',\n          'updatedAt': FieldValue.serverTimestamp(),\n        });\n        return;\n      }\n      participants.remove(user.uid);\n      transaction.update(ref, {\n        'participantIds': participants,\n        'updatedAt': FieldValue.serverTimestamp(),\n      });\n"""
+          if old2 not in s:
+              raise SystemExit('leave transaction pattern not found')
+          s = s.replace(old2, new2, 1)
+          p.write_text(s)
+          PY
+      - name: Commit patch and remove temporary workflow
+        run: |
+          git config user.name 'turgutburaktan-ops'
+          git config user.email 'actions@users.noreply.github.com'
+          git rm .github/workflows/fix_event_transaction_order.yml
+          git add lib/services/social_event_service.dart
+          git commit -m 'fix: read event transaction documents before writes'
+          git push origin HEAD:feature/video-v1
