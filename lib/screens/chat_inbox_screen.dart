@@ -220,7 +220,16 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
                 .where((id) => id != myId)
                 .toList();
             if (otherIds.isEmpty) return const SizedBox.shrink();
-            return _ThreadTile(thread: thread, otherUserId: otherIds.first);
+            final lastRead = thread.lastReadAt[myId];
+            final unread = thread.lastSenderId != myId &&
+                thread.lastMessageAt != null &&
+                (lastRead == null || thread.lastMessageAt!.isAfter(lastRead));
+            return _ThreadTile(
+              thread: thread,
+              otherUserId: otherIds.first,
+              myId: myId,
+              unread: unread,
+            );
           },
         );
       },
@@ -305,11 +314,32 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
   }
 }
 
+String _threadTime(DateTime? value) {
+  if (value == null) return '';
+  final local = value.toLocal();
+  final now = DateTime.now();
+  if (now.year == local.year && now.month == local.month && now.day == local.day) {
+    return '${local.hour.toString().padLeft(2, '0')}:${local.minute.toString().padLeft(2, '0')}';
+  }
+  if (now.difference(local).inDays < 7) {
+    const days = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
+    return days[local.weekday - 1];
+  }
+  return '${local.day.toString().padLeft(2, '0')}.${local.month.toString().padLeft(2, '0')}';
+}
+
 class _ThreadTile extends StatelessWidget {
   final ChatThread thread;
   final String otherUserId;
+  final String myId;
+  final bool unread;
 
-  const _ThreadTile({required this.thread, required this.otherUserId});
+  const _ThreadTile({
+    required this.thread,
+    required this.otherUserId,
+    required this.myId,
+    required this.unread,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -343,14 +373,31 @@ class _ThreadTile extends StatelessWidget {
                 ? const Icon(Icons.person, color: Colors.white54)
                 : null,
           ),
-          title: Text(
-            name,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w700,
-            ),
+          title: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: unread ? FontWeight.w900 : FontWeight.w700,
+                  ),
+                ),
+              ),
+              if (thread.lastMessageAt != null) ...[
+                const SizedBox(width: 8),
+                Text(
+                  _threadTime(thread.lastMessageAt),
+                  style: TextStyle(
+                    color: unread ? const Color(0xFF62E6D2) : Colors.white38,
+                    fontSize: 11,
+                    fontWeight: unread ? FontWeight.w800 : FontWeight.w500,
+                  ),
+                ),
+              ],
+            ],
           ),
           subtitle: Text(
             thread.lastMessage.isEmpty
@@ -358,9 +405,18 @@ class _ThreadTile extends StatelessWidget {
                 : thread.lastMessage,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(color: Colors.white54),
+            style: TextStyle(
+              color: unread ? Colors.white : Colors.white54,
+              fontWeight: unread ? FontWeight.w700 : FontWeight.w400,
+            ),
           ),
-          trailing: const Icon(Icons.chevron_right, color: Colors.white38),
+          trailing: unread
+              ? const Badge(
+                  backgroundColor: Color(0xFF62E6D2),
+                  smallSize: 9,
+                  child: Icon(Icons.chevron_right, color: Colors.white54),
+                )
+              : const Icon(Icons.chevron_right, color: Colors.white38),
           onTap: () {
             Navigator.push(
               context,

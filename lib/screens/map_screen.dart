@@ -8,6 +8,7 @@ import '../models/photo_spot.dart';
 import '../models/nearby_venue.dart';
 import '../models/social_event.dart';
 import '../models/user_map_point.dart';
+import '../services/activity_demand_service.dart';
 import '../services/road_route_service.dart';
 import '../services/nearby_venue_service.dart';
 import '../services/social_event_service.dart';
@@ -689,7 +690,11 @@ class _MapScreenState extends State<MapScreen> {
           stream: SocialEventService.instance.watchUpcoming(limit: 120),
           builder: (context, eventSnapshot) {
             _events = eventSnapshot.data ?? _events;
-            return SafeArea(
+            return StreamBuilder<List<ActivityDemand>>(
+              stream: ActivityDemandService.instance.watchActive(limit: 600),
+              builder: (context, demandSnapshot) {
+                final activeDemands = demandSnapshot.data ?? const <ActivityDemand>[];
+                return SafeArea(
               child: Stack(
                 children: [
                   GoogleMap(
@@ -815,6 +820,36 @@ class _MapScreenState extends State<MapScreen> {
                             ],
                           ),
                         ),
+                        if (activeDemands.isNotEmpty) ...[
+                          const SizedBox(height: 8),
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: Material(
+                              color: const Color(0xFF0F1113).withValues(alpha: .95),
+                              borderRadius: BorderRadius.circular(14),
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(14),
+                                onTap: _openEvents,
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(Icons.people_alt_outlined, size: 17, color: Color(0xFF62E6D2)),
+                                      const SizedBox(width: 7),
+                                      Text(
+                                        '${activeDemands.length} topluluk sinyali',
+                                        style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w800),
+                                      ),
+                                      const SizedBox(width: 6),
+                                      const Text('• kişi konumu gösterilmez', style: TextStyle(fontSize: 10.5, color: Colors.white54)),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                         const SizedBox(height: 8),
                         Container(
                           padding: const EdgeInsets.all(4),
@@ -977,6 +1012,8 @@ class _MapScreenState extends State<MapScreen> {
                     ),
                 ],
               ),
+                );
+              },
             );
           },
         );
