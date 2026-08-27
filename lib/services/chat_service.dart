@@ -25,17 +25,13 @@ class ChatService {
   Future<User> _requiredUser() async {
     final current = _auth.currentUser;
     if (current != null) return current;
-
     try {
       final restored = await _auth
           .authStateChanges()
           .firstWhere((user) => user != null)
           .timeout(const Duration(seconds: 3));
       if (restored != null) return restored;
-    } on TimeoutException {
-      // Fall through to the normal logged-out error below.
-    }
-
+    } on TimeoutException {}
     throw Exception('Mesajlaşmak için giriş yapmalısın.');
   }
 
@@ -52,7 +48,6 @@ class ChatService {
     if (_recentSends.length >= 8) {
       throw Exception('Çok hızlı mesaj gönderiyorsun. Birkaç saniye bekle.');
     }
-
     final fingerprint = text.trim().toLowerCase();
     final repeatedTooFast =
         _lastMessageFingerprint == fingerprint &&
@@ -61,7 +56,6 @@ class ChatService {
     if (repeatedTooFast) {
       throw Exception('Aynı mesajı art arda çok hızlı gönderemezsin.');
     }
-
     _recentSends.add(now);
     _lastMessageFingerprint = fingerprint;
     _lastMessageAt = now;
@@ -70,18 +64,8 @@ class ChatService {
   Future<bool> isBlockedBetween(String otherUserId) async {
     final me = (await _requiredUser()).uid;
     final refs = await Future.wait([
-      _firestore
-          .collection('users')
-          .doc(me)
-          .collection('blocked')
-          .doc(otherUserId)
-          .get(),
-      _firestore
-          .collection('users')
-          .doc(otherUserId)
-          .collection('blocked')
-          .doc(me)
-          .get(),
+      _firestore.collection('users').doc(me).collection('blocked').doc(otherUserId).get(),
+      _firestore.collection('users').doc(otherUserId).collection('blocked').doc(me).get(),
     ]);
     return refs.any((doc) => doc.exists);
   }
@@ -92,9 +76,7 @@ class ChatService {
     String? sourceId,
   }) async {
     final user = await _requiredUser();
-    if (otherUserId == user.uid) {
-      throw Exception('Kendine mesaj gönderemezsin.');
-    }
+    if (otherUserId == user.uid) throw Exception('Kendine mesaj gönderemezsin.');
     if (await isBlockedBetween(otherUserId)) {
       throw Exception('Bu kullanıcıyla mesajlaşma kullanılamıyor.');
     }
@@ -107,15 +89,11 @@ class ChatService {
       final members = (data['memberIds'] as List? ?? const <dynamic>[])
           .map((value) => value.toString())
           .toList(growable: false);
-      final type = (data['type'] ?? '').toString();
-      final validDirectThread =
-          type == 'direct' &&
+      final valid = (data['type'] ?? '').toString() == 'direct' &&
           members.length == 2 &&
           members.contains(user.uid) &&
           members.contains(otherUserId);
-      if (!validDirectThread) {
-        throw Exception('Bu sohbete erişimin yok.');
-      }
+      if (!valid) throw Exception('Bu sohbete erişimin yok.');
       return id;
     }
 
@@ -125,10 +103,10 @@ class ChatService {
       'sourceType': sourceType,
       'sourceId': sourceId,
       'lastReadAt': {user.uid: FieldValue.serverTimestamp()},
+      'typingAt': <String, dynamic>{},
       'updatedAt': FieldValue.serverTimestamp(),
       'createdAt': FieldValue.serverTimestamp(),
     });
-
     return id;
   }
 
@@ -142,10 +120,8 @@ class ChatService {
           .map((snapshot) {
             final items = snapshot.docs.map(ChatThread.fromDocument).toList();
             items.sort((a, b) {
-              final ad =
-                  a.lastMessageAt ?? DateTime.fromMillisecondsSinceEpoch(0);
-              final bd =
-                  b.lastMessageAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+              final ad = a.lastMessageAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+              final bd = b.lastMessageAt ?? DateTime.fromMillisecondsSinceEpoch(0);
               return bd.compareTo(ad);
             });
             return items;
@@ -169,14 +145,11 @@ class ChatService {
           .doc(threadId)
           .collection('messages')
           .orderBy('createdAt', descending: true)
-          .limit(100)
+          .limit(150)
           .snapshots()
-          .map(
-            (snapshot) => snapshot.docs
-                .map(ChatMessage.fromDocument)
-                .where((message) => !message.deleted)
-                .toList(growable: false),
-          );
+          .map((snapshot) => snapshot.docs
+              .map(ChatMessage.fromDocument)
+              .toList(growable: false));
     });
   }
 
@@ -184,6 +157,68 @@ class ChatService {
     final user = await _requiredUser();
     await _firestore.collection('chat_threads').doc(threadId).update({
       'lastReadAt.${user.uid}': FieldValue.serverTimestamp(),
+    });
+  }
+
+  Future<void> setTyping(String threadId, bool typing) async {
+    final user = await _requiredUser();
+    final ref = _firestore.collection('chat_threads').doc(threadId);
+    await ref.update({
+      'typingAt.${user.uid}': typing
+          ? FieldValue.serverTimestamp()
+          : FieldValue.delete(),
+    });
+  }
+
+  Future<void> setPresence(bool online) async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+    await _firestore.collection('users').doc(user.uid).set({
+      'isOnline': online,
+      'lastSeenAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  }
+
+  Future<void> toggleReaction({
+    required String threadId,
+    required String messageId,
+    required String emoji,
+  }) async {
+    final user = await _requiredUser();
+    final ref = _firestore
+        .collection('chat_threads')
+        .doc(threadId)
+        .collection('messages')
+        .doc(messageId);
+    final doc = await ref.get();
+    if (!doc.exists || doc.data()?['deleted'] == true) return;
+    final reactions = doc.data()?['reactions'];
+    final current = reactions is Map ? reactions[user.uid]?.toString() : null;
+    await ref.update({
+      'reactions.${user.uid}': current == emoji ? FieldValue.delete() : emoji,
+    });
+  }
+
+  Future<void> deleteForEveryone({
+    required String threadId,
+    required String messageId,
+  }) async {
+    final user = await _requiredUser();
+    final ref = _firestore
+        .collection('chat_threads')
+        .doc(threadId)
+        .collection('messages')
+        .doc(messageId);
+    final doc = await ref.get();
+    if (!doc.exists) return;
+    if ((doc.data()?['senderId'] ?? '').toString() != user.uid) {
+      throw Exception('Sadece kendi mesajını geri alabilirsin.');
+    }
+    await ref.update({
+      'deleted': true,
+      'deletedAt': FieldValue.serverTimestamp(),
+      'text': 'Mesaj geri alındı',
+      'mediaUrl': null,
     });
   }
 
@@ -196,18 +231,11 @@ class ChatService {
     final user = await _requiredUser();
     final clean = text.trim();
     if (clean.isEmpty) return;
-    if (clean.length > 1500) {
-      throw Exception('Mesaj en fazla 1500 karakter olabilir.');
-    }
-    if (otherUserId == user.uid) {
-      throw Exception('Kendine mesaj gönderemezsin.');
-    }
-
-    final expectedThreadId = directThreadId(user.uid, otherUserId);
-    if (threadId != expectedThreadId) {
+    if (clean.length > 1500) throw Exception('Mesaj en fazla 1500 karakter olabilir.');
+    if (otherUserId == user.uid) throw Exception('Kendine mesaj gönderemezsin.');
+    if (threadId != directThreadId(user.uid, otherUserId)) {
       throw Exception('Geçersiz sohbet kimliği.');
     }
-
     ContentModerationService.instance.enforce(clean);
     if (await isBlockedBetween(otherUserId)) {
       throw Exception('Bu kullanıcıyla mesajlaşma kullanılamıyor.');
@@ -237,7 +265,6 @@ class ChatService {
     if (await isBlockedBetween(otherUserId)) {
       throw Exception('Bu kullanıcıyla mesajlaşma kullanılamıyor.');
     }
-
     final messageRef = _firestore
         .collection('chat_threads')
         .doc(threadId)
@@ -246,14 +273,13 @@ class ChatService {
     final ext = contentType.contains('png')
         ? 'png'
         : contentType.contains('webp')
-        ? 'webp'
-        : 'jpg';
+            ? 'webp'
+            : 'jpg';
     final storageRef = _storage.ref(
       'users/${user.uid}/chat/$threadId/${messageRef.id}.$ext',
     );
     await storageRef.putData(bytes, SettableMetadata(contentType: contentType));
     final mediaUrl = await storageRef.getDownloadURL();
-
     await _sendPreparedMessage(
       threadId: threadId,
       otherUserId: otherUserId,
@@ -265,6 +291,31 @@ class ChatService {
     );
   }
 
+  Future<void> sendSharedContent({
+    required String threadId,
+    required String otherUserId,
+    required String sharedType,
+    required String sharedId,
+    required String title,
+    String? imageUrl,
+  }) async {
+    final label = sharedType == 'event'
+        ? '📅 Etkinlik'
+        : sharedType == 'reel'
+            ? '▶️ Reels'
+            : '📷 Gönderi';
+    await _sendPreparedMessage(
+      threadId: threadId,
+      otherUserId: otherUserId,
+      text: '$label • $title',
+      type: 'share',
+      sharedType: sharedType,
+      sharedId: sharedId,
+      sharedTitle: title,
+      sharedImageUrl: imageUrl,
+    );
+  }
+
   Future<void> _sendPreparedMessage({
     required String threadId,
     required String otherUserId,
@@ -273,12 +324,15 @@ class ChatService {
     String? mediaUrl,
     ChatMessage? replyTo,
     DocumentReference<Map<String, dynamic>>? forcedMessageRef,
+    String? sharedType,
+    String? sharedId,
+    String? sharedTitle,
+    String? sharedImageUrl,
   }) async {
     final user = await _requiredUser();
     final threadRef = _firestore.collection('chat_threads').doc(threadId);
     final thread = await threadRef.get();
-    final members =
-        (thread.data()?['memberIds'] as List?)
+    final members = (thread.data()?['memberIds'] as List?)
             ?.map((e) => e.toString())
             .toList() ??
         const <String>[];
@@ -288,8 +342,7 @@ class ChatService {
       throw Exception('Bu sohbete erişimin yok.');
     }
 
-    final messageRef =
-        forcedMessageRef ?? threadRef.collection('messages').doc();
+    final messageRef = forcedMessageRef ?? threadRef.collection('messages').doc();
     final batch = _firestore.batch();
     batch.set(messageRef, {
       'senderId': user.uid,
@@ -301,6 +354,11 @@ class ChatService {
           ? null
           : (replyTo.isImage ? '📷 Fotoğraf' : replyTo.text),
       'replySenderId': replyTo?.senderId,
+      'sharedType': sharedType,
+      'sharedId': sharedId,
+      'sharedTitle': sharedTitle,
+      'sharedImageUrl': sharedImageUrl,
+      'reactions': <String, String>{},
       'createdAt': FieldValue.serverTimestamp(),
       'deleted': false,
     });
@@ -309,6 +367,7 @@ class ChatService {
       'lastSenderId': user.uid,
       'lastMessageAt': FieldValue.serverTimestamp(),
       'lastReadAt': {user.uid: FieldValue.serverTimestamp()},
+      'typingAt': {user.uid: FieldValue.delete()},
       'updatedAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
     await batch.commit();
@@ -318,7 +377,9 @@ class ChatService {
         : 'Bir kullanıcı';
     final preview = type == 'image'
         ? 'Sana bir fotoğraf gönderdi'
-        : (text.length > 90 ? '${text.substring(0, 90)}…' : text);
+        : type == 'share'
+            ? 'Seninle bir içerik paylaştı'
+            : (text.length > 90 ? '${text.substring(0, 90)}…' : text);
     try {
       await AppNotificationService.instance.notifyUser(
         userId: otherUserId,
@@ -328,9 +389,7 @@ class ChatService {
         sourceId: threadId,
         actorId: user.uid,
       );
-    } catch (_) {
-      // Mesaj gönderildiyse bildirim yazma hatası sohbeti bozmaz.
-    }
+    } catch (_) {}
   }
 
   Future<void> blockUser(String otherUserId) async {
@@ -341,10 +400,7 @@ class ChatService {
         .doc(user.uid)
         .collection('blocked')
         .doc(otherUserId)
-        .set({
-          'userId': otherUserId,
-          'createdAt': FieldValue.serverTimestamp(),
-        });
+        .set({'userId': otherUserId, 'createdAt': FieldValue.serverTimestamp()});
   }
 
   Future<void> unblockUser(String otherUserId) async {
@@ -363,9 +419,7 @@ class ChatService {
     String? threadId,
   }) async {
     final user = await _requiredUser();
-    if (otherUserId == user.uid) {
-      throw Exception('Kendini raporlayamazsın.');
-    }
+    if (otherUserId == user.uid) throw Exception('Kendini raporlayamazsın.');
     await _firestore.collection('user_reports').add({
       'reporterId': user.uid,
       'reportedUserId': otherUserId,
