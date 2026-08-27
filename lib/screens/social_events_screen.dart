@@ -502,10 +502,7 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
                                   sharedId: event.id,
                                   title: event.title,
                                 ),
-                                icon: const Icon(
-                                  Icons.send_outlined,
-                                  size: 19,
-                                ),
+                                icon: const Icon(Icons.send_outlined, size: 19),
                               ),
                               Text(
                                 '${event.participantCount}/${event.capacity}',

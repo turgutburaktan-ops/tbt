@@ -243,9 +243,7 @@ class _HomeFeedHubState extends State<_HomeFeedHub> {
     if (notification is ScrollUpdateNotification) {
       final delta = notification.scrollDelta ?? 0;
       if (delta < -2 && pixels < 220) {
-        next = pixels < 34
-            ? _HomeChromeMode.full
-            : _HomeChromeMode.quick;
+        next = pixels < 34 ? _HomeChromeMode.full : _HomeChromeMode.quick;
       }
     } else if (notification is OverscrollNotification &&
         notification.overscroll < 0) {
