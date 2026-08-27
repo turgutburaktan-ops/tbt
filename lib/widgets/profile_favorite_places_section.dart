@@ -12,6 +12,7 @@ import '../data/curated_photo_spots_regions.dart';
 import '../data/curated_photo_spots_verified_expansion.dart';
 import '../models/nearby_venue.dart';
 import '../models/photo_spot.dart';
+import '../screens/retention_hub_screen.dart';
 import '../screens/rewards_hub_screen.dart';
 import '../services/location_service.dart';
 import '../services/nationwide_candidate_spot_resolver.dart';
@@ -42,13 +43,28 @@ class ProfileFavoritePlacesSection extends StatelessWidget {
     return 'Gezgin';
   }
 
+  int _nextLevelXp(int xp) {
+    if (xp < 200) return 200;
+    if (xp < 600) return 600;
+    if (xp < 1500) return 1500;
+    if (xp < 3000) return 3000;
+    if (xp < 6000) return 6000;
+    return 6000;
+  }
+
+  int _levelFloor(int xp) {
+    if (xp >= 6000) return 6000;
+    if (xp >= 3000) return 3000;
+    if (xp >= 1500) return 1500;
+    if (xp >= 600) return 600;
+    if (xp >= 200) return 200;
+    return 0;
+  }
+
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-      stream: FirebaseFirestore.instance
-          .collection('users')
-          .doc(userId)
-          .snapshots(),
+      stream: FirebaseFirestore.instance.collection('users').doc(userId).snapshots(),
       builder: (context, snapshot) {
         final profile = snapshot.data?.data() ?? const <String, dynamic>{};
         final raw = profile['favoritePlaces'];
@@ -57,80 +73,24 @@ class ProfileFavoritePlacesSection extends StatelessWidget {
             : <String, dynamic>{};
         final hasAny = _types.any((type) => favorites[type.key] is Map);
         final xp = (profile['xp'] as num?)?.toInt() ?? 0;
-        final level = _levelName(xp);
+
         if (!editable && !hasAny && xp <= 0) return const SizedBox.shrink();
+
         return Padding(
           padding: const EdgeInsets.fromLTRB(16, 6, 16, 10),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               if (editable || xp > 0) ...[
-                InkWell(
-                  borderRadius: BorderRadius.circular(16),
-                  onTap: editable
-                      ? () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const RewardsHubScreen(),
-                          ),
-                        )
-                      : null,
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF13161C),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: const Color(0xFF2C3240)),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 42,
-                          height: 42,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFB8A1FF)
-                                .withValues(alpha: .12),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.workspace_premium_rounded,
-                            color: Color(0xFFB8A1FF),
-                          ),
-                        ),
-                        const SizedBox(width: 9),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                level,
-                                style: const TextStyle(
-                                  fontSize: 15.5,
-                                  fontWeight: FontWeight.w900,
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                editable
-                                    ? '$xp XP • Görevler, seviyeler ve rozetler'
-                                    : '$xp XP',
-                                style: const TextStyle(
-                                  color: Colors.white54,
-                                  fontSize: 10.5,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        if (editable)
-                          const Icon(
-                            Icons.chevron_right_rounded,
-                            color: Colors.white38,
-                          ),
-                      ],
-                    ),
-                  ),
+                _ProgressCard(
+                  profile: profile,
+                  userId: userId,
+                  xp: xp,
+                  level: _levelName(xp),
+                  nextLevelXp: _nextLevelXp(xp),
+                  levelFloor: _levelFloor(xp),
+                  favoritesReady: hasAny,
+                  editable: editable,
                 ),
                 const SizedBox(height: 14),
               ],
@@ -140,10 +100,7 @@ class ProfileFavoritePlacesSection extends StatelessWidget {
                     const Expanded(
                       child: Text(
                         'Favori Mekanlarım',
-                        style: TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w900,
-                        ),
+                        style: TextStyle(fontSize: 17, fontWeight: FontWeight.w900),
                       ),
                     ),
                     if (editable)
@@ -157,42 +114,27 @@ class ProfileFavoritePlacesSection extends StatelessWidget {
                 Row(
                   children: _types.map((type) {
                     final value = favorites[type.key];
-                    final data = value is Map
-                        ? Map<String, dynamic>.from(value)
-                        : null;
+                    final data = value is Map ? Map<String, dynamic>.from(value) : null;
                     final name = (data?['name'] ?? '').toString().trim();
-                    if (!editable && data == null) {
-                      return const SizedBox.shrink();
-                    }
+                    if (!editable && data == null) return const SizedBox.shrink();
                     return Expanded(
                       child: Padding(
-                        padding: EdgeInsets.only(
-                          right: type == _types.last ? 0 : 6,
-                        ),
+                        padding: EdgeInsets.only(right: type == _types.last ? 0 : 6),
                         child: InkWell(
                           borderRadius: BorderRadius.circular(14),
                           onTap: editable ? () => _pick(context, type) : null,
                           child: Container(
                             height: 86,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 9,
-                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 9),
                             decoration: BoxDecoration(
                               color: const Color(0xFF11141A),
                               borderRadius: BorderRadius.circular(14),
-                              border: Border.all(
-                                color: const Color(0xFF292E38),
-                              ),
+                              border: Border.all(color: const Color(0xFF292E38)),
                             ),
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Icon(
-                                  type.icon,
-                                  size: 22,
-                                  color: const Color(0xFFB8A1FF),
-                                ),
+                                Icon(type.icon, size: 22, color: const Color(0xFFB8A1FF)),
                                 const SizedBox(height: 6),
                                 Text(
                                   type.label,
@@ -213,9 +155,7 @@ class ProfileFavoritePlacesSection extends StatelessWidget {
                                   style: TextStyle(
                                     fontSize: 10.5,
                                     fontWeight: FontWeight.w900,
-                                    color: name.isEmpty
-                                        ? Colors.white38
-                                        : Colors.white,
+                                    color: name.isEmpty ? Colors.white38 : Colors.white,
                                   ),
                                 ),
                               ],
@@ -270,6 +210,175 @@ class ProfileFavoritePlacesSection extends StatelessWidget {
   }
 }
 
+class _ProgressCard extends StatelessWidget {
+  final Map<String, dynamic> profile;
+  final String userId;
+  final int xp;
+  final String level;
+  final int nextLevelXp;
+  final int levelFloor;
+  final bool favoritesReady;
+  final bool editable;
+
+  const _ProgressCard({
+    required this.profile,
+    required this.userId,
+    required this.xp,
+    required this.level,
+    required this.nextLevelXp,
+    required this.levelFloor,
+    required this.favoritesReady,
+    required this.editable,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    final isSelf = currentUser?.uid == userId;
+    final settings = profile['settings'] is Map
+        ? Map<String, dynamic>.from(profile['settings'] as Map)
+        : const <String, dynamic>{};
+    final interests = settings['interests'] is List ? settings['interests'] as List : const [];
+    final displayName = (profile['displayName'] ?? '').toString().trim();
+    final bio = (profile['bio'] ?? '').toString().trim();
+    final photo = (profile['photoUrl'] ?? currentUser?.photoURL ?? '').toString().trim();
+    final profileReady = displayName.length >= 2 && (bio.isNotEmpty || photo.isNotEmpty);
+    final phoneReady = isSelf && (currentUser?.phoneNumber ?? '').isNotEmpty;
+    final emailReady = isSelf && (currentUser?.emailVerified ?? false);
+    final completed = [
+      profileReady,
+      interests.isNotEmpty,
+      favoritesReady,
+      phoneReady,
+      emailReady,
+    ].where((value) => value).length;
+
+    final target = nextLevelXp == levelFloor ? 1 : nextLevelXp - levelFloor;
+    final progress = nextLevelXp == levelFloor
+        ? 1.0
+        : ((xp - levelFloor) / target).clamp(0.0, 1.0).toDouble();
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFF13161C),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFF2C3240)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFB8A1FF).withValues(alpha: .12),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.workspace_premium_rounded, color: Color(0xFFB8A1FF)),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(level, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900)),
+                    const SizedBox(height: 2),
+                    Text('$xp XP • Başlangıç $completed/5', style: const TextStyle(color: Colors.white54, fontSize: 11)),
+                  ],
+                ),
+              ),
+              if (editable)
+                IconButton(
+                  tooltip: 'Görevler ve ödüller',
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const RewardsHubScreen()),
+                  ),
+                  icon: const Icon(Icons.chevron_right_rounded, color: Colors.white54),
+                ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: LinearProgressIndicator(value: progress, minHeight: 7),
+          ),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              if (profileReady) const _Badge(icon: Icons.person_rounded, label: 'Profil Hazır'),
+              if (favoritesReady) const _Badge(icon: Icons.place_rounded, label: 'Mekan Kaşifi'),
+              if (interests.isNotEmpty) const _Badge(icon: Icons.auto_awesome_rounded, label: 'İlgi Alanları'),
+              if (emailReady) const _Badge(icon: Icons.verified_outlined, label: 'E-posta Doğrulandı'),
+              if (phoneReady) const _Badge(icon: Icons.phone_iphone_rounded, label: 'Telefon Doğrulandı'),
+              if (profile['badges'] is Map && (profile['badges'] as Map)['first1000'] == true)
+                const _Badge(icon: Icons.emoji_events_rounded, label: 'TBT İlk 1000'),
+            ],
+          ),
+          if (editable) ...[
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const RewardsHubScreen()),
+                    ),
+                    icon: const Icon(Icons.task_alt_rounded, size: 18),
+                    label: const Text('Görevler'),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const RetentionHubScreen()),
+                    ),
+                    icon: const Icon(Icons.local_fire_department_rounded, size: 18),
+                    label: const Text('Bugün TBT'),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _Badge extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  const _Badge({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+    decoration: BoxDecoration(
+      color: Colors.white.withValues(alpha: .05),
+      borderRadius: BorderRadius.circular(20),
+      border: Border.all(color: Colors.white10),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 13, color: const Color(0xFFB8A1FF)),
+        const SizedBox(width: 4),
+        Text(label, style: const TextStyle(fontSize: 9.5, fontWeight: FontWeight.w800)),
+      ],
+    ),
+  );
+}
+
 class _FavoritePlacePicker extends StatefulWidget {
   final _FavoriteType type;
   const _FavoritePlacePicker({required this.type});
@@ -280,6 +389,7 @@ class _FavoritePlacePicker extends StatefulWidget {
 class _FavoritePlacePickerState extends State<_FavoritePlacePicker> {
   final _search = TextEditingController();
   late Future<List<_PlaceChoice>> _future;
+
   @override
   void initState() {
     super.initState();
@@ -310,29 +420,20 @@ class _FavoritePlacePickerState extends State<_FavoritePlacePicker> {
           byId[spot.id] = spot;
         }
       }
-      final spots = NationwideCandidateSpotResolver.mergeInto(
-        byId.values.toList(),
-      );
+      final spots = NationwideCandidateSpotResolver.mergeInto(byId.values.toList());
       return spots
-          .map(
-            (spot) => _PlaceChoice(
-              id: spot.id,
-              name: spot.name,
-              subtitle: spot.city,
-              source: 'photo_spots',
-            ),
-          )
+          .map((spot) => _PlaceChoice(id: spot.id, name: spot.name, subtitle: spot.city, source: 'photo_spots'))
           .toList()
         ..sort((a, b) => a.name.compareTo(b.name));
     }
+
     final category = widget.type.key == 'cafe'
         ? NearbyVenueCategory.cafe
         : NearbyVenueCategory.dining;
-    double latitude = 39, longitude = 35;
+    double latitude = 39;
+    double longitude = 35;
     try {
-      final position = await LocationService.getCurrentPosition().timeout(
-        const Duration(seconds: 8),
-      );
+      final position = await LocationService.getCurrentPosition().timeout(const Duration(seconds: 8));
       if (position != null) {
         latitude = position.latitude;
         longitude = position.longitude;
@@ -342,18 +443,17 @@ class _FavoritePlacePickerState extends State<_FavoritePlacePicker> {
     } catch (_) {
       if (!NearbyVenueService.instance.hasSelectedCity) rethrow;
     }
+
     final venues = await NearbyVenueService.instance
         .nearby(category: category, latitude: latitude, longitude: longitude)
         .timeout(const Duration(seconds: 12));
     return venues
-        .map(
-          (v) => _PlaceChoice(
-            id: '${v.category.name}:${v.id}',
-            name: v.name,
-            subtitle: v.address,
-            source: 'nearby_venues',
-          ),
-        )
+        .map((v) => _PlaceChoice(
+              id: '${v.category.name}:${v.id}',
+              name: v.name,
+              subtitle: v.address,
+              source: 'nearby_venues',
+            ))
         .toList()
       ..sort((a, b) => a.name.compareTo(b.name));
   }
@@ -366,8 +466,7 @@ class _FavoritePlacePickerState extends State<_FavoritePlacePicker> {
         title: Text('Favori ${widget.type.label}'),
         actions: [
           TextButton(
-            onPressed: () =>
-                Navigator.pop(context, const _PlaceChoice.remove()),
+            onPressed: () => Navigator.pop(context, const _PlaceChoice.remove()),
             child: const Text('Kaldır'),
           ),
         ],
@@ -396,10 +495,7 @@ class _FavoritePlacePickerState extends State<_FavoritePlacePicker> {
                       children: [
                         CircularProgressIndicator(strokeWidth: 2.5),
                         SizedBox(height: 12),
-                        Text(
-                          'Yakındaki mekanlar hazırlanıyor…',
-                          style: TextStyle(color: Colors.white54),
-                        ),
+                        Text('Yakındaki mekanlar hazırlanıyor…', style: TextStyle(color: Colors.white54)),
                       ],
                     ),
                   );
@@ -427,46 +523,29 @@ class _FavoritePlacePickerState extends State<_FavoritePlacePicker> {
                     ),
                   );
                 }
+
                 final q = _search.text.trim().toLowerCase();
                 final items = (snapshot.data ?? const <_PlaceChoice>[])
-                    .where(
-                      (i) =>
-                          q.isEmpty ||
-                          '${i.name} ${i.subtitle}'.toLowerCase().contains(q),
-                    )
+                    .where((i) => q.isEmpty || '${i.name} ${i.subtitle}'.toLowerCase().contains(q))
                     .toList();
                 if (items.isEmpty) {
                   return const Center(
-                    child: Text(
-                      'Bu kategoride eşleşen mekan yok.',
-                      style: TextStyle(color: Colors.white54),
-                    ),
+                    child: Text('Bu kategoride eşleşen mekan yok.', style: TextStyle(color: Colors.white54)),
                   );
                 }
+
                 return ListView.separated(
                   padding: const EdgeInsets.fromLTRB(12, 0, 12, 24),
                   itemCount: items.length,
-                  separatorBuilder: (_, __) =>
-                      const Divider(height: 1, color: Color(0xFF242831)),
+                  separatorBuilder: (_, __) => const Divider(height: 1, color: Color(0xFF242831)),
                   itemBuilder: (context, index) {
                     final item = items[index];
                     return ListTile(
-                      leading: Icon(
-                        widget.type.icon,
-                        color: const Color(0xFFB8A1FF),
-                      ),
-                      title: Text(
-                        item.name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                      leading: Icon(widget.type.icon, color: const Color(0xFFB8A1FF)),
+                      title: Text(item.name, maxLines: 1, overflow: TextOverflow.ellipsis),
                       subtitle: item.subtitle.isEmpty
                           ? null
-                          : Text(
-                              item.subtitle,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
+                          : Text(item.subtitle, maxLines: 1, overflow: TextOverflow.ellipsis),
                       trailing: const Icon(Icons.add_circle_outline_rounded),
                       onTap: () => Navigator.pop(context, item),
                     );
@@ -497,9 +576,9 @@ class _PlaceChoice {
     required this.source,
   }) : remove = false;
   const _PlaceChoice.remove()
-    : id = '',
-      name = '',
-      subtitle = '',
-      source = '',
-      remove = true;
+      : id = '',
+        name = '',
+        subtitle = '',
+        source = '',
+        remove = true;
 }
