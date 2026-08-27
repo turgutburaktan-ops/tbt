@@ -8,9 +8,15 @@ class AuthService {
 
   static final AuthService instance = AuthService._();
 
+  static const String _googleServerClientId = String.fromEnvironment(
+    'GOOGLE_SERVER_CLIENT_ID',
+  );
+
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final GoogleSignIn _googleSignIn = GoogleSignIn();
+  late final GoogleSignIn _googleSignIn = GoogleSignIn(
+    serverClientId: _googleServerClientId.isEmpty ? null : _googleServerClientId,
+  );
 
   User? get currentUser => _auth.currentUser;
   Stream<User?> get authStateChanges => _auth.authStateChanges();
@@ -53,11 +59,20 @@ class AuthService {
   }
 
   Future<UserCredential?> signInWithGoogle() async {
+    if (defaultTargetPlatform == TargetPlatform.android &&
+        _googleServerClientId.isEmpty) {
+      throw Exception(
+        'Google ile giriş yapılandırması eksik. Güncel TBT sürümünü kullanın.',
+      );
+    }
     try {
       try {
         final account = await _googleSignIn.signIn();
         if (account == null) return null;
         final authentication = await account.authentication;
+        if (authentication.idToken == null || authentication.idToken!.isEmpty) {
+          throw Exception('Google kimlik belirteci alınamadı.');
+        }
         final credential = GoogleAuthProvider.credential(
           accessToken: authentication.accessToken,
           idToken: authentication.idToken,
@@ -85,6 +100,7 @@ class AuthService {
           'Google ile giriş şu anda doğrulanamıyor. Uygulamayı güncelleyip tekrar deneyin.',
         );
       }
+      if (raw.contains('yapılandırması eksik')) rethrow;
       throw Exception('Google ile giriş tamamlanamadı. Lütfen tekrar deneyin.');
     }
   }
