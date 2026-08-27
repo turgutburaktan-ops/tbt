@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:ui';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -117,6 +118,24 @@ class _ChatVoiceRecordButtonState extends State<ChatVoiceRecordButton> {
     }
   }
 
+  Future<void> _cancelRecording() async {
+    if (!_recording || _finishing) return;
+    _ticker?.cancel();
+    try {
+      await _recorder.cancel();
+    } catch (e) {
+      widget.onError?.call(e);
+    } finally {
+      if (mounted) {
+        setState(() {
+          _recording = false;
+          _startedAt = null;
+          _elapsed = Duration.zero;
+        });
+      }
+    }
+  }
+
   @override
   void dispose() {
     _ticker?.cancel();
@@ -136,30 +155,37 @@ class _ChatVoiceRecordButtonState extends State<ChatVoiceRecordButton> {
     if (_recording) {
       return Container(
         height: 48,
-        padding: const EdgeInsets.only(left: 10, right: 3),
+        padding: const EdgeInsets.only(left: 2, right: 3),
         decoration: BoxDecoration(
-          color: const Color(0xFF2B171B),
+          color: const Color(0xFF211A36),
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: const Color(0x66FF5D6C)),
+          border: Border.all(color: const Color(0x806C5CE7)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
+            IconButton(
+              tooltip: 'Kaydı iptal et',
+              visualDensity: VisualDensity.compact,
+              onPressed: _finishing ? null : _cancelRecording,
+              icon: const Icon(Icons.close_rounded, color: Colors.white70),
+            ),
             const Icon(
               Icons.fiber_manual_record_rounded,
-              color: Color(0xFFFF5D6C),
-              size: 14,
+              color: Color(0xFFFF6375),
+              size: 13,
             ),
             const SizedBox(width: 5),
             Text(
               _durationLabel(_elapsed),
               style: const TextStyle(
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w900,
                 color: Colors.white,
+                fontFeatures: [FontFeature.tabularFigures()],
               ),
             ),
             IconButton(
-              tooltip: 'Kaydı gönder',
+              tooltip: 'Sesli mesajı gönder',
               onPressed: _finishing ? null : _stopAndSend,
               icon: _finishing
                   ? const SizedBox(
@@ -167,7 +193,7 @@ class _ChatVoiceRecordButtonState extends State<ChatVoiceRecordButton> {
                       height: 18,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Icon(Icons.send_rounded, color: Colors.white),
+                  : const Icon(Icons.arrow_upward_rounded, color: Colors.white),
             ),
           ],
         ),
@@ -177,8 +203,8 @@ class _ChatVoiceRecordButtonState extends State<ChatVoiceRecordButton> {
     return IconButton.filled(
       tooltip: 'Sesli mesaj',
       style: IconButton.styleFrom(
-        backgroundColor: const Color(0xFFD7DADF),
-        foregroundColor: Colors.black,
+        backgroundColor: const Color(0xFF6256D9),
+        foregroundColor: Colors.white,
       ),
       onPressed: widget.disabled || _finishing ? null : _start,
       icon: _finishing
