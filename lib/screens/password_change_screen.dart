@@ -73,10 +73,14 @@ class _PasswordChangeScreenState extends State<PasswordChangeScreen> {
             ),
           )
           .timeout(const Duration(seconds: 20));
-      await user.updatePassword(nextPassword).timeout(const Duration(seconds: 20));
+      await user
+          .updatePassword(nextPassword)
+          .timeout(const Duration(seconds: 20));
       success = true;
     } on TimeoutException {
-      _message('İşlem zaman aşımına uğradı. Bağlantını kontrol edip tekrar dene.');
+      _message(
+        'İşlem zaman aşımına uğradı. Bağlantını kontrol edip tekrar dene.',
+      );
     } on FirebaseAuthException catch (e) {
       _message(switch (e.code) {
         'wrong-password' || 'invalid-credential' => 'Mevcut şifre yanlış.',
@@ -109,7 +113,11 @@ class _PasswordChangeScreenState extends State<PasswordChangeScreen> {
           keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           padding: const EdgeInsets.fromLTRB(18, 20, 18, 32),
           children: [
-            const Icon(Icons.lock_reset_rounded, size: 48, color: AppColors.cyan),
+            const Icon(
+              Icons.lock_reset_rounded,
+              size: 48,
+              color: AppColors.cyan,
+            ),
             const SizedBox(height: 16),
             const Text(
               'Hesabını güvende tut',
