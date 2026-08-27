@@ -69,11 +69,11 @@ class ProfileFavoritePlacesSection extends StatelessWidget {
                   borderRadius: BorderRadius.circular(16),
                   onTap: editable
                       ? () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const RewardsHubScreen(),
-                            ),
-                          )
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const RewardsHubScreen(),
+                          ),
+                        )
                       : null,
                   child: Container(
                     width: double.infinity,
@@ -89,7 +89,8 @@ class ProfileFavoritePlacesSection extends StatelessWidget {
                           width: 42,
                           height: 42,
                           decoration: BoxDecoration(
-                            color: const Color(0xFFB8A1FF).withValues(alpha: .12),
+                            color: const Color(0xFFB8A1FF)
+                                .withValues(alpha: .12),
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(
@@ -97,7 +98,7 @@ class ProfileFavoritePlacesSection extends StatelessWidget {
                             color: Color(0xFFB8A1FF),
                           ),
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: 9),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -116,7 +117,7 @@ class ProfileFavoritePlacesSection extends StatelessWidget {
                                     : '$xp XP',
                                 style: const TextStyle(
                                   color: Colors.white54,
-                                  fontSize: 11.5,
+                                  fontSize: 10.5,
                                 ),
                               ),
                             ],
