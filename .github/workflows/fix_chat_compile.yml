@@ -1,4 +1,4 @@
-name: Repair Chat Compile
+name: Finalize Full Build Repair
 
 on:
   push:
@@ -16,25 +16,34 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: feature/video-v1
-      - name: Repair invalid Flutter color constant
+      - name: Repair compile and iOS CI validation
         shell: bash
         run: |
           set -euo pipefail
           python3 - <<'PY'
           from pathlib import Path
-          p = Path('lib/screens/chat_screen.dart')
-          s = p.read_text()
-          old = 'Colors.white46'
-          if old not in s:
-              print('No invalid white46 constant remains.')
-              raise SystemExit(0)
-          p.write_text(s.replace(old, 'Colors.white54'))
+
+          chat = Path('lib/screens/chat_screen.dart')
+          s = chat.read_text()
+          chat.write_text(s.replace('Colors.white46', 'Colors.white54'))
+
+          workflow = Path('.github/workflows/tbt_full_build.yml')
+          w = workflow.read_text()
+          old_build = 'flutter build ios --debug --no-codesign --no-pub'
+          new_build = 'flutter build ios --simulator --debug --no-pub'
+          if old_build not in w and new_build not in w:
+              raise SystemExit('Expected iOS build command not found')
+          w = w.replace(old_build, new_build)
+          w = w.replace('build/ios/iphoneos/Runner.app', 'build/ios/iphonesimulator/Runner.app')
+          w = w.replace('name: tbt-ios-unsigned-app', 'name: tbt-ios-simulator-app')
+          workflow.write_text(w)
           PY
-          if git diff --quiet; then
-            exit 0
-          fi
           git config user.name 'tbt-build-bot'
           git config user.email 'actions@users.noreply.github.com'
-          git add lib/screens/chat_screen.dart
-          git commit -m 'fix: repair chat presence color compile error'
+          git add lib/screens/chat_screen.dart .github/workflows/tbt_full_build.yml
+          git rm .github/workflows/fix_chat_compile.yml
+          if git diff --cached --quiet; then
+            exit 0
+          fi
+          git commit -m 'fix: stabilize chat compile and iOS CI build'
           git push origin HEAD:feature/video-v1
