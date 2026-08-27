@@ -47,9 +47,10 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
       'app-not-authorized' ||
       'captcha-check-failed' ||
       'missing-client-identifier' ||
-      'invalid-app-credential' =>
-        'Uygulama güvenlik sertifikası doğrulanamadı. TBT’yi güncelleyip tekrar dene.',
-      _ => error.message ?? (sending ? 'SMS gönderilemedi.' : 'Telefon doğrulanamadı.'),
+      'invalid-app-credential' => 'Uygulama güvenlik sertifikası doğrulanamadı. TBT’yi güncelleyip tekrar dene.',
+      _ =>
+        error.message ??
+            (sending ? 'SMS gönderilemedi.' : 'Telefon doğrulanamadı.'),
     };
   }
 
@@ -113,7 +114,9 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
       _message(_authError(error, sending: true));
       if (mounted) setState(() => _sending = false);
     } catch (_) {
-      _message('SMS gönderilemedi. İnternet bağlantını kontrol edip tekrar dene.');
+      _message(
+        'SMS gönderilemedi. İnternet bağlantını kontrol edip tekrar dene.',
+      );
       if (mounted) setState(() => _sending = false);
     }
   }
