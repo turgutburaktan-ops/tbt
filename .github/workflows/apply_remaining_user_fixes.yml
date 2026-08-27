@@ -1,0 +1,124 @@
+name: Apply Remaining Requested Fixes
+
+on:
+  push:
+    branches:
+      - feature/video-v1
+
+permissions:
+  contents: write
+
+jobs:
+  apply-fixes:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/video-v1
+          fetch-depth: 0
+      - name: Apply chat, sharing and home chrome fixes
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          def replace_required(path, old, new, count=1):
+              p = Path(path)
+              text = p.read_text()
+              if old not in text:
+                  raise SystemExit(f'Expected source block not found in {path}: {old[:100]!r}')
+              p.write_text(text.replace(old, new, count))
+
+          # 1) Chat: stop rebuilding the entire conversation on a periodic timer.
+          replace_required(
+              'lib/screens/chat_screen.dart',
+              '  Timer? _typingTimer;\n  Timer? _presenceRefreshTimer;\n',
+              '  Timer? _typingTimer;\n',
+          )
+          replace_required(
+              'lib/screens/chat_screen.dart',
+              "    Future.microtask(() => ChatService.instance.setPresence(true));\n    _presenceRefreshTimer = Timer.periodic(const Duration(seconds: 5), (_) {\n      if (mounted) setState(() {});\n    });\n",
+              "    Future.microtask(() => ChatService.instance.setPresence(true));\n",
+          )
+          replace_required(
+              'lib/screens/chat_screen.dart',
+              '    _typingTimer?.cancel();\n    _presenceRefreshTimer?.cancel();\n',
+              '    _typingTimer?.cancel();\n',
+          )
+          replace_required(
+              'lib/screens/chat_screen.dart',
+              "                          if (snapshot.connectionState ==\n                              ConnectionState.waiting) {\n",
+              "                          if (snapshot.connectionState ==\n                                  ConnectionState.waiting &&\n                              !snapshot.hasData) {\n",
+          )
+          replace_required(
+              'lib/screens/chat_screen.dart',
+              "                              return _messageBubble(\n                                message: message,\n                                mine: mine,\n                                seen: mine && _isSeen(message, thread),\n                                removed: removed,\n                                reactions: reactions,\n                              );\n",
+              "                              return KeyedSubtree(\n                                key: ValueKey('chat-message-${message.id}'),\n                                child: _messageBubble(\n                                  message: message,\n                                  mine: mine,\n                                  seen: mine && _isSeen(message, thread),\n                                  removed: removed,\n                                  reactions: reactions,\n                                ),\n                              );\n",
+          )
+
+          # 2) Shared-content labels: venue/spot messages should identify themselves correctly.
+          replace_required(
+              'lib/services/chat_service.dart',
+              "    final label = sharedType == 'event'\n        ? '📅 Etkinlik'\n        : sharedType == 'reel'\n        ? '▶️ Reels'\n        : '📷 Gönderi';\n",
+              "    final label = sharedType == 'event'\n        ? '📅 Etkinlik'\n        : sharedType == 'venue'\n        ? '📍 Mekan'\n        : sharedType == 'spot'\n        ? '📍 Çekim noktası'\n        : sharedType == 'reel'\n        ? '▶️ Reels'\n        : '📷 Gönderi';\n",
+          )
+
+          # 3) Event cards: add direct in-app message sharing.
+          replace_required(
+              'lib/screens/social_events_screen.dart',
+              "import '../widgets/content_engagement_bar.dart';\n",
+              "import '../widgets/chat_share_sheet.dart';\nimport '../widgets/content_engagement_bar.dart';\n",
+          )
+          replace_required(
+              'lib/screens/social_events_screen.dart',
+              "                              Text(\n                                '${event.participantCount}/${event.capacity}',\n                                style: const TextStyle(\n                                  fontWeight: FontWeight.w800,\n                                ),\n                              ),\n",
+              "                              IconButton(\n                                tooltip: 'Mesaj olarak gönder',\n                                onPressed: () => shareCardToChat(\n                                  context,\n                                  sharedType: 'event',\n                                  sharedId: event.id,\n                                  title: event.title,\n                                ),\n                                icon: const Icon(\n                                  Icons.send_outlined,\n                                  size: 19,\n                                ),\n                              ),\n                              Text(\n                                '${event.participantCount}/${event.capacity}',\n                                style: const TextStyle(\n                                  fontWeight: FontWeight.w800,\n                                ),\n                              ),\n",
+          )
+
+          # 4) Nearby venues: share any cafe/hotel/food venue as a chat card.
+          replace_required(
+              'lib/widgets/nearby_places_view.dart',
+              "import '../theme/app_theme.dart';\n",
+              "import '../theme/app_theme.dart';\nimport 'chat_share_sheet.dart';\n",
+          )
+          replace_required(
+              'lib/widgets/nearby_places_view.dart',
+              "                  IconButton(\n                    tooltip: 'Yol tarifi',\n                    onPressed: () => _directions(venue),\n                    icon: const Icon(\n                      Icons.directions_outlined,\n                      color: Colors.white54,\n                    ),\n                  ),\n",
+              "                  IconButton(\n                    tooltip: 'Mesaj olarak gönder',\n                    onPressed: () => shareCardToChat(\n                      context,\n                      sharedType: 'venue',\n                      sharedId: '${venue.latitude},${venue.longitude}',\n                      title: venue.name,\n                    ),\n                    icon: const Icon(\n                      Icons.send_outlined,\n                      color: Colors.white54,\n                    ),\n                  ),\n                  IconButton(\n                    tooltip: 'Yol tarifi',\n                    onPressed: () => _directions(venue),\n                    icon: const Icon(\n                      Icons.directions_outlined,\n                      color: Colors.white54,\n                    ),\n                  ),\n",
+          )
+
+          # 5) Home top chrome: move through full -> quick -> compact based on
+          # actual scroll distance instead of disappearing on the first tiny delta.
+          replace_required(
+              'lib/screens/home_shell_v3.dart',
+              "    if (pixels <= 4) {\n      next = _HomeChromeMode.full;\n    } else if (notification is ScrollUpdateNotification) {\n      final delta = notification.scrollDelta ?? 0;\n      if (delta > 1.5) {\n        next = _HomeChromeMode.compact;\n      } else if (delta < -1.5) {\n        next = _HomeChromeMode.quick;\n      }\n    } else if (notification is OverscrollNotification &&\n        notification.overscroll < 0) {\n      next = _HomeChromeMode.full;\n    }\n",
+              "    if (pixels <= 4) {\n      next = _HomeChromeMode.full;\n    } else if (pixels < 72) {\n      next = _HomeChromeMode.quick;\n    } else if (pixels < 150) {\n      next = _HomeChromeMode.quick;\n    } else {\n      next = _HomeChromeMode.compact;\n    }\n\n    if (notification is ScrollUpdateNotification) {\n      final delta = notification.scrollDelta ?? 0;\n      if (delta < -2 && pixels < 220) {\n        next = pixels < 34\n            ? _HomeChromeMode.full\n            : _HomeChromeMode.quick;\n      }\n    } else if (notification is OverscrollNotification &&\n        notification.overscroll < 0) {\n      next = _HomeChromeMode.full;\n    }\n",
+          )
+          replace_required(
+              'lib/screens/home_shell_v3.dart',
+              "      duration: const Duration(milliseconds: 190),\n      curve: Curves.easeOutCubic,\n",
+              "      duration: const Duration(milliseconds: 280),\n      curve: Curves.easeInOutCubic,\n",
+          )
+          replace_required(
+              'lib/screens/home_shell_v3.dart',
+              "              duration: const Duration(milliseconds: 150),\n",
+              "              duration: const Duration(milliseconds: 240),\n",
+          )
+
+          PY
+          git config user.name 'tbt-fix-bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add \
+            lib/screens/chat_screen.dart \
+            lib/services/chat_service.dart \
+            lib/screens/social_events_screen.dart \
+            lib/widgets/nearby_places_view.dart \
+            lib/screens/home_shell_v3.dart
+          git rm .github/workflows/apply_remaining_user_fixes.yml
+          if git diff --cached --quiet; then
+            exit 0
+          fi
+          git commit -m 'fix: finish chat sharing and smooth home interactions'
+          git push origin HEAD:feature/video-v1
