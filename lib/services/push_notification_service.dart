@@ -22,6 +22,8 @@ class PushNotificationService with WidgetsBindingObserver {
   final FirebaseMessaging _messaging = FirebaseMessaging.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final Set<String> _recentOpenedMessages = <String>{};
+
   StreamSubscription<String>? _tokenSub;
   StreamSubscription<User?>? _authSub;
   StreamSubscription<RemoteMessage>? _foregroundSub;
@@ -29,67 +31,118 @@ class PushNotificationService with WidgetsBindingObserver {
   GlobalKey<NavigatorState>? _navigatorKey;
   String? _lastSavedToken;
   DateTime? _lastActivityWrite;
+  Future<void>? _initializing;
+  bool _initialized = false;
+  bool _observerAdded = false;
 
-  Future<void> initialize(GlobalKey<NavigatorState> navigatorKey) async {
+  Future<void> initialize(GlobalKey<NavigatorState> navigatorKey) {
     _navigatorKey = navigatorKey;
-    WidgetsBinding.instance.addObserver(this);
-    FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
-    await _messaging.setAutoInitEnabled(true);
-    final settings = await _messaging.requestPermission(
-      alert: true,
-      badge: true,
-      sound: true,
-    );
-    if (settings.authorizationStatus == AuthorizationStatus.denied) return;
+    if (_initialized) return Future.value();
+    final running = _initializing;
+    if (running != null) return running;
 
-    _authSub?.cancel();
-    _authSub = _auth.authStateChanges().listen((user) async {
+    final request = _initializeInternal(navigatorKey);
+    _initializing = request;
+    return request.whenComplete(() {
+      if (identical(_initializing, request)) _initializing = null;
+    });
+  }
+
+  Future<void> _initializeInternal(
+    GlobalKey<NavigatorState> navigatorKey,
+  ) async {
+    if (!_observerAdded) {
+      WidgetsBinding.instance.addObserver(this);
+      _observerAdded = true;
+    }
+    FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+
+    await _messaging
+        .setAutoInitEnabled(true)
+        .timeout(const Duration(seconds: 4));
+    final settings = await _messaging
+        .requestPermission(alert: true, badge: true, sound: true)
+        .timeout(const Duration(seconds: 8));
+    if (settings.authorizationStatus == AuthorizationStatus.denied) {
+      _initialized = true;
+      return;
+    }
+
+    await _authSub?.cancel();
+    _authSub = _auth.authStateChanges().listen((user) {
       if (user == null) {
         _lastSavedToken = null;
         _lastActivityWrite = null;
         return;
       }
-      await _markActive(force: true);
-      await _saveCurrentToken();
+      unawaited(_refreshRegistration());
     });
-    _tokenSub?.cancel();
-    _tokenSub = _messaging.onTokenRefresh.listen(_saveToken);
-    _foregroundSub?.cancel();
-    _foregroundSub = FirebaseMessaging.onMessage.listen((message) {
-      final context = navigatorKey.currentContext;
-      if (context == null) return;
-      final title = message.notification?.title ?? 'Yeni bildirim';
-      final body = message.notification?.body ?? '';
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(body.isEmpty ? title : '$title\n$body'),
-          action: message.data.isEmpty
-              ? null
-              : SnackBarAction(
-                  label: 'Aç',
-                  onPressed: () => _openMessage(message),
-                ),
-        ),
-      );
-    });
-    _openedSub?.cancel();
-    _openedSub = FirebaseMessaging.onMessageOpenedApp.listen(_openMessage);
-    final initial = await _messaging.getInitialMessage();
-    if (initial != null) {
-      WidgetsBinding.instance.addPostFrameCallback(
-        (_) => _openMessage(initial),
-      );
-    }
+
+    await _tokenSub?.cancel();
+    _tokenSub = _messaging.onTokenRefresh.listen(
+      (token) => unawaited(_saveToken(token)),
+      onError: (_) {},
+      cancelOnError: false,
+    );
+
+    await _foregroundSub?.cancel();
+    _foregroundSub = FirebaseMessaging.onMessage.listen(
+      (message) {
+        final context = navigatorKey.currentContext;
+        if (context == null) return;
+        final title = message.notification?.title ?? 'Yeni bildirim';
+        final body = message.notification?.body ?? '';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(body.isEmpty ? title : '$title\n$body'),
+            action: message.data.isEmpty
+                ? null
+                : SnackBarAction(
+                    label: 'Aç',
+                    onPressed: () => unawaited(_openMessage(message)),
+                  ),
+          ),
+        );
+      },
+      onError: (_) {},
+      cancelOnError: false,
+    );
+
+    await _openedSub?.cancel();
+    _openedSub = FirebaseMessaging.onMessageOpenedApp.listen(
+      (message) => unawaited(_openMessage(message)),
+      onError: (_) {},
+      cancelOnError: false,
+    );
+
+    try {
+      final initial = await _messaging
+          .getInitialMessage()
+          .timeout(const Duration(seconds: 4));
+      if (initial != null) {
+        WidgetsBinding.instance.addPostFrameCallback(
+          (_) => unawaited(_openMessage(initial)),
+        );
+      }
+    } catch (_) {}
+
     if (_auth.currentUser != null) {
-      await _markActive(force: true);
-      await _saveCurrentToken();
+      await _refreshRegistration();
     }
+    _initialized = true;
+  }
+
+  Future<void> _refreshRegistration() async {
+    await Future.wait<void>([
+      _markActive(force: true),
+      _saveCurrentToken(),
+    ]);
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      _markActive();
+      unawaited(_markActive());
     }
   }
 
@@ -102,20 +155,24 @@ class PushNotificationService with WidgetsBindingObserver {
         now.difference(_lastActivityWrite!) < const Duration(minutes: 15)) {
       return;
     }
-    _lastActivityWrite = now;
     try {
       await _firestore.collection('users').doc(user.uid).set({
         'lastActiveAt': FieldValue.serverTimestamp(),
         'lastActivePlatform': _platformName,
-      }, SetOptions(merge: true));
+      }, SetOptions(merge: true)).timeout(const Duration(seconds: 4));
+      _lastActivityWrite = now;
     } catch (_) {
-      // Activity tracking must never block app startup or foregrounding.
+      // Activity tracking must never block the app.
     }
   }
 
   Future<void> _saveCurrentToken() async {
-    final token = await _messaging.getToken();
-    if (token != null && token.isNotEmpty) await _saveToken(token);
+    try {
+      final token = await _messaging.getToken().timeout(
+        const Duration(seconds: 5),
+      );
+      if (token != null && token.isNotEmpty) await _saveToken(token);
+    } catch (_) {}
   }
 
   String get _platformName {
@@ -132,30 +189,56 @@ class PushNotificationService with WidgetsBindingObserver {
   Future<void> _saveToken(String token) async {
     final user = _auth.currentUser;
     if (user == null || token.isEmpty || token == _lastSavedToken) return;
-    _lastSavedToken = token;
-    await _firestore
-        .collection('users')
-        .doc(user.uid)
-        .collection('push_tokens')
-        .doc(token)
-        .set({
-          'token': token,
-          'platform': _platformName,
-          'updatedAt': FieldValue.serverTimestamp(),
-        }, SetOptions(merge: true));
-    await _markActive(force: true);
+    try {
+      await _firestore
+          .collection('users')
+          .doc(user.uid)
+          .collection('push_tokens')
+          .doc(token)
+          .set({
+            'token': token,
+            'platform': _platformName,
+            'updatedAt': FieldValue.serverTimestamp(),
+          }, SetOptions(merge: true))
+          .timeout(const Duration(seconds: 5));
+      _lastSavedToken = token;
+      await _markActive(force: true);
+    } catch (_) {
+      // Keep _lastSavedToken unchanged so the next resume/auth event retries.
+    }
   }
 
   Future<Map<String, dynamic>> _profile(String userId) async {
     if (userId.isEmpty) return const <String, dynamic>{};
-    final doc = await _firestore.collection('users').doc(userId).get();
-    return doc.data() ?? const <String, dynamic>{};
+    try {
+      final doc = await _firestore
+          .collection('users')
+          .doc(userId)
+          .get()
+          .timeout(const Duration(seconds: 4));
+      return doc.data() ?? const <String, dynamic>{};
+    } catch (_) {
+      return const <String, dynamic>{};
+    }
+  }
+
+  bool _claimOpen(RemoteMessage message) {
+    final key = message.messageId ??
+        '${message.data['type']}|${message.data['sourceId']}|${message.data['actorId']}|${message.data['eventId']}';
+    if (_recentOpenedMessages.contains(key)) return false;
+    _recentOpenedMessages.add(key);
+    Future<void>.delayed(
+      const Duration(seconds: 3),
+      () => _recentOpenedMessages.remove(key),
+    );
+    return true;
   }
 
   Future<void> _openMessage(RemoteMessage message) async {
+    if (!_claimOpen(message)) return;
     final navigator = _navigatorKey?.currentState;
     if (navigator == null) return;
-    await _markActive(force: true);
+    unawaited(_markActive(force: true));
 
     final type = (message.data['type'] ?? '').toString().trim();
     final sourceId = (message.data['sourceId'] ?? '').toString().trim();
@@ -192,15 +275,21 @@ class PushNotificationService with WidgetsBindingObserver {
       return;
     }
     if (type.startsWith('post_') && sourceId.isNotEmpty) {
-      final doc = await _firestore.collection('posts').doc(sourceId).get();
-      if (doc.exists) {
-        navigator.push(
-          MaterialPageRoute(
-            builder: (_) =>
-                PostDetailScreen(post: {...?doc.data(), 'id': doc.id}),
-          ),
-        );
-      }
+      try {
+        final doc = await _firestore
+            .collection('posts')
+            .doc(sourceId)
+            .get()
+            .timeout(const Duration(seconds: 4));
+        if (doc.exists) {
+          navigator.push(
+            MaterialPageRoute(
+              builder: (_) =>
+                  PostDetailScreen(post: {...?doc.data(), 'id': doc.id}),
+            ),
+          );
+        }
+      } catch (_) {}
       return;
     }
     if ((type == 'follow' || type.startsWith('story_')) && actorId.isNotEmpty) {
@@ -215,10 +304,21 @@ class PushNotificationService with WidgetsBindingObserver {
   }
 
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
+    if (_observerAdded) {
+      WidgetsBinding.instance.removeObserver(this);
+      _observerAdded = false;
+    }
     _tokenSub?.cancel();
     _authSub?.cancel();
     _foregroundSub?.cancel();
     _openedSub?.cancel();
+    _tokenSub = null;
+    _authSub = null;
+    _foregroundSub = null;
+    _openedSub = null;
+    _navigatorKey = null;
+    _initialized = false;
+    _initializing = null;
+    _recentOpenedMessages.clear();
   }
 }
