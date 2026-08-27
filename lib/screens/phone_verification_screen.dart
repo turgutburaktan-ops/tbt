@@ -38,6 +38,21 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
       ..showSnackBar(SnackBar(content: Text(text)));
   }
 
+  String _authError(FirebaseAuthException error, {bool sending = false}) {
+    return switch (error.code) {
+      'invalid-phone-number' => 'Telefon numarası geçersiz.',
+      'too-many-requests' =>
+        'Çok fazla deneme yapıldı. Bir süre sonra tekrar dene.',
+      'quota-exceeded' => 'SMS kotası geçici olarak dolu.',
+      'app-not-authorized' ||
+      'captcha-check-failed' ||
+      'missing-client-identifier' ||
+      'invalid-app-credential' =>
+        'Uygulama güvenlik sertifikası doğrulanamadı. TBT’yi güncelleyip tekrar dene.',
+      _ => error.message ?? (sending ? 'SMS gönderilemedi.' : 'Telefon doğrulanamadı.'),
+    };
+  }
+
   String _normalize(String raw) {
     var value = raw.replaceAll(RegExp(r'[^0-9+]'), '');
     if (value.startsWith('0')) value = '+90${value.substring(1)}';
@@ -66,6 +81,7 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
       _message('Geçerli bir telefon numarası gir.');
       return;
     }
+    FocusScope.of(context).unfocus();
     setState(() => _sending = true);
     try {
       await FirebaseAuth.instance.verifyPhoneNumber(
@@ -75,13 +91,7 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
           await _applyCredential(credential);
         },
         verificationFailed: (error) {
-          _message(switch (error.code) {
-            'invalid-phone-number' => 'Telefon numarası geçersiz.',
-            'too-many-requests' =>
-              'Çok fazla deneme yapıldı. Bir süre sonra tekrar dene.',
-            'quota-exceeded' => 'SMS kotası geçici olarak dolu.',
-            _ => error.message ?? 'SMS gönderilemedi.',
-          });
+          _message(_authError(error, sending: true));
           if (mounted) setState(() => _sending = false);
         },
         codeSent: (verificationId, resendToken) {
@@ -100,7 +110,10 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
         timeout: const Duration(seconds: 60),
       );
     } on FirebaseAuthException catch (error) {
-      _message(error.message ?? 'SMS gönderilemedi.');
+      _message(_authError(error, sending: true));
+      if (mounted) setState(() => _sending = false);
+    } catch (_) {
+      _message('SMS gönderilemedi. İnternet bağlantını kontrol edip tekrar dene.');
       if (mounted) setState(() => _sending = false);
     }
   }
@@ -128,7 +141,7 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
       _message(switch (error.code) {
         'invalid-verification-code' => 'SMS kodu yanlış.',
         'session-expired' => 'Kodun süresi doldu. Yeni kod iste.',
-        _ => error.message ?? 'Telefon doğrulanamadı.',
+        _ => _authError(error),
       });
     } finally {
       if (mounted) setState(() => _verifying = false);
@@ -157,7 +170,7 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
         'provider-already-linked' => 'Bu hesaba zaten bir telefon bağlı.',
         'requires-recent-login' =>
           'Güvenlik için tekrar giriş yapıp yeniden dene.',
-        _ => error.message ?? 'Telefon hesaba bağlanamadı.',
+        _ => _authError(error),
       });
     }
   }
@@ -170,6 +183,7 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
       appBar: AppBar(title: const Text('Telefonu Doğrula')),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(18, 18, 18, 32),
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
         children: [
           const Icon(
             Icons.phone_android_rounded,
@@ -191,6 +205,7 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
             controller: _phone,
             enabled: !sent,
             keyboardType: TextInputType.phone,
+            autofillHints: const [AutofillHints.telephoneNumber],
             decoration: const InputDecoration(
               labelText: 'Telefon numarası',
               hintText: '+90 5xx xxx xx xx',
@@ -214,6 +229,7 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
               controller: _code,
               autofocus: true,
               keyboardType: TextInputType.number,
+              autofillHints: const [AutofillHints.oneTimeCode],
               maxLength: 6,
               textAlign: TextAlign.center,
               style: const TextStyle(
@@ -251,6 +267,8 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
             ),
             TextButton(
               onPressed: () => setState(() {
+                _timer?.cancel();
+                _seconds = 0;
                 _verificationId = null;
                 _code.clear();
               }),
