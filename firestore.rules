@@ -296,8 +296,21 @@ service cloud.firestore {
     match /spot_meetups/{id} { allow read: if true; allow create: if signedIn() && request.resource.data.hostId == request.auth.uid && request.resource.data.participantIds.hasAny([request.auth.uid]); allow update: if signedIn() && (participantOnlyChange() || (resource.data.hostId == request.auth.uid && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','updatedAt']) && request.resource.data.status in ['open','cancelled'])); allow delete: if isAdmin(); }
     match /event_tickets/{id} {
       allow read: if signedIn() && (resource.data.userId == request.auth.uid || (exists(/databases/$(database)/documents/social_events/$(resource.data.eventId)) && get(/databases/$(database)/documents/social_events/$(resource.data.eventId)).data.hostId == request.auth.uid));
-      allow create: if signedIn() && request.resource.data.userId == request.auth.uid && exists(/databases/$(database)/documents/social_events/$(request.resource.data.eventId)) && request.resource.data.status in ['active','pendingPayment'] && ((get(/databases/$(database)/documents/social_events/$(request.resource.data.eventId)).data.accessType == 'free' && request.resource.data.status == 'active') || (get(/databases/$(database)/documents/social_events/$(request.resource.data.eventId)).data.accessType == 'paid' && request.resource.data.status == 'pendingPayment'));
-      allow update: if signedIn() && ((resource.data.userId == request.auth.uid && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','updatedAt']) && request.resource.data.status == 'cancelled') || (exists(/databases/$(database)/documents/social_events/$(resource.data.eventId)) && get(/databases/$(database)/documents/social_events/$(resource.data.eventId)).data.hostId == request.auth.uid && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','usedAt','updatedAt']) && request.resource.data.status == 'used'));
+      allow create: if signedIn() && request.resource.data.userId == request.auth.uid && exists(/databases/$(database)/documents/social_events/$(request.resource.data.eventId)) && request.resource.data.status in ['active','pendingPayment'] && ((get(/databases/$(database)/documents/social_events/$(request.resource.data.eventId)).data.get('accessType', 'free') == 'free' && request.resource.data.status == 'active') || (get(/databases/$(database)/documents/social_events/$(request.resource.data.eventId)).data.get('accessType', 'free') == 'paid' && request.resource.data.status == 'pendingPayment'));
+      allow update: if signedIn() && (
+        (resource.data.userId == request.auth.uid &&
+          request.resource.data.userId == resource.data.userId &&
+          request.resource.data.eventId == resource.data.eventId &&
+          request.resource.data.status in ['active','pendingPayment','cancelled'] &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['eventTitle','userName','status','isPaidEvent','priceMinor','currency','qrToken','issuedAt','usedAt','updatedAt']) &&
+          exists(/databases/$(database)/documents/social_events/$(resource.data.eventId)) &&
+          ((get(/databases/$(database)/documents/social_events/$(resource.data.eventId)).data.get('accessType', 'free') == 'free' && request.resource.data.status in ['active','cancelled']) ||
+           (get(/databases/$(database)/documents/social_events/$(resource.data.eventId)).data.get('accessType', 'free') == 'paid' && request.resource.data.status in ['pendingPayment','cancelled']))) ||
+        (exists(/databases/$(database)/documents/social_events/$(resource.data.eventId)) &&
+          get(/databases/$(database)/documents/social_events/$(resource.data.eventId)).data.hostId == request.auth.uid &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','usedAt','updatedAt']) &&
+          request.resource.data.status == 'used')
+      );
       allow delete: if isAdmin();
     }
     match /user_reports/{id} { allow read: if isAdmin(); allow create: if signedIn() && request.resource.data.reporterId == request.auth.uid && request.resource.data.reportedUserId is string && request.resource.data.reason is string && request.resource.data.reason.size() >= 3 && request.resource.data.reason.size() <= 500; allow update, delete: if isAdmin(); }
