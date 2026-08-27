@@ -5,6 +5,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 
+import 'auth_switch_stream.dart';
+
 class ProfileService {
   ProfileService._();
   static final ProfileService instance = ProfileService._();
@@ -14,13 +16,12 @@ class ProfileService {
   final FirebaseStorage _storage = FirebaseStorage.instance;
   Future<void>? _profileUpdateInFlight;
 
-  Stream<DocumentSnapshot<Map<String, dynamic>>> watchMine() {
-    return _auth.authStateChanges().asyncExpand((user) {
-      if (user == null) {
-        return const Stream<DocumentSnapshot<Map<String, dynamic>>>.empty();
-      }
-      return _firestore.collection('users').doc(user.uid).snapshots();
-    });
+  Stream<DocumentSnapshot<Map<String, dynamic>>?> watchMine() {
+    return switchAuthStream<DocumentSnapshot<Map<String, dynamic>>?>(
+      auth: _auth,
+      signedOutValue: null,
+      signedIn: (user) => _firestore.collection('users').doc(user.uid).snapshots(),
+    );
   }
 
   Future<void> updateProfile({
@@ -84,8 +85,6 @@ class ProfileService {
           .timeout(const Duration(seconds: 8));
     }
 
-    // Firestore is the profile source used by the app. Persist it first so a
-    // temporary Auth profile sync failure cannot make the UI look half-saved.
     await _firestore.collection('users').doc(user.uid).set({
       'uid': user.uid,
       'displayName': cleanName,
