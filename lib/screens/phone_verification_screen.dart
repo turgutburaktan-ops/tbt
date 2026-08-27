@@ -161,7 +161,9 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
     } on FirebaseAuthException catch (error) {
       if (error.code == 'session-expired') {
         _resetSession();
-        _message('Kodun süresi doldu. Yeni bir SMS kodu iste.');
+        _message(
+          'Kodun süresi doldu. Oturumu yeniledik; yeni bir SMS kodu iste.',
+        );
         return;
       }
       _message(
@@ -192,7 +194,9 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
     } on FirebaseAuthException catch (error) {
       if (error.code == 'session-expired') {
         _resetSession();
-        _message('Doğrulama oturumu sona erdi. Yeni kod iste.');
+        _message(
+          'Doğrulama oturumu sona erdi. Oturumu yeniledik; yeni kod iste.',
+        );
         return;
       }
       _message(switch (error.code) {

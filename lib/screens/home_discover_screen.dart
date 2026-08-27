@@ -158,7 +158,7 @@ class _HomeDiscoverScreenState extends State<HomeDiscoverScreen> {
             textInputAction: TextInputAction.search,
             onChanged: _onSearchChanged,
             decoration: InputDecoration(
-              hintText: 'Kişi, mekan, etkinlik veya içerik ara...',
+              hintText: 'Kişi, kullanıcı adı, mekan veya etkinlik ara...',
               prefixIcon: const Icon(Icons.search_rounded),
               suffixIcon: _query.isEmpty
                   ? null
@@ -210,7 +210,19 @@ class _HomeDiscoverScreenState extends State<HomeDiscoverScreen> {
             );
           }
           if (!snapshot.hasData) {
-            return const Center(child: CircularProgressIndicator());
+            return GridView.builder(
+              physics: const NeverScrollableScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(2, 0, 2, 20),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                mainAxisSpacing: 2,
+                crossAxisSpacing: 2,
+                childAspectRatio: .78,
+              ),
+              itemCount: 12,
+              itemBuilder: (_, __) =>
+                  const ColoredBox(color: Color(0xFF171A1F)),
+            );
           }
           final docs = [...snapshot.data!.docs]
             ..sort((a, b) {

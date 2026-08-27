@@ -97,7 +97,7 @@ class NearbyVenueService {
       });
       final r = await http
           .get(uri, headers: _headers)
-          .timeout(const Duration(seconds: 6));
+          .timeout(const Duration(seconds: 4));
       if (r.statusCode != 200) return null;
       final raw = jsonDecode(r.body);
       if (raw is! List || raw.isEmpty) return null;

@@ -56,7 +56,7 @@ class ProfileFavoritePlacesSection extends StatelessWidget {
                 children: [
                   const Expanded(
                     child: Text(
-                      'Favori Mekanlar',
+                      'Favori Mekanlarım',
                       style: TextStyle(
                         fontSize: 17,
                         fontWeight: FontWeight.w900,
@@ -97,18 +97,18 @@ class ProfileFavoritePlacesSection extends StatelessWidget {
                       child: Row(
                         children: [
                           Container(
-                            width: 42,
-                            height: 42,
+                            width: 36,
+                            height: 36,
                             decoration: BoxDecoration(
                               color: const Color(0xFF1A1F28),
-                              borderRadius: BorderRadius.circular(13),
+                              borderRadius: BorderRadius.circular(11),
                             ),
                             child: Icon(
                               type.icon,
                               color: const Color(0xFFB8A1FF),
                             ),
                           ),
-                          const SizedBox(width: 12),
+                          const SizedBox(width: 9),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -117,13 +117,13 @@ class ProfileFavoritePlacesSection extends StatelessWidget {
                                   type.label,
                                   style: const TextStyle(
                                     color: Colors.white54,
-                                    fontSize: 11.5,
+                                    fontSize: 10.5,
                                     fontWeight: FontWeight.w700,
                                   ),
                                 ),
                                 const SizedBox(height: 3),
                                 Text(
-                                  name.isEmpty ? 'Favorini seç' : name,
+                                  name.isEmpty ? 'Seç' : name,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: TextStyle(
