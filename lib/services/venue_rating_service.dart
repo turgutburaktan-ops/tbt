@@ -45,6 +45,10 @@ class VenueRatingService {
 
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final Map<String, _CachedVenueRating> _summaryCache = {};
+  final Map<String, Future<VenueRatingSummary>> _summaryInFlight = {};
+
+  static const Duration _summaryCacheLifetime = Duration(minutes: 5);
 
   String venueKey(String category, String venueId) {
     final raw = '${category}_$venueId';
@@ -82,16 +86,55 @@ class VenueRatingService {
     );
   }
 
-  Future<VenueRatingSummary> summary(String category, String venueId) async {
-    final snapshot = await _ratings(category, venueId).limit(1000).get();
-    return _summaryFromDocs(snapshot.docs);
+  Future<VenueRatingSummary> summary(String category, String venueId) {
+    final key = venueKey(category, venueId);
+    final cached = _summaryCache[key];
+    if (cached != null && !cached.isExpired) {
+      return Future.value(cached.value);
+    }
+
+    final running = _summaryInFlight[key];
+    if (running != null) return running;
+
+    final request = _loadSummary(category, venueId, key);
+    _summaryInFlight[key] = request;
+    return request.whenComplete(() {
+      if (identical(_summaryInFlight[key], request)) {
+        _summaryInFlight.remove(key);
+      }
+    });
+  }
+
+  Future<VenueRatingSummary> _loadSummary(
+    String category,
+    String venueId,
+    String key,
+  ) async {
+    try {
+      final snapshot = await _ratings(category, venueId)
+          .limit(1000)
+          .get()
+          .timeout(const Duration(seconds: 6));
+      final value = _summaryFromDocs(snapshot.docs);
+      _summaryCache[key] = _CachedVenueRating(value, DateTime.now());
+      return value;
+    } catch (_) {
+      final stale = _summaryCache[key];
+      if (stale != null) return stale.value;
+      rethrow;
+    }
   }
 
   Stream<VenueRatingSummary> watchSummary(String category, String venueId) =>
       _ratings(category, venueId)
           .limit(1000)
           .snapshots()
-          .map((snapshot) => _summaryFromDocs(snapshot.docs));
+          .map((snapshot) {
+            final value = _summaryFromDocs(snapshot.docs);
+            _summaryCache[venueKey(category, venueId)] =
+                _CachedVenueRating(value, DateTime.now());
+            return value;
+          });
 
   Stream<List<VenueReview>> watchReviews(
     String category,
@@ -193,6 +236,7 @@ class VenueRatingService {
       payload['comment'] = '';
     }
     await ratingRef.set(payload, SetOptions(merge: true));
+    _invalidateSummary(category, venueId);
   }
 
   Future<void> deleteMyReview({
@@ -202,6 +246,7 @@ class VenueRatingService {
     final user = _auth.currentUser;
     if (user == null) throw Exception('Giriş yapmalısın.');
     await _ratings(category, venueId).doc(user.uid).delete();
+    _invalidateSummary(category, venueId);
   }
 
   Future<void> toggleHelpful({
@@ -260,4 +305,20 @@ class VenueRatingService {
       'createdAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: false));
   }
+
+  void _invalidateSummary(String category, String venueId) {
+    final key = venueKey(category, venueId);
+    _summaryCache.remove(key);
+    _summaryInFlight.remove(key);
+  }
+}
+
+class _CachedVenueRating {
+  final VenueRatingSummary value;
+  final DateTime savedAt;
+
+  const _CachedVenueRating(this.value, this.savedAt);
+
+  bool get isExpired =>
+      DateTime.now().difference(savedAt) > VenueRatingService._summaryCacheLifetime;
 }
