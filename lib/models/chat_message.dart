@@ -9,6 +9,7 @@ class ChatThread {
   final String? sourceType;
   final String? sourceId;
   final Map<String, DateTime?> lastReadAt;
+  final Map<String, DateTime?> typingAt;
 
   const ChatThread({
     required this.id,
@@ -19,21 +20,23 @@ class ChatThread {
     this.sourceType,
     this.sourceId,
     this.lastReadAt = const <String, DateTime?>{},
+    this.typingAt = const <String, DateTime?>{},
   });
+
+  static Map<String, DateTime?> _timestampMap(dynamic raw) {
+    final result = <String, DateTime?>{};
+    if (raw is Map) {
+      for (final entry in raw.entries) {
+        final value = entry.value;
+        result[entry.key.toString()] = value is Timestamp ? value.toDate() : null;
+      }
+    }
+    return result;
+  }
 
   factory ChatThread.fromDocument(DocumentSnapshot<Map<String, dynamic>> doc) {
     final data = doc.data() ?? const <String, dynamic>{};
     final rawMembers = data['memberIds'];
-    final rawReadAt = data['lastReadAt'];
-    final readAt = <String, DateTime?>{};
-    if (rawReadAt is Map) {
-      for (final entry in rawReadAt.entries) {
-        final value = entry.value;
-        readAt[entry.key.toString()] = value is Timestamp
-            ? value.toDate()
-            : null;
-      }
-    }
     return ChatThread(
       id: doc.id,
       memberIds: rawMembers is List
@@ -44,7 +47,8 @@ class ChatThread {
       lastMessageAt: (data['lastMessageAt'] as Timestamp?)?.toDate(),
       sourceType: data['sourceType']?.toString(),
       sourceId: data['sourceId']?.toString(),
-      lastReadAt: readAt,
+      lastReadAt: _timestampMap(data['lastReadAt']),
+      typingAt: _timestampMap(data['typingAt']),
     );
   }
 }
@@ -60,6 +64,12 @@ class ChatMessage {
   final String? replySenderId;
   final DateTime? createdAt;
   final bool deleted;
+  final DateTime? deletedAt;
+  final Map<String, String> reactions;
+  final String? sharedType;
+  final String? sharedId;
+  final String? sharedTitle;
+  final String? sharedImageUrl;
 
   const ChatMessage({
     required this.id,
@@ -72,13 +82,29 @@ class ChatMessage {
     this.replySenderId,
     required this.createdAt,
     required this.deleted,
+    this.deletedAt,
+    this.reactions = const <String, String>{},
+    this.sharedType,
+    this.sharedId,
+    this.sharedTitle,
+    this.sharedImageUrl,
   });
 
   bool get isImage => type == 'image' && (mediaUrl?.isNotEmpty ?? false);
+  bool get isAudio => type == 'audio' && (mediaUrl?.isNotEmpty ?? false);
+  bool get isShare => type == 'share';
   bool get hasReply => (replyToId?.isNotEmpty ?? false);
 
   factory ChatMessage.fromDocument(DocumentSnapshot<Map<String, dynamic>> doc) {
     final data = doc.data() ?? const <String, dynamic>{};
+    final rawReactions = data['reactions'];
+    final reactions = <String, String>{};
+    if (rawReactions is Map) {
+      for (final entry in rawReactions.entries) {
+        final emoji = entry.value?.toString() ?? '';
+        if (emoji.isNotEmpty) reactions[entry.key.toString()] = emoji;
+      }
+    }
     return ChatMessage(
       id: doc.id,
       senderId: (data['senderId'] ?? '').toString(),
@@ -90,6 +116,12 @@ class ChatMessage {
       replySenderId: data['replySenderId']?.toString(),
       createdAt: (data['createdAt'] as Timestamp?)?.toDate(),
       deleted: data['deleted'] == true,
+      deletedAt: (data['deletedAt'] as Timestamp?)?.toDate(),
+      reactions: reactions,
+      sharedType: data['sharedType']?.toString(),
+      sharedId: data['sharedId']?.toString(),
+      sharedTitle: data['sharedTitle']?.toString(),
+      sharedImageUrl: data['sharedImageUrl']?.toString(),
     );
   }
 }
