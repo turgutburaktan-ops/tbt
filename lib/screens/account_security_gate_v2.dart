@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -29,14 +31,17 @@ class _AccountSecurityGateV2State extends State<AccountSecurityGateV2> {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
     try {
-      await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
-        'phoneVerificationDeferred': true,
-        'phoneVerificationDeferredAt': FieldValue.serverTimestamp(),
-        'updatedAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .set({
+            'phoneVerificationDeferred': true,
+            'phoneVerificationDeferredAt': FieldValue.serverTimestamp(),
+            'updatedAt': FieldValue.serverTimestamp(),
+          }, SetOptions(merge: true))
+          .timeout(const Duration(seconds: 7));
     } catch (_) {
-      // The session-level state still lets the user continue. They can verify
-      // later from Settings > Verification even if persistence is unavailable.
+      // Session state already lets the user continue; persistence is best effort.
     }
   }
 
@@ -69,18 +74,28 @@ class _EmailVerificationScreenState extends State<_EmailVerificationScreen> {
 
   Future<void> _sendAgain() async {
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null || user.email == null) return;
+    if (user == null || user.email == null || _busy) return;
     setState(() {
       _busy = true;
       _message = null;
     });
     try {
-      await user.sendEmailVerification();
-      if (mounted)
+      await user
+          .sendEmailVerification()
+          .timeout(const Duration(seconds: 12));
+      if (mounted) {
         setState(() => _message = 'Doğrulama e-postası yeniden gönderildi.');
+      }
     } on FirebaseAuthException catch (e) {
-      if (mounted)
+      if (mounted) {
         setState(() => _message = e.message ?? 'E-posta gönderilemedi.');
+      }
+    } on TimeoutException {
+      if (mounted) {
+        setState(() => _message = 'İşlem zaman aşımına uğradı. Tekrar dene.');
+      }
+    } catch (_) {
+      if (mounted) setState(() => _message = 'E-posta gönderilemedi.');
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -88,13 +103,13 @@ class _EmailVerificationScreenState extends State<_EmailVerificationScreen> {
 
   Future<void> _check() async {
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
+    if (user == null || _busy) return;
     setState(() {
       _busy = true;
       _message = null;
     });
     try {
-      await user.reload();
+      await user.reload().timeout(const Duration(seconds: 10));
       final refreshed = FirebaseAuth.instance.currentUser;
       if (refreshed?.emailVerified == true) {
         await FirebaseFirestore.instance
@@ -104,17 +119,30 @@ class _EmailVerificationScreenState extends State<_EmailVerificationScreen> {
               'emailVerified': true,
               'emailVerifiedAt': FieldValue.serverTimestamp(),
               'updatedAt': FieldValue.serverTimestamp(),
-            }, SetOptions(merge: true));
-        if (mounted)
+            }, SetOptions(merge: true))
+            .timeout(const Duration(seconds: 7));
+        if (mounted) {
           setState(
             () => _message =
                 'E-posta doğrulandı. Telefon doğrulamasına geçiliyor.',
           );
+        }
       } else if (mounted) {
         setState(
-          () => _message = 'E-posta henüz doğrulanmamış. Gelen kutunu ve spam klasörünü kontrol et.',
+          () => _message =
+              'E-posta henüz doğrulanmamış. Gelen kutunu ve spam klasörünü kontrol et.',
         );
       }
+    } on TimeoutException {
+      if (mounted) {
+        setState(() => _message = 'Kontrol zaman aşımına uğradı. Tekrar dene.');
+      }
+    } on FirebaseAuthException catch (e) {
+      if (mounted) {
+        setState(() => _message = e.message ?? 'Doğrulama kontrol edilemedi.');
+      }
+    } catch (_) {
+      if (mounted) setState(() => _message = 'Doğrulama kontrol edilemedi.');
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -159,7 +187,13 @@ class _EmailVerificationScreenState extends State<_EmailVerificationScreen> {
             const SizedBox(height: 24),
             FilledButton.icon(
               onPressed: _busy ? null : _check,
-              icon: const Icon(Icons.verified_outlined),
+              icon: _busy
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.verified_outlined),
               label: const Text('Doğruladım, kontrol et'),
             ),
             TextButton(
@@ -196,12 +230,30 @@ class _PhoneVerificationScreenState extends State<_PhoneVerificationScreen> {
   String? _verificationId;
   bool _busy = false;
   String? _error;
+  Timer? _busyGuard;
 
   @override
   void dispose() {
+    _busyGuard?.cancel();
     _phone.dispose();
     _code.dispose();
     super.dispose();
+  }
+
+  void _armBusyGuard() {
+    _busyGuard?.cancel();
+    _busyGuard = Timer(const Duration(seconds: 65), () {
+      if (!mounted || !_busy) return;
+      setState(() {
+        _busy = false;
+        _error = 'SMS işlemi zaman aşımına uğradı. Tekrar deneyebilirsin.';
+      });
+    });
+  }
+
+  void _finishBusy() {
+    _busyGuard?.cancel();
+    if (mounted && _busy) setState(() => _busy = false);
   }
 
   Future<void> _sendCode() async {
@@ -212,43 +264,71 @@ class _PhoneVerificationScreenState extends State<_PhoneVerificationScreen> {
       );
       return;
     }
+    if (_busy) return;
     setState(() {
       _busy = true;
       _error = null;
     });
-    await FirebaseAuth.instance.verifyPhoneNumber(
-      phoneNumber: phone,
-      timeout: const Duration(seconds: 60),
-      verificationCompleted: (credential) =>
-          _finishVerification(credential, phone),
-      verificationFailed: (e) {
-        if (mounted)
-          setState(() {
-            _busy = false;
-            _error =
-                '${e.message ?? 'SMS gönderilemedi.'} (Firebase kodu: ${e.code})';
-          });
-      },
-      codeSent: (id, _) {
-        if (mounted)
-          setState(() {
-            _verificationId = id;
-            _busy = false;
-          });
-      },
-      codeAutoRetrievalTimeout: (id) {
-        if (mounted)
-          setState(() {
-            _verificationId = id;
-            _busy = false;
-          });
-      },
-    );
+    _armBusyGuard();
+    try {
+      await FirebaseAuth.instance.verifyPhoneNumber(
+        phoneNumber: phone,
+        timeout: const Duration(seconds: 60),
+        verificationCompleted: (credential) {
+          _busyGuard?.cancel();
+          unawaited(_finishVerification(credential, phone));
+        },
+        verificationFailed: (e) {
+          _busyGuard?.cancel();
+          if (mounted) {
+            setState(() {
+              _busy = false;
+              _error =
+                  '${e.message ?? 'SMS gönderilemedi.'} (Firebase kodu: ${e.code})';
+            });
+          }
+        },
+        codeSent: (id, _) {
+          _busyGuard?.cancel();
+          if (mounted) {
+            setState(() {
+              _verificationId = id;
+              _busy = false;
+            });
+          }
+        },
+        codeAutoRetrievalTimeout: (id) {
+          _busyGuard?.cancel();
+          if (mounted) {
+            setState(() {
+              _verificationId = id;
+              _busy = false;
+            });
+          }
+        },
+      );
+    } on FirebaseAuthException catch (e) {
+      _busyGuard?.cancel();
+      if (mounted) {
+        setState(() {
+          _busy = false;
+          _error = e.message ?? 'SMS doğrulaması başlatılamadı.';
+        });
+      }
+    } catch (_) {
+      _busyGuard?.cancel();
+      if (mounted) {
+        setState(() {
+          _busy = false;
+          _error = 'SMS doğrulaması başlatılamadı. Tekrar dene.';
+        });
+      }
+    }
   }
 
   Future<void> _confirmCode() async {
     final id = _verificationId;
-    if (id == null || _code.text.trim().length < 4) return;
+    if (id == null || _code.text.trim().length < 4 || _busy) return;
     await _finishVerification(
       PhoneAuthProvider.credential(
         verificationId: id,
@@ -264,35 +344,53 @@ class _PhoneVerificationScreenState extends State<_PhoneVerificationScreen> {
   ) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
-    setState(() {
-      _busy = true;
-      _error = null;
-    });
+    if (mounted) {
+      setState(() {
+        _busy = true;
+        _error = null;
+      });
+    }
+    _armBusyGuard();
     try {
       final linked = user.providerData.any(
         (p) => p.providerId == PhoneAuthProvider.PROVIDER_ID,
       );
       if (linked) {
-        await user.reauthenticateWithCredential(credential);
+        await user
+            .reauthenticateWithCredential(credential)
+            .timeout(const Duration(seconds: 15));
       } else {
-        await user.linkWithCredential(credential);
+        await user
+            .linkWithCredential(credential)
+            .timeout(const Duration(seconds: 15));
       }
-      await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
-        'phoneNumber': phone,
-        'phoneVerified': true,
-        'phoneVerifiedAt': FieldValue.serverTimestamp(),
-        'phoneVerificationDeferred': false,
-        'updatedAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
-      if (mounted) setState(() => _busy = false);
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .set({
+            'phoneNumber': phone,
+            'phoneVerified': true,
+            'phoneVerifiedAt': FieldValue.serverTimestamp(),
+            'phoneVerificationDeferred': false,
+            'updatedAt': FieldValue.serverTimestamp(),
+          }, SetOptions(merge: true))
+          .timeout(const Duration(seconds: 8));
     } on FirebaseAuthException catch (e) {
-      if (mounted)
+      if (mounted) {
         setState(() {
-          _busy = false;
           _error = e.code == 'credential-already-in-use'
               ? 'Bu telefon numarası başka bir hesapta kullanılıyor.'
               : '${e.message ?? 'Telefon doğrulanamadı.'} (Firebase kodu: ${e.code})';
         });
+      }
+    } on TimeoutException {
+      if (mounted) {
+        setState(() => _error = 'Doğrulama zaman aşımına uğradı. Tekrar dene.');
+      }
+    } catch (_) {
+      if (mounted) setState(() => _error = 'Telefon doğrulanamadı. Tekrar dene.');
+    } finally {
+      _finishBusy();
     }
   }
 
