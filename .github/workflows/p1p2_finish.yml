@@ -1,0 +1,75 @@
+name: Apply remaining P1 P2 UX fixes
+
+on:
+  push:
+    paths:
+      - '.github/workflows/p1p2_finish.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Apply P1 P2 fixes
+        shell: python
+        run: |
+          from pathlib import Path
+
+          def replace_once(path, old, new):
+              p = Path(path)
+              text = p.read_text()
+              if old not in text:
+                  raise SystemExit(f'Expected block not found in {path}')
+              p.write_text(text.replace(old, new, 1))
+
+          # P2: Messages already has a global entry in the home header; remove duplicate profile-menu entry.
+          replace_once(
+              'lib/screens/profile_page_v2.dart',
+              """      case 'messages':\n        if (mounted) Navigator.pushNamed(context, '/messages');\n        return;\n""",
+              """""",
+          )
+          replace_once(
+              'lib/screens/profile_page_v2.dart',
+              """                              PopupMenuItem(\n                                value: 'messages',\n                                child: ListTile(\n                                  leading:\n                                      Icon(Icons.chat_bubble_outline_rounded),\n                                  title: Text('Mesajlar'),\n                                ),\n                              ),\n""",
+              """""",
+          )
+
+          # P1: Make Buradayim / Bulusalim explicit at the top of Radar.
+          replace_once(
+              'lib/screens/radar_screen.dart',
+              """                      _summaryCard(demands, events),\n                      const SizedBox(height: 25),\n""",
+              """                      _summaryCard(demands, events),\n                      const SizedBox(height: 14),\n                      Row(\n                        children: [\n                          Expanded(\n                            child: FilledButton.icon(\n                              onPressed: () => _openActivity('Buradayım'),\n                              icon: const Icon(Icons.my_location_rounded),\n                              label: const Text('Buradayım'),\n                            ),\n                          ),\n                          const SizedBox(width: 10),\n                          Expanded(\n                            child: OutlinedButton.icon(\n                              onPressed: () => _openActivity('Buluşalım'),\n                              icon: const Icon(Icons.group_add_outlined),\n                              label: const Text('Buluşalım'),\n                            ),\n                          ),\n                        ],\n                      ),\n                      const Padding(\n                        padding: EdgeInsets.only(top: 7),\n                        child: Text(\n                          'Konumun açık adres olarak paylaşılmaz; yalnızca seçtiğin şehir ve aktivite görünür.',\n                          style: TextStyle(color: Colors.white38, fontSize: 10.5, height: 1.3),\n                        ),\n                      ),\n                      const SizedBox(height: 25),\n""",
+          )
+
+          # P1: Use the venue image when available; retain a polished category placeholder otherwise.
+          replace_once(
+              'lib/widgets/nearby_places_view.dart',
+              """                Container(\n              width: 46,\n              height: 46,\n              decoration: BoxDecoration(\n                borderRadius: BorderRadius.circular(14),\n                gradient: LinearGradient(\n                  colors: [\n                    const Color(0xFF42F5E9).withValues(alpha: .22),\n                    const Color(0xFF8B5CF6).withValues(alpha: .22),\n                  ],\n                ),\n              ),\n              child: Icon(_icon, color: const Color(0xFF42F5E9)),\n            ),\n""",
+              """                ClipRRect(\n                  borderRadius: BorderRadius.circular(14),\n                  child: SizedBox(\n                    width: 64,\n                    height: 64,\n                    child: venue.imageUrl.trim().isNotEmpty\n                        ? Image.network(\n                            venue.imageUrl,\n                            fit: BoxFit.cover,\n                            errorBuilder: (_, __, ___) => _venuePlaceholder(),\n                          )\n                        : _venuePlaceholder(),\n                  ),\n                ),\n""",
+          )
+          replace_once(
+              'lib/widgets/nearby_places_view.dart',
+              """  @override\n  Widget build(BuildContext context) => Container(\n""",
+              """  Widget _venuePlaceholder() => Container(\n        decoration: BoxDecoration(\n          gradient: LinearGradient(\n            colors: [\n              const Color(0xFF42F5E9).withValues(alpha: .18),\n              const Color(0xFF8B5CF6).withValues(alpha: .18),\n            ],\n          ),\n        ),\n        child: Center(\n          child: Icon(_icon, color: const Color(0xFFB7BCC2), size: 27),\n        ),\n      );\n\n  @override\n  Widget build(BuildContext context) => Container(\n""",
+          )
+          replace_once(
+              'lib/widgets/nearby_places_view.dart',
+              """                  if (venue.openingHours.isNotEmpty) ...[\n""",
+              """                  if (venue.cuisine.isNotEmpty) ...[\n                    const SizedBox(height: 4),\n                    Text(\n                      venue.cuisine,\n                      maxLines: 1,\n                      overflow: TextOverflow.ellipsis,\n                      style: const TextStyle(color: Colors.white54, fontSize: 10.5),\n                    ),\n                  ],\n                  if (venue.openingHours.isNotEmpty) ...[\n""",
+          )
+      - name: Commit changes
+        run: |
+          git config user.name "tbt-fix-bot"
+          git config user.email "actions@github.com"
+          git add lib/screens/profile_page_v2.dart lib/screens/radar_screen.dart lib/widgets/nearby_places_view.dart
+          if git diff --cached --quiet; then
+            echo "No changes"
+          else
+            git commit -m "feat: complete P1 P2 venue radar profile UX"
+            git push origin HEAD:main
+          fi
