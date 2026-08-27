@@ -69,13 +69,15 @@ class ChatService {
           .doc(me)
           .collection('blocked')
           .doc(otherUserId)
-          .get(),
+          .get()
+          .timeout(const Duration(seconds: 5)),
       _firestore
           .collection('users')
           .doc(otherUserId)
           .collection('blocked')
           .doc(me)
-          .get(),
+          .get()
+          .timeout(const Duration(seconds: 5)),
     ]);
     return refs.any((doc) => doc.exists);
   }
@@ -95,7 +97,7 @@ class ChatService {
 
     final id = directThreadId(user.uid, otherUserId);
     final ref = _firestore.collection('chat_threads').doc(id);
-    final existing = await ref.get();
+    final existing = await ref.get().timeout(const Duration(seconds: 6));
     if (existing.exists) {
       final data = existing.data() ?? const <String, dynamic>{};
       final members = (data['memberIds'] as List? ?? const <dynamic>[])
@@ -110,25 +112,37 @@ class ChatService {
       return id;
     }
 
-    // Keep initial thread creation deliberately minimal. Extra UX metadata is
-    // best-effort so a rules/version mismatch can never block core messaging.
     await ref.set({
       'type': 'direct',
       'memberIds': [user.uid, otherUserId],
       'createdAt': FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
-    });
+    }).timeout(const Duration(seconds: 8));
+    unawaited(_initializeThreadMetadata(
+      ref: ref,
+      userId: user.uid,
+      sourceType: sourceType,
+      sourceId: sourceId,
+    ));
+    return id;
+  }
+
+  Future<void> _initializeThreadMetadata({
+    required DocumentReference<Map<String, dynamic>> ref,
+    required String userId,
+    String? sourceType,
+    String? sourceId,
+  }) async {
     try {
       await ref.set({
         'sourceType': sourceType,
         'sourceId': sourceId,
-        'lastReadAt': {user.uid: FieldValue.serverTimestamp()},
+        'lastReadAt': {userId: FieldValue.serverTimestamp()},
         'typingAt': <String, dynamic>{},
         'messageReactions': <String, dynamic>{},
         'deletedMessageIds': <String>[],
-      }, SetOptions(merge: true));
+      }, SetOptions(merge: true)).timeout(const Duration(seconds: 6));
     } catch (_) {}
-    return id;
   }
 
   Stream<List<ChatThread>> myThreads() {
@@ -183,7 +197,7 @@ class ChatService {
     try {
       await _firestore.collection('chat_threads').doc(threadId).update({
         'lastReadAt.${user.uid}': FieldValue.serverTimestamp(),
-      });
+      }).timeout(const Duration(seconds: 5));
     } catch (_) {}
   }
 
@@ -194,7 +208,7 @@ class ChatService {
         'typingAt.${user.uid}': typing
             ? FieldValue.serverTimestamp()
             : FieldValue.delete(),
-      });
+      }).timeout(const Duration(seconds: 5));
     } catch (_) {}
   }
 
@@ -205,7 +219,7 @@ class ChatService {
       await _firestore.collection('users').doc(user.uid).set({
         'isOnline': online,
         'lastSeenAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
+      }, SetOptions(merge: true)).timeout(const Duration(seconds: 5));
     } catch (_) {}
   }
 
@@ -216,7 +230,7 @@ class ChatService {
   }) async {
     final user = await _requiredUser();
     final threadRef = _firestore.collection('chat_threads').doc(threadId);
-    final thread = await threadRef.get();
+    final thread = await threadRef.get().timeout(const Duration(seconds: 6));
     final data = thread.data() ?? const <String, dynamic>{};
     final members = (data['memberIds'] as List? ?? const <dynamic>[])
         .map((e) => e.toString())
@@ -237,7 +251,7 @@ class ChatService {
       'messageReactions.$messageId.${user.uid}': current == emoji
           ? FieldValue.delete()
           : emoji,
-    });
+    }).timeout(const Duration(seconds: 6));
   }
 
   Future<void> deleteForEveryone({
@@ -250,7 +264,8 @@ class ChatService {
         .doc(threadId)
         .collection('messages')
         .doc(messageId)
-        .get();
+        .get()
+        .timeout(const Duration(seconds: 6));
     if (!message.exists) return;
     if ((message.data()?['senderId'] ?? '').toString() != user.uid) {
       throw Exception('Sadece kendi mesajını geri alabilirsin.');
@@ -258,7 +273,7 @@ class ChatService {
     await _firestore.collection('chat_threads').doc(threadId).update({
       'deletedMessageIds': FieldValue.arrayUnion([messageId]),
       'messageReactions.$messageId': FieldValue.delete(),
-    });
+    }).timeout(const Duration(seconds: 6));
   }
 
   Future<void> sendMessage({
@@ -321,17 +336,26 @@ class ChatService {
     final storageRef = _storage.ref(
       'users/${user.uid}/chat/$threadId/${messageRef.id}.$ext',
     );
-    await storageRef.putData(bytes, SettableMetadata(contentType: contentType));
-    final mediaUrl = await storageRef.getDownloadURL();
-    await _sendPreparedMessage(
-      threadId: threadId,
-      otherUserId: otherUserId,
-      text: '📷 Fotoğraf',
-      type: 'image',
-      mediaUrl: mediaUrl,
-      replyTo: replyTo,
-      forcedMessageRef: messageRef,
-    );
+    try {
+      await storageRef
+          .putData(bytes, SettableMetadata(contentType: contentType))
+          .timeout(const Duration(seconds: 25));
+      final mediaUrl = await storageRef
+          .getDownloadURL()
+          .timeout(const Duration(seconds: 8));
+      await _sendPreparedMessage(
+        threadId: threadId,
+        otherUserId: otherUserId,
+        text: '📷 Fotoğraf',
+        type: 'image',
+        mediaUrl: mediaUrl,
+        replyTo: replyTo,
+        forcedMessageRef: messageRef,
+      );
+    } catch (error) {
+      unawaited(_deleteStorageQuietly(storageRef));
+      rethrow;
+    }
   }
 
   Future<void> sendAudioMessage({
@@ -357,18 +381,33 @@ class ChatService {
     final storageRef = _storage.ref(
       'users/${user.uid}/chat/$threadId/${messageRef.id}.m4a',
     );
-    await storageRef.putData(bytes, SettableMetadata(contentType: 'audio/mp4'));
-    final mediaUrl = await storageRef.getDownloadURL();
-    await _sendPreparedMessage(
-      threadId: threadId,
-      otherUserId: otherUserId,
-      text: '🎙️ Sesli mesaj',
-      type: 'audio',
-      mediaUrl: mediaUrl,
-      durationMs: durationMs,
-      replyTo: replyTo,
-      forcedMessageRef: messageRef,
-    );
+    try {
+      await storageRef
+          .putData(bytes, SettableMetadata(contentType: 'audio/mp4'))
+          .timeout(const Duration(seconds: 30));
+      final mediaUrl = await storageRef
+          .getDownloadURL()
+          .timeout(const Duration(seconds: 8));
+      await _sendPreparedMessage(
+        threadId: threadId,
+        otherUserId: otherUserId,
+        text: '🎙️ Sesli mesaj',
+        type: 'audio',
+        mediaUrl: mediaUrl,
+        durationMs: durationMs,
+        replyTo: replyTo,
+        forcedMessageRef: messageRef,
+      );
+    } catch (error) {
+      unawaited(_deleteStorageQuietly(storageRef));
+      rethrow;
+    }
+  }
+
+  Future<void> _deleteStorageQuietly(Reference ref) async {
+    try {
+      await ref.delete().timeout(const Duration(seconds: 5));
+    } catch (_) {}
   }
 
   Future<void> sendSharedContent({
@@ -416,7 +455,7 @@ class ChatService {
   }) async {
     final user = await _requiredUser();
     final threadRef = _firestore.collection('chat_threads').doc(threadId);
-    final thread = await threadRef.get();
+    final thread = await threadRef.get().timeout(const Duration(seconds: 6));
     final members =
         (thread.data()?['memberIds'] as List?)
             ?.map((e) => e.toString())
@@ -453,27 +492,44 @@ class ChatService {
       'deleted': false,
     };
 
-    // Core reliability rule: message creation must not be coupled to optional
-    // thread metadata. If the metadata rule is stale, the DM still sends.
-    await messageRef.set(messageData);
+    await messageRef.set(messageData).timeout(const Duration(seconds: 8));
 
     final lastMessage = type == 'image'
         ? '📷 Fotoğraf'
         : type == 'audio'
         ? '🎙️ Sesli mesaj'
         : text;
+    unawaited(_afterMessageSent(
+      threadRef: threadRef,
+      threadId: threadId,
+      otherUserId: otherUserId,
+      user: user,
+      lastMessage: lastMessage,
+      type: type,
+      text: text,
+    ));
+  }
+
+  Future<void> _afterMessageSent({
+    required DocumentReference<Map<String, dynamic>> threadRef,
+    required String threadId,
+    required String otherUserId,
+    required User user,
+    required String lastMessage,
+    required String type,
+    required String text,
+  }) async {
     try {
       await threadRef.set({
         'lastMessage': lastMessage,
         'lastSenderId': user.uid,
         'lastMessageAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
+      }, SetOptions(merge: true)).timeout(const Duration(seconds: 6));
     } catch (_) {}
-    try {
-      await markThreadRead(threadId);
-      await setTyping(threadId, false);
-    } catch (_) {}
+
+    unawaited(markThreadRead(threadId));
+    unawaited(setTyping(threadId, false));
 
     final senderName = (user.displayName ?? '').trim().isNotEmpty
         ? user.displayName!.trim()
@@ -493,7 +549,7 @@ class ChatService {
         body: preview,
         sourceId: threadId,
         actorId: user.uid,
-      );
+      ).timeout(const Duration(seconds: 6));
     } catch (_) {}
   }
 
@@ -508,7 +564,8 @@ class ChatService {
         .set({
           'userId': otherUserId,
           'createdAt': FieldValue.serverTimestamp(),
-        });
+        })
+        .timeout(const Duration(seconds: 8));
   }
 
   Future<void> unblockUser(String otherUserId) async {
@@ -518,7 +575,8 @@ class ChatService {
         .doc(user.uid)
         .collection('blocked')
         .doc(otherUserId)
-        .delete();
+        .delete()
+        .timeout(const Duration(seconds: 8));
   }
 
   Future<void> reportUser({
@@ -535,6 +593,6 @@ class ChatService {
       'reason': reason.trim().isEmpty ? 'unspecified' : reason.trim(),
       'status': 'pending',
       'createdAt': FieldValue.serverTimestamp(),
-    });
+    }).timeout(const Duration(seconds: 8));
   }
 }
