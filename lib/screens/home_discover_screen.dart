@@ -1,7 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import '../services/content_engagement_service.dart';
 import '../theme/app_theme.dart';
+import '../widgets/firebase_media_image.dart';
 import 'post_detail_screen.dart';
 import 'reels_screen.dart';
 import 'user_profile_screen.dart';
@@ -146,6 +149,118 @@ class _HomeDiscoverScreenState extends State<HomeDiscoverScreen> {
     });
   }
 
+  String _firstMediaValue(Map<String, dynamic> data, List<String> keys) {
+    for (final key in keys) {
+      final value = (data[key] ?? '').toString().trim();
+      if (value.isNotEmpty) return value;
+    }
+    return '';
+  }
+
+  bool _hasMediaCandidate(Map<String, dynamic> data) {
+    const keys = <String>[
+      'thumbnailUrl',
+      'coverUrl',
+      'imageUrl',
+      'mediaUrl',
+      'storagePath',
+      'thumbnailStoragePath',
+      'videoUrl',
+      'videoStoragePath',
+    ];
+    return keys.any((key) => (data[key] ?? '').toString().trim().isNotEmpty);
+  }
+
+  Future<void> _likeOnDoubleTap(
+    BuildContext context,
+    QueryDocumentSnapshot<Map<String, dynamic>> doc,
+  ) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            const SnackBar(content: Text('Beğenmek için giriş yapmalısın.')),
+          );
+      }
+      return;
+    }
+
+    final data = doc.data();
+    try {
+      final likeRef = FirebaseFirestore.instance
+          .collection('posts')
+          .doc(doc.id)
+          .collection('likes')
+          .doc(user.uid);
+      final existing = await likeRef.get();
+      if (existing.exists) return;
+
+      final caption = (data['caption'] ?? '').toString().trim();
+      await ContentEngagementService.instance.toggleLike(
+        collection: 'posts',
+        id: doc.id,
+        ownerId: (data['userId'] ?? '').toString(),
+        title: caption.isEmpty ? 'Gönderi' : caption,
+        sourceType: 'post',
+      );
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            SnackBar(
+              content: Text(e.toString().replaceFirst('Exception: ', '')),
+            ),
+          );
+      }
+    }
+  }
+
+  Widget _explorePreview(
+    QueryDocumentSnapshot<Map<String, dynamic>> doc,
+    Map<String, dynamic> data,
+    bool isVideo,
+  ) {
+    final previewUrl = _firstMediaValue(
+      data,
+      isVideo
+          ? const ['thumbnailUrl', 'coverUrl', 'imageUrl', 'mediaUrl']
+          : const ['imageUrl', 'mediaUrl', 'thumbnailUrl', 'coverUrl'],
+    );
+    final storagePath = _firstMediaValue(
+      data,
+      isVideo
+          ? const ['thumbnailStoragePath', 'storagePath']
+          : const ['storagePath', 'thumbnailStoragePath'],
+    );
+    final userId = (data['userId'] ?? '').toString().trim();
+    final fallbackPaths = <String>[
+      if (isVideo && userId.isNotEmpty)
+        'users/$userId/posts/${doc.id}_thumb.jpg',
+      ...FirebaseMediaImage.postPaths(userId, doc.id),
+    ];
+
+    return FirebaseMediaImage(
+      imageUrl: previewUrl,
+      storagePath: storagePath,
+      fallbackStoragePaths: fallbackPaths,
+      fit: BoxFit.cover,
+      placeholder: const ColoredBox(color: Color(0xFF171A1F)),
+      errorWidget: ColoredBox(
+        color: AppColors.surface,
+        child: Center(
+          child: Icon(
+            isVideo ? Icons.play_circle_outline_rounded : Icons.image_outlined,
+            color: Colors.white24,
+            size: 30,
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) => ColoredBox(
     color: AppColors.background,
@@ -224,7 +339,9 @@ class _HomeDiscoverScreenState extends State<HomeDiscoverScreen> {
                   const ColoredBox(color: Color(0xFF171A1F)),
             );
           }
-          final docs = [...snapshot.data!.docs]
+          final docs = snapshot.data!.docs
+              .where((doc) => _hasMediaCandidate(doc.data()))
+              .toList()
             ..sort((a, b) {
               final av = a.data()['createdAt'];
               final bv = b.data()['createdAt'];
@@ -253,17 +370,12 @@ class _HomeDiscoverScreenState extends State<HomeDiscoverScreen> {
               final doc = docs[index];
               final data = doc.data();
               final videoUrl = (data['videoUrl'] ?? '').toString().trim();
-              final imageUrl = (data['imageUrl'] ?? data['mediaUrl'] ?? '')
-                  .toString()
-                  .trim();
               final isVideo =
                   videoUrl.isNotEmpty ||
                   (data['mediaType'] ?? '').toString() == 'video';
-              final thumb =
-                  (data['thumbnailUrl'] ?? data['coverUrl'] ?? imageUrl)
-                      .toString()
-                      .trim();
-              return InkWell(
+              return GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onDoubleTap: () => _likeOnDoubleTap(context, doc),
                 onTap: () => isVideo
                     ? Navigator.push(
                         context,
@@ -279,28 +391,7 @@ class _HomeDiscoverScreenState extends State<HomeDiscoverScreen> {
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
-                    ColoredBox(
-                      color: AppColors.surface,
-                      child: thumb.isEmpty
-                          ? Icon(
-                              isVideo
-                                  ? Icons.play_circle_outline_rounded
-                                  : Icons.image_outlined,
-                              color: Colors.white30,
-                              size: 34,
-                            )
-                          : Image.network(
-                              thumb,
-                              fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => Icon(
-                                isVideo
-                                    ? Icons.play_circle_outline_rounded
-                                    : Icons.image_outlined,
-                                color: Colors.white30,
-                                size: 34,
-                              ),
-                            ),
-                    ),
+                    _explorePreview(doc, data, isVideo),
                     if (isVideo)
                       const Positioned(
                         left: 7,
