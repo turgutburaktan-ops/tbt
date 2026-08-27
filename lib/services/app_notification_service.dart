@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+import 'auth_switch_stream.dart';
+
 class AppNotificationItem {
   final String id;
   final String type;
@@ -59,9 +61,10 @@ class AppNotificationService {
       _firestore.collection('users').doc(userId).collection('notifications');
 
   Stream<List<AppNotificationItem>> _buildMineStream(int limit) {
-    return _auth.authStateChanges().asyncExpand((user) {
-      if (user == null) return Stream.value(const <AppNotificationItem>[]);
-      return _items(user.uid)
+    return switchAuthStream<List<AppNotificationItem>>(
+      auth: _auth,
+      signedOutValue: const <AppNotificationItem>[],
+      signedIn: (user) => _items(user.uid)
           .orderBy('createdAt', descending: true)
           .limit(limit)
           .snapshots()
@@ -69,8 +72,8 @@ class AppNotificationService {
             (snapshot) => snapshot.docs
                 .map(AppNotificationItem.fromDocument)
                 .toList(growable: false),
-          );
-    });
+          ),
+    );
   }
 
   Stream<List<AppNotificationItem>> watchMine({int limit = 80}) {
