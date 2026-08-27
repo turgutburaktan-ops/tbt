@@ -135,3 +135,8 @@ s = s.replace(
     1,
 )
 p.write_text(s)
+
+# Final launch-facing cleanup collected from the latest end-to-end recording.
+launch = Path('.github/scripts/apply_launch_polish.py')
+if launch.exists():
+    exec(compile(launch.read_text(), str(launch), 'exec'))
