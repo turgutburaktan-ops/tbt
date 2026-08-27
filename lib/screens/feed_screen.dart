@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../models/social_event.dart';
+import '../services/content_engagement_service.dart';
 import '../services/social_event_service.dart';
 import '../services/social_service.dart';
 import '../widgets/app_video_player.dart';
@@ -698,6 +699,35 @@ class _FeedPostCard extends StatelessWidget {
     );
   }
 
+  Future<void> _doubleTapLike(BuildContext context) async {
+    if (postId.trim().isEmpty) return;
+    try {
+      final alreadyLiked = await ContentEngagementService.instance
+          .isLiked('posts', postId)
+          .first;
+      if (alreadyLiked) return;
+      await ContentEngagementService.instance.toggleLike(
+        collection: 'posts',
+        id: postId,
+        ownerId: userId,
+        title: caption.trim().isEmpty
+            ? (_isVideo ? 'Video paylaşımı' : 'Fotoğraf paylaşımı')
+            : caption,
+        sourceType: 'post',
+      );
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            SnackBar(
+              content: Text(e.toString().replaceFirst('Exception: ', '')),
+            ),
+          );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) => Container(
     margin: const EdgeInsets.fromLTRB(8, 4, 8, 14),
@@ -814,7 +844,11 @@ class _FeedPostCard extends StatelessWidget {
             ),
           ),
         ),
-        AspectRatio(aspectRatio: 4 / 5, child: _media()),
+        GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onDoubleTap: () => _doubleTapLike(context),
+          child: AspectRatio(aspectRatio: 4 / 5, child: _media()),
+        ),
         Padding(
           padding: const EdgeInsets.fromLTRB(8, 4, 8, 0),
           child: ContentEngagementBar(
