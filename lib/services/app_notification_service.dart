@@ -41,16 +41,20 @@ class AppNotificationItem {
 }
 
 class AppNotificationService {
-  AppNotificationService._();
+  AppNotificationService._() {
+    _sharedMine = _buildMineStream(80).asBroadcastStream();
+  }
+
   static final AppNotificationService instance = AppNotificationService._();
 
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  late final Stream<List<AppNotificationItem>> _sharedMine;
 
   CollectionReference<Map<String, dynamic>> _items(String userId) =>
       _firestore.collection('users').doc(userId).collection('notifications');
 
-  Stream<List<AppNotificationItem>> watchMine({int limit = 80}) {
+  Stream<List<AppNotificationItem>> _buildMineStream(int limit) {
     return _auth.authStateChanges().asyncExpand((user) {
       if (user == null) return Stream.value(const <AppNotificationItem>[]);
       return _items(user.uid)
@@ -65,14 +69,23 @@ class AppNotificationService {
     });
   }
 
-  Stream<int> unreadCount() =>
-      watchMine().map((items) => items.where((item) => !item.read).length);
+  Stream<List<AppNotificationItem>> watchMine({int limit = 80}) {
+    if (limit == 80) return _sharedMine;
+    return _buildMineStream(limit);
+  }
 
-  Stream<int> unreadMessageCount() => watchMine().map(
-    (items) => items
-        .where((item) => !item.read && item.type.toLowerCase() == 'message')
-        .length,
-  );
+  Stream<int> unreadCount() =>
+      _sharedMine.map((items) => items.where((item) => !item.read).length).distinct();
+
+  Stream<int> unreadMessageCount() => _sharedMine
+      .map(
+        (items) => items
+            .where(
+              (item) => !item.read && item.type.toLowerCase() == 'message',
+            )
+            .length,
+      )
+      .distinct();
 
   Future<void> notifyUser({
     required String userId,
@@ -218,9 +231,6 @@ class AppNotificationService {
     final user = _auth.currentUser;
     if (user == null) return;
 
-    // Legacy notifications may not have a `read` field at all. The UI treats
-    // those as unread, but a `where(read == false)` query can never return
-    // missing fields. Scan in bounded pages and normalize every unread record.
     DocumentSnapshot<Map<String, dynamic>>? cursor;
     while (true) {
       Query<Map<String, dynamic>> query = _items(user.uid).limit(400);
