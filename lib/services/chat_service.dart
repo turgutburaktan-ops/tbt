@@ -142,8 +142,10 @@ class ChatService {
           .map((snapshot) {
             final items = snapshot.docs.map(ChatThread.fromDocument).toList();
             items.sort((a, b) {
-              final ad = a.lastMessageAt ?? DateTime.fromMillisecondsSinceEpoch(0);
-              final bd = b.lastMessageAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+              final ad =
+                  a.lastMessageAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+              final bd =
+                  b.lastMessageAt ?? DateTime.fromMillisecondsSinceEpoch(0);
               return bd.compareTo(ad);
             });
             return items;
@@ -152,9 +154,11 @@ class ChatService {
   }
 
   Stream<ChatThread?> watchThread(String threadId) {
-    return _firestore.collection('chat_threads').doc(threadId).snapshots().map(
-      (doc) => doc.exists ? ChatThread.fromDocument(doc) : null,
-    );
+    return _firestore
+        .collection('chat_threads')
+        .doc(threadId)
+        .snapshots()
+        .map((doc) => doc.exists ? ChatThread.fromDocument(doc) : null);
   }
 
   Stream<List<ChatMessage>> messages(String threadId) {
@@ -242,8 +246,8 @@ class ChatService {
     final ext = contentType.contains('png')
         ? 'png'
         : contentType.contains('webp')
-            ? 'webp'
-            : 'jpg';
+        ? 'webp'
+        : 'jpg';
     final storageRef = _storage.ref(
       'users/${user.uid}/chat/$threadId/${messageRef.id}.$ext',
     );
@@ -273,7 +277,8 @@ class ChatService {
     final user = await _requiredUser();
     final threadRef = _firestore.collection('chat_threads').doc(threadId);
     final thread = await threadRef.get();
-    final members = (thread.data()?['memberIds'] as List?)
+    final members =
+        (thread.data()?['memberIds'] as List?)
             ?.map((e) => e.toString())
             .toList() ??
         const <String>[];
@@ -283,7 +288,8 @@ class ChatService {
       throw Exception('Bu sohbete erişimin yok.');
     }
 
-    final messageRef = forcedMessageRef ?? threadRef.collection('messages').doc();
+    final messageRef =
+        forcedMessageRef ?? threadRef.collection('messages').doc();
     final batch = _firestore.batch();
     batch.set(messageRef, {
       'senderId': user.uid,

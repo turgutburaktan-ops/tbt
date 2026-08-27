@@ -215,9 +215,8 @@ class _ChatScreenState extends State<ChatScreen> {
     } else if (action == 'copy') {
       await Clipboard.setData(ClipboardData(text: message.text));
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Mesaj kopyalandı.')),
-        );
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text('Mesaj kopyalandı.')));
       }
     }
   }
@@ -304,7 +303,10 @@ class _ChatScreenState extends State<ChatScreen> {
                 imageUrl: imageUrl,
                 fit: BoxFit.contain,
                 errorWidget: const Center(
-                  child: Icon(Icons.broken_image_outlined, color: Colors.white54),
+                  child: Icon(
+                    Icons.broken_image_outlined,
+                    color: Colors.white54,
+                  ),
                 ),
               ),
             ),
@@ -316,7 +318,8 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Widget _replyPreview(ChatMessage message, bool mine) {
     if (!message.hasReply) return const SizedBox.shrink();
-    final repliedToMe = message.replySenderId == FirebaseAuth.instance.currentUser?.uid;
+    final repliedToMe =
+        message.replySenderId == FirebaseAuth.instance.currentUser?.uid;
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.only(bottom: 7),
@@ -324,7 +327,9 @@ class _ChatScreenState extends State<ChatScreen> {
       decoration: BoxDecoration(
         color: mine ? Colors.black12 : Colors.white.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(10),
-        border: const Border(left: BorderSide(color: Colors.white54, width: 2.5)),
+        border: const Border(
+          left: BorderSide(color: Colors.white54, width: 2.5),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -476,7 +481,9 @@ class _ChatScreenState extends State<ChatScreen> {
               child: ClipOval(
                 child: FirebaseMediaImage(
                   imageUrl: photoUrl,
-                  fallbackStoragePaths: FirebaseMediaImage.avatarPaths(widget.otherUserId),
+                  fallbackStoragePaths: FirebaseMediaImage.avatarPaths(
+                    widget.otherUserId,
+                  ),
                   fit: BoxFit.cover,
                   errorWidget: const ColoredBox(
                     color: Color(0xFF20252B),
@@ -495,14 +502,20 @@ class _ChatScreenState extends State<ChatScreen> {
                     widget.otherDisplayName,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.w900),
+                    style: const TextStyle(
+                      fontSize: 15.5,
+                      fontWeight: FontWeight.w900,
+                    ),
                   ),
                   if (username.isNotEmpty)
                     Text(
                       '@$username',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(color: Colors.white46, fontSize: 11.5),
+                      style: const TextStyle(
+                        color: Colors.white46,
+                        fontSize: 11.5,
+                      ),
                     ),
                 ],
               ),
@@ -536,7 +549,11 @@ class _ChatScreenState extends State<ChatScreen> {
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.reply_rounded, size: 18, color: Colors.white54),
+                    const Icon(
+                      Icons.reply_rounded,
+                      size: 18,
+                      color: Colors.white54,
+                    ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Column(
@@ -544,13 +561,19 @@ class _ChatScreenState extends State<ChatScreen> {
                         children: [
                           const Text(
                             'Yanıtlıyorsun',
-                            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900),
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w900,
+                            ),
                           ),
                           Text(
                             _replyTo!.isImage ? '📷 Fotoğraf' : _replyTo!.text,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(color: Colors.white54, fontSize: 12),
+                            style: const TextStyle(
+                              color: Colors.white54,
+                              fontSize: 12,
+                            ),
                           ),
                         ],
                       ),
@@ -590,14 +613,20 @@ class _ChatScreenState extends State<ChatScreen> {
                       maxLines: 5,
                       maxLength: 1500,
                       textCapitalization: TextCapitalization.sentences,
-                      style: const TextStyle(color: Colors.white, fontSize: 15.5),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 15.5,
+                      ),
                       decoration: InputDecoration(
                         counterText: '',
                         hintText: 'Mesaj yaz...',
                         hintStyle: const TextStyle(color: Colors.white38),
                         filled: true,
                         fillColor: const Color(0xFF1B222B),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 17, vertical: 12),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 17,
+                          vertical: 12,
+                        ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(24),
                           borderSide: BorderSide.none,
@@ -649,93 +678,106 @@ class _ChatScreenState extends State<ChatScreen> {
         titleSpacing: 0,
         title: _conversationHeader(),
         actions: [
-          IconButton(onPressed: _showSafetyMenu, icon: const Icon(Icons.more_vert)),
+          IconButton(
+            onPressed: _showSafetyMenu,
+            icon: const Icon(Icons.more_vert),
+          ),
         ],
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFFB7BCC2)))
+          ? const Center(
+              child: CircularProgressIndicator(color: Color(0xFFB7BCC2)),
+            )
           : _error != null
-              ? Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Text(
-                      _error!,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(color: Colors.white70),
-                    ),
-                  ),
-                )
-              : Column(
-                  children: [
-                    Expanded(
-                      child: StreamBuilder<ChatThread?>(
-                        stream: ChatService.instance.watchThread(_threadId!),
-                        builder: (context, threadSnapshot) {
-                          final thread = threadSnapshot.data;
-                          return StreamBuilder<List<ChatMessage>>(
-                            stream: ChatService.instance.messages(_threadId!),
-                            builder: (context, snapshot) {
-                              if (snapshot.connectionState == ConnectionState.waiting) {
-                                return const Center(
-                                  child: CircularProgressIndicator(color: Color(0xFFB7BCC2)),
-                                );
-                              }
-                              final messages = snapshot.data ?? const <ChatMessage>[];
-                              _markReadFromMessages(messages, myId);
-                              if (messages.isEmpty) {
-                                return const Center(
-                                  child: Padding(
-                                    padding: EdgeInsets.all(28),
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(
-                                          Icons.chat_bubble_outline_rounded,
-                                          size: 46,
-                                          color: Colors.white24,
-                                        ),
-                                        SizedBox(height: 12),
-                                        Text(
-                                          'Sohbeti başlat',
-                                          style: TextStyle(
-                                            fontSize: 17,
-                                            fontWeight: FontWeight.w900,
-                                          ),
-                                        ),
-                                        SizedBox(height: 6),
-                                        Text(
-                                          'Mesaj veya fotoğraf göndererek konuşmaya başlayabilirsin.',
-                                          textAlign: TextAlign.center,
-                                          style: TextStyle(color: Colors.white46, height: 1.4),
-                                        ),
-                                      ],
+          ? Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Text(
+                  _error!,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.white70),
+                ),
+              ),
+            )
+          : Column(
+              children: [
+                Expanded(
+                  child: StreamBuilder<ChatThread?>(
+                    stream: ChatService.instance.watchThread(_threadId!),
+                    builder: (context, threadSnapshot) {
+                      final thread = threadSnapshot.data;
+                      return StreamBuilder<List<ChatMessage>>(
+                        stream: ChatService.instance.messages(_threadId!),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const Center(
+                              child: CircularProgressIndicator(
+                                color: Color(0xFFB7BCC2),
+                              ),
+                            );
+                          }
+                          final messages =
+                              snapshot.data ?? const <ChatMessage>[];
+                          _markReadFromMessages(messages, myId);
+                          if (messages.isEmpty) {
+                            return const Center(
+                              child: Padding(
+                                padding: EdgeInsets.all(28),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.chat_bubble_outline_rounded,
+                                      size: 46,
+                                      color: Colors.white24,
                                     ),
-                                  ),
-                                );
-                              }
-                              return ListView.builder(
-                                reverse: true,
-                                keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-                                padding: const EdgeInsets.fromLTRB(12, 14, 12, 10),
-                                itemCount: messages.length,
-                                itemBuilder: (context, index) {
-                                  final message = messages[index];
-                                  final mine = message.senderId == myId;
-                                  return _messageBubble(
-                                    message: message,
-                                    mine: mine,
-                                    seen: mine && _isSeen(message, thread),
-                                  );
-                                },
+                                    SizedBox(height: 12),
+                                    Text(
+                                      'Sohbeti başlat',
+                                      style: TextStyle(
+                                        fontSize: 17,
+                                        fontWeight: FontWeight.w900,
+                                      ),
+                                    ),
+                                    SizedBox(height: 6),
+                                    Text(
+                                      'Mesaj veya fotoğraf göndererek konuşmaya başlayabilirsin.',
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        color: Colors.white46,
+                                        height: 1.4,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          }
+                          return ListView.builder(
+                            reverse: true,
+                            keyboardDismissBehavior:
+                                ScrollViewKeyboardDismissBehavior.onDrag,
+                            padding: const EdgeInsets.fromLTRB(12, 14, 12, 10),
+                            itemCount: messages.length,
+                            itemBuilder: (context, index) {
+                              final message = messages[index];
+                              final mine = message.senderId == myId;
+                              return _messageBubble(
+                                message: message,
+                                mine: mine,
+                                seen: mine && _isSeen(message, thread),
                               );
                             },
                           );
                         },
-                      ),
-                    ),
-                    _composer(),
-                  ],
+                      );
+                    },
+                  ),
                 ),
+                _composer(),
+              ],
+            ),
     );
   }
 }
