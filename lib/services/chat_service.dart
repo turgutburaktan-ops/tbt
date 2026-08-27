@@ -316,8 +316,8 @@ class ChatService {
     final ext = contentType.contains('png')
         ? 'png'
         : contentType.contains('webp')
-            ? 'webp'
-            : 'jpg';
+        ? 'webp'
+        : 'jpg';
     final storageRef = _storage.ref(
       'users/${user.uid}/chat/$threadId/${messageRef.id}.$ext',
     );
@@ -382,8 +382,8 @@ class ChatService {
     final label = sharedType == 'event'
         ? '📅 Etkinlik'
         : sharedType == 'reel'
-            ? '▶️ Reels'
-            : '📷 Gönderi';
+        ? '▶️ Reels'
+        : '📷 Gönderi';
     await _sendPreparedMessage(
       threadId: threadId,
       otherUserId: otherUserId,
@@ -436,10 +436,10 @@ class ChatService {
       'replyText': replyTo == null
           ? null
           : (replyTo.isImage
-              ? '📷 Fotoğraf'
-              : replyTo.isAudio
-                  ? '🎙️ Sesli mesaj'
-                  : replyTo.text),
+                ? '📷 Fotoğraf'
+                : replyTo.isAudio
+                ? '🎙️ Sesli mesaj'
+                : replyTo.text),
       'replySenderId': replyTo?.senderId,
       'sharedType': sharedType,
       'sharedId': sharedId,
@@ -456,8 +456,8 @@ class ChatService {
     final lastMessage = type == 'image'
         ? '📷 Fotoğraf'
         : type == 'audio'
-            ? '🎙️ Sesli mesaj'
-            : text;
+        ? '🎙️ Sesli mesaj'
+        : text;
     try {
       await threadRef.set({
         'lastMessage': lastMessage,
@@ -477,10 +477,10 @@ class ChatService {
     final preview = type == 'image'
         ? 'Sana bir fotoğraf gönderdi'
         : type == 'audio'
-            ? 'Sana bir sesli mesaj gönderdi'
-            : type == 'share'
-                ? 'Seninle bir içerik paylaştı'
-                : (text.length > 90 ? '${text.substring(0, 90)}…' : text);
+        ? 'Sana bir sesli mesaj gönderdi'
+        : type == 'share'
+        ? 'Seninle bir içerik paylaştı'
+        : (text.length > 90 ? '${text.substring(0, 90)}…' : text);
     try {
       await AppNotificationService.instance.notifyUser(
         userId: otherUserId,
