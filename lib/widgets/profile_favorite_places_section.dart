@@ -12,6 +12,7 @@ import '../data/curated_photo_spots_regions.dart';
 import '../data/curated_photo_spots_verified_expansion.dart';
 import '../models/nearby_venue.dart';
 import '../models/photo_spot.dart';
+import '../screens/rewards_hub_screen.dart';
 import '../services/location_service.dart';
 import '../services/nationwide_candidate_spot_resolver.dart';
 import '../services/nearby_venue_service.dart';
@@ -32,6 +33,15 @@ class ProfileFavoritePlacesSection extends StatelessWidget {
     _FavoriteType('spot', 'Gezilecek', Icons.place_outlined),
   ];
 
+  String _levelName(int xp) {
+    if (xp >= 6000) return 'Türkiye Kaşifi';
+    if (xp >= 3000) return 'Usta Kaşif';
+    if (xp >= 1500) return 'Şehir Rehberi';
+    if (xp >= 600) return 'Fotoğraf Avcısı';
+    if (xp >= 200) return 'Kaşif';
+    return 'Gezgin';
+  }
+
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
@@ -40,104 +50,182 @@ class ProfileFavoritePlacesSection extends StatelessWidget {
           .doc(userId)
           .snapshots(),
       builder: (context, snapshot) {
-        final raw = snapshot.data?.data()?['favoritePlaces'];
+        final profile = snapshot.data?.data() ?? const <String, dynamic>{};
+        final raw = profile['favoritePlaces'];
         final favorites = raw is Map
             ? Map<String, dynamic>.from(raw)
             : <String, dynamic>{};
         final hasAny = _types.any((type) => favorites[type.key] is Map);
-        if (!editable && !hasAny) return const SizedBox.shrink();
+        final xp = (profile['xp'] as num?)?.toInt() ?? 0;
+        final level = _levelName(xp);
+        if (!editable && !hasAny && xp <= 0) return const SizedBox.shrink();
         return Padding(
           padding: const EdgeInsets.fromLTRB(16, 6, 16, 10),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  const Expanded(
-                    child: Text(
-                      'Favori Mekanlarım',
-                      style: TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w900,
-                      ),
+              if (editable || xp > 0) ...[
+                InkWell(
+                  borderRadius: BorderRadius.circular(16),
+                  onTap: editable
+                      ? () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const RewardsHubScreen(),
+                            ),
+                          )
+                      : null,
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF13161C),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: const Color(0xFF2C3240)),
                     ),
-                  ),
-                  if (editable)
-                    const Text(
-                      'Düzenle',
-                      style: TextStyle(color: Colors.white38, fontSize: 11),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: _types.map((type) {
-                  final value = favorites[type.key];
-                  final data = value is Map
-                      ? Map<String, dynamic>.from(value)
-                      : null;
-                  final name = (data?['name'] ?? '').toString().trim();
-                  if (!editable && data == null) return const SizedBox.shrink();
-                  return Expanded(
-                    child: Padding(
-                      padding: EdgeInsets.only(
-                        right: type == _types.last ? 0 : 6,
-                      ),
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(14),
-                        onTap: editable ? () => _pick(context, type) : null,
-                        child: Container(
-                          height: 86,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 9,
-                          ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 42,
+                          height: 42,
                           decoration: BoxDecoration(
-                            color: const Color(0xFF11141A),
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(color: const Color(0xFF292E38)),
+                            color: const Color(0xFFB8A1FF).withValues(alpha: .12),
+                            shape: BoxShape.circle,
                           ),
+                          child: const Icon(
+                            Icons.workspace_premium_rounded,
+                            color: Color(0xFFB8A1FF),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
                           child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Icon(
-                                type.icon,
-                                size: 22,
-                                color: const Color(0xFFB8A1FF),
-                              ),
-                              const SizedBox(height: 6),
                               Text(
-                                type.label,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
+                                level,
                                 style: const TextStyle(
-                                  color: Colors.white54,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w700,
+                                  fontSize: 15.5,
+                                  fontWeight: FontWeight.w900,
                                 ),
                               ),
-                              const SizedBox(height: 3),
+                              const SizedBox(height: 2),
                               Text(
-                                name.isEmpty ? 'Seç' : name,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontSize: 10.5,
-                                  fontWeight: FontWeight.w900,
-                                  color: name.isEmpty
-                                      ? Colors.white38
-                                      : Colors.white,
+                                editable
+                                    ? '$xp XP • Görevler, seviyeler ve rozetler'
+                                    : '$xp XP',
+                                style: const TextStyle(
+                                  color: Colors.white54,
+                                  fontSize: 11.5,
                                 ),
                               ),
                             ],
                           ),
                         ),
+                        if (editable)
+                          const Icon(
+                            Icons.chevron_right_rounded,
+                            color: Colors.white38,
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 14),
+              ],
+              if (editable || hasAny) ...[
+                Row(
+                  children: [
+                    const Expanded(
+                      child: Text(
+                        'Favori Mekanlarım',
+                        style: TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w900,
+                        ),
                       ),
                     ),
-                  );
-                }).toList(),
-              ),
+                    if (editable)
+                      const Text(
+                        'Düzenle',
+                        style: TextStyle(color: Colors.white38, fontSize: 11),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: _types.map((type) {
+                    final value = favorites[type.key];
+                    final data = value is Map
+                        ? Map<String, dynamic>.from(value)
+                        : null;
+                    final name = (data?['name'] ?? '').toString().trim();
+                    if (!editable && data == null) {
+                      return const SizedBox.shrink();
+                    }
+                    return Expanded(
+                      child: Padding(
+                        padding: EdgeInsets.only(
+                          right: type == _types.last ? 0 : 6,
+                        ),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(14),
+                          onTap: editable ? () => _pick(context, type) : null,
+                          child: Container(
+                            height: 86,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 9,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF11141A),
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(
+                                color: const Color(0xFF292E38),
+                              ),
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  type.icon,
+                                  size: 22,
+                                  color: const Color(0xFFB8A1FF),
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  type.label,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    color: Colors.white54,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                const SizedBox(height: 3),
+                                Text(
+                                  name.isEmpty ? 'Seç' : name,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: 10.5,
+                                    fontWeight: FontWeight.w900,
+                                    color: name.isEmpty
+                                        ? Colors.white38
+                                        : Colors.white,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ],
             ],
           ),
         );
@@ -172,10 +260,11 @@ class ProfileFavoritePlacesSection extends StatelessWidget {
         }, SetOptions(merge: true));
       }
     } catch (_) {
-      if (context.mounted)
+      if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Favori mekan güncellenemedi.')),
         );
+      }
     }
   }
 }
@@ -299,7 +388,7 @@ class _FavoritePlacePickerState extends State<_FavoritePlacePicker> {
             child: FutureBuilder<List<_PlaceChoice>>(
               future: _future,
               builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting)
+                if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
@@ -313,7 +402,8 @@ class _FavoritePlacePickerState extends State<_FavoritePlacePicker> {
                       ],
                     ),
                   );
-                if (snapshot.hasError)
+                }
+                if (snapshot.hasError) {
                   return Center(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
@@ -335,6 +425,7 @@ class _FavoritePlacePickerState extends State<_FavoritePlacePicker> {
                       ],
                     ),
                   );
+                }
                 final q = _search.text.trim().toLowerCase();
                 final items = (snapshot.data ?? const <_PlaceChoice>[])
                     .where(
@@ -343,13 +434,14 @@ class _FavoritePlacePickerState extends State<_FavoritePlacePicker> {
                           '${i.name} ${i.subtitle}'.toLowerCase().contains(q),
                     )
                     .toList();
-                if (items.isEmpty)
+                if (items.isEmpty) {
                   return const Center(
                     child: Text(
                       'Bu kategoride eşleşen mekan yok.',
                       style: TextStyle(color: Colors.white54),
                     ),
                   );
+                }
                 return ListView.separated(
                   padding: const EdgeInsets.fromLTRB(12, 0, 12, 24),
                   itemCount: items.length,
