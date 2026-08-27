@@ -158,16 +158,56 @@ class ContentEngagementService {
   }) async {
     final me = _auth.currentUser;
     if (me == null) throw Exception('Göndermek için giriş yapmalısın.');
+    if (targetUserId.trim().isEmpty || sourceId.trim().isEmpty) {
+      throw Exception('Paylaşılacak içerik bulunamadı.');
+    }
+
     final threadId = await ChatService.instance.ensureDirectThread(
       targetUserId,
       sourceType: sourceType,
       sourceId: sourceId,
     );
-    final icon = sourceType == 'social_event' ? '📅' : '📷';
-    await ChatService.instance.sendMessage(
+
+    String sharedType;
+    String collection;
+    if (sourceType == 'social_event' || sourceType == 'event') {
+      sharedType = 'event';
+      collection = 'social_events';
+    } else if (sourceType == 'reel') {
+      sharedType = 'reel';
+      collection = 'posts';
+    } else {
+      sharedType = 'post';
+      collection = 'posts';
+    }
+
+    String? imageUrl;
+    try {
+      final snap = await _firestore.collection(collection).doc(sourceId).get();
+      final data = snap.data();
+      if (data != null) {
+        final candidates = sharedType == 'event'
+            ? [data['coverImageUrl'], data['imageUrl'], data['photoUrl']]
+            : [data['thumbnailUrl'], data['imageUrl']];
+        for (final candidate in candidates) {
+          final value = candidate?.toString().trim() ?? '';
+          if (value.isNotEmpty) {
+            imageUrl = value;
+            break;
+          }
+        }
+      }
+    } catch (_) {
+      // Kart yine de gerçek içerik kimliğiyle gönderilir.
+    }
+
+    await ChatService.instance.sendSharedContent(
       threadId: threadId,
       otherUserId: targetUserId,
-      text: '$icon $title\nUygulama içinden paylaşıldı.',
+      sharedType: sharedType,
+      sharedId: sourceId,
+      title: title.trim().isEmpty ? 'Paylaşım' : title.trim(),
+      imageUrl: imageUrl,
     );
   }
 
