@@ -23,21 +23,32 @@ class ActivityDemandScreen extends StatefulWidget {
 }
 
 class _ActivityDemandScreenState extends State<ActivityDemandScreen> {
+  static const _background = Color(0xFF090A0C);
+  static const _panel = Color(0xFF15181B);
+  static const _border = Color(0xFF292D32);
+  static const _accent = Color(0xFF42F5E9);
+
   final _cityController = TextEditingController(text: 'Elazığ');
   String _window = 'today';
   String _activity = 'Fotoğraf';
   bool _busy = false;
 
   static const activities = <String>[
-    'Fotoğraf', 'Kahve', 'Yürüyüş', 'Kamp', 'Spor', 'Oyun', 'Müzik', 'Gezi'
+    'Fotoğraf',
+    'Kahve',
+    'Yürüyüş',
+    'Kamp',
+    'Spor',
+    'Oyun',
+    'Müzik',
+    'Gezi',
   ];
 
   @override
   void initState() {
     super.initState();
-    if ((widget.initialCity ?? '').trim().isNotEmpty) {
-      _cityController.text = widget.initialCity!.trim();
-    }
+    final initialCity = (widget.initialCity ?? '').trim();
+    if (initialCity.isNotEmpty) _cityController.text = initialCity;
     if (widget.initialActivity != null && activities.contains(widget.initialActivity)) {
       _activity = widget.initialActivity!;
     }
@@ -53,9 +64,7 @@ class _ActivityDemandScreenState extends State<ActivityDemandScreen> {
         'Fotoğraf' => SocialEventType.photography,
         'Yürüyüş' => SocialEventType.walking,
         'Kamp' => SocialEventType.camping,
-        'Spor' => SocialEventType.social,
         'Oyun' => SocialEventType.gaming,
-        'Müzik' => SocialEventType.social,
         'Gezi' => SocialEventType.trip,
         'Kahve' => SocialEventType.foodDrink,
         _ => SocialEventType.social,
@@ -74,12 +83,17 @@ class _ActivityDemandScreenState extends State<ActivityDemandScreen> {
     return now.add(const Duration(hours: 2));
   }
 
-  Future<void> _toggleDemand(bool selected) async {
+  Future<void> _toggleHere(bool selected) async {
     if (_busy) return;
     if (FirebaseAuth.instance.currentUser == null) {
-      _message('Katılmak için giriş yapmalısın.');
+      _message('Buradayım durumunu paylaşmak için giriş yapmalısın.');
       return;
     }
+    if (_cityController.text.trim().length < 2) {
+      _message('Önce şehir seçmelisin.');
+      return;
+    }
+
     setState(() => _busy = true);
     try {
       if (selected) {
@@ -88,29 +102,33 @@ class _ActivityDemandScreenState extends State<ActivityDemandScreen> {
           city: _cityController.text,
           window: _window,
         );
+        _message('Buradayım durumun kapatıldı.');
       } else {
         await ActivityDemandService.instance.setDemand(
           activity: _activity,
           city: _cityController.text,
           window: _window,
         );
+        _message('Buradayım aktif. Kesin konumun paylaşılmaz.');
       }
-    } catch (e) {
-      _message(e.toString().replaceFirst('Exception: ', ''));
+    } catch (error) {
+      _message(error.toString().replaceFirst('Exception: ', ''));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
   }
 
   Future<void> _createMeetup(int interestedCount) async {
+    if (_busy) return;
     if (FirebaseAuth.instance.currentUser == null) {
-      _message('Buluşma oluşturmak için giriş yapmalısın.');
+      _message('Buluşalım oluşturmak için giriş yapmalısın.');
       return;
     }
     if (_cityController.text.trim().length < 2) {
       _message('Önce şehir seçmelisin.');
       return;
     }
+
     final location = await Navigator.push<EventLocationSelection>(
       context,
       MaterialPageRoute(
@@ -131,16 +149,17 @@ class _ActivityDemandScreenState extends State<ActivityDemandScreen> {
         capacity: interestedCount.clamp(4, 50),
         city: _cityController.text.trim(),
         locationLabel: location.label,
-        description: 'Bu buluşma aynı aktiviteyi yapmak isteyen kullanıcıların talebinden oluşturuldu.',
+        description:
+            'Aynı aktiviteyi yapmak isteyen TBT kullanıcıları için oluşturuldu.',
         latitude: location.latitude,
         longitude: location.longitude,
         visibility: EventVisibility.public,
       );
       if (!mounted) return;
-      _message('Buluşma oluşturuldu.');
+      _message('Buluşalım oluşturuldu ve Çevrende akışına eklendi.');
       Navigator.pop(context, true);
-    } catch (e) {
-      _message(e.toString().replaceFirst('Exception: ', ''));
+    } catch (error) {
+      _message(error.toString().replaceFirst('Exception: ', ''));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -157,30 +176,51 @@ class _ActivityDemandScreenState extends State<ActivityDemandScreen> {
   Widget build(BuildContext context) {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     return Scaffold(
-      backgroundColor: const Color(0xFF090A0C),
+      backgroundColor: _background,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF090A0C),
-        title: const Text('Bugün ne yapmak istiyorsun?'),
+        backgroundColor: _background,
+        title: const Text('Buradayım / Buluşalım'),
       ),
       body: StreamBuilder<List<ActivityDemand>>(
         stream: ActivityDemandService.instance.watchActive(),
         builder: (context, snapshot) {
           final all = snapshot.data ?? const <ActivityDemand>[];
-          final matching = all.where((d) => ActivityDemandService.instance.matches(
-                d,
-                activity: _activity,
-                city: _cityController.text,
-                window: _window,
-              )).toList();
+          final matching = all
+              .where(
+                (d) => ActivityDemandService.instance.matches(
+                  d,
+                  activity: _activity,
+                  city: _cityController.text,
+                  window: _window,
+                ),
+              )
+              .toList();
           final selected = uid != null && matching.any((d) => d.userId == uid);
           final count = matching.length;
 
           return ListView(
             padding: const EdgeInsets.fromLTRB(18, 10, 18, 32),
             children: [
-              const Text(
-                'Etkinlik beklemek yerine aynı şeyi yapmak isteyenleri önce burada buluşturuyoruz.',
-                style: TextStyle(color: Colors.white60, height: 1.45),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: _panel,
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: _border),
+                ),
+                child: const Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.shield_outlined, color: _accent),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Buradayım yalnızca şehir ve aktivite sinyali paylaşır. Kesin konumun ve canlı koordinatın diğer kullanıcılara gösterilmez.',
+                        style: TextStyle(color: Colors.white70, height: 1.4),
+                      ),
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(height: 16),
               SearchableSelectionField(
@@ -195,11 +235,15 @@ class _ActivityDemandScreenState extends State<ActivityDemandScreen> {
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
-                children: activities.map((item) => ChoiceChip(
-                  label: Text(item),
-                  selected: _activity == item,
-                  onSelected: (_) => setState(() => _activity = item),
-                )).toList(),
+                children: activities
+                    .map(
+                      (item) => ChoiceChip(
+                        label: Text(item),
+                        selected: _activity == item,
+                        onSelected: (_) => setState(() => _activity = item),
+                      ),
+                    )
+                    .toList(),
               ),
               const SizedBox(height: 18),
               SegmentedButton<String>(
@@ -209,38 +253,53 @@ class _ActivityDemandScreenState extends State<ActivityDemandScreen> {
                   ButtonSegment(value: 'weekend', label: Text('Hafta sonu')),
                 ],
                 selected: {_window},
-                onSelectionChanged: (value) => setState(() => _window = value.first),
+                onSelectionChanged: (value) =>
+                    setState(() => _window = value.first),
               ),
               const SizedBox(height: 24),
               Container(
                 padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF15181B),
+                  color: _panel,
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: const Color(0xFF292D32)),
+                  border: Border.all(color: _border),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('$_activity • ${_cityController.text.trim().isEmpty ? 'Şehir seç' : _cityController.text.trim()}',
-                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
-                    const SizedBox(height: 8),
-                    Text('$count kişi aynı şeyi yapmak istiyor',
-                        style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900)),
-                    const SizedBox(height: 6),
                     Text(
-                      count >= 20
-                          ? 'Talep güçlü. Bir buluşma başlatmak için iyi zaman.'
-                          : 'Talep biriktikçe bu aktivite daha görünür olacak.',
-                      style: const TextStyle(color: Colors.white60),
+                      '$_activity • ${_cityController.text.trim().isEmpty ? 'Şehir seç' : _cityController.text.trim()}',
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      '$count kişi aynı aktiviteyle ilgileniyor',
+                      style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    const Text(
+                      'Buradayım ile sinyal ver veya Buluşalım ile herkese açık bir plan oluştur.',
+                      style: TextStyle(color: Colors.white60),
                     ),
                     const SizedBox(height: 16),
                     SizedBox(
                       width: double.infinity,
                       child: FilledButton.icon(
-                        onPressed: _busy ? null : () => _toggleDemand(selected),
-                        icon: Icon(selected ? Icons.check_circle : Icons.add_circle_outline),
-                        label: Text(selected ? 'Ben de istiyorum ✓' : 'Ben de istiyorum'),
+                        onPressed: _busy ? null : () => _toggleHere(selected),
+                        icon: Icon(
+                          selected
+                              ? Icons.location_on_rounded
+                              : Icons.location_on_outlined,
+                        ),
+                        label: Text(
+                          selected ? 'Buradayım Aktif ✓' : 'Buradayım',
+                        ),
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -249,28 +308,37 @@ class _ActivityDemandScreenState extends State<ActivityDemandScreen> {
                       child: OutlinedButton.icon(
                         onPressed: _busy ? null : () => _createMeetup(count),
                         icon: const Icon(Icons.groups_2_outlined),
-                        label: const Text('Buluşma Başlat'),
+                        label: const Text('Buluşalım Oluştur'),
                       ),
                     ),
                   ],
                 ),
               ),
               const SizedBox(height: 24),
-              const Text('Şu an popüler talepler',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
+              const Text(
+                'Şu an popüler sinyaller',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
+              ),
               const SizedBox(height: 10),
               ...activities.map((activity) {
-                final activityCount = all.where((d) => ActivityDemandService.instance.matches(
-                      d,
-                      activity: activity,
-                      city: _cityController.text,
-                      window: _window,
-                    )).length;
+                final activityCount = all
+                    .where(
+                      (d) => ActivityDemandService.instance.matches(
+                        d,
+                        activity: activity,
+                        city: _cityController.text,
+                        window: _window,
+                      ),
+                    )
+                    .length;
                 return ListTile(
                   contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.bolt_rounded),
                   title: Text(activity),
-                  trailing: Text('$activityCount kişi',
-                      style: const TextStyle(fontWeight: FontWeight.w800)),
+                  trailing: Text(
+                    '$activityCount kişi',
+                    style: const TextStyle(fontWeight: FontWeight.w800),
+                  ),
                   onTap: () => setState(() => _activity = activity),
                 );
               }),
