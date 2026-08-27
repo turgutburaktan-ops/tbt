@@ -148,31 +148,65 @@ class VenueRatingService {
     ).orderBy('updatedAt', descending: true).limit(limit).snapshots().asyncMap((
       snapshot,
     ) async {
+      final sourceDocs = snapshot.docs.where((doc) {
+        final comment = (doc.data()['comment'] ?? '').toString().trim();
+        return comment.isNotEmpty;
+      }).toList(growable: false);
+
       final result = <VenueReview>[];
-      for (final doc in snapshot.docs) {
-        final data = doc.data();
-        final comment = (data['comment'] ?? '').toString().trim();
-        if (comment.isEmpty) continue;
-        final helpfulCollection = doc.reference.collection('helpful');
-        final helpfulByMe = uid == null
-            ? false
-            : (await helpfulCollection.doc(uid).get()).exists;
-        final helpfulAggregate = await helpfulCollection.count().get();
-        result.add(
-          VenueReview(
-            userId: doc.id,
-            userName: (data['userName'] ?? '').toString().trim().isEmpty
-                ? 'Kullanıcı'
-                : (data['userName'] ?? '').toString(),
-            rating: ((data['rating'] as num?)?.toInt() ?? 1).clamp(1, 5),
-            comment: comment,
-            helpfulCount: helpfulAggregate.count ?? 0,
-            mine: uid != null && doc.id == uid,
-            helpfulByMe: helpfulByMe,
-            updatedAt:
-                (data['updatedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
-          ),
+      const chunkSize = 10;
+      for (var start = 0; start < sourceDocs.length; start += chunkSize) {
+        final end = (start + chunkSize).clamp(0, sourceDocs.length);
+        final chunk = sourceDocs.sublist(start, end);
+        final reviews = await Future.wait(
+          chunk.map((doc) async {
+            final data = doc.data();
+            final comment = (data['comment'] ?? '').toString().trim();
+            final helpfulCollection = doc.reference.collection('helpful');
+            var helpfulByMe = false;
+            var helpfulCount = 0;
+            try {
+              final values = await Future.wait<Object?>([
+                if (uid != null)
+                  helpfulCollection
+                      .doc(uid)
+                      .get()
+                      .timeout(const Duration(seconds: 5)),
+                helpfulCollection
+                    .count()
+                    .get()
+                    .timeout(const Duration(seconds: 5)),
+              ]);
+              var index = 0;
+              if (uid != null) {
+                final mine = values[index++];
+                if (mine is DocumentSnapshot<Map<String, dynamic>>) {
+                  helpfulByMe = mine.exists;
+                }
+              }
+              final aggregate = values[index];
+              if (aggregate is AggregateQuerySnapshot) {
+                helpfulCount = aggregate.count ?? 0;
+              }
+            } catch (_) {
+              // Yardımcı metaveri yüklenemese bile yorumun kendisini göster.
+            }
+            return VenueReview(
+              userId: doc.id,
+              userName: (data['userName'] ?? '').toString().trim().isEmpty
+                  ? 'Kullanıcı'
+                  : (data['userName'] ?? '').toString(),
+              rating: ((data['rating'] as num?)?.toInt() ?? 1).clamp(1, 5),
+              comment: comment,
+              helpfulCount: helpfulCount,
+              mine: uid != null && doc.id == uid,
+              helpfulByMe: helpfulByMe,
+              updatedAt:
+                  (data['updatedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+            );
+          }),
         );
+        result.addAll(reviews);
       }
       return result;
     });
