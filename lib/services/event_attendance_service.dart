@@ -98,6 +98,7 @@ class EventAttendanceService {
       }
 
       final attendanceSnap = await tx.get(attendanceRef);
+      final ticketSnap = await tx.get(ticketRef);
       final previous = attendanceSnap.exists
           ? (attendanceSnap.data()?['status'] ?? '').toString()
           : '';
@@ -150,7 +151,6 @@ class EventAttendanceService {
         }, SetOptions(merge: true));
       }
 
-      final ticketSnap = await tx.get(ticketRef);
       if (status == 'going' || status == 'private') {
         final paid = accessType == EventAccessType.paid.name;
         tx.set(ticketRef, {
