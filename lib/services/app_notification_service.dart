@@ -74,8 +74,9 @@ class AppNotificationService {
     return _buildMineStream(limit);
   }
 
-  Stream<int> unreadCount() =>
-      _sharedMine.map((items) => items.where((item) => !item.read).length).distinct();
+  Stream<int> unreadCount() => _sharedMine
+      .map((items) => items.where((item) => !item.read).length)
+      .distinct();
 
   Stream<int> unreadMessageCount() => _sharedMine
       .map(
@@ -95,11 +96,12 @@ class AppNotificationService {
     String? sourceId,
     String? actorId,
   }) async {
-    if (userId.trim().isEmpty) return;
+    final target = userId.trim();
+    if (target.isEmpty) return;
     final current = _auth.currentUser;
-    if (current != null && current.uid == userId) return;
+    if (current != null && current.uid == target) return;
 
-    await _items(userId).add({
+    await _items(target).add({
       'type': type.trim().isEmpty ? 'general' : type.trim(),
       'title': title.trim(),
       'body': body.trim(),
@@ -107,7 +109,7 @@ class AppNotificationService {
       'actorId': actorId ?? current?.uid,
       'read': false,
       'createdAt': FieldValue.serverTimestamp(),
-    });
+    }).timeout(const Duration(seconds: 6));
   }
 
   Future<void> notifyUsers({
@@ -121,21 +123,33 @@ class AppNotificationService {
     final unique = userIds
         .map((e) => e.trim())
         .where((e) => e.isNotEmpty)
-        .toSet();
+        .toSet()
+        .toList(growable: false);
     if (unique.isEmpty) return;
 
-    await Future.wait(
-      unique.map(
-        (userId) => notifyUser(
-          userId: userId,
-          type: type,
-          title: title,
-          body: body,
-          sourceId: sourceId,
-          actorId: actorId,
-        ),
-      ),
-    );
+    const chunkSize = 20;
+    for (var start = 0; start < unique.length; start += chunkSize) {
+      final end = (start + chunkSize < unique.length)
+          ? start + chunkSize
+          : unique.length;
+      final chunk = unique.sublist(start, end);
+      await Future.wait(
+        chunk.map((userId) async {
+          try {
+            await notifyUser(
+              userId: userId,
+              type: type,
+              title: title,
+              body: body,
+              sourceId: sourceId,
+              actorId: actorId,
+            );
+          } catch (_) {
+            // One recipient failure must not abort the rest of the fanout.
+          }
+        }),
+      );
+    }
   }
 
   Future<void> notifyMeOnce({
@@ -149,7 +163,7 @@ class AppNotificationService {
     if (user == null || dedupeKey.trim().isEmpty) return;
     final safeKey = dedupeKey.replaceAll(RegExp(r'[^a-zA-Z0-9_-]'), '_');
     final ref = _items(user.uid).doc('smart_$safeKey');
-    final existing = await ref.get();
+    final existing = await ref.get().timeout(const Duration(seconds: 5));
     if (existing.exists) return;
     await ref.set({
       'type': type,
@@ -161,14 +175,18 @@ class AppNotificationService {
       'smart': true,
       'dedupeKey': dedupeKey,
       'createdAt': FieldValue.serverTimestamp(),
-    });
+    }).timeout(const Duration(seconds: 6));
   }
 
   Future<void> refreshCampusDigest() async {
     final user = _auth.currentUser;
     if (user == null) return;
     try {
-      final profile = await _firestore.collection('users').doc(user.uid).get();
+      final profile = await _firestore
+          .collection('users')
+          .doc(user.uid)
+          .get()
+          .timeout(const Duration(seconds: 5));
       final university = (profile.data()?['university'] ?? '')
           .toString()
           .trim();
@@ -178,7 +196,8 @@ class AppNotificationService {
           .collection('communities')
           .where('university', isEqualTo: university)
           .limit(80)
-          .get();
+          .get()
+          .timeout(const Duration(seconds: 6));
       final ids = communities.docs.map((d) => d.id).toSet();
       if (ids.isEmpty) return;
 
@@ -188,7 +207,8 @@ class AppNotificationService {
           .collection('social_events')
           .where('visibility', isEqualTo: 'public')
           .limit(120)
-          .get();
+          .get()
+          .timeout(const Duration(seconds: 6));
 
       final tonight = events.docs.where((doc) {
         final d = doc.data();
@@ -224,7 +244,7 @@ class AppNotificationService {
     await _items(user.uid).doc(notificationId).set({
       'read': true,
       'readAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
+    }, SetOptions(merge: true)).timeout(const Duration(seconds: 6));
   }
 
   Future<void> markAllRead() async {
@@ -235,7 +255,7 @@ class AppNotificationService {
     while (true) {
       Query<Map<String, dynamic>> query = _items(user.uid).limit(400);
       if (cursor != null) query = query.startAfterDocument(cursor);
-      final snapshot = await query.get();
+      final snapshot = await query.get().timeout(const Duration(seconds: 8));
       if (snapshot.docs.isEmpty) return;
 
       final unreadDocs = snapshot.docs
@@ -249,7 +269,7 @@ class AppNotificationService {
             'readAt': FieldValue.serverTimestamp(),
           }, SetOptions(merge: true));
         }
-        await batch.commit();
+        await batch.commit().timeout(const Duration(seconds: 8));
       }
 
       if (snapshot.docs.length < 400) return;
