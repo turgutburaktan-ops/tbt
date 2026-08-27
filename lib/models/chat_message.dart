@@ -32,7 +32,9 @@ class ChatThread {
     if (raw is Map) {
       for (final entry in raw.entries) {
         final value = entry.value;
-        result[entry.key.toString()] = value is Timestamp ? value.toDate() : null;
+        result[entry.key.toString()] = value is Timestamp
+            ? value.toDate()
+            : null;
       }
     }
     return result;
