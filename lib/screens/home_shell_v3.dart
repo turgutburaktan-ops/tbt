@@ -232,12 +232,20 @@ class _HomeFeedHubState extends State<_HomeFeedHub> {
     final pixels = notification.metrics.pixels;
     if (pixels <= 4) {
       next = _HomeChromeMode.full;
-    } else if (notification is ScrollUpdateNotification) {
+    } else if (pixels < 72) {
+      next = _HomeChromeMode.quick;
+    } else if (pixels < 150) {
+      next = _HomeChromeMode.quick;
+    } else {
+      next = _HomeChromeMode.compact;
+    }
+
+    if (notification is ScrollUpdateNotification) {
       final delta = notification.scrollDelta ?? 0;
-      if (delta > 1.5) {
-        next = _HomeChromeMode.compact;
-      } else if (delta < -1.5) {
-        next = _HomeChromeMode.quick;
+      if (delta < -2 && pixels < 220) {
+        next = pixels < 34
+            ? _HomeChromeMode.full
+            : _HomeChromeMode.quick;
       }
     } else if (notification is OverscrollNotification &&
         notification.overscroll < 0) {
@@ -252,13 +260,13 @@ class _HomeFeedHubState extends State<_HomeFeedHub> {
 
   Widget _animatedChrome({required bool visible, required Widget child}) {
     return AnimatedSize(
-      duration: const Duration(milliseconds: 190),
-      curve: Curves.easeOutCubic,
+      duration: const Duration(milliseconds: 280),
+      curve: Curves.easeInOutCubic,
       alignment: Alignment.topCenter,
       child: visible
           ? AnimatedOpacity(
               opacity: 1,
-              duration: const Duration(milliseconds: 150),
+              duration: const Duration(milliseconds: 240),
               child: child,
             )
           : const SizedBox.shrink(),

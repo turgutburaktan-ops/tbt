@@ -10,6 +10,7 @@ import '../services/event_privacy_service.dart';
 import '../services/event_ticket_service.dart';
 import '../services/event_trust_service.dart';
 import '../services/social_event_service.dart';
+import '../widgets/chat_share_sheet.dart';
 import '../widgets/content_engagement_bar.dart';
 import 'event_location_picker_screen.dart';
 import 'event_photo_create_screen.dart';
@@ -491,6 +492,19 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
                                       ),
                                     ),
                                   ],
+                                ),
+                              ),
+                              IconButton(
+                                tooltip: 'Mesaj olarak gönder',
+                                onPressed: () => shareCardToChat(
+                                  context,
+                                  sharedType: 'event',
+                                  sharedId: event.id,
+                                  title: event.title,
+                                ),
+                                icon: const Icon(
+                                  Icons.send_outlined,
+                                  size: 19,
                                 ),
                               ),
                               Text(

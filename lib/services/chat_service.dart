@@ -381,6 +381,10 @@ class ChatService {
   }) async {
     final label = sharedType == 'event'
         ? '📅 Etkinlik'
+        : sharedType == 'venue'
+        ? '📍 Mekan'
+        : sharedType == 'spot'
+        ? '📍 Çekim noktası'
         : sharedType == 'reel'
         ? '▶️ Reels'
         : '📷 Gönderi';

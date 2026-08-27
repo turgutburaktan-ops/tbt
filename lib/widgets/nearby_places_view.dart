@@ -13,6 +13,7 @@ import '../services/nearby_venue_service.dart';
 import '../services/route_selection_service.dart';
 import '../services/venue_rating_service.dart';
 import '../theme/app_theme.dart';
+import 'chat_share_sheet.dart';
 
 class NearbyPlacesView extends StatefulWidget {
   final NearbyVenueCategory category;
@@ -572,6 +573,19 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
                           ? Icons.bookmark_rounded
                           : Icons.bookmark_border_rounded,
                       color: selected ? AppColors.cyan : Colors.white54,
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: 'Mesaj olarak gönder',
+                    onPressed: () => shareCardToChat(
+                      context,
+                      sharedType: 'venue',
+                      sharedId: '${venue.latitude},${venue.longitude}',
+                      title: venue.name,
+                    ),
+                    icon: const Icon(
+                      Icons.send_outlined,
+                      color: Colors.white54,
                     ),
                   ),
                   IconButton(

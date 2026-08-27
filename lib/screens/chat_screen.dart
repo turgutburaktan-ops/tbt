@@ -51,7 +51,6 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   ChatMessage? _replyTo;
   String? _lastMarkedMessageId;
   Timer? _typingTimer;
-  Timer? _presenceRefreshTimer;
 
   @override
   void initState() {
@@ -60,9 +59,6 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     _controller.addListener(_handleTypingChanged);
     _prepare();
     Future.microtask(() => ChatService.instance.setPresence(true));
-    _presenceRefreshTimer = Timer.periodic(const Duration(seconds: 5), (_) {
-      if (mounted) setState(() {});
-    });
   }
 
   @override
@@ -1142,7 +1138,6 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _typingTimer?.cancel();
-    _presenceRefreshTimer?.cancel();
     _controller.removeListener(_handleTypingChanged);
     _stopTyping();
     Future.microtask(() => ChatService.instance.setPresence(false));
@@ -1202,7 +1197,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                         stream: _messagesStream,
                         builder: (context, snapshot) {
                           if (snapshot.connectionState ==
-                              ConnectionState.waiting) {
+                                  ConnectionState.waiting &&
+                              !snapshot.hasData) {
                             return const Center(
                               child: CircularProgressIndicator(
                                 color: Color(0xFFB7BCC2),
@@ -1272,12 +1268,15 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                               final reactions =
                                   thread?.messageReactions[message.id] ??
                                   message.reactions;
-                              return _messageBubble(
-                                message: message,
-                                mine: mine,
-                                seen: mine && _isSeen(message, thread),
-                                removed: removed,
-                                reactions: reactions,
+                              return KeyedSubtree(
+                                key: ValueKey('chat-message-${message.id}'),
+                                child: _messageBubble(
+                                  message: message,
+                                  mine: mine,
+                                  seen: mine && _isSeen(message, thread),
+                                  removed: removed,
+                                  reactions: reactions,
+                                ),
                               );
                             },
                           );
