@@ -6,7 +6,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../models/chat_message.dart';
 import 'app_notification_service.dart';
 import 'content_moderation_service.dart';
-import 'social_service.dart';
 
 class ChatService {
   ChatService._();
@@ -97,9 +96,29 @@ class ChatService {
       throw Exception('Bu kullanıcıyla mesajlaşma kullanılamıyor.');
     }
 
-    await SocialService.instance.ensureUserProfile();
     final id = directThreadId(user.uid, otherUserId);
     final ref = _firestore.collection('chat_threads').doc(id);
+
+    // Opening an existing conversation must be read-only. Rewriting the thread
+    // on every navigation can be rejected by Firestore security rules and is
+    // unnecessary. Only create the document when it does not exist yet.
+    final existing = await ref.get();
+    if (existing.exists) {
+      final data = existing.data() ?? const <String, dynamic>{};
+      final members = (data['memberIds'] as List? ?? const <dynamic>[])
+          .map((value) => value.toString())
+          .toList(growable: false);
+      final type = (data['type'] ?? '').toString();
+      final validDirectThread =
+          type == 'direct' &&
+          members.length == 2 &&
+          members.contains(user.uid) &&
+          members.contains(otherUserId);
+      if (!validDirectThread) {
+        throw Exception('Bu sohbete erişimin yok.');
+      }
+      return id;
+    }
 
     await ref.set({
       'type': 'direct',
@@ -108,7 +127,7 @@ class ChatService {
       'sourceId': sourceId,
       'updatedAt': FieldValue.serverTimestamp(),
       'createdAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
+    });
 
     return id;
   }
