@@ -45,7 +45,8 @@ class _ChatVoiceRecordButtonState extends State<ChatVoiceRecordButton> {
         throw Exception('Sesli mesaj için mikrofon izni vermelisin.');
       }
       final temp = await getTemporaryDirectory();
-      final path = '${temp.path}/tbt_voice_${DateTime.now().microsecondsSinceEpoch}.m4a';
+      final path =
+          '${temp.path}/tbt_voice_${DateTime.now().microsecondsSinceEpoch}.m4a';
       await _recorder.start(
         const RecordConfig(
           encoder: AudioEncoder.aacLc,
@@ -144,17 +145,28 @@ class _ChatVoiceRecordButtonState extends State<ChatVoiceRecordButton> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.fiber_manual_record_rounded, color: Color(0xFFFF5D6C), size: 14),
+            const Icon(
+              Icons.fiber_manual_record_rounded,
+              color: Color(0xFFFF5D6C),
+              size: 14,
+            ),
             const SizedBox(width: 5),
             Text(
               _durationLabel(_elapsed),
-              style: const TextStyle(fontWeight: FontWeight.w800, color: Colors.white),
+              style: const TextStyle(
+                fontWeight: FontWeight.w800,
+                color: Colors.white,
+              ),
             ),
             IconButton(
               tooltip: 'Kaydı gönder',
               onPressed: _finishing ? null : _stopAndSend,
               icon: _finishing
-                  ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
                   : const Icon(Icons.send_rounded, color: Colors.white),
             ),
           ],
@@ -170,7 +182,11 @@ class _ChatVoiceRecordButtonState extends State<ChatVoiceRecordButton> {
       ),
       onPressed: widget.disabled || _finishing ? null : _start,
       icon: _finishing
-          ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+          ? const SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
           : const Icon(Icons.mic_rounded),
     );
   }
@@ -246,12 +262,22 @@ class _ChatAudioBubbleState extends State<ChatAudioBubble> {
               return IconButton(
                 onPressed: _loading ? null : _toggle,
                 style: IconButton.styleFrom(
-                  backgroundColor: widget.mine ? Colors.black12 : Colors.white10,
+                  backgroundColor: widget.mine
+                      ? Colors.black12
+                      : Colors.white10,
                   foregroundColor: fg,
                 ),
                 icon: _loading
-                    ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                    : Icon(playing ? Icons.pause_rounded : Icons.play_arrow_rounded),
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Icon(
+                        playing
+                            ? Icons.pause_rounded
+                            : Icons.play_arrow_rounded,
+                      ),
               );
             },
           ),
@@ -266,8 +292,12 @@ class _ChatAudioBubbleState extends State<ChatAudioBubble> {
                   initialData: Duration.zero,
                   builder: (_, positionSnapshot) {
                     final position = positionSnapshot.data ?? Duration.zero;
-                    final totalMs = total.inMilliseconds > 0 ? total.inMilliseconds : 1;
-                    final value = position.inMilliseconds.clamp(0, totalMs).toDouble();
+                    final totalMs = total.inMilliseconds > 0
+                        ? total.inMilliseconds
+                        : 1;
+                    final value = position.inMilliseconds
+                        .clamp(0, totalMs)
+                        .toDouble();
                     return Column(
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -275,8 +305,12 @@ class _ChatAudioBubbleState extends State<ChatAudioBubble> {
                         SliderTheme(
                           data: SliderTheme.of(context).copyWith(
                             trackHeight: 2.5,
-                            thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 5),
-                            overlayShape: const RoundSliderOverlayShape(overlayRadius: 10),
+                            thumbShape: const RoundSliderThumbShape(
+                              enabledThumbRadius: 5,
+                            ),
+                            overlayShape: const RoundSliderOverlayShape(
+                              overlayRadius: 10,
+                            ),
                           ),
                           child: Slider(
                             min: 0,
@@ -285,7 +319,9 @@ class _ChatAudioBubbleState extends State<ChatAudioBubble> {
                             activeColor: fg,
                             inactiveColor: secondary,
                             onChanged: _loaded
-                                ? (next) => _player.seek(Duration(milliseconds: next.round()))
+                                ? (next) => _player.seek(
+                                    Duration(milliseconds: next.round()),
+                                  )
                                 : null,
                           ),
                         ),
@@ -293,7 +329,11 @@ class _ChatAudioBubbleState extends State<ChatAudioBubble> {
                           padding: const EdgeInsets.only(left: 7, right: 7),
                           child: Text(
                             '${_label(position)} / ${_label(total)}',
-                            style: TextStyle(color: secondary, fontSize: 10.5, fontWeight: FontWeight.w700),
+                            style: TextStyle(
+                              color: secondary,
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                         ),
                       ],
