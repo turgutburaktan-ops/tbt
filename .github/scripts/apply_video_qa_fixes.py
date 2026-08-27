@@ -233,15 +233,18 @@ s = s.replace('''                if (snapshot.connectionState == ConnectionState
                 }''', 1)
 p.write_text(s)
 
-
-# 4) Phone verification UX: security/app-identifier failures should be explicit
-# and not leave the user believing an SMS was sent.
+# Phone verification is additionally hardened directly in its screen. Keep this
+# hook for older branches where the previous generic wording still exists.
 p = Path('lib/screens/phone_verification_screen.dart')
 if p.exists():
     s = p.read_text()
-    # Keep wording actionable for the exact Firebase integrity failures seen in QA.
     s = s.replace(
         "'Telefon doğrulaması başlatılamadı. Lütfen tekrar deneyin.'",
         "'SMS gönderilemedi. Uygulama güvenlik doğrulaması tamamlanamadı; uygulamayı güncelleyip tekrar deneyin.'",
     )
     p.write_text(s)
+
+# Apply lower-risk loading/layout polish collected from the same QA recording.
+polish = Path('.github/scripts/apply_video_qa_polish.py')
+if polish.exists():
+    exec(compile(polish.read_text(), str(polish), 'exec'))
