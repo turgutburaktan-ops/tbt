@@ -2,12 +2,6 @@ name: Apply Video Review UX V2
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - feature/video-v1
-    paths:
-      - '.github/scripts/apply_video_review_ux_v2.py'
-      - '.github/workflows/apply_video_review_ux_v2.yml'
 
 permissions:
   contents: write
