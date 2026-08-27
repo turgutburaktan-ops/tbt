@@ -1,0 +1,48 @@
+name: Apply P1 P2 Finish
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feature/video-v1
+    paths:
+      - .github/workflows/apply_p1_p2_finish.yml
+      - .github/scripts/apply_p1_p2_finish.py
+
+permissions:
+  contents: write
+
+concurrency:
+  group: apply-p1-p2-finish-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  apply:
+    if: github.actor != 'tbt-fix-bot'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/video-v1
+          fetch-depth: 0
+      - name: Apply final scoped fixes
+        run: python3 .github/scripts/apply_p1_p2_finish.py
+      - name: Format changed Dart files
+        shell: bash
+        run: |
+          if command -v dart >/dev/null 2>&1; then
+            dart format lib/screens/chat_inbox_screen.dart lib/screens/map_screen.dart
+          fi
+      - name: Commit changes
+        shell: bash
+        run: |
+          if git diff --quiet; then
+            echo 'No final P1/P2 changes needed.'
+            exit 0
+          fi
+          git config user.name 'tbt-fix-bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add lib/screens/chat_inbox_screen.dart lib/screens/map_screen.dart
+          git commit -m 'feat: finish P1 P2 social and inbox UX'
+          git push origin HEAD:feature/video-v1
