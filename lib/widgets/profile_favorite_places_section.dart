@@ -64,7 +64,10 @@ class ProfileFavoritePlacesSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-      stream: FirebaseFirestore.instance.collection('users').doc(userId).snapshots(),
+      stream: FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .snapshots(),
       builder: (context, snapshot) {
         final profile = snapshot.data?.data() ?? const <String, dynamic>{};
         final raw = profile['favoritePlaces'];
@@ -100,7 +103,10 @@ class ProfileFavoritePlacesSection extends StatelessWidget {
                     const Expanded(
                       child: Text(
                         'Favori Mekanlarım',
-                        style: TextStyle(fontSize: 17, fontWeight: FontWeight.w900),
+                        style: TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w900,
+                        ),
                       ),
                     ),
                     if (editable)
@@ -114,27 +120,41 @@ class ProfileFavoritePlacesSection extends StatelessWidget {
                 Row(
                   children: _types.map((type) {
                     final value = favorites[type.key];
-                    final data = value is Map ? Map<String, dynamic>.from(value) : null;
+                    final data = value is Map
+                        ? Map<String, dynamic>.from(value)
+                        : null;
                     final name = (data?['name'] ?? '').toString().trim();
-                    if (!editable && data == null) return const SizedBox.shrink();
+                    if (!editable && data == null)
+                      return const SizedBox.shrink();
                     return Expanded(
                       child: Padding(
-                        padding: EdgeInsets.only(right: type == _types.last ? 0 : 6),
+                        padding: EdgeInsets.only(
+                          right: type == _types.last ? 0 : 6,
+                        ),
                         child: InkWell(
                           borderRadius: BorderRadius.circular(14),
                           onTap: editable ? () => _pick(context, type) : null,
                           child: Container(
                             height: 86,
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 9),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 9,
+                            ),
                             decoration: BoxDecoration(
                               color: const Color(0xFF11141A),
                               borderRadius: BorderRadius.circular(14),
-                              border: Border.all(color: const Color(0xFF292E38)),
+                              border: Border.all(
+                                color: const Color(0xFF292E38),
+                              ),
                             ),
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Icon(type.icon, size: 22, color: const Color(0xFFB8A1FF)),
+                                Icon(
+                                  type.icon,
+                                  size: 22,
+                                  color: const Color(0xFFB8A1FF),
+                                ),
                                 const SizedBox(height: 6),
                                 Text(
                                   type.label,
@@ -155,7 +175,9 @@ class ProfileFavoritePlacesSection extends StatelessWidget {
                                   style: TextStyle(
                                     fontSize: 10.5,
                                     fontWeight: FontWeight.w900,
-                                    color: name.isEmpty ? Colors.white38 : Colors.white,
+                                    color: name.isEmpty
+                                        ? Colors.white38
+                                        : Colors.white,
                                   ),
                                 ),
                               ],
@@ -238,11 +260,16 @@ class _ProgressCard extends StatelessWidget {
     final settings = profile['settings'] is Map
         ? Map<String, dynamic>.from(profile['settings'] as Map)
         : const <String, dynamic>{};
-    final interests = settings['interests'] is List ? settings['interests'] as List : const [];
+    final interests = settings['interests'] is List
+        ? settings['interests'] as List
+        : const [];
     final displayName = (profile['displayName'] ?? '').toString().trim();
     final bio = (profile['bio'] ?? '').toString().trim();
-    final photo = (profile['photoUrl'] ?? currentUser?.photoURL ?? '').toString().trim();
-    final profileReady = displayName.length >= 2 && (bio.isNotEmpty || photo.isNotEmpty);
+    final photo = (profile['photoUrl'] ?? currentUser?.photoURL ?? '')
+        .toString()
+        .trim();
+    final profileReady =
+        displayName.length >= 2 && (bio.isNotEmpty || photo.isNotEmpty);
     final phoneReady = isSelf && (currentUser?.phoneNumber ?? '').isNotEmpty;
     final emailReady = isSelf && (currentUser?.emailVerified ?? false);
     final completed = [
@@ -278,16 +305,31 @@ class _ProgressCard extends StatelessWidget {
                   color: const Color(0xFFB8A1FF).withValues(alpha: .12),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.workspace_premium_rounded, color: Color(0xFFB8A1FF)),
+                child: const Icon(
+                  Icons.workspace_premium_rounded,
+                  color: Color(0xFFB8A1FF),
+                ),
               ),
               const SizedBox(width: 10),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(level, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900)),
+                    Text(
+                      level,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
                     const SizedBox(height: 2),
-                    Text('$xp XP • Başlangıç $completed/5', style: const TextStyle(color: Colors.white54, fontSize: 11)),
+                    Text(
+                      '$xp XP • Başlangıç $completed/5',
+                      style: const TextStyle(
+                        color: Colors.white54,
+                        fontSize: 11,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -298,7 +340,10 @@ class _ProgressCard extends StatelessWidget {
                     context,
                     MaterialPageRoute(builder: (_) => const RewardsHubScreen()),
                   ),
-                  icon: const Icon(Icons.chevron_right_rounded, color: Colors.white54),
+                  icon: const Icon(
+                    Icons.chevron_right_rounded,
+                    color: Colors.white54,
+                  ),
                 ),
             ],
           ),
@@ -312,13 +357,31 @@ class _ProgressCard extends StatelessWidget {
             spacing: 6,
             runSpacing: 6,
             children: [
-              if (profileReady) const _Badge(icon: Icons.person_rounded, label: 'Profil Hazır'),
-              if (favoritesReady) const _Badge(icon: Icons.place_rounded, label: 'Mekan Kaşifi'),
-              if (interests.isNotEmpty) const _Badge(icon: Icons.auto_awesome_rounded, label: 'İlgi Alanları'),
-              if (emailReady) const _Badge(icon: Icons.verified_outlined, label: 'E-posta Doğrulandı'),
-              if (phoneReady) const _Badge(icon: Icons.phone_iphone_rounded, label: 'Telefon Doğrulandı'),
-              if (profile['badges'] is Map && (profile['badges'] as Map)['first1000'] == true)
-                const _Badge(icon: Icons.emoji_events_rounded, label: 'TBT İlk 1000'),
+              if (profileReady)
+                const _Badge(icon: Icons.person_rounded, label: 'Profil Hazır'),
+              if (favoritesReady)
+                const _Badge(icon: Icons.place_rounded, label: 'Mekan Kaşifi'),
+              if (interests.isNotEmpty)
+                const _Badge(
+                  icon: Icons.auto_awesome_rounded,
+                  label: 'İlgi Alanları',
+                ),
+              if (emailReady)
+                const _Badge(
+                  icon: Icons.verified_outlined,
+                  label: 'E-posta Doğrulandı',
+                ),
+              if (phoneReady)
+                const _Badge(
+                  icon: Icons.phone_iphone_rounded,
+                  label: 'Telefon Doğrulandı',
+                ),
+              if (profile['badges'] is Map &&
+                  (profile['badges'] as Map)['first1000'] == true)
+                const _Badge(
+                  icon: Icons.emoji_events_rounded,
+                  label: 'TBT İlk 1000',
+                ),
             ],
           ),
           if (editable) ...[
@@ -329,7 +392,9 @@ class _ProgressCard extends StatelessWidget {
                   child: OutlinedButton.icon(
                     onPressed: () => Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) => const RewardsHubScreen()),
+                      MaterialPageRoute(
+                        builder: (_) => const RewardsHubScreen(),
+                      ),
                     ),
                     icon: const Icon(Icons.task_alt_rounded, size: 18),
                     label: const Text('Görevler'),
@@ -340,9 +405,14 @@ class _ProgressCard extends StatelessWidget {
                   child: FilledButton.icon(
                     onPressed: () => Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) => const RetentionHubScreen()),
+                      MaterialPageRoute(
+                        builder: (_) => const RetentionHubScreen(),
+                      ),
                     ),
-                    icon: const Icon(Icons.local_fire_department_rounded, size: 18),
+                    icon: const Icon(
+                      Icons.local_fire_department_rounded,
+                      size: 18,
+                    ),
                     label: const Text('Bugün TBT'),
                   ),
                 ),
@@ -373,7 +443,10 @@ class _Badge extends StatelessWidget {
       children: [
         Icon(icon, size: 13, color: const Color(0xFFB8A1FF)),
         const SizedBox(width: 4),
-        Text(label, style: const TextStyle(fontSize: 9.5, fontWeight: FontWeight.w800)),
+        Text(
+          label,
+          style: const TextStyle(fontSize: 9.5, fontWeight: FontWeight.w800),
+        ),
       ],
     ),
   );
@@ -420,9 +493,18 @@ class _FavoritePlacePickerState extends State<_FavoritePlacePicker> {
           byId[spot.id] = spot;
         }
       }
-      final spots = NationwideCandidateSpotResolver.mergeInto(byId.values.toList());
+      final spots = NationwideCandidateSpotResolver.mergeInto(
+        byId.values.toList(),
+      );
       return spots
-          .map((spot) => _PlaceChoice(id: spot.id, name: spot.name, subtitle: spot.city, source: 'photo_spots'))
+          .map(
+            (spot) => _PlaceChoice(
+              id: spot.id,
+              name: spot.name,
+              subtitle: spot.city,
+              source: 'photo_spots',
+            ),
+          )
           .toList()
         ..sort((a, b) => a.name.compareTo(b.name));
     }
@@ -433,7 +515,9 @@ class _FavoritePlacePickerState extends State<_FavoritePlacePicker> {
     double latitude = 39;
     double longitude = 35;
     try {
-      final position = await LocationService.getCurrentPosition().timeout(const Duration(seconds: 8));
+      final position = await LocationService.getCurrentPosition().timeout(
+        const Duration(seconds: 8),
+      );
       if (position != null) {
         latitude = position.latitude;
         longitude = position.longitude;
@@ -448,12 +532,14 @@ class _FavoritePlacePickerState extends State<_FavoritePlacePicker> {
         .nearby(category: category, latitude: latitude, longitude: longitude)
         .timeout(const Duration(seconds: 12));
     return venues
-        .map((v) => _PlaceChoice(
-              id: '${v.category.name}:${v.id}',
-              name: v.name,
-              subtitle: v.address,
-              source: 'nearby_venues',
-            ))
+        .map(
+          (v) => _PlaceChoice(
+            id: '${v.category.name}:${v.id}',
+            name: v.name,
+            subtitle: v.address,
+            source: 'nearby_venues',
+          ),
+        )
         .toList()
       ..sort((a, b) => a.name.compareTo(b.name));
   }
@@ -466,7 +552,8 @@ class _FavoritePlacePickerState extends State<_FavoritePlacePicker> {
         title: Text('Favori ${widget.type.label}'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, const _PlaceChoice.remove()),
+            onPressed: () =>
+                Navigator.pop(context, const _PlaceChoice.remove()),
             child: const Text('Kaldır'),
           ),
         ],
@@ -495,7 +582,10 @@ class _FavoritePlacePickerState extends State<_FavoritePlacePicker> {
                       children: [
                         CircularProgressIndicator(strokeWidth: 2.5),
                         SizedBox(height: 12),
-                        Text('Yakındaki mekanlar hazırlanıyor…', style: TextStyle(color: Colors.white54)),
+                        Text(
+                          'Yakındaki mekanlar hazırlanıyor…',
+                          style: TextStyle(color: Colors.white54),
+                        ),
                       ],
                     ),
                   );
@@ -526,26 +616,45 @@ class _FavoritePlacePickerState extends State<_FavoritePlacePicker> {
 
                 final q = _search.text.trim().toLowerCase();
                 final items = (snapshot.data ?? const <_PlaceChoice>[])
-                    .where((i) => q.isEmpty || '${i.name} ${i.subtitle}'.toLowerCase().contains(q))
+                    .where(
+                      (i) =>
+                          q.isEmpty ||
+                          '${i.name} ${i.subtitle}'.toLowerCase().contains(q),
+                    )
                     .toList();
                 if (items.isEmpty) {
                   return const Center(
-                    child: Text('Bu kategoride eşleşen mekan yok.', style: TextStyle(color: Colors.white54)),
+                    child: Text(
+                      'Bu kategoride eşleşen mekan yok.',
+                      style: TextStyle(color: Colors.white54),
+                    ),
                   );
                 }
 
                 return ListView.separated(
                   padding: const EdgeInsets.fromLTRB(12, 0, 12, 24),
                   itemCount: items.length,
-                  separatorBuilder: (_, __) => const Divider(height: 1, color: Color(0xFF242831)),
+                  separatorBuilder: (_, __) =>
+                      const Divider(height: 1, color: Color(0xFF242831)),
                   itemBuilder: (context, index) {
                     final item = items[index];
                     return ListTile(
-                      leading: Icon(widget.type.icon, color: const Color(0xFFB8A1FF)),
-                      title: Text(item.name, maxLines: 1, overflow: TextOverflow.ellipsis),
+                      leading: Icon(
+                        widget.type.icon,
+                        color: const Color(0xFFB8A1FF),
+                      ),
+                      title: Text(
+                        item.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                       subtitle: item.subtitle.isEmpty
                           ? null
-                          : Text(item.subtitle, maxLines: 1, overflow: TextOverflow.ellipsis),
+                          : Text(
+                              item.subtitle,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                       trailing: const Icon(Icons.add_circle_outline_rounded),
                       onTap: () => Navigator.pop(context, item),
                     );
@@ -576,9 +685,9 @@ class _PlaceChoice {
     required this.source,
   }) : remove = false;
   const _PlaceChoice.remove()
-      : id = '',
-        name = '',
-        subtitle = '',
-        source = '',
-        remove = true;
+    : id = '',
+      name = '',
+      subtitle = '',
+      source = '',
+      remove = true;
 }
