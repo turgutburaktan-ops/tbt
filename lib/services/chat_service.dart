@@ -86,8 +86,9 @@ class ChatService {
     String? sourceId,
   }) async {
     final user = await _requiredUser();
-    if (otherUserId == user.uid)
+    if (otherUserId == user.uid) {
       throw Exception('Kendine mesaj gönderemezsin.');
+    }
     if (await isBlockedBetween(otherUserId)) {
       throw Exception('Bu kullanıcıyla mesajlaşma kullanılamıyor.');
     }
@@ -109,18 +110,24 @@ class ChatService {
       return id;
     }
 
+    // Keep initial thread creation deliberately minimal. Extra UX metadata is
+    // best-effort so a rules/version mismatch can never block core messaging.
     await ref.set({
       'type': 'direct',
       'memberIds': [user.uid, otherUserId],
-      'sourceType': sourceType,
-      'sourceId': sourceId,
-      'lastReadAt': {user.uid: FieldValue.serverTimestamp()},
-      'typingAt': <String, dynamic>{},
-      'messageReactions': <String, dynamic>{},
-      'deletedMessageIds': <String>[],
-      'updatedAt': FieldValue.serverTimestamp(),
       'createdAt': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
     });
+    try {
+      await ref.set({
+        'sourceType': sourceType,
+        'sourceId': sourceId,
+        'lastReadAt': {user.uid: FieldValue.serverTimestamp()},
+        'typingAt': <String, dynamic>{},
+        'messageReactions': <String, dynamic>{},
+        'deletedMessageIds': <String>[],
+      }, SetOptions(merge: true));
+    } catch (_) {}
     return id;
   }
 
@@ -173,27 +180,33 @@ class ChatService {
 
   Future<void> markThreadRead(String threadId) async {
     final user = await _requiredUser();
-    await _firestore.collection('chat_threads').doc(threadId).update({
-      'lastReadAt.${user.uid}': FieldValue.serverTimestamp(),
-    });
+    try {
+      await _firestore.collection('chat_threads').doc(threadId).update({
+        'lastReadAt.${user.uid}': FieldValue.serverTimestamp(),
+      });
+    } catch (_) {}
   }
 
   Future<void> setTyping(String threadId, bool typing) async {
     final user = await _requiredUser();
-    await _firestore.collection('chat_threads').doc(threadId).update({
-      'typingAt.${user.uid}': typing
-          ? FieldValue.serverTimestamp()
-          : FieldValue.delete(),
-    });
+    try {
+      await _firestore.collection('chat_threads').doc(threadId).update({
+        'typingAt.${user.uid}': typing
+            ? FieldValue.serverTimestamp()
+            : FieldValue.delete(),
+      });
+    } catch (_) {}
   }
 
   Future<void> setPresence(bool online) async {
     final user = _auth.currentUser;
     if (user == null) return;
-    await _firestore.collection('users').doc(user.uid).set({
-      'isOnline': online,
-      'lastSeenAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
+    try {
+      await _firestore.collection('users').doc(user.uid).set({
+        'isOnline': online,
+        'lastSeenAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    } catch (_) {}
   }
 
   Future<void> toggleReaction({
@@ -208,8 +221,9 @@ class ChatService {
     final members = (data['memberIds'] as List? ?? const <dynamic>[])
         .map((e) => e.toString())
         .toList(growable: false);
-    if (!members.contains(user.uid))
+    if (!members.contains(user.uid)) {
       throw Exception('Bu sohbete erişimin yok.');
+    }
     final deletedIds = (data['deletedMessageIds'] as List? ?? const <dynamic>[])
         .map((e) => e.toString())
         .toSet();
@@ -256,10 +270,12 @@ class ChatService {
     final user = await _requiredUser();
     final clean = text.trim();
     if (clean.isEmpty) return;
-    if (clean.length > 1500)
+    if (clean.length > 1500) {
       throw Exception('Mesaj en fazla 1500 karakter olabilir.');
-    if (otherUserId == user.uid)
+    }
+    if (otherUserId == user.uid) {
       throw Exception('Kendine mesaj gönderemezsin.');
+    }
     if (threadId != directThreadId(user.uid, otherUserId)) {
       throw Exception('Geçersiz sohbet kimliği.');
     }
@@ -300,8 +316,8 @@ class ChatService {
     final ext = contentType.contains('png')
         ? 'png'
         : contentType.contains('webp')
-        ? 'webp'
-        : 'jpg';
+            ? 'webp'
+            : 'jpg';
     final storageRef = _storage.ref(
       'users/${user.uid}/chat/$threadId/${messageRef.id}.$ext',
     );
@@ -366,8 +382,8 @@ class ChatService {
     final label = sharedType == 'event'
         ? '📅 Etkinlik'
         : sharedType == 'reel'
-        ? '▶️ Reels'
-        : '📷 Gönderi';
+            ? '▶️ Reels'
+            : '📷 Gönderi';
     await _sendPreparedMessage(
       threadId: threadId,
       otherUserId: otherUserId,
@@ -410,8 +426,7 @@ class ChatService {
 
     final messageRef =
         forcedMessageRef ?? threadRef.collection('messages').doc();
-    final batch = _firestore.batch();
-    batch.set(messageRef, {
+    final messageData = <String, dynamic>{
       'senderId': user.uid,
       'text': text,
       'type': type,
@@ -421,10 +436,10 @@ class ChatService {
       'replyText': replyTo == null
           ? null
           : (replyTo.isImage
-                ? '📷 Fotoğraf'
-                : replyTo.isAudio
-                ? '🎙️ Sesli mesaj'
-                : replyTo.text),
+              ? '📷 Fotoğraf'
+              : replyTo.isAudio
+                  ? '🎙️ Sesli mesaj'
+                  : replyTo.text),
       'replySenderId': replyTo?.senderId,
       'sharedType': sharedType,
       'sharedId': sharedId,
@@ -432,21 +447,27 @@ class ChatService {
       'sharedImageUrl': sharedImageUrl,
       'createdAt': FieldValue.serverTimestamp(),
       'deleted': false,
-    });
+    };
+
+    // Core reliability rule: message creation must not be coupled to optional
+    // thread metadata. If the metadata rule is stale, the DM still sends.
+    await messageRef.set(messageData);
+
     final lastMessage = type == 'image'
         ? '📷 Fotoğraf'
         : type == 'audio'
-        ? '🎙️ Sesli mesaj'
-        : text;
-    batch.set(threadRef, {
-      'lastMessage': lastMessage,
-      'lastSenderId': user.uid,
-      'lastMessageAt': FieldValue.serverTimestamp(),
-      'lastReadAt': {user.uid: FieldValue.serverTimestamp()},
-      'updatedAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
-    await batch.commit();
+            ? '🎙️ Sesli mesaj'
+            : text;
     try {
+      await threadRef.set({
+        'lastMessage': lastMessage,
+        'lastSenderId': user.uid,
+        'lastMessageAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    } catch (_) {}
+    try {
+      await markThreadRead(threadId);
       await setTyping(threadId, false);
     } catch (_) {}
 
@@ -456,10 +477,10 @@ class ChatService {
     final preview = type == 'image'
         ? 'Sana bir fotoğraf gönderdi'
         : type == 'audio'
-        ? 'Sana bir sesli mesaj gönderdi'
-        : type == 'share'
-        ? 'Seninle bir içerik paylaştı'
-        : (text.length > 90 ? '${text.substring(0, 90)}…' : text);
+            ? 'Sana bir sesli mesaj gönderdi'
+            : type == 'share'
+                ? 'Seninle bir içerik paylaştı'
+                : (text.length > 90 ? '${text.substring(0, 90)}…' : text);
     try {
       await AppNotificationService.instance.notifyUser(
         userId: otherUserId,
