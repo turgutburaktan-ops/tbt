@@ -20,6 +20,7 @@ jobs:
     env:
       FIREBASE_PROJECT_ID: en-iyi-cekim-noktasi
       FIREBASE_ANDROID_APP_ID: '1:330568532415:android:bf2ffa0b4d9210ed41a10a'
+      # These must remain identical to the certificate used by every QA APK.
       TBT_SHA1: '75:8F:F2:13:89:03:3E:D2:63:75:41:5F:AD:30:E1:1F:9A:D1:F3:64'
       TBT_SHA256: '3F:9A:A4:96:CA:F1:37:EA:C1:48:CD:94:29:23:95:6D:3D:6A:2A:DA:FF:9C:DB:10:51:DE:02:40:62:81:96:25'
     steps:
