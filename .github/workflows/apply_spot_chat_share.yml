@@ -1,0 +1,65 @@
+name: Apply Spot Chat Sharing
+
+on:
+  push:
+    branches:
+      - feature/video-v1
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/video-v1
+          fetch-depth: 0
+      - name: Add spot message sharing
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('lib/screens/spot_explore_screen_v2.dart')
+          s = p.read_text()
+          old = "import '../widgets/route_selection_button.dart';\nimport '../widgets/spot_image.dart';\n"
+          new = "import '../widgets/chat_share_sheet.dart';\nimport '../widgets/route_selection_button.dart';\nimport '../widgets/spot_image.dart';\n"
+          if old not in s:
+              raise SystemExit('spot imports block not found')
+          s = s.replace(old, new, 1)
+
+          old = "                onToggleRoute: () => _toggleRoute(spot),\n              );\n"
+          new = "                onToggleRoute: () => _toggleRoute(spot),\n                onShare: () => shareCardToChat(\n                  context,\n                  sharedType: 'spot',\n                  sharedId: '${spot.latitude},${spot.longitude}',\n                  title: spot.name,\n                  imageUrl: spot.imageUrl,\n                ),\n              );\n"
+          if old not in s:
+              raise SystemExit('spot card call block not found')
+          s = s.replace(old, new, 1)
+
+          old = "  final VoidCallback onOpen;\n  final VoidCallback onToggleRoute;\n  const _SpotVenueCard({\n"
+          new = "  final VoidCallback onOpen;\n  final VoidCallback onToggleRoute;\n  final VoidCallback onShare;\n  const _SpotVenueCard({\n"
+          if old not in s:
+              raise SystemExit('spot card fields block not found')
+          s = s.replace(old, new, 1)
+
+          old = "    required this.onOpen,\n    required this.onToggleRoute,\n  });\n"
+          new = "    required this.onOpen,\n    required this.onToggleRoute,\n    required this.onShare,\n  });\n"
+          if old not in s:
+              raise SystemExit('spot card constructor block not found')
+          s = s.replace(old, new, 1)
+
+          # Place a send action immediately before the existing route bookmark.
+          marker = "                    IconButton(\n                      tooltip: selected ? 'Rotadan çıkar' : 'Rotaya ekle',\n"
+          insert = "                    IconButton(\n                      tooltip: 'Mesaj olarak gönder',\n                      onPressed: onShare,\n                      icon: const Icon(\n                        Icons.send_outlined,\n                        color: Colors.white54,\n                      ),\n                    ),\n" + marker
+          if marker not in s:
+              raise SystemExit('spot route action marker not found')
+          s = s.replace(marker, insert, 1)
+          p.write_text(s)
+          PY
+          git config user.name 'tbt-fix-bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add lib/screens/spot_explore_screen_v2.dart
+          git rm .github/workflows/apply_spot_chat_share.yml
+          git commit -m 'feat: share photo spots directly in chat'
+          git push origin HEAD:feature/video-v1
