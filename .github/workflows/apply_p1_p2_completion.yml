@@ -1,0 +1,456 @@
+name: Apply P1 P2 Completion
+
+on:
+  push:
+    branches: [feature/video-v1]
+    paths:
+      - .github/workflows/apply_p1_p2_completion.yml
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/video-v1
+          fetch-depth: 0
+
+      - name: Apply scoped P1/P2 fixes
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          def replace(path, old, new, count=1):
+              p = Path(path)
+              text = p.read_text()
+              if old not in text:
+                  raise SystemExit(f'Expected block not found in {path}: {old[:120]!r}')
+              text = text.replace(old, new, count)
+              p.write_text(text)
+
+          # P1 #19 — carry real image/description metadata through the venue model.
+          path = 'lib/models/nearby_venue.dart'
+          text = Path(path).read_text()
+          text = text.replace(
+              "  final String website;\n",
+              "  final String website;\n  final String imageUrl;\n  final String description;\n",
+              1,
+          )
+          text = text.replace(
+              "    this.website = '',\n  });",
+              "    this.website = '',\n    this.imageUrl = '',\n    this.description = '',\n  });",
+              1,
+          )
+          text = text.replace(
+              "    'website': website,\n  };",
+              "    'website': website,\n    'imageUrl': imageUrl,\n    'description': description,\n  };",
+              1,
+          )
+          text = text.replace(
+              "      website: (json['website'] ?? '').toString(),\n    );",
+              "      website: (json['website'] ?? '').toString(),\n      imageUrl: (json['imageUrl'] ?? '').toString(),\n      description: (json['description'] ?? '').toString(),\n    );",
+              1,
+          )
+          Path(path).write_text(text)
+
+          # P1 #19 — verified business + OSM image/description sources.
+          path = 'lib/services/nearby_venue_service.dart'
+          text = Path(path).read_text()
+          old = """            website: (d['website'] ?? '').toString(),\n          ),"""
+          new = """            website: (d['website'] ?? '').toString(),
+            imageUrl: (
+              d['coverImageUrl'] ??
+              d['imageUrl'] ??
+              d['photoUrl'] ??
+              d['logoUrl'] ??
+              ''
+            ).toString(),
+            description: (
+              d['shortDescription'] ?? d['description'] ?? ''
+            ).toString(),
+          ),"""
+          if old not in text:
+              raise SystemExit('business venue constructor block not found')
+          text = text.replace(old, new, 1)
+          old = """          website: (tags['contact:website'] ?? tags['website'] ?? '')\n              .toString(),\n        ),"""
+          new = """          website: (tags['contact:website'] ?? tags['website'] ?? '')
+              .toString(),
+          imageUrl: (() {
+            final value = (tags['image'] ?? '').toString().trim();
+            return value.startsWith('https://') || value.startsWith('http://')
+                ? value
+                : '';
+          })(),
+          description: (
+            tags['description:tr'] ?? tags['description'] ?? ''
+          ).toString(),
+        ),"""
+          if old not in text:
+              raise SystemExit('OSM venue constructor block not found')
+          text = text.replace(old, new, 1)
+          Path(path).write_text(text)
+
+          # P1 #19 + P2 #22 — richer venue cards, skeleton state, one-tap city autocomplete.
+          path = 'lib/widgets/nearby_places_view.dart'
+          text = Path(path).read_text()
+          text = text.replace(
+              "import '../models/nearby_venue.dart';\n",
+              "import '../data/turkey_selection_data.dart';\nimport '../models/nearby_venue.dart';\n",
+              1,
+          )
+          text = text.replace(
+              "import 'chat_share_sheet.dart';\n",
+              "import 'chat_share_sheet.dart';\nimport 'searchable_selection_field.dart';\n",
+              1,
+          )
+          old = """              TextField(
+                controller: _cityController,
+                autofocus: true,
+                textInputAction: TextInputAction.search,
+                onSubmitted: (_) => _searchCity(sheetContext, setSheet),
+                decoration: const InputDecoration(
+                  prefixIcon: Icon(Icons.location_city_outlined),
+                  hintText: 'Örn. Elazığ, İzmir, İstanbul',
+                ),
+              ),
+              const SizedBox(height: 12),
+              FilledButton.icon(
+                onPressed: _citySearching
+                    ? null
+                    : () => _searchCity(sheetContext, setSheet),
+                icon: _citySearching
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.search_rounded),
+                label: Text(
+                  _citySearching ? 'Şehir bulunuyor…' : 'Şehri Göster',
+                ),
+              ),"""
+          new = """              SearchableSelectionField(
+                controller: _cityController,
+                options: turkeyCities,
+                labelText: 'Şehir',
+                hintText: 'Örn. Elazığ, İzmir, İstanbul',
+                prefixIcon: Icons.location_city_outlined,
+                enabled: !_citySearching,
+                maxSuggestions: 7,
+                onSelected: (_) => _searchCity(sheetContext, setSheet),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                _citySearching
+                    ? 'Şehir hazırlanıyor…'
+                    : 'Listeden şehre dokunduğunda doğrudan açılır.',
+                style: const TextStyle(color: Colors.white54, fontSize: 11),
+              ),"""
+          if old not in text:
+              raise SystemExit('city picker block not found')
+          text = text.replace(old, new, 1)
+          text = text.replace(
+              "    if (_loading) return const Center(child: CircularProgressIndicator());",
+              "    if (_loading) return const _VenueSkeletonList();",
+              1,
+          )
+          old = """              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceStrong,
+                  borderRadius: BorderRadius.circular(13),
+                ),
+                child: Icon(_icon, color: AppColors.cyan),
+              ),"""
+          new = """              ClipRRect(
+                borderRadius: BorderRadius.circular(13),
+                child: SizedBox(
+                  width: 72,
+                  height: 72,
+                  child: venue.imageUrl.trim().isNotEmpty
+                      ? Image.network(
+                          venue.imageUrl.trim(),
+                          fit: BoxFit.cover,
+                          filterQuality: FilterQuality.medium,
+                          errorBuilder: (_, __, ___) => _venuePlaceholder(),
+                        )
+                      : _venuePlaceholder(),
+                ),
+              ),"""
+          if old not in text:
+              raise SystemExit('venue icon block not found')
+          text = text.replace(old, new, 1)
+          old = """                      children: [
+                        if (rating.count > 0)"""
+          new = """                      children: [
+                        Text(
+                          venue.category.label,
+                          style: const TextStyle(
+                            color: AppColors.cyan,
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        if (rating.count > 0)"""
+          if old not in text:
+              raise SystemExit('venue metadata wrap block not found')
+          text = text.replace(old, new, 1)
+          old = """                    if (venue.address.isNotEmpty) ...[
+                      const SizedBox(height: 5),"""
+          new = """                    if (venue.description.trim().isNotEmpty) ...[
+                      const SizedBox(height: 5),
+                      Text(
+                        venue.description.trim(),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Colors.white60,
+                          fontSize: 11.5,
+                          height: 1.25,
+                        ),
+                      ),
+                    ],
+                    if (venue.address.isNotEmpty) ...[
+                      const SizedBox(height: 5),"""
+          if old not in text:
+              raise SystemExit('venue address block not found')
+          text = text.replace(old, new, 1)
+          marker = """  IconData get _icon => switch (widget.category) {"""
+          helper = """  Widget _venuePlaceholder() => ColoredBox(
+    color: AppColors.surfaceStrong,
+    child: Center(child: Icon(_icon, color: AppColors.cyan, size: 28)),
+  );
+
+  IconData get _icon => switch (widget.category) {"""
+          if marker not in text:
+              raise SystemExit('venue placeholder insertion point not found')
+          text = text.replace(marker, helper, 1)
+          insert_before = """class _SortChip extends StatelessWidget {"""
+          skeleton = """class _VenueSkeletonList extends StatelessWidget {
+  const _VenueSkeletonList();
+
+  @override
+  Widget build(BuildContext context) => ListView.builder(
+    padding: const EdgeInsets.fromLTRB(14, 2, 14, 28),
+    itemCount: 5,
+    itemBuilder: (_, __) => Container(
+      height: 102,
+      margin: const EdgeInsets.only(bottom: 9),
+      padding: const EdgeInsets.all(13),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 72,
+            height: 72,
+            decoration: BoxDecoration(
+              color: AppColors.surfaceStrong,
+              borderRadius: BorderRadius.circular(13),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(height: 13, width: 170, color: AppColors.surfaceStrong),
+                const SizedBox(height: 10),
+                Container(height: 10, width: 120, color: AppColors.surfaceStrong),
+                const SizedBox(height: 8),
+                Container(height: 10, width: 200, color: AppColors.surfaceStrong),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+class _SortChip extends StatelessWidget {"""
+          if insert_before not in text:
+              raise SystemExit('skeleton insertion point not found')
+          text = text.replace(insert_before, skeleton, 1)
+          Path(path).write_text(text)
+
+          # P1 #20 — make Buradayım/Buluşalım explicit while reusing privacy-safe city demand + event flows.
+          path = 'lib/widgets/retention_now_overlay.dart'
+          text = Path(path).read_text()
+          text = text.replace(
+              "import 'package:flutter/material.dart';\n",
+              "import 'package:flutter/material.dart';\n\nimport '../screens/activity_demand_screen.dart';\nimport '../screens/event_create_screen_v2.dart';\n",
+              1,
+          )
+          text = text.replace("                      'Şu An',", "                      'Buradayım / Buluşalım',", 1)
+          text = text.replace("                            'Şu An',", "                            'Buradayım / Buluşalım',", 1)
+          text = text.replace(
+              "                            'Çevrende ve TBT’de son hareketler',",
+              "                            'Yakınındaki planlara katıl veya yeni bir plan başlat',",
+              1,
+          )
+          old = """              Expanded(
+                child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>("""
+          new = """              const Padding(
+                padding: EdgeInsets.fromLTRB(16, 4, 16, 8),
+                child: _NowActions(),
+              ),
+              Expanded(
+                child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>("""
+          if old not in text:
+              raise SystemExit('now actions insertion point not found')
+          text = text.replace(old, new, 1)
+          marker = """class _RadarBadge extends StatelessWidget {"""
+          actions = """class _NowActions extends StatelessWidget {
+  const _NowActions();
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      Row(
+        children: [
+          Expanded(
+            child: FilledButton.icon(
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const ActivityDemandScreen(
+                    initialActivity: 'Sosyal',
+                  ),
+                ),
+              ),
+              icon: const Icon(Icons.near_me_rounded),
+              label: const Text('Buradayım'),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: OutlinedButton.icon(
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const EventCreateScreenV2(
+                    initialTitle: 'Buluşalım',
+                    initialDescription: 'Yakındaki insanlarla yeni bir plan.',
+                  ),
+                ),
+              ),
+              icon: const Icon(Icons.group_add_outlined),
+              label: const Text('Buluşalım'),
+            ),
+          ),
+        ],
+      ),
+      const SizedBox(height: 6),
+      const Text(
+        'Buradayım yalnızca seçtiğin şehir ve aktivite sinyalini paylaşır; kesin konum yayınlanmaz.',
+        style: TextStyle(color: Colors.white46, fontSize: 10.5, height: 1.3),
+      ),
+    ],
+  );
+}
+
+class _RadarBadge extends StatelessWidget {"""
+          if marker not in text:
+              raise SystemExit('now actions class insertion point not found')
+          text = text.replace(marker, actions, 1)
+          Path(path).write_text(text)
+
+          # P2 #22 — global search belongs in global header, not profile overflow.
+          path = 'lib/screens/home_shell_v3.dart'
+          text = Path(path).read_text()
+          marker = """        StreamBuilder<int>(
+          stream: AppNotificationService.instance.unreadCount(),"""
+          search_action = """        _HeaderAction(
+          tooltip: 'TBT’de Ara',
+          icon: Icons.search_rounded,
+          count: 0,
+          onTap: () => Navigator.pushNamed(context, '/search'),
+        ),
+        StreamBuilder<int>(
+          stream: AppNotificationService.instance.unreadCount(),"""
+          if marker not in text:
+              raise SystemExit('home header insertion point not found')
+          text = text.replace(marker, search_action, 1)
+          Path(path).write_text(text)
+
+          path = 'lib/screens/profile_page_v2.dart'
+          text = Path(path).read_text()
+          text = text.replace("""      case 'messages':
+        if (mounted) Navigator.pushNamed(context, '/messages');
+        return;
+      case 'search':
+        if (mounted) Navigator.pushNamed(context, '/search');
+        return;
+""", '', 1)
+          text = text.replace("""                const PopupMenuItem(
+                  value: 'messages',
+                  child: ListTile(
+                    dense: true,
+                    leading: Icon(Icons.chat_bubble_outline_rounded),
+                    title: Text('Mesajlar'),
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'search',
+                  child: ListTile(
+                    dense: true,
+                    leading: Icon(Icons.search_rounded),
+                    title: Text('TBT’de Ara'),
+                  ),
+                ),
+""", '', 1)
+          Path(path).write_text(text)
+
+          # Guardrail: camera/Iris files must remain untouched by this workflow.
+          forbidden = [
+              'lib/screens/camera_screen.dart',
+              'lib/screens/main_camera_screen.dart',
+              'lib/screens/ai_edit_screen.dart',
+          ]
+          import subprocess
+          changed = subprocess.check_output(['git', 'diff', '--name-only'], text=True).splitlines()
+          bad = sorted(set(changed).intersection(forbidden))
+          if bad:
+              raise SystemExit(f'Camera/Iris guardrail violated: {bad}')
+          print('\n'.join(changed))
+          PY
+
+      - name: Format changed Dart files
+        shell: bash
+        run: |
+          if command -v dart >/dev/null 2>&1; then
+            dart format \
+              lib/models/nearby_venue.dart \
+              lib/services/nearby_venue_service.dart \
+              lib/widgets/nearby_places_view.dart \
+              lib/widgets/retention_now_overlay.dart \
+              lib/screens/home_shell_v3.dart \
+              lib/screens/profile_page_v2.dart
+          fi
+
+      - name: Commit P1/P2 completion
+        shell: bash
+        run: |
+          git config user.name "tbt-fix-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add \
+            lib/models/nearby_venue.dart \
+            lib/services/nearby_venue_service.dart \
+            lib/widgets/nearby_places_view.dart \
+            lib/widgets/retention_now_overlay.dart \
+            lib/screens/home_shell_v3.dart \
+            lib/screens/profile_page_v2.dart
+          git diff --cached --quiet && exit 0
+          git commit -m "feat: complete P1 P2 video experience fixes"
+          git push origin HEAD:feature/video-v1
