@@ -765,7 +765,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      color: online ? const Color(0xFF55D68B) : Colors.white46,
+                      color: online ? const Color(0xFF55D68B) : Colors.white54,
                       fontSize: 11.5,
                     ),
                   ),
