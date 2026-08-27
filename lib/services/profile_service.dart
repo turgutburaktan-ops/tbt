@@ -16,10 +16,9 @@ class ProfileService {
   final FirebaseStorage _storage = FirebaseStorage.instance;
   Future<void>? _profileUpdateInFlight;
 
-  Stream<DocumentSnapshot<Map<String, dynamic>>?> watchMine() {
-    return switchAuthStream<DocumentSnapshot<Map<String, dynamic>>?>(
+  Stream<DocumentSnapshot<Map<String, dynamic>>> watchMine() {
+    return switchAuthStreamOrEmpty<DocumentSnapshot<Map<String, dynamic>>>(
       auth: _auth,
-      signedOutValue: null,
       signedIn: (user) => _firestore.collection('users').doc(user.uid).snapshots(),
     );
   }
