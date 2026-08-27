@@ -24,11 +24,8 @@ class _HomeDiscoverScreenState extends State<HomeDiscoverScreen> {
     super.dispose();
   }
 
-  String _normalize(Object? value) => (value ?? '')
-      .toString()
-      .trim()
-      .toLowerCase()
-      .replaceAll('ı', 'i');
+  String _normalize(Object? value) =>
+      (value ?? '').toString().trim().toLowerCase().replaceAll('ı', 'i');
 
   String _titleCase(String value) => value
       .trim()
@@ -121,21 +118,22 @@ class _HomeDiscoverScreenState extends State<HomeDiscoverScreen> {
       }
     } catch (_) {}
 
-    final ranked = byId.values
-        .map((doc) => (doc: doc, score: _userMatchScore(doc, typed)))
-        .where((item) => item.score > 0)
-        .toList()
-      ..sort((a, b) {
-        final byScore = b.score.compareTo(a.score);
-        if (byScore != 0) return byScore;
-        final aName = _normalize(
-          a.doc.data()['displayName'] ?? a.doc.data()['name'],
-        );
-        final bName = _normalize(
-          b.doc.data()['displayName'] ?? b.doc.data()['name'],
-        );
-        return aName.compareTo(bName);
-      });
+    final ranked =
+        byId.values
+            .map((doc) => (doc: doc, score: _userMatchScore(doc, typed)))
+            .where((item) => item.score > 0)
+            .toList()
+          ..sort((a, b) {
+            final byScore = b.score.compareTo(a.score);
+            if (byScore != 0) return byScore;
+            final aName = _normalize(
+              a.doc.data()['displayName'] ?? a.doc.data()['name'],
+            );
+            final bName = _normalize(
+              b.doc.data()['displayName'] ?? b.doc.data()['name'],
+            );
+            return aName.compareTo(bName);
+          });
 
     return ranked.take(12).map((item) => item.doc).toList();
   }
@@ -372,7 +370,9 @@ class _HomeDiscoverScreenState extends State<HomeDiscoverScreen> {
                     : NetworkImage(photo),
                 child: photo.trim().isEmpty
                     ? Text(
-                        name.isEmpty ? '?' : name.characters.first.toUpperCase(),
+                        name.isEmpty
+                            ? '?'
+                            : name.characters.first.toUpperCase(),
                       )
                     : null,
               ),
