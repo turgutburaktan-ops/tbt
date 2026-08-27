@@ -6,6 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../models/chat_message.dart';
 import '../services/chat_service.dart';
@@ -39,6 +40,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   final ImagePicker _picker = ImagePicker();
 
   String? _threadId;
+  Stream<ChatThread?>? _threadStream;
+  Stream<List<ChatMessage>>? _messagesStream;
   bool _loading = true;
   bool _sending = false;
   bool _sendingMedia = false;
@@ -82,6 +85,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       if (!mounted) return;
       setState(() {
         _threadId = id;
+        _threadStream = ChatService.instance.watchThread(id);
+        _messagesStream = ChatService.instance.messages(id);
         _loading = false;
       });
     } catch (e) {
@@ -438,6 +443,16 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       );
       return;
     }
+    if (message.sharedType == 'venue' || message.sharedType == 'spot') {
+      final uri = Uri.https('www.google.com', '/maps/search/', {
+        'api': '1',
+        'query': id,
+      });
+      if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+        throw Exception('Mekan haritada açılamadı.');
+      }
+      return;
+    }
     try {
       final snap = await FirebaseFirestore.instance
           .collection('posts')
@@ -513,11 +528,17 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     final canOpen = (message.sharedId?.trim().isNotEmpty ?? false);
     final icon = message.sharedType == 'event'
         ? Icons.event_rounded
+        : message.sharedType == 'venue' || message.sharedType == 'spot'
+        ? Icons.place_rounded
         : message.sharedType == 'reel'
         ? Icons.play_circle_fill_rounded
         : Icons.photo_library_rounded;
     final typeLabel = message.sharedType == 'event'
         ? 'Etkinlik'
+        : message.sharedType == 'venue'
+        ? 'Mekan'
+        : message.sharedType == 'spot'
+        ? 'Çekim noktası'
         : message.sharedType == 'reel'
         ? 'Reels'
         : 'Gönderi';
@@ -1170,7 +1191,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               ),
             )
           : StreamBuilder<ChatThread?>(
-              stream: ChatService.instance.watchThread(_threadId!),
+              stream: _threadStream,
               builder: (context, threadSnapshot) {
                 final thread = threadSnapshot.data;
                 return Column(
@@ -1178,7 +1199,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                     _searchBar(),
                     Expanded(
                       child: StreamBuilder<List<ChatMessage>>(
-                        stream: ChatService.instance.messages(_threadId!),
+                        stream: _messagesStream,
                         builder: (context, snapshot) {
                           if (snapshot.connectionState ==
                               ConnectionState.waiting) {
