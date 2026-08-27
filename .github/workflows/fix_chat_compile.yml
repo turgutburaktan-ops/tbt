@@ -30,7 +30,6 @@ jobs:
               raise SystemExit(0)
           p.write_text(s.replace(old, 'Colors.white54'))
           PY
-          dart format lib/screens/chat_screen.dart
           if git diff --quiet; then
             exit 0
           fi
