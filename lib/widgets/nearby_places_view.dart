@@ -5,6 +5,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../data/turkey_selection_data.dart';
 import '../models/nearby_venue.dart';
 import '../models/route_place.dart';
 import '../screens/business_profile_screen.dart';
@@ -14,6 +15,7 @@ import '../services/route_selection_service.dart';
 import '../services/venue_rating_service.dart';
 import '../theme/app_theme.dart';
 import 'chat_share_sheet.dart';
+import 'searchable_selection_field.dart';
 
 class NearbyPlacesView extends StatefulWidget {
   final NearbyVenueCategory category;
@@ -192,31 +194,22 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
                 style: TextStyle(color: Colors.white60, height: 1.35),
               ),
               const SizedBox(height: 14),
-              TextField(
+              SearchableSelectionField(
                 controller: _cityController,
-                autofocus: true,
-                textInputAction: TextInputAction.search,
-                onSubmitted: (_) => _searchCity(sheetContext, setSheet),
-                decoration: const InputDecoration(
-                  prefixIcon: Icon(Icons.location_city_outlined),
-                  hintText: 'Örn. Elazığ, İzmir, İstanbul',
-                ),
+                options: turkeyCities,
+                labelText: 'Şehir',
+                hintText: 'Örn. Elazığ, İzmir, İstanbul',
+                prefixIcon: Icons.location_city_outlined,
+                enabled: !_citySearching,
+                maxSuggestions: 7,
+                onSelected: (_) => _searchCity(sheetContext, setSheet),
               ),
-              const SizedBox(height: 12),
-              FilledButton.icon(
-                onPressed: _citySearching
-                    ? null
-                    : () => _searchCity(sheetContext, setSheet),
-                icon: _citySearching
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.search_rounded),
-                label: Text(
-                  _citySearching ? 'Şehir bulunuyor…' : 'Şehri Göster',
-                ),
+              const SizedBox(height: 8),
+              Text(
+                _citySearching
+                    ? 'Şehir hazırlanıyor…'
+                    : 'Listeden şehre dokunduğunda doğrudan açılır.',
+                style: const TextStyle(color: Colors.white54, fontSize: 11),
               ),
               if (NearbyVenueService.instance.hasSelectedCity) ...[
                 const SizedBox(height: 8),
@@ -444,7 +437,7 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
   }
 
   Widget _body() {
-    if (_loading) return const Center(child: CircularProgressIndicator());
+    if (_loading) return const _VenueSkeletonList();
     if (_error != null)
       return _StateMessage(
         icon: Icons.location_off_outlined,
@@ -493,14 +486,20 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceStrong,
-                  borderRadius: BorderRadius.circular(13),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(13),
+                child: SizedBox(
+                  width: 72,
+                  height: 72,
+                  child: venue.imageUrl.trim().isNotEmpty
+                      ? Image.network(
+                          venue.imageUrl.trim(),
+                          fit: BoxFit.cover,
+                          filterQuality: FilterQuality.medium,
+                          errorBuilder: (_, __, ___) => _venuePlaceholder(),
+                        )
+                      : _venuePlaceholder(),
                 ),
-                child: Icon(_icon, color: AppColors.cyan),
               ),
               const SizedBox(width: 11),
               Expanded(
@@ -521,6 +520,14 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
                       spacing: 7,
                       runSpacing: 3,
                       children: [
+                        Text(
+                          venue.category.label,
+                          style: const TextStyle(
+                            color: AppColors.cyan,
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
                         if (rating.count > 0)
                           Text(
                             '★ ${rating.average.toStringAsFixed(1)} (${rating.count})',
@@ -548,6 +555,19 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
                           ),
                       ],
                     ),
+                    if (venue.description.trim().isNotEmpty) ...[
+                      const SizedBox(height: 5),
+                      Text(
+                        venue.description.trim(),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Colors.white60,
+                          fontSize: 11.5,
+                          height: 1.25,
+                        ),
+                      ),
+                    ],
                     if (venue.address.isNotEmpty) ...[
                       const SizedBox(height: 5),
                       Text(
@@ -605,11 +625,62 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
     );
   }
 
+  Widget _venuePlaceholder() => ColoredBox(
+    color: AppColors.surfaceStrong,
+    child: Center(child: Icon(_icon, color: AppColors.cyan, size: 28)),
+  );
+
   IconData get _icon => switch (widget.category) {
     NearbyVenueCategory.cafe => Icons.local_cafe_outlined,
     NearbyVenueCategory.hotel => Icons.hotel_outlined,
     NearbyVenueCategory.dining => Icons.restaurant_outlined,
   };
+}
+
+class _VenueSkeletonList extends StatelessWidget {
+  const _VenueSkeletonList();
+
+  @override
+  Widget build(BuildContext context) => ListView.builder(
+    padding: const EdgeInsets.fromLTRB(14, 2, 14, 28),
+    itemCount: 5,
+    itemBuilder: (_, __) => Container(
+      height: 102,
+      margin: const EdgeInsets.only(bottom: 9),
+      padding: const EdgeInsets.all(13),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 72,
+            height: 72,
+            decoration: BoxDecoration(
+              color: AppColors.surfaceStrong,
+              borderRadius: BorderRadius.circular(13),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(height: 13, width: 170, color: AppColors.surfaceStrong),
+                const SizedBox(height: 10),
+                Container(height: 10, width: 120, color: AppColors.surfaceStrong),
+                const SizedBox(height: 8),
+                Container(height: 10, width: 200, color: AppColors.surfaceStrong),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
 }
 
 class _SortChip extends StatelessWidget {

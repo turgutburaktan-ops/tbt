@@ -125,12 +125,6 @@ class _ProfileBodyState extends State<_ProfileBody> {
       case 'stats':
         _openStatistics();
         return;
-      case 'messages':
-        if (mounted) Navigator.pushNamed(context, '/messages');
-        return;
-      case 'search':
-        if (mounted) Navigator.pushNamed(context, '/search');
-        return;
       case 'business':
         if (mounted) Navigator.pushNamed(context, '/business');
         return;
@@ -332,22 +326,6 @@ class _ProfileBodyState extends State<_ProfileBody> {
                     dense: true,
                     leading: Icon(Icons.share_outlined),
                     title: Text('Profili paylaş'),
-                  ),
-                ),
-                const PopupMenuItem(
-                  value: 'messages',
-                  child: ListTile(
-                    dense: true,
-                    leading: Icon(Icons.chat_bubble_outline_rounded),
-                    title: Text('Mesajlar'),
-                  ),
-                ),
-                const PopupMenuItem(
-                  value: 'search',
-                  child: ListTile(
-                    dense: true,
-                    leading: Icon(Icons.search_rounded),
-                    title: Text('TBT’de Ara'),
                   ),
                 ),
                 const PopupMenuItem(

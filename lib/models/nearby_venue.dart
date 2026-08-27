@@ -33,6 +33,8 @@ class NearbyVenue {
   final String openingHours;
   final String phone;
   final String website;
+  final String imageUrl;
+  final String description;
 
   const NearbyVenue({
     required this.id,
@@ -44,6 +46,8 @@ class NearbyVenue {
     this.openingHours = '',
     this.phone = '',
     this.website = '',
+    this.imageUrl = '',
+    this.description = '',
   });
 
   Map<String, Object?> toJson() => {
@@ -56,6 +60,8 @@ class NearbyVenue {
     'openingHours': openingHours,
     'phone': phone,
     'website': website,
+    'imageUrl': imageUrl,
+    'description': description,
   };
 
   factory NearbyVenue.fromJson(Map<String, dynamic> json) {
@@ -74,6 +80,8 @@ class NearbyVenue {
       openingHours: (json['openingHours'] ?? '').toString(),
       phone: (json['phone'] ?? '').toString(),
       website: (json['website'] ?? '').toString(),
+      imageUrl: (json['imageUrl'] ?? '').toString(),
+      description: (json['description'] ?? '').toString(),
     );
   }
 }

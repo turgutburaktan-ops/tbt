@@ -2,6 +2,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import '../screens/activity_demand_screen.dart';
+import '../screens/event_create_screen_v2.dart';
+
 class RetentionNowOverlay extends StatelessWidget {
   final Widget child;
   const RetentionNowOverlay({super.key, required this.child});
@@ -46,7 +49,7 @@ class RetentionNowOverlay extends StatelessWidget {
                     _PulseDot(),
                     SizedBox(width: 6),
                     Text(
-                      'Şu An',
+                      'Buradayım / Buluşalım',
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w800,
@@ -151,7 +154,7 @@ class _NowSheet extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Şu An',
+                            'Buradayım / Buluşalım',
                             style: TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.w900,
@@ -160,7 +163,7 @@ class _NowSheet extends StatelessWidget {
                           ),
                           SizedBox(height: 3),
                           Text(
-                            'Çevrende ve TBT’de son hareketler',
+                            'Yakınındaki planlara katıl veya yeni bir plan başlat',
                             style: TextStyle(
                               color: Colors.white54,
                               fontSize: 12.5,
@@ -172,6 +175,10 @@ class _NowSheet extends StatelessWidget {
                     _RadarBadge(),
                   ],
                 ),
+              ),
+              const Padding(
+                padding: EdgeInsets.fromLTRB(16, 4, 16, 8),
+                child: _NowActions(),
               ),
               Expanded(
                 child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
@@ -262,6 +269,56 @@ class _NowSheet extends StatelessWidget {
       ),
     );
   }
+}
+
+class _NowActions extends StatelessWidget {
+  const _NowActions();
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      Row(
+        children: [
+          Expanded(
+            child: FilledButton.icon(
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const ActivityDemandScreen(
+                    initialActivity: 'Sosyal',
+                  ),
+                ),
+              ),
+              icon: const Icon(Icons.near_me_rounded),
+              label: const Text('Buradayım'),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: OutlinedButton.icon(
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const EventCreateScreenV2(
+                    initialTitle: 'Buluşalım',
+                    initialDescription: 'Yakındaki insanlarla yeni bir plan.',
+                  ),
+                ),
+              ),
+              icon: const Icon(Icons.group_add_outlined),
+              label: const Text('Buluşalım'),
+            ),
+          ),
+        ],
+      ),
+      const SizedBox(height: 6),
+      const Text(
+        'Buradayım yalnızca seçtiğin şehir ve aktivite sinyalini paylaşır; kesin konum yayınlanmaz.',
+        style: TextStyle(color: Colors.white46, fontSize: 10.5, height: 1.3),
+      ),
+    ],
+  );
 }
 
 class _RadarBadge extends StatelessWidget {

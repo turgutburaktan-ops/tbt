@@ -399,6 +399,12 @@ class _HomeHeader extends StatelessWidget {
           ),
         ] else
           const Spacer(),
+        _HeaderAction(
+          tooltip: 'TBT’de Ara',
+          icon: Icons.search_rounded,
+          count: 0,
+          onTap: () => Navigator.pushNamed(context, '/search'),
+        ),
         StreamBuilder<int>(
           stream: AppNotificationService.instance.unreadCount(),
           builder: (_, s) => _HeaderAction(

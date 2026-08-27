@@ -260,6 +260,16 @@ class NearbyVenueService {
             openingHours: (d['openingHours'] ?? '').toString(),
             phone: (d['phone'] ?? '').toString(),
             website: (d['website'] ?? '').toString(),
+            imageUrl: (
+              d['coverImageUrl'] ??
+              d['imageUrl'] ??
+              d['photoUrl'] ??
+              d['logoUrl'] ??
+              ''
+            ).toString(),
+            description: (
+              d['shortDescription'] ?? d['description'] ?? ''
+            ).toString(),
           ),
         );
       }
@@ -382,6 +392,15 @@ class NearbyVenueService {
           phone: (tags['contact:phone'] ?? tags['phone'] ?? '').toString(),
           website: (tags['contact:website'] ?? tags['website'] ?? '')
               .toString(),
+          imageUrl: (() {
+            final value = (tags['image'] ?? '').toString().trim();
+            return value.startsWith('https://') || value.startsWith('http://')
+                ? value
+                : '';
+          })(),
+          description: (
+            tags['description:tr'] ?? tags['description'] ?? ''
+          ).toString(),
         ),
       );
       if (out.length >= 600) break;
