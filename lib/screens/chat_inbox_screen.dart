@@ -18,6 +18,7 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocus = FocusNode();
   String _query = '';
+  int _threadsRevision = 0;
 
   @override
   void dispose() {
@@ -65,9 +66,16 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
             child: CircularProgressIndicator(color: Color(0xFFB7BCC2)),
           );
         }
-        if (snapshot.hasError) {
+        if (snapshot.hasError && !snapshot.hasData) {
           return const Center(
-            child: Text('Kullanıcı araması şu anda kullanılamıyor.'),
+            child: Padding(
+              padding: EdgeInsets.all(28),
+              child: Text(
+                'Kullanıcı araması şu anda kullanılamıyor.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.white60),
+              ),
+            ),
           );
         }
 
@@ -164,12 +172,43 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
   }
 
   Widget _threads(String myId) {
+    final revision = _threadsRevision;
     return StreamBuilder<List<ChatThread>>(
+      key: ValueKey('threads-$revision'),
       stream: ChatService.instance.myThreads(),
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
+        if (snapshot.connectionState == ConnectionState.waiting &&
+            !snapshot.hasData) {
           return const Center(
             child: CircularProgressIndicator(color: Color(0xFFB7BCC2)),
+          );
+        }
+        if (snapshot.hasError && !snapshot.hasData) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(30),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.cloud_off_rounded,
+                    size: 48,
+                    color: Colors.white30,
+                  ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Mesajlar şu anda yüklenemedi.',
+                    style: TextStyle(fontWeight: FontWeight.w800),
+                  ),
+                  const SizedBox(height: 12),
+                  OutlinedButton.icon(
+                    onPressed: () => setState(() => _threadsRevision++),
+                    icon: const Icon(Icons.refresh_rounded),
+                    label: const Text('Tekrar Dene'),
+                  ),
+                ],
+              ),
+            ),
           );
         }
 
@@ -218,7 +257,7 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
             final thread = threads[index];
             final otherIds = thread.memberIds
                 .where((id) => id != myId)
-                .toList();
+                .toList(growable: false);
             if (otherIds.isEmpty) return const SizedBox.shrink();
             final lastRead = thread.lastReadAt[myId];
             final unread = thread.lastSenderId != myId &&
@@ -227,7 +266,6 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
             return _ThreadTile(
               thread: thread,
               otherUserId: otherIds.first,
-              myId: myId,
               unread: unread,
             );
           },
@@ -318,7 +356,9 @@ String _threadTime(DateTime? value) {
   if (value == null) return '';
   final local = value.toLocal();
   final now = DateTime.now();
-  if (now.year == local.year && now.month == local.month && now.day == local.day) {
+  if (now.year == local.year &&
+      now.month == local.month &&
+      now.day == local.day) {
     return '${local.hour.toString().padLeft(2, '0')}:${local.minute.toString().padLeft(2, '0')}';
   }
   if (now.difference(local).inDays < 7) {
@@ -331,32 +371,23 @@ String _threadTime(DateTime? value) {
 class _ThreadTile extends StatelessWidget {
   final ChatThread thread;
   final String otherUserId;
-  final String myId;
   final bool unread;
 
   const _ThreadTile({
     required this.thread,
     required this.otherUserId,
-    required this.myId,
     required this.unread,
   });
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-      stream: FirebaseFirestore.instance
-          .collection('users')
-          .doc(otherUserId)
-          .snapshots(),
+    return FutureBuilder<_ThreadUserPreview>(
+      future: _ThreadUserCache.load(otherUserId),
       builder: (context, snapshot) {
-        final data = snapshot.data?.data() ?? const <String, dynamic>{};
-        final name =
-            (data['displayName'] ?? data['username'] ?? 'Topluluk üyesi')
-                .toString();
-        final username = (data['username'] ?? data['handle'] ?? '')
-            .toString()
-            .replaceFirst(RegExp(r'^@'), '');
-        final photoUrl = (data['photoUrl'] ?? '').toString();
+        final preview = snapshot.data ?? _ThreadUserPreview.fallback;
+        final name = preview.name;
+        final username = preview.username;
+        final photoUrl = preview.photoUrl;
 
         return ListTile(
           contentPadding: const EdgeInsets.symmetric(
@@ -434,4 +465,82 @@ class _ThreadTile extends StatelessWidget {
       },
     );
   }
+}
+
+class _ThreadUserPreview {
+  final String name;
+  final String username;
+  final String photoUrl;
+
+  const _ThreadUserPreview({
+    required this.name,
+    required this.username,
+    required this.photoUrl,
+  });
+
+  static const fallback = _ThreadUserPreview(
+    name: 'Topluluk üyesi',
+    username: '',
+    photoUrl: '',
+  );
+}
+
+class _ThreadUserCache {
+  static const Duration _lifetime = Duration(minutes: 5);
+  static final Map<String, _CachedThreadUser> _cache = {};
+  static final Map<String, Future<_ThreadUserPreview>> _inFlight = {};
+
+  static Future<_ThreadUserPreview> load(String userId) {
+    final cached = _cache[userId];
+    if (cached != null && !cached.isExpired) {
+      return Future.value(cached.value);
+    }
+    final running = _inFlight[userId];
+    if (running != null) return running;
+
+    final request = _fetch(userId);
+    _inFlight[userId] = request;
+    return request.whenComplete(() {
+      if (identical(_inFlight[userId], request)) _inFlight.remove(userId);
+    });
+  }
+
+  static Future<_ThreadUserPreview> _fetch(String userId) async {
+    final stale = _cache[userId]?.value;
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .get()
+          .timeout(const Duration(seconds: 4));
+      final data = doc.data() ?? const <String, dynamic>{};
+      final name =
+          (data['displayName'] ?? data['username'] ?? 'Topluluk üyesi')
+              .toString()
+              .trim();
+      final username = (data['username'] ?? data['handle'] ?? '')
+          .toString()
+          .trim()
+          .replaceFirst(RegExp(r'^@'), '');
+      final value = _ThreadUserPreview(
+        name: name.isEmpty ? 'Topluluk üyesi' : name,
+        username: username,
+        photoUrl: (data['photoUrl'] ?? '').toString().trim(),
+      );
+      _cache[userId] = _CachedThreadUser(value, DateTime.now());
+      return value;
+    } catch (_) {
+      return stale ?? _ThreadUserPreview.fallback;
+    }
+  }
+}
+
+class _CachedThreadUser {
+  final _ThreadUserPreview value;
+  final DateTime savedAt;
+
+  const _CachedThreadUser(this.value, this.savedAt);
+
+  bool get isExpired =>
+      DateTime.now().difference(savedAt) > _ThreadUserCache._lifetime;
 }
