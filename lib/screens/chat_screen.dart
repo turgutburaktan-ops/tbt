@@ -28,8 +28,7 @@ class ChatScreen extends StatefulWidget {
   State<ChatScreen> createState() => _ChatScreenState();
 }
 
-class _ChatScreenState extends State<ChatScreen>
-    with WidgetsBindingObserver {
+class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   final TextEditingController _controller = TextEditingController();
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _focusNode = FocusNode();
@@ -54,12 +53,9 @@ class _ChatScreenState extends State<ChatScreen>
     _controller.addListener(_handleTypingChanged);
     _prepare();
     Future.microtask(() => ChatService.instance.setPresence(true));
-    _presenceRefreshTimer = Timer.periodic(
-      const Duration(seconds: 5),
-      (_) {
-        if (mounted) setState(() {});
-      },
-    );
+    _presenceRefreshTimer = Timer.periodic(const Duration(seconds: 5), (_) {
+      if (mounted) setState(() {});
+    });
   }
 
   @override
@@ -276,7 +272,10 @@ class _ChatScreenState extends State<ChatScreen>
                         onTap: () => Navigator.pop(context, 'react:$emoji'),
                         child: Padding(
                           padding: const EdgeInsets.all(9),
-                          child: Text(emoji, style: const TextStyle(fontSize: 25)),
+                          child: Text(
+                            emoji,
+                            style: const TextStyle(fontSize: 25),
+                          ),
                         ),
                       ),
                     )
@@ -296,7 +295,10 @@ class _ChatScreenState extends State<ChatScreen>
               ),
             if (mine)
               ListTile(
-                leading: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent),
+                leading: const Icon(
+                  Icons.delete_outline_rounded,
+                  color: Colors.redAccent,
+                ),
                 title: const Text(
                   'Herkesten geri al',
                   style: TextStyle(color: Colors.redAccent),
@@ -316,9 +318,8 @@ class _ChatScreenState extends State<ChatScreen>
     } else if (action == 'copy') {
       await Clipboard.setData(ClipboardData(text: message.text));
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Mesaj kopyalandı.')),
-        );
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text('Mesaj kopyalandı.')));
       }
     } else if (action == 'delete') {
       try {
@@ -402,7 +403,8 @@ class _ChatScreenState extends State<ChatScreen>
 
   Widget _replyPreview(ChatMessage message, bool mine) {
     if (!message.hasReply) return const SizedBox.shrink();
-    final repliedToMe = message.replySenderId == FirebaseAuth.instance.currentUser?.uid;
+    final repliedToMe =
+        message.replySenderId == FirebaseAuth.instance.currentUser?.uid;
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.only(bottom: 7),
@@ -410,7 +412,9 @@ class _ChatScreenState extends State<ChatScreen>
       decoration: BoxDecoration(
         color: mine ? Colors.black12 : Colors.white.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(10),
-        border: const Border(left: BorderSide(color: Colors.white54, width: 2.5)),
+        border: const Border(
+          left: BorderSide(color: Colors.white54, width: 2.5),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -444,12 +448,14 @@ class _ChatScreenState extends State<ChatScreen>
     final icon = message.sharedType == 'event'
         ? Icons.event_rounded
         : message.sharedType == 'reel'
-            ? Icons.play_circle_fill_rounded
-            : Icons.photo_library_rounded;
+        ? Icons.play_circle_fill_rounded
+        : Icons.photo_library_rounded;
     return Container(
       width: 250,
       decoration: BoxDecoration(
-        color: mine ? Colors.black.withValues(alpha: 0.08) : const Color(0xFF121820),
+        color: mine
+            ? Colors.black.withValues(alpha: 0.08)
+            : const Color(0xFF121820),
         borderRadius: BorderRadius.circular(15),
         border: Border.all(color: mine ? Colors.black12 : Colors.white10),
       ),
@@ -471,7 +477,11 @@ class _ChatScreenState extends State<ChatScreen>
             padding: const EdgeInsets.all(11),
             child: Row(
               children: [
-                Icon(icon, size: 19, color: mine ? Colors.black54 : Colors.white60),
+                Icon(
+                  icon,
+                  size: 19,
+                  color: mine ? Colors.black54 : Colors.white60,
+                ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -546,7 +556,10 @@ class _ChatScreenState extends State<ChatScreen>
               SizedBox(width: 6),
               Text(
                 'Mesaj geri alındı',
-                style: TextStyle(color: Colors.white38, fontStyle: FontStyle.italic),
+                style: TextStyle(
+                  color: Colors.white38,
+                  fontStyle: FontStyle.italic,
+                ),
               ),
             ],
           ),
@@ -560,17 +573,23 @@ class _ChatScreenState extends State<ChatScreen>
         onDoubleTap: () => _react(message, '❤️'),
         onLongPress: () => _showMessageActions(message, mine),
         child: Container(
-          constraints: BoxConstraints(maxWidth: MediaQuery.sizeOf(context).width * 0.79),
+          constraints: BoxConstraints(
+            maxWidth: MediaQuery.sizeOf(context).width * 0.79,
+          ),
           margin: EdgeInsets.only(bottom: reactions.isEmpty ? 8 : 4),
           child: Column(
-            crossAxisAlignment: mine ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+            crossAxisAlignment: mine
+                ? CrossAxisAlignment.end
+                : CrossAxisAlignment.start,
             children: [
               Container(
                 padding: message.isImage
                     ? const EdgeInsets.all(4)
                     : const EdgeInsets.fromLTRB(13, 10, 11, 7),
                 decoration: BoxDecoration(
-                  color: mine ? const Color(0xFFD7DADF) : const Color(0xFF1B222B),
+                  color: mine
+                      ? const Color(0xFFD7DADF)
+                      : const Color(0xFF1B222B),
                   borderRadius: BorderRadius.only(
                     topLeft: const Radius.circular(20),
                     topRight: const Radius.circular(20),
@@ -602,7 +621,10 @@ class _ChatScreenState extends State<ChatScreen>
                               errorWidget: const ColoredBox(
                                 color: Color(0xFF15191E),
                                 child: Center(
-                                  child: Icon(Icons.broken_image_outlined, color: Colors.white54),
+                                  child: Icon(
+                                    Icons.broken_image_outlined,
+                                    color: Colors.white54,
+                                  ),
                                 ),
                               ),
                             ),
@@ -641,9 +663,13 @@ class _ChatScreenState extends State<ChatScreen>
                           if (mine) ...[
                             const SizedBox(width: 4),
                             Icon(
-                              seen ? Icons.done_all_rounded : Icons.done_rounded,
+                              seen
+                                  ? Icons.done_all_rounded
+                                  : Icons.done_rounded,
                               size: 14,
-                              color: seen ? const Color(0xFF2878B5) : Colors.black38,
+                              color: seen
+                                  ? const Color(0xFF2878B5)
+                                  : Colors.black38,
                             ),
                           ],
                         ],
@@ -687,11 +713,15 @@ class _ChatScreenState extends State<ChatScreen>
                   child: ClipOval(
                     child: FirebaseMediaImage(
                       imageUrl: photoUrl,
-                      fallbackStoragePaths: FirebaseMediaImage.avatarPaths(widget.otherUserId),
+                      fallbackStoragePaths: FirebaseMediaImage.avatarPaths(
+                        widget.otherUserId,
+                      ),
                       fit: BoxFit.cover,
                       errorWidget: const ColoredBox(
                         color: Color(0xFF20252B),
-                        child: Center(child: Icon(Icons.person_rounded, size: 21)),
+                        child: Center(
+                          child: Icon(Icons.person_rounded, size: 21),
+                        ),
                       ),
                     ),
                   ),
@@ -706,7 +736,10 @@ class _ChatScreenState extends State<ChatScreen>
                       decoration: BoxDecoration(
                         color: const Color(0xFF55D68B),
                         shape: BoxShape.circle,
-                        border: Border.all(color: const Color(0xFF090A0C), width: 2),
+                        border: Border.all(
+                          color: const Color(0xFF090A0C),
+                          width: 2,
+                        ),
                       ),
                     ),
                   ),
@@ -722,7 +755,10 @@ class _ChatScreenState extends State<ChatScreen>
                     widget.otherDisplayName,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.w900),
+                    style: const TextStyle(
+                      fontSize: 15.5,
+                      fontWeight: FontWeight.w900,
+                    ),
                   ),
                   Text(
                     online ? 'çevrimiçi' : _lastSeenLabel(lastSeen),
@@ -812,7 +848,11 @@ class _ChatScreenState extends State<ChatScreen>
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.reply_rounded, size: 18, color: Colors.white54),
+                    const Icon(
+                      Icons.reply_rounded,
+                      size: 18,
+                      color: Colors.white54,
+                    ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Column(
@@ -820,13 +860,19 @@ class _ChatScreenState extends State<ChatScreen>
                         children: [
                           const Text(
                             'Yanıtlıyorsun',
-                            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900),
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w900,
+                            ),
                           ),
                           Text(
                             _replyTo!.isImage ? '📷 Fotoğraf' : _replyTo!.text,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(color: Colors.white54, fontSize: 12),
+                            style: const TextStyle(
+                              color: Colors.white54,
+                              fontSize: 12,
+                            ),
                           ),
                         ],
                       ),
@@ -866,14 +912,20 @@ class _ChatScreenState extends State<ChatScreen>
                       maxLines: 5,
                       maxLength: 1500,
                       textCapitalization: TextCapitalization.sentences,
-                      style: const TextStyle(color: Colors.white, fontSize: 15.5),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 15.5,
+                      ),
                       decoration: InputDecoration(
                         counterText: '',
                         hintText: 'Mesaj yaz...',
                         hintStyle: const TextStyle(color: Colors.white38),
                         filled: true,
                         fillColor: const Color(0xFF1B222B),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 17, vertical: 12),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 17,
+                          vertical: 12,
+                        ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(24),
                           borderSide: BorderSide.none,
@@ -987,99 +1039,116 @@ class _ChatScreenState extends State<ChatScreen>
               child: CircularProgressIndicator(color: Color(0xFFB7BCC2)),
             )
           : _error != null
-              ? Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Text(
-                      _error!,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(color: Colors.white70),
-                    ),
-                  ),
-                )
-              : StreamBuilder<ChatThread?>(
-                  stream: ChatService.instance.watchThread(_threadId!),
-                  builder: (context, threadSnapshot) {
-                    final thread = threadSnapshot.data;
-                    return Column(
-                      children: [
-                        _searchBar(),
-                        Expanded(
-                          child: StreamBuilder<List<ChatMessage>>(
-                            stream: ChatService.instance.messages(_threadId!),
-                            builder: (context, snapshot) {
-                              if (snapshot.connectionState == ConnectionState.waiting) {
-                                return const Center(
-                                  child: CircularProgressIndicator(color: Color(0xFFB7BCC2)),
-                                );
-                              }
-                              final allMessages = snapshot.data ?? const <ChatMessage>[];
-                              _markReadFromMessages(allMessages, myId);
-                              final query = _searchController.text.trim().toLowerCase();
-                              final messages = query.isEmpty
-                                  ? allMessages
-                                  : allMessages.where((message) {
-                                      final haystack = '${message.text} ${message.sharedTitle ?? ''}'
-                                          .toLowerCase();
+          ? Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Text(
+                  _error!,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.white70),
+                ),
+              ),
+            )
+          : StreamBuilder<ChatThread?>(
+              stream: ChatService.instance.watchThread(_threadId!),
+              builder: (context, threadSnapshot) {
+                final thread = threadSnapshot.data;
+                return Column(
+                  children: [
+                    _searchBar(),
+                    Expanded(
+                      child: StreamBuilder<List<ChatMessage>>(
+                        stream: ChatService.instance.messages(_threadId!),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const Center(
+                              child: CircularProgressIndicator(
+                                color: Color(0xFFB7BCC2),
+                              ),
+                            );
+                          }
+                          final allMessages =
+                              snapshot.data ?? const <ChatMessage>[];
+                          _markReadFromMessages(allMessages, myId);
+                          final query = _searchController.text
+                              .trim()
+                              .toLowerCase();
+                          final messages = query.isEmpty
+                              ? allMessages
+                              : allMessages
+                                    .where((message) {
+                                      final haystack =
+                                          '${message.text} ${message.sharedTitle ?? ''}'
+                                              .toLowerCase();
                                       return haystack.contains(query);
-                                    }).toList(growable: false);
-                              if (messages.isEmpty) {
-                                return Center(
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(28),
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(
-                                          query.isEmpty
-                                              ? Icons.chat_bubble_outline_rounded
-                                              : Icons.search_off_rounded,
-                                          size: 46,
-                                          color: Colors.white24,
-                                        ),
-                                        const SizedBox(height: 12),
-                                        Text(
-                                          query.isEmpty ? 'Sohbeti başlat' : 'Eşleşen mesaj yok',
-                                          style: const TextStyle(
-                                            fontSize: 17,
-                                            fontWeight: FontWeight.w900,
-                                          ),
-                                        ),
-                                      ],
+                                    })
+                                    .toList(growable: false);
+                          if (messages.isEmpty) {
+                            return Center(
+                              child: Padding(
+                                padding: const EdgeInsets.all(28),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      query.isEmpty
+                                          ? Icons.chat_bubble_outline_rounded
+                                          : Icons.search_off_rounded,
+                                      size: 46,
+                                      color: Colors.white24,
                                     ),
-                                  ),
-                                );
-                              }
-                              return ListView.builder(
-                                reverse: true,
-                                keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-                                padding: const EdgeInsets.fromLTRB(12, 14, 12, 10),
-                                itemCount: messages.length,
-                                itemBuilder: (context, index) {
-                                  final message = messages[index];
-                                  final mine = message.senderId == myId;
-                                  final removed = message.deleted ||
-                                      (thread?.deletedMessageIds.contains(message.id) ?? false);
-                                  final reactions = thread?.messageReactions[message.id] ??
-                                      message.reactions;
-                                  return _messageBubble(
-                                    message: message,
-                                    mine: mine,
-                                    seen: mine && _isSeen(message, thread),
-                                    removed: removed,
-                                    reactions: reactions,
-                                  );
-                                },
+                                    const SizedBox(height: 12),
+                                    Text(
+                                      query.isEmpty
+                                          ? 'Sohbeti başlat'
+                                          : 'Eşleşen mesaj yok',
+                                      style: const TextStyle(
+                                        fontSize: 17,
+                                        fontWeight: FontWeight.w900,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          }
+                          return ListView.builder(
+                            reverse: true,
+                            keyboardDismissBehavior:
+                                ScrollViewKeyboardDismissBehavior.onDrag,
+                            padding: const EdgeInsets.fromLTRB(12, 14, 12, 10),
+                            itemCount: messages.length,
+                            itemBuilder: (context, index) {
+                              final message = messages[index];
+                              final mine = message.senderId == myId;
+                              final removed =
+                                  message.deleted ||
+                                  (thread?.deletedMessageIds.contains(
+                                        message.id,
+                                      ) ??
+                                      false);
+                              final reactions =
+                                  thread?.messageReactions[message.id] ??
+                                  message.reactions;
+                              return _messageBubble(
+                                message: message,
+                                mine: mine,
+                                seen: mine && _isSeen(message, thread),
+                                removed: removed,
+                                reactions: reactions,
                               );
                             },
-                          ),
-                        ),
-                        _typingIndicator(thread),
-                        _composer(),
-                      ],
-                    );
-                  },
-                ),
+                          );
+                        },
+                      ),
+                    ),
+                    _typingIndicator(thread),
+                    _composer(),
+                  ],
+                );
+              },
+            ),
     );
   }
 }

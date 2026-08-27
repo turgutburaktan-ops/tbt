@@ -22,7 +22,8 @@ class _ChatAudioMessageState extends State<ChatAudioMessage> {
   bool _loading = false;
   String? _error;
 
-  Duration get _fallbackDuration => Duration(milliseconds: widget.durationMs ?? 0);
+  Duration get _fallbackDuration =>
+      Duration(milliseconds: widget.durationMs ?? 0);
 
   Future<void> _toggle() async {
     if (_loading) return;
@@ -95,7 +96,9 @@ class _ChatAudioMessageState extends State<ChatAudioMessage> {
                         ),
                       )
                     : Icon(
-                        playing ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                        playing
+                            ? Icons.pause_rounded
+                            : Icons.play_arrow_rounded,
                       ),
               );
             },
@@ -131,7 +134,9 @@ class _ChatAudioMessageState extends State<ChatAudioMessage> {
                                   overlayRadius: 12,
                                 ),
                                 activeTrackColor: foreground,
-                                inactiveTrackColor: muted.withValues(alpha: 0.35),
+                                inactiveTrackColor: muted.withValues(
+                                  alpha: 0.35,
+                                ),
                                 thumbColor: foreground,
                               ),
                               child: Slider(
@@ -141,8 +146,8 @@ class _ChatAudioMessageState extends State<ChatAudioMessage> {
                                 onChanged: duration.inMilliseconds <= 0
                                     ? null
                                     : (next) => _player.seek(
-                                          Duration(milliseconds: next.round()),
-                                        ),
+                                        Duration(milliseconds: next.round()),
+                                      ),
                               ),
                             ),
                             Row(
@@ -150,11 +155,17 @@ class _ChatAudioMessageState extends State<ChatAudioMessage> {
                               children: [
                                 Text(
                                   _label(position),
-                                  style: TextStyle(fontSize: 10.5, color: muted),
+                                  style: TextStyle(
+                                    fontSize: 10.5,
+                                    color: muted,
+                                  ),
                                 ),
                                 Text(
                                   _label(duration),
-                                  style: TextStyle(fontSize: 10.5, color: muted),
+                                  style: TextStyle(
+                                    fontSize: 10.5,
+                                    color: muted,
+                                  ),
                                 ),
                               ],
                             ),
@@ -165,10 +176,7 @@ class _ChatAudioMessageState extends State<ChatAudioMessage> {
                   },
                 ),
                 if (_error != null)
-                  Text(
-                    _error!,
-                    style: TextStyle(fontSize: 10.5, color: muted),
-                  ),
+                  Text(_error!, style: TextStyle(fontSize: 10.5, color: muted)),
               ],
             ),
           ),
