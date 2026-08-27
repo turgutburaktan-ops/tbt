@@ -11,6 +11,7 @@ on:
   workflow_dispatch:
 
 # Keep this workflow as the production gate for runtime Firestore rule changes.
+# Redeploy marker: 2026-08-27 chat access refresh
 jobs:
   deploy:
     runs-on: ubuntu-latest
