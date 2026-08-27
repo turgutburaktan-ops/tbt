@@ -130,27 +130,35 @@ class AuthService {
   }) async {
     if (user == null) return;
     final ref = _firestore.collection('users').doc(user.uid);
-    final existing = await ref.get();
-    final data = existing.data();
-
-    final fallbackName = (user.displayName ?? '').trim();
-    await ref.set({
-      'uid': user.uid,
-      'email': user.email ?? data?['email'] ?? '',
-      'phoneNumber': user.phoneNumber ?? data?['phoneNumber'] ?? '',
-      'displayName': fallbackName.isNotEmpty
-          ? fallbackName
-          : (data?['displayName'] ?? '').toString(),
-      'authProvider': provider,
-      'onboardingRequired': data == null
-          ? true
-          : (data['onboardingRequired'] ?? false),
-      'onboardingCompleted': data == null
-          ? false
-          : (data['onboardingCompleted'] ?? false),
-      if (data == null) 'createdAt': FieldValue.serverTimestamp(),
-      'updatedAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
+    try {
+      final existing = await ref.get().timeout(const Duration(seconds: 4));
+      final data = existing.data();
+      final fallbackName = (user.displayName ?? '').trim();
+      await ref.set({
+        'uid': user.uid,
+        'email': user.email ?? data?['email'] ?? '',
+        'phoneNumber': user.phoneNumber ?? data?['phoneNumber'] ?? '',
+        'displayName': fallbackName.isNotEmpty
+            ? fallbackName
+            : (data?['displayName'] ?? '').toString(),
+        'authProvider': provider,
+        'onboardingRequired': data == null
+            ? true
+            : (data['onboardingRequired'] ?? false),
+        'onboardingCompleted': data == null
+            ? false
+            : (data['onboardingCompleted'] ?? false),
+        if (data == null) 'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true)).timeout(const Duration(seconds: 5));
+    } catch (error, stackTrace) {
+      if (kDebugMode) {
+        debugPrint('Social profile sync skipped: $error');
+        debugPrintStack(stackTrace: stackTrace);
+      }
+      // Authentication already succeeded. A temporary profile sync problem
+      // must not turn a valid sign-in into a fake login failure.
+    }
   }
 
   Future<void> verifyPhoneNumber({
@@ -219,7 +227,9 @@ class AuthService {
   }
 
   Future<void> logout() async {
-    await _googleSignIn.signOut();
+    try {
+      await _googleSignIn.signOut().timeout(const Duration(seconds: 4));
+    } catch (_) {}
     await _auth.signOut();
   }
 
