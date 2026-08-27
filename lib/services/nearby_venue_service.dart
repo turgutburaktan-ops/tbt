@@ -55,10 +55,20 @@ class NearbyVenueService {
     'trabzon': ('Trabzon', 41.0015, 39.7178),
     'van': ('Van', 38.5012, 43.3729),
   };
+
+  final Map<String, Future<List<NearbyVenue>>> _inFlight =
+      <String, Future<List<NearbyVenue>>>{};
+  SharedPreferences? _preferences;
+
   double? _cityLatitude, _cityLongitude, _south, _west, _north, _east;
   String? _cityName;
+
   String? get selectedCityName => _cityName;
   bool get hasSelectedCity => _cityLatitude != null && _cityLongitude != null;
+
+  Future<SharedPreferences> _prefs() async =>
+      _preferences ??= await SharedPreferences.getInstance();
+
   String _fold(String v) => v
       .trim()
       .toLowerCase()
@@ -68,6 +78,7 @@ class NearbyVenueService {
       .replaceAll('ş', 's')
       .replaceAll('ö', 'o')
       .replaceAll('ç', 'c');
+
   CityVenueArea _area(String n, double a, double o) => CityVenueArea(
     name: n,
     latitude: a,
@@ -77,6 +88,7 @@ class NearbyVenueService {
     west: o - .8,
     east: o + .8,
   );
+
   Future<CityVenueArea?> findCity(String value) async {
     final q = value.trim();
     if (q.length < 2) return null;
@@ -121,8 +133,9 @@ class NearbyVenueService {
           lon == null ||
           bbox == null ||
           bbox.length < 4 ||
-          bbox.any((e) => e == null))
+          bbox.any((e) => e == null)) {
         return null;
+      }
       final address = chosen['address'] is Map
           ? Map<String, dynamic>.from(chosen['address'] as Map)
           : const <String, dynamic>{};
@@ -175,17 +188,46 @@ class NearbyVenueService {
     required double longitude,
     int radiusMeters = cityScaleRadiusMeters,
     bool forceRefresh = false,
+  }) {
+    final state = _snapshotState(latitude, longitude);
+    final key = _cacheKeyForState(category, state, radiusMeters);
+    final running = _inFlight[key];
+    if (running != null) return running;
+
+    final request = _nearbyInternal(
+      category: category,
+      state: state,
+      radiusMeters: radiusMeters,
+      forceRefresh: forceRefresh,
+      key: key,
+    );
+    _inFlight[key] = request;
+    return request.whenComplete(() {
+      if (identical(_inFlight[key], request)) _inFlight.remove(key);
+    });
+  }
+
+  Future<List<NearbyVenue>> _nearbyInternal({
+    required NearbyVenueCategory category,
+    required _VenueQueryState state,
+    required int radiusMeters,
+    required bool forceRefresh,
+    required String key,
   }) async {
-    final a = _cityLatitude ?? latitude,
-        o = _cityLongitude ?? longitude,
-        p = await SharedPreferences.getInstance(),
-        key = _cacheKey(category, a, o, radiusMeters),
-        cached = _readCache(p, key);
-    if (!forceRefresh && cached != null && !cached.isExpired)
-      return _merge(
-        cached.venues,
-        await _tbtBusinesses(category, a, o, radiusMeters),
-      );
+    final p = await _prefs();
+    final cached = _readCache(p, key);
+    final businessFuture = _tbtBusinesses(
+      category,
+      state.latitude,
+      state.longitude,
+      radiusMeters,
+      state,
+    );
+
+    if (!forceRefresh && cached != null && !cached.isExpired) {
+      return _merge(cached.venues, await businessFuture);
+    }
+
     Object? lastError;
     for (final endpoint in _endpoints) {
       try {
@@ -193,31 +235,58 @@ class NearbyVenueService {
             .post(
               Uri.parse(endpoint),
               headers: _headers,
-              body: {'data': _query(category, a, o, radiusMeters)},
+              body: {
+                'data': _query(
+                  category,
+                  state.latitude,
+                  state.longitude,
+                  radiusMeters,
+                  state,
+                ),
+              },
             )
-            .timeout(const Duration(seconds: 20));
+            .timeout(const Duration(seconds: 14));
         if (r.statusCode != 200) {
           lastError = 'HTTP ${r.statusCode}';
           continue;
         }
-        final osm = _parse(r.body, category);
-        await p.setString(
-          key,
-          jsonEncode({
-            'savedAt': DateTime.now().millisecondsSinceEpoch,
-            'venues': osm.map((v) => v.toJson()).toList(),
-          }),
-        );
-        return _merge(osm, await _tbtBusinesses(category, a, o, radiusMeters));
+        final osm = _parse(r.body, category, state);
+        try {
+          await p.setString(
+            key,
+            jsonEncode({
+              'savedAt': DateTime.now().millisecondsSinceEpoch,
+              'venues': osm.map((v) => v.toJson()).toList(),
+            }),
+          );
+        } catch (_) {
+          // Cache failure must not block fresh venue data.
+        }
+        return _merge(osm, await businessFuture);
       } catch (e) {
         lastError = e;
       }
     }
-    final t = await _tbtBusinesses(category, a, o, radiusMeters);
+
+    final t = await businessFuture;
     if (cached != null) return _merge(cached.venues, t);
     if (t.isNotEmpty) return t;
     throw Exception(
       'Mekan verisi alınamadı: ${lastError ?? 'bağlantı hatası'}',
+    );
+  }
+
+  _VenueQueryState _snapshotState(double latitude, double longitude) {
+    final selected = hasSelectedCity;
+    return _VenueQueryState(
+      cityName: _cityName,
+      latitude: _cityLatitude ?? latitude,
+      longitude: _cityLongitude ?? longitude,
+      south: _south,
+      west: _west,
+      north: _north,
+      east: _east,
+      selectedCity: selected,
     );
   }
 
@@ -226,27 +295,31 @@ class NearbyVenueService {
     double a,
     double o,
     int r,
+    _VenueQueryState state,
   ) async {
     try {
       final snap = await FirebaseFirestore.instance
-              .collection('business_venues')
-              .where('source', isEqualTo: 'user_submission')
-              .limit(500)
-              .get(),
-          out = <NearbyVenue>[];
+          .collection('business_venues')
+          .where('source', isEqualTo: 'user_submission')
+          .limit(500)
+          .get()
+          .timeout(const Duration(seconds: 7));
+      final out = <NearbyVenue>[];
       for (final doc in snap.docs) {
         final d = doc.data();
         if (d['verified'] != true ||
             d['pendingListing'] == true ||
-            (d['category'] ?? '').toString() != c.name)
+            (d['category'] ?? '').toString() != c.name) {
           continue;
+        }
         final lat = (d['latitude'] as num?)?.toDouble(),
             lon = (d['longitude'] as num?)?.toDouble();
         if (lat == null || lon == null) continue;
-        if (hasSelectedCity && _hasBounds) {
-          if (!_insideBounds(lat, lon)) continue;
-        } else if (_distanceMeters(a, o, lat, lon) > r)
+        if (state.hasBounds) {
+          if (!state.insideBounds(lat, lon)) continue;
+        } else if (_distanceMeters(a, o, lat, lon) > r) {
           continue;
+        }
         final n = (d['venueName'] ?? '').toString().trim();
         if (n.isEmpty) continue;
         out.add(
@@ -279,11 +352,6 @@ class NearbyVenueService {
     }
   }
 
-  bool get _hasBounds =>
-      _south != null && _west != null && _north != null && _east != null;
-  bool _insideBounds(double a, double o) =>
-      !_hasBounds ||
-      (a >= _south! && a <= _north! && o >= _west! && o <= _east!);
   List<NearbyVenue> _merge(List<NearbyVenue> b, List<NearbyVenue> m) {
     final out = <NearbyVenue>[], seen = <String>{};
     for (final v in [...m, ...b]) {
@@ -309,11 +377,15 @@ class NearbyVenueService {
     return e * 2 * math.atan2(math.sqrt(z), math.sqrt(1 - z));
   }
 
-  String _cacheKey(NearbyVenueCategory c, double a, double o, int r) {
-    final city = hasSelectedCity
-        ? '_${_cityName?.toLowerCase().replaceAll(' ', '_') ?? 'city'}'
+  String _cacheKeyForState(
+    NearbyVenueCategory c,
+    _VenueQueryState state,
+    int r,
+  ) {
+    final city = state.selectedCity
+        ? '_${state.cityName?.toLowerCase().replaceAll(' ', '_') ?? 'city'}'
         : '_nearby';
-    return 'city_venues_v6_${c.name}_${r}_${(a * 10).round()}_${(o * 10).round()}$city';
+    return 'city_venues_v7_${c.name}_${r}_${(state.latitude * 10).round()}_${(state.longitude * 10).round()}$city';
   }
 
   _CachedVenues? _readCache(SharedPreferences p, String key) {
@@ -335,18 +407,28 @@ class NearbyVenueService {
     }
   }
 
-  String _query(NearbyVenueCategory c, double a, double o, int r) {
+  String _query(
+    NearbyVenueCategory c,
+    double a,
+    double o,
+    int r,
+    _VenueQueryState state,
+  ) {
     final f = c.osmFilters
         .map(
-          (x) => hasSelectedCity && _hasBounds
-              ? '  nwr(${_south!},${_west!},${_north!},${_east!})$x["name"];'
+          (x) => state.hasBounds
+              ? '  nwr(${state.south!},${state.west!},${state.north!},${state.east!})$x["name"];'
               : '  nwr(around:$r,$a,$o)$x["name"];',
         )
         .join('\n');
-    return '[out:json][timeout:20];\n(\n$f\n);\nout center tags;';
+    return '[out:json][timeout:14];\n(\n$f\n);\nout center tags;';
   }
 
-  List<NearbyVenue> _parse(String body, NearbyVenueCategory c) {
+  List<NearbyVenue> _parse(
+    String body,
+    NearbyVenueCategory c,
+    _VenueQueryState state,
+  ) {
     final d = jsonDecode(body) as Map<String, dynamic>,
         elements = (d['elements'] as List<dynamic>?) ?? const [];
     final out = <NearbyVenue>[], seen = <String>{};
@@ -365,7 +447,7 @@ class NearbyVenueService {
               (item['lon'] as num?)?.toDouble() ??
               (center?['lon'] as num?)?.toDouble();
       if (a == null || o == null) continue;
-      if (hasSelectedCity && _hasBounds && !_insideBounds(a, o)) continue;
+      if (state.hasBounds && !state.insideBounds(a, o)) continue;
       final k =
           '${n.toLowerCase()}_${a.toStringAsFixed(4)}_${o.toStringAsFixed(4)}';
       if (!seen.add(k)) continue;
@@ -407,6 +489,35 @@ class NearbyVenueService {
     }
     return out;
   }
+}
+
+class _VenueQueryState {
+  final String? cityName;
+  final double latitude;
+  final double longitude;
+  final double? south;
+  final double? west;
+  final double? north;
+  final double? east;
+  final bool selectedCity;
+
+  const _VenueQueryState({
+    required this.cityName,
+    required this.latitude,
+    required this.longitude,
+    required this.south,
+    required this.west,
+    required this.north,
+    required this.east,
+    required this.selectedCity,
+  });
+
+  bool get hasBounds =>
+      selectedCity && south != null && west != null && north != null && east != null;
+
+  bool insideBounds(double lat, double lon) =>
+      !hasBounds ||
+      (lat >= south! && lat <= north! && lon >= west! && lon <= east!);
 }
 
 class _CachedVenues {
