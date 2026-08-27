@@ -217,19 +217,33 @@ class AppNotificationService {
   Future<void> markAllRead() async {
     final user = _auth.currentUser;
     if (user == null) return;
-    final snapshot = await _items(user.uid)
-        .where('read', isEqualTo: false)
-        .limit(100)
-        .get();
-    if (snapshot.docs.isEmpty) return;
 
-    final batch = _firestore.batch();
-    for (final doc in snapshot.docs) {
-      batch.set(doc.reference, {
-        'read': true,
-        'readAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
+    // Legacy notifications may not have a `read` field at all. The UI treats
+    // those as unread, but a `where(read == false)` query can never return
+    // missing fields. Scan in bounded pages and normalize every unread record.
+    DocumentSnapshot<Map<String, dynamic>>? cursor;
+    while (true) {
+      Query<Map<String, dynamic>> query = _items(user.uid).limit(400);
+      if (cursor != null) query = query.startAfterDocument(cursor);
+      final snapshot = await query.get();
+      if (snapshot.docs.isEmpty) return;
+
+      final unreadDocs = snapshot.docs
+          .where((doc) => doc.data()['read'] != true)
+          .toList(growable: false);
+      if (unreadDocs.isNotEmpty) {
+        final batch = _firestore.batch();
+        for (final doc in unreadDocs) {
+          batch.set(doc.reference, {
+            'read': true,
+            'readAt': FieldValue.serverTimestamp(),
+          }, SetOptions(merge: true));
+        }
+        await batch.commit();
+      }
+
+      if (snapshot.docs.length < 400) return;
+      cursor = snapshot.docs.last;
     }
-    await batch.commit();
   }
 }
