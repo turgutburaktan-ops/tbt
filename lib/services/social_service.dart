@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -9,59 +11,92 @@ class SocialService {
   static final SocialService instance = SocialService._();
 
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-
   final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  final Map<String, Stream<DocumentSnapshot<Map<String, dynamic>>>>
+      _profileStreams = {};
+  final Map<String, Stream<QuerySnapshot<Map<String, dynamic>>>>
+      _postStreams = {};
+  final Map<String, Stream<int>> _followersCountStreams = {};
+  final Map<String, Stream<int>> _followingCountStreams = {};
+  final Map<String, Future<void>> _followMutations = {};
+  Future<void>? _ensureProfileInFlight;
 
   User? get currentUser => _auth.currentUser;
 
-  // =========================================================
-  // KULLANICI PROFİLİNİ FIRESTORE'A HAZIRLA
-  // =========================================================
+  Future<void> ensureUserProfile() {
+    final running = _ensureProfileInFlight;
+    if (running != null) return running;
 
-  Future<void> ensureUserProfile() async {
+    final request = _ensureUserProfileInternal();
+    _ensureProfileInFlight = request;
+    return request.whenComplete(() {
+      if (identical(_ensureProfileInFlight, request)) {
+        _ensureProfileInFlight = null;
+      }
+    });
+  }
+
+  Future<void> _ensureUserProfileInternal() async {
     final user = _auth.currentUser;
-
     if (user == null) return;
 
     final userRef = _firestore.collection('users').doc(user.uid);
+    final snapshot = await userRef.get().timeout(const Duration(seconds: 6));
+    final existing = snapshot.data();
 
-    final snapshot = await userRef.get();
-
-    final data = {
-      'uid': user.uid,
-      'displayName': user.displayName?.trim().isNotEmpty == true
-          ? user.displayName
-          : 'Fotoğrafçı',
-      'email': user.email ?? '',
-      'photoUrl': user.photoURL ?? '',
-      'updatedAt': FieldValue.serverTimestamp(),
-    };
-
-    if (!snapshot.exists) {
-      await userRef.set({...data, 'createdAt': FieldValue.serverTimestamp()});
-    } else {
-      await userRef.set(data, SetOptions(merge: true));
+    if (!snapshot.exists || existing == null) {
+      await userRef.set({
+        'uid': user.uid,
+        'displayName': user.displayName?.trim().isNotEmpty == true
+            ? user.displayName
+            : 'Fotoğrafçı',
+        'email': user.email ?? '',
+        'photoUrl': user.photoURL ?? '',
+        'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      }).timeout(const Duration(seconds: 7));
+      return;
     }
-  }
 
-  // =========================================================
-  // KULLANICI PROFİLİ
-  // =========================================================
+    // Opening a profile must not rewrite the user document every time. That
+    // used to fan out a fresh snapshot to every screen listening to the user.
+    final patch = <String, dynamic>{};
+    if ((existing['uid'] ?? '').toString().isEmpty) patch['uid'] = user.uid;
+    if ((existing['displayName'] ?? '').toString().trim().isEmpty &&
+        (user.displayName ?? '').trim().isNotEmpty) {
+      patch['displayName'] = user.displayName!.trim();
+    }
+    if ((existing['email'] ?? '').toString().trim().isEmpty &&
+        (user.email ?? '').trim().isNotEmpty) {
+      patch['email'] = user.email!.trim();
+    }
+    if ((existing['photoUrl'] ?? '').toString().trim().isEmpty &&
+        (user.photoURL ?? '').trim().isNotEmpty) {
+      patch['photoUrl'] = user.photoURL!.trim();
+    }
+    if (patch.isEmpty) return;
+
+    patch['updatedAt'] = FieldValue.serverTimestamp();
+    await userRef
+        .set(patch, SetOptions(merge: true))
+        .timeout(const Duration(seconds: 7));
+  }
 
   Stream<DocumentSnapshot<Map<String, dynamic>>> userProfile(String userId) {
-    return _firestore.collection('users').doc(userId).snapshots();
+    return _profileStreams.putIfAbsent(
+      userId,
+      () => _firestore
+          .collection('users')
+          .doc(userId)
+          .snapshots()
+          .asBroadcastStream(),
+    );
   }
-
-  // =========================================================
-  // TAKİP EDİYOR MU?
-  // =========================================================
 
   Stream<bool> isFollowing(String targetUserId) {
     final user = _auth.currentUser;
-
-    if (user == null) {
-      return Stream.value(false);
-    }
+    if (user == null) return Stream.value(false);
 
     return _firestore
         .collection('users')
@@ -69,24 +104,30 @@ class SocialService {
         .collection('following')
         .doc(targetUserId)
         .snapshots()
-        .map((snapshot) => snapshot.exists);
+        .map((snapshot) => snapshot.exists)
+        .distinct();
   }
 
-  // =========================================================
-  // TAKİP ET
-  // =========================================================
-
-  Future<void> followUser(String targetUserId) async {
+  Future<void> followUser(String targetUserId) {
     final user = _auth.currentUser;
-
     if (user == null) {
-      throw Exception('Takip etmek için giriş yapmalısın.');
+      return Future.error(Exception('Takip etmek için giriş yapmalısın.'));
     }
-
     if (user.uid == targetUserId) {
-      throw Exception('Kendini takip edemezsin.');
+      return Future.error(Exception('Kendini takip edemezsin.'));
     }
 
+    final key = '${user.uid}:$targetUserId';
+    final running = _followMutations[key];
+    if (running != null) return running;
+    final request = _followUserInternal(user, targetUserId);
+    _followMutations[key] = request;
+    return request.whenComplete(() {
+      if (identical(_followMutations[key], request)) _followMutations.remove(key);
+    });
+  }
+
+  Future<void> _followUserInternal(User user, String targetUserId) async {
     await ensureUserProfile();
 
     final followingRef = _firestore
@@ -94,26 +135,20 @@ class SocialService {
         .doc(user.uid)
         .collection('following')
         .doc(targetUserId);
-
     final followerRef = _firestore
         .collection('users')
         .doc(targetUserId)
         .collection('followers')
         .doc(user.uid);
 
-    final existing = await followingRef.get();
-
-    if (existing.exists) {
-      return;
-    }
+    final existing = await followingRef.get().timeout(const Duration(seconds: 6));
+    if (existing.exists) return;
 
     final batch = _firestore.batch();
-
     batch.set(followingRef, {
       'userId': targetUserId,
       'createdAt': FieldValue.serverTimestamp(),
     });
-
     batch.set(followerRef, {
       'userId': user.uid,
       'displayName': user.displayName?.trim().isNotEmpty == true
@@ -122,124 +157,116 @@ class SocialService {
       'photoUrl': user.photoURL ?? '',
       'createdAt': FieldValue.serverTimestamp(),
     });
+    await batch.commit().timeout(const Duration(seconds: 8));
 
-    await batch.commit();
-
-    try {
-      final displayName = (user.displayName ?? '').trim().isEmpty
-          ? 'Bir kullanıcı'
-          : user.displayName!.trim();
-      await AppNotificationService.instance.notifyUser(
-        userId: targetUserId,
-        type: 'follow',
-        title: '$displayName seni takip etmeye başladı',
-        body: 'Profilini görmek için dokun.',
-        actorId: user.uid,
-      );
-    } catch (_) {
-      // Takip işlemi başarılıysa bildirim hatası ana işlemi bozmaz.
-    }
+    final displayName = (user.displayName ?? '').trim().isEmpty
+        ? 'Bir kullanıcı'
+        : user.displayName!.trim();
+    unawaited(_notifyQuietly(
+      userId: targetUserId,
+      type: 'follow',
+      title: '$displayName seni takip etmeye başladı',
+      body: 'Profilini görmek için dokun.',
+      actorId: user.uid,
+    ));
   }
 
-  // =========================================================
-  // TAKİBİ BIRAK
-  // =========================================================
-
-  Future<void> unfollowUser(String targetUserId) async {
+  Future<void> unfollowUser(String targetUserId) {
     final user = _auth.currentUser;
+    if (user == null) return Future.error(Exception('Giriş yapmalısın.'));
+    if (user.uid == targetUserId) return Future.value();
 
-    if (user == null) {
-      throw Exception('Giriş yapmalısın.');
-    }
+    final key = '${user.uid}:$targetUserId';
+    final running = _followMutations[key];
+    if (running != null) return running;
+    final request = _unfollowUserInternal(user.uid, targetUserId);
+    _followMutations[key] = request;
+    return request.whenComplete(() {
+      if (identical(_followMutations[key], request)) _followMutations.remove(key);
+    });
+  }
 
-    if (user.uid == targetUserId) {
-      return;
-    }
-
+  Future<void> _unfollowUserInternal(String uid, String targetUserId) async {
     final followingRef = _firestore
         .collection('users')
-        .doc(user.uid)
+        .doc(uid)
         .collection('following')
         .doc(targetUserId);
-
     final followerRef = _firestore
         .collection('users')
         .doc(targetUserId)
         .collection('followers')
-        .doc(user.uid);
+        .doc(uid);
 
     final batch = _firestore.batch();
-
     batch.delete(followingRef);
-
     batch.delete(followerRef);
-
-    await batch.commit();
+    await batch.commit().timeout(const Duration(seconds: 8));
   }
-
-  // =========================================================
-  // TAKİP ET / TAKİBİ BIRAK
-  // =========================================================
 
   Future<void> toggleFollow(String targetUserId) async {
     final user = _auth.currentUser;
+    if (user == null) throw Exception('Giriş yapmalısın.');
+    if (user.uid == targetUserId) return;
 
-    if (user == null) {
-      throw Exception('Giriş yapmalısın.');
+    final key = '${user.uid}:$targetUserId';
+    final running = _followMutations[key];
+    if (running != null) return running;
+
+    final request = _toggleFollowInternal(user, targetUserId);
+    _followMutations[key] = request;
+    try {
+      await request;
+    } finally {
+      if (identical(_followMutations[key], request)) _followMutations.remove(key);
     }
+  }
 
+  Future<void> _toggleFollowInternal(User user, String targetUserId) async {
     final followingRef = _firestore
         .collection('users')
         .doc(user.uid)
         .collection('following')
         .doc(targetUserId);
-
-    final snapshot = await followingRef.get();
-
+    final snapshot = await followingRef.get().timeout(const Duration(seconds: 6));
     if (snapshot.exists) {
-      await unfollowUser(targetUserId);
+      await _unfollowUserInternal(user.uid, targetUserId);
     } else {
-      await followUser(targetUserId);
+      await _followUserInternal(user, targetUserId);
     }
   }
 
-  // =========================================================
-  // TAKİPÇİ SAYISI
-  // =========================================================
-
   Stream<int> followersCount(String userId) {
-    return _firestore
-        .collection('users')
-        .doc(userId)
-        .collection('followers')
-        .snapshots()
-        .map((snapshot) => snapshot.docs.length);
+    return _followersCountStreams.putIfAbsent(
+      userId,
+      () => _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('followers')
+          .snapshots()
+          .map((snapshot) => snapshot.docs.length)
+          .distinct()
+          .asBroadcastStream(),
+    );
   }
-
-  // =========================================================
-  // TAKİP EDİLEN SAYISI
-  // =========================================================
 
   Stream<int> followingCount(String userId) {
-    return _firestore
-        .collection('users')
-        .doc(userId)
-        .collection('following')
-        .snapshots()
-        .map((snapshot) => snapshot.docs.length);
+    return _followingCountStreams.putIfAbsent(
+      userId,
+      () => _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('following')
+          .snapshots()
+          .map((snapshot) => snapshot.docs.length)
+          .distinct()
+          .asBroadcastStream(),
+    );
   }
-
-  // =========================================================
-  // TAKİP EDİLEN KULLANICI ID'LERİ
-  // Akış ekranında kullanacağız.
-  // =========================================================
 
   Stream<List<String>> followingIds() {
     final user = _auth.currentUser;
-
-    if (user == null) {
-      return Stream.value(<String>[]);
-    }
+    if (user == null) return Stream.value(<String>[]);
 
     return _firestore
         .collection('users')
@@ -249,10 +276,6 @@ class SocialService {
         .map((snapshot) => snapshot.docs.map((doc) => doc.id).toList());
   }
 
-  // =========================================================
-  // TAKİPÇİLER
-  // =========================================================
-
   Stream<QuerySnapshot<Map<String, dynamic>>> followers(String userId) {
     return _firestore
         .collection('users')
@@ -260,10 +283,6 @@ class SocialService {
         .collection('followers')
         .snapshots();
   }
-
-  // =========================================================
-  // TAKİP EDİLENLER
-  // =========================================================
 
   Stream<QuerySnapshot<Map<String, dynamic>>> following(String userId) {
     return _firestore
@@ -273,14 +292,34 @@ class SocialService {
         .snapshots();
   }
 
-  // =========================================================
-  // KULLANICININ PAYLAŞIMLARI
-  // =========================================================
-
   Stream<QuerySnapshot<Map<String, dynamic>>> userPosts(String userId) {
-    return _firestore
-        .collection('posts')
-        .where('userId', isEqualTo: userId)
-        .snapshots();
+    return _postStreams.putIfAbsent(
+      userId,
+      () => _firestore
+          .collection('posts')
+          .where('userId', isEqualTo: userId)
+          .snapshots()
+          .asBroadcastStream(),
+    );
+  }
+
+  Future<void> _notifyQuietly({
+    required String userId,
+    required String type,
+    required String title,
+    required String body,
+    required String actorId,
+  }) async {
+    try {
+      await AppNotificationService.instance
+          .notifyUser(
+            userId: userId,
+            type: type,
+            title: title,
+            body: body,
+            actorId: actorId,
+          )
+          .timeout(const Duration(seconds: 6));
+    } catch (_) {}
   }
 }
