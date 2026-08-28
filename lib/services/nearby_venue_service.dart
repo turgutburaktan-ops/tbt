@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
 
@@ -26,6 +27,7 @@ class NearbyVenueService {
   static final instance = NearbyVenueService._();
   static const _cacheLifetime = Duration(hours: 18);
   static const int cityScaleRadiusMeters = 80000;
+  static const int _selectedCityMaxDistanceMeters = 55000;
   static const _endpoints = <String>[
     'https://overpass-api.de/api/interpreter',
     'https://overpass.private.coffee/api/interpreter',
@@ -83,10 +85,10 @@ class NearbyVenueService {
     name: n,
     latitude: a,
     longitude: o,
-    south: a - .65,
-    north: a + .65,
-    west: o - .8,
-    east: o + .8,
+    south: a - .55,
+    north: a + .55,
+    west: o - .65,
+    east: o + .65,
   );
 
   Future<CityVenueArea?> findCity(String value) async {
@@ -224,11 +226,77 @@ class NearbyVenueService {
       state,
     );
 
-    if (!forceRefresh && cached != null && !cached.isExpired) {
-      return _merge(cached.venues, await businessFuture);
+    // Stale-while-refresh behavior: normal navigation should never block on a
+    // slow Overpass endpoint when we already have usable city data.
+    if (!forceRefresh && cached != null) {
+      final business = await businessFuture;
+      final merged = _merge(cached.venues, business);
+      if (cached.isExpired) {
+        unawaited(
+          _refreshCacheQuietly(
+            category: category,
+            state: state,
+            radiusMeters: radiusMeters,
+            key: key,
+          ),
+        );
+      }
+      return merged;
     }
 
-    Object? lastError;
+    final fresh = await _fetchFreshOsm(
+      category: category,
+      state: state,
+      radiusMeters: radiusMeters,
+    );
+    if (fresh != null) {
+      try {
+        await p.setString(
+          key,
+          jsonEncode({
+            'savedAt': DateTime.now().millisecondsSinceEpoch,
+            'venues': fresh.map((v) => v.toJson()).toList(),
+          }),
+        );
+      } catch (_) {}
+      return _merge(fresh, await businessFuture);
+    }
+
+    final t = await businessFuture;
+    if (cached != null) return _merge(cached.venues, t);
+    if (t.isNotEmpty) return t;
+    throw Exception('Mekan verisi alınamadı.');
+  }
+
+  Future<void> _refreshCacheQuietly({
+    required NearbyVenueCategory category,
+    required _VenueQueryState state,
+    required int radiusMeters,
+    required String key,
+  }) async {
+    try {
+      final fresh = await _fetchFreshOsm(
+        category: category,
+        state: state,
+        radiusMeters: radiusMeters,
+      );
+      if (fresh == null) return;
+      final p = await _prefs();
+      await p.setString(
+        key,
+        jsonEncode({
+          'savedAt': DateTime.now().millisecondsSinceEpoch,
+          'venues': fresh.map((v) => v.toJson()).toList(),
+        }),
+      );
+    } catch (_) {}
+  }
+
+  Future<List<NearbyVenue>?> _fetchFreshOsm({
+    required NearbyVenueCategory category,
+    required _VenueQueryState state,
+    required int radiusMeters,
+  }) async {
     for (final endpoint in _endpoints) {
       try {
         final r = await http
@@ -245,35 +313,12 @@ class NearbyVenueService {
                 ),
               },
             )
-            .timeout(const Duration(seconds: 14));
-        if (r.statusCode != 200) {
-          lastError = 'HTTP ${r.statusCode}';
-          continue;
-        }
-        final osm = _parse(r.body, category, state);
-        try {
-          await p.setString(
-            key,
-            jsonEncode({
-              'savedAt': DateTime.now().millisecondsSinceEpoch,
-              'venues': osm.map((v) => v.toJson()).toList(),
-            }),
-          );
-        } catch (_) {
-          // Cache failure must not block fresh venue data.
-        }
-        return _merge(osm, await businessFuture);
-      } catch (e) {
-        lastError = e;
-      }
+            .timeout(const Duration(seconds: 7));
+        if (r.statusCode != 200) continue;
+        return _parse(r.body, category, state);
+      } catch (_) {}
     }
-
-    final t = await businessFuture;
-    if (cached != null) return _merge(cached.venues, t);
-    if (t.isNotEmpty) return t;
-    throw Exception(
-      'Mekan verisi alınamadı: ${lastError ?? 'bağlantı hatası'}',
-    );
+    return null;
   }
 
   _VenueQueryState _snapshotState(double latitude, double longitude) {
@@ -290,6 +335,45 @@ class NearbyVenueService {
     );
   }
 
+  bool _belongsToSelectedCity(
+    _VenueQueryState state,
+    double lat,
+    double lon, {
+    String cityTag = '',
+    String address = '',
+  }) {
+    if (!state.selectedCity) return true;
+    if (state.hasBounds && !state.insideBounds(lat, lon)) return false;
+    if (_distanceMeters(state.latitude, state.longitude, lat, lon) >
+        _selectedCityMaxDistanceMeters) {
+      return false;
+    }
+
+    final expected = _fold(state.cityName ?? '');
+    if (expected.isEmpty) return true;
+    final tagged = _fold(cityTag);
+    if (tagged.isNotEmpty &&
+        !tagged.contains(expected) &&
+        !expected.contains(tagged)) {
+      return false;
+    }
+    final foldedAddress = _fold(address);
+    if (foldedAddress.isNotEmpty) {
+      const otherMajorCities = <String>[
+        'diyarbakir',
+        'malatya',
+        'bingol',
+        'tunceli',
+        'erzincan',
+        'adiyaman',
+      ];
+      for (final other in otherMajorCities) {
+        if (other != expected && foldedAddress.contains(other)) return false;
+      }
+    }
+    return true;
+  }
+
   Future<List<NearbyVenue>> _tbtBusinesses(
     NearbyVenueCategory c,
     double a,
@@ -303,7 +387,7 @@ class NearbyVenueService {
           .where('source', isEqualTo: 'user_submission')
           .limit(500)
           .get()
-          .timeout(const Duration(seconds: 7));
+          .timeout(const Duration(seconds: 5));
       final out = <NearbyVenue>[];
       for (final doc in snap.docs) {
         final d = doc.data();
@@ -315,8 +399,18 @@ class NearbyVenueService {
         final lat = (d['latitude'] as num?)?.toDouble(),
             lon = (d['longitude'] as num?)?.toDouble();
         if (lat == null || lon == null) continue;
-        if (state.hasBounds) {
-          if (!state.insideBounds(lat, lon)) continue;
+        final address = (d['address'] ?? '').toString();
+        final city = (d['city'] ?? d['province'] ?? '').toString();
+        if (state.selectedCity) {
+          if (!_belongsToSelectedCity(
+            state,
+            lat,
+            lon,
+            cityTag: city,
+            address: address,
+          )) {
+            continue;
+          }
         } else if (_distanceMeters(a, o, lat, lon) > r) {
           continue;
         }
@@ -329,7 +423,7 @@ class NearbyVenueService {
             name: n,
             latitude: lat,
             longitude: lon,
-            address: (d['address'] ?? '').toString(),
+            address: address,
             openingHours: (d['openingHours'] ?? '').toString(),
             phone: (d['phone'] ?? '').toString(),
             website: (d['website'] ?? '').toString(),
@@ -385,7 +479,7 @@ class NearbyVenueService {
     final city = state.selectedCity
         ? '_${state.cityName?.toLowerCase().replaceAll(' ', '_') ?? 'city'}'
         : '_nearby';
-    return 'city_venues_v7_${c.name}_${r}_${(state.latitude * 10).round()}_${(state.longitude * 10).round()}$city';
+    return 'city_venues_v8_${c.name}_${r}_${(state.latitude * 10).round()}_${(state.longitude * 10).round()}$city';
   }
 
   _CachedVenues? _readCache(SharedPreferences p, String key) {
@@ -421,7 +515,27 @@ class NearbyVenueService {
               : '  nwr(around:$r,$a,$o)$x["name"];',
         )
         .join('\n');
-    return '[out:json][timeout:14];\n(\n$f\n);\nout center tags;';
+    return '[out:json][timeout:10];\n(\n$f\n);\nout center tags;';
+  }
+
+  String _osmImageUrl(Map<String, dynamic> tags) {
+    final direct = (tags['image'] ?? '').toString().trim();
+    if (direct.startsWith('https://') || direct.startsWith('http://')) {
+      return direct;
+    }
+    final commons = (tags['wikimedia_commons'] ?? '').toString().trim();
+    if (commons.isEmpty) return '';
+    final fileName = commons.toLowerCase().startsWith('file:')
+        ? commons.substring(5).trim()
+        : commons;
+    if (fileName.isEmpty || commons.toLowerCase().startsWith('category:')) {
+      return '';
+    }
+    return Uri.https(
+      'commons.wikimedia.org',
+      '/wiki/Special:FilePath/$fileName',
+      {'width': '640'},
+    ).toString();
   }
 
   List<NearbyVenue> _parse(
@@ -447,21 +561,31 @@ class NearbyVenueService {
               (item['lon'] as num?)?.toDouble() ??
               (center?['lon'] as num?)?.toDouble();
       if (a == null || o == null) continue;
-      if (state.hasBounds && !state.insideBounds(a, o)) continue;
-      final k =
-          '${n.toLowerCase()}_${a.toStringAsFixed(4)}_${o.toStringAsFixed(4)}';
-      if (!seen.add(k)) continue;
       final street = (tags['addr:street'] ?? '').toString().trim(),
           number = (tags['addr:housenumber'] ?? '').toString().trim(),
           district = (tags['addr:district'] ?? tags['addr:suburb'] ?? '')
               .toString()
               .trim(),
-          city = (tags['addr:city'] ?? '').toString().trim(),
+          city = (tags['addr:city'] ?? tags['addr:province'] ?? '')
+              .toString()
+              .trim(),
           address = [
             [street, number].where((x) => x.isNotEmpty).join(' '),
             district,
             city,
           ].where((x) => x.isNotEmpty).join(', ');
+      if (!_belongsToSelectedCity(
+        state,
+        a,
+        o,
+        cityTag: city,
+        address: address,
+      )) {
+        continue;
+      }
+      final k =
+          '${n.toLowerCase()}_${a.toStringAsFixed(4)}_${o.toStringAsFixed(4)}';
+      if (!seen.add(k)) continue;
       out.add(
         NearbyVenue(
           id: '${item['type'] ?? 'node'}-${item['id'] ?? k}',
@@ -474,12 +598,7 @@ class NearbyVenueService {
           phone: (tags['contact:phone'] ?? tags['phone'] ?? '').toString(),
           website: (tags['contact:website'] ?? tags['website'] ?? '')
               .toString(),
-          imageUrl: (() {
-            final value = (tags['image'] ?? '').toString().trim();
-            return value.startsWith('https://') || value.startsWith('http://')
-                ? value
-                : '';
-          })(),
+          imageUrl: _osmImageUrl(tags),
           description: (
             tags['description:tr'] ?? tags['description'] ?? ''
           ).toString(),
