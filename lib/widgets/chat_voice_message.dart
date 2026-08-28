@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:ui';
 import 'dart:typed_data';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
@@ -28,6 +28,7 @@ class _ChatVoiceRecordButtonState extends State<ChatVoiceRecordButton> {
   final AudioRecorder _recorder = AudioRecorder();
   bool _recording = false;
   bool _finishing = false;
+  bool _startedByLongPress = false;
   DateTime? _startedAt;
   Timer? _ticker;
   Duration _elapsed = Duration.zero;
@@ -38,27 +39,39 @@ class _ChatVoiceRecordButtonState extends State<ChatVoiceRecordButton> {
     return '$minutes:$seconds';
   }
 
-  Future<void> _start() async {
+  void _report(Object error) {
+    widget.onError?.call(error is TimeoutException
+        ? Exception('Ses kaydı zaman aşımına uğradı. Tekrar dene.')
+        : error);
+  }
+
+  Future<void> _start({bool fromLongPress = false}) async {
     if (widget.disabled || _recording || _finishing) return;
     try {
-      final allowed = await _recorder.hasPermission();
+      final allowed = await _recorder
+          .hasPermission()
+          .timeout(const Duration(seconds: 5));
       if (!allowed) {
         throw Exception('Sesli mesaj için mikrofon izni vermelisin.');
       }
-      final temp = await getTemporaryDirectory();
+      final temp = await getTemporaryDirectory()
+          .timeout(const Duration(seconds: 4));
       final path =
           '${temp.path}/tbt_voice_${DateTime.now().microsecondsSinceEpoch}.m4a';
-      await _recorder.start(
-        const RecordConfig(
-          encoder: AudioEncoder.aacLc,
-          bitRate: 128000,
-          sampleRate: 44100,
-        ),
-        path: path,
-      );
+      await _recorder
+          .start(
+            const RecordConfig(
+              encoder: AudioEncoder.aacLc,
+              bitRate: 96000,
+              sampleRate: 44100,
+            ),
+            path: path,
+          )
+          .timeout(const Duration(seconds: 6));
       if (!mounted) return;
       setState(() {
         _recording = true;
+        _startedByLongPress = fromLongPress;
         _startedAt = DateTime.now();
         _elapsed = Duration.zero;
       });
@@ -68,7 +81,7 @@ class _ChatVoiceRecordButtonState extends State<ChatVoiceRecordButton> {
         setState(() => _elapsed = DateTime.now().difference(_startedAt!));
       });
     } catch (e) {
-      widget.onError?.call(e);
+      _report(e);
     }
   }
 
@@ -81,10 +94,11 @@ class _ChatVoiceRecordButtonState extends State<ChatVoiceRecordButton> {
         : DateTime.now().difference(_startedAt!);
     String? path;
     try {
-      path = await _recorder.stop();
+      path = await _recorder.stop().timeout(const Duration(seconds: 6));
       if (mounted) {
         setState(() {
           _recording = false;
+          _startedByLongPress = false;
           _startedAt = null;
         });
       }
@@ -92,9 +106,9 @@ class _ChatVoiceRecordButtonState extends State<ChatVoiceRecordButton> {
         throw Exception('Ses kaydı oluşturulamadı.');
       }
       final file = File(path);
-      final bytes = await file.readAsBytes();
-      if (duration.inMilliseconds < 350 || bytes.isEmpty) {
-        throw Exception('Ses kaydı çok kısa.');
+      final bytes = await file.readAsBytes().timeout(const Duration(seconds: 8));
+      if (duration.inMilliseconds < 450 || bytes.isEmpty) {
+        throw Exception('Ses kaydı çok kısa. En az yarım saniye kaydet.');
       }
       await widget.onRecorded(bytes, duration.inMilliseconds);
       try {
@@ -107,12 +121,13 @@ class _ChatVoiceRecordButtonState extends State<ChatVoiceRecordButton> {
           if (await file.exists()) await file.delete();
         } catch (_) {}
       }
-      widget.onError?.call(e);
+      _report(e);
     } finally {
       if (mounted) {
         setState(() {
           _finishing = false;
           _elapsed = Duration.zero;
+          _startedByLongPress = false;
         });
       }
     }
@@ -122,13 +137,14 @@ class _ChatVoiceRecordButtonState extends State<ChatVoiceRecordButton> {
     if (!_recording || _finishing) return;
     _ticker?.cancel();
     try {
-      await _recorder.cancel();
+      await _recorder.cancel().timeout(const Duration(seconds: 5));
     } catch (e) {
-      widget.onError?.call(e);
+      _report(e);
     } finally {
       if (mounted) {
         setState(() {
           _recording = false;
+          _startedByLongPress = false;
           _startedAt = null;
           _elapsed = Duration.zero;
         });
@@ -153,13 +169,15 @@ class _ChatVoiceRecordButtonState extends State<ChatVoiceRecordButton> {
   @override
   Widget build(BuildContext context) {
     if (_recording) {
-      return Container(
+      return AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
         height: 48,
-        padding: const EdgeInsets.only(left: 2, right: 3),
+        constraints: const BoxConstraints(minWidth: 154),
+        padding: const EdgeInsets.symmetric(horizontal: 3),
         decoration: BoxDecoration(
-          color: const Color(0xFF211A36),
+          color: const Color(0xFF171D24),
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: const Color(0x806C5CE7)),
+          border: Border.all(color: const Color(0xFF3A4654)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -168,12 +186,13 @@ class _ChatVoiceRecordButtonState extends State<ChatVoiceRecordButton> {
               tooltip: 'Kaydı iptal et',
               visualDensity: VisualDensity.compact,
               onPressed: _finishing ? null : _cancelRecording,
-              icon: const Icon(Icons.close_rounded, color: Colors.white70),
+              icon: const Icon(Icons.close_rounded, color: Colors.white60),
             ),
+            const SizedBox(width: 1),
             const Icon(
               Icons.fiber_manual_record_rounded,
-              color: Color(0xFFFF6375),
-              size: 13,
+              color: Color(0xFFFF5D72),
+              size: 12,
             ),
             const SizedBox(width: 5),
             Text(
@@ -193,27 +212,44 @@ class _ChatVoiceRecordButtonState extends State<ChatVoiceRecordButton> {
                       height: 18,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Icon(Icons.arrow_upward_rounded, color: Colors.white),
+                  : const Icon(Icons.send_rounded, color: Color(0xFF8CD9FF)),
             ),
           ],
         ),
       );
     }
 
-    return IconButton.filled(
-      tooltip: 'Sesli mesaj',
-      style: IconButton.styleFrom(
-        backgroundColor: const Color(0xFF6256D9),
-        foregroundColor: Colors.white,
+    return Semantics(
+      button: true,
+      label: 'Sesli mesaj kaydet',
+      hint: 'Dokunarak başlat veya basılı tutup bırakınca gönder',
+      child: GestureDetector(
+        onLongPressStart: widget.disabled || _finishing
+            ? null
+            : (_) => _start(fromLongPress: true),
+        onLongPressEnd: widget.disabled || _finishing
+            ? null
+            : (_) {
+                if (_startedByLongPress) _stopAndSend();
+              },
+        child: IconButton.filled(
+          tooltip: 'Sesli mesaj',
+          style: IconButton.styleFrom(
+            backgroundColor: const Color(0xFF202731),
+            foregroundColor: const Color(0xFF8CD9FF),
+          ),
+          onPressed: widget.disabled || _finishing
+              ? null
+              : () => _start(fromLongPress: false),
+          icon: _finishing
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Icon(Icons.mic_none_rounded),
+        ),
       ),
-      onPressed: widget.disabled || _finishing ? null : _start,
-      icon: _finishing
-          ? const SizedBox(
-              width: 18,
-              height: 18,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            )
-          : const Icon(Icons.mic_rounded),
     );
   }
 }
@@ -250,7 +286,7 @@ class _ChatAudioBubbleState extends State<ChatAudioBubble> {
     try {
       if (!_loaded) {
         setState(() => _loading = true);
-        await _player.setUrl(widget.url);
+        await _player.setUrl(widget.url).timeout(const Duration(seconds: 10));
         _loaded = true;
       }
       if (_player.playing) {
@@ -260,6 +296,12 @@ class _ChatAudioBubbleState extends State<ChatAudioBubble> {
           await _player.seek(Duration.zero);
         }
         await _player.play();
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Sesli mesaj oynatılamadı.')),
+        );
       }
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -275,10 +317,10 @@ class _ChatAudioBubbleState extends State<ChatAudioBubble> {
   @override
   Widget build(BuildContext context) {
     final fallbackDuration = Duration(milliseconds: widget.durationMs ?? 0);
-    final fg = widget.mine ? Colors.black87 : Colors.white;
+    final fg = widget.mine ? const Color(0xFF0A1118) : Colors.white;
     final secondary = widget.mine ? Colors.black45 : Colors.white54;
     return SizedBox(
-      width: 235,
+      width: 225,
       child: Row(
         children: [
           StreamBuilder<PlayerState>(
@@ -300,14 +342,12 @@ class _ChatAudioBubbleState extends State<ChatAudioBubble> {
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
                     : Icon(
-                        playing
-                            ? Icons.pause_rounded
-                            : Icons.play_arrow_rounded,
+                        playing ? Icons.pause_rounded : Icons.play_arrow_rounded,
                       ),
               );
             },
           ),
-          const SizedBox(width: 6),
+          const SizedBox(width: 4),
           Expanded(
             child: StreamBuilder<Duration?>(
               stream: _player.durationStream,
@@ -332,10 +372,10 @@ class _ChatAudioBubbleState extends State<ChatAudioBubble> {
                           data: SliderTheme.of(context).copyWith(
                             trackHeight: 2.5,
                             thumbShape: const RoundSliderThumbShape(
-                              enabledThumbRadius: 5,
+                              enabledThumbRadius: 4.5,
                             ),
                             overlayShape: const RoundSliderOverlayShape(
-                              overlayRadius: 10,
+                              overlayRadius: 9,
                             ),
                           ),
                           child: Slider(
@@ -357,7 +397,7 @@ class _ChatAudioBubbleState extends State<ChatAudioBubble> {
                             '${_label(position)} / ${_label(total)}',
                             style: TextStyle(
                               color: secondary,
-                              fontSize: 10.5,
+                              fontSize: 10,
                               fontWeight: FontWeight.w700,
                             ),
                           ),
