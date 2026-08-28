@@ -454,7 +454,7 @@ class _HomeHeader extends StatelessWidget {
           stream: AppNotificationService.instance.unreadMessageCount(),
           builder: (_, s) => _HeaderAction(
             tooltip: 'Mesajlar',
-            icon: Icons.chat_bubble_outline_rounded,
+            icon: Icons.send_outlined,
             count: s.data ?? 0,
             onTap: () => Navigator.push(
               context,
