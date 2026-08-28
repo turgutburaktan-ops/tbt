@@ -40,9 +40,11 @@ class _ChatVoiceRecordButtonState extends State<ChatVoiceRecordButton> {
   }
 
   void _report(Object error) {
-    widget.onError?.call(error is TimeoutException
-        ? Exception('Ses kaydı zaman aşımına uğradı. Tekrar dene.')
-        : error);
+    widget.onError?.call(
+      error is TimeoutException
+          ? Exception('Ses kaydı zaman aşımına uğradı. Tekrar dene.')
+          : error,
+    );
   }
 
   Future<void> _start({bool fromLongPress = false}) async {
@@ -317,8 +319,10 @@ class _ChatAudioBubbleState extends State<ChatAudioBubble> {
   @override
   Widget build(BuildContext context) {
     final fallbackDuration = Duration(milliseconds: widget.durationMs ?? 0);
-    final fg = widget.mine ? const Color(0xFF0A1118) : Colors.white;
-    final secondary = widget.mine ? Colors.black45 : Colors.white54;
+    const fg = Colors.white;
+    final secondary = widget.mine
+        ? Colors.white60
+        : Colors.white54;
     return SizedBox(
       width: 225,
       child: Row(
@@ -330,9 +334,7 @@ class _ChatAudioBubbleState extends State<ChatAudioBubble> {
               return IconButton(
                 onPressed: _loading ? null : _toggle,
                 style: IconButton.styleFrom(
-                  backgroundColor: widget.mine
-                      ? Colors.black12
-                      : Colors.white10,
+                  backgroundColor: Colors.white10,
                   foregroundColor: fg,
                 ),
                 icon: _loading
