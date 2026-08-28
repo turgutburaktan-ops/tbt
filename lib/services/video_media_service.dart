@@ -45,9 +45,11 @@ class VideoMediaService {
       );
     }
 
+    // 720p'ye zorlamak görüntüyü fazla yumuşatıyordu. En yüksek kaliteyi
+    // kullanarak kaynak detayını mümkün olduğunca koruyoruz.
     final compressed = await VideoCompress.compressVideo(
       source.path,
-      quality: VideoQuality.Res1280x720Quality,
+      quality: VideoQuality.HighestQuality,
       deleteOrigin: false,
       includeAudio: true,
     );
@@ -62,7 +64,7 @@ class VideoMediaService {
 
     final thumbnail = await VideoCompress.getFileThumbnail(
       compressedPath,
-      quality: 78,
+      quality: 92,
       position: 500,
     );
     if (!await thumbnail.exists() || await thumbnail.length() <= 0) {
