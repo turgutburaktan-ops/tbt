@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 
 import '../services/app_notification_service.dart';
 import '../widgets/firebase_media_image.dart';
-import 'chat_screen.dart';
 import 'event_deep_link_screen.dart';
 import 'post_detail_screen.dart';
 import 'user_profile_screen.dart';
@@ -25,9 +24,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       await AppNotificationService.instance.refreshCampusDigest();
       try {
         await AppNotificationService.instance.markAllRead();
-      } catch (_) {
-        // Bildirim ekranı yine açılabilsin; stream bir sonraki değişimi yansıtır.
-      }
+      } catch (_) {}
     });
   }
 
@@ -48,8 +45,6 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   IconData _iconFor(String type) {
     switch (type) {
-      case 'message':
-        return Icons.chat_bubble_rounded;
       case 'follow':
         return Icons.person_add_alt_1_rounded;
       case 'post_like':
@@ -79,7 +74,6 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   }
 
   Color _accentFor(String type) {
-    if (type == 'message') return const Color(0xFF9FD6FF);
     if (type == 'post_like' || type == 'story_like') {
       return const Color(0xFFFF8FA3);
     }
@@ -90,11 +84,16 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   Future<Map<String, dynamic>> _actor(String actorId) async {
     if (actorId.trim().isEmpty) return const <String, dynamic>{};
-    final doc = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(actorId)
-        .get();
-    return doc.data() ?? const <String, dynamic>{};
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(actorId)
+          .get()
+          .timeout(const Duration(seconds: 5));
+      return doc.data() ?? const <String, dynamic>{};
+    } catch (_) {
+      return const <String, dynamic>{};
+    }
   }
 
   Future<void> _openItem(AppNotificationItem item) async {
@@ -109,21 +108,6 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         context,
         MaterialPageRoute(
           builder: (_) => EventDeepLinkScreen(eventId: sourceId),
-        ),
-      );
-      return;
-    }
-
-    if (item.type == 'message' && actorId.isNotEmpty) {
-      final actor = await _actor(actorId);
-      if (!mounted) return;
-      final displayName =
-          (actor['displayName'] ?? actor['username'] ?? 'Kullanıcı').toString();
-      await Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) =>
-              ChatScreen(otherUserId: actorId, otherDisplayName: displayName),
         ),
       );
       return;
@@ -190,8 +174,6 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         return _isSocial(item.type);
       case 'events':
         return _opensEvent(item.type);
-      case 'messages':
-        return item.type == 'message';
       default:
         return true;
     }
@@ -224,9 +206,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   Widget _leading(AppNotificationItem item) {
     final actorId = item.actorId?.trim() ?? '';
-    if (actorId.isEmpty) {
-      return _iconBubble(item.type);
-    }
+    if (actorId.isEmpty) return _iconBubble(item.type);
     return FutureBuilder<Map<String, dynamic>>(
       future: _actor(actorId),
       builder: (context, snapshot) {
@@ -289,7 +269,6 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   Widget _itemCard(AppNotificationItem item) {
     final actionable =
         _opensEvent(item.type) ||
-        item.type == 'message' ||
         item.type == 'follow' ||
         item.type.startsWith('post_') ||
         item.type.startsWith('story_');
@@ -472,12 +451,6 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                     _filterChip('social', 'Sosyal', Icons.people_alt_outlined),
                     const SizedBox(width: 7),
                     _filterChip('events', 'Etkinlik', Icons.event_outlined),
-                    const SizedBox(width: 7),
-                    _filterChip(
-                      'messages',
-                      'Mesajlar',
-                      Icons.chat_bubble_outline_rounded,
-                    ),
                   ],
                 ),
               ),
@@ -507,7 +480,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                               ),
                               const SizedBox(height: 6),
                               const Text(
-                                'Mesajlar, sosyal hareketler ve etkinlik gelişmeleri burada toplanacak.',
+                                'Beğeni, yorum, takip ve etkinlik gelişmeleri burada görünür. Mesajlar yalnızca Mesajlar bölümünde tutulur.',
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   color: Colors.white54,
