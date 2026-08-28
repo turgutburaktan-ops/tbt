@@ -226,8 +226,6 @@ class NearbyVenueService {
       state,
     );
 
-    // Stale-while-refresh behavior: normal navigation should never block on a
-    // slow Overpass endpoint when we already have usable city data.
     if (!forceRefresh && cached != null) {
       final business = await businessFuture;
       final merged = _merge(cached.venues, business);
@@ -479,7 +477,7 @@ class NearbyVenueService {
     final city = state.selectedCity
         ? '_${state.cityName?.toLowerCase().replaceAll(' ', '_') ?? 'city'}'
         : '_nearby';
-    return 'city_venues_v8_${c.name}_${r}_${(state.latitude * 10).round()}_${(state.longitude * 10).round()}$city';
+    return 'city_venues_v9_${c.name}_${r}_${(state.latitude * 10).round()}_${(state.longitude * 10).round()}$city';
   }
 
   _CachedVenues? _readCache(SharedPreferences p, String key) {
