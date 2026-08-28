@@ -30,6 +30,18 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
   DateTime? _lastBackPressedAt;
+  final Set<int> _loadedTabs = <int>{0};
+
+  Widget _tabPage(int index) {
+    if (!_loadedTabs.contains(index)) return const SizedBox.shrink();
+    return switch (index) {
+      0 => const _HomeFeedHub(),
+      1 => const _PlacesHub(),
+      3 => const _NearbyUnifiedHub(),
+      4 => const _ProfileGate(),
+      _ => const SizedBox.shrink(),
+    };
+  }
 
   Future<void> _selectDestination(int index) async {
     if (index == 2) {
@@ -39,7 +51,11 @@ class _HomeScreenState extends State<HomeScreen> {
       );
       return;
     }
-    if (mounted) setState(() => _selectedIndex = index);
+    if (!mounted || index == _selectedIndex) return;
+    setState(() {
+      _loadedTabs.add(index);
+      _selectedIndex = index;
+    });
   }
 
   void _handleBack(bool keyboardOpen) {
@@ -48,7 +64,10 @@ class _HomeScreenState extends State<HomeScreen> {
       return;
     }
     if (_selectedIndex != 0) {
-      setState(() => _selectedIndex = 0);
+      setState(() {
+        _loadedTabs.add(0);
+        _selectedIndex = 0;
+      });
       return;
     }
     final now = DateTime.now();
@@ -72,13 +91,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const pages = <Widget>[
-      _HomeFeedHub(),
-      _PlacesHub(),
-      SizedBox.shrink(),
-      _NearbyUnifiedHub(),
-      _ProfileGate(),
-    ];
+    final pages = List<Widget>.generate(5, _tabPage, growable: false);
     final keyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
     return PopScope(
       canPop: false,
