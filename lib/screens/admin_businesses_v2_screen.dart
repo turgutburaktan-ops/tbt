@@ -90,6 +90,7 @@ class _AdminBusinessesV2ScreenState extends State<AdminBusinessesV2Screen> {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Başvurunun mekan kimliği eksik.')));
       return;
     }
+    if (!mounted) return;
     setState(() => _reviewing.add(key));
     try {
       await AdminConsoleService.instance.reviewBusinessClaim(category: category, venueId: venueId, approve: approve, reason: reason);
@@ -114,25 +115,59 @@ class _AdminBusinessesV2ScreenState extends State<AdminBusinessesV2Screen> {
   int _count(String status) => status == 'all' ? _items.length : _items.where((e) => (e['status'] ?? 'registered').toString() == status).length;
   String _status(String s) => s == 'verified' ? 'Onaylı' : s == 'pending_review' ? 'Bekleyen' : s == 'rejected' ? 'Reddedildi' : 'Kayıtlı';
 
-  void _details(Map<String, dynamic> data) {
+  Future<void> _details(Map<String, dynamic> data) async {
     final status = (data['status'] ?? 'registered').toString();
     final evidenceUrl = (data['evidenceUrl'] ?? '').toString().trim();
-    showModalBottomSheet<void>(context: context, useSafeArea: true, isScrollControlled: true, showDragHandle: true, builder: (sheetContext) => DraggableScrollableSheet(expand: false, initialChildSize: .82, minChildSize: .5, maxChildSize: .96, builder: (_, controller) => ListView(controller: controller, padding: const EdgeInsets.fromLTRB(18, 4, 18, 28), children: [
-      Text((data['venueName'] ?? data['legalName'] ?? 'İşletme').toString(), style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w900)),
-      const SizedBox(height: 12),
-      Text('Durum: ${_status(status)}'),
-      Text('E-posta: ${data['businessEmail'] ?? data['ownerEmail'] ?? '-'}'),
-      Text('Telefon: ${data['businessPhone'] ?? data['phone'] ?? '-'}'),
-      Text('Yasal ad: ${data['legalName'] ?? '-'}'),
-      const SizedBox(height: 18),
-      const Text('Yetki kanıtı', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900)),
-      const SizedBox(height: 9),
-      if (evidenceUrl.isEmpty) const SizedBox(height: 180, child: Center(child: Text('Kanıt görseli bulunamadı.'))) else ClipRRect(borderRadius: BorderRadius.circular(16), child: SizedBox(height: 320, child: InteractiveViewer(minScale: 1, maxScale: 4, child: Image.network(evidenceUrl, fit: BoxFit.contain, errorBuilder: (_, __, ___) => const Center(child: Text('Kanıt görseli yüklenemedi.')))))),
-      const SizedBox(height: 18),
-      if (status == 'pending_review') Row(children: [Expanded(child: OutlinedButton.icon(onPressed: _reviewing.contains(_keyFor(data)) ? null : () => _review(data, approve: false), icon: const Icon(Icons.close_rounded), label: const Text('Reddet'))), const SizedBox(width: 10), Expanded(child: FilledButton.icon(onPressed: _reviewing.contains(_keyFor(data)) ? null : () => _review(data, approve: true), icon: const Icon(Icons.verified_rounded), label: const Text('Onayla')))]),
-      const SizedBox(height: 10),
-      OutlinedButton.icon(onPressed: () { Navigator.pop(sheetContext); Navigator.push(context, MaterialPageRoute(builder: (_) => BusinessPanelPreviewScreen(venueName: (data['venueName'] ?? 'İşletme').toString(), category: (data['category'] ?? 'cafe').toString()))); }, icon: const Icon(Icons.dashboard_customize_outlined), label: const Text('Paneli Görüntüle')),
-    ])));
+    final action = await showModalBottomSheet<String>(
+      context: context,
+      useSafeArea: true,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (sheetContext) => DraggableScrollableSheet(
+        expand: false,
+        initialChildSize: .82,
+        minChildSize: .5,
+        maxChildSize: .96,
+        builder: (_, controller) => ListView(
+          controller: controller,
+          padding: const EdgeInsets.fromLTRB(18, 4, 18, 28),
+          children: [
+            Text((data['venueName'] ?? data['legalName'] ?? 'İşletme').toString(), style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w900)),
+            const SizedBox(height: 12),
+            Text('Durum: ${_status(status)}'),
+            Text('E-posta: ${data['businessEmail'] ?? data['ownerEmail'] ?? '-'}'),
+            Text('Telefon: ${data['businessPhone'] ?? data['phone'] ?? '-'}'),
+            Text('Yasal ad: ${data['legalName'] ?? '-'}'),
+            const SizedBox(height: 18),
+            const Text('Yetki kanıtı', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900)),
+            const SizedBox(height: 9),
+            if (evidenceUrl.isEmpty)
+              const SizedBox(height: 180, child: Center(child: Text('Kanıt görseli bulunamadı.')))
+            else
+              ClipRRect(borderRadius: BorderRadius.circular(16), child: SizedBox(height: 320, child: InteractiveViewer(minScale: 1, maxScale: 4, child: Image.network(evidenceUrl, fit: BoxFit.contain, errorBuilder: (_, __, ___) => const Center(child: Text('Kanıt görseli yüklenemedi.')))))),
+            const SizedBox(height: 18),
+            if (status == 'pending_review')
+              Row(children: [
+                Expanded(child: OutlinedButton.icon(onPressed: () => Navigator.pop(sheetContext, 'reject'), icon: const Icon(Icons.close_rounded), label: const Text('Reddet'))),
+                const SizedBox(width: 10),
+                Expanded(child: FilledButton.icon(onPressed: () => Navigator.pop(sheetContext, 'approve'), icon: const Icon(Icons.verified_rounded), label: const Text('Onayla'))),
+              ]),
+            const SizedBox(height: 10),
+            OutlinedButton.icon(onPressed: () => Navigator.pop(sheetContext, 'preview'), icon: const Icon(Icons.dashboard_customize_outlined), label: const Text('Paneli Görüntüle')),
+          ],
+        ),
+      ),
+    );
+    if (!mounted || action == null) return;
+    await WidgetsBinding.instance.endOfFrame;
+    if (!mounted) return;
+    if (action == 'approve') {
+      await _review(data, approve: true);
+    } else if (action == 'reject') {
+      await _review(data, approve: false);
+    } else if (action == 'preview') {
+      await Navigator.push(context, MaterialPageRoute(builder: (_) => BusinessPanelPreviewScreen(venueName: (data['venueName'] ?? 'İşletme').toString(), category: (data['category'] ?? 'cafe').toString())));
+    }
   }
 
   @override
