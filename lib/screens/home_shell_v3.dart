@@ -9,6 +9,7 @@ import '../services/nearby_venue_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/nearby_places_view.dart';
 import '../widgets/story_strip.dart';
+import '../widgets/tbt_brand_mark.dart';
 import 'campus_home_screen.dart';
 import 'chat_inbox_screen.dart';
 import 'event_photo_create_screen.dart';
@@ -387,20 +388,7 @@ class _HomeHeader extends StatelessWidget {
     child: Row(
       children: [
         if (showBrand) ...[
-          Container(
-            width: 34,
-            height: 34,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(11),
-              gradient: AppColors.accentGradient,
-            ),
-            child: const Icon(
-              Icons.camera_outlined,
-              color: Color(0xFF08090D),
-              size: 19,
-            ),
-          ),
+          const TbtBrandMark(size: 36),
           const SizedBox(width: 9),
           const Expanded(
             child: Text(
