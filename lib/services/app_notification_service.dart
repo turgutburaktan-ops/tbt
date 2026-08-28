@@ -26,6 +26,8 @@ class AppNotificationItem {
     this.createdAt,
   });
 
+  bool get isMessage => type.toLowerCase() == 'message';
+
   factory AppNotificationItem.fromDocument(
     DocumentSnapshot<Map<String, dynamic>> doc,
   ) {
@@ -76,22 +78,26 @@ class AppNotificationService {
     );
   }
 
+  List<AppNotificationItem> _visibleNotifications(
+    List<AppNotificationItem> items,
+  ) => items.where((item) => !item.isMessage).toList(growable: false);
+
   Stream<List<AppNotificationItem>> watchMine({int limit = 80}) {
-    if (limit == 80) return _sharedMine.stream;
-    return _buildMineStream(limit);
+    if (limit == 80) {
+      return _sharedMine.stream.map(_visibleNotifications);
+    }
+    return _buildMineStream(limit).map(_visibleNotifications);
   }
 
   Stream<int> unreadCount() => _sharedMine.stream
-      .map((items) => items.where((item) => !item.read).length)
+      .map(
+        (items) => items.where((item) => !item.read && !item.isMessage).length,
+      )
       .distinct();
 
   Stream<int> unreadMessageCount() => _sharedMine.stream
       .map(
-        (items) => items
-            .where(
-              (item) => !item.read && item.type.toLowerCase() == 'message',
-            )
-            .length,
+        (items) => items.where((item) => !item.read && item.isMessage).length,
       )
       .distinct();
 
@@ -261,9 +267,11 @@ class AppNotificationService {
       final snapshot = await query.get().timeout(const Duration(seconds: 8));
       if (snapshot.docs.isEmpty) return;
 
-      final unreadDocs = snapshot.docs
-          .where((doc) => doc.data()['read'] != true)
-          .toList(growable: false);
+      final unreadDocs = snapshot.docs.where((doc) {
+        final data = doc.data();
+        final type = (data['type'] ?? '').toString().toLowerCase();
+        return data['read'] != true && type != 'message';
+      }).toList(growable: false);
       if (unreadDocs.isNotEmpty) {
         final batch = _firestore.batch();
         for (final doc in unreadDocs) {
