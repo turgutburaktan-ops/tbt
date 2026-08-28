@@ -660,7 +660,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               child: Text(
                 canOpen ? '$typeLabel · Açmak için dokun' : typeLabel,
                 style: const TextStyle(
-                  color: Colors.white45,
+                  color: Colors.white38,
                   fontSize: 10.5,
                   fontWeight: FontWeight.w600,
                 ),
@@ -824,7 +824,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                           Text(
                             time,
                             style: const TextStyle(
-                              color: Colors.white45,
+                              color: Colors.white38,
                               fontSize: 10.3,
                               fontWeight: FontWeight.w600,
                             ),
@@ -924,7 +924,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      color: online ? const Color(0xFF55D68B) : Colors.white45,
+                      color: online ? const Color(0xFF55D68B) : Colors.white38,
                       fontSize: 11.2,
                     ),
                   ),
@@ -1028,7 +1028,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                                 : _replyTo!.text,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(color: Colors.white45, fontSize: 11.5),
+                            style: const TextStyle(color: Colors.white38, fontSize: 11.5),
                           ),
                         ],
                       ),
@@ -1264,7 +1264,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                                           ? Icons.forum_outlined
                                           : Icons.search_off_rounded,
                                       size: 44,
-                                      color: Colors.white20,
+                                      color: Colors.white24,
                                     ),
                                     const SizedBox(height: 12),
                                     Text(
@@ -1281,7 +1281,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                                       const Text(
                                         'Fotoğraf, sesli mesaj ve içerik paylaşabilirsin.',
                                         textAlign: TextAlign.center,
-                                        style: TextStyle(color: Colors.white45),
+                                        style: TextStyle(color: Colors.white38),
                                       ),
                                     ],
                                   ],
