@@ -32,6 +32,7 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
   List<NearbyVenue> _venues = const [];
   final Map<String, VenueRatingSummary> _ratings = {};
   bool _loading = true;
+  bool _refreshing = false;
   bool _citySearching = false;
   String? _error;
   String _sort = 'popular';
@@ -68,9 +69,11 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
   Future<void> _load({bool forceRefresh = false}) async {
     final generation = ++_loadGeneration;
     final category = widget.category;
+    final keepExisting = _venues.isNotEmpty;
     if (mounted) {
       setState(() {
-        _loading = true;
+        _loading = !keepExisting;
+        _refreshing = keepExisting;
         _error = null;
       });
     }
@@ -87,6 +90,7 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
       if (position == null && !hasCity) {
         setState(() {
           _loading = false;
+          _refreshing = false;
           _error = 'Mekanları görmek için konumunu aç veya bir şehir seç.';
         });
         return;
@@ -108,6 +112,7 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
         _userPosition = position;
         _venues = items;
         _loading = false;
+        _refreshing = false;
         _error = null;
       });
       _loadRatings(items);
@@ -115,18 +120,19 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
       if (!mounted || generation != _loadGeneration) return;
       setState(() {
         _loading = false;
-        _error = NearbyVenueService.instance.hasSelectedCity
-            ? '${NearbyVenueService.instance.selectedCityName} mekanları şu an yüklenemedi. Tekrar deneyebilirsin.'
-            : 'Mekanlar şu an yüklenemedi. Bağlantını kontrol edip tekrar dene.';
+        _refreshing = false;
+        if (_venues.isEmpty) {
+          _error = NearbyVenueService.instance.hasSelectedCity
+              ? '${NearbyVenueService.instance.selectedCityName} mekanları şu an yüklenemedi. Tekrar deneyebilirsin.'
+              : 'Mekanlar şu an yüklenemedi. Bağlantını kontrol edip tekrar dene.';
+        }
       });
     }
   }
 
   Future<void> _loadRatings(List<NearbyVenue> items) async {
     final generation = ++_ratingGeneration;
-    final candidates = items.take(120).toList(growable: false);
-    final loaded = <String, VenueRatingSummary>{};
-
+    final candidates = items.take(48).toList(growable: false);
     const batchSize = 12;
     for (var start = 0; start < candidates.length; start += batchSize) {
       if (!mounted || generation != _ratingGeneration) return;
@@ -146,15 +152,11 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
         }),
       );
       if (!mounted || generation != _ratingGeneration) return;
+      final loaded = <String, VenueRatingSummary>{};
       for (final entry in results) {
         if (entry != null) loaded[entry.key] = entry.value;
       }
-      if (loaded.isNotEmpty) {
-        setState(() {
-          _ratings.addAll(loaded);
-        });
-        loaded.clear();
-      }
+      if (loaded.isNotEmpty) setState(() => _ratings.addAll(loaded));
     }
   }
 
@@ -179,6 +181,22 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
     return km < 10 ? '${km.toStringAsFixed(1)} km' : '${km.round()} km';
   }
 
+  double _popularityScore(NearbyVenue v) {
+    final rating = _ratings[_key(v)] ?? VenueRatingSummary.empty;
+    final ratingSignal = rating.count > 0
+        ? rating.average * math.log(rating.count + 2)
+        : 0.0;
+    final distance = _distanceKm(v);
+    final proximitySignal = !distance.isFinite
+        ? 0.0
+        : math.max(0.0, 2.2 - (distance / 25));
+    final infoSignal =
+        (v.imageUrl.trim().isNotEmpty ? .7 : 0) +
+        (v.address.trim().isNotEmpty ? .25 : 0) +
+        (v.openingHours.trim().isNotEmpty ? .25 : 0);
+    return ratingSignal + proximitySignal + infoSignal;
+  }
+
   List<NearbyVenue> get _visible {
     final q = _searchController.text.trim().toLowerCase();
     final out = _venues
@@ -194,9 +212,12 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
         return _distanceKm(a).compareTo(_distanceKm(b));
       }
       if (_sort == 'popular') {
-        final ap = ar.average * math.log(ar.count + 2);
-        final bp = br.average * math.log(br.count + 2);
-        return bp.compareTo(ap);
+        final score = _popularityScore(b).compareTo(_popularityScore(a));
+        if (score != 0) return score;
+        if (_userPosition != null) {
+          return _distanceKm(a).compareTo(_distanceKm(b));
+        }
+        return a.name.compareTo(b.name);
       }
       final rating = br.average.compareTo(ar.average);
       if (rating != 0) return rating;
@@ -230,7 +251,7 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
               ),
               const SizedBox(height: 5),
               const Text(
-                'Seçtiğin şehrin Kafe, Lezzet ve Otellerinin tamamı gösterilir. Konumun yalnızca mesafe sıralamasında kullanılır.',
+                'Seçtiğin şehir sınırındaki mekanlar gösterilir. Konumun yalnızca mesafe ve sıralama için kullanılır.',
                 style: TextStyle(color: Colors.white60, height: 1.35),
               ),
               const SizedBox(height: 14),
@@ -271,6 +292,7 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
       _cityController.text = NearbyVenueService.instance.selectedCityName ?? '';
       _ratings.clear();
       _ratingGeneration++;
+      _venues = const [];
       await _load(forceRefresh: true);
     }
   }
@@ -397,7 +419,7 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
                               Text(
                                 city == null
                                     ? 'Şehir değiştirmek için dokun'
-                                    : 'Şehir genelindeki ${widget.category.label.toLowerCase()}',
+                                    : '$city içindeki ${widget.category.label.toLowerCase()}',
                                 style: const TextStyle(color: Colors.white54, fontSize: 10.5),
                               ),
                             ],
@@ -456,7 +478,13 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
                 ),
               ],
               const Spacer(),
-              if (!_loading)
+              if (_refreshing)
+                const SizedBox(
+                  width: 15,
+                  height: 15,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              else if (!_loading)
                 Text(
                   '${_visible.length} yer',
                   style: const TextStyle(color: Colors.white38, fontSize: 11),
@@ -470,8 +498,8 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
   }
 
   Widget _body() {
-    if (_loading) return const _VenueSkeletonList();
-    if (_error != null) {
+    if (_loading && _venues.isEmpty) return const _VenueSkeletonList();
+    if (_error != null && _venues.isEmpty) {
       return _StateMessage(
         icon: Icons.location_off_outlined,
         title: _error!,
@@ -499,11 +527,18 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
     return RefreshIndicator(
       onRefresh: () => _load(forceRefresh: true),
       child: ListView.builder(
-        padding: const EdgeInsets.fromLTRB(14, 2, 14, 28),
+        padding: const EdgeInsets.fromLTRB(14, 2, 14, 110),
         itemCount: items.length,
         itemBuilder: (_, index) => _venueCard(items[index]),
       ),
     );
+  }
+
+  String _openingLabel(String raw) {
+    final value = raw.trim();
+    if (value.isEmpty) return '';
+    if (value == '24/7') return '24 saat açık';
+    return 'Çalışma saati mevcut';
   }
 
   Widget _venueCard(NearbyVenue venue) {
@@ -511,21 +546,22 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
     final routeId = 'venue:${venue.category.name}:${venue.id}';
     final selected = RouteSelectionService.instance.contains(routeId);
     final distance = _distanceLabel(venue);
+    final opening = _openingLabel(venue.openingHours);
     return Card(
       margin: const EdgeInsets.only(bottom: 9),
       child: InkWell(
         onTap: () => _profile(venue),
         borderRadius: BorderRadius.circular(16),
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(14, 13, 8, 13),
+          padding: const EdgeInsets.fromLTRB(10, 10, 6, 10),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               ClipRRect(
                 borderRadius: BorderRadius.circular(13),
                 child: SizedBox(
-                  width: 72,
-                  height: 72,
+                  width: 84,
+                  height: 84,
                   child: venue.imageUrl.trim().isNotEmpty
                       ? Image.network(
                           venue.imageUrl.trim(),
@@ -550,31 +586,29 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
                     const SizedBox(height: 5),
                     Wrap(
                       spacing: 7,
-                      runSpacing: 3,
+                      runSpacing: 5,
                       children: [
-                        Text(
-                          venue.category.label,
-                          style: const TextStyle(
-                            color: AppColors.cyan,
-                            fontSize: 11.5,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
+                        _MetaPill(label: venue.category.label, color: AppColors.cyan),
                         if (rating.count > 0)
-                          Text(
-                            '★ ${rating.average.toStringAsFixed(1)} (${rating.count})',
-                            style: const TextStyle(
-                              color: Colors.amber,
-                              fontSize: 11.5,
-                              fontWeight: FontWeight.w700,
-                            ),
+                          _MetaPill(
+                            label: '★ ${rating.average.toStringAsFixed(1)} · ${rating.count}',
+                            color: Colors.amber,
                           ),
                         if (distance.isNotEmpty)
-                          Text(distance, style: const TextStyle(color: Colors.white60, fontSize: 11.5)),
-                        if (venue.openingHours.isNotEmpty)
-                          const Text('Saatler mevcut', style: TextStyle(color: Colors.white54, fontSize: 11.5)),
+                          _MetaPill(label: distance, color: Colors.white70),
+                        if (opening.isNotEmpty)
+                          _MetaPill(label: opening, color: Colors.greenAccent),
                       ],
                     ),
+                    if (venue.address.isNotEmpty) ...[
+                      const SizedBox(height: 7),
+                      Text(
+                        venue.address,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(color: Colors.white54, fontSize: 11.5),
+                      ),
+                    ],
                     if (venue.description.trim().isNotEmpty) ...[
                       const SizedBox(height: 5),
                       Text(
@@ -582,15 +616,6 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(color: Colors.white60, fontSize: 11.5, height: 1.25),
-                      ),
-                    ],
-                    if (venue.address.isNotEmpty) ...[
-                      const SizedBox(height: 5),
-                      Text(
-                        venue.address,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(color: Colors.white54, fontSize: 11.5),
                       ),
                     ],
                   ],
@@ -632,7 +657,7 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
 
   Widget _venuePlaceholder() => ColoredBox(
     color: AppColors.surfaceStrong,
-    child: Center(child: Icon(_icon, color: AppColors.cyan, size: 28)),
+    child: Center(child: Icon(_icon, color: AppColors.cyan, size: 30)),
   );
 
   IconData get _icon => switch (widget.category) {
@@ -642,17 +667,36 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
   };
 }
 
+class _MetaPill extends StatelessWidget {
+  final String label;
+  final Color color;
+  const _MetaPill({required this.label, required this.color});
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+    decoration: BoxDecoration(
+      color: color.withValues(alpha: .10),
+      borderRadius: BorderRadius.circular(99),
+      border: Border.all(color: color.withValues(alpha: .20)),
+    ),
+    child: Text(
+      label,
+      style: TextStyle(color: color, fontSize: 10.5, fontWeight: FontWeight.w800),
+    ),
+  );
+}
+
 class _VenueSkeletonList extends StatelessWidget {
   const _VenueSkeletonList();
 
   @override
   Widget build(BuildContext context) => ListView.builder(
-    padding: const EdgeInsets.fromLTRB(14, 2, 14, 28),
-    itemCount: 5,
+    padding: const EdgeInsets.fromLTRB(14, 2, 14, 110),
+    itemCount: 4,
     itemBuilder: (_, __) => Container(
-      height: 102,
+      height: 104,
       margin: const EdgeInsets.only(bottom: 9),
-      padding: const EdgeInsets.all(13),
+      padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
@@ -661,8 +705,8 @@ class _VenueSkeletonList extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            width: 72,
-            height: 72,
+            width: 84,
+            height: 84,
             decoration: BoxDecoration(
               color: AppColors.surfaceStrong,
               borderRadius: BorderRadius.circular(13),
