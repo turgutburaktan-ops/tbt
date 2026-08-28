@@ -46,4 +46,25 @@ class AdminConsoleService {
       'reason': reason.trim(),
     });
   }
+
+  Future<AdminInsightsData> insights() async {
+    final result = await _functions.httpsCallable('getAdminInsights').call();
+    final data = Map<String, dynamic>.from(result.data as Map);
+    final counts = Map<String, dynamic>.from(
+      (data['counts'] as Map?) ?? const {},
+    );
+    final errors = ((data['errors'] as List?) ?? const [])
+        .map((item) => Map<String, dynamic>.from(item as Map))
+        .toList();
+    return AdminInsightsData(counts: counts, errors: errors);
+  }
+}
+
+class AdminInsightsData {
+  final Map<String, dynamic> counts;
+  final List<Map<String, dynamic>> errors;
+
+  const AdminInsightsData({required this.counts, required this.errors});
+
+  int value(String key) => (counts[key] as num?)?.toInt() ?? 0;
 }
