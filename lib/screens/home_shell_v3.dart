@@ -216,8 +216,6 @@ class _BottomNav extends StatelessWidget {
   }
 }
 
-enum _HomeChromeMode { full, quick, compact }
-
 class _HomeFeedHub extends StatefulWidget {
   const _HomeFeedHub();
   @override
@@ -225,18 +223,26 @@ class _HomeFeedHub extends StatefulWidget {
 }
 
 class _HomeFeedHubState extends State<_HomeFeedHub> {
+  static const double _chromeCollapseExtent = 148;
+
   int _section = 0;
   int _photoMode = 0;
   final Set<int> _loadedSections = <int>{0};
   final Set<int> _loadedPhotoModes = <int>{0};
-  _HomeChromeMode _chromeMode = _HomeChromeMode.full;
+  final ValueNotifier<double> _chromeCollapse = ValueNotifier<double>(0);
+
+  @override
+  void dispose() {
+    _chromeCollapse.dispose();
+    super.dispose();
+  }
 
   void _setSection(int value) {
     if (value == _section) return;
+    _chromeCollapse.value = 0;
     setState(() {
       _loadedSections.add(value);
       _section = value;
-      _chromeMode = _HomeChromeMode.full;
     });
   }
 
@@ -252,61 +258,49 @@ class _HomeFeedHubState extends State<_HomeFeedHub> {
     if (_section != 0 || notification.metrics.axis != Axis.vertical) {
       return false;
     }
-
-    var next = _chromeMode;
-    final pixels = notification.metrics.pixels;
-    if (pixels <= 4) {
-      next = _HomeChromeMode.full;
-    } else if (pixels < 72) {
-      next = _HomeChromeMode.quick;
-    } else if (pixels < 150) {
-      next = _HomeChromeMode.quick;
-    } else {
-      next = _HomeChromeMode.compact;
-    }
-
-    if (notification is ScrollUpdateNotification) {
-      final delta = notification.scrollDelta ?? 0;
-      if (delta < -2 && pixels < 220) {
-        next = pixels < 34 ? _HomeChromeMode.full : _HomeChromeMode.quick;
-      }
-    } else if (notification is OverscrollNotification &&
-        notification.overscroll < 0) {
-      next = _HomeChromeMode.full;
-    }
-
-    if (next != _chromeMode && mounted) {
-      setState(() => _chromeMode = next);
+    final next = notification.metrics.pixels
+        .clamp(0.0, _chromeCollapseExtent)
+        .toDouble();
+    if ((next - _chromeCollapse.value).abs() > .35) {
+      _chromeCollapse.value = next;
     }
     return false;
   }
 
-  Widget _animatedChrome({required bool visible, required Widget child}) {
-    return TweenAnimationBuilder<double>(
-      tween: Tween<double>(end: visible ? 1 : 0),
-      duration: const Duration(milliseconds: 340),
-      curve: Curves.easeOutCubic,
-      child: IgnorePointer(ignoring: !visible, child: child),
-      builder: (context, value, animatedChild) => ClipRect(
-        child: Align(
-          alignment: Alignment.topCenter,
-          heightFactor: value,
-          child: Opacity(
-            opacity: value,
-            child: Transform.translate(
-              offset: Offset(0, -8 * (1 - value)),
-              child: animatedChild,
-            ),
+  Widget _scrollLinkedChrome() => ValueListenableBuilder<double>(
+    valueListenable: _chromeCollapse,
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const StoryStrip(),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(14, 3, 14, 5),
+          child: _SegmentTabs(
+            labels: const ['Sana Özel', 'Takip'],
+            selected: _photoMode,
+            onChanged: _setPhotoMode,
           ),
         ),
-      ),
-    );
-  }
+      ],
+    ),
+    builder: (context, offset, child) {
+      final progress = (offset / _chromeCollapseExtent).clamp(0.0, 1.0);
+      final factor = 1 - progress;
+      return ClipRect(
+        child: Align(
+          alignment: Alignment.topCenter,
+          heightFactor: factor,
+          child: Transform.translate(
+            offset: Offset(0, -offset),
+            child: IgnorePointer(ignoring: progress > .97, child: child),
+          ),
+        ),
+      );
+    },
+  );
 
   @override
   Widget build(BuildContext context) {
-    final full = _chromeMode == _HomeChromeMode.full;
-    final compact = _chromeMode == _HomeChromeMode.compact;
     return ColoredBox(
       color: AppColors.background,
       child: SafeArea(
@@ -314,16 +308,13 @@ class _HomeFeedHubState extends State<_HomeFeedHub> {
         child: Column(
           children: [
             const _HomeHeader(showBrand: true),
-            _animatedChrome(
-              visible: full,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(14, 2, 14, 7),
-                child: _SegmentTabs(
-                  labels: const ['Ana Sayfa', 'Keşfet'],
-                  selected: _section,
-                  prominent: true,
-                  onChanged: _setSection,
-                ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(14, 2, 14, 7),
+              child: _SegmentTabs(
+                labels: const ['Ana Sayfa', 'Keşfet'],
+                selected: _section,
+                prominent: true,
+                onChanged: _setSection,
               ),
             ),
             Expanded(
@@ -335,21 +326,7 @@ class _HomeFeedHubState extends State<_HomeFeedHub> {
                     _loadedSections.contains(0)
                         ? Column(
                             children: [
-                              _animatedChrome(
-                                visible: full,
-                                child: const StoryStrip(),
-                              ),
-                              _animatedChrome(
-                                visible: !compact,
-                                child: Padding(
-                                  padding: const EdgeInsets.fromLTRB(14, 3, 14, 5),
-                                  child: _SegmentTabs(
-                                    labels: const ['Sana Özel', 'Takip'],
-                                    selected: _photoMode,
-                                    onChanged: _setPhotoMode,
-                                  ),
-                                ),
-                              ),
+                              _scrollLinkedChrome(),
                               Expanded(
                                 child: IndexedStack(
                                   index: _photoMode,
@@ -405,9 +382,7 @@ class _HomeHeader extends StatelessWidget {
   const _HomeHeader({this.showBrand = true});
 
   @override
-  Widget build(BuildContext context) => AnimatedContainer(
-    duration: const Duration(milliseconds: 180),
-    curve: Curves.easeOutCubic,
+  Widget build(BuildContext context) => Padding(
     padding: EdgeInsets.fromLTRB(showBrand ? 14 : 6, 8, 6, 5),
     child: Row(
       children: [
@@ -420,13 +395,10 @@ class _HomeHeader extends StatelessWidget {
               borderRadius: BorderRadius.circular(11),
               gradient: AppColors.accentGradient,
             ),
-            child: const Text(
-              'TBT',
-              style: TextStyle(
-                color: Color(0xFF08090D),
-                fontSize: 10.5,
-                fontWeight: FontWeight.w900,
-              ),
+            child: const Icon(
+              Icons.camera_outlined,
+              color: Color(0xFF08090D),
+              size: 19,
             ),
           ),
           const SizedBox(width: 9),
