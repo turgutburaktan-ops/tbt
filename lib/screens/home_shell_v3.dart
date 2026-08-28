@@ -282,17 +282,24 @@ class _HomeFeedHubState extends State<_HomeFeedHub> {
   }
 
   Widget _animatedChrome({required bool visible, required Widget child}) {
-    return AnimatedSize(
-      duration: const Duration(milliseconds: 280),
-      curve: Curves.easeInOutCubic,
-      alignment: Alignment.topCenter,
-      child: visible
-          ? AnimatedOpacity(
-              opacity: 1,
-              duration: const Duration(milliseconds: 240),
-              child: child,
-            )
-          : const SizedBox.shrink(),
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(end: visible ? 1 : 0),
+      duration: const Duration(milliseconds: 340),
+      curve: Curves.easeOutCubic,
+      child: IgnorePointer(ignoring: !visible, child: child),
+      builder: (context, value, animatedChild) => ClipRect(
+        child: Align(
+          alignment: Alignment.topCenter,
+          heightFactor: value,
+          child: Opacity(
+            opacity: value,
+            child: Transform.translate(
+              offset: Offset(0, -8 * (1 - value)),
+              child: animatedChild,
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -306,7 +313,7 @@ class _HomeFeedHubState extends State<_HomeFeedHub> {
         bottom: false,
         child: Column(
           children: [
-            _HomeHeader(showBrand: !compact),
+            const _HomeHeader(showBrand: true),
             _animatedChrome(
               visible: full,
               child: Padding(
@@ -505,7 +512,10 @@ class _PlacesHubState extends State<_PlacesHub> {
     if (_category == 'Gezilecek Yerler') {
       content = const SpotExploreScreen(embedded: true);
     } else {
-      content = NearbyPlacesView(category: _nearbyCategory());
+      content = NearbyPlacesView(
+        key: ValueKey(_category),
+        category: _nearbyCategory(),
+      );
     }
 
     return ColoredBox(
