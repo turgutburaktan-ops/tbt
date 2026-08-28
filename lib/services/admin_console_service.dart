@@ -1,4 +1,5 @@
 import 'package:cloud_functions/cloud_functions.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class AdminConsoleService {
   AdminConsoleService._();
@@ -8,12 +9,40 @@ class AdminConsoleService {
     region: 'europe-west1',
   );
 
+  Future<void> _ensureFreshAdminAuth() async {
+    final current = FirebaseAuth.instance.currentUser;
+    if (current == null) {
+      throw FirebaseAuthException(
+        code: 'not-signed-in',
+        message: 'Yönetici işlemi için giriş gerekli.',
+      );
+    }
+    await current.reload();
+    final refreshed = FirebaseAuth.instance.currentUser;
+    if (refreshed == null) {
+      throw FirebaseAuthException(
+        code: 'not-signed-in',
+        message: 'Yönetici oturumu bulunamadı.',
+      );
+    }
+    await refreshed.getIdToken(true);
+    final token = await refreshed.getIdTokenResult();
+    if (token.claims?['admin'] != true) {
+      throw FirebaseAuthException(
+        code: 'admin-claim-missing',
+        message: 'Yönetici yetkisi doğrulanamadı.',
+      );
+    }
+  }
+
   Future<Map<String, dynamic>> overview() async {
+    await _ensureFreshAdminAuth();
     final result = await _functions.httpsCallable('adminGetOverview').call();
     return Map<String, dynamic>.from(result.data as Map);
   }
 
   Future<List<Map<String, dynamic>>> recentUsers({int limit = 60}) async {
+    await _ensureFreshAdminAuth();
     final result = await _functions
         .httpsCallable('adminListRecentUsers')
         .call({'limit': limit});
@@ -24,6 +53,7 @@ class AdminConsoleService {
   }
 
   Future<List<Map<String, dynamic>>> businessClaims({int limit = 120}) async {
+    await _ensureFreshAdminAuth();
     final result = await _functions
         .httpsCallable('getAdminBusinessClaims')
         .call({'limit': limit});
@@ -39,6 +69,7 @@ class AdminConsoleService {
     required bool approve,
     String reason = '',
   }) async {
+    await _ensureFreshAdminAuth();
     await _functions.httpsCallable('adminReviewBusinessClaim').call({
       'category': category,
       'venueId': venueId,
@@ -48,6 +79,7 @@ class AdminConsoleService {
   }
 
   Future<AdminInsightsData> insights() async {
+    await _ensureFreshAdminAuth();
     final result = await _functions.httpsCallable('getAdminInsights').call();
     final data = Map<String, dynamic>.from(result.data as Map);
     final counts = Map<String, dynamic>.from(
