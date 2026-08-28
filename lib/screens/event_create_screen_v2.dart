@@ -9,7 +9,6 @@ import 'package:image_picker/image_picker.dart';
 
 import '../models/social_event.dart';
 import '../services/event_privacy_service.dart';
-import '../services/event_trust_service.dart';
 import '../services/social_event_service.dart';
 import '../theme/app_theme.dart';
 import 'event_location_picker_screen.dart';
@@ -58,7 +57,10 @@ class _EventCreateScreenV2State extends State<EventCreateScreenV2> {
   Map<String, String> _selectedPeople = {};
   EventLocationSelection? _selectedLocation;
   bool _saving = false;
+  bool _advancedOpen = false;
   String? _error;
+
+  bool get _fromTemplate => widget.initialTitle.trim().isNotEmpty;
 
   @override
   void initState() {
@@ -68,9 +70,11 @@ class _EventCreateScreenV2State extends State<EventCreateScreenV2> {
     _location = TextEditingController(text: widget.initialLocationLabel);
     _description = TextEditingController(text: widget.initialDescription);
     _capacity = TextEditingController(text: widget.initialCapacity.toString());
-    _startsAt =
-        widget.initialStartsAt ?? DateTime.now().add(const Duration(hours: 2));
+    _startsAt = _roundToFive(
+      widget.initialStartsAt ?? DateTime.now().add(const Duration(hours: 2)),
+    );
     _type = widget.initialType;
+    _advancedOpen = !_fromTemplate;
     if (widget.initialLatitude != null && widget.initialLongitude != null) {
       _selectedLocation = EventLocationSelection(
         latitude: widget.initialLatitude!,
@@ -80,16 +84,19 @@ class _EventCreateScreenV2State extends State<EventCreateScreenV2> {
     }
   }
 
+  DateTime _roundToFive(DateTime value) {
+    final local = value.toLocal();
+    final roundedMinute = ((local.minute + 4) ~/ 5) * 5;
+    if (roundedMinute >= 60) {
+      return DateTime(local.year, local.month, local.day, local.hour)
+          .add(const Duration(hours: 1));
+    }
+    return DateTime(local.year, local.month, local.day, local.hour, roundedMinute);
+  }
+
   @override
   void dispose() {
-    for (final c in [
-      _title,
-      _city,
-      _location,
-      _description,
-      _customType,
-      _capacity,
-    ]) {
+    for (final c in [_title, _city, _location, _description, _customType, _capacity]) {
       c.dispose();
     }
     super.dispose();
@@ -140,28 +147,57 @@ class _EventCreateScreenV2State extends State<EventCreateScreenV2> {
     if (source != null) await _pickImage(source);
   }
 
+  Widget _pickerTheme(BuildContext context, Widget? child) {
+    final base = Theme.of(context);
+    return Theme(
+      data: base.copyWith(
+        colorScheme: base.colorScheme.copyWith(
+          surface: AppColors.surface,
+          primary: AppColors.cyan,
+          onPrimary: Colors.black,
+          onSurface: Colors.white,
+        ),
+        dialogTheme: const DialogThemeData(backgroundColor: AppColors.surface),
+        timePickerTheme: const TimePickerThemeData(
+          backgroundColor: AppColors.surface,
+          dialBackgroundColor: AppColors.surfaceStrong,
+          hourMinuteColor: AppColors.surfaceStrong,
+          dayPeriodColor: AppColors.surfaceStrong,
+          helpTextStyle: TextStyle(color: Colors.white60),
+        ),
+        datePickerTheme: const DatePickerThemeData(
+          backgroundColor: AppColors.surface,
+          headerBackgroundColor: AppColors.surfaceStrong,
+          headerForegroundColor: Colors.white,
+        ),
+      ),
+      child: child!,
+    );
+  }
+
   Future<void> _chooseDateTime() async {
+    final now = DateTime.now();
     final date = await showDatePicker(
       context: context,
-      initialDate: _startsAt,
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
+      initialDate: _startsAt.isBefore(now) ? now : _startsAt,
+      firstDate: DateTime(now.year, now.month, now.day),
+      lastDate: now.add(const Duration(days: 365)),
+      builder: _pickerTheme,
     );
     if (date == null || !mounted) return;
+    final rounded = _roundToFive(_startsAt);
     final time = await showTimePicker(
       context: context,
-      initialTime: TimeOfDay.fromDateTime(_startsAt),
+      initialTime: TimeOfDay(hour: rounded.hour, minute: rounded.minute),
+      builder: _pickerTheme,
     );
-    if (time == null) return;
-    setState(() {
-      _startsAt = DateTime(
-        date.year,
-        date.month,
-        date.day,
-        time.hour,
-        time.minute,
-      );
-    });
+    if (time == null || !mounted) return;
+    var chosen = DateTime(date.year, date.month, date.day, time.hour, time.minute);
+    chosen = _roundToFive(chosen);
+    if (chosen.isBefore(DateTime.now())) {
+      chosen = _roundToFive(DateTime.now().add(const Duration(minutes: 10)));
+    }
+    setState(() => _startsAt = chosen);
   }
 
   Future<void> _chooseLocation() async {
@@ -203,13 +239,7 @@ class _EventCreateScreenV2State extends State<EventCreateScreenV2> {
                 child: Row(
                   children: [
                     const Expanded(
-                      child: Text(
-                        'Kişileri Seç',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
+                      child: Text('Kişileri Seç', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900)),
                     ),
                     TextButton(
                       onPressed: () => Navigator.pop(sheet, {
@@ -225,33 +255,20 @@ class _EventCreateScreenV2State extends State<EventCreateScreenV2> {
                 child: StreamBuilder(
                   stream: EventPrivacyService.instance.users(),
                   builder: (_, snapshot) {
-                    if (!snapshot.hasData) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
-                    final docs = snapshot.data!.docs
-                        .where((d) => d.id != me)
-                        .toList();
+                    if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+                    final docs = snapshot.data!.docs.where((d) => d.id != me).toList();
                     return ListView.builder(
                       itemCount: docs.length,
                       itemBuilder: (_, index) {
-                        final doc = docs[index];
-                        final data = doc.data();
-                        final name =
-                            (data['displayName'] ??
-                                    data['email'] ??
-                                    'Kullanıcı')
-                                .toString();
+                        final doc = docs[index], data = doc.data();
+                        final name = (data['displayName'] ?? data['email'] ?? 'Kullanıcı').toString();
                         names[doc.id] = name;
                         final checked = selected.contains(doc.id);
                         return CheckboxListTile(
                           value: checked,
                           title: Text(name),
                           onChanged: (value) => setSheetState(() {
-                            if (value == true) {
-                              selected.add(doc.id);
-                            } else {
-                              selected.remove(doc.id);
-                            }
+                            value == true ? selected.add(doc.id) : selected.remove(doc.id);
                           }),
                         );
                       },
@@ -289,6 +306,14 @@ class _EventCreateScreenV2State extends State<EventCreateScreenV2> {
       return;
     }
     final capacity = int.tryParse(_capacity.text.trim()) ?? 0;
+    if (_title.text.trim().length < 3) {
+      setState(() => _error = 'Etkinlik başlığını tamamla.');
+      return;
+    }
+    if (_city.text.trim().length < 2) {
+      setState(() => _error = 'Şehir bilgisini gir.');
+      return;
+    }
     if (_image == null) {
       setState(() => _error = 'Etkinlik için bir kapak fotoğrafı ekle.');
       return;
@@ -301,8 +326,7 @@ class _EventCreateScreenV2State extends State<EventCreateScreenV2> {
       setState(() => _error = 'Haritadan kesin konumu seç.');
       return;
     }
-    if (_visibility == EventVisibility.selectedPeople &&
-        _selectedPeople.isEmpty) {
+    if (_visibility == EventVisibility.selectedPeople && _selectedPeople.isEmpty) {
       setState(() => _error = 'En az bir kişi seçmelisin.');
       return;
     }
@@ -311,14 +335,11 @@ class _EventCreateScreenV2State extends State<EventCreateScreenV2> {
       _saving = true;
       _error = null;
     });
-
-    String? uploadedPath;
     try {
       final allowed = await EventPrivacyService.instance.resolveAudience(
         _visibility,
         selectedUserIds: _selectedPeople.keys.toList(),
       );
-
       final eventId = await SocialEventService.instance.create(
         title: _title.text,
         type: _type,
@@ -335,30 +356,16 @@ class _EventCreateScreenV2State extends State<EventCreateScreenV2> {
         visibility: _visibility,
         allowedUserIds: allowed,
       );
-
-      final ref = FirebaseStorage.instance.ref().child(
-        'users/${user.uid}/events/$eventId/cover.jpg',
-      );
-      uploadedPath = ref.fullPath;
-      await ref.putFile(_image!, SettableMetadata(contentType: 'image/jpeg'));
-      final url = await ref.getDownloadURL();
+      final ref = FirebaseStorage.instance.ref().child('users/${user.uid}/events/$eventId/cover.jpg');
+      await ref.putFile(_image!, SettableMetadata(contentType: 'image/jpeg')).timeout(const Duration(seconds: 30));
+      final url = await ref.getDownloadURL().timeout(const Duration(seconds: 8));
       await FirebaseFunctions.instanceFor(region: 'europe-west1')
           .httpsCallable('setSocialEventCover')
-          .call({
-            'eventId': eventId,
-            'coverImageUrl': url,
-            'coverStoragePath': ref.fullPath,
-          });
-
-      if (!mounted) return;
-      Navigator.pop(context, true);
+          .call({'eventId': eventId, 'coverImageUrl': url, 'coverStoragePath': ref.fullPath})
+          .timeout(const Duration(seconds: 12));
+      if (mounted) Navigator.pop(context, true);
     } catch (e) {
-      if (uploadedPath != null) {
-        // Don't delete a successfully attached cover; cleanup only matters on failed attach.
-      }
-      if (mounted) {
-        setState(() => _error = e.toString().replaceFirst('Exception: ', ''));
-      }
+      if (mounted) setState(() => _error = e.toString().replaceFirst('Exception: ', ''));
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -368,14 +375,39 @@ class _EventCreateScreenV2State extends State<EventCreateScreenV2> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('Etkinlik Oluştur')),
+      appBar: AppBar(
+        title: Text(_fromTemplate ? 'Planı Tamamla' : 'Etkinlik Oluştur'),
+      ),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(18, 14, 18, 40),
+        padding: const EdgeInsets.fromLTRB(18, 12, 18, 40),
         children: [
+          if (_fromTemplate) ...[
+            Container(
+              padding: const EdgeInsets.all(13),
+              decoration: BoxDecoration(
+                color: AppColors.cyan.withValues(alpha: .08),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppColors.cyan.withValues(alpha: .2)),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.bolt_rounded, color: AppColors.cyan),
+                  SizedBox(width: 9),
+                  Expanded(
+                    child: Text(
+                      'Şablon hazır. Konumu, zamanı ve kapağı tamamlayıp planı hemen yayınlayabilirsin.',
+                      style: TextStyle(color: Colors.white70, fontSize: 12, height: 1.3),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
           GestureDetector(
             onTap: _saving ? null : _chooseImage,
             child: Container(
-              height: 220,
+              height: 158,
               clipBehavior: Clip.antiAlias,
               decoration: BoxDecoration(
                 color: AppColors.surface,
@@ -386,21 +418,11 @@ class _EventCreateScreenV2State extends State<EventCreateScreenV2> {
                   ? const Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(
-                          Icons.add_a_photo_outlined,
-                          size: 48,
-                          color: AppColors.violetBright,
-                        ),
-                        SizedBox(height: 10),
-                        Text(
-                          'Etkinlik kapak fotoğrafı ekle',
-                          style: TextStyle(fontWeight: FontWeight.w900),
-                        ),
-                        SizedBox(height: 5),
-                        Text(
-                          'Kameradan çek veya galeriden seç',
-                          style: TextStyle(color: Colors.white54),
-                        ),
+                        Icon(Icons.add_a_photo_outlined, size: 38, color: AppColors.violetBright),
+                        SizedBox(height: 8),
+                        Text('Kapak fotoğrafı ekle', style: TextStyle(fontWeight: FontWeight.w900)),
+                        SizedBox(height: 3),
+                        Text('Çek veya galeriden seç', style: TextStyle(color: Colors.white54, fontSize: 11.5)),
                       ],
                     )
                   : Stack(
@@ -408,11 +430,11 @@ class _EventCreateScreenV2State extends State<EventCreateScreenV2> {
                       children: [
                         Image.file(_image!, fit: BoxFit.cover),
                         Positioned(
-                          right: 10,
-                          bottom: 10,
+                          right: 8,
+                          bottom: 8,
                           child: FilledButton.tonalIcon(
                             onPressed: _saving ? null : _chooseImage,
-                            icon: const Icon(Icons.edit_outlined),
+                            icon: const Icon(Icons.edit_outlined, size: 18),
                             label: const Text('Değiştir'),
                           ),
                         ),
@@ -420,194 +442,129 @@ class _EventCreateScreenV2State extends State<EventCreateScreenV2> {
                     ),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           TextField(
             controller: _title,
-            decoration: const InputDecoration(
-              labelText: 'Etkinlik başlığı',
-              prefixIcon: Icon(Icons.title),
-            ),
+            decoration: const InputDecoration(labelText: 'Plan başlığı', prefixIcon: Icon(Icons.title)),
           ),
-          const SizedBox(height: 12),
-          DropdownButtonFormField<SocialEventType>(
-            initialValue: _type,
-            isExpanded: true,
-            decoration: const InputDecoration(labelText: 'Etkinlik türü'),
-            items: SocialEventType.values
-                .map((e) => DropdownMenuItem(value: e, child: Text(e.label)))
-                .toList(),
-            onChanged: _saving
-                ? null
-                : (value) =>
-                      setState(() => _type = value ?? SocialEventType.social),
+          const SizedBox(height: 10),
+          TextField(
+            controller: _city,
+            decoration: const InputDecoration(labelText: 'Şehir', prefixIcon: Icon(Icons.location_city_outlined)),
           ),
-          if (_type == SocialEventType.other) ...[
-            const SizedBox(height: 12),
-            TextField(
-              controller: _customType,
-              decoration: const InputDecoration(
-                labelText: 'Etkinlik türünün adı',
-              ),
-            ),
-          ],
-          const SizedBox(height: 12),
-          DropdownButtonFormField<EventVisibility>(
-            initialValue: _visibility,
-            isExpanded: true,
-            decoration: const InputDecoration(
-              labelText: 'Kimler görebilir?',
-              prefixIcon: Icon(Icons.shield_outlined),
-            ),
-            items: EventVisibility.values
-                .map(
-                  (e) => DropdownMenuItem(
-                    value: e,
-                    child: Row(
-                      children: [
-                        Icon(_visibilityIcon(e), size: 18),
-                        const SizedBox(width: 8),
-                        Text(e.label),
-                      ],
-                    ),
-                  ),
-                )
-                .toList(),
-            onChanged: _saving
-                ? null
-                : (value) => setState(() {
-                    _visibility = value ?? EventVisibility.public;
-                    if (_visibility != EventVisibility.selectedPeople) {
-                      _selectedPeople = {};
-                    }
-                  }),
+          const SizedBox(height: 10),
+          TextField(
+            controller: _location,
+            decoration: const InputDecoration(labelText: 'Buluşma adresi', prefixIcon: Icon(Icons.place_outlined)),
           ),
-          if (_visibility == EventVisibility.selectedPeople) ...[
-            const SizedBox(height: 8),
-            OutlinedButton.icon(
-              onPressed: _saving
-                  ? null
-                  : () async {
-                      final value = await _pickPeople(
-                        _selectedPeople.keys.toSet(),
-                      );
-                      if (mounted) setState(() => _selectedPeople = value);
-                    },
-              icon: const Icon(Icons.person_add_alt_1),
-              label: Text(
-                _selectedPeople.isEmpty
-                    ? 'Kişileri seç'
-                    : '${_selectedPeople.length} kişi seçildi',
-              ),
-            ),
-          ],
-          const SizedBox(height: 14),
-          Container(
+          const SizedBox(height: 7),
+          SizedBox(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            child: OutlinedButton.icon(
+              onPressed: _saving ? null : _chooseLocation,
+              icon: Icon(_selectedLocation == null ? Icons.map_outlined : Icons.location_on_rounded),
+              label: Text(_selectedLocation == null ? 'Haritadan konumu seç' : 'Konum seçildi • Değiştir'),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Container(
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(15),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: ListTile(
+              leading: const Icon(Icons.schedule_rounded, color: AppColors.cyan),
+              title: const Text('Tarih ve saat', style: TextStyle(fontWeight: FontWeight.w800)),
+              subtitle: Text(_dateLabel()),
+              trailing: const Icon(Icons.edit_calendar_outlined),
+              onTap: _saving ? null : _chooseDateTime,
+            ),
+          ),
+          const SizedBox(height: 10),
+          TextField(
+            controller: _capacity,
+            keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            decoration: const InputDecoration(labelText: 'Kişi sayısı', prefixIcon: Icon(Icons.groups_2_outlined)),
+          ),
+          const SizedBox(height: 12),
+          Container(
             decoration: BoxDecoration(
               color: AppColors.surface,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(color: AppColors.border),
             ),
-            child: const Row(
+            child: ExpansionTile(
+              initiallyExpanded: _advancedOpen,
+              onExpansionChanged: (value) => _advancedOpen = value,
+              leading: const Icon(Icons.tune_rounded, color: Colors.white60),
+              title: const Text('Ek detaylar', style: TextStyle(fontWeight: FontWeight.w900)),
+              subtitle: const Text('Tür, görünürlük ve açıklama', style: TextStyle(color: Colors.white54, fontSize: 11)),
+              childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 14),
               children: [
-                Icon(Icons.confirmation_number_outlined, color: AppColors.cyan),
-                SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Ücretsiz etkinlik',
-                        style: TextStyle(fontWeight: FontWeight.w900),
-                      ),
-                      SizedBox(height: 2),
-                      Text(
-                        'Ücretli etkinlikler şimdilik kapalı.',
-                        style: TextStyle(color: Colors.white54, fontSize: 11.5),
-                      ),
-                    ],
+                DropdownButtonFormField<SocialEventType>(
+                  initialValue: _type,
+                  isExpanded: true,
+                  decoration: const InputDecoration(labelText: 'Etkinlik türü'),
+                  items: SocialEventType.values.map((e) => DropdownMenuItem(value: e, child: Text(e.label))).toList(),
+                  onChanged: _saving ? null : (value) => setState(() => _type = value ?? SocialEventType.social),
+                ),
+                if (_type == SocialEventType.other) ...[
+                  const SizedBox(height: 10),
+                  TextField(controller: _customType, decoration: const InputDecoration(labelText: 'Etkinlik türünün adı')),
+                ],
+                const SizedBox(height: 10),
+                DropdownButtonFormField<EventVisibility>(
+                  initialValue: _visibility,
+                  isExpanded: true,
+                  decoration: const InputDecoration(labelText: 'Kimler görebilir?', prefixIcon: Icon(Icons.shield_outlined)),
+                  items: EventVisibility.values.map((e) => DropdownMenuItem(value: e, child: Row(children: [Icon(_visibilityIcon(e), size: 18), const SizedBox(width: 8), Text(e.label)]))).toList(),
+                  onChanged: _saving ? null : (value) => setState(() {
+                    _visibility = value ?? EventVisibility.public;
+                    if (_visibility != EventVisibility.selectedPeople) _selectedPeople = {};
+                  }),
+                ),
+                if (_visibility == EventVisibility.selectedPeople) ...[
+                  const SizedBox(height: 8),
+                  OutlinedButton.icon(
+                    onPressed: _saving ? null : () async {
+                      final value = await _pickPeople(_selectedPeople.keys.toSet());
+                      if (mounted) setState(() => _selectedPeople = value);
+                    },
+                    icon: const Icon(Icons.person_add_alt_1),
+                    label: Text(_selectedPeople.isEmpty ? 'Kişileri seç' : '${_selectedPeople.length} kişi seçildi'),
                   ),
+                ],
+                const SizedBox(height: 10),
+                TextField(
+                  controller: _description,
+                  minLines: 2,
+                  maxLines: 4,
+                  maxLength: 500,
+                  decoration: const InputDecoration(labelText: 'Açıklama / not'),
+                ),
+                const SizedBox(height: 6),
+                const Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text('Ücretsiz etkinlik • ücretli etkinlikler şimdilik kapalı', style: TextStyle(color: Colors.white54, fontSize: 10.5)),
                 ),
               ],
             ),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _city,
-            decoration: const InputDecoration(
-              labelText: 'Şehir',
-              prefixIcon: Icon(Icons.location_city_outlined),
-            ),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _location,
-            decoration: const InputDecoration(
-              labelText: 'Etkinlik / buluşma adresi',
-              prefixIcon: Icon(Icons.place_outlined),
-            ),
-          ),
-          const SizedBox(height: 8),
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: _saving ? null : _chooseLocation,
-              icon: Icon(
-                _selectedLocation == null
-                    ? Icons.map_outlined
-                    : Icons.location_on_rounded,
-              ),
-              label: Text(
-                _selectedLocation == null
-                    ? 'Haritadan kesin konumu seç'
-                    : 'Harita konumu seçildi • Değiştir',
-              ),
-            ),
-          ),
-          const SizedBox(height: 8),
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: const Icon(Icons.event_outlined),
-            title: const Text('Tarih ve saat'),
-            subtitle: Text(_dateLabel()),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: _saving ? null : _chooseDateTime,
-          ),
-          TextField(
-            controller: _capacity,
-            keyboardType: TextInputType.number,
-            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-            decoration: const InputDecoration(
-              labelText: 'Katılımcı kapasitesi',
-              prefixIcon: Icon(Icons.groups_2_outlined),
-            ),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _description,
-            minLines: 2,
-            maxLines: 5,
-            maxLength: 500,
-            decoration: const InputDecoration(labelText: 'Açıklama / not'),
           ),
           if (_error != null) ...[
             const SizedBox(height: 10),
             Text(_error!, style: const TextStyle(color: Colors.redAccent)),
           ],
-          const SizedBox(height: 18),
+          const SizedBox(height: 16),
           SizedBox(
             height: 54,
             child: FilledButton.icon(
               onPressed: _saving ? null : _save,
               icon: _saving
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
+                  ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
                   : const Icon(Icons.event_available_outlined),
-              label: Text(_saving ? 'Oluşturuluyor…' : 'Etkinliği Oluştur'),
+              label: Text(_saving ? 'Oluşturuluyor…' : 'Planı Yayınla'),
             ),
           ),
         ],
