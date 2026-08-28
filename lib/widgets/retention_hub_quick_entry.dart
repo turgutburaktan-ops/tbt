@@ -36,8 +36,6 @@ class _RetentionHubQuickEntryState extends State<RetentionHubQuickEntry> {
       return;
     }
     try {
-      // Never force-refresh a token from inside idTokenChanges. A forced token
-      // refresh can itself emit idTokenChanges and create a needless loop.
       final token = await user
           .getIdTokenResult()
           .timeout(const Duration(seconds: 6));
@@ -72,7 +70,7 @@ class _RetentionHubQuickEntryState extends State<RetentionHubQuickEntry> {
         if (uid != null)
           Positioned(
             right: 12,
-            bottom: 122,
+            bottom: 84,
             child: SafeArea(
               top: false,
               child: StreamBuilder<_RewardSummary>(
@@ -86,8 +84,8 @@ class _RetentionHubQuickEntryState extends State<RetentionHubQuickEntry> {
                       onTap: () => Navigator.of(context).pushNamed('/rewards'),
                       child: Ink(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 11,
-                          vertical: 8,
+                          horizontal: 10,
+                          vertical: 7,
                         ),
                         decoration: BoxDecoration(
                           color: const Color(0xE60D1118),
@@ -95,9 +93,9 @@ class _RetentionHubQuickEntryState extends State<RetentionHubQuickEntry> {
                           border: Border.all(color: Colors.white12),
                           boxShadow: const [
                             BoxShadow(
-                              color: Colors.black38,
-                              blurRadius: 10,
-                              offset: Offset(0, 4),
+                              color: Colors.black26,
+                              blurRadius: 8,
+                              offset: Offset(0, 3),
                             ),
                           ],
                         ),
@@ -106,28 +104,28 @@ class _RetentionHubQuickEntryState extends State<RetentionHubQuickEntry> {
                           children: [
                             const Icon(
                               Icons.bolt_rounded,
-                              size: 16,
+                              size: 15,
                               color: Color(0xFFFFD166),
                             ),
-                            const SizedBox(width: 5),
+                            const SizedBox(width: 4),
                             Text(
                               '${reward.xp} XP',
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.w900,
-                                fontSize: 11,
+                                fontSize: 10.5,
                               ),
                             ),
-                            const SizedBox(width: 5),
+                            const SizedBox(width: 4),
                             ConstrainedBox(
-                              constraints: const BoxConstraints(maxWidth: 88),
+                              constraints: const BoxConstraints(maxWidth: 62),
                               child: Text(
                                 reward.level,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(
                                   color: Colors.white54,
-                                  fontSize: 10,
+                                  fontSize: 9.5,
                                   fontWeight: FontWeight.w700,
                                 ),
                               ),
@@ -144,9 +142,9 @@ class _RetentionHubQuickEntryState extends State<RetentionHubQuickEntry> {
         if (_isAdmin)
           Positioned(
             left: 12,
-            bottom: 122,
+            top: 8,
             child: SafeArea(
-              top: false,
+              bottom: false,
               child: Material(
                 color: Colors.transparent,
                 child: InkWell(
@@ -154,37 +152,29 @@ class _RetentionHubQuickEntryState extends State<RetentionHubQuickEntry> {
                   onTap: () => Navigator.of(context).pushNamed('/admin'),
                   child: Ink(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
+                      horizontal: 10,
+                      vertical: 6,
                     ),
                     decoration: BoxDecoration(
                       color: const Color(0xE60D1118),
                       borderRadius: BorderRadius.circular(999),
-                      border: Border.all(color: const Color(0x8845E7F2)),
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Colors.black38,
-                          blurRadius: 10,
-                          offset: Offset(0, 4),
-                        ),
-                      ],
+                      border: Border.all(color: const Color(0x6645E7F2)),
                     ),
                     child: const Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(
                           Icons.admin_panel_settings_rounded,
-                          size: 16,
+                          size: 15,
                           color: Color(0xFF45E7F2),
                         ),
-                        SizedBox(width: 6),
+                        SizedBox(width: 5),
                         Text(
-                          'Admin Paneli',
+                          'Admin',
                           style: TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.w900,
-                            fontSize: 11,
-                            letterSpacing: -.1,
+                            fontSize: 10.5,
                           ),
                         ),
                       ],
