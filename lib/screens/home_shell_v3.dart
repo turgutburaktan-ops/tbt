@@ -227,12 +227,24 @@ class _HomeFeedHub extends StatefulWidget {
 class _HomeFeedHubState extends State<_HomeFeedHub> {
   int _section = 0;
   int _photoMode = 0;
+  final Set<int> _loadedSections = <int>{0};
+  final Set<int> _loadedPhotoModes = <int>{0};
   _HomeChromeMode _chromeMode = _HomeChromeMode.full;
 
   void _setSection(int value) {
+    if (value == _section) return;
     setState(() {
+      _loadedSections.add(value);
       _section = value;
       _chromeMode = _HomeChromeMode.full;
+    });
+  }
+
+  void _setPhotoMode(int value) {
+    if (value == _photoMode) return;
+    setState(() {
+      _loadedPhotoModes.add(value);
+      _photoMode = value;
     });
   }
 
@@ -313,36 +325,47 @@ class _HomeFeedHubState extends State<_HomeFeedHub> {
                 child: IndexedStack(
                   index: _section,
                   children: [
-                    Column(
-                      children: [
-                        _animatedChrome(
-                          visible: full,
-                          child: const StoryStrip(),
-                        ),
-                        _animatedChrome(
-                          visible: !compact,
-                          child: Padding(
-                            padding: const EdgeInsets.fromLTRB(14, 3, 14, 5),
-                            child: _SegmentTabs(
-                              labels: const ['Sana Özel', 'Takip'],
-                              selected: _photoMode,
-                              onChanged: (value) =>
-                                  setState(() => _photoMode = value),
-                            ),
-                          ),
-                        ),
-                        Expanded(
-                          child: IndexedStack(
-                            index: _photoMode,
-                            children: const [
-                              _AuthAwareFeed(mode: FeedMode.forYou),
-                              _AuthAwareFeed(mode: FeedMode.following),
+                    _loadedSections.contains(0)
+                        ? Column(
+                            children: [
+                              _animatedChrome(
+                                visible: full,
+                                child: const StoryStrip(),
+                              ),
+                              _animatedChrome(
+                                visible: !compact,
+                                child: Padding(
+                                  padding: const EdgeInsets.fromLTRB(14, 3, 14, 5),
+                                  child: _SegmentTabs(
+                                    labels: const ['Sana Özel', 'Takip'],
+                                    selected: _photoMode,
+                                    onChanged: _setPhotoMode,
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: IndexedStack(
+                                  index: _photoMode,
+                                  children: [
+                                    _loadedPhotoModes.contains(0)
+                                        ? const _AuthAwareFeed(
+                                            mode: FeedMode.forYou,
+                                          )
+                                        : const SizedBox.shrink(),
+                                    _loadedPhotoModes.contains(1)
+                                        ? const _AuthAwareFeed(
+                                            mode: FeedMode.following,
+                                          )
+                                        : const SizedBox.shrink(),
+                                  ],
+                                ),
+                              ),
                             ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const HomeDiscoverScreen(),
+                          )
+                        : const SizedBox.shrink(),
+                    _loadedSections.contains(1)
+                        ? const HomeDiscoverScreen()
+                        : const SizedBox.shrink(),
                   ],
                 ),
               ),
