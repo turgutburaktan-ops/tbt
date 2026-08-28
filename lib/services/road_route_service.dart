@@ -36,19 +36,22 @@ class RoadRouteService {
   final http.Client _client = http.Client();
   final Map<String, _CachedRoadRoute> _cache = {};
   final Map<String, Future<RoadRouteResult?>> _inFlight = {};
+  int _requestGeneration = 0;
 
   static const Duration _cacheLifetime = Duration(minutes: 8);
 
   Future<RoadRouteResult?> drivingRoute(List<LatLng> waypoints) {
     if (waypoints.length < 2) return Future.value(null);
     final key = _routeKey(waypoints);
-    final cached = _cache[key];
-    if (cached != null && !cached.isExpired) return Future.value(cached.value);
 
     final running = _inFlight[key];
     if (running != null) return running;
 
-    final request = _loadRoute(waypoints, key);
+    final generation = ++_requestGeneration;
+    final cached = _cache[key];
+    if (cached != null && !cached.isExpired) return Future.value(cached.value);
+
+    final request = _loadRoute(waypoints, key, generation);
     _inFlight[key] = request;
     return request.whenComplete(() {
       if (identical(_inFlight[key], request)) _inFlight.remove(key);
@@ -58,6 +61,7 @@ class RoadRouteService {
   Future<RoadRouteResult?> _loadRoute(
     List<LatLng> waypoints,
     String key,
+    int generation,
   ) async {
     final coordinates = waypoints
         .map((point) => '${point.longitude},${point.latitude}')
@@ -71,15 +75,17 @@ class RoadRouteService {
       final response = await _client
           .get(uri, headers: const {'User-Agent': 'TBT/1.0'})
           .timeout(const Duration(seconds: 8));
-      if (response.statusCode != 200) return _stale(key);
+      if (response.statusCode != 200) return _fallbackIfCurrent(key, generation);
       final json = jsonDecode(response.body) as Map<String, dynamic>;
       final routes = json['routes'] as List<dynamic>?;
-      if (routes == null || routes.isEmpty) return _stale(key);
+      if (routes == null || routes.isEmpty) {
+        return _fallbackIfCurrent(key, generation);
+      }
       final route = routes.first as Map<String, dynamic>;
       final geometry = route['geometry'] as Map<String, dynamic>?;
       final coordinatesList = geometry?['coordinates'] as List<dynamic>?;
       if (coordinatesList == null || coordinatesList.length < 2) {
-        return _stale(key);
+        return _fallbackIfCurrent(key, generation);
       }
 
       final points = <LatLng>[];
@@ -90,7 +96,7 @@ class RoadRouteService {
         if (lat is! num || lon is! num) continue;
         points.add(LatLng(lat.toDouble(), lon.toDouble()));
       }
-      if (points.length < 2) return _stale(key);
+      if (points.length < 2) return _fallbackIfCurrent(key, generation);
 
       final result = RoadRouteResult(
         points: points,
@@ -99,13 +105,20 @@ class RoadRouteService {
       );
       _cache[key] = _CachedRoadRoute(result, DateTime.now());
       _trimCache();
+
+      // A newer destination was selected while this request was in flight.
+      // Keep the result cached, but never let it overwrite the newer route UI.
+      if (generation != _requestGeneration) return null;
       return result;
     } catch (_) {
-      return _stale(key);
+      return _fallbackIfCurrent(key, generation);
     }
   }
 
-  RoadRouteResult? _stale(String key) => _cache[key]?.value;
+  RoadRouteResult? _fallbackIfCurrent(String key, int generation) {
+    if (generation != _requestGeneration) return null;
+    return _cache[key]?.value;
+  }
 
   String _routeKey(List<LatLng> waypoints) => waypoints
       .map(
