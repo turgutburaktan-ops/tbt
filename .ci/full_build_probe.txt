@@ -1,0 +1,4 @@
+TBT Full Build PR probe.
+Base: feature/video-v1
+Purpose: expose pull_request workflow job and logs to connected CI inspection.
+Trigger: synchronize
