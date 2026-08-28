@@ -138,11 +138,8 @@ class ContentEngagementBar extends StatelessWidget {
                             ),
                           );
                         }
-                        if (snapshot.connectionState ==
-                            ConnectionState.waiting) {
-                          return const Center(
-                            child: CircularProgressIndicator(),
-                          );
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return const Center(child: CircularProgressIndicator());
                         }
                         final docs = snapshot.data?.docs ?? const [];
                         if (docs.isEmpty) {
@@ -167,9 +164,7 @@ class ContentEngagementBar extends StatelessWidget {
                               ),
                               title: Text(
                                 (data['userName'] ?? 'Kullanıcı').toString(),
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w800,
-                                ),
+                                style: const TextStyle(fontWeight: FontWeight.w800),
                               ),
                               subtitle: MentionText(
                                 text: (data['text'] ?? '').toString(),
@@ -379,14 +374,13 @@ class ContentEngagementBar extends StatelessWidget {
                         ? null
                         : () async {
                             try {
-                              await ContentEngagementService.instance
-                                  .toggleLike(
-                                    collection: collection,
-                                    id: contentId,
-                                    ownerId: ownerId,
-                                    title: title,
-                                    sourceType: sourceType,
-                                  );
+                              await ContentEngagementService.instance.toggleLike(
+                                collection: collection,
+                                id: contentId,
+                                ownerId: ownerId,
+                                title: title,
+                                sourceType: sourceType,
+                              );
                             } catch (e) {
                               if (context.mounted) {
                                 _message(
@@ -396,22 +390,43 @@ class ContentEngagementBar extends StatelessWidget {
                               }
                             }
                           },
-                    icon: Icon(
-                      liked
-                          ? Icons.favorite_rounded
-                          : Icons.favorite_border_rounded,
-                      color: liked ? likedColor : Colors.white,
-                      size: 27,
+                    icon: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 240),
+                      reverseDuration: const Duration(milliseconds: 160),
+                      transitionBuilder: (child, animation) =>
+                          ScaleTransition(
+                            scale: CurvedAnimation(
+                              parent: animation,
+                              curve: Curves.easeOutBack,
+                            ),
+                            child: FadeTransition(
+                              opacity: animation,
+                              child: child,
+                            ),
+                          ),
+                      child: Icon(
+                        liked
+                            ? Icons.favorite_rounded
+                            : Icons.favorite_border_rounded,
+                        key: ValueKey<bool>(liked),
+                        color: liked ? likedColor : Colors.white,
+                        size: liked ? 30 : 27,
+                      ),
                     ),
                   ),
                   if (count > 0)
-                    Padding(
-                      padding: const EdgeInsets.only(right: 4),
-                      child: Text(
-                        '$count',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 180),
+                      child: Padding(
+                        key: ValueKey<int>(count),
+                        padding: const EdgeInsets.only(right: 4),
+                        child: Text(
+                          '$count',
+                          style: TextStyle(
+                            fontSize: liked ? 13 : 12,
+                            fontWeight: FontWeight.w800,
+                            color: liked ? likedColor : Colors.white,
+                          ),
                         ),
                       ),
                     ),
@@ -442,14 +457,16 @@ class ContentEngagementBar extends StatelessWidget {
                   title: title,
                   sourceType: sourceType,
                 );
-                if (context.mounted)
+                if (context.mounted) {
                   _message(context, '${user['name']} etiketlendi.');
+                }
               } catch (e) {
-                if (context.mounted)
+                if (context.mounted) {
                   _message(
                     context,
                     e.toString().replaceFirst('Exception: ', ''),
                   );
+                }
               }
             },
             icon: const Icon(
@@ -480,11 +497,13 @@ class ContentEngagementBar extends StatelessWidget {
                 sourceId: contentId,
                 title: title,
               );
-              if (context.mounted)
+              if (context.mounted) {
                 _message(context, '${user['name']} kullanıcısına gönderildi.');
+              }
             } catch (e) {
-              if (context.mounted)
+              if (context.mounted) {
                 _message(context, e.toString().replaceFirst('Exception: ', ''));
+              }
             }
           },
           icon: const Icon(Icons.send_outlined, size: 26),
