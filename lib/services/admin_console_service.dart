@@ -25,7 +25,7 @@ class AdminConsoleService {
 
   Future<List<Map<String, dynamic>>> businessClaims({int limit = 120}) async {
     final result = await _functions
-        .httpsCallable('adminListBusinessClaims')
+        .httpsCallable('getAdminBusinessClaims')
         .call({'limit': limit});
     final data = Map<String, dynamic>.from(result.data as Map);
     return (data['items'] as List? ?? const [])
