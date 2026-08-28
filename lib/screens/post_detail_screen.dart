@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import '../services/content_engagement_service.dart';
 import '../services/post_service.dart';
 import '../services/spot_repository.dart';
 import '../widgets/app_video_player.dart';
@@ -9,29 +10,48 @@ import '../widgets/content_engagement_bar.dart';
 import '../widgets/firebase_media_image.dart';
 import '../widgets/mention_text.dart';
 import 'spot_detail_screen.dart';
+import 'user_profile_screen.dart';
 
 class PostDetailScreen extends StatefulWidget {
   final Map<String, dynamic> post;
-
   const PostDetailScreen({super.key, required this.post});
 
   @override
   State<PostDetailScreen> createState() => _PostDetailScreenState();
 }
 
-class _PostDetailScreenState extends State<PostDetailScreen> {
+class _PostDetailScreenState extends State<PostDetailScreen>
+    with SingleTickerProviderStateMixin {
   late Map<String, dynamic> _post;
   bool _openingSpot = false;
+  bool _liking = false;
+  bool _showHeart = false;
+  late final AnimationController _heartController;
+  late final Animation<double> _heartScale;
 
   @override
   void initState() {
     super.initState();
     _post = Map<String, dynamic>.from(widget.post);
+    _heartController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 520),
+    );
+    _heartScale = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: .45, end: 1.18), weight: 45),
+      TweenSequenceItem(tween: Tween(begin: 1.18, end: 1), weight: 55),
+    ]).animate(CurvedAnimation(parent: _heartController, curve: Curves.easeOutBack));
+  }
+
+  @override
+  void dispose() {
+    _heartController.dispose();
+    super.dispose();
   }
 
   bool get _isMine {
     final uid = FirebaseAuth.instance.currentUser?.uid;
-    return uid != null && uid == _post['userId']?.toString();
+    return uid != null && uid == (_post['userId'] ?? '').toString();
   }
 
   bool get _isVideo {
@@ -46,98 +66,109 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     return '${d.day.toString().padLeft(2, '0')}.${d.month.toString().padLeft(2, '0')}.${d.year}';
   }
 
+  void _openProfile() {
+    final uid = (_post['userId'] ?? '').toString().trim();
+    if (uid.isEmpty) return;
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => UserProfileScreen(userId: uid)),
+    );
+  }
+
+  Future<void> _doubleTapLike() async {
+    if (_liking) return;
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(const SnackBar(content: Text('Beğenmek için giriş yapmalısın.')));
+      return;
+    }
+    final postId = (_post['id'] ?? '').toString().trim();
+    if (postId.isEmpty) return;
+    setState(() {
+      _liking = true;
+      _showHeart = true;
+    });
+    _heartController.forward(from: 0);
+    try {
+      final liked = await ContentEngagementService.instance
+          .isLiked('posts', postId)
+          .first
+          .timeout(const Duration(seconds: 4));
+      if (!liked) {
+        final caption = (_post['caption'] ?? '').toString().trim();
+        await ContentEngagementService.instance.toggleLike(
+          collection: 'posts',
+          id: postId,
+          ownerId: (_post['userId'] ?? '').toString(),
+          title: caption.isEmpty
+              ? (_isVideo ? 'Video paylaşımı' : 'Fotoğraf paylaşımı')
+              : caption,
+          sourceType: 'post',
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))));
+      }
+    } finally {
+      await Future<void>.delayed(const Duration(milliseconds: 420));
+      if (mounted) setState(() { _liking = false; _showHeart = false; });
+    }
+  }
+
   Future<void> _openSpot(String spotName) async {
     if (_openingSpot || spotName.trim().isEmpty) return;
     setState(() => _openingSpot = true);
     try {
-      final results = await SpotRepository.instance.search(
-        spotName,
-        limit: 2000,
-      );
+      final results = await SpotRepository.instance.search(spotName, limit: 2000);
       if (!mounted) return;
       if (results.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Bu çekim noktası kartı henüz bulunamadı.'),
-          ),
+          const SnackBar(content: Text('Bu çekim noktası kartı henüz bulunamadı.')),
         );
         return;
       }
       final normalized = spotName.trim().toLowerCase();
-      final exact = results.where(
-        (spot) => spot.name.trim().toLowerCase() == normalized,
-      );
+      final exact = results.where((s) => s.name.trim().toLowerCase() == normalized);
       final spot = exact.isNotEmpty ? exact.first : results.first;
-      await Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => SpotDetailScreen(spot: spot)),
-      );
+      await Navigator.push(context, MaterialPageRoute(builder: (_) => SpotDetailScreen(spot: spot)));
     } finally {
       if (mounted) setState(() => _openingSpot = false);
     }
   }
 
   Future<void> _edit() async {
-    final captionController = TextEditingController(
-      text: (_post['caption'] ?? '').toString(),
-    );
-    final spotController = TextEditingController(
-      text: (_post['spotName'] ?? '').toString(),
-    );
+    final captionController = TextEditingController(text: (_post['caption'] ?? '').toString());
+    final spotController = TextEditingController(text: (_post['spotName'] ?? '').toString());
     final save = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
       backgroundColor: const Color(0xFF0E1012),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-      ),
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
       builder: (sheetContext) => Padding(
-        padding: EdgeInsets.fromLTRB(
-          20,
-          18,
-          20,
-          MediaQuery.of(sheetContext).viewInsets.bottom + 24,
-        ),
+        padding: EdgeInsets.fromLTRB(20, 18, 20, MediaQuery.of(sheetContext).viewInsets.bottom + 24),
         child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Gönderiyi Düzenle',
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900),
-              ),
+              const Text('Gönderiyi Düzenle', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900)),
               const SizedBox(height: 16),
-              TextField(
-                controller: captionController,
-                minLines: 3,
-                maxLines: 6,
-                maxLength: 500,
-                decoration: const InputDecoration(labelText: 'Açıklama'),
-              ),
+              TextField(controller: captionController, minLines: 3, maxLines: 6, maxLength: 500, decoration: const InputDecoration(labelText: 'Açıklama')),
               const SizedBox(height: 12),
-              TextField(
-                controller: spotController,
-                decoration: const InputDecoration(
-                  labelText: 'Konum / çekim noktası',
-                ),
-              ),
+              TextField(controller: spotController, decoration: const InputDecoration(labelText: 'Konum / çekim noktası')),
               const SizedBox(height: 18),
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: FilledButton(
-                  onPressed: () => Navigator.pop(sheetContext, true),
-                  child: const Text('Kaydet'),
-                ),
-              ),
+              SizedBox(width: double.infinity, height: 50, child: FilledButton(onPressed: () => Navigator.pop(sheetContext, true), child: const Text('Kaydet'))),
             ],
           ),
         ),
       ),
     );
-
     if (save == true) {
       try {
         await PostService.instance.updatePost(
@@ -145,20 +176,9 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
           caption: captionController.text,
           spotName: spotController.text,
         );
-        if (mounted) {
-          setState(() {
-            _post['caption'] = captionController.text.trim();
-            _post['spotName'] = spotController.text.trim();
-          });
-        }
+        if (mounted) setState(() { _post['caption'] = captionController.text.trim(); _post['spotName'] = spotController.text.trim(); });
       } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(e.toString().replaceFirst('Exception: ', '')),
-            ),
-          );
-        }
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))));
       }
     }
     captionController.dispose();
@@ -173,19 +193,12 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
         title: const Text('Gönderiyi sil'),
         content: const Text('Bu paylaşım kalıcı olarak silinecek.'),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Vazgeç'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Sil', style: TextStyle(color: Colors.redAccent)),
-          ),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Vazgeç')),
+          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Sil', style: TextStyle(color: Colors.redAccent))),
         ],
       ),
     );
     if (confirmed != true) return;
-
     try {
       await PostService.instance.deletePost(
         postId: (_post['id'] ?? '').toString(),
@@ -195,11 +208,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
       );
       if (mounted) Navigator.pop(context, true);
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
-        );
-      }
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))));
     }
   }
 
@@ -207,37 +216,12 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     showModalBottomSheet<void>(
       context: context,
       backgroundColor: const Color(0xFF121416),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-      ),
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
       builder: (sheetContext) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.edit_outlined),
-              title: const Text('Düzenle'),
-              onTap: () {
-                Navigator.pop(sheetContext);
-                _edit();
-              },
-            ),
-            ListTile(
-              leading: const Icon(
-                Icons.delete_outline,
-                color: Colors.redAccent,
-              ),
-              title: const Text(
-                'Sil',
-                style: TextStyle(color: Colors.redAccent),
-              ),
-              onTap: () {
-                Navigator.pop(sheetContext);
-                _delete();
-              },
-            ),
-          ],
-        ),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          ListTile(leading: const Icon(Icons.edit_outlined), title: const Text('Düzenle'), onTap: () { Navigator.pop(sheetContext); _edit(); }),
+          ListTile(leading: const Icon(Icons.delete_outline, color: Colors.redAccent), title: const Text('Sil', style: TextStyle(color: Colors.redAccent)), onTap: () { Navigator.pop(sheetContext); _delete(); }),
+        ]),
       ),
     );
   }
@@ -247,219 +231,130 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     final storagePath = (_post['storagePath'] ?? '').toString();
     final videoUrl = (_post['videoUrl'] ?? '').toString();
     final thumbnailUrl = (_post['thumbnailUrl'] ?? imageUrl).toString();
-    final thumbnailStoragePath = (_post['thumbnailStoragePath'] ?? storagePath)
-        .toString();
-    final fallbackStoragePaths = FirebaseMediaImage.postPaths(
-      (_post['userId'] ?? '').toString(),
-      (_post['id'] ?? '').toString(),
-    );
-
+    final thumbnailStoragePath = (_post['thumbnailStoragePath'] ?? storagePath).toString();
+    final fallbackPaths = FirebaseMediaImage.postPaths((_post['userId'] ?? '').toString(), (_post['id'] ?? '').toString());
     if (_isVideo && videoUrl.isNotEmpty) {
       return AppVideoPlayer.network(
-        url: videoUrl,
-        autoplay: false,
-        muted: false,
-        loop: true,
-        showControls: true,
-        fit: BoxFit.contain,
-        loading: FirebaseMediaImage(
-          imageUrl: thumbnailUrl,
-          storagePath: thumbnailStoragePath,
-          fit: BoxFit.contain,
-        ),
+        url: videoUrl, autoplay: false, muted: false, loop: true, showControls: true, fit: BoxFit.contain,
+        loading: FirebaseMediaImage(imageUrl: thumbnailUrl, storagePath: thumbnailStoragePath, fit: BoxFit.contain),
       );
     }
-
     return InteractiveViewer(
-      minScale: 1,
-      maxScale: 5,
-      panEnabled: true,
-      clipBehavior: Clip.hardEdge,
-      child: SizedBox.expand(
-        child: FirebaseMediaImage(
-          imageUrl: imageUrl,
-          storagePath: storagePath,
-          fallbackStoragePaths: fallbackStoragePaths,
-          fit: BoxFit.contain,
-          errorWidget: const Center(
-            child: Icon(
-              Icons.broken_image_outlined,
-              size: 70,
-              color: Colors.white30,
-            ),
-          ),
-        ),
-      ),
+      minScale: 1, maxScale: 5, panEnabled: true, clipBehavior: Clip.hardEdge,
+      child: SizedBox.expand(child: FirebaseMediaImage(
+        imageUrl: imageUrl, storagePath: storagePath, fallbackStoragePaths: fallbackPaths, fit: BoxFit.contain,
+        errorWidget: const Center(child: Icon(Icons.broken_image_outlined, size: 70, color: Colors.white30)),
+      )),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final caption = (_post['caption'] ?? '').toString().trim();
-    final spot =
-        (_post['spotName'] ?? _post['locationName'] ?? _post['location'] ?? '')
-            .toString()
-            .trim();
+    final spot = (_post['spotName'] ?? _post['locationName'] ?? _post['location'] ?? '').toString().trim();
     final userName = (_post['userName'] ?? 'Fotoğrafçı').toString();
+    final userPhoto = (_post['userPhotoUrl'] ?? _post['photoUrl'] ?? '').toString();
+    final userId = (_post['userId'] ?? '').toString();
     final date = _dateLabel(_post['createdAt']);
 
     return Scaffold(
       backgroundColor: const Color(0xFF090A0C),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF090A0C),
-        foregroundColor: Colors.white,
+        backgroundColor: const Color(0xFF090A0C), foregroundColor: Colors.white,
         title: Text(_isVideo ? 'Video' : 'Paylaşım'),
-        actions: [
-          if (_isMine)
-            IconButton(
-              tooltip: 'Gönderi seçenekleri',
-              onPressed: _showMenu,
-              icon: const Icon(Icons.more_horiz),
-            ),
-        ],
+        actions: [if (_isMine) IconButton(tooltip: 'Gönderi seçenekleri', onPressed: _showMenu, icon: const Icon(Icons.more_horiz))],
       ),
       body: ListView(
         padding: const EdgeInsets.only(bottom: 36),
         children: [
           Container(
             margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-            decoration: BoxDecoration(
-              color: const Color(0xFF0F1113),
-              borderRadius: BorderRadius.circular(22),
-              border: Border.all(color: const Color(0xFF34383D)),
-            ),
+            decoration: BoxDecoration(color: const Color(0xFF0F1113), borderRadius: BorderRadius.circular(22), border: Border.all(color: const Color(0xFF34383D))),
             clipBehavior: Clip.antiAlias,
-            child: Column(
-              children: [
-                Padding(
+            child: Column(children: [
+              InkWell(
+                onTap: userId.trim().isEmpty ? null : _openProfile,
+                child: Padding(
                   padding: const EdgeInsets.fromLTRB(16, 14, 14, 12),
-                  child: Row(
-                    children: [
-                      const CircleAvatar(
-                        radius: 19,
-                        backgroundColor: Color(0xFF1A1D20),
-                        child: Icon(
-                          Icons.person_outline_rounded,
-                          color: Colors.white70,
+                  child: Row(children: [
+                    SizedBox(
+                      width: 38, height: 38,
+                      child: ClipOval(child: FirebaseMediaImage(
+                        imageUrl: userPhoto,
+                        fallbackStoragePaths: FirebaseMediaImage.avatarPaths(userId),
+                        fit: BoxFit.cover,
+                        errorWidget: const ColoredBox(color: Color(0xFF1A1D20), child: Center(child: Icon(Icons.person_outline_rounded, color: Colors.white70))),
+                      )),
+                    ),
+                    const SizedBox(width: 11),
+                    Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      Row(children: [
+                        Flexible(child: Text(userName, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w900))),
+                        if (_isVideo) ...[const SizedBox(width: 6), const Icon(Icons.videocam_rounded, size: 17, color: Colors.white54)],
+                      ]),
+                      if (spot.isNotEmpty)
+                        InkWell(
+                          onTap: _openingSpot ? null : () => _openSpot(spot),
+                          child: Padding(
+                            padding: const EdgeInsets.only(top: 3),
+                            child: Row(children: [
+                              const Icon(Icons.location_on_rounded, size: 14, color: Colors.white54),
+                              const SizedBox(width: 3),
+                              Flexible(child: Text(spot, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white54, fontSize: 11.5))),
+                            ]),
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 11),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Flexible(
-                                  child: Text(
-                                    userName,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w900,
-                                    ),
-                                  ),
-                                ),
-                                if (_isVideo) ...[
-                                  const SizedBox(width: 6),
-                                  const Icon(
-                                    Icons.videocam_rounded,
-                                    size: 17,
-                                    color: Colors.white54,
-                                  ),
-                                ],
-                              ],
+                    ])),
+                    const Icon(Icons.chevron_right_rounded, color: Colors.white30, size: 19),
+                  ]),
+                ),
+              ),
+              ColoredBox(
+                color: Colors.black,
+                child: AspectRatio(
+                  aspectRatio: 1,
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onDoubleTap: _doubleTapLike,
+                    child: Stack(fit: StackFit.expand, children: [
+                      _media(),
+                      IgnorePointer(
+                        child: AnimatedOpacity(
+                          opacity: _showHeart ? 1 : 0,
+                          duration: const Duration(milliseconds: 120),
+                          child: Center(
+                            child: ScaleTransition(
+                              scale: _heartScale,
+                              child: const Icon(Icons.favorite_rounded, color: Colors.white, size: 94, shadows: [Shadow(color: Colors.black54, blurRadius: 18)]),
                             ),
-                            if (spot.isNotEmpty)
-                              InkWell(
-                                onTap: _openingSpot
-                                    ? null
-                                    : () => _openSpot(spot),
-                                child: Padding(
-                                  padding: const EdgeInsets.only(top: 3),
-                                  child: Row(
-                                    children: [
-                                      const Icon(
-                                        Icons.location_on_rounded,
-                                        size: 14,
-                                        color: Colors.white54,
-                                      ),
-                                      const SizedBox(width: 3),
-                                      Flexible(
-                                        child: Text(
-                                          spot,
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: const TextStyle(
-                                            color: Colors.white54,
-                                            fontSize: 11.5,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                          ],
+                          ),
                         ),
                       ),
-                    ],
+                    ]),
                   ),
                 ),
-                ColoredBox(
-                  color: Colors.black,
-                  child: AspectRatio(aspectRatio: 1, child: _media()),
-                ),
-              ],
-            ),
+              ),
+            ]),
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(18, 8, 18, 0),
             child: ContentEngagementBar(
-              collection: 'posts',
-              contentId: (_post['id'] ?? '').toString(),
-              ownerId: (_post['userId'] ?? '').toString(),
-              title: caption.isEmpty
-                  ? (_isVideo ? 'Video paylaşımı' : 'Fotoğraf paylaşımı')
-                  : caption,
-              sourceType: 'post',
-              showTagAction: false,
+              collection: 'posts', contentId: (_post['id'] ?? '').toString(), ownerId: userId,
+              title: caption.isEmpty ? (_isVideo ? 'Video paylaşımı' : 'Fotoğraf paylaşımı') : caption,
+              sourceType: 'post', showTagAction: false,
             ),
           ),
           if (caption.isNotEmpty || date.isNotEmpty)
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (caption.isNotEmpty)
-                    MentionText(
-                      text: caption,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        height: 1.5,
-                        fontSize: 14.5,
-                      ),
-                      mentionStyle: const TextStyle(
-                        color: Color(0xFFD7DADF),
-                        height: 1.5,
-                        fontSize: 14.5,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                  if (date.isNotEmpty) ...[
-                    const SizedBox(height: 10),
-                    Text(
-                      date,
-                      style: const TextStyle(
-                        color: Colors.white38,
-                        fontSize: 11,
-                      ),
-                    ),
-                  ],
-                ],
-              ),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                if (caption.isNotEmpty) MentionText(
+                  text: caption,
+                  style: const TextStyle(color: Colors.white, height: 1.5, fontSize: 14.5),
+                  mentionStyle: const TextStyle(color: Color(0xFFD7DADF), height: 1.5, fontSize: 14.5, fontWeight: FontWeight.w900),
+                ),
+                if (date.isNotEmpty) ...[const SizedBox(height: 10), Text(date, style: const TextStyle(color: Colors.white38, fontSize: 11))],
+              ]),
             ),
         ],
       ),
