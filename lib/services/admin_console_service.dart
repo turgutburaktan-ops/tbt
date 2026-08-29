@@ -104,27 +104,19 @@ class AdminConsoleService {
       'reason': reason.trim(),
     };
 
-    await _ensureFreshAdminAuth();
-    final callable = _functions.httpsCallable('adminReviewBusinessClaim');
-    try {
-      await callable.call(payload);
-      return;
-    } on FirebaseFunctionsException catch (error) {
-      if (error.code != 'unauthenticated') rethrow;
-    }
-
-    // Some Android/native Functions SDK paths can fail to forward the current
-    // Firebase Auth context to a callable even though the same user has a
-    // valid admin claim. Fall back to a normal HTTPS endpoint and attach the
-    // freshly minted Firebase ID token explicitly. The backend verifies this
-    // token with Firebase Admin and still requires admin=true.
+    // Business review intentionally bypasses the callable transport. On some
+    // Android builds the native Functions SDK has returned UNAUTHENTICATED
+    // despite Firebase Auth exposing a valid admin claim. Send the freshly
+    // minted Firebase ID token explicitly and let the backend verify it with
+    // Firebase Admin before applying the review.
     final token = await _freshAdminIdToken();
     final response = await http
         .post(
           _businessReviewHttp,
           headers: <String, String>{
             'authorization': 'Bearer $token',
-            'content-type': 'application/json',
+            'content-type': 'application/json; charset=utf-8',
+            'accept': 'application/json',
           },
           body: jsonEncode(payload),
         )
@@ -132,14 +124,20 @@ class AdminConsoleService {
 
     if (response.statusCode >= 200 && response.statusCode < 300) return;
 
+    String code = 'http-${response.statusCode}';
     String message = 'İşletme onayı tamamlanamadı.';
     try {
       final decoded = jsonDecode(response.body);
-      if (decoded is Map && decoded['message'] != null) {
-        message = decoded['message'].toString();
+      if (decoded is Map) {
+        if (decoded['error'] != null) code = decoded['error'].toString();
+        if (decoded['message'] != null) message = decoded['message'].toString();
       }
-    } catch (_) {}
-    throw Exception(message);
+    } catch (_) {
+      if (response.body.trim().isNotEmpty) {
+        message = response.body.trim();
+      }
+    }
+    throw Exception('[$code / HTTP ${response.statusCode}] $message');
   }
 
   Future<AdminInsightsData> insights() async {
