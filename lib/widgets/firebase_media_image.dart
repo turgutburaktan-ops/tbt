@@ -60,7 +60,8 @@ class _FirebaseMediaImageState extends State<FirebaseMediaImage> {
   static const Duration _storageTimeout = Duration(seconds: 6);
   static const Duration _urlCacheLifetime = Duration(minutes: 20);
   static final Map<String, _CachedMediaUrl> _urlCache = <String, _CachedMediaUrl>{};
-  static final Map<String, Future<String?>> _urlInFlight = <String, Future<String?>>{};
+  static final Map<String, Future<String?>> _urlInFlight =
+      <String, Future<String?>>{};
 
   late Future<String?> _resolvedUrl;
   Uint8List? _resolvedBytes;
@@ -162,7 +163,9 @@ class _FirebaseMediaImageState extends State<FirebaseMediaImage> {
     if (storagePath.isNotEmpty) add(storage.ref().child(storagePath));
     final savedUrl = widget.imageUrl.trim();
     if (savedUrl.isNotEmpty && _isFirebaseStorageUrl(savedUrl)) {
-      try { add(storage.refFromURL(savedUrl)); } catch (_) {}
+      try {
+        add(storage.refFromURL(savedUrl));
+      } catch (_) {}
     }
     for (final path in widget.fallbackStoragePaths) {
       final cleanPath = path.trim();
@@ -185,7 +188,8 @@ class _FirebaseMediaImageState extends State<FirebaseMediaImage> {
     Uint8List? bytes;
     for (final reference in _storageReferences()) {
       try {
-        final candidate = await reference.getData(_maxRecoveryBytes).timeout(_storageTimeout);
+        final candidate =
+            await reference.getData(_maxRecoveryBytes).timeout(_storageTimeout);
         if (candidate != null && candidate.isNotEmpty) {
           bytes = candidate;
           break;
@@ -208,22 +212,46 @@ class _FirebaseMediaImageState extends State<FirebaseMediaImage> {
         uri.host.endsWith('.firebasestorage.app');
   }
 
-  Widget _placeholder() => widget.placeholder ?? const ColoredBox(
-    color: Color(0xFF171A1D),
-    child: Center(child: SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white24))),
-  );
+  Widget _placeholder() => widget.placeholder ??
+      const ColoredBox(
+        color: Color(0xFF171A1D),
+        child: Center(
+          child: SizedBox(
+            width: 22,
+            height: 22,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: Colors.white24,
+            ),
+          ),
+        ),
+      );
 
-  Widget _error() => widget.errorWidget ?? const ColoredBox(
-    color: Color(0xFF171A1D),
-    child: Center(child: Icon(Icons.broken_image_outlined, color: Colors.white30)),
-  );
+  Widget _error() => widget.errorWidget ??
+      const ColoredBox(
+        color: Color(0xFF171A1D),
+        child: Center(
+          child: Icon(Icons.broken_image_outlined, color: Colors.white30),
+        ),
+      );
+
+  double? _effectiveWidth(BoxConstraints constraints) {
+    final requested = widget.width;
+    if (requested != null && requested.isFinite) return requested;
+    if (constraints.maxWidth.isFinite) return constraints.maxWidth;
+    return null;
+  }
+
+  double? _effectiveHeight(BoxConstraints constraints) {
+    final requested = widget.height;
+    if (requested != null && requested.isFinite) return requested;
+    if (constraints.maxHeight.isFinite) return constraints.maxHeight;
+    return null;
+  }
 
   int _targetCacheWidth(BuildContext context, BoxConstraints constraints) {
-    final logicalWidth = widget.width != null && widget.width!.isFinite
-        ? widget.width!
-        : constraints.maxWidth.isFinite
-            ? constraints.maxWidth
-            : MediaQuery.sizeOf(context).width;
+    final logicalWidth = _effectiveWidth(constraints) ??
+        MediaQuery.sizeOf(context).width;
     return (logicalWidth * MediaQuery.devicePixelRatioOf(context))
         .round()
         .clamp(64, 1440)
@@ -231,57 +259,73 @@ class _FirebaseMediaImageState extends State<FirebaseMediaImage> {
   }
 
   Widget _memoryImage(Uint8List bytes) => LayoutBuilder(
-    builder: (context, constraints) => Image.memory(
-      bytes,
-      width: widget.width,
-      height: widget.height,
-      fit: widget.fit,
-      alignment: widget.alignment,
-      filterQuality: widget.filterQuality,
-      cacheWidth: _targetCacheWidth(context, constraints),
-      gaplessPlayback: true,
-      errorBuilder: (_, __, ___) => _error(),
-    ),
-  );
+        builder: (context, constraints) => SizedBox(
+          width: _effectiveWidth(constraints),
+          height: _effectiveHeight(constraints),
+          child: Image.memory(
+            bytes,
+            width: _effectiveWidth(constraints),
+            height: _effectiveHeight(constraints),
+            fit: widget.fit,
+            alignment: widget.alignment,
+            filterQuality: widget.filterQuality,
+            cacheWidth: _targetCacheWidth(context, constraints),
+            gaplessPlayback: true,
+            errorBuilder: (_, __, ___) => _error(),
+          ),
+        ),
+      );
 
   @override
   Widget build(BuildContext context) {
     final bytes = _resolvedBytes;
-    if (bytes != null) return _withPostZoom(RepaintBoundary(child: _memoryImage(bytes)));
+    if (bytes != null) {
+      return _withPostZoom(RepaintBoundary(child: _memoryImage(bytes)));
+    }
     if (_recoveringBytes) return _placeholder();
 
     return FutureBuilder<String?>(
       future: _resolvedUrl,
       builder: (context, snapshot) {
-        if (snapshot.connectionState != ConnectionState.done) return _placeholder();
+        if (snapshot.connectionState != ConnectionState.done) {
+          return _placeholder();
+        }
         final url = snapshot.data;
         if (url == null || url.isEmpty) return _error();
         return LayoutBuilder(
-          builder: (context, constraints) => _withPostZoom(
-            RepaintBoundary(
-              child: CachedNetworkImage(
-                imageUrl: url,
-                width: widget.width,
-                height: widget.height,
-                fit: widget.fit,
-                alignment: widget.alignment,
-                filterQuality: widget.filterQuality,
-                memCacheWidth: _targetCacheWidth(context, constraints),
-                fadeInDuration: Duration.zero,
-                fadeOutDuration: Duration.zero,
-                placeholder: (_, __) => _placeholder(),
-                errorWidget: (_, __, ___) {
-                  final willRecover = !_recoveryAttempted && _canRecover;
-                  if (willRecover) {
-                    WidgetsBinding.instance.addPostFrameCallback((_) {
-                      if (mounted) _recoverAfterLoadError();
-                    });
-                  }
-                  return willRecover ? _placeholder() : _error();
-                },
+          builder: (context, constraints) {
+            final width = _effectiveWidth(constraints);
+            final height = _effectiveHeight(constraints);
+            return _withPostZoom(
+              RepaintBoundary(
+                child: SizedBox(
+                  width: width,
+                  height: height,
+                  child: CachedNetworkImage(
+                    imageUrl: url,
+                    width: width,
+                    height: height,
+                    fit: widget.fit,
+                    alignment: widget.alignment,
+                    filterQuality: widget.filterQuality,
+                    memCacheWidth: _targetCacheWidth(context, constraints),
+                    fadeInDuration: Duration.zero,
+                    fadeOutDuration: Duration.zero,
+                    placeholder: (_, __) => _placeholder(),
+                    errorWidget: (_, __, ___) {
+                      final willRecover = !_recoveryAttempted && _canRecover;
+                      if (willRecover) {
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          if (mounted) _recoverAfterLoadError();
+                        });
+                      }
+                      return willRecover ? _placeholder() : _error();
+                    },
+                  ),
+                ),
               ),
-            ),
-          ),
+            );
+          },
         );
       },
     );
@@ -292,5 +336,6 @@ class _CachedMediaUrl {
   final String url;
   final DateTime savedAt;
   const _CachedMediaUrl(this.url, this.savedAt);
-  bool get isExpired => DateTime.now().difference(savedAt) > _FirebaseMediaImageState._urlCacheLifetime;
+  bool get isExpired => DateTime.now().difference(savedAt) >
+      _FirebaseMediaImageState._urlCacheLifetime;
 }
