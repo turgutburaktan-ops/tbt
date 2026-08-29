@@ -1,5 +1,9 @@
+import 'dart:typed_data' as typed_data;
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+
+typedef ByteData = typed_data.ByteData;
 
 class StoryContextLinkService {
   StoryContextLinkService._();
