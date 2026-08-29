@@ -523,6 +523,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       (v) => _setBool('notifyRewards', v),
                     ),
                     _section('İçerik ve Keşif'),
+                    _tile(
+                      Icons.archive_outlined,
+                      'Story Arşivi',
+                      'Süresi dolan Story’lerini gör ve yeniden paylaş',
+                      () => Navigator.pushNamed(context, '/story-archive'),
+                    ),
                     _switchTile(
                       Icons.play_circle_outline_rounded,
                       'Videoları otomatik oynat',

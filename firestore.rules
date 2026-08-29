@@ -226,6 +226,11 @@ service cloud.firestore {
         allow delete: if isSelf(uid);
       }
       match /map_points/{pointId} { allow read, create, update, delete: if isSelf(uid) && (request.method == 'delete' || request.resource.data.ownerId == uid); }
+      match /story_archive/{storyId} {
+        allow read: if isSelf(uid);
+        allow create, update: if isSelf(uid) && request.resource.data.userId == uid;
+        allow delete: if isSelf(uid);
+      }
     }
 
     match /usernames/{usernameId} {

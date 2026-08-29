@@ -75,6 +75,48 @@ class StoryService {
     );
   }
 
+  Stream<List<AppStory>> watchArchive() {
+    final user = _auth.currentUser;
+    if (user == null) return const Stream.empty();
+    return _firestore
+        .collection('users')
+        .doc(user.uid)
+        .collection('story_archive')
+        .limit(200)
+        .snapshots()
+        .map((snapshot) {
+          final stories = snapshot.docs.map(AppStory.fromDocument).toList();
+          stories.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+          return stories;
+        });
+  }
+
+  Future<void> syncLegacyStoriesToArchive() async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+    final stories = await _firestore
+        .collection('stories')
+        .where('userId', isEqualTo: user.uid)
+        .limit(200)
+        .get();
+    if (stories.docs.isEmpty) return;
+    final batch = _firestore.batch();
+    for (final story in stories.docs) {
+      final archiveRef = _firestore
+          .collection('users')
+          .doc(user.uid)
+          .collection('story_archive')
+          .doc(story.id);
+      batch.set(archiveRef, {
+        ...story.data(),
+        'id': story.id,
+        'userId': user.uid,
+        'archivedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    }
+    await batch.commit();
+  }
+
   Map<String, dynamic> _baseStoryData(User user, String storyId) {
     final now = DateTime.now();
     return {
@@ -120,7 +162,7 @@ class StoryService {
       final imageUrl = await storageRef
           .getDownloadURL()
           .timeout(const Duration(seconds: 8));
-      await storyRef.set({
+      final storyData = <String, dynamic>{
         ..._baseStoryData(user, storyRef.id),
         'mediaType': 'image',
         'imageUrl': imageUrl,
@@ -130,7 +172,18 @@ class StoryService {
         'thumbnailUrl': '',
         'thumbnailStoragePath': '',
         'durationMs': 0,
-      }).timeout(const Duration(seconds: 8));
+      };
+      final batch = _firestore.batch();
+      batch.set(storyRef, storyData);
+      batch.set(
+        _firestore
+            .collection('users')
+            .doc(user.uid)
+            .collection('story_archive')
+            .doc(storyRef.id),
+        {...storyData, 'archivedAt': FieldValue.serverTimestamp()},
+      );
+      await batch.commit().timeout(const Duration(seconds: 8));
     } catch (_) {
       unawaited(_deleteStorageQuietly(storageRef));
       rethrow;
@@ -177,7 +230,7 @@ class StoryService {
       ]);
       final videoUrl = urls[0];
       final thumbnailUrl = urls[1];
-      await storyRef.set({
+      final storyData = <String, dynamic>{
         ..._baseStoryData(user, storyRef.id),
         'mediaType': 'video',
         'imageUrl': thumbnailUrl,
@@ -187,7 +240,18 @@ class StoryService {
         'thumbnailUrl': thumbnailUrl,
         'thumbnailStoragePath': thumbRef.fullPath,
         'durationMs': prepared.durationMs,
-      }).timeout(const Duration(seconds: 8));
+      };
+      final batch = _firestore.batch();
+      batch.set(storyRef, storyData);
+      batch.set(
+        _firestore
+            .collection('users')
+            .doc(user.uid)
+            .collection('story_archive')
+            .doc(storyRef.id),
+        {...storyData, 'archivedAt': FieldValue.serverTimestamp()},
+      );
+      await batch.commit().timeout(const Duration(seconds: 8));
     } catch (_) {
       unawaited(_deleteStorageQuietly(videoRef));
       unawaited(_deleteStorageQuietly(thumbRef));
@@ -389,11 +453,16 @@ class StoryService {
   Future<void> deleteStory(AppStory story) async {
     final user = _auth.currentUser;
     if (user == null || story.userId != user.uid) return;
-    await _firestore
-        .collection('stories')
-        .doc(story.id)
-        .delete()
-        .timeout(const Duration(seconds: 7));
+    final batch = _firestore.batch();
+    batch.delete(_firestore.collection('stories').doc(story.id));
+    batch.delete(
+      _firestore
+          .collection('users')
+          .doc(user.uid)
+          .collection('story_archive')
+          .doc(story.id),
+    );
+    await batch.commit().timeout(const Duration(seconds: 7));
     final paths = <String>{
       story.storagePath,
       story.videoStoragePath,
@@ -402,5 +471,35 @@ class StoryService {
     await Future.wait(
       paths.map((path) => _deleteStorageQuietly(_storage.ref().child(path))),
     );
+  }
+
+  Future<void> repostArchivedStory(AppStory story) async {
+    final user = _auth.currentUser;
+    if (user == null || story.userId != user.uid) {
+      throw Exception('Bu Story’yi yeniden paylaşma yetkin yok.');
+    }
+    _enforceStoryCreateCooldown();
+    final storyRef = _firestore.collection('stories').doc();
+    await storyRef.set({
+      ..._baseStoryData(user, storyRef.id),
+      'mediaType': story.mediaType,
+      'imageUrl': story.imageUrl,
+      'storagePath': story.storagePath,
+      'videoUrl': story.videoUrl,
+      'videoStoragePath': story.videoStoragePath,
+      'thumbnailUrl': story.thumbnailUrl,
+      'thumbnailStoragePath': story.thumbnailStoragePath,
+      'durationMs': story.durationMs,
+      'repostedFromStoryId': story.id,
+    }).timeout(const Duration(seconds: 8));
+    await _firestore
+        .collection('users')
+        .doc(user.uid)
+        .collection('story_archive')
+        .doc(story.id)
+        .set({
+          'lastRepostedAt': FieldValue.serverTimestamp(),
+          'repostCount': FieldValue.increment(1),
+        }, SetOptions(merge: true));
   }
 }

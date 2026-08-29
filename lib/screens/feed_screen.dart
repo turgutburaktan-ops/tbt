@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../models/social_event.dart';
 import '../services/content_engagement_service.dart';
+import '../services/post_service.dart';
 import '../services/social_event_service.dart';
 import '../services/social_service.dart';
 import '../widgets/app_video_player.dart';
@@ -165,6 +166,8 @@ class FeedScreen extends StatelessWidget {
                             imageUrl: (data['imageUrl'] ?? '').toString(),
                             storagePath: (data['storagePath'] ?? '').toString(),
                             videoUrl: videoUrl,
+                            videoStoragePath:
+                                (data['videoStoragePath'] ?? '').toString(),
                             thumbnailUrl:
                                 (data['thumbnailUrl'] ?? data['imageUrl'] ?? '')
                                     .toString(),
@@ -627,6 +630,7 @@ class _FeedPostCard extends StatelessWidget {
   final String imageUrl;
   final String storagePath;
   final String videoUrl;
+  final String videoStoragePath;
   final String thumbnailUrl;
   final String thumbnailStoragePath;
   final String caption;
@@ -642,6 +646,7 @@ class _FeedPostCard extends StatelessWidget {
     required this.imageUrl,
     required this.storagePath,
     required this.videoUrl,
+    required this.videoStoragePath,
     required this.thumbnailUrl,
     required this.thumbnailStoragePath,
     required this.caption,
@@ -725,6 +730,50 @@ class _FeedPostCard extends StatelessWidget {
             ),
           );
       }
+    }
+  }
+
+  Future<void> _delete(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Gönderiyi sil'),
+        content: const Text(
+          'Bu gönderi kalıcı olarak silinecek. Devam etmek istiyor musun?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Vazgeç'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            style: FilledButton.styleFrom(backgroundColor: Colors.redAccent),
+            child: const Text('Sil'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
+
+    try {
+      await PostService.instance.deletePost(
+        postId: postId,
+        storagePath: storagePath,
+        videoStoragePath: videoStoragePath,
+        thumbnailStoragePath: thumbnailStoragePath,
+      );
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Gönderi silindi.')),
+      );
+    } catch (error) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(error.toString().replaceFirst('Exception: ', '')),
+        ),
+      );
     }
   }
 
@@ -839,7 +888,34 @@ class _FeedPostCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                const Icon(Icons.more_horiz_rounded, color: Colors.white38),
+                if (FirebaseAuth.instance.currentUser?.uid == userId)
+                  PopupMenuButton<String>(
+                    tooltip: 'Gönderi seçenekleri',
+                    onSelected: (value) {
+                      if (value == 'delete') _delete(context);
+                    },
+                    itemBuilder: (_) => const [
+                      PopupMenuItem<String>(
+                        value: 'delete',
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.delete_outline_rounded,
+                              color: Colors.redAccent,
+                            ),
+                            SizedBox(width: 10),
+                            Text('Gönderiyi sil'),
+                          ],
+                        ),
+                      ),
+                    ],
+                    icon: const Icon(
+                      Icons.more_horiz_rounded,
+                      color: Colors.white70,
+                    ),
+                  )
+                else
+                  const Icon(Icons.more_horiz_rounded, color: Colors.white38),
               ],
             ),
           ),
