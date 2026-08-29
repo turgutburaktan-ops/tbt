@@ -8,7 +8,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../services/story_context_link_service.dart';
 import '../services/story_service.dart';
+import 'story_context_template_picker.dart';
 
 class StoryPhotoEditorScreen extends StatefulWidget {
   final File photo;
@@ -29,6 +31,7 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
 
   int? _selectedIndex;
   int _layoutCount = 0;
+  StoryContextTemplateSelection? _contextTemplate;
   bool _sharing = false,
       _exporting = false,
       _editingText = false,
@@ -226,6 +229,58 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
     });
   }
 
+  Future<void> _openContextTemplates() async {
+    if (_sharing) return;
+    _finishMode();
+    final selected = await Navigator.push<StoryContextTemplateSelection>(
+      context,
+      MaterialPageRoute(builder: (_) => const StoryContextTemplatePicker()),
+    );
+    if (!mounted || selected == null) return;
+
+    final size = MediaQuery.sizeOf(context);
+    setState(() {
+      _contextTemplate = selected;
+      _layoutCount = selected.slotCount;
+      _layoutSlots
+        ..clear()
+        ..addAll(List<File?>.filled(selected.slotCount, null));
+      _editingBackground = false;
+      _backgroundScale = 1;
+      _backgroundRotation = 0;
+      _backgroundOffset = Offset.zero;
+      if (selected.contextType != 'free' && selected.contextName.trim().isNotEmpty) {
+        _overlays.add(
+          _StoryOverlay.context(
+            text: '${_contextIcon(selected.contextType)} ${selected.contextName}',
+            position: Offset(size.width * .5, size.height * .17),
+          ),
+        );
+      }
+      _overlays.add(
+        _StoryOverlay.context(
+          text: selected.templateTitle,
+          position: Offset(size.width * .5, size.height * .84),
+          compact: true,
+        ),
+      );
+      _selectedIndex = _overlays.length - 1;
+    });
+  }
+
+  String _contextIcon(String type) {
+    switch (type) {
+      case 'event':
+        return '🎟️';
+      case 'venue':
+        return '📍';
+      case 'spot':
+        return '🗺️';
+      default:
+        return '✨';
+    }
+  }
+
   Future<void> _chooseLayout() async {
     if (_sharing) return;
     _finishMode();
@@ -304,6 +359,7 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
     );
     if (!mounted || choice == null) return;
     setState(() {
+      _contextTemplate = null;
       _layoutCount = choice;
       _layoutSlots
         ..clear()
@@ -451,6 +507,17 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
           .toSet()
           .toList(growable: false);
       await StoryService.instance.createStory(rendered, mentionedUserIds: mentionIds);
+      final template = _contextTemplate;
+      if (template != null) {
+        await StoryContextLinkService.instance.attachToLatestOwnStory(
+          contextType: template.contextType,
+          contextId: template.contextId,
+          contextName: template.contextName,
+          templateId: template.templateId,
+          templateTitle: template.templateTitle,
+          slotCount: template.slotCount,
+        );
+      }
       if (mounted) Navigator.of(context).pop(true);
     } catch (error) {
       if (mounted) {
@@ -627,6 +694,8 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
+                          _ToolButton(icon: Icons.auto_awesome_mosaic_outlined, label: 'Şablon', onTap: _openContextTemplates),
+                          const SizedBox(height: 8),
                           _ToolButton(icon: Icons.text_fields_rounded, label: 'Yazı', onTap: () => _openText()),
                           const SizedBox(height: 8),
                           _ToolButton(icon: Icons.emoji_emotions_outlined, label: 'Emoji', onTap: () => _openText(emoji: true)),
@@ -983,6 +1052,34 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
     if (item.isEmoji) {
       return Text(item.text ?? '', textAlign: TextAlign.center, style: const TextStyle(fontSize: 58));
     }
+    if (item.isContext) {
+      return Container(
+        constraints: const BoxConstraints(maxWidth: 300),
+        padding: EdgeInsets.symmetric(
+          horizontal: item.compactContext ? 11 : 14,
+          vertical: item.compactContext ? 7 : 9,
+        ),
+        decoration: BoxDecoration(
+          color: Colors.black.withValues(alpha: .72),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: selected && !_movingOverlay ? Colors.white : Colors.white24,
+            width: selected && !_movingOverlay ? 2 : 1,
+          ),
+        ),
+        child: Text(
+          item.text ?? '',
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: item.compactContext ? 14 : 17,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+      );
+    }
     if (item.targetUserId != null) {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 8),
@@ -1216,6 +1313,8 @@ class _StoryOverlay {
   final Color color;
   final File? photo;
   final String? targetUserId;
+  final bool isContext;
+  final bool compactContext;
   Offset position;
   double scale, rotation, gestureStartScale, gestureStartRotation;
 
@@ -1226,6 +1325,8 @@ class _StoryOverlay {
     required this.color,
     required this.photo,
     required this.targetUserId,
+    required this.isContext,
+    required this.compactContext,
     required this.position,
     this.scale = 1,
     this.rotation = 0,
@@ -1246,6 +1347,24 @@ class _StoryOverlay {
         color: color,
         photo: null,
         targetUserId: null,
+        isContext: false,
+        compactContext: false,
+        position: position,
+      );
+
+  factory _StoryOverlay.context({
+    required String text,
+    required Offset position,
+    bool compact = false,
+  }) => _StoryOverlay._(
+        text: text,
+        isEmoji: false,
+        fontFamily: 'sans-serif-medium',
+        color: Colors.white,
+        photo: null,
+        targetUserId: null,
+        isContext: true,
+        compactContext: compact,
         position: position,
       );
 
@@ -1260,6 +1379,8 @@ class _StoryOverlay {
         color: Colors.black,
         photo: null,
         targetUserId: targetUserId,
+        isContext: false,
+        compactContext: false,
         position: position,
       );
 
@@ -1270,6 +1391,8 @@ class _StoryOverlay {
         color: Colors.white,
         photo: photo,
         targetUserId: null,
+        isContext: false,
+        compactContext: false,
         position: position,
       );
 
@@ -1280,6 +1403,8 @@ class _StoryOverlay {
         color: color,
         photo: photo,
         targetUserId: targetUserId,
+        isContext: isContext,
+        compactContext: compactContext,
         position: position,
         scale: scale,
         rotation: rotation,
