@@ -1,11 +1,13 @@
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 class AdminConsoleService {
   AdminConsoleService._();
   static final instance = AdminConsoleService._();
 
   final FirebaseFunctions _functions = FirebaseFunctions.instanceFor(
+    app: Firebase.app(),
     region: 'europe-west1',
   );
 
@@ -69,13 +71,23 @@ class AdminConsoleService {
     required bool approve,
     String reason = '',
   }) async {
-    await _ensureFreshAdminAuth();
-    await _functions.httpsCallable('adminReviewBusinessClaim').call({
+    final payload = <String, dynamic>{
       'category': category,
       'venueId': venueId,
       'decision': approve ? 'verified' : 'rejected',
       'reason': reason.trim(),
-    });
+    };
+    await _ensureFreshAdminAuth();
+    final callable = _functions.httpsCallable('adminReviewBusinessClaim');
+    try {
+      await callable.call(payload);
+    } on FirebaseFunctionsException catch (error) {
+      if (error.code != 'unauthenticated') rethrow;
+      // The native Functions SDK can briefly retain the previous auth token
+      // after a custom-claim refresh. Refresh once and retry the admin action.
+      await _ensureFreshAdminAuth();
+      await callable.call(payload);
+    }
   }
 
   Future<AdminInsightsData> insights() async {
