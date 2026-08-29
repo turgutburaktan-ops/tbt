@@ -392,7 +392,6 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
   Future<void> _sendReply() async {
     final text = _replyController.text.trim();
     if (text.isEmpty || _sending) return;
-    _pause();
     setState(() => _sending = true);
     try {
       await StoryService.instance.sendReply(_current, text);
@@ -407,10 +406,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
         );
       }
     } finally {
-      if (mounted) {
-        setState(() => _sending = false);
-        _resume();
-      }
+      if (mounted) setState(() => _sending = false);
     }
   }
 
@@ -745,7 +741,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
                   left: 0,
                   right: 0,
                   bottom: 0,
-                  height: 150,
+                  height: 110,
                   child: IgnorePointer(
                     child: DecoratedBox(
                       decoration: BoxDecoration(
@@ -753,7 +749,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
                           begin: Alignment.bottomCenter,
                           end: Alignment.topCenter,
                           colors: [
-                            Colors.black.withValues(alpha: .72),
+                            Colors.black.withValues(alpha: .58),
                             Colors.transparent,
                           ],
                         ),
@@ -764,7 +760,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
                 Positioned(
                   left: 12,
                   right: 12,
-                  bottom: MediaQuery.paddingOf(context).bottom + 10,
+                  bottom: 8,
                   child: _mine
                       ? StreamBuilder<List<Map<String, dynamic>>>(
                           stream:
@@ -811,7 +807,6 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
                                         maxLength,
                                       }) =>
                                           null,
-                                      onTap: _pause,
                                       onSubmitted: (_) => _sendReply(),
                                       textInputAction: TextInputAction.send,
                                       decoration: const InputDecoration(
