@@ -392,6 +392,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
   Future<void> _sendReply() async {
     final text = _replyController.text.trim();
     if (text.isEmpty || _sending) return;
+    _pause();
     setState(() => _sending = true);
     try {
       await StoryService.instance.sendReply(_current, text);
@@ -406,7 +407,10 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
         );
       }
     } finally {
-      if (mounted) setState(() => _sending = false);
+      if (mounted) {
+        setState(() => _sending = false);
+        _resume();
+      }
     }
   }
 
@@ -807,6 +811,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
                                         maxLength,
                                       }) =>
                                           null,
+                                      onTap: _pause,
                                       onSubmitted: (_) => _sendReply(),
                                       textInputAction: TextInputAction.send,
                                       decoration: const InputDecoration(
