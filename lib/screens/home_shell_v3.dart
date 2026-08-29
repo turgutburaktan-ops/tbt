@@ -106,9 +106,9 @@ class _HomeScreenState extends State<HomeScreen> {
         floatingActionButton: keyboardOpen
             ? null
             : Container(
-                width: 58,
-                height: 58,
-                padding: const EdgeInsets.all(2.5),
+                width: 54,
+                height: 54,
+                padding: const EdgeInsets.all(2),
                 decoration: const BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: AppColors.accentGradient,
@@ -121,7 +121,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   foregroundColor: Colors.white,
                   shape: const CircleBorder(),
                   onPressed: () => _selectDestination(2),
-                  child: const Icon(Icons.photo_camera_rounded, size: 25),
+                  child: const Icon(Icons.photo_camera_rounded, size: 23),
                 ),
               ),
         bottomNavigationBar: keyboardOpen
@@ -152,12 +152,12 @@ class _BottomNav extends StatelessWidget {
     return SafeArea(
       top: false,
       child: BottomAppBar(
-        height: 66,
+        height: 64,
         padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 4),
         color: AppColors.navigation,
         elevation: 0,
         shape: const CircularNotchedRectangle(),
-        notchMargin: 7,
+        notchMargin: 6,
         child: Row(
           children: List.generate(items.length, (index) {
             if (index == 2) {
@@ -224,7 +224,7 @@ class _HomeFeedHub extends StatefulWidget {
 }
 
 class _HomeFeedHubState extends State<_HomeFeedHub> {
-  static const double _chromeCollapseExtent = 148;
+  static const double _chromeCollapseExtent = 132;
 
   int _section = 0;
   int _photoMode = 0;
@@ -275,7 +275,7 @@ class _HomeFeedHubState extends State<_HomeFeedHub> {
       children: [
         const StoryStrip(),
         Padding(
-          padding: const EdgeInsets.fromLTRB(14, 3, 14, 5),
+          padding: const EdgeInsets.fromLTRB(10, 0, 10, 2),
           child: _SegmentTabs(
             labels: const ['Sana Özel', 'Takip'],
             selected: _photoMode,
@@ -310,7 +310,7 @@ class _HomeFeedHubState extends State<_HomeFeedHub> {
           children: [
             const _HomeHeader(showBrand: true),
             Padding(
-              padding: const EdgeInsets.fromLTRB(14, 2, 14, 7),
+              padding: const EdgeInsets.fromLTRB(10, 0, 10, 2),
               child: _SegmentTabs(
                 labels: const ['Ana Sayfa', 'Keşfet'],
                 selected: _section,
@@ -384,17 +384,17 @@ class _HomeHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-    padding: EdgeInsets.fromLTRB(showBrand ? 14 : 6, 8, 6, 5),
+    padding: EdgeInsets.fromLTRB(showBrand ? 12 : 6, 5, 4, 2),
     child: Row(
       children: [
         if (showBrand) ...[
-          const TbtBrandMark(size: 36),
-          const SizedBox(width: 9),
+          const TbtBrandMark(size: 32),
+          const SizedBox(width: 8),
           const Expanded(
             child: Text(
               'TBT',
               style: TextStyle(
-                fontSize: 20,
+                fontSize: 19,
                 fontWeight: FontWeight.w900,
                 letterSpacing: -.35,
               ),
@@ -716,40 +716,44 @@ class _SegmentTabs extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) => Container(
-    height: prominent ? 36 : 34,
-    padding: const EdgeInsets.all(2),
-    decoration: BoxDecoration(
-      color: AppColors.surface,
-      borderRadius: BorderRadius.circular(12),
-      border: Border.all(color: AppColors.border),
-    ),
+  Widget build(BuildContext context) => SizedBox(
+    height: prominent ? 34 : 31,
     child: Row(
       children: List.generate(labels.length, (index) {
         final active = selected == index;
         return Expanded(
           child: InkWell(
             onTap: () => onChanged(index),
-            borderRadius: BorderRadius.circular(9),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 160),
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: active ? AppColors.surfaceStrong : Colors.transparent,
-                borderRadius: BorderRadius.circular(9),
-              ),
-              child: Text(
-                labels[index],
-                textAlign: TextAlign.center,
-                maxLines: 1,
-                style: TextStyle(
-                  color: active
-                      ? Colors.white
-                      : Colors.white.withValues(alpha: .48),
-                  fontSize: prominent ? 12 : 10.5,
-                  fontWeight: active ? FontWeight.w900 : FontWeight.w700,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Expanded(
+                  child: Center(
+                    child: Text(
+                      labels[index],
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      style: TextStyle(
+                        color: active
+                            ? Colors.white
+                            : Colors.white.withValues(alpha: .46),
+                        fontSize: prominent ? 12.5 : 11,
+                        fontWeight: active ? FontWeight.w900 : FontWeight.w700,
+                      ),
+                    ),
+                  ),
                 ),
-              ),
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 160),
+                  curve: Curves.easeOut,
+                  width: active ? (prominent ? 44 : 34) : 0,
+                  height: 2.5,
+                  decoration: BoxDecoration(
+                    gradient: active ? AppColors.accentGradient : null,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+              ],
             ),
           ),
         );
@@ -775,6 +779,8 @@ class _HeaderAction extends StatelessWidget {
     tooltip: tooltip,
     onPressed: onTap,
     visualDensity: VisualDensity.compact,
+    constraints: const BoxConstraints(minWidth: 38, minHeight: 38),
+    padding: const EdgeInsets.all(8),
     icon: Badge(
       isLabelVisible: count > 0,
       backgroundColor: AppColors.violet,
