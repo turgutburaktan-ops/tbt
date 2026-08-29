@@ -131,7 +131,10 @@ class StoryService {
     };
   }
 
-  Future<void> createStory(File image) async {
+  Future<void> createStory(
+    File image, {
+    List<String> mentionedUserIds = const <String>[],
+  }) async {
     final user = _auth.currentUser;
     if (user == null) throw Exception('Story paylaşmak için giriş yapmalısın.');
     _enforceStoryCreateCooldown();
@@ -142,6 +145,12 @@ class StoryService {
       throw Exception('Fotoğraf 15 MB sınırını aşıyor.');
     }
 
+    final mentions = mentionedUserIds
+        .map((id) => id.trim())
+        .where((id) => id.isNotEmpty && id != user.uid)
+        .toSet()
+        .take(20)
+        .toList(growable: false);
     final storyRef = _firestore.collection('stories').doc();
     final extension = image.path.toLowerCase().endsWith('.png') ? 'png' : 'jpg';
     final storageRef = _storage.ref().child(
@@ -172,6 +181,7 @@ class StoryService {
         'thumbnailUrl': '',
         'thumbnailStoragePath': '',
         'durationMs': 0,
+        'mentionedUserIds': mentions,
       };
       final batch = _firestore.batch();
       batch.set(storyRef, storyData);
@@ -184,6 +194,18 @@ class StoryService {
         {...storyData, 'archivedAt': FieldValue.serverTimestamp()},
       );
       await batch.commit().timeout(const Duration(seconds: 8));
+      for (final targetId in mentions) {
+        unawaited(
+          _notifyQuietly(
+            userId: targetId,
+            type: 'story_mention',
+            title: '${_actorName(user)} senden Story’sinde bahsetti',
+            body: 'Story’yi görmek için dokun.',
+            sourceId: storyRef.id,
+            actorId: user.uid,
+          ),
+        );
+      }
     } catch (_) {
       unawaited(_deleteStorageQuietly(storageRef));
       rethrow;
@@ -240,6 +262,7 @@ class StoryService {
         'thumbnailUrl': thumbnailUrl,
         'thumbnailStoragePath': thumbRef.fullPath,
         'durationMs': prepared.durationMs,
+        'mentionedUserIds': const <String>[],
       };
       final batch = _firestore.batch();
       batch.set(storyRef, storyData);
@@ -277,12 +300,12 @@ class StoryService {
   }
 
   Map<String, dynamic> _actorData(User user) => {
-    'userId': user.uid,
-    'userName': user.displayName?.trim().isNotEmpty == true
-        ? user.displayName!.trim()
-        : 'TBT kullanıcısı',
-    'userPhotoUrl': user.photoURL ?? '',
-  };
+        'userId': user.uid,
+        'userName': user.displayName?.trim().isNotEmpty == true
+            ? user.displayName!.trim()
+            : 'TBT kullanıcısı',
+        'userPhotoUrl': user.photoURL ?? '',
+      };
 
   String _actorName(User user) => (user.displayName ?? '').trim().isNotEmpty
       ? user.displayName!.trim()
@@ -292,10 +315,8 @@ class StoryService {
     final user = _auth.currentUser;
     final ids = storyIds.where((id) => id.trim().isNotEmpty).toSet().toList();
     if (user == null || ids.isEmpty) return Stream.value(<String>{});
-    final Map<
-      String,
-      StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>
-    > controllers = {};
+    final Map<String, StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>>
+        controllers = {};
     final viewed = <String>{};
     late final StreamController<Set<String>> controller;
     controller = StreamController<Set<String>>.broadcast(
@@ -395,14 +416,16 @@ class StoryService {
       'updatedAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true)).timeout(const Duration(seconds: 7));
     if (liked) {
-      unawaited(_notifyQuietly(
-        userId: story.userId,
-        type: 'story_like',
-        title: '${_actorName(user)} storyini beğendi',
-        body: 'Story etkileşimlerini görmek için dokun.',
-        sourceId: story.id,
-        actorId: user.uid,
-      ));
+      unawaited(
+        _notifyQuietly(
+          userId: story.userId,
+          type: 'story_like',
+          title: '${_actorName(user)} storyini beğendi',
+          body: 'Story etkileşimlerini görmek için dokun.',
+          sourceId: story.id,
+          actorId: user.uid,
+        ),
+      );
     }
   }
 
@@ -420,14 +443,16 @@ class StoryService {
       'viewedAt': FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true)).timeout(const Duration(seconds: 7));
-    unawaited(_notifyQuietly(
-      userId: story.userId,
-      type: 'story_reaction',
-      title: '${_actorName(user)} storyine tepki verdi',
-      body: clean,
-      sourceId: story.id,
-      actorId: user.uid,
-    ));
+    unawaited(
+      _notifyQuietly(
+        userId: story.userId,
+        type: 'story_reaction',
+        title: '${_actorName(user)} storyine tepki verdi',
+        body: clean,
+        sourceId: story.id,
+        actorId: user.uid,
+      ),
+    );
   }
 
   Future<void> _notifyQuietly({
@@ -485,6 +510,51 @@ class StoryService {
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true)).timeout(const Duration(seconds: 6));
     } catch (_) {}
+  }
+
+  Future<void> archiveStory(AppStory story) async {
+    final user = _auth.currentUser;
+    if (user == null || story.userId != user.uid) {
+      throw Exception('Bu Story’yi arşivleme yetkin yok.');
+    }
+    final activeRef = _firestore.collection('stories').doc(story.id);
+    final archiveRef = _firestore
+        .collection('users')
+        .doc(user.uid)
+        .collection('story_archive')
+        .doc(story.id);
+    final active = await activeRef.get().timeout(const Duration(seconds: 7));
+    final now = DateTime.now();
+    final batch = _firestore.batch();
+    final data = active.data();
+    if (data != null) {
+      batch.set(
+        archiveRef,
+        {
+          ...data,
+          'id': story.id,
+          'userId': user.uid,
+          'archivedAt': FieldValue.serverTimestamp(),
+          'manuallyArchivedAt': FieldValue.serverTimestamp(),
+          'expiresAt': Timestamp.fromDate(now.subtract(const Duration(seconds: 1))),
+        },
+        SetOptions(merge: true),
+      );
+    } else {
+      batch.set(
+        archiveRef,
+        {
+          'id': story.id,
+          'userId': user.uid,
+          'archivedAt': FieldValue.serverTimestamp(),
+          'manuallyArchivedAt': FieldValue.serverTimestamp(),
+          'expiresAt': Timestamp.fromDate(now.subtract(const Duration(seconds: 1))),
+        },
+        SetOptions(merge: true),
+      );
+    }
+    batch.delete(activeRef);
+    await batch.commit().timeout(const Duration(seconds: 8));
   }
 
   Future<void> deleteStory(AppStory story) async {
