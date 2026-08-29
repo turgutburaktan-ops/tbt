@@ -292,7 +292,10 @@ class StoryService {
     final user = _auth.currentUser;
     final ids = storyIds.where((id) => id.trim().isNotEmpty).toSet().toList();
     if (user == null || ids.isEmpty) return Stream.value(<String>{});
-    final controllers = <String, StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>>>{};
+    final Map<
+      String,
+      StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>
+    > controllers = {};
     final viewed = <String>{};
     late final StreamController<Set<String>> controller;
     controller = StreamController<Set<String>>.broadcast(
