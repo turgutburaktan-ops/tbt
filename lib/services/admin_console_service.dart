@@ -1,6 +1,9 @@
+import 'dart:convert';
+
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:http/http.dart' as http;
 
 class AdminConsoleService {
   AdminConsoleService._();
@@ -9,6 +12,10 @@ class AdminConsoleService {
   final FirebaseFunctions _functions = FirebaseFunctions.instanceFor(
     app: Firebase.app(),
     region: 'europe-west1',
+  );
+
+  static final Uri _businessReviewHttp = Uri.parse(
+    'https://europe-west1-en-iyi-cekim-noktasi.cloudfunctions.net/adminReviewBusinessClaimHttp',
   );
 
   Future<void> _ensureFreshAdminAuth() async {
@@ -35,6 +42,25 @@ class AdminConsoleService {
         message: 'Yönetici yetkisi doğrulanamadı.',
       );
     }
+  }
+
+  Future<String> _freshAdminIdToken() async {
+    await _ensureFreshAdminAuth();
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      throw FirebaseAuthException(
+        code: 'not-signed-in',
+        message: 'Yönetici oturumu bulunamadı.',
+      );
+    }
+    final token = await user.getIdToken(true);
+    if (token == null || token.isEmpty) {
+      throw FirebaseAuthException(
+        code: 'token-missing',
+        message: 'Yönetici kimlik belirteci alınamadı.',
+      );
+    }
+    return token;
   }
 
   Future<Map<String, dynamic>> overview() async {
@@ -77,17 +103,43 @@ class AdminConsoleService {
       'decision': approve ? 'verified' : 'rejected',
       'reason': reason.trim(),
     };
+
     await _ensureFreshAdminAuth();
     final callable = _functions.httpsCallable('adminReviewBusinessClaim');
     try {
       await callable.call(payload);
+      return;
     } on FirebaseFunctionsException catch (error) {
       if (error.code != 'unauthenticated') rethrow;
-      // The native Functions SDK can briefly retain the previous auth token
-      // after a custom-claim refresh. Refresh once and retry the admin action.
-      await _ensureFreshAdminAuth();
-      await callable.call(payload);
     }
+
+    // Some Android/native Functions SDK paths can fail to forward the current
+    // Firebase Auth context to a callable even though the same user has a
+    // valid admin claim. Fall back to a normal HTTPS endpoint and attach the
+    // freshly minted Firebase ID token explicitly. The backend verifies this
+    // token with Firebase Admin and still requires admin=true.
+    final token = await _freshAdminIdToken();
+    final response = await http
+        .post(
+          _businessReviewHttp,
+          headers: <String, String>{
+            'authorization': 'Bearer $token',
+            'content-type': 'application/json',
+          },
+          body: jsonEncode(payload),
+        )
+        .timeout(const Duration(seconds: 20));
+
+    if (response.statusCode >= 200 && response.statusCode < 300) return;
+
+    String message = 'İşletme onayı tamamlanamadı.';
+    try {
+      final decoded = jsonDecode(response.body);
+      if (decoded is Map && decoded['message'] != null) {
+        message = decoded['message'].toString();
+      }
+    } catch (_) {}
+    throw Exception(message);
   }
 
   Future<AdminInsightsData> insights() async {
