@@ -260,7 +260,7 @@ class _ClipSheetState extends State<_ClipSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final int maxStart = (widget.track.durationMs - 15000).clamp(0, 86400000);
+    final int maxStart = (widget.track.durationMs - 15000).clamp(0, 86400000).toInt();
     return Padding(
       padding: const EdgeInsets.fromLTRB(18, 12, 18, 24),
       child: Column(
@@ -329,9 +329,9 @@ class _ClipSheetState extends State<_ClipSheet> {
             ),
           ),
           Slider(
-            value: maxStart == 0 ? 0 : _startMs.clamp(0, maxStart.toDouble()),
-            min: 0,
-            max: maxStart == 0 ? 1 : maxStart.toDouble(),
+            value: maxStart == 0 ? 0.0 : _startMs.clamp(0.0, maxStart.toDouble()).toDouble(),
+            min: 0.0,
+            max: maxStart == 0 ? 1.0 : maxStart.toDouble(),
             onChanged: maxStart == 0 ? null : (double value) => setState(() => _startMs = value),
           ),
           Text('${(_startMs / 1000).toStringAsFixed(1)} sn → ${((_startMs + 15000) / 1000).toStringAsFixed(1)} sn', textAlign: TextAlign.center, style: const TextStyle(color: Colors.white60)),
