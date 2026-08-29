@@ -351,8 +351,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
   bool _sending = false;
 
   AppStory get _current => _stories[_index];
-  bool get _mine =>
-      _current.userId == FirebaseAuth.instance.currentUser?.uid;
+  bool get _mine => _current.userId == FirebaseAuth.instance.currentUser?.uid;
 
   @override
   void initState() {
@@ -441,10 +440,115 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
     return '${d.inHours.clamp(1, 24)} sa';
   }
 
+  Future<void> _archive() async {
+    _pause();
+    try {
+      await StoryService.instance.archiveStory(_current);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Story arşive alındı.')),
+      );
+      Navigator.pop(context);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
+      );
+      _resume();
+    }
+  }
+
   Future<void> _delete() async {
     _pause();
-    await StoryService.instance.deleteStory(_current);
-    if (mounted) Navigator.pop(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Story silinsin mi?'),
+        content: const Text(
+          'Bu Story aktif akıştan ve arşivden kalıcı olarak silinecek.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Vazgeç'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            style: FilledButton.styleFrom(backgroundColor: Colors.redAccent),
+            child: const Text('Sil'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) {
+      if (mounted) _resume();
+      return;
+    }
+    try {
+      await StoryService.instance.deleteStory(_current);
+      if (mounted) Navigator.pop(context);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
+      );
+      _resume();
+    }
+  }
+
+  Future<void> _showOwnerMenu() async {
+    _pause();
+    final action = await showModalBottomSheet<String>(
+      context: context,
+      useSafeArea: true,
+      backgroundColor: const Color(0xFF111318),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
+      ),
+      builder: (sheetContext) => Padding(
+        padding: const EdgeInsets.fromLTRB(12, 10, 12, 14),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              margin: const EdgeInsets.only(bottom: 10),
+              decoration: BoxDecoration(
+                color: Colors.white24,
+                borderRadius: BorderRadius.circular(99),
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.archive_outlined),
+              title: const Text('Arşive al'),
+              subtitle: const Text('Story aktif akıştan kalkar, arşivinde kalır.'),
+              onTap: () => Navigator.pop(sheetContext, 'archive'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent),
+              title: const Text('Sil', style: TextStyle(color: Colors.redAccent)),
+              subtitle: const Text('Story kalıcı olarak silinir.'),
+              onTap: () => Navigator.pop(sheetContext, 'delete'),
+            ),
+            const Divider(color: Colors.white12),
+            ListTile(
+              leading: const Icon(Icons.close_rounded),
+              title: const Text('İptal'),
+              onTap: () => Navigator.pop(sheetContext),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (!mounted) return;
+    if (action == 'archive') {
+      await _archive();
+    } else if (action == 'delete') {
+      await _delete();
+    } else {
+      _resume();
+    }
   }
 
   Future<void> _react(String emoji) async {
@@ -515,10 +619,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
                         Expanded(
                           child: Text(
                             '${items.length} izleyen',
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w900,
-                            ),
+                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
                           ),
                         ),
                         IconButton(
@@ -531,10 +632,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
                   Expanded(
                     child: items.isEmpty
                         ? const Center(
-                            child: Text(
-                              'Henüz görüntüleme yok',
-                              style: TextStyle(color: Colors.white54),
-                            ),
+                            child: Text('Henüz görüntüleme yok', style: TextStyle(color: Colors.white54)),
                           )
                         : ListView.builder(
                             itemCount: items.length,
@@ -545,23 +643,17 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
                                   backgroundColor: const Color(0xFF22252A),
                                   child: ClipOval(
                                     child: FirebaseMediaImage(
-                                      imageUrl:
-                                          (x['userPhotoUrl'] ?? '').toString(),
-                                      fallbackStoragePaths:
-                                          FirebaseMediaImage.avatarPaths(
-                                        (x['userId'] ?? x['id'] ?? '')
-                                            .toString(),
+                                      imageUrl: (x['userPhotoUrl'] ?? '').toString(),
+                                      fallbackStoragePaths: FirebaseMediaImage.avatarPaths(
+                                        (x['userId'] ?? x['id'] ?? '').toString(),
                                       ),
-                                      errorWidget:
-                                          const Icon(Icons.person_outline),
+                                      errorWidget: const Icon(Icons.person_outline),
                                     ),
                                   ),
                                 ),
                                 title: Text(
                                   (x['userName'] ?? 'Kullanıcı').toString(),
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w800,
-                                  ),
+                                  style: const TextStyle(fontWeight: FontWeight.w800),
                                 ),
                                 subtitle: (x['message'] ?? '').toString().isEmpty
                                     ? null
@@ -615,11 +707,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
         height: height,
         fit: BoxFit.cover,
         errorWidget: const Center(
-          child: Icon(
-            Icons.broken_image_outlined,
-            size: 52,
-            color: Colors.white38,
-          ),
+          child: Icon(Icons.broken_image_outlined, size: 52, color: Colors.white38),
         ),
       ),
     );
@@ -634,12 +722,8 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
       backgroundColor: Colors.black,
       body: LayoutBuilder(
         builder: (context, constraints) {
-          final width = constraints.maxWidth.isFinite
-              ? constraints.maxWidth
-              : screen.width;
-          final height = constraints.maxHeight.isFinite
-              ? constraints.maxHeight
-              : screen.height;
+          final width = constraints.maxWidth.isFinite ? constraints.maxWidth : screen.width;
+          final height = constraints.maxHeight.isFinite ? constraints.maxHeight : screen.height;
           return SizedBox(
             width: width,
             height: height,
@@ -659,8 +743,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
                       _markViewed();
                       _restartProgress();
                     },
-                    itemBuilder: (_, i) =>
-                        _media(_stories[i], width, height),
+                    itemBuilder: (_, i) => _media(_stories[i], width, height),
                   ),
                 ),
                 Positioned.fill(
@@ -697,10 +780,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
                         gradient: LinearGradient(
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
-                          colors: [
-                            Colors.black.withValues(alpha: .68),
-                            Colors.transparent,
-                          ],
+                          colors: [Colors.black.withValues(alpha: .68), Colors.transparent],
                         ),
                       ),
                     ),
@@ -719,9 +799,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
                               _stories.length,
                               (i) => Expanded(
                                 child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 1.5,
-                                  ),
+                                  padding: const EdgeInsets.symmetric(horizontal: 1.5),
                                   child: ClipRRect(
                                     borderRadius: BorderRadius.circular(4),
                                     child: LinearProgressIndicator(
@@ -732,10 +810,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
                                               : _progress.value,
                                       minHeight: 2.5,
                                       backgroundColor: Colors.white24,
-                                      valueColor:
-                                          const AlwaysStoppedAnimation<Color>(
-                                        Colors.white,
-                                      ),
+                                      valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
                                     ),
                                   ),
                                 ),
@@ -752,16 +827,10 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
                               child: ClipOval(
                                 child: FirebaseMediaImage(
                                   imageUrl: current.userPhotoUrl,
-                                  fallbackStoragePaths:
-                                      FirebaseMediaImage.avatarPaths(
-                                    current.userId,
-                                  ),
+                                  fallbackStoragePaths: FirebaseMediaImage.avatarPaths(current.userId),
                                   errorWidget: const ColoredBox(
                                     color: Color(0xFF22252A),
-                                    child: Icon(
-                                      Icons.person_outline,
-                                      size: 20,
-                                    ),
+                                    child: Icon(Icons.person_outline, size: 20),
                                   ),
                                 ),
                               ),
@@ -770,23 +839,15 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
                             Expanded(
                               child: RichText(
                                 text: TextSpan(
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 13,
-                                  ),
+                                  style: const TextStyle(color: Colors.white, fontSize: 13),
                                   children: [
                                     TextSpan(
                                       text: current.userName,
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.w900,
-                                      ),
+                                      style: const TextStyle(fontWeight: FontWeight.w900),
                                     ),
                                     TextSpan(
                                       text: '  ${_time(current)}',
-                                      style: const TextStyle(
-                                        color: Colors.white60,
-                                        fontWeight: FontWeight.w600,
-                                      ),
+                                      style: const TextStyle(color: Colors.white60, fontWeight: FontWeight.w600),
                                     ),
                                   ],
                                 ),
@@ -794,7 +855,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
                             ),
                             if (_mine)
                               IconButton(
-                                onPressed: _delete,
+                                onPressed: _showOwnerMenu,
                                 icon: const Icon(Icons.more_horiz_rounded),
                               ),
                             IconButton(
@@ -818,10 +879,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
                         gradient: LinearGradient(
                           begin: Alignment.bottomCenter,
                           end: Alignment.topCenter,
-                          colors: [
-                            Colors.black.withValues(alpha: .58),
-                            Colors.transparent,
-                          ],
+                          colors: [Colors.black.withValues(alpha: .58), Colors.transparent],
                         ),
                       ),
                     ),
@@ -833,28 +891,21 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
                   bottom: 8,
                   child: _mine
                       ? StreamBuilder<List<Map<String, dynamic>>>(
-                          stream:
-                              StoryService.instance.watchInteractions(current),
+                          stream: StoryService.instance.watchInteractions(current),
                           builder: (_, snapshot) => Align(
                             alignment: Alignment.centerLeft,
                             child: TextButton.icon(
                               onPressed: _showViewers,
-                              style: TextButton.styleFrom(
-                                foregroundColor: Colors.white,
-                              ),
+                              style: TextButton.styleFrom(foregroundColor: Colors.white),
                               icon: const Icon(Icons.visibility_outlined),
-                              label:
-                                  Text('${snapshot.data?.length ?? 0} izleyen'),
+                              label: Text('${snapshot.data?.length ?? 0} izleyen'),
                             ),
                           ),
                         )
                       : StreamBuilder<Map<String, dynamic>>(
-                          stream: StoryService.instance
-                              .watchMyInteraction(current.id),
+                          stream: StoryService.instance.watchMyInteraction(current.id),
                           builder: (_, snapshot) {
-                            final liked = (snapshot.data ??
-                                    const <String, dynamic>{})['liked'] ==
-                                true;
+                            final liked = (snapshot.data ?? const <String, dynamic>{})['liked'] == true;
                             const fieldBorder = OutlineInputBorder(
                               borderRadius: BorderRadius.all(Radius.circular(24)),
                               borderSide: BorderSide(color: Colors.white30),
@@ -873,39 +924,28 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
                                         required currentLength,
                                         required isFocused,
                                         maxLength,
-                                      }) =>
-                                          null,
+                                      }) => null,
                                       onSubmitted: (_) => _sendReply(),
                                       textInputAction: TextInputAction.send,
                                       decoration: InputDecoration(
                                         hintText: 'Mesaj gönder…',
                                         filled: true,
-                                        fillColor:
-                                            Colors.black.withValues(alpha: .35),
+                                        fillColor: Colors.black.withValues(alpha: .35),
                                         border: fieldBorder,
                                         enabledBorder: fieldBorder,
                                         focusedBorder: fieldBorder,
                                         disabledBorder: fieldBorder,
-                                        contentPadding:
-                                            const EdgeInsets.symmetric(
-                                          horizontal: 16,
-                                          vertical: 12,
-                                        ),
+                                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                                       ),
                                     ),
                                   ),
                                 ),
                                 const SizedBox(width: 8),
                                 IconButton(
-                                  onPressed: () => StoryService.instance
-                                      .setLiked(current, !liked),
+                                  onPressed: () => StoryService.instance.setLiked(current, !liked),
                                   icon: Icon(
-                                    liked
-                                        ? Icons.favorite_rounded
-                                        : Icons.favorite_border_rounded,
-                                    color: liked
-                                        ? Colors.redAccent
-                                        : Colors.white,
+                                    liked ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                                    color: liked ? Colors.redAccent : Colors.white,
                                   ),
                                 ),
                                 PopupMenuButton<String>(
@@ -913,25 +953,17 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
                                   onOpened: _pause,
                                   onCanceled: _resume,
                                   onSelected: (emoji) => _react(emoji),
-                                  itemBuilder: (_) =>
-                                      ['❤️', '🔥', '😍', '👏', '😂']
-                                          .map(
-                                            (emoji) => PopupMenuItem<String>(
-                                              value: emoji,
-                                              child: Text(
-                                                emoji,
-                                                style: const TextStyle(
-                                                  fontSize: 24,
-                                                ),
-                                              ),
-                                            ),
-                                          )
-                                          .toList(),
+                                  itemBuilder: (_) => ['❤️', '🔥', '😍', '👏', '😂']
+                                      .map(
+                                        (emoji) => PopupMenuItem<String>(
+                                          value: emoji,
+                                          child: Text(emoji, style: const TextStyle(fontSize: 24)),
+                                        ),
+                                      )
+                                      .toList(),
                                   child: const Padding(
                                     padding: EdgeInsets.all(10),
-                                    child: Icon(
-                                      Icons.emoji_emotions_outlined,
-                                    ),
+                                    child: Icon(Icons.emoji_emotions_outlined),
                                   ),
                                 ),
                                 IconButton(
@@ -940,9 +972,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
                                       ? const SizedBox(
                                           width: 18,
                                           height: 18,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                          ),
+                                          child: CircularProgressIndicator(strokeWidth: 2),
                                         )
                                       : const Icon(Icons.send_rounded),
                                 ),
