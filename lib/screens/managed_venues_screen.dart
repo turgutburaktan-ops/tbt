@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
 import 'business_hub_screen.dart';
+import 'business_profile_editor_screen.dart';
 
 class ManagedVenuesScreen extends StatelessWidget {
   const ManagedVenuesScreen({super.key});
@@ -112,58 +113,106 @@ class ManagedVenuesScreen extends StatelessWidget {
               final venueId = (data['venueId'] ?? '').toString();
               final logoUrl = (data['logoUrl'] ?? '').toString().trim();
 
+              void openManager() {
+                if (venueId.isEmpty) return;
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => BusinessHubScreen(
+                      initialCategory: category,
+                      initialVenueId: venueId,
+                      initialVenueName: venueName,
+                    ),
+                  ),
+                );
+              }
+
+              void openEditor() {
+                if (venueId.isEmpty) return;
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => BusinessProfileEditorScreen(
+                      category: category,
+                      venueId: venueId,
+                      venueName: venueName,
+                    ),
+                  ),
+                );
+              }
+
               return Card(
                 margin: EdgeInsets.zero,
-                child: ListTile(
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 13,
-                    vertical: 7,
-                  ),
-                  leading: CircleAvatar(
-                    radius: 24,
-                    backgroundColor: AppColors.surfaceStrong,
-                    backgroundImage: logoUrl.isEmpty
-                        ? null
-                        : NetworkImage(logoUrl),
-                    child: logoUrl.isEmpty
-                        ? const Icon(
-                            Icons.storefront_outlined,
-                            color: AppColors.cyan,
-                          )
-                        : null,
-                  ),
-                  title: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          venueName,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontWeight: FontWeight.w900),
-                        ),
+                child: Column(
+                  children: [
+                    ListTile(
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 13,
+                        vertical: 7,
                       ),
-                      const SizedBox(width: 5),
-                      const Icon(
-                        Icons.verified_rounded,
-                        size: 17,
-                        color: AppColors.cyan,
+                      leading: CircleAvatar(
+                        radius: 24,
+                        backgroundColor: AppColors.surfaceStrong,
+                        backgroundImage: logoUrl.isEmpty
+                            ? null
+                            : NetworkImage(logoUrl),
+                        child: logoUrl.isEmpty
+                            ? const Icon(
+                                Icons.storefront_outlined,
+                                color: AppColors.cyan,
+                              )
+                            : null,
                       ),
-                    ],
-                  ),
-                  subtitle: Text(_categoryLabel(category)),
-                  trailing: const Icon(Icons.chevron_right_rounded),
-                  onTap: venueId.isEmpty
-                      ? null
-                      : () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => BusinessHubScreen(
-                              initialCategory: category,
-                              initialVenueId: venueId,
-                              initialVenueName: venueName,
+                      title: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              venueName,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w900,
+                              ),
                             ),
                           ),
-                        ),
+                          const SizedBox(width: 5),
+                          const Icon(
+                            Icons.verified_rounded,
+                            size: 17,
+                            color: AppColors.cyan,
+                          ),
+                        ],
+                      ),
+                      subtitle: Text(_categoryLabel(category)),
+                      trailing: const Icon(Icons.chevron_right_rounded),
+                      onTap: openManager,
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: venueId.isEmpty ? null : openEditor,
+                              icon: const Icon(Icons.edit_outlined, size: 17),
+                              label: const Text('Profili Düzenle'),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: venueId.isEmpty ? null : openManager,
+                              icon: const Icon(
+                                Icons.dashboard_customize_outlined,
+                                size: 17,
+                              ),
+                              label: const Text('Yönetim'),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               );
             },
