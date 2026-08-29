@@ -299,6 +299,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
   late final List<AppStory> _stories;
   late final AnimationController _progress;
   final _replyController = TextEditingController();
+  final _replyFocusNode = FocusNode();
   int _index = 0;
   bool _sending = false;
 
@@ -316,6 +317,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
       ..addStatusListener((status) {
         if (status == AnimationStatus.completed) _next();
       });
+    _replyFocusNode.addListener(_handleReplyFocusChange);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _markViewed();
       _restartProgress();
@@ -324,10 +326,20 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
 
   @override
   void dispose() {
+    _replyFocusNode.removeListener(_handleReplyFocusChange);
+    _replyFocusNode.dispose();
     _progress.dispose();
     _controller.dispose();
     _replyController.dispose();
     super.dispose();
+  }
+
+  void _handleReplyFocusChange() {
+    if (_replyFocusNode.hasFocus) {
+      _pause();
+    } else if (!_sending) {
+      _resume();
+    }
   }
 
   Duration get _duration => Duration(
@@ -416,7 +428,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
     } finally {
       if (mounted) {
         setState(() => _sending = false);
-        _resume();
+        if (!_replyFocusNode.hasFocus) _resume();
       }
     }
   }
@@ -658,25 +670,24 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
                             children: List.generate(
                               _stories.length,
                               (i) => Expanded(
-                                child: Container(
-                                  height: 2.5,
-                                  margin: const EdgeInsets.symmetric(
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
                                     horizontal: 1.5,
                                   ),
-                                  clipBehavior: Clip.antiAlias,
-                                  decoration: BoxDecoration(
-                                    color: Colors.white24,
+                                  child: ClipRRect(
                                     borderRadius: BorderRadius.circular(4),
-                                  ),
-                                  alignment: Alignment.centerLeft,
-                                  child: FractionallySizedBox(
-                                    widthFactor: i < _index
-                                        ? 1
-                                        : i > _index
-                                            ? 0
-                                            : _progress.value,
-                                    child: const ColoredBox(
-                                      color: Colors.white,
+                                    child: LinearProgressIndicator(
+                                      value: i < _index
+                                          ? 1
+                                          : i > _index
+                                              ? 0
+                                              : _progress.value,
+                                      minHeight: 2.5,
+                                      backgroundColor: Colors.white24,
+                                      valueColor:
+                                          const AlwaysStoppedAnimation<Color>(
+                                        Colors.white,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -796,20 +807,18 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
                             final liked = (snapshot.data ??
                                     const <String, dynamic>{})['liked'] ==
                                 true;
+                            const fieldBorder = OutlineInputBorder(
+                              borderRadius: BorderRadius.all(Radius.circular(24)),
+                              borderSide: BorderSide(color: Colors.white30),
+                            );
                             return Row(
                               children: [
                                 Expanded(
-                                  child: Container(
+                                  child: SizedBox(
                                     height: 46,
-                                    decoration: BoxDecoration(
-                                      color:
-                                          Colors.black.withValues(alpha: .35),
-                                      border:
-                                          Border.all(color: Colors.white30),
-                                      borderRadius: BorderRadius.circular(24),
-                                    ),
                                     child: TextField(
                                       controller: _replyController,
+                                      focusNode: _replyFocusNode,
                                       maxLength: 500,
                                       buildCounter: (
                                         _, {
@@ -818,13 +827,19 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
                                         maxLength,
                                       }) =>
                                           null,
-                                      onTap: _pause,
                                       onSubmitted: (_) => _sendReply(),
                                       textInputAction: TextInputAction.send,
-                                      decoration: const InputDecoration(
+                                      decoration: InputDecoration(
                                         hintText: 'Mesaj gönder…',
-                                        border: InputBorder.none,
-                                        contentPadding: EdgeInsets.symmetric(
+                                        filled: true,
+                                        fillColor:
+                                            Colors.black.withValues(alpha: .35),
+                                        border: fieldBorder,
+                                        enabledBorder: fieldBorder,
+                                        focusedBorder: fieldBorder,
+                                        disabledBorder: fieldBorder,
+                                        contentPadding:
+                                            const EdgeInsets.symmetric(
                                           horizontal: 16,
                                           vertical: 12,
                                         ),
