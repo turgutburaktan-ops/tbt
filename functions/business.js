@@ -192,7 +192,7 @@ exports.addBusinessCampaign = onCall({region: 'europe-west1'}, async (request) =
   return {ok: true};
 });
 
-exports.adminReviewBusinessClaim = onCall({region: 'europe-west1'}, async (request) => {
+exports.adminReviewBusinessClaim = onCall({region: 'europe-west1', invoker: 'public'}, async (request) => {
   requireAuth(request);
   if (request.auth.token.admin !== true) throw new HttpsError('permission-denied', 'Admin yetkisi gerekli.');
   const d = request.data || {};
