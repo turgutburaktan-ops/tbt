@@ -76,40 +76,70 @@ class _StoryStripState extends State<StoryStrip> {
           stories.sort((a, b) => a.createdAt.compareTo(b.createdAt));
         }
         final mine = grouped.remove(me?.uid);
-        return SizedBox(
-          height: 104,
-          child: ListView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.fromLTRB(12, 8, 12, 7),
-            children: [
-              _AddStoryCircle(
-                userId: me?.uid ?? '',
-                photoUrl: me?.photoURL ?? '',
-                loading: _openingCamera,
-                hasStory: mine != null && mine.isNotEmpty,
-                onTap: _addStory,
-                onStoryTap: mine == null
-                    ? null
-                    : () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => StoryViewerScreen(stories: mine),
+        final otherStoryIds = grouped.values
+            .expand((stories) => stories)
+            .map((story) => story.id)
+            .toList(growable: false);
+
+        return StreamBuilder<Set<String>>(
+          stream: StoryService.instance.watchViewedStoryIds(otherStoryIds),
+          initialData: const <String>{},
+          builder: (context, viewedSnapshot) {
+            final viewedIds = viewedSnapshot.data ?? const <String>{};
+            final groups = grouped.values.toList(growable: false);
+            groups.sort((a, b) {
+              final aViewed = a.every((story) => viewedIds.contains(story.id));
+              final bViewed = b.every((story) => viewedIds.contains(story.id));
+              if (aViewed != bViewed) return aViewed ? 1 : -1;
+              return a.first.createdAt.compareTo(b.first.createdAt);
+            });
+
+            return SizedBox(
+              height: 104,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.fromLTRB(12, 8, 12, 7),
+                children: [
+                  _AddStoryCircle(
+                    userId: me?.uid ?? '',
+                    photoUrl: me?.photoURL ?? '',
+                    loading: _openingCamera,
+                    hasStory: mine != null && mine.isNotEmpty,
+                    onTap: _addStory,
+                    onStoryTap: mine == null
+                        ? null
+                        : () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => StoryViewerScreen(stories: mine),
+                              ),
+                            ),
+                  ),
+                  ...groups.map((stories) {
+                    final fullyViewed =
+                        stories.every((story) => viewedIds.contains(story.id));
+                    final firstUnviewed = stories.indexWhere(
+                      (story) => !viewedIds.contains(story.id),
+                    );
+                    final initialIndex = firstUnviewed >= 0 ? firstUnviewed : 0;
+                    return _StoryCircle(
+                      stories: stories,
+                      viewed: fullyViewed,
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => StoryViewerScreen(
+                            stories: stories,
+                            initialIndex: initialIndex,
                           ),
                         ),
+                      ),
+                    );
+                  }),
+                ],
               ),
-              ...grouped.values.map(
-                (stories) => _StoryCircle(
-                  stories: stories,
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => StoryViewerScreen(stories: stories),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
+            );
+          },
         );
       },
     );
@@ -223,8 +253,13 @@ class _AddStoryCircle extends StatelessWidget {
 
 class _StoryCircle extends StatelessWidget {
   final List<AppStory> stories;
+  final bool viewed;
   final VoidCallback onTap;
-  const _StoryCircle({required this.stories, required this.onTap});
+  const _StoryCircle({
+    required this.stories,
+    required this.viewed,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -240,15 +275,18 @@ class _StoryCircle extends StatelessWidget {
               width: 64,
               height: 64,
               padding: const EdgeInsets.all(2.5),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  colors: [
-                    Color(0xFF39E7E0),
-                    Color(0xFF6977FF),
-                    Color(0xFFB65CFF),
-                  ],
-                ),
+                color: viewed ? const Color(0xFF626870) : null,
+                gradient: viewed
+                    ? null
+                    : const LinearGradient(
+                        colors: [
+                          Color(0xFF39E7E0),
+                          Color(0xFF6977FF),
+                          Color(0xFFB65CFF),
+                        ],
+                      ),
               ),
               child: Container(
                 padding: const EdgeInsets.all(2),
@@ -277,7 +315,11 @@ class _StoryCircle extends StatelessWidget {
               s.userName,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700),
+              style: TextStyle(
+                fontSize: 10.5,
+                fontWeight: FontWeight.w700,
+                color: viewed ? Colors.white60 : Colors.white,
+              ),
             ),
           ],
         ),
@@ -288,7 +330,12 @@ class _StoryCircle extends StatelessWidget {
 
 class StoryViewerScreen extends StatefulWidget {
   final List<AppStory> stories;
-  const StoryViewerScreen({super.key, required this.stories});
+  final int initialIndex;
+  const StoryViewerScreen({
+    super.key,
+    required this.stories,
+    this.initialIndex = 0,
+  });
   @override
   State<StoryViewerScreen> createState() => _StoryViewerScreenState();
 }
@@ -312,7 +359,8 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
     super.initState();
     _stories = [...widget.stories]
       ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
-    _controller = PageController();
+    _index = widget.initialIndex.clamp(0, _stories.length - 1);
+    _controller = PageController(initialPage: _index);
     _progress = AnimationController(vsync: this)
       ..addStatusListener((status) {
         if (status == AnimationStatus.completed) _next();
