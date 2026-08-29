@@ -19,6 +19,13 @@ class StoryStrip extends StatefulWidget {
 
 class _StoryStripState extends State<StoryStrip> {
   bool _openingCamera = false;
+  late final Stream<List<AppStory>> _activeStories;
+
+  @override
+  void initState() {
+    super.initState();
+    _activeStories = StoryService.instance.watchActive();
+  }
 
   Future<void> _addStory() async {
     if (_openingCamera) return;
@@ -53,7 +60,7 @@ class _StoryStripState extends State<StoryStrip> {
   Widget build(BuildContext context) {
     final me = FirebaseAuth.instance.currentUser;
     return StreamBuilder<List<AppStory>>(
-      stream: StoryService.instance.watchActive(),
+      stream: _activeStories,
       builder: (context, snapshot) {
         final visible = (snapshot.data ?? const <AppStory>[])
             .where(
