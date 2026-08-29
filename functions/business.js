@@ -1,6 +1,7 @@
-const {onCall, HttpsError} = require('firebase-functions/v2/https');
+const {onCall, onRequest, HttpsError} = require('firebase-functions/v2/https');
 const {getFirestore, FieldValue, Timestamp} = require('firebase-admin/firestore');
 const {getStorage} = require('firebase-admin/storage');
+const {getAuth} = require('firebase-admin/auth');
 
 const MAX_ACTIVE_CLAIMS = 2;
 const REJECT_COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000;
@@ -192,21 +193,48 @@ exports.addBusinessCampaign = onCall({region: 'europe-west1'}, async (request) =
   return {ok: true};
 });
 
-exports.adminReviewBusinessClaim = onCall({region: 'europe-west1', invoker: 'public'}, async (request) => {
-  requireAuth(request);
-  if (request.auth.token.admin !== true) throw new HttpsError('permission-denied', 'Admin yetkisi gerekli.');
-  const d = request.data || {};
-  const id = venueKey(d.category, d.venueId);
-  const decision = clean(d.decision, 20);
+async function reviewBusinessClaimCore({uid, token, data: d}) {
+  if (!uid) throw new HttpsError('unauthenticated', 'Giriş gerekli.');
+  if (token?.admin !== true) throw new HttpsError('permission-denied', 'Admin yetkisi gerekli.');
+  const id = venueKey(d?.category, d?.venueId);
+  const decision = clean(d?.decision, 20);
   if (!['verified', 'rejected'].includes(decision)) throw new HttpsError('invalid-argument', 'Geçersiz karar.');
   const db = getFirestore(), ref = db.collection('business_claims').doc(id), snap = await ref.get();
   if (!snap.exists) throw new HttpsError('not-found', 'Başvuru bulunamadı.');
   const data = snap.data() || {};
   if (data.status !== 'pending_review') throw new HttpsError('failed-precondition', 'Yalnız incelemedeki başvurular sonuçlandırılabilir.');
-  const update = {status: decision, verificationLevel: decision === 'verified' ? 'manual_strong' : 'none', adminReviewRequired: false, verifiedAt: decision === 'verified' ? FieldValue.serverTimestamp() : null, verifiedBy: decision === 'verified' ? request.auth.uid : null, rejectionReason: decision === 'rejected' ? clean(d.reason, 500) : '', updatedAt: FieldValue.serverTimestamp()};
+  const update = {status: decision, verificationLevel: decision === 'verified' ? 'manual_strong' : 'none', adminReviewRequired: false, verifiedAt: decision === 'verified' ? FieldValue.serverTimestamp() : null, verifiedBy: decision === 'verified' ? uid : null, rejectionReason: decision === 'rejected' ? clean(d?.reason, 500) : '', updatedAt: FieldValue.serverTimestamp()};
   await ref.update(update);
   if (decision === 'verified') {
     await db.collection('business_venues').doc(id).set({ownerUid: data.applicantUid, venueId: data.venueId, category: data.category, venueName: data.venueName, verified: true, verificationLevel: 'manual_strong', updatedAt: FieldValue.serverTimestamp()}, {merge: true});
   }
   return {status: decision};
+}
+
+exports.adminReviewBusinessClaim = onCall({region: 'europe-west1', invoker: 'public'}, async (request) => {
+  return reviewBusinessClaimCore({uid: request.auth?.uid, token: request.auth?.token, data: request.data || {}});
+});
+
+exports.adminReviewBusinessClaimHttp = onRequest({region: 'europe-west1', invoker: 'public', cors: true}, async (req, res) => {
+  if (req.method === 'OPTIONS') {
+    res.status(204).send('');
+    return;
+  }
+  if (req.method !== 'POST') {
+    res.status(405).json({error: 'method-not-allowed', message: 'Yalnız POST desteklenir.'});
+    return;
+  }
+  try {
+    const header = String(req.get('authorization') || '');
+    const match = header.match(/^Bearer\s+(.+)$/i);
+    if (!match) throw new HttpsError('unauthenticated', 'Giriş gerekli.');
+    const decoded = await getAuth().verifyIdToken(match[1], true);
+    const result = await reviewBusinessClaimCore({uid: decoded.uid, token: decoded, data: req.body || {}});
+    res.status(200).json(result);
+  } catch (error) {
+    const code = error?.code || 'internal';
+    const message = error?.message || 'İşletme başvurusu işlenemedi.';
+    const status = code === 'unauthenticated' ? 401 : code === 'permission-denied' ? 403 : code === 'not-found' ? 404 : code === 'invalid-argument' ? 400 : code === 'failed-precondition' ? 409 : 500;
+    res.status(status).json({error: code, message});
+  }
 });
