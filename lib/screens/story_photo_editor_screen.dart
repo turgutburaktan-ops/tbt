@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:math' as math;
+import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -11,6 +12,7 @@ import 'package:image_picker/image_picker.dart';
 import '../services/story_context_link_service.dart';
 import '../services/story_service.dart';
 import 'story_context_template_picker.dart';
+import 'story_music_picker.dart';
 
 class StoryPhotoEditorScreen extends StatefulWidget {
   final File photo;
@@ -32,6 +34,7 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
   int? _selected;
   int _layoutCount = 0;
   StoryContextTemplateSelection? _contextTemplate;
+  StoryMusicSelection? _musicSelection;
   bool _sharing = false;
   bool _exporting = false;
   bool _editingText = false;
@@ -150,6 +153,32 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
       _textController.clear();
     });
     _textFocus.unfocus();
+  }
+
+  Future<void> _openMusicPicker() async {
+    if (_sharing) return;
+    _finishMode();
+    final StoryMusicSelection? selected = await showModalBottomSheet<StoryMusicSelection>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => const StoryMusicPicker(),
+    );
+    if (!mounted || selected == null) return;
+
+    final Size s = MediaQuery.sizeOf(context);
+    setState(() {
+      _musicSelection = selected;
+      _items.removeWhere((item) => item.music != null);
+      _items.add(
+        _OverlayItem.music(
+          selected,
+          Offset(s.width * .5, s.height * .23),
+        ),
+      );
+      _selected = _items.length - 1;
+    });
   }
 
   Future<void> _openEmojiPicker() async {
@@ -420,6 +449,7 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
     final int? i = _selected;
     if (i == null || i < 0 || i >= _items.length) return;
     setState(() {
+      if (_items[i].music != null) _musicSelection = null;
       _items.removeAt(i);
       _selected = null;
       _moving = false;
@@ -479,6 +509,19 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
           templateId: t.templateId,
           templateTitle: t.templateTitle,
           slotCount: t.slotCount,
+        );
+      }
+      final StoryMusicSelection? music = _musicSelection;
+      if (music != null) {
+        await StoryContextLinkService.instance.attachMusicToLatestOwnStory(
+          trackId: music.trackId,
+          title: music.title,
+          artist: music.artist,
+          artworkUrl: music.artworkUrl,
+          previewUrl: music.previewUrl,
+          startMs: music.startMs,
+          durationMs: music.clipDurationMs,
+          stickerStyle: music.stickerStyle,
         );
       }
       if (mounted) Navigator.pop(context, true);
@@ -668,6 +711,8 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
                         const SizedBox(height: 7),
                         _Tool(Icons.text_fields_rounded, 'Yazı', _openText),
                         const SizedBox(height: 7),
+                        _Tool(Icons.music_note_rounded, 'Müzik', _openMusicPicker),
+                        const SizedBox(height: 7),
                         _Tool(Icons.emoji_emotions_outlined, 'Emoji', _openEmojiPicker),
                         const SizedBox(height: 7),
                         _Tool(Icons.alternate_email_rounded, 'Bahset', _openMentionPicker),
@@ -846,13 +891,14 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
 
   Widget _buildItem(int i) {
     final _OverlayItem x = _items[i];
+    final bool expandedHitArea = x.isPlainText;
     return Positioned(
       left: x.position.dx,
       top: x.position.dy,
       child: FractionalTranslation(
         translation: const Offset(-.5, -.5),
         child: GestureDetector(
-          behavior: HitTestBehavior.translucent,
+          behavior: HitTestBehavior.opaque,
           onTap: () => setState(() => _selected = i),
           onScaleStart: (_) {
             x.startScale = x.scale;
@@ -865,7 +911,7 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
           onScaleUpdate: (ScaleUpdateDetails d) {
             setState(() {
               x.position += d.focalPointDelta;
-              x.scale = (x.startScale * d.scale).clamp(.05, 30.0).toDouble();
+              x.scale = (x.startScale * d.scale).clamp(.08, 12.0).toDouble();
               x.rotation = x.startRotation + d.rotation;
               _overTrash = d.focalPoint.dy > MediaQuery.sizeOf(context).height - 125;
             });
@@ -880,11 +926,16 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
               });
             }
           },
-          child: Transform.rotate(
-            angle: x.rotation,
-            child: Transform.scale(
-              scale: x.scale,
-              child: _itemBody(x, i == _selected),
+          child: Padding(
+            padding: expandedHitArea
+                ? const EdgeInsets.symmetric(horizontal: 38, vertical: 30)
+                : EdgeInsets.zero,
+            child: Transform.rotate(
+              angle: x.rotation,
+              child: Transform.scale(
+                scale: x.scale,
+                child: _itemBody(x, i == _selected),
+              ),
             ),
           ),
         ),
@@ -893,6 +944,7 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
   }
 
   Widget _itemBody(_OverlayItem x, bool selected) {
+    if (x.music != null) return _musicSticker(x.music!);
     if (x.photo != null) {
       return Container(
         width: 168,
@@ -923,17 +975,105 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
         child: Text(x.text ?? '', textAlign: TextAlign.center, style: TextStyle(fontSize: x.compact ? 14 : 17, fontWeight: FontWeight.w900)),
       );
     }
-    return Text(
-      x.text ?? '',
-      textAlign: TextAlign.center,
-      style: TextStyle(
-        fontFamily: x.font,
-        color: x.color,
-        fontSize: 34,
-        fontWeight: FontWeight.w900,
-        shadows: const <Shadow>[Shadow(color: Colors.black54, blurRadius: 5)],
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minWidth: 140, minHeight: 52, maxWidth: 320),
+      child: Center(
+        child: Text(
+          x.text ?? '',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontFamily: x.font,
+            color: x.color,
+            fontSize: 34,
+            fontWeight: FontWeight.w900,
+            shadows: const <Shadow>[Shadow(color: Colors.black54, blurRadius: 5)],
+          ),
+        ),
       ),
     );
+  }
+
+  Widget _musicSticker(StoryMusicSelection music) {
+    if (music.stickerStyle == 'title') {
+      return Container(
+        constraints: const BoxConstraints(maxWidth: 280),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+        decoration: BoxDecoration(
+          color: Colors.black87,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: Colors.white12),
+        ),
+        child: Text(music.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900)),
+      );
+    }
+
+    if (music.stickerStyle == 'card') {
+      return Container(
+        width: 245,
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: const Color(0xE6121418),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: Colors.white12),
+        ),
+        child: Row(
+          children: <Widget>[
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                gradient: const LinearGradient(
+                  colors: <Color>[Color(0xFF38E8FF), Color(0xFF4A7DFF), Color(0xFF9B4DFF)],
+                ),
+              ),
+              child: const Icon(Icons.music_note_rounded, color: Colors.white),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  Text(music.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w900)),
+                  Text(music.artist, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, color: Colors.white60)),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Container(
+      constraints: const BoxConstraints(maxWidth: 280),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+      decoration: BoxDecoration(
+        color: Colors.black87,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: Colors.white12),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          const ShaderMask(
+            blendMode: BlendMode.srcIn,
+            shaderCallback: _musicShader,
+            child: Icon(Icons.music_note_rounded, color: Colors.white, size: 20),
+          ),
+          const SizedBox(width: 8),
+          Flexible(
+            child: Text('${music.title} · ${music.artist}', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w800)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static Shader _musicShader(Rect bounds) {
+    return const LinearGradient(
+      colors: <Color>[Color(0xFF38E8FF), Color(0xFF4A7DFF), Color(0xFF9B4DFF)],
+    ).createShader(bounds);
   }
 
   Widget _trash() {
@@ -1035,6 +1175,7 @@ class _OverlayItem {
   File? photo;
   String? targetUserId;
   String? font;
+  StoryMusicSelection? music;
   Color color;
   bool emoji;
   bool context;
@@ -1050,6 +1191,7 @@ class _OverlayItem {
     this.photo,
     this.targetUserId,
     this.font,
+    this.music,
     this.color = Colors.white,
     this.emoji = false,
     this.context = false,
@@ -1060,6 +1202,8 @@ class _OverlayItem {
     this.startScale = 1,
     this.startRotation = 0,
   });
+
+  bool get isPlainText => photo == null && !emoji && targetUserId == null && !context && music == null;
 
   factory _OverlayItem.text(String text, Offset position, String font, Color color) {
     return _OverlayItem(text: text, position: position, font: font, color: color);
@@ -1079,6 +1223,10 @@ class _OverlayItem {
 
   factory _OverlayItem.context(String text, Offset position, {bool compact = false}) {
     return _OverlayItem(text: text, position: position, context: true, compact: compact);
+  }
+
+  factory _OverlayItem.music(StoryMusicSelection music, Offset position) {
+    return _OverlayItem(music: music, position: position);
   }
 }
 
