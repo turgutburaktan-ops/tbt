@@ -1,9 +1,5 @@
-import 'dart:typed_data' as typed_data;
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-
-typedef ByteData = typed_data.ByteData;
 
 class StoryContextLinkService {
   StoryContextLinkService._();
@@ -11,6 +7,53 @@ class StoryContextLinkService {
 
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  Future<QueryDocumentSnapshot<Map<String, dynamic>>?> _latestOwnStory() async {
+    final user = _auth.currentUser;
+    if (user == null) return null;
+
+    final snapshot = await _firestore
+        .collection('stories')
+        .where('userId', isEqualTo: user.uid)
+        .limit(20)
+        .get()
+        .timeout(const Duration(seconds: 7));
+    if (snapshot.docs.isEmpty) return null;
+
+    QueryDocumentSnapshot<Map<String, dynamic>>? latest;
+    DateTime latestAt = DateTime.fromMillisecondsSinceEpoch(0);
+    for (final doc in snapshot.docs) {
+      final raw = doc.data()['createdAt'];
+      final at = raw is Timestamp
+          ? raw.toDate()
+          : DateTime.fromMillisecondsSinceEpoch(0);
+      if (latest == null || at.isAfter(latestAt)) {
+        latest = doc;
+        latestAt = at;
+      }
+    }
+    return latest;
+  }
+
+  Future<void> _writeToStoryAndArchive(
+    QueryDocumentSnapshot<Map<String, dynamic>> story,
+    Map<String, dynamic> data,
+  ) async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+    final batch = _firestore.batch();
+    batch.set(story.reference, data, SetOptions(merge: true));
+    batch.set(
+      _firestore
+          .collection('users')
+          .doc(user.uid)
+          .collection('story_archive')
+          .doc(story.id),
+      data,
+      SetOptions(merge: true),
+    );
+    await batch.commit().timeout(const Duration(seconds: 7));
+  }
 
   Future<void> attachToLatestOwnStory({
     required String contextType,
@@ -20,30 +63,10 @@ class StoryContextLinkService {
     required String templateTitle,
     required int slotCount,
   }) async {
-    final user = _auth.currentUser;
-    if (user == null) return;
-
-    final snapshot = await _firestore
-        .collection('stories')
-        .where('userId', isEqualTo: user.uid)
-        .limit(20)
-        .get()
-        .timeout(const Duration(seconds: 7));
-    if (snapshot.docs.isEmpty) return;
-
-    QueryDocumentSnapshot<Map<String, dynamic>>? latest;
-    DateTime latestAt = DateTime.fromMillisecondsSinceEpoch(0);
-    for (final doc in snapshot.docs) {
-      final raw = doc.data()['createdAt'];
-      final at = raw is Timestamp ? raw.toDate() : DateTime.fromMillisecondsSinceEpoch(0);
-      if (latest == null || at.isAfter(latestAt)) {
-        latest = doc;
-        latestAt = at;
-      }
-    }
+    final latest = await _latestOwnStory();
     if (latest == null) return;
 
-    final data = <String, dynamic>{
+    await _writeToStoryAndArchive(latest, <String, dynamic>{
       'storyContextType': contextType,
       'storyContextId': contextId,
       'storyContextName': contextName,
@@ -52,19 +75,33 @@ class StoryContextLinkService {
       'storyTemplateSlotCount': slotCount,
       'storyTemplateVersion': 1,
       'storyContextLinkedAt': FieldValue.serverTimestamp(),
-    };
+    });
+  }
 
-    final batch = _firestore.batch();
-    batch.set(latest.reference, data, SetOptions(merge: true));
-    batch.set(
-      _firestore
-          .collection('users')
-          .doc(user.uid)
-          .collection('story_archive')
-          .doc(latest.id),
-      data,
-      SetOptions(merge: true),
-    );
-    await batch.commit().timeout(const Duration(seconds: 7));
+  Future<void> attachMusicToLatestOwnStory({
+    required String trackId,
+    required String title,
+    required String artist,
+    required String artworkUrl,
+    required String previewUrl,
+    required int startMs,
+    required int durationMs,
+    required String stickerStyle,
+  }) async {
+    final latest = await _latestOwnStory();
+    if (latest == null) return;
+
+    await _writeToStoryAndArchive(latest, <String, dynamic>{
+      'musicTrackId': trackId,
+      'musicTitle': title,
+      'musicArtist': artist,
+      'musicArtworkUrl': artworkUrl,
+      'musicPreviewUrl': previewUrl,
+      'musicStartMs': startMs,
+      'musicDurationMs': durationMs,
+      'musicStickerStyle': stickerStyle,
+      'musicVersion': 1,
+      'musicLinkedAt': FieldValue.serverTimestamp(),
+    });
   }
 }
