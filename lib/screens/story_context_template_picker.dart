@@ -77,7 +77,7 @@ class _StoryContextTemplatePickerState
             ),
           ),
           const SizedBox(height: 10),
-          if (spec.type != 'free')
+          if (spec.type != 'free' && _selectedContext == null)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 14),
               child: TextField(
@@ -112,6 +112,7 @@ class _StoryContextTemplatePickerState
                     selected: _selectedContext,
                     onContextSelected: (item) =>
                         setState(() => _selectedContext = item),
+                    onBack: () => setState(() => _selectedContext = null),
                     onTemplateSelected: _finish,
                   ),
           ),
@@ -140,6 +141,7 @@ class _ContextBrowser extends StatelessWidget {
   final String query;
   final _ContextItem? selected;
   final ValueChanged<_ContextItem> onContextSelected;
+  final VoidCallback onBack;
   final void Function(_ContextItem, _TemplateSpec) onTemplateSelected;
 
   const _ContextBrowser({
@@ -147,6 +149,7 @@ class _ContextBrowser extends StatelessWidget {
     required this.query,
     required this.selected,
     required this.onContextSelected,
+    required this.onBack,
     required this.onTemplateSelected,
   });
 
@@ -160,9 +163,7 @@ class _ContextBrowser extends StatelessWidget {
             child: Row(
               children: [
                 IconButton(
-                  onPressed: () => onContextSelected(
-                    const _ContextItem(id: '', name: '', type: ''),
-                  ),
+                  onPressed: onBack,
                   icon: const Icon(Icons.arrow_back_rounded),
                 ),
                 Expanded(
