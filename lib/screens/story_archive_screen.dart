@@ -37,6 +37,13 @@ class _StoryArchiveScreenState extends State<StoryArchiveScreen> {
 
   int _yearsAgo(AppStory story, DateTime now) => now.year - story.createdAt.year;
 
+  String _duration(AppStory story) {
+    final total = (story.durationMs / 1000).round();
+    final minutes = total ~/ 60;
+    final seconds = total % 60;
+    return '$minutes:${seconds.toString().padLeft(2, '0')}';
+  }
+
   Future<void> _repost(AppStory story) async {
     if (_sharing.contains(story.id)) return;
     setState(() => _sharing.add(story.id));
@@ -78,6 +85,7 @@ class _StoryArchiveScreenState extends State<StoryArchiveScreen> {
     setState(() => _deleting.add(story.id));
     try {
       await StoryService.instance.deleteStory(story);
+      if (mounted) Navigator.of(context).maybePop();
     } finally {
       if (mounted) setState(() => _deleting.remove(story.id));
     }
@@ -93,82 +101,153 @@ class _StoryArchiveScreenState extends State<StoryArchiveScreen> {
         ),
       );
 
+  void _openStory(AppStory story) {
+    showDialog<void>(
+      context: context,
+      barrierColor: Colors.black,
+      builder: (dialogContext) {
+        final sharing = _sharing.contains(story.id);
+        final deleting = _deleting.contains(story.id);
+        return Dialog.fullscreen(
+          backgroundColor: Colors.black,
+          child: StatefulBuilder(
+            builder: (context, setSheetState) => Stack(
+              fit: StackFit.expand,
+              children: [
+                _preview(story),
+                const DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [Colors.black54, Colors.transparent, Colors.black87],
+                      stops: [0, .35, 1],
+                    ),
+                  ),
+                ),
+                SafeArea(
+                  child: Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(8, 6, 8, 0),
+                        child: Row(
+                          children: [
+                            IconButton(
+                              onPressed: () => Navigator.pop(dialogContext),
+                              icon: const Icon(Icons.arrow_back_rounded),
+                            ),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                _date(story.createdAt),
+                                style: const TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Spacer(),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 18),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: FilledButton.icon(
+                                onPressed: sharing
+                                    ? null
+                                    : () async {
+                                        setSheetState(() {});
+                                        await _repost(story);
+                                        if (context.mounted) setSheetState(() {});
+                                      },
+                                icon: _sharing.contains(story.id)
+                                    ? const SizedBox(
+                                        width: 17,
+                                        height: 17,
+                                        child: CircularProgressIndicator(strokeWidth: 2),
+                                      )
+                                    : const Icon(Icons.replay_rounded),
+                                label: const Text('Tekrar Paylaş'),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            IconButton.filledTonal(
+                              tooltip: 'Sil',
+                              onPressed: deleting
+                                  ? null
+                                  : () async {
+                                      setSheetState(() {});
+                                      await _delete(story);
+                                    },
+                              icon: _deleting.contains(story.id)
+                                  ? const SizedBox(
+                                      width: 18,
+                                      height: 18,
+                                      child: CircularProgressIndicator(strokeWidth: 2),
+                                    )
+                                  : const Icon(Icons.delete_outline_rounded),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   Widget _memorySection(List<AppStory> memories, DateTime now) {
     if (memories.isEmpty) return const SizedBox.shrink();
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
             'Bugünden Anılar',
-            style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900),
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
           ),
-          const SizedBox(height: 4),
-          Text(
-            memories.any((s) => _yearsAgo(s, now) == 1)
-                ? 'Geçen sene bugün paylaştıkların'
-                : 'Geçmiş yıllarda bugün paylaştıkların',
-            style: const TextStyle(color: Colors.white60),
-          ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 9),
           SizedBox(
-            height: 210,
+            height: 154,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               itemCount: memories.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 10),
+              separatorBuilder: (_, __) => const SizedBox(width: 7),
               itemBuilder: (_, index) {
                 final story = memories[index];
                 final years = _yearsAgo(story, now);
-                final sharing = _sharing.contains(story.id);
-                return SizedBox(
-                  width: 140,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(18),
+                return GestureDetector(
+                  onTap: () => _openStory(story),
+                  child: SizedBox(
+                    width: 104,
                     child: Stack(
                       fit: StackFit.expand,
                       children: [
-                        _preview(story),
-                        const DecoratedBox(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [Colors.transparent, Colors.black87],
-                              stops: [.4, 1],
-                            ),
-                          ),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: _preview(story),
                         ),
                         Positioned(
-                          left: 10,
-                          top: 10,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
-                            decoration: BoxDecoration(
-                              color: Colors.black54,
-                              borderRadius: BorderRadius.circular(14),
+                          left: 6,
+                          right: 6,
+                          bottom: 6,
+                          child: Text(
+                            years == 1 ? 'Geçen sene bugün' : '$years yıl önce bugün',
+                            maxLines: 2,
+                            style: const TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w900,
+                              shadows: [Shadow(blurRadius: 8, color: Colors.black)],
                             ),
-                            child: Text(
-                              years == 1 ? 'Geçen sene bugün' : '$years yıl önce bugün',
-                              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800),
-                            ),
-                          ),
-                        ),
-                        Positioned(
-                          left: 8,
-                          right: 8,
-                          bottom: 8,
-                          child: FilledButton.icon(
-                            onPressed: sharing ? null : () => _repost(story),
-                            icon: sharing
-                                ? const SizedBox(
-                                    width: 15,
-                                    height: 15,
-                                    child: CircularProgressIndicator(strokeWidth: 2),
-                                  )
-                                : const Icon(Icons.replay_rounded, size: 17),
-                            label: const Text('Paylaş'),
                           ),
                         ),
                       ],
@@ -183,90 +262,55 @@ class _StoryArchiveScreenState extends State<StoryArchiveScreen> {
     );
   }
 
-  Widget _archiveCard(AppStory story) {
-    final sharing = _sharing.contains(story.id);
-    final deleting = _deleting.contains(story.id);
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(18),
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          _preview(story),
-          const DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [Colors.transparent, Colors.black87],
-                stops: [.45, 1],
-              ),
-            ),
-          ),
-          if (story.isVideo)
-            const Align(
-              alignment: Alignment.topLeft,
-              child: Padding(
-                padding: EdgeInsets.all(10),
-                child: Icon(Icons.videocam_rounded),
-              ),
-            ),
-          Positioned(
-            top: 3,
-            right: 3,
-            child: IconButton(
-              tooltip: 'Sil',
-              onPressed: deleting ? null : () => _delete(story),
-              icon: deleting
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.delete_outline_rounded),
-            ),
-          ),
-          Positioned(
-            left: 10,
-            right: 10,
-            bottom: 10,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  _date(story.createdAt),
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                  ),
+  Widget _archiveTile(AppStory story) => GestureDetector(
+        onTap: () => _openStory(story),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            _preview(story),
+            if (story.isVideo)
+              Positioned(
+                left: 6,
+                bottom: 6,
+                child: Row(
+                  children: [
+                    const Icon(Icons.play_arrow_rounded, size: 15),
+                    if (story.durationMs > 0) ...[
+                      const SizedBox(width: 2),
+                      Text(
+                        _duration(story),
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                          shadows: [Shadow(blurRadius: 6, color: Colors.black)],
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
-                const SizedBox(height: 7),
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton.icon(
-                    onPressed: sharing ? null : () => _repost(story),
-                    icon: sharing
-                        ? const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.replay_rounded, size: 18),
-                    label: const Text('Tekrar paylaş'),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+              ),
+          ],
+        ),
+      );
 
   @override
   Widget build(BuildContext context) => Scaffold(
         backgroundColor: AppColors.background,
-        appBar: AppBar(title: const Text('Story Arşivi')),
+        appBar: AppBar(
+          title: const Text('Story Arşivi'),
+          actions: [
+            PopupMenuButton<String>(
+              icon: const Icon(Icons.more_vert_rounded),
+              itemBuilder: (_) => const [
+                PopupMenuItem<String>(
+                  enabled: false,
+                  value: 'info',
+                  child: Text('Story’lerin yalnızca sana görünür'),
+                ),
+              ],
+            ),
+          ],
+        ),
         body: StreamBuilder<List<AppStory>>(
           stream: StoryService.instance.watchArchive(),
           builder: (context, snapshot) {
@@ -286,15 +330,15 @@ class _StoryArchiveScreenState extends State<StoryArchiveScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.archive_outlined, size: 62, color: Colors.white38),
-                      SizedBox(height: 14),
+                      Icon(Icons.archive_outlined, size: 54, color: Colors.white38),
+                      SizedBox(height: 12),
                       Text(
                         'Arşivlenmiş Story yok',
-                        style: TextStyle(fontSize: 19, fontWeight: FontWeight.w900),
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
                       ),
-                      SizedBox(height: 7),
+                      SizedBox(height: 6),
                       Text(
-                        'Story’lerin 24 saat dolduğunda burada saklanacak.',
+                        '24 saati dolan Story’lerin burada saklanacak.',
                         textAlign: TextAlign.center,
                         style: TextStyle(color: Colors.white54),
                       ),
@@ -308,30 +352,19 @@ class _StoryArchiveScreenState extends State<StoryArchiveScreen> {
             return CustomScrollView(
               slivers: [
                 SliverToBoxAdapter(child: _memorySection(memories, now)),
-                const SliverToBoxAdapter(
-                  child: Padding(
-                    padding: EdgeInsets.fromLTRB(12, 14, 12, 8),
-                    child: Text(
-                      'Tüm Story’ler',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
-                    ),
+                SliverGrid(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) => _archiveTile(stories[index]),
+                    childCount: stories.length,
+                  ),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 3,
+                    crossAxisSpacing: 2,
+                    mainAxisSpacing: 2,
+                    childAspectRatio: .72,
                   ),
                 ),
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(12, 0, 12, 20),
-                  sliver: SliverGrid(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) => _archiveCard(stories[index]),
-                      childCount: stories.length,
-                    ),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 10,
-                      mainAxisSpacing: 10,
-                      childAspectRatio: .67,
-                    ),
-                  ),
-                ),
+                const SliverToBoxAdapter(child: SizedBox(height: 24)),
               ],
             );
           },
