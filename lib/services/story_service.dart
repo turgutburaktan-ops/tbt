@@ -288,6 +288,40 @@ class StoryService {
       ? user.displayName!.trim()
       : 'Bir kullanıcı';
 
+  Stream<Set<String>> watchViewedStoryIds(Iterable<String> storyIds) {
+    final user = _auth.currentUser;
+    final ids = storyIds.where((id) => id.trim().isNotEmpty).toSet().toList();
+    if (user == null || ids.isEmpty) return Stream.value(<String>{});
+    final controllers = <String, StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>>>{};
+    final viewed = <String>{};
+    late final StreamController<Set<String>> controller;
+    controller = StreamController<Set<String>>.broadcast(
+      onListen: () {
+        for (final id in ids) {
+          controllers[id] = _interactionRef(id, user.uid).snapshots().listen(
+            (doc) {
+              if (doc.exists && doc.data()?['viewedAt'] != null) {
+                viewed.add(id);
+              } else {
+                viewed.remove(id);
+              }
+              if (!controller.isClosed) controller.add(Set<String>.from(viewed));
+            },
+            onError: (_) {},
+          );
+        }
+        controller.add(Set<String>.from(viewed));
+      },
+      onCancel: () async {
+        for (final subscription in controllers.values) {
+          await subscription.cancel();
+        }
+        controllers.clear();
+      },
+    );
+    return controller.stream;
+  }
+
   Future<void> recordView(AppStory story) async {
     final user = _auth.currentUser;
     if (user == null || user.uid == story.userId || !story.isActive) return;
