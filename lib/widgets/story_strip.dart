@@ -424,7 +424,8 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
     if (!story.hasMusic) return;
     try {
       await _musicPlayer.setUrl(story.musicPreviewUrl);
-      await _musicPlayer.setVolume(story.musicVolume.clamp(0, 1));
+      final targetVolume = story.musicVolume.clamp(0, 1).toDouble();
+      await _musicPlayer.setVolume(story.musicFadeInMs > 0 ? 0 : targetVolume);
       if (generation != _musicGeneration || !mounted) return;
       final start = Duration(milliseconds: story.musicStartMs.clamp(0, 86400000));
       final clipLength = Duration(
@@ -434,9 +435,41 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
       await _musicPlayer.setClip(start: start, end: start + clipLength);
       if (generation != _musicGeneration || !mounted) return;
       _musicReady = true;
-      if (_progress.isAnimating) unawaited(_musicPlayer.play());
+      if (_progress.isAnimating) {
+        unawaited(_musicPlayer.play());
+        unawaited(_runMusicFades(story, generation, targetVolume));
+      }
     } catch (_) {
       if (generation == _musicGeneration) _musicReady = false;
+    }
+  }
+
+  Future<void> _runMusicFades(
+    AppStory story,
+    int generation,
+    double targetVolume,
+  ) async {
+    final fadeIn = story.musicFadeInMs.clamp(0, 1500);
+    if (fadeIn > 0) {
+      const steps = 10;
+      for (var step = 1; step <= steps; step++) {
+        await Future<void>.delayed(Duration(milliseconds: fadeIn ~/ steps));
+        if (generation != _musicGeneration || !mounted) return;
+        await _musicPlayer.setVolume(targetVolume * step / steps);
+      }
+    }
+    final clipMs = (story.musicDurationMs > 0 ? story.musicDurationMs : 15000)
+        .clamp(1000, 15000);
+    final fadeOut = story.musicFadeOutMs.clamp(0, 1500);
+    final waitMs = (clipMs - fadeIn - fadeOut).clamp(0, 15000);
+    if (waitMs > 0) await Future<void>.delayed(Duration(milliseconds: waitMs));
+    if (fadeOut > 0) {
+      const steps = 10;
+      for (var step = steps - 1; step >= 0; step--) {
+        if (generation != _musicGeneration || !mounted) return;
+        await _musicPlayer.setVolume(targetVolume * step / steps);
+        await Future<void>.delayed(Duration(milliseconds: fadeOut ~/ steps));
+      }
     }
   }
 
