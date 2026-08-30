@@ -334,6 +334,28 @@ class _Track {
 }
 
 Future<List<_Track>> _fetchCommonsTracks() async {
+  final groups = await Future.wait(<Future<List<_Track>>>[
+    _fetchCommonsCategory(
+      search: 'filetype:audio deepcat:"Audio files of music" incategory:"CC-Zero"',
+      category: 'Yabancı',
+      limit: 100,
+    ),
+    _fetchCommonsCategory(
+      search: 'filetype:audio deepcat:"Turkish-language music" incategory:"CC-Zero"',
+      category: 'Türkçe',
+      limit: 50,
+    ),
+  ]);
+  return <String, _Track>{
+    for (final track in groups.expand((items) => items)) track.id: track,
+  }.values.toList();
+}
+
+Future<List<_Track>> _fetchCommonsCategory({
+  required String search,
+  required String category,
+  required int limit,
+}) async {
   try {
     final uri = Uri.https('commons.wikimedia.org', '/w/api.php', <String, String>{
       'action': 'query',
@@ -341,9 +363,9 @@ Future<List<_Track>> _fetchCommonsTracks() async {
       'formatversion': '2',
       'origin': '*',
       'generator': 'search',
-      'gsrsearch': 'filetype:audio deepcat:"Audio files of music" incategory:"CC-Zero"',
+      'gsrsearch': search,
       'gsrnamespace': '6',
-      'gsrlimit': '100',
+      'gsrlimit': limit.toString(),
       'prop': 'videoinfo',
       'viprop': 'url|duration|mime|derivatives|extmetadata',
     });
@@ -399,7 +421,7 @@ Future<List<_Track>> _fetchCommonsTracks() async {
         artist: artist.isEmpty ? 'Wikimedia Commons' : artist,
         artworkUrl: '',
         previewUrl: audioUrl,
-        category: 'Yabancı',
+        category: category,
         durationMs: (((info['duration'] as num?)?.toDouble() ?? 15) * 1000).round(),
         license: 'CC0 1.0',
         sourceUrl: pageUrl,
