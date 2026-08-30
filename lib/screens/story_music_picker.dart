@@ -45,7 +45,6 @@ class StoryMusicSelection {
     this.mood = 'Seyahat',
   });
 }
-}
 
 class StoryMusicPicker extends StatefulWidget {
   const StoryMusicPicker({super.key});
