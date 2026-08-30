@@ -24,6 +24,7 @@ class StoryPhotoEditorScreen extends StatefulWidget {
 }
 
 class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
+  static const bool _musicFeatureVisible = false;
   final GlobalKey _canvasKey = GlobalKey();
   final TextEditingController _textController = TextEditingController();
   final FocusNode _textFocus = FocusNode();
@@ -736,8 +737,10 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
                         const SizedBox(height: 7),
                         _Tool(Icons.text_fields_rounded, 'Yazı', _openText),
                         const SizedBox(height: 7),
-                        _Tool(Icons.music_note_rounded, 'Müzik', _openMusicPicker),
-                        const SizedBox(height: 7),
+                        if (_musicFeatureVisible) ...[
+                          _Tool(Icons.music_note_rounded, 'Müzik', _openMusicPicker),
+                          const SizedBox(height: 7),
+                        ],
                         _Tool(Icons.emoji_emotions_outlined, 'Emoji', _openEmojiPicker),
                         const SizedBox(height: 7),
                         _Tool(Icons.alternate_email_rounded, 'Bahset', _openMentionPicker),

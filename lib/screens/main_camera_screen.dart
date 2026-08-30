@@ -1,15 +1,25 @@
+import 'dart:async';
 import 'dart:io';
 
+import 'package:camerawesome/camerawesome_plugin.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../services/story_service.dart';
 import '../theme/app_theme.dart';
-import '../widgets/retention_hub_quick_entry.dart';
 import 'camera_video_post_screen.dart';
 import 'create_post_screen.dart';
+import 'story_photo_editor_screen.dart';
+
+enum CameraShareMode { story, reels, photo, video }
 
 class MainCameraScreen extends StatefulWidget {
-  const MainCameraScreen({super.key});
+  final CameraShareMode initialMode;
+
+  const MainCameraScreen({
+    super.key,
+    this.initialMode = CameraShareMode.photo,
+  });
 
   @override
   State<MainCameraScreen> createState() => _MainCameraScreenState();
@@ -17,10 +27,33 @@ class MainCameraScreen extends StatefulWidget {
 
 class _MainCameraScreenState extends State<MainCameraScreen> {
   final ImagePicker _picker = ImagePicker();
-  bool _busy = false;
-  String? _error;
+  late CameraShareMode _mode;
+  CameraShareMode? _pendingMode;
+  VideoRecordingCameraState? _recordingState;
+  Timer? _recordingTimer;
+  int _recordedSeconds = 0;
+  bool _handlingCapture = false;
+  bool _openingGallery = false;
+  bool _showGrid = false;
 
-  static const int _videoLimitSeconds = 60;
+  bool get _isVideoMode =>
+      _mode == CameraShareMode.story ||
+      _mode == CameraShareMode.reels ||
+      _mode == CameraShareMode.video;
+
+  int get _videoLimitSeconds => _mode == CameraShareMode.story ? 15 : 60;
+
+  @override
+  void initState() {
+    super.initState();
+    _mode = widget.initialMode;
+  }
+
+  @override
+  void dispose() {
+    _recordingTimer?.cancel();
+    super.dispose();
+  }
 
   void _message(String text) {
     if (!mounted) return;
@@ -29,181 +62,686 @@ class _MainCameraScreenState extends State<MainCameraScreen> {
       ..showSnackBar(SnackBar(content: Text(text)));
   }
 
-  Future<void> _photo(ImageSource source) async {
-    if (_busy) return;
+  void _selectMode(CameraShareMode mode, CameraState cameraState) {
+    if (_recordingState != null || _handlingCapture || mode == _mode) return;
     setState(() {
-      _busy = true;
-      _error = null;
+      _mode = mode;
+      _recordedSeconds = 0;
     });
+    cameraState.setState(
+      mode == CameraShareMode.photo ? CaptureMode.photo : CaptureMode.video,
+    );
+  }
+
+  Future<void> _capture(CameraState cameraState) async {
+    if (_handlingCapture || _openingGallery) return;
+    if (cameraState is PhotoCameraState) {
+      _pendingMode = _mode;
+      await cameraState.takePhoto();
+      return;
+    }
+    if (cameraState is VideoCameraState) {
+      _pendingMode = _mode;
+      await cameraState.startRecording();
+      _startRecordingClock();
+      return;
+    }
+    if (cameraState is VideoRecordingCameraState) {
+      _stopRecordingClock();
+      await cameraState.stopRecording();
+    }
+  }
+
+  void _startRecordingClock() {
+    _recordingTimer?.cancel();
+    if (mounted) setState(() => _recordedSeconds = 0);
+    _recordingTimer = Timer.periodic(const Duration(seconds: 1), (timer) async {
+      if (!mounted) return;
+      final next = _recordedSeconds + 1;
+      setState(() => _recordedSeconds = next);
+      if (next < _videoLimitSeconds) return;
+      timer.cancel();
+      final state = _recordingState;
+      _recordingState = null;
+      if (state != null) await state.stopRecording();
+    });
+  }
+
+  void _stopRecordingClock() {
+    _recordingTimer?.cancel();
+    _recordingTimer = null;
+  }
+
+  Future<void> _onMediaCapture(MediaCapture event) async {
+    if (event.status == MediaCaptureStatus.failure) {
+      _stopRecordingClock();
+      _recordingState = null;
+      _message('Çekim tamamlanamadı. Kamera izinlerini kontrol edip tekrar dene.');
+      return;
+    }
+    if (event.status != MediaCaptureStatus.success || _handlingCapture) return;
+
+    String? path;
+    event.captureRequest.when(
+      single: (single) {
+        path = single.file?.path;
+      },
+      multiple: (multiple) {
+        for (final file in multiple.fileBySensor.values) {
+          if (file?.path.isNotEmpty == true) {
+            path = file!.path;
+            break;
+          }
+        }
+      },
+    );
+    if (path == null || path!.isEmpty) {
+      _message('Çekilen dosya bulunamadı.');
+      return;
+    }
+
+    _stopRecordingClock();
+    _recordingState = null;
+    _handlingCapture = true;
+    final capturedMode = _pendingMode ?? _mode;
     try {
-      final picked = await _picker.pickImage(
-        source: source,
-        preferredCameraDevice: CameraDevice.rear,
-        imageQuality: 100,
-        requestFullMetadata: false,
+      await _routeCapturedFile(
+        File(path!),
+        mode: capturedMode,
+        isVideo: event.isVideo,
       );
+    } finally {
+      _handlingCapture = false;
+    }
+  }
+
+  Future<void> _openGallery() async {
+    if (_openingGallery || _handlingCapture || _recordingState != null) return;
+    setState(() => _openingGallery = true);
+    try {
+      final wantsVideo = _isVideoMode;
+      if (_mode == CameraShareMode.story) {
+        final type = await showModalBottomSheet<String>(
+          context: context,
+          useSafeArea: true,
+          backgroundColor: AppColors.surface,
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          builder: (sheet) => Padding(
+            padding: const EdgeInsets.fromLTRB(16, 10, 16, 18),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 38,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.white24,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  'Story için galeriden seç',
+                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.w900),
+                ),
+                const SizedBox(height: 8),
+                ListTile(
+                  leading: const Icon(Icons.photo_library_outlined),
+                  title: const Text('Fotoğraf seç'),
+                  onTap: () => Navigator.pop(sheet, 'photo'),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.video_library_outlined),
+                  title: const Text('Video seç'),
+                  subtitle: const Text('En fazla 15 saniye'),
+                  onTap: () => Navigator.pop(sheet, 'video'),
+                ),
+              ],
+            ),
+          ),
+        );
+        if (type == null || !mounted) return;
+        final picked = type == 'video'
+            ? await _picker.pickVideo(
+                source: ImageSource.gallery,
+                maxDuration: const Duration(seconds: 15),
+              )
+            : await _picker.pickImage(
+                source: ImageSource.gallery,
+                imageQuality: 100,
+                requestFullMetadata: false,
+              );
+        if (picked != null && mounted) {
+          await _routeCapturedFile(
+            File(picked.path),
+            mode: _mode,
+            isVideo: type == 'video',
+          );
+        }
+        return;
+      }
+
+      final picked = wantsVideo
+          ? await _picker.pickVideo(
+              source: ImageSource.gallery,
+              maxDuration: const Duration(seconds: 60),
+            )
+          : await _picker.pickImage(
+              source: ImageSource.gallery,
+              imageQuality: 100,
+              requestFullMetadata: false,
+            );
       if (picked == null || !mounted) return;
-      await Navigator.of(context).pushReplacement(
+      await _routeCapturedFile(
+        File(picked.path),
+        mode: _mode,
+        isVideo: wantsVideo,
+      );
+    } catch (error) {
+      _message('Galeri açılamadı: ${error.toString().replaceFirst('Exception: ', '')}');
+    } finally {
+      if (mounted) setState(() => _openingGallery = false);
+    }
+  }
+
+  Future<void> _routeCapturedFile(
+    File file, {
+    required CameraShareMode mode,
+    required bool isVideo,
+  }) async {
+    if (!await file.exists() || await file.length() <= 0) {
+      throw Exception('Çekilen dosya okunamadı.');
+    }
+    if (!mounted) return;
+
+    if (mode == CameraShareMode.story) {
+      if (isVideo) {
+        try {
+          await StoryService.instance.createVideoStory(file);
+          if (mounted) Navigator.pop(context, true);
+        } catch (error) {
+          _message(error.toString().replaceFirst('Exception: ', ''));
+        }
+        return;
+      }
+      final shared = await Navigator.push<bool>(
+        context,
         MaterialPageRoute(
-          builder: (_) => CreatePostScreen(initialImagePath: picked.path),
+          fullscreenDialog: true,
+          builder: (_) => StoryPhotoEditorScreen(photo: file),
         ),
       );
-    } catch (e) {
-      if (mounted) setState(() => _error = 'Fotoğraf açılamadı: $e');
-    } finally {
-      if (mounted) setState(() => _busy = false);
+      if (mounted && shared == true) Navigator.pop(context, true);
+      return;
     }
-  }
 
-  Future<void> _video(ImageSource source) async {
-    if (_busy) return;
-    setState(() {
-      _busy = true;
-      _error = null;
-    });
-    try {
-      final picked = await _picker.pickVideo(
-        source: source,
-        preferredCameraDevice: CameraDevice.rear,
-        maxDuration: const Duration(seconds: _videoLimitSeconds),
-      );
-      if (picked == null || !mounted) return;
-      final file = File(picked.path);
-      if (!await file.exists() || await file.length() <= 0) {
-        throw Exception('Video dosyası okunamadı.');
-      }
+    if (isVideo) {
       await Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => CameraVideoPostScreen(video: file)),
+        MaterialPageRoute(
+          builder: (_) => CameraVideoPostScreen(
+            video: file,
+            isReel: mode == CameraShareMode.reels,
+          ),
+        ),
       );
-    } catch (e) {
-      if (mounted) setState(() => _error = 'Video açılamadı: $e');
-    } finally {
-      if (mounted) setState(() => _busy = false);
+      return;
     }
-  }
-
-  Future<void> _gallery() async {
-    final kind = await showModalBottomSheet<String>(
-      context: context,
-      useSafeArea: true,
-      backgroundColor: AppColors.surface,
-      builder: (sheet) => Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          ListTile(
-            leading: const Icon(Icons.photo_library_outlined),
-            title: const Text('Fotoğraf seç'),
-            onTap: () => Navigator.pop(sheet, 'photo'),
-          ),
-          ListTile(
-            leading: const Icon(Icons.video_library_outlined),
-            title: const Text('Video seç'),
-            subtitle: const Text('En fazla 1 dakika'),
-            onTap: () => Navigator.pop(sheet, 'video'),
-          ),
-        ],
+    await Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (_) => CreatePostScreen(initialImagePath: file.path),
       ),
     );
-    if (kind == 'photo') await _photo(ImageSource.gallery);
-    if (kind == 'video') await _video(ImageSource.gallery);
   }
 
   @override
   Widget build(BuildContext context) {
-    return RetentionHubQuickEntry(
-      child: Scaffold(
-        backgroundColor: AppColors.background,
-        appBar: AppBar(title: const Text('Kamera')),
-        body: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(22),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 520),
-                child: Column(
-                  children: [
-                    Container(
-                      width: 78,
-                      height: 78,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: AppColors.accentGradient,
-                        border: Border.all(color: Colors.white12),
-                      ),
-                      child: const Icon(
-                        Icons.photo_camera_rounded,
-                        size: 36,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 18),
-                    const Text(
-                      'Ne çekmek istiyorsun?',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    const Text(
-                      'Fotoğraf çek veya 1 dakikaya kadar video/Reels oluştur.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.white60, height: 1.4),
-                    ),
-                    if (_error != null) ...[
-                      const SizedBox(height: 14),
-                      Text(
-                        _error!,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(color: Colors.redAccent),
-                      ),
-                    ],
-                    const SizedBox(height: 24),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 54,
-                      child: FilledButton.icon(
-                        onPressed: _busy
-                            ? null
-                            : () => _photo(ImageSource.camera),
-                        icon: const Icon(Icons.camera_alt_outlined),
-                        label: const Text('Fotoğraf Çek'),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 54,
-                      child: FilledButton.icon(
-                        onPressed: _busy
-                            ? null
-                            : () => _video(ImageSource.camera),
-                        icon: const Icon(Icons.videocam_outlined),
-                        label: const Text('Video / Reels Çek • 1 dk'),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 52,
-                      child: OutlinedButton.icon(
-                        onPressed: _busy ? null : _gallery,
-                        icon: const Icon(Icons.photo_library_outlined),
-                        label: const Text('Galeriden Seç'),
-                      ),
-                    ),
-                    if (_busy) ...[
-                      const SizedBox(height: 20),
-                      const CircularProgressIndicator(),
-                    ],
-                  ],
-                ),
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: CameraAwesomeBuilder.custom(
+        saveConfig: SaveConfig.photoAndVideo(
+          initialCaptureMode: _mode == CameraShareMode.photo
+              ? CaptureMode.photo
+              : CaptureMode.video,
+          videoOptions: VideoOptions(enableAudio: true),
+          mirrorFrontCamera: true,
+        ),
+        sensorConfig: SensorConfig.single(
+          sensor: Sensor.position(SensorPosition.back),
+          flashMode: FlashMode.auto,
+          aspectRatio: CameraAspectRatios.ratio_16_9,
+          zoom: 0,
+        ),
+        previewFit: CameraPreviewFit.cover,
+        enablePhysicalButton: true,
+        onMediaCaptureEvent: _onMediaCapture,
+        builder: (cameraState, preview) {
+          final recording = cameraState is VideoRecordingCameraState;
+          _recordingState = cameraState is VideoRecordingCameraState
+              ? cameraState
+              : null;
+          return _CameraOverlay(
+            state: cameraState,
+            mode: _mode,
+            recording: recording,
+            recordedSeconds: _recordedSeconds,
+            showGrid: _showGrid,
+            busy: _handlingCapture || _openingGallery,
+            onClose: () => Navigator.pop(context),
+            onGallery: _openGallery,
+            onCapture: () => _capture(cameraState),
+            onToggleGrid: () => setState(() => _showGrid = !_showGrid),
+            onModeSelected: (mode) => _selectMode(mode, cameraState),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _CameraOverlay extends StatelessWidget {
+  final CameraState state;
+  final CameraShareMode mode;
+  final bool recording;
+  final bool busy;
+  final bool showGrid;
+  final int recordedSeconds;
+  final VoidCallback onClose;
+  final VoidCallback onGallery;
+  final VoidCallback onCapture;
+  final VoidCallback onToggleGrid;
+  final ValueChanged<CameraShareMode> onModeSelected;
+
+  const _CameraOverlay({
+    required this.state,
+    required this.mode,
+    required this.recording,
+    required this.busy,
+    required this.showGrid,
+    required this.recordedSeconds,
+    required this.onClose,
+    required this.onGallery,
+    required this.onCapture,
+    required this.onToggleGrid,
+    required this.onModeSelected,
+  });
+
+  String get _modeLabel => switch (mode) {
+    CameraShareMode.story => 'STORY',
+    CameraShareMode.reels => 'REELS',
+    CameraShareMode.photo => 'FOTOĞRAF',
+    CameraShareMode.video => 'VİDEO',
+  };
+
+  String get _durationLabel => switch (mode) {
+    CameraShareMode.story => '15 sn',
+    CameraShareMode.reels => '60 sn',
+    CameraShareMode.photo => 'Tek kare',
+    CameraShareMode.video => '60 sn',
+  };
+
+  bool get _videoMode => mode != CameraShareMode.photo;
+
+  String _clock(int seconds) {
+    final minutes = seconds ~/ 60;
+    final remainder = seconds % 60;
+    return '$minutes:${remainder.toString().padLeft(2, '0')}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        const IgnorePointer(
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Color(0x99000000),
+                  Colors.transparent,
+                  Colors.transparent,
+                  Color(0xE6000000),
+                ],
+                stops: [0, .25, .58, 1],
               ),
             ),
+          ),
+        ),
+        if (showGrid && mode == CameraShareMode.photo)
+          const IgnorePointer(child: _CameraGrid()),
+        SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(14, 10, 14, 16),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    _GlassButton(icon: Icons.close_rounded, onTap: onClose),
+                    const Spacer(),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.black45,
+                        borderRadius: BorderRadius.circular(999),
+                        border: Border.all(color: Colors.white24),
+                      ),
+                      child: Text(
+                        recording ? '● ${_clock(recordedSeconds)}' : _modeLabel,
+                        style: TextStyle(
+                          color: recording ? Colors.redAccent : Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: .7,
+                        ),
+                      ),
+                    ),
+                    const Spacer(),
+                    _GlassButton(
+                      icon: Icons.flash_auto_rounded,
+                      onTap: recording
+                          ? null
+                          : () => state.sensorConfig.switchCameraFlash(),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 62),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: Column(
+                    children: [
+                      _SideInfo(icon: Icons.timer_outlined, label: _durationLabel),
+                      if (mode == CameraShareMode.photo) ...[
+                        const SizedBox(height: 9),
+                        _SideTool(
+                          icon: Icons.grid_3x3_rounded,
+                          label: showGrid ? 'Izgara açık' : 'Izgara',
+                          onTap: onToggleGrid,
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  switch (mode) {
+                    CameraShareMode.story => 'Anını çek ve Story olarak paylaş',
+                    CameraShareMode.reels => 'Dikey videonu Reels olarak paylaş',
+                    CameraShareMode.photo => 'Fotoğrafını çek, konumunu ekle ve paylaş',
+                    CameraShareMode.video => 'Videonu çek ve ana akışta paylaş',
+                  },
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w700,
+                    shadows: [Shadow(color: Colors.black, blurRadius: 8)],
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Center(
+                        child: _GlassButton(
+                          icon: Icons.photo_library_outlined,
+                          onTap: busy || recording ? null : onGallery,
+                        ),
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: busy ? null : onCapture,
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 180),
+                        width: 82,
+                        height: 82,
+                        padding: EdgeInsets.all(recording ? 23 : 7),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 4),
+                          boxShadow: const [BoxShadow(color: Colors.black38, blurRadius: 18)],
+                        ),
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            shape: recording ? BoxShape.rectangle : BoxShape.circle,
+                            borderRadius: recording ? BorderRadius.circular(8) : null,
+                            color: _videoMode ? Colors.redAccent : Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: Center(
+                        child: _GlassButton(
+                          icon: Icons.cameraswitch_rounded,
+                          onTap: recording ? null : () => state.switchCameraSensor(),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 13),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: CameraShareMode.values
+                        .map(
+                          (item) => _ModeButton(
+                            mode: item,
+                            selected: item == mode,
+                            enabled: !recording && !busy,
+                            onTap: () => onModeSelected(item),
+                          ),
+                        )
+                        .toList(growable: false),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        if (busy)
+          const ColoredBox(
+            color: Color(0x55000000),
+            child: Center(child: CircularProgressIndicator(color: AppColors.cyan)),
+          ),
+      ],
+    );
+  }
+}
+
+class _ModeButton extends StatelessWidget {
+  final CameraShareMode mode;
+  final bool selected;
+  final bool enabled;
+  final VoidCallback onTap;
+
+  const _ModeButton({
+    required this.mode,
+    required this.selected,
+    required this.enabled,
+    required this.onTap,
+  });
+
+  String get _label => switch (mode) {
+    CameraShareMode.story => 'Story',
+    CameraShareMode.reels => 'Reels',
+    CameraShareMode.photo => 'Fotoğraf',
+    CameraShareMode.video => 'Video',
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: enabled ? onTap : null,
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 8),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              _label,
+              style: TextStyle(
+                color: selected ? Colors.white : Colors.white54,
+                fontSize: 12.5,
+                fontWeight: selected ? FontWeight.w900 : FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 5),
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 160),
+              width: selected ? 24 : 0,
+              height: 3,
+              decoration: BoxDecoration(
+                gradient: selected ? AppColors.accentGradient : null,
+                borderRadius: BorderRadius.circular(3),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _GlassButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback? onTap;
+
+  const _GlassButton({required this.icon, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.black45,
+      shape: const CircleBorder(side: BorderSide(color: Colors.white24)),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: SizedBox(
+          width: 44,
+          height: 44,
+          child: Icon(
+            icon,
+            color: onTap == null ? Colors.white30 : Colors.white,
+            size: 22,
           ),
         ),
       ),
     );
   }
+}
+
+class _SideTool extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  const _SideTool({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.black45,
+      borderRadius: BorderRadius.circular(16),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          width: 52,
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.white24),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, color: Colors.white, size: 21),
+              const SizedBox(height: 3),
+              Text(
+                label,
+                maxLines: 1,
+                style: const TextStyle(
+                  color: Colors.white70,
+                  fontSize: 8.5,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SideInfo extends StatelessWidget {
+  final IconData icon;
+  final String label;
+
+  const _SideInfo({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 52,
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.black45,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white24),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: Colors.white, size: 21),
+          const SizedBox(height: 3),
+          Text(
+            label,
+            maxLines: 1,
+            style: const TextStyle(
+              color: Colors.white70,
+              fontSize: 8.5,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CameraGrid extends StatelessWidget {
+  const _CameraGrid();
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(painter: _CameraGridPainter());
+  }
+}
+
+class _CameraGridPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.white.withValues(alpha: .38)
+      ..strokeWidth = .8;
+    canvas.drawLine(Offset(size.width / 3, 0), Offset(size.width / 3, size.height), paint);
+    canvas.drawLine(Offset(size.width * 2 / 3, 0), Offset(size.width * 2 / 3, size.height), paint);
+    canvas.drawLine(Offset(0, size.height / 3), Offset(size.width, size.height / 3), paint);
+    canvas.drawLine(Offset(0, size.height * 2 / 3), Offset(size.width, size.height * 2 / 3), paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

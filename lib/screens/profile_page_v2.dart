@@ -12,10 +12,10 @@ import '../services/social_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/firebase_media_image.dart';
 import '../widgets/profile_favorite_places_section.dart';
-import 'camera_screen.dart';
 import 'create_post_screen.dart';
 import 'follow_list_screen.dart';
 import 'login_screen.dart';
+import 'main_camera_screen.dart';
 import 'post_detail_screen.dart';
 import 'user_statistics_screen.dart';
 
@@ -411,7 +411,9 @@ class _ProfileBodyState extends State<_ProfileBody> {
                     onTap: () => Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => const CameraScreen(storyMode: true),
+                        builder: (_) => const MainCameraScreen(
+                          initialMode: CameraShareMode.story,
+                        ),
                       ),
                     ),
                     child: Container(

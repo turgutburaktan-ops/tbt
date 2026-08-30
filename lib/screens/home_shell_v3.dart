@@ -38,20 +38,13 @@ class _HomeScreenState extends State<HomeScreen> {
     return switch (index) {
       0 => const _HomeFeedHub(),
       1 => const _PlacesHub(),
-      3 => const _NearbyUnifiedHub(),
-      4 => const _ProfileGate(),
+      2 => const _NearbyUnifiedHub(),
+      3 => const _ProfileGate(),
       _ => const SizedBox.shrink(),
     };
   }
 
   Future<void> _selectDestination(int index) async {
-    if (index == 2) {
-      await Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => const MainCameraScreen()),
-      );
-      return;
-    }
     if (!mounted || index == _selectedIndex) return;
     setState(() {
       _loadedTabs.add(index);
@@ -92,7 +85,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final pages = List<Widget>.generate(5, _tabPage, growable: false);
+    final pages = List<Widget>.generate(4, _tabPage, growable: false);
     final keyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
     return PopScope(
       canPop: false,
@@ -102,28 +95,6 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Scaffold(
         backgroundColor: AppColors.background,
         body: IndexedStack(index: _selectedIndex, children: pages),
-        floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-        floatingActionButton: keyboardOpen
-            ? null
-            : Container(
-                width: 54,
-                height: 54,
-                padding: const EdgeInsets.all(2),
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: AppColors.accentGradient,
-                ),
-                child: FloatingActionButton(
-                  heroTag: 'main-camera-v3',
-                  tooltip: 'Kamera',
-                  elevation: 0,
-                  backgroundColor: AppColors.surface,
-                  foregroundColor: Colors.white,
-                  shape: const CircleBorder(),
-                  onPressed: () => _selectDestination(2),
-                  child: const Icon(Icons.photo_camera_rounded, size: 23),
-                ),
-              ),
         bottomNavigationBar: keyboardOpen
             ? null
             : _BottomNav(
@@ -145,7 +116,6 @@ class _BottomNav extends StatelessWidget {
     const items = [
       (Icons.home_outlined, Icons.home_rounded, 'Ana Sayfa'),
       (Icons.place_outlined, Icons.place_rounded, 'Mekanlar'),
-      (Icons.circle_outlined, Icons.circle, 'Kamera'),
       (Icons.near_me_outlined, Icons.near_me_rounded, 'Çevrende'),
       (Icons.person_outline_rounded, Icons.person_rounded, 'Profil'),
     ];
@@ -156,25 +126,8 @@ class _BottomNav extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 4),
         color: AppColors.navigation,
         elevation: 0,
-        shape: const CircularNotchedRectangle(),
-        notchMargin: 6,
         child: Row(
           children: List.generate(items.length, (index) {
-            if (index == 2) {
-              return const Expanded(
-                child: Align(
-                  alignment: Alignment.bottomCenter,
-                  child: Text(
-                    'Kamera',
-                    style: TextStyle(
-                      color: Color(0x75FFFFFF),
-                      fontSize: 9,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              );
-            }
             final item = items[index];
             final selected = selectedIndex == index;
             return Expanded(
@@ -231,6 +184,8 @@ class _HomeFeedHubState extends State<_HomeFeedHub> {
   final Set<int> _loadedSections = <int>{0};
   final Set<int> _loadedPhotoModes = <int>{0};
   final ValueNotifier<double> _chromeCollapse = ValueNotifier<double>(0);
+  Offset? _swipeStart;
+  bool _openingCamera = false;
 
   @override
   void dispose() {
@@ -268,6 +223,28 @@ class _HomeFeedHubState extends State<_HomeFeedHub> {
     return false;
   }
 
+  void _rememberSwipeStart(PointerDownEvent event) {
+    _swipeStart = event.localPosition.dx <= 32 ? event.localPosition : null;
+  }
+
+  void _finishSwipe(PointerUpEvent event) {
+    final start = _swipeStart;
+    _swipeStart = null;
+    if (start == null || _section != 0) return;
+    final delta = event.localPosition - start;
+    if (delta.dx < 82 || delta.dx.abs() < delta.dy.abs() * 1.25) return;
+    _openCamera();
+  }
+
+  Future<void> _openCamera() async {
+    if (_openingCamera) return;
+    _openingCamera = true;
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute(builder: (_) => const MainCameraScreen()),
+    );
+    _openingCamera = false;
+  }
+
   Widget _scrollLinkedChrome() => ValueListenableBuilder<double>(
     valueListenable: _chromeCollapse,
     child: Column(
@@ -302,9 +279,14 @@ class _HomeFeedHubState extends State<_HomeFeedHub> {
 
   @override
   Widget build(BuildContext context) {
-    return ColoredBox(
-      color: AppColors.background,
-      child: SafeArea(
+    return Listener(
+      behavior: HitTestBehavior.translucent,
+      onPointerDown: _rememberSwipeStart,
+      onPointerUp: _finishSwipe,
+      onPointerCancel: (_) => _swipeStart = null,
+      child: ColoredBox(
+        color: AppColors.background,
+        child: SafeArea(
         bottom: false,
         child: Column(
           children: [
@@ -356,6 +338,7 @@ class _HomeFeedHubState extends State<_HomeFeedHub> {
               ),
             ),
           ],
+        ),
         ),
       ),
     );

@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 
 import '../models/app_story.dart';
-import '../screens/camera_screen.dart';
+import '../screens/main_camera_screen.dart';
 import '../screens/music_detail_screen.dart';
 import '../screens/story_music_picker.dart';
 import '../services/story_service.dart';
@@ -36,7 +36,11 @@ class _StoryStripState extends State<StoryStrip> {
     try {
       final shared = await Navigator.push<bool>(
         context,
-        MaterialPageRoute(builder: (_) => const CameraScreen(storyMode: true)),
+        MaterialPageRoute(
+          builder: (_) => const MainCameraScreen(
+            initialMode: CameraShareMode.story,
+          ),
+        ),
       );
       if (!mounted || shared != true) return;
       ScaffoldMessenger.of(context)
@@ -345,6 +349,7 @@ class StoryViewerScreen extends StatefulWidget {
 
 class _StoryViewerScreenState extends State<StoryViewerScreen>
     with SingleTickerProviderStateMixin {
+  static const bool _musicFeatureVisible = false;
   late final PageController _controller;
   late final List<AppStory> _stories;
   late final AnimationController _progress;
@@ -398,7 +403,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
   }
 
   Duration get _duration => Duration(
-        milliseconds: _current.hasMusic
+        milliseconds: _musicFeatureVisible && _current.hasMusic
             ? (_current.musicDurationMs > 0
                 ? _current.musicDurationMs.clamp(1000, 15000).toInt()
                 : 15000)
@@ -420,6 +425,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
     final generation = ++_musicGeneration;
     _musicReady = false;
     await _musicPlayer.stop();
+    if (!_musicFeatureVisible) return;
     final story = _current;
     if (!story.hasMusic) return;
     try {
@@ -995,7 +1001,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
                     ),
                   ),
                 ),
-                if (current.hasMusic)
+                if (_musicFeatureVisible && current.hasMusic)
                   Positioned(
                     left: 18,
                     right: 18,

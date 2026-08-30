@@ -8,8 +8,13 @@ import '../widgets/app_video_player.dart';
 
 class CameraVideoPostScreen extends StatefulWidget {
   final File video;
+  final bool isReel;
 
-  const CameraVideoPostScreen({super.key, required this.video});
+  const CameraVideoPostScreen({
+    super.key,
+    required this.video,
+    this.isReel = false,
+  });
 
   @override
   State<CameraVideoPostScreen> createState() => _CameraVideoPostScreenState();
@@ -97,7 +102,9 @@ class _CameraVideoPostScreenState extends State<CameraVideoPostScreen> {
         longitude: _longitude,
       );
       if (!mounted) return;
-      _message('Video başarıyla paylaşıldı! 🎬');
+      _message(widget.isReel
+          ? 'Reels başarıyla paylaşıldı! 🎬'
+          : 'Video başarıyla paylaşıldı! 🎬');
       Navigator.of(context).pop(true);
     } catch (error) {
       _message(
@@ -115,7 +122,7 @@ class _CameraVideoPostScreenState extends State<CameraVideoPostScreen> {
       appBar: AppBar(
         backgroundColor: const Color(0xFF090A0C),
         foregroundColor: Colors.white,
-        title: const Text('Video Paylaş'),
+        title: Text(widget.isReel ? 'Reels Paylaş' : 'Video Paylaş'),
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(18, 16, 18, 36),
@@ -134,10 +141,12 @@ class _CameraVideoPostScreenState extends State<CameraVideoPostScreen> {
             ),
           ),
           const SizedBox(height: 8),
-          const Text(
-            'Video paylaşılırken 720p hazırlanacak. En fazla 60 saniye.',
+          Text(
+            widget.isReel
+                ? 'Reels paylaşılırken 720p hazırlanacak. En fazla 60 saniye.'
+                : 'Video paylaşılırken 720p hazırlanacak. En fazla 60 saniye.',
             textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.white38, fontSize: 12),
+            style: const TextStyle(color: Colors.white38, fontSize: 12),
           ),
           const SizedBox(height: 18),
           TextField(
@@ -197,7 +206,13 @@ class _CameraVideoPostScreenState extends State<CameraVideoPostScreen> {
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : const Icon(Icons.send_rounded),
-              label: Text(_sharing ? 'Video hazırlanıyor…' : 'Videoyu Paylaş'),
+              label: Text(
+                _sharing
+                    ? (widget.isReel
+                          ? 'Reels hazırlanıyor…'
+                          : 'Video hazırlanıyor…')
+                    : (widget.isReel ? 'Reels’i Paylaş' : 'Videoyu Paylaş'),
+              ),
             ),
           ),
         ],
