@@ -597,6 +597,17 @@ class StoryService {
       'thumbnailUrl': story.thumbnailUrl,
       'thumbnailStoragePath': story.thumbnailStoragePath,
       'durationMs': story.durationMs,
+      'musicTrackId': story.musicTrackId,
+      'musicTitle': story.musicTitle,
+      'musicArtist': story.musicArtist,
+      'musicArtworkUrl': story.musicArtworkUrl,
+      'musicPreviewUrl': story.musicPreviewUrl,
+      'musicAudioUrl': story.musicPreviewUrl,
+      'musicStartMs': story.musicStartMs,
+      'musicDurationMs': story.musicDurationMs,
+      'musicStickerStyle': story.musicStickerStyle,
+      'musicLicense': story.musicLicense,
+      'musicSourceUrl': story.musicSourceUrl,
       'repostedFromStoryId': story.id,
     }).timeout(const Duration(seconds: 8));
     await _firestore

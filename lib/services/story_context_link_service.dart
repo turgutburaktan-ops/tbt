@@ -87,6 +87,8 @@ class StoryContextLinkService {
     required int startMs,
     required int durationMs,
     required String stickerStyle,
+    required String license,
+    required String sourceUrl,
   }) async {
     final latest = await _latestOwnStory();
     if (latest == null) return;
@@ -97,10 +99,13 @@ class StoryContextLinkService {
       'musicArtist': artist,
       'musicArtworkUrl': artworkUrl,
       'musicPreviewUrl': previewUrl,
+      'musicAudioUrl': previewUrl,
       'musicStartMs': startMs,
       'musicDurationMs': durationMs,
       'musicStickerStyle': stickerStyle,
-      'musicVersion': 1,
+      'musicLicense': license,
+      'musicSourceUrl': sourceUrl,
+      'musicVersion': 2,
       'musicLinkedAt': FieldValue.serverTimestamp(),
     });
   }

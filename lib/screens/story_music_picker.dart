@@ -1,6 +1,9 @@
+import 'dart:convert';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:http/http.dart' as http;
 
 class StoryMusicSelection {
   final String trackId;
@@ -38,10 +41,17 @@ class StoryMusicPicker extends StatefulWidget {
 }
 
 class _StoryMusicPickerState extends State<StoryMusicPicker> {
+  late final Future<List<_Track>> _commonsTracks;
   String _query = '';
   String _category = 'Senin için';
 
   static const _categories = <String>['Senin için', 'Trend', 'Türkçe', 'Yabancı', 'Kaydedilenler'];
+
+  @override
+  void initState() {
+    super.initState();
+    _commonsTracks = _fetchCommonsTracks();
+  }
 
   List<_Track> _filtered(List<_Track> tracks) => tracks.where((t) {
     if (!t.active) return false;
@@ -106,25 +116,33 @@ class _StoryMusicPickerState extends State<StoryMusicPicker> {
             ),
             const SizedBox(height: 8),
             Expanded(
-              child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-                stream: FirebaseFirestore.instance.collection('music_tracks').limit(160).snapshots(),
-                builder: (_, snapshot) {
-                  final remote = snapshot.hasData ? snapshot.data!.docs.map(_Track.fromDoc).toList() : <_Track>[];
-                  final merged = <String, _Track>{for (final t in _cc0Tracks) t.id: t, for (final t in remote) t.id: t}.values.toList();
-                  final tracks = _filtered(merged);
-                  if (tracks.isEmpty) {
-                    return const _MusicEmpty(
-                      title: 'Bu kategoride henüz müzik yok',
-                      subtitle: 'Yalnızca lisansı doğrulanmış parçaları gösteriyoruz.',
+              child: FutureBuilder<List<_Track>>(
+                future: _commonsTracks,
+                builder: (_, commonsSnapshot) => StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                  stream: FirebaseFirestore.instance.collection('music_tracks').limit(160).snapshots(),
+                  builder: (_, snapshot) {
+                    final remote = snapshot.hasData ? snapshot.data!.docs.map(_Track.fromDoc).toList() : <_Track>[];
+                    final commons = commonsSnapshot.data ?? const <_Track>[];
+                    final merged = <String, _Track>{
+                      for (final t in _cc0Tracks) t.id: t,
+                      for (final t in commons) t.id: t,
+                      for (final t in remote) t.id: t,
+                    }.values.toList();
+                    final tracks = _filtered(merged);
+                    if (tracks.isEmpty) {
+                      return const _MusicEmpty(
+                        title: 'Bu kategoride henüz müzik yok',
+                        subtitle: 'Yalnızca lisansı doğrulanmış parçaları gösteriyoruz.',
+                      );
+                    }
+                    return ListView.separated(
+                      padding: const EdgeInsets.fromLTRB(12, 4, 12, 24),
+                      itemCount: tracks.length,
+                      separatorBuilder: (_, __) => const Divider(height: 1, color: Colors.white10),
+                      itemBuilder: (_, i) => _TrackTile(track: tracks[i], onTap: () => _chooseClip(tracks[i])),
                     );
-                  }
-                  return ListView.separated(
-                    padding: const EdgeInsets.fromLTRB(12, 4, 12, 24),
-                    itemCount: tracks.length,
-                    separatorBuilder: (_, __) => const Divider(height: 1, color: Colors.white10),
-                    itemBuilder: (_, i) => _TrackTile(track: tracks[i], onTap: () => _chooseClip(tracks[i])),
-                  );
-                },
+                  },
+                ),
               ),
             ),
           ]),
@@ -294,22 +312,134 @@ class _Track {
 
   factory _Track.fromDoc(QueryDocumentSnapshot<Map<String, dynamic>> doc) {
     final d = doc.data();
+    final audioUrl = (d['audioUrl'] ?? d['previewUrl'] ?? '').toString().trim();
+    final rightsVerified = d['commercialUseAllowed'] == true &&
+        d['derivativesAllowed'] == true &&
+        d['catalogDistributionAllowed'] == true;
     return _Track(
       id: doc.id,
       title: (d['title'] ?? 'İsimsiz şarkı').toString(),
       artist: (d['artist'] ?? 'Bilinmeyen sanatçı').toString(),
       artworkUrl: (d['artworkUrl'] ?? '').toString(),
-      previewUrl: (d['previewUrl'] ?? '').toString(),
+      previewUrl: audioUrl,
       category: (d['category'] ?? 'Yabancı').toString(),
       durationMs: (d['durationMs'] as num?)?.toInt() ?? 15000,
       license: (d['license'] ?? '').toString(),
       sourceUrl: (d['sourceUrl'] ?? '').toString(),
-      active: d['active'] != false,
+      active: d['active'] != false && audioUrl.isNotEmpty && rightsVerified,
       saved: d['saved'] == true,
       trending: d['trending'] == true,
     );
   }
 }
+
+Future<List<_Track>> _fetchCommonsTracks() async {
+  try {
+    final uri = Uri.https('commons.wikimedia.org', '/w/api.php', <String, String>{
+      'action': 'query',
+      'format': 'json',
+      'formatversion': '2',
+      'origin': '*',
+      'generator': 'search',
+      'gsrsearch': 'filetype:audio deepcat:"Audio files of music" incategory:"CC-Zero"',
+      'gsrnamespace': '6',
+      'gsrlimit': '100',
+      'prop': 'videoinfo',
+      'viprop': 'url|duration|mime|derivatives|extmetadata',
+    });
+    final response = await http.get(
+      uri,
+      headers: const <String, String>{'User-Agent': 'TBT-Mobile/1.0 (story music catalog)'},
+    ).timeout(const Duration(seconds: 12));
+    if (response.statusCode != 200) return const <_Track>[];
+    final root = jsonDecode(response.body) as Map<String, dynamic>;
+    final pages = ((root['query'] as Map?)?['pages'] as List?) ?? const <dynamic>[];
+    final tracks = <_Track>[];
+    for (final rawPage in pages) {
+      if (rawPage is! Map) continue;
+      final page = Map<String, dynamic>.from(rawPage);
+      final infoList = page['videoinfo'] as List?;
+      if (infoList == null || infoList.isEmpty || infoList.first is! Map) continue;
+      final info = Map<String, dynamic>.from(infoList.first as Map);
+      final ext = info['extmetadata'] is Map
+          ? Map<String, dynamic>.from(info['extmetadata'] as Map)
+          : const <String, dynamic>{};
+      final license = _metaValue(ext['LicenseShortName']);
+      if (!license.toUpperCase().replaceAll(' ', '').contains('CC0')) continue;
+      final derivatives = (info['derivatives'] as List?) ?? const <dynamic>[];
+      String audioUrl = '';
+      for (final rawDerivative in derivatives) {
+        if (rawDerivative is! Map) continue;
+        final derivative = Map<String, dynamic>.from(rawDerivative);
+        final type = (derivative['type'] ?? '').toString().toLowerCase();
+        final key = (derivative['transcodekey'] ?? '').toString().toLowerCase();
+        if (type == 'audio/mpeg' || key.contains('mp3')) {
+          audioUrl = (derivative['src'] ?? '').toString();
+          if (audioUrl.isNotEmpty) break;
+        }
+      }
+      if (audioUrl.isEmpty && (info['mime'] ?? '').toString() == 'audio/mpeg') {
+        audioUrl = (info['url'] ?? '').toString();
+      }
+      if (audioUrl.isEmpty) continue;
+      final rawTitle = (page['title'] ?? 'İsimsiz parça').toString();
+      final title = rawTitle
+          .replaceFirst(RegExp(r'^File:'), '')
+          .replaceFirst(RegExp(r'\.(ogg|oga|mp3|wav|flac|webm)
+  _Track(id: 'cc0_komiku_wind', title: 'The Wind', artist: 'Komiku', artworkUrl: '', previewUrl: 'https://files.freemusicarchive.org/storage-freemusicarchive-org/music/Music_for_Video/Komiku/Tale_on_the_Late/Komiku_-_13_-_The_Wind.mp3', category: 'Yabancı', durationMs: 114000, license: 'CC0 1.0', sourceUrl: 'https://freemusicarchive.org/music/Komiku/Tale_on_the_Late/Komiku_-_Tale_on_the_Late_-_13_The_Wind/', trending: true),
+  _Track(id: 'cc0_komiku_remember', title: 'Remember the time we use to play', artist: 'Komiku', artworkUrl: '', previewUrl: 'https://files.freemusicarchive.org/storage-freemusicarchive-org/music/Music_for_Video/Komiku/Tale_on_the_Late/Komiku_-_02_-_Remember_the_time_we_use_to_play.mp3', category: 'Yabancı', durationMs: 96000, license: 'CC0 1.0', sourceUrl: 'https://commons.wikimedia.org/wiki/File:Komiku_-_02_-_Remember_the_time_we_use_to_play.ogg', trending: true),
+  _Track(id: 'cc0_monplaisir_free3', title: 'Free To Use 3', artist: 'Monplaisir', artworkUrl: '', previewUrl: 'https://files.freemusicarchive.org/storage-freemusicarchive-org/music/Music_for_Video/Monplaisir/Free_To_Use/Monplaisir_-_03_-_Free_To_Use_3.mp3', category: 'Yabancı', durationMs: 187000, license: 'CC0 1.0', sourceUrl: 'https://commons.wikimedia.org/wiki/File:Monplaisir_-_03_-_Free_To_Use_3.ogg'),
+  _Track(id: 'cc0_monplaisir_free12', title: 'Free To Use 12', artist: 'Monplaisir', artworkUrl: '', previewUrl: 'https://files.freemusicarchive.org/storage-freemusicarchive-org/music/Music_for_Video/Monplaisir/Free_To_Use/Monplaisir_-_12_-_Free_To_Use_12.mp3', category: 'Yabancı', durationMs: 114000, license: 'CC0 1.0', sourceUrl: 'https://commons.wikimedia.org/wiki/File:Monplaisir_-_12_-_Free_To_Use_12.ogg'),
+  _Track(id: 'cc0_monplaisir_close', title: 'Close to you', artist: 'Monplaisir', artworkUrl: '', previewUrl: 'https://files.freemusicarchive.org/storage-freemusicarchive-org/music/Music_for_Video/Monplaisir/Fifty_seconds_of_rain/Monplaisir_-_02_-_Close_to_you.mp3', category: 'Yabancı', durationMs: 137000, license: 'CC0 1.0', sourceUrl: 'https://commons.wikimedia.org/wiki/File:Monplaisir_-_02_-_Close_to_you.ogg'),
+  _Track(id: 'cc0_monplaisir_noneed', title: 'No need to', artist: 'Monplaisir', artworkUrl: '', previewUrl: 'https://files.freemusicarchive.org/storage-freemusicarchive-org/music/Music_for_Video/Monplaisir/Fifty_seconds_of_rain/Monplaisir_-_01_-_No_need_to.mp3', category: 'Yabancı', durationMs: 122000, license: 'CC0 1.0', sourceUrl: 'https://commons.wikimedia.org/wiki/File:Monplaisir_-_01_-_No_need_to.ogg'),
+  _Track(id: 'cc0_monplaisir_action', title: 'Action', artist: 'Monplaisir', artworkUrl: '', previewUrl: 'https://files.freemusicarchive.org/storage-freemusicarchive-org/music/WFMU/Monplaisir/American_Dreams_Soundtrack/Monplaisir_-_18_-_Action.mp3', category: 'Yabancı', durationMs: 190000, license: 'CC0 1.0', sourceUrl: 'https://commons.wikimedia.org/wiki/File:Monplaisir_-_18_-_Action.ogg', trending: true),
+  _Track(id: 'cc0_bartmann_bouncy', title: 'Bouncy Gypsy Beats', artist: 'John Bartmann', artworkUrl: '', previewUrl: 'https://files.freemusicarchive.org/storage-freemusicarchive-org/music/ccCommunity/John_Bartmann/Public_Domain_Soundtrack_Music_Album_One/John_Bartmann_-_03_-_Bouncy_Gypsy_Beats.mp3', category: 'Yabancı', durationMs: 260000, license: 'CC0 1.0', sourceUrl: 'https://commons.wikimedia.org/wiki/File:John_Bartmann_-_03_-_Bouncy_Gypsy_Beats.ogg'),
+];
+
+class _MusicEmpty extends StatelessWidget {
+  final String title, subtitle;
+  const _MusicEmpty({required this.title, required this.subtitle});
+  @override
+  Widget build(BuildContext context) => Center(child: Padding(padding: const EdgeInsets.all(28), child: Column(mainAxisSize: MainAxisSize.min, children: <Widget>[
+    const Icon(Icons.library_music_outlined, size: 54, color: Colors.white38),
+    const SizedBox(height: 12),
+    Text(title, textAlign: TextAlign.center, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
+    const SizedBox(height: 6),
+    Text(subtitle, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white54)),
+  ])));
+}
+, caseSensitive: false), '')
+          .replaceAll('_', ' ');
+      final artist = _plainText(_metaValue(ext['Artist']));
+      final pageUrl = 'https://commons.wikimedia.org/wiki/${Uri.encodeComponent(rawTitle.replaceAll(' ', '_'))}';
+      tracks.add(_Track(
+        id: 'commons_${page['pageid']}',
+        title: title,
+        artist: artist.isEmpty ? 'Wikimedia Commons' : artist,
+        artworkUrl: '',
+        previewUrl: audioUrl,
+        category: 'Yabancı',
+        durationMs: (((info['duration'] as num?)?.toDouble() ?? 15) * 1000).round(),
+        license: 'CC0 1.0',
+        sourceUrl: pageUrl,
+      ));
+    }
+    return tracks;
+  } catch (_) {
+    return const <_Track>[];
+  }
+}
+
+String _metaValue(dynamic value) {
+  if (value is Map) return (value['value'] ?? '').toString();
+  return value?.toString() ?? '';
+}
+
+String _plainText(String value) => value
+    .replaceAll(RegExp(r'<[^>]*>'), '')
+    .replaceAll('&nbsp;', ' ')
+    .replaceAll('&amp;', '&')
+    .trim();
 
 const List<_Track> _cc0Tracks = <_Track>[
   _Track(id: 'cc0_komiku_wind', title: 'The Wind', artist: 'Komiku', artworkUrl: '', previewUrl: 'https://files.freemusicarchive.org/storage-freemusicarchive-org/music/Music_for_Video/Komiku/Tale_on_the_Late/Komiku_-_13_-_The_Wind.mp3', category: 'Yabancı', durationMs: 114000, license: 'CC0 1.0', sourceUrl: 'https://freemusicarchive.org/music/Komiku/Tale_on_the_Late/Komiku_-_Tale_on_the_Late_-_13_The_Wind/', trending: true),

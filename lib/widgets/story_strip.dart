@@ -3,6 +3,7 @@ import 'dart:collection';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:just_audio/just_audio.dart';
 
 import '../models/app_story.dart';
 import '../screens/camera_screen.dart';
@@ -345,10 +346,13 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
   late final PageController _controller;
   late final List<AppStory> _stories;
   late final AnimationController _progress;
+  final AudioPlayer _musicPlayer = AudioPlayer();
   final _replyController = TextEditingController();
   final _replyFocusNode = FocusNode();
   int _index = 0;
   bool _sending = false;
+  bool _musicReady = false;
+  int _musicGeneration = 0;
 
   AppStory get _current => _stories[_index];
   bool get _mine => _current.userId == FirebaseAuth.instance.currentUser?.uid;
@@ -373,6 +377,8 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
 
   @override
   void dispose() {
+    _musicGeneration++;
+    unawaited(_musicPlayer.dispose());
     _replyFocusNode.removeListener(_handleReplyFocusChange);
     _replyFocusNode.dispose();
     _progress.dispose();
@@ -390,22 +396,57 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
   }
 
   Duration get _duration => Duration(
-        milliseconds: _current.isVideo
-            ? (_current.durationMs > 0
-                ? _current.durationMs.clamp(1000, 15000).toInt()
+        milliseconds: _current.hasMusic
+            ? (_current.musicDurationMs > 0
+                ? _current.musicDurationMs.clamp(1000, 15000).toInt()
                 : 15000)
-            : 7000,
+            : _current.isVideo
+                ? (_current.durationMs > 0
+                    ? _current.durationMs.clamp(1000, 15000).toInt()
+                    : 15000)
+                : 7000,
       );
 
   void _restartProgress() {
     _progress.stop();
     _progress.duration = _duration;
     _progress.forward(from: 0);
+    unawaited(_startCurrentMusic());
   }
 
-  void _pause() => _progress.stop();
+  Future<void> _startCurrentMusic() async {
+    final generation = ++_musicGeneration;
+    _musicReady = false;
+    await _musicPlayer.stop();
+    final story = _current;
+    if (!story.hasMusic) return;
+    try {
+      await _musicPlayer.setUrl(story.musicPreviewUrl);
+      if (generation != _musicGeneration || !mounted) return;
+      final start = Duration(milliseconds: story.musicStartMs.clamp(0, 86400000));
+      final clipLength = Duration(
+        milliseconds: (story.musicDurationMs > 0 ? story.musicDurationMs : 15000)
+            .clamp(1000, 15000),
+      );
+      await _musicPlayer.setClip(start: start, end: start + clipLength);
+      if (generation != _musicGeneration || !mounted) return;
+      _musicReady = true;
+      if (_progress.isAnimating) unawaited(_musicPlayer.play());
+    } catch (_) {
+      if (generation == _musicGeneration) _musicReady = false;
+    }
+  }
+
+  void _pause() {
+    _progress.stop();
+    unawaited(_musicPlayer.pause());
+  }
+
   void _resume() {
     if (!_progress.isCompleted) _progress.forward();
+    if (_musicReady && !_musicPlayer.playing) {
+      unawaited(_musicPlayer.play());
+    }
   }
 
   void _next() {
@@ -690,7 +731,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
           key: ValueKey(s.id),
           url: s.videoUrl,
           autoplay: true,
-          muted: false,
+          muted: s.hasMusic,
           loop: false,
           showControls: false,
           fit: BoxFit.cover,

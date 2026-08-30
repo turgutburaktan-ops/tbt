@@ -522,6 +522,8 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
           startMs: music.startMs,
           durationMs: music.clipDurationMs,
           stickerStyle: music.stickerStyle,
+          license: music.license,
+          sourceUrl: music.sourceUrl,
         );
       }
       if (mounted) Navigator.pop(context, true);
