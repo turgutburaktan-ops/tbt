@@ -385,7 +385,44 @@ Future<List<_Track>> _fetchCommonsTracks() async {
       final rawTitle = (page['title'] ?? 'İsimsiz parça').toString();
       final title = rawTitle
           .replaceFirst(RegExp(r'^File:'), '')
-          .replaceFirst(RegExp(r'\.(ogg|oga|mp3|wav|flac|webm)
+          .replaceFirst(
+            RegExp(r'\.(ogg|oga|mp3|wav|flac|webm)$', caseSensitive: false),
+            '',
+          )
+          .replaceAll('_', ' ');
+      final artist = _plainText(_metaValue(ext['Artist']));
+      final pageUrl =
+          'https://commons.wikimedia.org/wiki/${Uri.encodeComponent(rawTitle.replaceAll(' ', '_'))}';
+      tracks.add(_Track(
+        id: 'commons_${page['pageid']}',
+        title: title,
+        artist: artist.isEmpty ? 'Wikimedia Commons' : artist,
+        artworkUrl: '',
+        previewUrl: audioUrl,
+        category: 'Yabancı',
+        durationMs: (((info['duration'] as num?)?.toDouble() ?? 15) * 1000).round(),
+        license: 'CC0 1.0',
+        sourceUrl: pageUrl,
+      ));
+    }
+    return tracks;
+  } catch (_) {
+    return const <_Track>[];
+  }
+}
+
+String _metaValue(dynamic value) {
+  if (value is Map) return (value['value'] ?? '').toString();
+  return value?.toString() ?? '';
+}
+
+String _plainText(String value) => value
+    .replaceAll(RegExp(r'<[^>]*>'), '')
+    .replaceAll('&nbsp;', ' ')
+    .replaceAll('&amp;', '&')
+    .trim();
+
+const List<_Track> _cc0Tracks = <_Track>[
   _Track(id: 'cc0_komiku_wind', title: 'The Wind', artist: 'Komiku', artworkUrl: '', previewUrl: 'https://files.freemusicarchive.org/storage-freemusicarchive-org/music/Music_for_Video/Komiku/Tale_on_the_Late/Komiku_-_13_-_The_Wind.mp3', category: 'Yabancı', durationMs: 114000, license: 'CC0 1.0', sourceUrl: 'https://freemusicarchive.org/music/Komiku/Tale_on_the_Late/Komiku_-_Tale_on_the_Late_-_13_The_Wind/', trending: true),
   _Track(id: 'cc0_komiku_remember', title: 'Remember the time we use to play', artist: 'Komiku', artworkUrl: '', previewUrl: 'https://files.freemusicarchive.org/storage-freemusicarchive-org/music/Music_for_Video/Komiku/Tale_on_the_Late/Komiku_-_02_-_Remember_the_time_we_use_to_play.mp3', category: 'Yabancı', durationMs: 96000, license: 'CC0 1.0', sourceUrl: 'https://commons.wikimedia.org/wiki/File:Komiku_-_02_-_Remember_the_time_we_use_to_play.ogg', trending: true),
   _Track(id: 'cc0_monplaisir_free3', title: 'Free To Use 3', artist: 'Monplaisir', artworkUrl: '', previewUrl: 'https://files.freemusicarchive.org/storage-freemusicarchive-org/music/Music_for_Video/Monplaisir/Free_To_Use/Monplaisir_-_03_-_Free_To_Use_3.mp3', category: 'Yabancı', durationMs: 187000, license: 'CC0 1.0', sourceUrl: 'https://commons.wikimedia.org/wiki/File:Monplaisir_-_03_-_Free_To_Use_3.ogg'),
