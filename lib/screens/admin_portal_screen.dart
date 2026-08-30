@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
 import 'admin_businesses_v2_screen.dart';
+import 'admin_music_screen.dart';
 
 class AdminPortalScreen extends StatefulWidget {
   const AdminPortalScreen({super.key});
@@ -141,6 +142,14 @@ class _AdminPortalScreenState extends State<AdminPortalScreen> {
             'Kullanıcıların eklediği gezilecek yerleri onayla, reddet veya mükerrer işaretle.',
             '/admin-spot-submissions',
             accent: true,
+          ),
+          const SizedBox(height: 10),
+          _HeroAction(
+            icon: Icons.library_music_rounded,
+            title: 'Müzik Kataloğu',
+            subtitle: 'Sanatçı başvurularını ve hak bildirimlerini incele.',
+            button: 'Müzikleri Yönet',
+            onTap: () => _open(const AdminMusicScreen()),
           ),
           const SizedBox(height: 22),
           const Text(

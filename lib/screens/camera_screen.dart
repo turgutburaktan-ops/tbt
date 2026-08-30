@@ -3,16 +3,19 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../services/story_context_link_service.dart';
 import '../services/story_service.dart';
 import '../theme/app_theme.dart';
 import 'camera_video_post_screen.dart';
 import 'create_post_screen.dart';
+import 'story_music_picker.dart';
 import 'story_photo_editor_screen.dart';
 
 class CameraScreen extends StatefulWidget {
   final bool storyMode;
+  final StoryMusicSelection? initialMusic;
 
-  const CameraScreen({super.key, this.storyMode = false});
+  const CameraScreen({super.key, this.storyMode = false, this.initialMusic});
 
   @override
   State<CameraScreen> createState() => _CameraScreenState();
@@ -201,7 +204,7 @@ class _CameraScreenState extends State<CameraScreen>
         context,
         MaterialPageRoute(
           fullscreenDialog: true,
-          builder: (_) => StoryPhotoEditorScreen(photo: photo),
+          builder: (_) => StoryPhotoEditorScreen(photo: photo, initialMusic: widget.initialMusic),
         ),
       );
       if (!mounted) return;
@@ -224,6 +227,26 @@ class _CameraScreenState extends State<CameraScreen>
       try {
         setState(() => _returningFromCamera = true);
         await StoryService.instance.createVideoStory(video);
+        final music = widget.initialMusic;
+        if (music != null) {
+          await StoryContextLinkService.instance.attachMusicToLatestOwnStory(
+            trackId: music.trackId,
+            title: music.title,
+            artist: music.artist,
+            artworkUrl: music.artworkUrl,
+            previewUrl: music.previewUrl,
+            startMs: music.startMs,
+            durationMs: music.clipDurationMs,
+            stickerStyle: music.stickerStyle,
+            license: music.license,
+            sourceUrl: music.sourceUrl,
+            musicVolume: music.musicVolume,
+            originalAudioVolume: music.originalAudioVolume,
+            fadeInMs: music.fadeInMs,
+            fadeOutMs: music.fadeOutMs,
+            mood: music.mood,
+          );
+        }
         if (!mounted) return;
         Navigator.pop(context, true);
       } catch (error) {

@@ -608,6 +608,11 @@ class StoryService {
       'musicStickerStyle': story.musicStickerStyle,
       'musicLicense': story.musicLicense,
       'musicSourceUrl': story.musicSourceUrl,
+      'musicVolume': story.musicVolume,
+      'originalAudioVolume': story.originalAudioVolume,
+      'musicFadeInMs': story.musicFadeInMs,
+      'musicFadeOutMs': story.musicFadeOutMs,
+      'musicMood': story.musicMood,
       'repostedFromStoryId': story.id,
     }).timeout(const Duration(seconds: 8));
     await _firestore

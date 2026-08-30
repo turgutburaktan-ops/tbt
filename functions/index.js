@@ -316,15 +316,35 @@ exports.awardPostXp = onDocumentCreated('posts/{postId}', async (event) => {
   });
 });
 
+async function countMusicUsage(trackId) {
+  const clean = String(trackId || '').trim();
+  if (!clean) return;
+  await getFirestore().collection('music_usage').doc(clean).set({
+    storyCount: FieldValue.increment(1),
+    updatedAt: FieldValue.serverTimestamp(),
+  }, {merge: true});
+}
+
+exports.countStoryMusicLinked = onDocumentUpdated('stories/{storyId}', async (event) => {
+  const before = event.data?.before?.data() || {};
+  const after = event.data?.after?.data() || {};
+  const beforeId = String(before.musicTrackId || '');
+  const afterId = String(after.musicTrackId || '');
+  if (afterId && afterId !== beforeId) await countMusicUsage(afterId);
+});
+
 exports.awardStoryXp = onDocumentCreated('stories/{storyId}', async (event) => {
   const data = event.data?.data() || {};
-  await awardXp({
+  await Promise.all([
+    awardXp({
     userId: String(data.userId || data.ownerId || ''),
     points: 5,
     action: 'story',
     sourceId: event.params.storyId,
-    label: 'Story paylaştı',
-  });
+      label: 'Story paylaştı',
+    }),
+    countMusicUsage(data.musicTrackId),
+  ]);
 });
 
 exports.awardEventCreateXp = onDocumentCreated('social_events/{eventId}', async (event) => {

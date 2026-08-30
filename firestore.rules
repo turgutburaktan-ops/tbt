@@ -252,6 +252,43 @@ service cloud.firestore {
       allow delete: if false;
       match /messages/{messageId} { allow read: if threadMember(threadId); allow create: if threadMember(threadId) && threadUnblocked(threadId) && request.resource.data.senderId == request.auth.uid && request.resource.data.text is string && request.resource.data.text.size() > 0 && request.resource.data.text.size() <= 1500 && request.resource.data.deleted == false; allow update, delete: if false; }
     }
+    match /music_tracks/{trackId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+    match /music_usage/{trackId} {
+      allow read: if true;
+      allow write: if false;
+    }
+    match /music_submissions/{submissionId} {
+      allow read: if isAdmin() || (signedIn() && resource.data.submittedBy == request.auth.uid);
+      allow create: if signedIn() &&
+        request.resource.data.submittedBy == request.auth.uid &&
+        request.resource.data.status == 'pending' &&
+        request.resource.data.title is string &&
+        request.resource.data.title.size() >= 2 &&
+        request.resource.data.title.size() <= 120 &&
+        request.resource.data.artist is string &&
+        request.resource.data.artist.size() >= 2 &&
+        request.resource.data.artist.size() <= 120 &&
+        request.resource.data.audioUrl is string &&
+        request.resource.data.audioUrl.matches('^https://.+') &&
+        request.resource.data.commercialUseAllowed == true &&
+        request.resource.data.derivativesAllowed == true &&
+        request.resource.data.catalogDistributionAllowed == true;
+      allow update, delete: if isAdmin();
+    }
+    match /music_takedown_requests/{requestId} {
+      allow read: if isAdmin() || (signedIn() && resource.data.reporterId == request.auth.uid);
+      allow create: if signedIn() &&
+        request.resource.data.reporterId == request.auth.uid &&
+        request.resource.data.status == 'pending' &&
+        request.resource.data.trackId is string &&
+        request.resource.data.reason is string &&
+        request.resource.data.reason.size() >= 5 &&
+        request.resource.data.reason.size() <= 1000;
+      allow update, delete: if isAdmin();
+    }
     match /stories/{storyId} {
       allow read: if signedIn();
       allow create: if signedIn() && request.resource.data.userId == request.auth.uid && request.resource.data.expiresAt > request.time;

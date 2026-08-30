@@ -8,6 +8,7 @@ class AppVideoPlayer extends StatefulWidget {
   final File? file;
   final bool autoplay;
   final bool muted;
+  final double volume;
   final bool loop;
   final bool showControls;
   final BoxFit fit;
@@ -19,6 +20,7 @@ class AppVideoPlayer extends StatefulWidget {
     required String this.url,
     this.autoplay = false,
     this.muted = true,
+    this.volume = 1,
     this.loop = true,
     this.showControls = true,
     this.fit = BoxFit.contain,
@@ -31,6 +33,7 @@ class AppVideoPlayer extends StatefulWidget {
     required File this.file,
     this.autoplay = false,
     this.muted = true,
+    this.volume = 1,
     this.loop = true,
     this.showControls = true,
     this.fit = BoxFit.contain,
@@ -63,7 +66,7 @@ class _AppVideoPlayerState extends State<AppVideoPlayer> {
     try {
       await controller.initialize();
       await controller.setLooping(widget.loop);
-      await controller.setVolume(_muted ? 0 : 1);
+      await controller.setVolume(_muted ? 0 : widget.volume.clamp(0, 1));
       if (widget.autoplay) await controller.play();
       if (!mounted) return;
       setState(() => _ready = true);
@@ -94,7 +97,7 @@ class _AppVideoPlayerState extends State<AppVideoPlayer> {
     final controller = _controller;
     if (controller == null || !_ready) return;
     _muted = !_muted;
-    await controller.setVolume(_muted ? 0 : 1);
+    await controller.setVolume(_muted ? 0 : widget.volume.clamp(0, 1));
     if (mounted) setState(() {});
   }
 

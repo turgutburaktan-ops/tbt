@@ -7,6 +7,8 @@ import 'package:just_audio/just_audio.dart';
 
 import '../models/app_story.dart';
 import '../screens/camera_screen.dart';
+import '../screens/music_detail_screen.dart';
+import '../screens/story_music_picker.dart';
 import '../services/story_service.dart';
 import 'app_video_player.dart';
 import 'firebase_media_image.dart';
@@ -422,6 +424,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
     if (!story.hasMusic) return;
     try {
       await _musicPlayer.setUrl(story.musicPreviewUrl);
+      await _musicPlayer.setVolume(story.musicVolume.clamp(0, 1));
       if (generation != _musicGeneration || !mounted) return;
       final start = Duration(milliseconds: story.musicStartMs.clamp(0, 86400000));
       final clipLength = Duration(
@@ -722,6 +725,38 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
     });
   }
 
+  Future<void> _openMusicDetail() async {
+    final story = _current;
+    if (!story.hasMusic) return;
+    _pause();
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => MusicDetailScreen(
+          music: StoryMusicSelection(
+            trackId: story.musicTrackId,
+            title: story.musicTitle,
+            artist: story.musicArtist,
+            artworkUrl: story.musicArtworkUrl,
+            previewUrl: story.musicPreviewUrl,
+            durationMs: story.musicDurationMs,
+            startMs: story.musicStartMs,
+            clipDurationMs: story.musicDurationMs > 0 ? story.musicDurationMs : 15000,
+            stickerStyle: story.musicStickerStyle,
+            license: story.musicLicense,
+            sourceUrl: story.musicSourceUrl,
+            musicVolume: story.musicVolume,
+            originalAudioVolume: story.originalAudioVolume,
+            fadeInMs: story.musicFadeInMs,
+            fadeOutMs: story.musicFadeOutMs,
+            mood: story.musicMood,
+          ),
+        ),
+      ),
+    );
+    if (mounted) _resume();
+  }
+
   Widget _media(AppStory s, double width, double height) {
     if (s.isVideo && s.videoUrl.isNotEmpty) {
       return SizedBox(
@@ -731,7 +766,8 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
           key: ValueKey(s.id),
           url: s.videoUrl,
           autoplay: true,
-          muted: s.hasMusic,
+          muted: s.hasMusic && s.originalAudioVolume <= 0,
+          volume: s.hasMusic ? s.originalAudioVolume : 1,
           loop: false,
           showControls: false,
           fit: BoxFit.cover,
@@ -926,6 +962,24 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
                     ),
                   ),
                 ),
+                if (current.hasMusic)
+                  Positioned(
+                    left: 18,
+                    right: 18,
+                    bottom: 66,
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: FilledButton.tonalIcon(
+                        onPressed: _openMusicDetail,
+                        icon: const Icon(Icons.music_note_rounded, size: 18),
+                        label: Text(
+                          '${current.musicTitle} · ${current.musicArtist}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ),
+                  ),
                 Positioned(
                   left: 12,
                   right: 12,

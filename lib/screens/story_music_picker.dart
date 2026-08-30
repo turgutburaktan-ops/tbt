@@ -4,6 +4,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+
+import 'music_submission_screen.dart';
 
 class StoryMusicSelection {
   final String trackId;
@@ -17,6 +20,11 @@ class StoryMusicSelection {
   final String stickerStyle;
   final String license;
   final String sourceUrl;
+  final double musicVolume;
+  final double originalAudioVolume;
+  final int fadeInMs;
+  final int fadeOutMs;
+  final String mood;
 
   const StoryMusicSelection({
     required this.trackId,
@@ -30,7 +38,13 @@ class StoryMusicSelection {
     this.stickerStyle = 'minimal',
     this.license = '',
     this.sourceUrl = '',
+    this.musicVolume = .85,
+    this.originalAudioVolume = .25,
+    this.fadeInMs = 350,
+    this.fadeOutMs = 500,
+    this.mood = 'Seyahat',
   });
+}
 }
 
 class StoryMusicPicker extends StatefulWidget {
@@ -42,15 +56,79 @@ class StoryMusicPicker extends StatefulWidget {
 
 class _StoryMusicPickerState extends State<StoryMusicPicker> {
   late final Future<List<_Track>> _commonsTracks;
+  final AudioPlayer _previewPlayer = AudioPlayer();
+  final Set<String> _savedIds = <String>{};
+  final List<String> _recentIds = <String>[];
+  String _previewingId = '';
   String _query = '';
   String _category = 'Senin için';
 
-  static const _categories = <String>['Senin için', 'Trend', 'Türkçe', 'Yabancı', 'Kaydedilenler'];
+  static const _categories = <String>[
+    'Senin için', 'Trend', 'Yeni', 'Türkçe', 'Yabancı',
+    'Seyahat', 'Doğa', 'Enerjik', 'Sakin', 'Sinematik',
+    'Kaydedilenler', 'Son kullanılanlar',
+  ];
 
   @override
   void initState() {
     super.initState();
     _commonsTracks = _fetchCommonsTracks();
+    _loadLibraryState();
+  }
+
+  @override
+  void dispose() {
+    _previewPlayer.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadLibraryState() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    setState(() {
+      _savedIds.addAll(prefs.getStringList('story_music_saved') ?? const <String>[]);
+      _recentIds.addAll(prefs.getStringList('story_music_recent') ?? const <String>[]);
+    });
+  }
+
+  Future<void> _toggleSaved(String id) async {
+    setState(() => _savedIds.contains(id) ? _savedIds.remove(id) : _savedIds.add(id));
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList('story_music_saved', _savedIds.toList());
+  }
+
+  Future<void> _remember(String id) async {
+    _recentIds.remove(id);
+    _recentIds.insert(0, id);
+    if (_recentIds.length > 30) _recentIds.removeRange(30, _recentIds.length);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList('story_music_recent', _recentIds);
+  }
+
+  Future<void> _togglePreview(_Track track) async {
+    if (_previewingId == track.id) {
+      await _previewPlayer.stop();
+      if (mounted) setState(() => _previewingId = '');
+      return;
+    }
+    try {
+      await _previewPlayer.stop();
+      if (mounted) setState(() => _previewingId = track.id);
+      await _previewPlayer.setUrl(track.previewUrl);
+      await _previewPlayer.setClip(
+        start: Duration.zero,
+        end: Duration(milliseconds: track.durationMs.clamp(1000, 15000)),
+      );
+      await _previewPlayer.play();
+      if (mounted) setState(() => _previewingId = '');
+    } catch (_) {
+      if (mounted) {
+        setState(() => _previewingId = '');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Bu müzik şu anda önizlenemiyor.')),
+        );
+      }
+    }
   }
 
   List<_Track> _filtered(List<_Track> tracks) => tracks.where((t) {
@@ -58,7 +136,12 @@ class _StoryMusicPickerState extends State<StoryMusicPicker> {
     if (_query.isNotEmpty && !'${t.title} ${t.artist}'.toLowerCase().contains(_query)) return false;
     if (_category == 'Senin için') return true;
     if (_category == 'Trend') return t.trending;
-    if (_category == 'Kaydedilenler') return t.saved;
+    if (_category == 'Kaydedilenler') return _savedIds.contains(t.id);
+    if (_category == 'Son kullanılanlar') return _recentIds.contains(t.id);
+    if (_category == 'Yeni') return !t.trending;
+    if (const <String>{'Seyahat', 'Doğa', 'Enerjik', 'Sakin', 'Sinematik'}.contains(_category)) {
+      return t.mood == _category;
+    }
     return t.category.toLowerCase() == _category.toLowerCase();
   }).toList();
 
@@ -77,6 +160,14 @@ class _StoryMusicPickerState extends State<StoryMusicPicker> {
               padding: const EdgeInsets.fromLTRB(16, 14, 8, 8),
               child: Row(children: <Widget>[
                 const Expanded(child: Text('Müzik ekle', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900))),
+                TextButton.icon(
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const MusicSubmissionScreen()),
+                  ),
+                  icon: const Icon(Icons.upload_rounded, size: 18),
+                  label: const Text('Müziğini gönder'),
+                ),
                 IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close_rounded)),
               ]),
             ),
@@ -139,7 +230,17 @@ class _StoryMusicPickerState extends State<StoryMusicPicker> {
                       padding: const EdgeInsets.fromLTRB(12, 4, 12, 24),
                       itemCount: tracks.length,
                       separatorBuilder: (_, __) => const Divider(height: 1, color: Colors.white10),
-                      itemBuilder: (_, i) => _TrackTile(track: tracks[i], onTap: () => _chooseClip(tracks[i])),
+                      itemBuilder: (_, i) {
+                        final track = tracks[i];
+                        return _TrackTile(
+                          track: track,
+                          saved: _savedIds.contains(track.id),
+                          playing: _previewingId == track.id,
+                          onFavorite: () => _toggleSaved(track.id),
+                          onPreview: () => _togglePreview(track),
+                          onTap: () => _chooseClip(track),
+                        );
+                      },
                     );
                   },
                 ),
@@ -152,6 +253,9 @@ class _StoryMusicPickerState extends State<StoryMusicPicker> {
   }
 
   Future<void> _chooseClip(_Track track) async {
+    await _previewPlayer.stop();
+    if (mounted) setState(() => _previewingId = '');
+    await _remember(track.id);
     final selected = await showModalBottomSheet<StoryMusicSelection>(
       context: context,
       useSafeArea: true,
@@ -167,8 +271,16 @@ class _StoryMusicPickerState extends State<StoryMusicPicker> {
 
 class _TrackTile extends StatelessWidget {
   final _Track track;
-  final VoidCallback onTap;
-  const _TrackTile({required this.track, required this.onTap});
+  final bool saved, playing;
+  final VoidCallback onTap, onFavorite, onPreview;
+  const _TrackTile({
+    required this.track,
+    required this.saved,
+    required this.playing,
+    required this.onTap,
+    required this.onFavorite,
+    required this.onPreview,
+  });
 
   @override
   Widget build(BuildContext context) => ListTile(
@@ -185,7 +297,18 @@ class _TrackTile extends StatelessWidget {
     ),
     title: Text(track.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w800)),
     subtitle: Text('${track.artist}  •  ${track.license}', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white60)),
-    trailing: const Icon(Icons.play_circle_outline_rounded),
+    trailing: Row(mainAxisSize: MainAxisSize.min, children: <Widget>[
+      IconButton(
+        tooltip: saved ? 'Kaydedilenlerden çıkar' : 'Kaydet',
+        onPressed: onFavorite,
+        icon: Icon(saved ? Icons.bookmark_rounded : Icons.bookmark_border_rounded),
+      ),
+      IconButton(
+        tooltip: playing ? 'Durdur' : 'Dinle',
+        onPressed: onPreview,
+        icon: Icon(playing ? Icons.stop_circle_outlined : Icons.play_circle_outline_rounded),
+      ),
+    ]),
   );
 }
 
@@ -202,6 +325,10 @@ class _ClipSheetState extends State<_ClipSheet> {
   String _style = 'minimal';
   bool _loading = false;
   bool _playing = false;
+  double _musicVolume = .85;
+  double _originalVolume = .25;
+  double _fadeInMs = 350;
+  double _fadeOutMs = 500;
 
   @override
   void dispose() {
@@ -219,6 +346,7 @@ class _ClipSheetState extends State<_ClipSheet> {
     try {
       await _player.setUrl(widget.track.previewUrl);
       await _player.seek(Duration(milliseconds: _startMs.round()));
+      await _player.setVolume(_musicVolume);
       if (!mounted) return;
       setState(() { _loading = false; _playing = true; });
       await _player.play();
@@ -270,6 +398,35 @@ class _ClipSheetState extends State<_ClipSheet> {
           onChanged: maxStart == 0 ? null : (v) async { if (_playing) { await _player.stop(); _playing = false; } setState(() => _startMs = v); },
         ),
         Text('${(_startMs / 1000).toStringAsFixed(1)} sn → ${((_startMs + 15000) / 1000).toStringAsFixed(1)} sn', textAlign: TextAlign.center, style: const TextStyle(color: Colors.white60)),
+        const SizedBox(height: 12),
+        _MixSlider(
+          icon: Icons.music_note_rounded,
+          label: 'Müzik sesi',
+          value: _musicVolume,
+          onChanged: (v) async {
+            setState(() => _musicVolume = v);
+            await _player.setVolume(v);
+          },
+        ),
+        _MixSlider(
+          icon: Icons.movie_outlined,
+          label: 'Videonun sesi',
+          value: _originalVolume,
+          onChanged: (v) => setState(() => _originalVolume = v),
+        ),
+        Row(children: <Widget>[
+          Expanded(child: _FadeChoice(
+            label: 'Giriş',
+            value: _fadeInMs,
+            onChanged: (v) => setState(() => _fadeInMs = v),
+          )),
+          const SizedBox(width: 10),
+          Expanded(child: _FadeChoice(
+            label: 'Çıkış',
+            value: _fadeOutMs,
+            onChanged: (v) => setState(() => _fadeOutMs = v),
+          )),
+        ]),
         const SizedBox(height: 14),
         Wrap(spacing: 8, children: <Widget>[
           ChoiceChip(label: const Text('Minimal'), selected: _style == 'minimal', onSelected: (_) => setState(() => _style = 'minimal')),
@@ -294,6 +451,11 @@ class _ClipSheetState extends State<_ClipSheet> {
                 stickerStyle: _style,
                 license: widget.track.license,
                 sourceUrl: widget.track.sourceUrl,
+                musicVolume: _musicVolume,
+                originalAudioVolume: _originalVolume,
+                fadeInMs: _fadeInMs.round(),
+                fadeOutMs: _fadeOutMs.round(),
+                mood: widget.track.mood,
               )),
               child: const Text('Müziği ekle', style: TextStyle(fontWeight: FontWeight.w900)),
             ),
@@ -304,11 +466,39 @@ class _ClipSheetState extends State<_ClipSheet> {
   }
 }
 
+class _MixSlider extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final double value;
+  final ValueChanged<double> onChanged;
+  const _MixSlider({required this.icon, required this.label, required this.value, required this.onChanged});
+  @override
+  Widget build(BuildContext context) => Row(children: <Widget>[
+    Icon(icon, size: 20, color: Colors.white60),
+    const SizedBox(width: 8),
+    SizedBox(width: 105, child: Text(label, style: const TextStyle(fontWeight: FontWeight.w700))),
+    Expanded(child: Slider(value: value, onChanged: onChanged)),
+    SizedBox(width: 38, child: Text('%${(value * 100).round()}', textAlign: TextAlign.right)),
+  ]);
+}
+
+class _FadeChoice extends StatelessWidget {
+  final String label;
+  final double value;
+  final ValueChanged<double> onChanged;
+  const _FadeChoice({required this.label, required this.value, required this.onChanged});
+  @override
+  Widget build(BuildContext context) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: <Widget>[
+    Text('$label yumuşatma', style: const TextStyle(fontSize: 12, color: Colors.white60)),
+    Slider(value: value, min: 0, max: 1500, divisions: 6, onChanged: onChanged),
+  ]);
+}
+
 class _Track {
-  final String id, title, artist, artworkUrl, previewUrl, category, license, sourceUrl;
+  final String id, title, artist, artworkUrl, previewUrl, category, license, sourceUrl, mood;
   final int durationMs;
   final bool active, saved, trending;
-  const _Track({required this.id, required this.title, required this.artist, required this.artworkUrl, required this.previewUrl, required this.category, required this.durationMs, required this.license, required this.sourceUrl, this.active = true, this.saved = false, this.trending = false});
+  const _Track({required this.id, required this.title, required this.artist, required this.artworkUrl, required this.previewUrl, required this.category, required this.durationMs, required this.license, required this.sourceUrl, this.mood = 'Seyahat', this.active = true, this.saved = false, this.trending = false});
 
   factory _Track.fromDoc(QueryDocumentSnapshot<Map<String, dynamic>> doc) {
     final d = doc.data();
@@ -326,6 +516,7 @@ class _Track {
       durationMs: (d['durationMs'] as num?)?.toInt() ?? 15000,
       license: (d['license'] ?? '').toString(),
       sourceUrl: (d['sourceUrl'] ?? '').toString(),
+      mood: (d['mood'] ?? _inferMood((d['title'] ?? '').toString())).toString(),
       active: d['active'] != false && audioUrl.isNotEmpty && rightsVerified,
       saved: d['saved'] == true,
       trending: d['trending'] == true,
@@ -425,12 +616,22 @@ Future<List<_Track>> _fetchCommonsCategory({
         durationMs: (((info['duration'] as num?)?.toDouble() ?? 15) * 1000).round(),
         license: 'CC0 1.0',
         sourceUrl: pageUrl,
+        mood: _inferMood(title),
       ));
     }
     return tracks;
   } catch (_) {
     return const <_Track>[];
   }
+}
+
+String _inferMood(String title) {
+  final value = title.toLowerCase();
+  if (RegExp(r'nature|forest|river|rain|wind|garden|sea|ocean|doğa|orman|nehir|yağmur').hasMatch(value)) return 'Doğa';
+  if (RegExp(r'action|dance|battle|run|beat|party|enerji|dans').hasMatch(value)) return 'Enerjik';
+  if (RegExp(r'sad|calm|sleep|piano|quiet|ambient|sakin|hüzün').hasMatch(value)) return 'Sakin';
+  if (RegExp(r'cinema|film|epic|theme|dram|score|sinem').hasMatch(value)) return 'Sinematik';
+  return 'Seyahat';
 }
 
 String _metaValue(dynamic value) {

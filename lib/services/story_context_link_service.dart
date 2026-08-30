@@ -89,6 +89,11 @@ class StoryContextLinkService {
     required String stickerStyle,
     required String license,
     required String sourceUrl,
+    required double musicVolume,
+    required double originalAudioVolume,
+    required int fadeInMs,
+    required int fadeOutMs,
+    required String mood,
   }) async {
     final latest = await _latestOwnStory();
     if (latest == null) return;
@@ -105,7 +110,12 @@ class StoryContextLinkService {
       'musicStickerStyle': stickerStyle,
       'musicLicense': license,
       'musicSourceUrl': sourceUrl,
-      'musicVersion': 2,
+      'musicVolume': musicVolume.clamp(0, 1),
+      'originalAudioVolume': originalAudioVolume.clamp(0, 1),
+      'musicFadeInMs': fadeInMs.clamp(0, 1500),
+      'musicFadeOutMs': fadeOutMs.clamp(0, 1500),
+      'musicMood': mood,
+      'musicVersion': 3,
       'musicLinkedAt': FieldValue.serverTimestamp(),
     });
   }

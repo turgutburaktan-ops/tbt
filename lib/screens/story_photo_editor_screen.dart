@@ -16,7 +16,8 @@ import 'story_music_picker.dart';
 
 class StoryPhotoEditorScreen extends StatefulWidget {
   final File photo;
-  const StoryPhotoEditorScreen({super.key, required this.photo});
+  final StoryMusicSelection? initialMusic;
+  const StoryPhotoEditorScreen({super.key, required this.photo, this.initialMusic});
 
   @override
   State<StoryPhotoEditorScreen> createState() => _StoryPhotoEditorScreenState();
@@ -45,6 +46,23 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
   _Stroke? _activeStroke;
 
   double _bgScale = 1;
+
+  @override
+  void initState() {
+    super.initState();
+    final music = widget.initialMusic;
+    if (music != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        final size = MediaQuery.sizeOf(context);
+        setState(() {
+          _musicSelection = music;
+          _items.add(_OverlayItem.music(music, Offset(size.width * .5, size.height * .23)));
+          _selected = _items.length - 1;
+        });
+      });
+    }
+  }
   double _bgRotation = 0;
   double _bgStartScale = 1;
   double _bgStartRotation = 0;
@@ -524,6 +542,11 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
           stickerStyle: music.stickerStyle,
           license: music.license,
           sourceUrl: music.sourceUrl,
+          musicVolume: music.musicVolume,
+          originalAudioVolume: music.originalAudioVolume,
+          fadeInMs: music.fadeInMs,
+          fadeOutMs: music.fadeOutMs,
+          mood: music.mood,
         );
       }
       if (mounted) Navigator.pop(context, true);

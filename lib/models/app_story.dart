@@ -23,6 +23,11 @@ class AppStory {
   final String musicStickerStyle;
   final String musicLicense;
   final String musicSourceUrl;
+  final double musicVolume;
+  final double originalAudioVolume;
+  final int musicFadeInMs;
+  final int musicFadeOutMs;
+  final String musicMood;
   final DateTime createdAt;
   final DateTime expiresAt;
 
@@ -49,6 +54,11 @@ class AppStory {
     this.musicStickerStyle = 'minimal',
     this.musicLicense = '',
     this.musicSourceUrl = '',
+    this.musicVolume = .85,
+    this.originalAudioVolume = .25,
+    this.musicFadeInMs = 350,
+    this.musicFadeOutMs = 500,
+    this.musicMood = 'Seyahat',
     required this.createdAt,
     required this.expiresAt,
   });
@@ -91,11 +101,21 @@ class AppStory {
       musicStickerStyle: (data['musicStickerStyle'] ?? 'minimal').toString(),
       musicLicense: (data['musicLicense'] ?? '').toString(),
       musicSourceUrl: (data['musicSourceUrl'] ?? '').toString(),
+      musicVolume: _double(data['musicVolume'], .85),
+      originalAudioVolume: _double(data['originalAudioVolume'], .25),
+      musicFadeInMs: _int(data['musicFadeInMs']),
+      musicFadeOutMs: _int(data['musicFadeOutMs']),
+      musicMood: (data['musicMood'] ?? 'Seyahat').toString(),
       createdAt: _date(data['createdAt']) ?? DateTime.now(),
       expiresAt:
           _date(data['expiresAt']) ??
           DateTime.now().add(const Duration(hours: 24)),
     );
+  }
+
+  static double _double(dynamic value, double fallback) {
+    if (value is num) return value.toDouble().clamp(0, 1);
+    return double.tryParse(value?.toString() ?? '')?.clamp(0, 1) ?? fallback;
   }
 
   static int _int(dynamic value) {
