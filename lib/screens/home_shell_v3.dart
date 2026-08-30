@@ -224,7 +224,7 @@ class _HomeFeedHubState extends State<_HomeFeedHub> {
   }
 
   void _rememberSwipeStart(PointerDownEvent event) {
-    _swipeStart = event.localPosition.dx <= 32 ? event.localPosition : null;
+    _swipeStart = event.localPosition;
   }
 
   void _finishSwipe(PointerUpEvent event) {
@@ -232,7 +232,7 @@ class _HomeFeedHubState extends State<_HomeFeedHub> {
     _swipeStart = null;
     if (start == null || _section != 0) return;
     final delta = event.localPosition - start;
-    if (delta.dx < 82 || delta.dx.abs() < delta.dy.abs() * 1.25) return;
+    if (delta.dx < 105 || delta.dx.abs() < delta.dy.abs() * 1.4) return;
     _openCamera();
   }
 
