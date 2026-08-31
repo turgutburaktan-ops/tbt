@@ -211,7 +211,6 @@ class _HomeFeedHubState extends State<_HomeFeedHub> {
   final Set<int> _loadedPhotoModes = <int>{0};
   final ValueNotifier<double> _chromeCollapse = ValueNotifier<double>(0);
   Offset? _swipeStart;
-  DateTime? _swipeStartedAt;
   bool _openingCamera = false;
 
   @override
@@ -251,26 +250,19 @@ class _HomeFeedHubState extends State<_HomeFeedHub> {
   }
 
   void _rememberSwipeStart(PointerDownEvent event) {
-    if (event.localPosition.dx > 56) {
+    if (event.localPosition.dx > 72) {
       _swipeStart = null;
-      _swipeStartedAt = null;
       return;
     }
     _swipeStart = event.localPosition;
-    _swipeStartedAt = DateTime.now();
   }
 
   void _finishSwipe(PointerUpEvent event) {
     final start = _swipeStart;
-    final startedAt = _swipeStartedAt;
     _swipeStart = null;
-    _swipeStartedAt = null;
-    if (start == null || startedAt == null || _section != 0) return;
+    if (start == null || _section != 0) return;
     final delta = event.localPosition - start;
-    final elapsed = DateTime.now().difference(startedAt);
-    if (elapsed < const Duration(milliseconds: 120) ||
-        delta.dx < 135 ||
-        delta.dx.abs() < delta.dy.abs() * 1.8) {
+    if (delta.dx < 96 || delta.dx.abs() < delta.dy.abs() * 1.4) {
       return;
     }
     _openCamera();
@@ -344,10 +336,7 @@ class _HomeFeedHubState extends State<_HomeFeedHub> {
       behavior: HitTestBehavior.translucent,
       onPointerDown: _rememberSwipeStart,
       onPointerUp: _finishSwipe,
-      onPointerCancel: (_) {
-        _swipeStart = null;
-        _swipeStartedAt = null;
-      },
+      onPointerCancel: (_) => _swipeStart = null,
       child: ColoredBox(
         color: AppColors.background,
         child: Stack(
@@ -410,20 +399,31 @@ class _HomeFeedHubState extends State<_HomeFeedHub> {
               Positioned(
                 left: 0,
                 top: 150,
-                child: IgnorePointer(
-                  child: Container(
-                    width: 18,
-                    height: 68,
-                    decoration: const BoxDecoration(
-                      gradient: AppColors.accentGradient,
-                      borderRadius: BorderRadius.horizontal(
-                        right: Radius.circular(14),
+                child: Semantics(
+                  button: true,
+                  label: 'Kamerayı aç',
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: _openCamera,
+                    child: Container(
+                      width: 30,
+                      height: 72,
+                      alignment: Alignment.centerLeft,
+                      child: Container(
+                        width: 20,
+                        height: 68,
+                        decoration: const BoxDecoration(
+                          gradient: AppColors.accentGradient,
+                          borderRadius: BorderRadius.horizontal(
+                            right: Radius.circular(14),
+                          ),
+                        ),
+                        child: const Icon(
+                          Icons.chevron_right_rounded,
+                          size: 17,
+                          color: Colors.white,
+                        ),
                       ),
-                    ),
-                    child: const Icon(
-                      Icons.chevron_right_rounded,
-                      size: 16,
-                      color: Colors.white,
                     ),
                   ),
                 ),
