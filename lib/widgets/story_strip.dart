@@ -237,8 +237,8 @@ class _AddStoryCircle extends StatelessWidget {
                                 ),
                               )
                             : const Icon(
-                                Icons.add_rounded,
-                                size: 17,
+                                Icons.camera_alt_rounded,
+                                size: 14,
                                 color: Colors.black,
                               ),
                       ),
