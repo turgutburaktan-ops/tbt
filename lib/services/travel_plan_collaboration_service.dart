@@ -102,6 +102,14 @@ class TravelPlanCollaborationService {
     });
   }
 
+  Future<void> clearMeetingPoint(String planId) async {
+    _uid();
+    await _firestore.collection('travel_plans').doc(planId).update({
+      'meetingPoint': FieldValue.delete(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
   Future<void> vote(String planId, String proposalId) async {
     final uid = _uid();
     await _firestore
