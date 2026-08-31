@@ -55,7 +55,14 @@ class TravelPlanCollaborationService {
           .orderBy('createdAt', descending: true)
           .snapshots();
 
-  Future<void> propose(String planId, String text) async {
+  Future<void> propose(
+    String planId,
+    String text, {
+    String spotId = '',
+    double? latitude,
+    double? longitude,
+    String city = '',
+  }) async {
     final uid = _uid();
     final clean = text.trim();
     if (clean.isEmpty || clean.length > 180) return;
@@ -66,10 +73,33 @@ class TravelPlanCollaborationService {
         .add({
           'authorId': uid,
           'text': clean,
+          if (spotId.isNotEmpty) 'spotId': spotId,
+          if (latitude != null) 'latitude': latitude,
+          if (longitude != null) 'longitude': longitude,
+          if (city.isNotEmpty) 'city': city,
           'voterIds': <String>[],
           'createdAt': FieldValue.serverTimestamp(),
           'updatedAt': FieldValue.serverTimestamp(),
         });
+  }
+
+  Future<void> setMeetingPoint({
+    required String planId,
+    required String label,
+    required double latitude,
+    required double longitude,
+  }) async {
+    final uid = _uid();
+    await _firestore.collection('travel_plans').doc(planId).update({
+      'meetingPoint': {
+        'label': label.trim().isEmpty ? 'Buluşma noktası' : label.trim(),
+        'latitude': latitude,
+        'longitude': longitude,
+        'selectedBy': uid,
+        'updatedAt': FieldValue.serverTimestamp(),
+      },
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
   }
 
   Future<void> vote(String planId, String proposalId) async {
