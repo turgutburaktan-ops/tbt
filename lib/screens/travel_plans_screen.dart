@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../models/travel_plan.dart';
 import '../services/travel_plan_service.dart';
@@ -10,6 +11,18 @@ import 'travel_plan_invite_screen.dart';
 
 class TravelPlansScreen extends StatelessWidget {
   const TravelPlansScreen({super.key});
+
+  Future<void> _sharePlan(TravelPlan plan) async {
+    final stops = plan.spotNames
+        .asMap()
+        .entries
+        .map((entry) => '${entry.key + 1}. ${entry.value}')
+        .join('\n');
+    await Share.share(
+      '${plan.title}\n\n${plan.city} • ${plan.durationHours} saat • ${plan.transport} • ${plan.budget}\n\n$stops\n\nTBT ile hazırlandı.',
+      subject: plan.title,
+    );
+  }
 
   Future<void> _openRoute(BuildContext context, TravelPlan plan) async {
     final messenger = ScaffoldMessenger.of(context);
@@ -157,6 +170,11 @@ class TravelPlansScreen extends StatelessWidget {
                               ),
                             ],
                           ),
+                        ),
+                        IconButton(
+                          tooltip: 'Planı paylaş',
+                          onPressed: () => _sharePlan(plan),
+                          icon: const Icon(Icons.share_outlined),
                         ),
                         if (owned)
                           IconButton(

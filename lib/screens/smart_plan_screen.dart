@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../models/photo_spot.dart';
 import '../services/spot_repository.dart';
@@ -147,6 +148,103 @@ class _SmartPlanScreenState extends State<SmartPlanScreen> {
       ..showSnackBar(SnackBar(content: Text(text)));
   }
 
+  Future<void> _pickCity() async {
+    var query = '';
+    final selected = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.surface,
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (_, setSheetState) {
+          final normalizedQuery = _normalize(query.trim());
+          final matches = normalizedQuery.isEmpty
+              ? _cities
+              : _cities
+                    .where(
+                      (city) => _normalize(city).contains(normalizedQuery),
+                    )
+                    .toList(growable: false);
+          return SafeArea(
+            top: false,
+            child: SizedBox(
+              height: MediaQuery.sizeOf(sheetContext).height * .72,
+              child: Column(
+                children: [
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(
+                      14,
+                      14,
+                      14,
+                      MediaQuery.viewInsetsOf(sheetContext).bottom > 0 ? 8 : 12,
+                    ),
+                    child: TextField(
+                      autofocus: true,
+                      textCapitalization: TextCapitalization.words,
+                      decoration: const InputDecoration(
+                        hintText: 'Şehir ara',
+                        prefixIcon: Icon(Icons.search_rounded),
+                      ),
+                      onChanged: (value) =>
+                          setSheetState(() => query = value),
+                    ),
+                  ),
+                  Expanded(
+                    child: matches.isEmpty
+                        ? const Center(child: Text('Şehir bulunamadı'))
+                        : ListView.builder(
+                            keyboardDismissBehavior:
+                                ScrollViewKeyboardDismissBehavior.onDrag,
+                            itemCount: matches.length,
+                            itemBuilder: (_, index) {
+                              final city = matches[index];
+                              return ListTile(
+                                leading: const Icon(
+                                  Icons.location_city_outlined,
+                                ),
+                                title: Text(city),
+                                trailing: city == _city
+                                    ? const Icon(
+                                        Icons.check_circle_rounded,
+                                        color: AppColors.cyan,
+                                      )
+                                    : null,
+                                onTap: () =>
+                                    Navigator.pop(sheetContext, city),
+                              );
+                            },
+                          ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+    if (selected == null || !mounted) return;
+    setState(() {
+      _city = selected;
+      _generated = const [];
+      _title.text = '$selected gezi planı';
+    });
+  }
+
+  Future<void> _shareGenerated() async {
+    if (_generated.isEmpty) return;
+    final title = _title.text.trim().isEmpty
+        ? '${_city ?? ''} gezi planı'
+        : _title.text.trim();
+    final stops = _generated
+        .asMap()
+        .entries
+        .map((entry) => '${entry.key + 1}. ${entry.value.name}')
+        .join('\n');
+    await Share.share(
+      '$title\n\n${_city ?? ''} • $_duration saat • $_transport • $_budget\n\n$stops\n\nTBT ile hazırlandı.',
+      subject: title,
+    );
+  }
+
   Future<void> _save() async {
     if (_generated.isEmpty || _saving) return;
     if (FirebaseAuth.instance.currentUser == null) {
@@ -200,24 +298,16 @@ class _SmartPlanScreenState extends State<SmartPlanScreen> {
                   style: TextStyle(color: AppColors.textMuted, height: 1.4),
                 ),
                 const SizedBox(height: 16),
-                DropdownButtonFormField<String>(
-                  initialValue: _city,
+                TextFormField(
+                  key: ValueKey(_city),
+                  initialValue: _city ?? '',
+                  readOnly: true,
+                  onTap: _pickCity,
                   decoration: const InputDecoration(
-                    labelText: 'Şehir',
+                    labelText: 'Şehir ara ve seç',
                     prefixIcon: Icon(Icons.location_city_rounded),
+                    suffixIcon: Icon(Icons.search_rounded),
                   ),
-                  items: _cities
-                      .map(
-                        (city) => DropdownMenuItem(
-                          value: city,
-                          child: Text(city),
-                        ),
-                      )
-                      .toList(),
-                  onChanged: (value) => setState(() {
-                    _city = value;
-                    _generated = const [];
-                  }),
                 ),
                 const SizedBox(height: 18),
                 const Text('Ne kadar zamanın var?', style: _sectionStyle),
@@ -343,6 +433,12 @@ class _SmartPlanScreenState extends State<SmartPlanScreen> {
                     ),
                     icon: const Icon(Icons.route_rounded),
                     label: const Text('Rotayı Haritada Aç'),
+                  ),
+                  const SizedBox(height: 8),
+                  OutlinedButton.icon(
+                    onPressed: _shareGenerated,
+                    icon: const Icon(Icons.share_rounded),
+                    label: const Text('Planı Adıyla Paylaş'),
                   ),
                   const SizedBox(height: 8),
                   FilledButton.icon(
