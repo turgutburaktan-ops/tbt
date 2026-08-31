@@ -25,6 +25,25 @@ class AccountSecurityGateV2 extends StatefulWidget {
 
 class _AccountSecurityGateV2State extends State<AccountSecurityGateV2> {
   bool _phoneDeferredForSession = false;
+  bool _syncingAuthPhone = false;
+
+  void _syncVerifiedPhone(User user) {
+    if (_syncingAuthPhone) return;
+    _syncingAuthPhone = true;
+    Future.microtask(() async {
+      try {
+        await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+          'phoneVerified': true,
+          'verifiedPhoneNumber': user.phoneNumber,
+          'phoneVerifiedAt': FieldValue.serverTimestamp(),
+          'phoneVerificationDeferred': FieldValue.delete(),
+          'updatedAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
+      } finally {
+        _syncingAuthPhone = false;
+      }
+    });
+  }
 
   Future<void> _deferPhoneVerification() async {
     if (mounted) setState(() => _phoneDeferredForSession = true);
@@ -54,7 +73,13 @@ class _AccountSecurityGateV2State extends State<AccountSecurityGateV2> {
     final phoneDeferred =
         _phoneDeferredForSession ||
         widget.profile?['phoneVerificationDeferred'] == true;
-    if (widget.profile?['phoneVerified'] != true && !phoneDeferred) {
+    final authPhoneVerified = user?.phoneNumber?.trim().isNotEmpty == true;
+    if (authPhoneVerified && widget.profile?['phoneVerified'] != true) {
+      _syncVerifiedPhone(user!);
+    }
+    if (!authPhoneVerified &&
+        widget.profile?['phoneVerified'] != true &&
+        !phoneDeferred) {
       return _PhoneVerificationScreen(onSkip: _deferPhoneVerification);
     }
     return widget.child;
