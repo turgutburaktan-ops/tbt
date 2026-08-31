@@ -12,6 +12,7 @@ import '../widgets/story_strip.dart';
 import '../widgets/tbt_brand_mark.dart';
 import 'campus_home_screen.dart';
 import 'chat_inbox_screen.dart';
+import 'event_create_screen_v2.dart';
 import 'event_photo_create_screen.dart';
 import 'feed_screen.dart';
 import 'home_discover_screen.dart';
@@ -20,6 +21,7 @@ import 'main_camera_screen.dart';
 import 'map_screen.dart';
 import 'profile_page_v2.dart';
 import 'radar_screen.dart';
+import 'route_planner_screen.dart';
 import 'spot_explore_screen_v2.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -38,8 +40,9 @@ class _HomeScreenState extends State<HomeScreen> {
     return switch (index) {
       0 => const _HomeFeedHub(),
       1 => const _PlacesHub(),
-      2 => const _NearbyUnifiedHub(),
-      3 => const _ProfileGate(),
+      2 => _PlanningHub(onOpenNearby: () => _selectDestination(3)),
+      3 => const _NearbyUnifiedHub(),
+      4 => const _ProfileGate(),
       _ => const SizedBox.shrink(),
     };
   }
@@ -85,7 +88,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final pages = List<Widget>.generate(4, _tabPage, growable: false);
+    final pages = List<Widget>.generate(5, _tabPage, growable: false);
     final keyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
     return PopScope(
       canPop: false,
@@ -116,6 +119,7 @@ class _BottomNav extends StatelessWidget {
     const items = [
       (Icons.home_outlined, Icons.home_rounded, 'Ana Sayfa'),
       (Icons.place_outlined, Icons.place_rounded, 'Mekanlar'),
+      (Icons.explore_outlined, Icons.explore_rounded, 'Planla'),
       (Icons.near_me_outlined, Icons.near_me_rounded, 'Çevrende'),
       (Icons.person_outline_rounded, Icons.person_rounded, 'Profil'),
     ];
@@ -130,6 +134,7 @@ class _BottomNav extends StatelessWidget {
           children: List.generate(items.length, (index) {
             final item = items[index];
             final selected = selectedIndex == index;
+            final isPlanning = index == 2;
             return Expanded(
               child: InkWell(
                 onTap: () => onSelected(index),
@@ -139,10 +144,31 @@ class _BottomNav extends StatelessWidget {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      _GradientIcon(
-                        icon: selected ? item.$2 : item.$1,
-                        active: selected,
-                        size: 21,
+                      Container(
+                        width: isPlanning ? 34 : 26,
+                        height: isPlanning ? 27 : 23,
+                        decoration: isPlanning
+                            ? BoxDecoration(
+                                gradient: selected
+                                    ? AppColors.accentGradientHorizontal
+                                    : null,
+                                color: selected ? null : AppColors.surfaceStrong,
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                  color: selected
+                                      ? Colors.transparent
+                                      : AppColors.borderStrong,
+                                ),
+                              )
+                            : null,
+                        alignment: Alignment.center,
+                        child: isPlanning && selected
+                            ? Icon(item.$2, color: Colors.white, size: 20)
+                            : _GradientIcon(
+                                icon: selected ? item.$2 : item.$1,
+                                active: selected,
+                                size: 21,
+                              ),
                       ),
                       const SizedBox(height: 2),
                       Text(
@@ -581,6 +607,228 @@ class _PlacesHubState extends State<_PlacesHub> {
             ),
             Expanded(child: content),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PlanningHub extends StatelessWidget {
+  final VoidCallback onOpenNearby;
+
+  const _PlanningHub({required this.onOpenNearby});
+
+  void _open(BuildContext context, Widget page) {
+    Navigator.push(context, MaterialPageRoute(builder: (_) => page));
+  }
+
+  void _openAuthenticated(BuildContext context, Widget page) {
+    if (FirebaseAuth.instance.currentUser == null) {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(
+            content: Text('Plan oluşturmak için giriş yapmalısın.'),
+          ),
+        );
+      return;
+    }
+    _open(context, page);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ColoredBox(
+      color: AppColors.background,
+      child: SafeArea(
+        bottom: false,
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(14, 12, 14, 24),
+          children: [
+            const Row(
+              children: [
+                _GradientIcon(icon: Icons.explore_rounded, size: 27),
+                SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Planla',
+                        style: TextStyle(
+                          fontSize: 25,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: -.4,
+                        ),
+                      ),
+                      Text(
+                        'Gezini, etkinliğini ve buluşmanı buradan başlat.',
+                        style: TextStyle(
+                          color: AppColors.textMuted,
+                          fontSize: 11.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 18),
+            Container(
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                gradient: AppColors.subtleGradient,
+                borderRadius: BorderRadius.circular(22),
+                border: Border.all(color: AppColors.borderAccent),
+              ),
+              child: const Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Bugün ne yapmak istersin?',
+                          style: TextStyle(
+                            fontSize: 19,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                        SizedBox(height: 6),
+                        Text(
+                          'Rotanı kur, insanları bir araya getir veya çevrendeki planlara katıl.',
+                          style: TextStyle(
+                            color: AppColors.textMuted,
+                            fontSize: 12.5,
+                            height: 1.4,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(width: 14),
+                  _GradientIcon(icon: Icons.route_rounded, size: 48),
+                ],
+              ),
+            ),
+            const SizedBox(height: 14),
+            _PlanningActionCard(
+              icon: Icons.route_rounded,
+              title: 'Gezi Rotası Oluştur',
+              subtitle: 'Duraklarını seç, sırala ve yolculuğunu hazırla.',
+              accent: AppColors.cyan,
+              onTap: () => _open(context, const RoutePlannerScreen()),
+            ),
+            const SizedBox(height: 10),
+            _PlanningActionCard(
+              icon: Icons.event_available_rounded,
+              title: 'Etkinlik Oluştur',
+              subtitle: 'Tarih, konum ve ayrıntıları belirleyerek yayınla.',
+              accent: AppColors.violetBright,
+              onTap: () => _openAuthenticated(
+                context,
+                const EventCreateScreenV2(),
+              ),
+            ),
+            const SizedBox(height: 10),
+            _PlanningActionCard(
+              icon: Icons.groups_2_rounded,
+              title: 'Buluşma Başlat',
+              subtitle: 'Hızlı bir plan seç, detaylarını ekle ve paylaş.',
+              accent: AppColors.success,
+              onTap: () => _openAuthenticated(
+                context,
+                const EventPhotoCreateScreen(),
+              ),
+            ),
+            const SizedBox(height: 10),
+            _PlanningActionCard(
+              icon: Icons.near_me_rounded,
+              title: 'Yakınımda Ne Var?',
+              subtitle: 'Yakındaki etkinlikleri ve buluşmaları keşfet.',
+              accent: AppColors.warning,
+              onTap: onOpenNearby,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PlanningActionCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final Color accent;
+  final VoidCallback onTap;
+
+  const _PlanningActionCard({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.accent,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppColors.surface,
+      borderRadius: BorderRadius.circular(18),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(18),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 15),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: AppColors.border),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 46,
+                height: 46,
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: .13),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: accent.withValues(alpha: .32)),
+                ),
+                child: Icon(icon, color: accent, size: 24),
+              ),
+              const SizedBox(width: 13),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 14.5,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle,
+                      style: const TextStyle(
+                        color: AppColors.textMuted,
+                        fontSize: 11.5,
+                        height: 1.3,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              const Icon(
+                Icons.arrow_forward_ios_rounded,
+                color: AppColors.textSubtle,
+                size: 15,
+              ),
+            ],
+          ),
         ),
       ),
     );
