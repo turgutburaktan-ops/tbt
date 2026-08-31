@@ -137,6 +137,43 @@ class TravelPlanService {
     });
   }
 
+  Future<String> publishToFeed(TravelPlan plan) async {
+    final user = _requireUser();
+    if (plan.ownerId != user.uid) {
+      throw Exception('Yalnızca kendi rotanı paylaşabilirsin.');
+    }
+    final postRef = _firestore.collection('posts').doc('route_${plan.id}');
+    final existing = await postRef.get();
+    await _firestore.collection('travel_plans').doc(plan.id).update({
+      'isPublic': true,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+    await postRef.set({
+      'userId': user.uid,
+      'userName': (user.displayName ?? '').trim().isEmpty
+          ? 'TBT kullanıcısı'
+          : user.displayName!.trim(),
+      'userPhotoUrl': user.photoURL ?? '',
+      'mediaType': 'route',
+      'contentType': 'route',
+      'travelPlanId': plan.id,
+      'routeTitle': plan.title,
+      'routeCity': plan.city,
+      'routeDurationHours': plan.durationHours,
+      'routeBudget': plan.budget,
+      'routeTransport': plan.transport,
+      'routeSpotIds': plan.spotIds,
+      'routeSpotNames': plan.spotNames,
+      'routeStopSnapshots': plan.stopSnapshots,
+      'caption': '${plan.title} rotasını paylaştı.',
+      'spotName': plan.city,
+      'isPublic': true,
+      if (!existing.exists) 'createdAt': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+    return postRef.id;
+  }
+
   Future<void> addStop(String planId, PhotoSpot spot) async {
     _requireUser();
     await _firestore.collection('travel_plans').doc(planId).update({
