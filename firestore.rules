@@ -365,6 +365,21 @@ service cloud.firestore {
       match /followers/{uid} { allow read: if true; allow create, update: if signedIn() && uid == request.auth.uid && request.resource.data.userId == request.auth.uid; allow delete: if signedIn() && uid == request.auth.uid; }
     }
     match /photo_spots/{id} { allow read: if true; allow create, update, delete: if isAdmin(); }
+    match /travel_plans/{planId} {
+      allow read: if signedIn() && resource.data.memberIds.hasAny([request.auth.uid]);
+      allow create: if signedIn() && request.resource.data.ownerId == request.auth.uid &&
+        request.resource.data.memberIds is list && request.resource.data.memberIds.size() <= 60 &&
+        request.resource.data.memberIds.hasAny([request.auth.uid]) &&
+        request.resource.data.spotIds is list && request.resource.data.spotIds.size() >= 1 &&
+        request.resource.data.spotIds.size() <= 12 &&
+        request.resource.data.title is string && request.resource.data.title.size() >= 1 &&
+        request.resource.data.title.size() <= 80;
+      allow update: if signedIn() && resource.data.ownerId == request.auth.uid &&
+        request.resource.data.ownerId == resource.data.ownerId &&
+        request.resource.data.memberIds is list && request.resource.data.memberIds.size() <= 60 &&
+        request.resource.data.memberIds.hasAny([request.auth.uid]);
+      allow delete: if signedIn() && resource.data.ownerId == request.auth.uid;
+    }
     match /spot_submissions/{id} { allow read: if isAdmin() || (signedIn() && resource.data.submittedBy == request.auth.uid); allow create: if signedIn() && request.resource.data.submittedBy == request.auth.uid && request.resource.data.status == 'pending' && request.resource.data.coordinateVerified == false && request.resource.data.imageVerified == false && request.resource.data.name is string && request.resource.data.name.size() >= 3 && request.resource.data.name.size() <= 120; allow update, delete: if isAdmin(); }
     match /map_point_suggestions/{id} { allow read: if isAdmin() || (signedIn() && resource.data.ownerId == request.auth.uid); allow create: if signedIn() && request.resource.data.ownerId == request.auth.uid && request.resource.data.communitySuggested == true && request.resource.data.moderationStatus == 'pending' && request.resource.data.name is string && request.resource.data.name.size() >= 2 && request.resource.data.name.size() <= 60; allow update, delete: if isAdmin(); }
     match /venue_ratings/{venueKey} {

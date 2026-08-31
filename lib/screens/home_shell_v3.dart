@@ -22,7 +22,9 @@ import 'map_screen.dart';
 import 'profile_page_v2.dart';
 import 'radar_screen.dart';
 import 'route_planner_screen.dart';
+import 'smart_plan_screen.dart';
 import 'spot_explore_screen_v2.dart';
+import 'travel_plans_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -713,9 +715,54 @@ class _PlanningHub extends StatelessWidget {
             ),
             const SizedBox(height: 14),
             _PlanningActionCard(
+              icon: Icons.auto_awesome_rounded,
+              title: 'Akıllı Plan Oluştur',
+              subtitle: 'Şehir, süre ve ilgi alanına göre rotanı TBT hazırlasın.',
+              accent: AppColors.cyan,
+              featured: true,
+              onTap: () => _openAuthenticated(
+                context,
+                const SmartPlanScreen(),
+              ),
+            ),
+            const SizedBox(height: 10),
+            _PlanningActionCard(
+              icon: Icons.bookmarks_rounded,
+              title: 'Planlarım',
+              subtitle: 'Kaydettiğin ve davet edildiğin rotaları görüntüle.',
+              accent: AppColors.violetBright,
+              onTap: () => _openAuthenticated(
+                context,
+                const TravelPlansScreen(),
+              ),
+            ),
+            const SizedBox(height: 10),
+            _PlanningActionCard(
+              icon: Icons.group_add_rounded,
+              title: 'Arkadaşlarla Planla',
+              subtitle: 'Yeni bir rota hazırla ve arkadaşlarını davet et.',
+              accent: AppColors.success,
+              onTap: () => _openAuthenticated(
+                context,
+                const SmartPlanScreen(inviteAfterSave: true),
+              ),
+            ),
+            const Padding(
+              padding: EdgeInsets.fromLTRB(2, 20, 2, 10),
+              child: Text(
+                'HIZLI İŞLEMLER',
+                style: TextStyle(
+                  color: AppColors.textSubtle,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1.1,
+                ),
+              ),
+            ),
+            _PlanningActionCard(
               icon: Icons.route_rounded,
-              title: 'Gezi Rotası Oluştur',
-              subtitle: 'Duraklarını seç, sırala ve yolculuğunu hazırla.',
+              title: 'Manuel Rota Oluştur',
+              subtitle: 'Duraklarını kendin seç, sırala ve yolculuğunu hazırla.',
               accent: AppColors.cyan,
               onTap: () => _open(context, const RoutePlannerScreen()),
             ),
@@ -762,6 +809,7 @@ class _PlanningActionCard extends StatelessWidget {
   final String subtitle;
   final Color accent;
   final VoidCallback onTap;
+  final bool featured;
 
   const _PlanningActionCard({
     required this.icon,
@@ -769,12 +817,13 @@ class _PlanningActionCard extends StatelessWidget {
     required this.subtitle,
     required this.accent,
     required this.onTap,
+    this.featured = false,
   });
 
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: AppColors.surface,
+      color: featured ? AppColors.surfaceAlt : AppColors.surface,
       borderRadius: BorderRadius.circular(18),
       child: InkWell(
         onTap: onTap,
@@ -783,7 +832,9 @@ class _PlanningActionCard extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 15),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: AppColors.border),
+            border: Border.all(
+              color: featured ? AppColors.borderAccent : AppColors.border,
+            ),
           ),
           child: Row(
             children: [
