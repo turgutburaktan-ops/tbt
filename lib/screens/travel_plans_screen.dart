@@ -6,7 +6,9 @@ import '../models/travel_plan.dart';
 import '../services/travel_plan_service.dart';
 import '../theme/app_theme.dart';
 import 'route_planner_screen.dart';
+import 'offline_travel_plans_screen.dart';
 import 'smart_plan_screen.dart';
+import 'travel_plan_detail_screen.dart';
 import 'travel_plan_invite_screen.dart';
 
 class TravelPlansScreen extends StatelessWidget {
@@ -89,7 +91,21 @@ class TravelPlansScreen extends StatelessWidget {
     final currentUser = FirebaseAuth.instance.currentUser;
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('Planlarım')),
+      appBar: AppBar(
+        title: const Text('Planlarım'),
+        actions: [
+          IconButton(
+            tooltip: 'Çevrimdışı rotalar',
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const OfflineTravelPlansScreen(),
+              ),
+            ),
+            icon: const Icon(Icons.offline_pin_outlined),
+          ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => Navigator.push(
           context,
@@ -214,6 +230,15 @@ class TravelPlansScreen extends StatelessWidget {
                           ),
                         ),
                         const Spacer(),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: Wrap(
+                        spacing: 5,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
                         if (owned)
                           TextButton.icon(
                             onPressed: () => Navigator.push(
@@ -229,11 +254,22 @@ class TravelPlansScreen extends StatelessWidget {
                             label: const Text('Davet'),
                           ),
                         const SizedBox(width: 5),
-                        FilledButton(
+                        IconButton(
+                          tooltip: 'Haritada aç',
                           onPressed: () => _openRoute(context, plan),
-                          child: const Text('Rotayı Aç'),
+                          icon: const Icon(Icons.map_outlined),
                         ),
-                      ],
+                        FilledButton(
+                          onPressed: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => TravelPlanDetailScreen(plan: plan),
+                            ),
+                          ),
+                          child: const Text('Planı Aç'),
+                        ),
+                        ],
+                      ),
                     ),
                   ],
                 ),

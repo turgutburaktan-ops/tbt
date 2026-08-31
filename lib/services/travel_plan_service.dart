@@ -41,6 +41,12 @@ class TravelPlanService {
     required String transport,
     required List<String> interests,
     required List<PhotoSpot> spots,
+    DateTime? startAt,
+    double distanceKm = 0,
+    int travelMinutes = 0,
+    int estimatedBudget = 0,
+    String weatherSummary = '',
+    bool isPublic = false,
   }) async {
     final user = _requireUser();
     final reference = _firestore.collection('travel_plans').doc();
@@ -57,7 +63,28 @@ class TravelPlanService {
       'interests': interests,
       'spotIds': spots.map((spot) => spot.id).toList(growable: false),
       'spotNames': spots.map((spot) => spot.name).toList(growable: false),
+      'stopSnapshots': spots
+          .map(
+            (spot) => {
+              'id': spot.id,
+              'name': spot.name,
+              'city': spot.city,
+              'latitude': spot.latitude,
+              'longitude': spot.longitude,
+              'category': spot.category,
+              'bestTime': spot.bestTime,
+            },
+          )
+          .toList(growable: false),
       'memberIds': [user.uid],
+      'startAt': Timestamp.fromDate(startAt ?? DateTime.now()),
+      'distanceKm': distanceKm,
+      'travelMinutes': travelMinutes,
+      'estimatedBudget': estimatedBudget,
+      'weatherSummary': weatherSummary,
+      'isPublic': isPublic,
+      'ratingTotal': 0,
+      'ratingCount': 0,
       'createdAt': FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
     });
@@ -102,12 +129,85 @@ class TravelPlanService {
     await _firestore.collection('travel_plans').doc(planId).delete();
   }
 
+  Future<void> setPublic(String planId, bool value) async {
+    _requireUser();
+    await _firestore.collection('travel_plans').doc(planId).update({
+      'isPublic': value,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  Future<void> addStop(String planId, PhotoSpot spot) async {
+    _requireUser();
+    await _firestore.collection('travel_plans').doc(planId).update({
+      'spotIds': FieldValue.arrayUnion([spot.id]),
+      'spotNames': FieldValue.arrayUnion([spot.name]),
+      'stopSnapshots': FieldValue.arrayUnion([
+        {
+          'id': spot.id,
+          'name': spot.name,
+          'city': spot.city,
+          'latitude': spot.latitude,
+          'longitude': spot.longitude,
+          'category': spot.category,
+          'bestTime': spot.bestTime,
+        },
+      ]),
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  Stream<List<TravelPlan>> watchPublic() {
+    return _firestore
+        .collection('travel_plans')
+        .where('isPublic', isEqualTo: true)
+        .limit(80)
+        .snapshots()
+        .map((snapshot) {
+          final plans = snapshot.docs.map(TravelPlan.fromDoc).toList();
+          plans.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+          return plans;
+        });
+  }
+
+  Future<void> rate(String planId, int rating) async {
+    final user = _requireUser();
+    if (rating < 1 || rating > 5) return;
+    await _firestore
+        .collection('travel_plans')
+        .doc(planId)
+        .collection('ratings')
+        .doc(user.uid)
+        .set({
+          'userId': user.uid,
+          'rating': rating,
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+  }
+
   Future<List<PhotoSpot>> resolveSpots(TravelPlan plan) async {
     final all = await SpotRepository.instance.loadSpots();
     final byId = {for (final spot in all) spot.id: spot};
-    return plan.spotIds
-        .map((id) => byId[id])
-        .whereType<PhotoSpot>()
-        .toList(growable: false);
+    final snapshots = {
+      for (final item in plan.stopSnapshots) (item['id'] ?? '').toString(): item,
+    };
+    return plan.spotIds.map((id) {
+      final existing = byId[id];
+      if (existing != null) return existing;
+      final item = snapshots[id];
+      if (item == null) return null;
+      return PhotoSpot(
+        id: id,
+        name: (item['name'] ?? 'Rota durağı').toString(),
+        city: (item['city'] ?? plan.city).toString(),
+        latitude: (item['latitude'] as num?)?.toDouble() ?? 0,
+        longitude: (item['longitude'] as num?)?.toDouble() ?? 0,
+        rating: 0,
+        bestTime: (item['bestTime'] ?? '').toString(),
+        angle: '',
+        imageUrl: '',
+        category: (item['category'] ?? 'Mekan').toString(),
+      );
+    }).whereType<PhotoSpot>().toList(growable: false);
   }
 }

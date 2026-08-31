@@ -5,7 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../models/photo_spot.dart';
+import '../models/nearby_venue.dart';
+import '../services/nearby_venue_service.dart';
 import '../services/spot_repository.dart';
+import '../services/travel_intelligence_service.dart';
 import '../services/travel_plan_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/spot_image.dart';
@@ -32,6 +35,7 @@ class _SmartPlanScreenState extends State<SmartPlanScreen> {
   ];
 
   final _title = TextEditingController();
+  final _prompt = TextEditingController();
   List<PhotoSpot> _allSpots = const [];
   List<PhotoSpot> _generated = const [];
   List<String> _cities = const [];
@@ -42,6 +46,13 @@ class _SmartPlanScreenState extends State<SmartPlanScreen> {
   String _transport = 'Araç';
   bool _loading = true;
   bool _saving = false;
+  bool _generating = false;
+  bool _addFood = true;
+  bool _addCafe = true;
+  bool _addHotel = false;
+  DateTime _startAt = DateTime.now().add(const Duration(hours: 1));
+  RouteIntelligence? _intelligence;
+  int _estimatedBudget = 0;
 
   @override
   void initState() {
@@ -52,6 +63,7 @@ class _SmartPlanScreenState extends State<SmartPlanScreen> {
   @override
   void dispose() {
     _title.dispose();
+    _prompt.dispose();
     super.dispose();
   }
 
@@ -122,9 +134,79 @@ class _SmartPlanScreenState extends State<SmartPlanScreen> {
     return ordered;
   }
 
-  void _generate() {
+  void _applyPrompt() {
+    final prompt = _normalize(_prompt.text);
+    if (prompt.trim().isEmpty) return;
+    String? city;
+    for (final item in _cities) {
+      if (prompt.contains(_normalize(item))) {
+        city = item;
+        break;
+      }
+    }
+    final hourMatch = RegExp(r'(\d{1,2})\s*saat').firstMatch(prompt);
+    final parsedHours = int.tryParse(hourMatch?.group(1) ?? '');
+    final duration = parsedHours == null
+        ? _duration
+        : parsedHours <= 3
+        ? 3
+        : parsedHours <= 6
+        ? 5
+        : 8;
+    final transport = prompt.contains('yuru')
+        ? 'Yürüyüş'
+        : prompt.contains('bisiklet')
+        ? 'Bisiklet'
+        : prompt.contains('araba') || prompt.contains('arac')
+        ? 'Araç'
+        : _transport;
+    final budget = prompt.contains('ekonomik') || prompt.contains('ucuz')
+        ? 'Ekonomik'
+        : prompt.contains('rahat') || prompt.contains('butce sorun degil')
+        ? 'Rahat'
+        : _budget;
+    final interests = <String>{};
+    for (final interest in _interests) {
+      if (prompt.contains(_normalize(interest))) interests.add(interest);
+    }
+    setState(() {
+      _city = city ?? _city;
+      _duration = duration;
+      _transport = transport;
+      _budget = budget;
+      if (interests.isNotEmpty) {
+        _selectedInterests
+          ..clear()
+          ..addAll(interests);
+      }
+      _addFood = prompt.contains('yemek') || _addFood;
+      _addCafe = prompt.contains('kahve') || _addCafe;
+      _addHotel = prompt.contains('otel') || prompt.contains('konaklama');
+      _generated = const [];
+      _intelligence = null;
+    });
+    _message('İsteğin seçimlere uygulandı.');
+  }
+
+  PhotoSpot _venueSpot(NearbyVenue venue, String city) => PhotoSpot(
+    id: 'venue_${venue.category.name}_${venue.id}',
+    name: venue.name,
+    city: city,
+    latitude: venue.latitude,
+    longitude: venue.longitude,
+    rating: 0,
+    bestTime: venue.openingHours,
+    angle: '',
+    imageUrl: venue.imageUrl,
+    category: venue.category.label,
+    description: venue.description,
+    tags: [venue.category.label, city],
+  );
+
+  Future<void> _generate() async {
     final city = _city;
-    if (city == null) return;
+    if (city == null || _generating) return;
+    setState(() => _generating = true);
     final count = _duration <= 3
         ? 3
         : _duration <= 5
@@ -134,12 +216,73 @@ class _SmartPlanScreenState extends State<SmartPlanScreen> {
         .where((spot) => _normalize(spot.city) == _normalize(city))
         .toList()
       ..sort((a, b) => _score(b).compareTo(_score(a)));
-    final selected = _orderNearby(candidates.take(count).toList());
+    var selected = _orderNearby(candidates.take(count).toList());
+    if (selected.isEmpty) {
+      setState(() => _generating = false);
+      _message('$city için uygun rota bulunamadı.');
+      return;
+    }
+    try {
+      final center = selected[selected.length ~/ 2];
+      final categories = <NearbyVenueCategory>[
+        if (_addCafe) NearbyVenueCategory.cafe,
+        if (_addFood) NearbyVenueCategory.dining,
+        if (_addHotel) NearbyVenueCategory.hotel,
+      ];
+      final venueGroups = await Future.wait(
+        categories.map(
+          (category) => NearbyVenueService.instance.nearby(
+            category: category,
+            latitude: center.latitude,
+            longitude: center.longitude,
+            radiusMeters: 9000,
+          ),
+        ),
+      );
+      final venueStops = venueGroups
+          .where((group) => group.isNotEmpty)
+          .map((group) => _venueSpot(group.first, city));
+      selected = _orderNearby([...selected, ...venueStops]);
+    } catch (_) {}
+    var intelligence = await TravelIntelligenceService.instance.analyze(
+      selected,
+      transport: _transport,
+    );
+    final rainy = intelligence.weatherSummary.contains('Yağmurlu') ||
+        intelligence.weatherSummary.contains('Sağanak') ||
+        intelligence.weatherSummary.contains('Fırtınalı');
+    if (rainy) {
+      int indoorScore(PhotoSpot spot) {
+        final value = _normalize('${spot.category} ${spot.tags.join(' ')}');
+        return value.contains('muze') ||
+                value.contains('mimari') ||
+                value.contains('kafe') ||
+                value.contains('lezzet')
+            ? 1
+            : 0;
+      }
+      selected.sort((a, b) => indoorScore(b).compareTo(indoorScore(a)));
+      intelligence = await TravelIntelligenceService.instance.analyze(
+        selected,
+        transport: _transport,
+      );
+    }
+    final estimated = TravelIntelligenceService.instance.estimateBudget(
+      distanceKm: intelligence.distanceKm,
+      stopCount: selected.length,
+      budget: _budget,
+      transport: _transport,
+      mealStops: (_addFood ? 1 : 0) + (_addCafe ? 1 : 0),
+      hotel: _addHotel,
+    );
+    if (!mounted) return;
     setState(() {
       _generated = selected;
+      _intelligence = intelligence;
+      _estimatedBudget = estimated;
+      _generating = false;
       if (_title.text.trim().isEmpty) _title.text = '$city gezi planı';
     });
-    if (selected.isEmpty) _message('$city için uygun rota bulunamadı.');
   }
 
   void _message(String text) {
@@ -261,6 +404,11 @@ class _SmartPlanScreenState extends State<SmartPlanScreen> {
         transport: _transport,
         interests: _selectedInterests.toList(),
         spots: _generated,
+        startAt: _startAt,
+        distanceKm: _intelligence?.distanceKm ?? 0,
+        travelMinutes: _intelligence?.travelMinutes ?? 0,
+        estimatedBudget: _estimatedBudget,
+        weatherSummary: _intelligence?.weatherSummary ?? '',
       );
       if (!mounted) return;
       if (widget.inviteAfterSave) {
@@ -298,6 +446,24 @@ class _SmartPlanScreenState extends State<SmartPlanScreen> {
                   style: TextStyle(color: AppColors.textMuted, height: 1.4),
                 ),
                 const SizedBox(height: 16),
+                TextField(
+                  controller: _prompt,
+                  minLines: 2,
+                  maxLines: 4,
+                  decoration: InputDecoration(
+                    labelText: 'Nasıl bir plan istiyorsun?',
+                    hintText:
+                        'Örn: Elazığ’da arabayla 6 saat, tarih, yemek ve kahve ağırlıklı ekonomik rota',
+                    prefixIcon: const Icon(Icons.auto_awesome_rounded),
+                    suffixIcon: IconButton(
+                      tooltip: 'İsteği uygula',
+                      onPressed: _applyPrompt,
+                      icon: const Icon(Icons.arrow_forward_rounded),
+                    ),
+                  ),
+                  onSubmitted: (_) => _applyPrompt(),
+                ),
+                const SizedBox(height: 14),
                 TextFormField(
                   key: ValueKey(_city),
                   initialValue: _city ?? '',
@@ -308,6 +474,41 @@ class _SmartPlanScreenState extends State<SmartPlanScreen> {
                     prefixIcon: Icon(Icons.location_city_rounded),
                     suffixIcon: Icon(Icons.search_rounded),
                   ),
+                ),
+                const SizedBox(height: 12),
+                ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 4),
+                  leading: const Icon(Icons.schedule_rounded),
+                  title: const Text('Başlangıç: Konumum'),
+                  subtitle: Text(
+                    '${_startAt.day.toString().padLeft(2, '0')}.${_startAt.month.toString().padLeft(2, '0')}.${_startAt.year} • ${_startAt.hour.toString().padLeft(2, '0')}:${_startAt.minute.toString().padLeft(2, '0')}',
+                  ),
+                  trailing: const Icon(Icons.edit_calendar_outlined),
+                  onTap: () async {
+                    final date = await showDatePicker(
+                      context: context,
+                      firstDate: DateTime.now(),
+                      lastDate: DateTime.now().add(const Duration(days: 365)),
+                      initialDate: _startAt.isBefore(DateTime.now())
+                          ? DateTime.now()
+                          : _startAt,
+                    );
+                    if (date == null || !mounted) return;
+                    final time = await showTimePicker(
+                      context: context,
+                      initialTime: TimeOfDay.fromDateTime(_startAt),
+                    );
+                    if (time == null || !mounted) return;
+                    setState(() {
+                      _startAt = DateTime(
+                        date.year,
+                        date.month,
+                        date.day,
+                        time.hour,
+                        time.minute,
+                      );
+                    });
+                  },
                 ),
                 const SizedBox(height: 18),
                 const Text('Ne kadar zamanın var?', style: _sectionStyle),
@@ -381,16 +582,84 @@ class _SmartPlanScreenState extends State<SmartPlanScreen> {
                   ],
                 ),
                 const SizedBox(height: 14),
+                const Text('Molalar', style: _sectionStyle),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 7,
+                  children: [
+                    FilterChip(
+                      avatar: const Icon(Icons.restaurant_rounded, size: 17),
+                      label: const Text('Yemek'),
+                      selected: _addFood,
+                      onSelected: (value) => setState(() => _addFood = value),
+                    ),
+                    FilterChip(
+                      avatar: const Icon(Icons.local_cafe_rounded, size: 17),
+                      label: const Text('Kahve'),
+                      selected: _addCafe,
+                      onSelected: (value) => setState(() => _addCafe = value),
+                    ),
+                    FilterChip(
+                      avatar: const Icon(Icons.hotel_rounded, size: 17),
+                      label: const Text('Konaklama'),
+                      selected: _addHotel,
+                      onSelected: (value) => setState(() => _addHotel = value),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 14),
                 SizedBox(
                   height: 50,
                   child: FilledButton.icon(
-                    onPressed: _city == null ? null : _generate,
-                    icon: const Icon(Icons.auto_awesome_rounded),
-                    label: const Text('Planımı Hazırla'),
+                    onPressed: _city == null || _generating ? null : _generate,
+                    icon: _generating
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.auto_awesome_rounded),
+                    label: Text(
+                      _generating ? 'Rota hesaplanıyor…' : 'Planımı Hazırla',
+                    ),
                   ),
                 ),
                 if (_generated.isNotEmpty) ...[
                   const SizedBox(height: 24),
+                  if (_intelligence != null)
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      margin: const EdgeInsets.only(bottom: 14),
+                      decoration: BoxDecoration(
+                        gradient: AppColors.subtleGradient,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: AppColors.borderAccent),
+                      ),
+                      child: Wrap(
+                        spacing: 16,
+                        runSpacing: 10,
+                        children: [
+                          _PlanMetric(
+                            icon: Icons.route_rounded,
+                            text:
+                                '${_intelligence!.distanceKm.toStringAsFixed(1)} km',
+                          ),
+                          _PlanMetric(
+                            icon: Icons.schedule_rounded,
+                            text: '${_intelligence!.travelMinutes} dk yol',
+                          ),
+                          _PlanMetric(
+                            icon: Icons.payments_outlined,
+                            text: '≈ $_estimatedBudget TL',
+                          ),
+                          if (_intelligence!.weatherSummary.isNotEmpty)
+                            _PlanMetric(
+                              icon: Icons.cloud_outlined,
+                              text: _intelligence!.weatherSummary,
+                            ),
+                        ],
+                      ),
+                    ),
                   TextField(
                     controller: _title,
                     maxLength: 80,
@@ -468,3 +737,20 @@ class _SmartPlanScreenState extends State<SmartPlanScreen> {
 }
 
 const _sectionStyle = TextStyle(fontSize: 14, fontWeight: FontWeight.w900);
+
+class _PlanMetric extends StatelessWidget {
+  final IconData icon;
+  final String text;
+
+  const _PlanMetric({required this.icon, required this.text});
+
+  @override
+  Widget build(BuildContext context) => Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Icon(icon, size: 17, color: AppColors.cyan),
+      const SizedBox(width: 5),
+      Text(text, style: const TextStyle(fontWeight: FontWeight.w800)),
+    ],
+  );
+}

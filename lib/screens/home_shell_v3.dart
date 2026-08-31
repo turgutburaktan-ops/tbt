@@ -20,6 +20,7 @@ import 'login_screen.dart';
 import 'main_camera_screen.dart';
 import 'map_screen.dart';
 import 'profile_page_v2.dart';
+import 'public_travel_plans_screen.dart';
 import 'radar_screen.dart';
 import 'route_planner_screen.dart';
 import 'smart_plan_screen.dart';
@@ -745,6 +746,17 @@ class _PlanningHub extends StatelessWidget {
               onTap: () => _openAuthenticated(
                 context,
                 const SmartPlanScreen(inviteAfterSave: true),
+              ),
+            ),
+            const SizedBox(height: 10),
+            _PlanningActionCard(
+              icon: Icons.public_rounded,
+              title: 'Hazır Rotaları Keşfet',
+              subtitle: 'Topluluğun paylaştığı rotaları bul, puanla ve kaydet.',
+              accent: AppColors.warning,
+              onTap: () => _open(
+                context,
+                const PublicTravelPlansScreen(),
               ),
             ),
             const Padding(

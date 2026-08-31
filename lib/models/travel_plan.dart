@@ -12,6 +12,13 @@ class TravelPlan {
   final List<String> spotIds;
   final List<String> spotNames;
   final List<String> memberIds;
+  final List<Map<String, dynamic>> stopSnapshots;
+  final DateTime startAt;
+  final double distanceKm;
+  final int travelMinutes;
+  final int estimatedBudget;
+  final String weatherSummary;
+  final bool isPublic;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -27,6 +34,13 @@ class TravelPlan {
     required this.spotIds,
     required this.spotNames,
     required this.memberIds,
+    this.stopSnapshots = const [],
+    required this.startAt,
+    this.distanceKm = 0,
+    this.travelMinutes = 0,
+    this.estimatedBudget = 0,
+    this.weatherSummary = '',
+    this.isPublic = false,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -57,6 +71,19 @@ class TravelPlan {
       spotIds: strings('spotIds'),
       spotNames: strings('spotNames'),
       memberIds: strings('memberIds'),
+      stopSnapshots:
+          (data['stopSnapshots'] as List<dynamic>? ?? const <dynamic>[])
+              .whereType<Map>()
+              .map((item) => Map<String, dynamic>.from(item))
+              .toList(growable: false),
+      startAt: data['startAt'] is Timestamp
+          ? (data['startAt'] as Timestamp).toDate()
+          : readDate('createdAt'),
+      distanceKm: (data['distanceKm'] as num?)?.toDouble() ?? 0,
+      travelMinutes: (data['travelMinutes'] as num?)?.toInt() ?? 0,
+      estimatedBudget: (data['estimatedBudget'] as num?)?.toInt() ?? 0,
+      weatherSummary: (data['weatherSummary'] ?? '').toString(),
+      isPublic: data['isPublic'] == true,
       createdAt: readDate('createdAt'),
       updatedAt: readDate('updatedAt'),
     );

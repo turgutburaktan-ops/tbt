@@ -366,7 +366,8 @@ service cloud.firestore {
     }
     match /photo_spots/{id} { allow read: if true; allow create, update, delete: if isAdmin(); }
     match /travel_plans/{planId} {
-      allow read: if signedIn() && resource.data.memberIds.hasAny([request.auth.uid]);
+      allow read: if resource.data.get('isPublic', false) == true ||
+        (signedIn() && resource.data.memberIds.hasAny([request.auth.uid]));
       allow create: if signedIn() && request.resource.data.ownerId == request.auth.uid &&
         request.resource.data.memberIds is list && request.resource.data.memberIds.size() <= 60 &&
         request.resource.data.memberIds.hasAny([request.auth.uid]) &&
@@ -379,6 +380,46 @@ service cloud.firestore {
         request.resource.data.memberIds is list && request.resource.data.memberIds.size() <= 60 &&
         request.resource.data.memberIds.hasAny([request.auth.uid]);
       allow delete: if signedIn() && resource.data.ownerId == request.auth.uid;
+      match /ratings/{uid} {
+        allow read: if get(/databases/$(database)/documents/travel_plans/$(planId)).data.get('isPublic', false) == true;
+        allow create, update: if isSelf(uid) &&
+          get(/databases/$(database)/documents/travel_plans/$(planId)).data.get('isPublic', false) == true &&
+          request.resource.data.userId == uid && request.resource.data.rating is int &&
+          request.resource.data.rating >= 1 && request.resource.data.rating <= 5;
+        allow delete: if isSelf(uid);
+      }
+      match /messages/{messageId} {
+        allow read: if signedIn() && get(/databases/$(database)/documents/travel_plans/$(planId)).data.memberIds.hasAny([request.auth.uid]);
+        allow create: if signedIn() && get(/databases/$(database)/documents/travel_plans/$(planId)).data.memberIds.hasAny([request.auth.uid]) &&
+          request.resource.data.senderId == request.auth.uid && request.resource.data.text is string &&
+          request.resource.data.text.size() > 0 && request.resource.data.text.size() <= 1000;
+        allow update, delete: if false;
+      }
+      match /proposals/{proposalId} {
+        allow read: if signedIn() && get(/databases/$(database)/documents/travel_plans/$(planId)).data.memberIds.hasAny([request.auth.uid]);
+        allow create: if signedIn() && get(/databases/$(database)/documents/travel_plans/$(planId)).data.memberIds.hasAny([request.auth.uid]) &&
+          request.resource.data.authorId == request.auth.uid && request.resource.data.text is string &&
+          request.resource.data.text.size() > 0 && request.resource.data.text.size() <= 180 &&
+          request.resource.data.voterIds.size() == 0;
+        allow update: if signedIn() && (
+          (get(/databases/$(database)/documents/travel_plans/$(planId)).data.memberIds.hasAny([request.auth.uid]) &&
+            request.resource.data.diff(resource.data).affectedKeys().hasOnly(['voterIds','updatedAt']) &&
+            request.resource.data.voterIds.size() == resource.data.voterIds.size() + 1 &&
+            request.resource.data.voterIds.hasAll(resource.data.voterIds) &&
+            request.resource.data.voterIds.hasAny([request.auth.uid])) ||
+          (get(/databases/$(database)/documents/travel_plans/$(planId)).data.ownerId == request.auth.uid &&
+            request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','updatedAt']) &&
+            request.resource.data.status == 'accepted')
+        );
+        allow delete: if signedIn() && resource.data.authorId == request.auth.uid;
+      }
+      match /live_states/{uid} {
+        allow read: if signedIn() && get(/databases/$(database)/documents/travel_plans/$(planId)).data.memberIds.hasAny([request.auth.uid]);
+        allow create, update: if isSelf(uid) &&
+          get(/databases/$(database)/documents/travel_plans/$(planId)).data.memberIds.hasAny([request.auth.uid]) &&
+          request.resource.data.userId == uid;
+        allow delete: if isSelf(uid);
+      }
     }
     match /spot_submissions/{id} { allow read: if isAdmin() || (signedIn() && resource.data.submittedBy == request.auth.uid); allow create: if signedIn() && request.resource.data.submittedBy == request.auth.uid && request.resource.data.status == 'pending' && request.resource.data.coordinateVerified == false && request.resource.data.imageVerified == false && request.resource.data.name is string && request.resource.data.name.size() >= 3 && request.resource.data.name.size() <= 120; allow update, delete: if isAdmin(); }
     match /map_point_suggestions/{id} { allow read: if isAdmin() || (signedIn() && resource.data.ownerId == request.auth.uid); allow create: if signedIn() && request.resource.data.ownerId == request.auth.uid && request.resource.data.communitySuggested == true && request.resource.data.moderationStatus == 'pending' && request.resource.data.name is string && request.resource.data.name.size() >= 2 && request.resource.data.name.size() <= 60; allow update, delete: if isAdmin(); }
