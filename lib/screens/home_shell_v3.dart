@@ -185,6 +185,7 @@ class _HomeFeedHubState extends State<_HomeFeedHub> {
   final Set<int> _loadedPhotoModes = <int>{0};
   final ValueNotifier<double> _chromeCollapse = ValueNotifier<double>(0);
   Offset? _swipeStart;
+  DateTime? _swipeStartedAt;
   bool _openingCamera = false;
 
   @override
@@ -224,25 +225,59 @@ class _HomeFeedHubState extends State<_HomeFeedHub> {
   }
 
   void _rememberSwipeStart(PointerDownEvent event) {
+    if (event.localPosition.dx > 56) {
+      _swipeStart = null;
+      _swipeStartedAt = null;
+      return;
+    }
     _swipeStart = event.localPosition;
+    _swipeStartedAt = DateTime.now();
   }
 
   void _finishSwipe(PointerUpEvent event) {
     final start = _swipeStart;
+    final startedAt = _swipeStartedAt;
     _swipeStart = null;
-    if (start == null || _section != 0) return;
+    _swipeStartedAt = null;
+    if (start == null || startedAt == null || _section != 0) return;
     final delta = event.localPosition - start;
-    if (delta.dx < 105 || delta.dx.abs() < delta.dy.abs() * 1.4) return;
+    final elapsed = DateTime.now().difference(startedAt);
+    if (elapsed < const Duration(milliseconds: 120) ||
+        delta.dx < 135 ||
+        delta.dx.abs() < delta.dy.abs() * 1.8) {
+      return;
+    }
     _openCamera();
   }
 
   Future<void> _openCamera() async {
     if (_openingCamera) return;
     _openingCamera = true;
-    await Navigator.of(context).push<void>(
-      MaterialPageRoute(builder: (_) => const MainCameraScreen()),
-    );
-    _openingCamera = false;
+    try {
+      await Navigator.of(context).push<void>(
+        PageRouteBuilder<void>(
+          transitionDuration: const Duration(milliseconds: 360),
+          reverseTransitionDuration: const Duration(milliseconds: 260),
+          pageBuilder: (_, __, ___) => const MainCameraScreen(),
+          transitionsBuilder: (_, animation, __, child) {
+            final curved = CurvedAnimation(
+              parent: animation,
+              curve: Curves.easeOutCubic,
+              reverseCurve: Curves.easeInCubic,
+            );
+            return SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(-1, 0),
+                end: Offset.zero,
+              ).animate(curved),
+              child: child,
+            );
+          },
+        ),
+      );
+    } finally {
+      _openingCamera = false;
+    }
   }
 
   Widget _scrollLinkedChrome() => ValueListenableBuilder<double>(
@@ -283,13 +318,18 @@ class _HomeFeedHubState extends State<_HomeFeedHub> {
       behavior: HitTestBehavior.translucent,
       onPointerDown: _rememberSwipeStart,
       onPointerUp: _finishSwipe,
-      onPointerCancel: (_) => _swipeStart = null,
+      onPointerCancel: (_) {
+        _swipeStart = null;
+        _swipeStartedAt = null;
+      },
       child: ColoredBox(
         color: AppColors.background,
-        child: SafeArea(
-        bottom: false,
-        child: Column(
+        child: Stack(
           children: [
+            SafeArea(
+              bottom: false,
+              child: Column(
+                children: [
             const _HomeHeader(showBrand: true),
             Padding(
               padding: const EdgeInsets.fromLTRB(10, 0, 10, 2),
@@ -337,8 +377,32 @@ class _HomeFeedHubState extends State<_HomeFeedHub> {
                 ),
               ),
             ),
+                ],
+              ),
+            ),
+            if (_section == 0)
+              Positioned(
+                left: 0,
+                top: 150,
+                child: IgnorePointer(
+                  child: Container(
+                    width: 18,
+                    height: 68,
+                    decoration: const BoxDecoration(
+                      gradient: AppColors.accentGradient,
+                      borderRadius: BorderRadius.horizontal(
+                        right: Radius.circular(14),
+                      ),
+                    ),
+                    child: const Icon(
+                      Icons.chevron_right_rounded,
+                      size: 16,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
           ],
-        ),
         ),
       ),
     );

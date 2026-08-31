@@ -212,10 +212,17 @@ class StoryService {
     }
   }
 
-  Future<void> createVideoStory(File sourceVideo) async {
+  Future<void> createVideoStory(
+    File sourceVideo, {
+    String caption = '',
+  }) async {
     final user = _auth.currentUser;
     if (user == null) throw Exception('Story paylaşmak için giriş yapmalısın.');
     _enforceStoryCreateCooldown();
+    final cleanCaption = caption.trim();
+    if (cleanCaption.length > 120) {
+      throw Exception('Story yazısı en fazla 120 karakter olabilir.');
+    }
 
     final prepared = await VideoMediaService.instance
         .prepare(sourceVideo, maxDuration: const Duration(seconds: 15))
@@ -262,6 +269,7 @@ class StoryService {
         'thumbnailUrl': thumbnailUrl,
         'thumbnailStoragePath': thumbRef.fullPath,
         'durationMs': prepared.durationMs,
+        'caption': cleanCaption,
         'mentionedUserIds': const <String>[],
       };
       final batch = _firestore.batch();
@@ -597,6 +605,7 @@ class StoryService {
       'thumbnailUrl': story.thumbnailUrl,
       'thumbnailStoragePath': story.thumbnailStoragePath,
       'durationMs': story.durationMs,
+      'caption': story.caption,
       'musicTrackId': story.musicTrackId,
       'musicTitle': story.musicTitle,
       'musicArtist': story.musicArtist,

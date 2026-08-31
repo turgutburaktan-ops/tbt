@@ -1001,6 +1001,36 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
                     ),
                   ),
                 ),
+                if (current.caption.trim().isNotEmpty)
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      child: Center(
+                        child: Container(
+                          constraints: const BoxConstraints(maxWidth: 300),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 9,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: .52),
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: Text(
+                            current.caption,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 20,
+                              fontWeight: FontWeight.w900,
+                              shadows: [
+                                Shadow(color: Colors.black, blurRadius: 8),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
                 if (_musicFeatureVisible && current.hasMusic)
                   Positioned(
                     left: 18,

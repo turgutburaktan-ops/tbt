@@ -13,6 +13,7 @@ class AppStory {
   final String thumbnailUrl;
   final String thumbnailStoragePath;
   final int durationMs;
+  final String caption;
   final String musicTrackId;
   final String musicTitle;
   final String musicArtist;
@@ -44,6 +45,7 @@ class AppStory {
     required this.thumbnailUrl,
     required this.thumbnailStoragePath,
     required this.durationMs,
+    this.caption = '',
     this.musicTrackId = '',
     this.musicTitle = '',
     this.musicArtist = '',
@@ -91,6 +93,7 @@ class AppStory {
       thumbnailUrl: (data['thumbnailUrl'] ?? '').toString(),
       thumbnailStoragePath: (data['thumbnailStoragePath'] ?? '').toString(),
       durationMs: _int(data['durationMs']),
+      caption: (data['caption'] ?? '').toString(),
       musicTrackId: (data['musicTrackId'] ?? '').toString(),
       musicTitle: (data['musicTitle'] ?? '').toString(),
       musicArtist: (data['musicArtist'] ?? '').toString(),

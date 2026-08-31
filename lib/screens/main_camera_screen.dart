@@ -6,11 +6,11 @@ import 'package:camerawesome/pigeon.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
-import '../services/story_service.dart';
 import '../theme/app_theme.dart';
 import 'camera_video_post_screen.dart';
 import 'create_post_screen.dart';
 import 'story_photo_editor_screen.dart';
+import 'story_video_editor_screen.dart';
 
 enum CameraShareMode { story, reels, photo, video }
 
@@ -36,11 +36,12 @@ class _MainCameraScreenState extends State<MainCameraScreen> {
   bool _handlingCapture = false;
   bool _openingGallery = false;
   bool _showGrid = false;
+  bool _storyVideo = false;
 
   bool get _isVideoMode =>
-      _mode == CameraShareMode.story ||
       _mode == CameraShareMode.reels ||
-      _mode == CameraShareMode.video;
+      _mode == CameraShareMode.video ||
+      (_mode == CameraShareMode.story && _storyVideo);
 
   int get _videoLimitSeconds => _mode == CameraShareMode.story ? 15 : 60;
 
@@ -67,11 +68,28 @@ class _MainCameraScreenState extends State<MainCameraScreen> {
     if (_recordingState != null || _handlingCapture || mode == _mode) return;
     setState(() {
       _mode = mode;
+      if (mode == CameraShareMode.story) _storyVideo = false;
       _recordedSeconds = 0;
     });
     cameraState.setState(
-      mode == CameraShareMode.photo ? CaptureMode.photo : CaptureMode.video,
+      mode == CameraShareMode.photo || mode == CameraShareMode.story
+          ? CaptureMode.photo
+          : CaptureMode.video,
     );
+  }
+
+  void _selectStoryMedia(bool video, CameraState cameraState) {
+    if (_mode != CameraShareMode.story ||
+        _recordingState != null ||
+        _handlingCapture ||
+        _storyVideo == video) {
+      return;
+    }
+    setState(() {
+      _storyVideo = video;
+      _recordedSeconds = 0;
+    });
+    cameraState.setState(video ? CaptureMode.video : CaptureMode.photo);
   }
 
   Future<void> _capture(CameraState cameraState) async {
@@ -259,12 +277,14 @@ class _MainCameraScreenState extends State<MainCameraScreen> {
 
     if (mode == CameraShareMode.story) {
       if (isVideo) {
-        try {
-          await StoryService.instance.createVideoStory(file);
-          if (mounted) Navigator.pop(context, true);
-        } catch (error) {
-          _message(error.toString().replaceFirst('Exception: ', ''));
-        }
+        final shared = await Navigator.push<bool>(
+          context,
+          MaterialPageRoute(
+            fullscreenDialog: true,
+            builder: (_) => StoryVideoEditorScreen(video: file),
+          ),
+        );
+        if (mounted && shared == true) Navigator.pop(context, true);
         return;
       }
       final shared = await Navigator.push<bool>(
@@ -303,6 +323,7 @@ class _MainCameraScreenState extends State<MainCameraScreen> {
       body: CameraAwesomeBuilder.custom(
         saveConfig: SaveConfig.photoAndVideo(
           initialCaptureMode: _mode == CameraShareMode.photo
+                  || (_mode == CameraShareMode.story && !_storyVideo)
               ? CaptureMode.photo
               : CaptureMode.video,
           videoOptions: VideoOptions(enableAudio: true),
@@ -316,6 +337,31 @@ class _MainCameraScreenState extends State<MainCameraScreen> {
         ),
         previewFit: CameraPreviewFit.cover,
         enablePhysicalButton: true,
+        progressIndicator: const ColoredBox(
+          color: Colors.black,
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.photo_camera_rounded,
+                  color: AppColors.cyan,
+                  size: 38,
+                ),
+                SizedBox(height: 14),
+                CircularProgressIndicator(color: AppColors.cyan),
+                SizedBox(height: 12),
+                Text(
+                  'Kamera hazırlanıyor…',
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
         onMediaCaptureEvent: _onMediaCapture,
         builder: (cameraState, preview) {
           final recording = cameraState is VideoRecordingCameraState;
@@ -325,6 +371,7 @@ class _MainCameraScreenState extends State<MainCameraScreen> {
           return _CameraOverlay(
             state: cameraState,
             mode: _mode,
+            storyVideo: _storyVideo,
             recording: recording,
             recordedSeconds: _recordedSeconds,
             showGrid: _showGrid,
@@ -332,6 +379,8 @@ class _MainCameraScreenState extends State<MainCameraScreen> {
             onClose: () => Navigator.pop(context),
             onGallery: _openGallery,
             onCapture: () => _capture(cameraState),
+            onStoryMediaSelected: (video) =>
+                _selectStoryMedia(video, cameraState),
             onToggleGrid: () => setState(() => _showGrid = !_showGrid),
             onModeSelected: (mode) => _selectMode(mode, cameraState),
           );
@@ -344,6 +393,7 @@ class _MainCameraScreenState extends State<MainCameraScreen> {
 class _CameraOverlay extends StatelessWidget {
   final CameraState state;
   final CameraShareMode mode;
+  final bool storyVideo;
   final bool recording;
   final bool busy;
   final bool showGrid;
@@ -351,12 +401,14 @@ class _CameraOverlay extends StatelessWidget {
   final VoidCallback onClose;
   final VoidCallback onGallery;
   final VoidCallback onCapture;
+  final ValueChanged<bool> onStoryMediaSelected;
   final VoidCallback onToggleGrid;
   final ValueChanged<CameraShareMode> onModeSelected;
 
   const _CameraOverlay({
     required this.state,
     required this.mode,
+    required this.storyVideo,
     required this.recording,
     required this.busy,
     required this.showGrid,
@@ -364,6 +416,7 @@ class _CameraOverlay extends StatelessWidget {
     required this.onClose,
     required this.onGallery,
     required this.onCapture,
+    required this.onStoryMediaSelected,
     required this.onToggleGrid,
     required this.onModeSelected,
   });
@@ -376,13 +429,16 @@ class _CameraOverlay extends StatelessWidget {
   };
 
   String get _durationLabel => switch (mode) {
-    CameraShareMode.story => '15 sn',
+    CameraShareMode.story => storyVideo ? '15 sn' : 'Tek kare',
     CameraShareMode.reels => '60 sn',
     CameraShareMode.photo => 'Tek kare',
     CameraShareMode.video => '60 sn',
   };
 
-  bool get _videoMode => mode != CameraShareMode.photo;
+  bool get _videoMode =>
+      mode == CameraShareMode.reels ||
+      mode == CameraShareMode.video ||
+      (mode == CameraShareMode.story && storyVideo);
 
   String _clock(int seconds) {
     final minutes = seconds ~/ 60;
@@ -467,9 +523,19 @@ class _CameraOverlay extends StatelessWidget {
                   ),
                 ),
                 const Spacer(),
+                if (mode == CameraShareMode.story) ...[
+                  _StoryMediaSelector(
+                    video: storyVideo,
+                    enabled: !recording && !busy,
+                    onChanged: onStoryMediaSelected,
+                  ),
+                  const SizedBox(height: 12),
+                ],
                 Text(
                   switch (mode) {
-                    CameraShareMode.story => 'Anını çek ve Story olarak paylaş',
+                    CameraShareMode.story => storyVideo
+                        ? '15 saniyeye kadar videonu çek'
+                        : 'Fotoğrafını çek ve düzenlemeye devam et',
                     CameraShareMode.reels => 'Dikey videonu Reels olarak paylaş',
                     CameraShareMode.photo => 'Fotoğrafını çek, konumunu ekle ve paylaş',
                     CameraShareMode.video => 'Videonu çek ve ana akışta paylaş',
@@ -604,6 +670,84 @@ class _ModeButton extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _StoryMediaSelector extends StatelessWidget {
+  final bool video;
+  final bool enabled;
+  final ValueChanged<bool> onChanged;
+
+  const _StoryMediaSelector({
+    required this.video,
+    required this.enabled,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(3),
+      decoration: BoxDecoration(
+        color: Colors.black54,
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: Colors.white24),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _StoryMediaChoice(
+            label: 'Fotoğraf',
+            selected: !video,
+            enabled: enabled,
+            onTap: () => onChanged(false),
+          ),
+          _StoryMediaChoice(
+            label: 'Video',
+            selected: video,
+            enabled: enabled,
+            onTap: () => onChanged(true),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StoryMediaChoice extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final bool enabled;
+  final VoidCallback onTap;
+
+  const _StoryMediaChoice({
+    required this.label,
+    required this.selected,
+    required this.enabled,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: selected ? Colors.white : Colors.transparent,
+      borderRadius: BorderRadius.circular(999),
+      child: InkWell(
+        onTap: enabled ? onTap : null,
+        borderRadius: BorderRadius.circular(999),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Text(
+            label,
+            style: TextStyle(
+              color: selected ? Colors.black : Colors.white70,
+              fontSize: 12,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
         ),
       ),
     );
