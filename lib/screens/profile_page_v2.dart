@@ -66,6 +66,29 @@ class _ProfileBody extends StatefulWidget {
 class _ProfileBodyState extends State<_ProfileBody> {
   String _tab = 'all';
 
+  Future<void> _openRoutePost(Map<String, dynamic> data) async {
+    final planId = (data['travelPlanId'] ?? '').toString();
+    if (planId.isEmpty) return;
+    final snapshot = await FirebaseFirestore.instance
+        .collection('travel_plans')
+        .doc(planId)
+        .get();
+    if (!mounted) return;
+    if (!snapshot.exists) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Bu rota artık kullanılamıyor.')),
+      );
+      return;
+    }
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) =>
+            TravelPlanDetailScreen(plan: TravelPlan.fromDoc(snapshot)),
+      ),
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -243,6 +266,8 @@ class _ProfileBodyState extends State<_ProfileBody> {
                           final isVideo =
                               (data['mediaType'] ?? '').toString() == 'video' ||
                               (data['videoUrl'] ?? '').toString().isNotEmpty;
+                          final isRoute =
+                              (data['mediaType'] ?? '').toString() == 'route';
                           return _PostTile(
                             imageUrl: imageUrl,
                             storagePath: storagePath,
@@ -251,14 +276,17 @@ class _ProfileBodyState extends State<_ProfileBody> {
                               doc.id,
                             ),
                             isVideo: isVideo,
-                            onTap: () => Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => PostDetailScreen(
-                                  post: {...data, 'id': doc.id},
-                                ),
-                              ),
-                            ),
+                            isRoute: isRoute,
+                            onTap: () => isRoute
+                                ? _openRoutePost(data)
+                                : Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => PostDetailScreen(
+                                        post: {...data, 'id': doc.id},
+                                      ),
+                                    ),
+                                  ),
                           );
                         }, childCount: posts.length),
                       ),
@@ -789,6 +817,28 @@ class _ModuleCard extends StatelessWidget {
 class _ProfileRoutesSection extends StatelessWidget {
   const _ProfileRoutesSection();
 
+  Future<void> _publish(BuildContext context, TravelPlan plan) async {
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await TravelPlanService.instance.publishToFeed(plan);
+      if (!context.mounted) return;
+      messenger
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(content: Text('Rota profilinde ve akışta paylaşıldı.')),
+        );
+    } catch (error) {
+      if (!context.mounted) return;
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            'Rota paylaşılamadı: ${error.toString().replaceFirst('Exception: ', '')}',
+          ),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) => StreamBuilder<List<TravelPlan>>(
     stream: TravelPlanService.instance.watchMine(),
@@ -863,7 +913,11 @@ class _ProfileRoutesSection extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  trailing: const Icon(Icons.chevron_right_rounded),
+                  trailing: IconButton(
+                    tooltip: 'Rotayı paylaş',
+                    onPressed: () => _publish(context, plan),
+                    icon: const Icon(Icons.ios_share_rounded),
+                  ),
                   onTap: () => Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -886,12 +940,14 @@ class _PostTile extends StatelessWidget {
   final String storagePath;
   final List<String> fallbackStoragePaths;
   final bool isVideo;
+  final bool isRoute;
   final VoidCallback onTap;
   const _PostTile({
     required this.imageUrl,
     required this.storagePath,
     required this.fallbackStoragePaths,
     required this.isVideo,
+    this.isRoute = false,
     required this.onTap,
   });
 
@@ -904,15 +960,23 @@ class _PostTile extends StatelessWidget {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          FirebaseMediaImage(
-            imageUrl: imageUrl,
-            storagePath: storagePath,
-            fallbackStoragePaths: fallbackStoragePaths,
-            fit: BoxFit.cover,
-            errorWidget: const Center(
-              child: Icon(Icons.image_outlined, color: Colors.white30),
+          if (isRoute)
+            const DecoratedBox(
+              decoration: BoxDecoration(gradient: AppColors.subtleGradient),
+              child: Center(
+                child: Icon(Icons.route_rounded, size: 36, color: Colors.white),
+              ),
+            )
+          else
+            FirebaseMediaImage(
+              imageUrl: imageUrl,
+              storagePath: storagePath,
+              fallbackStoragePaths: fallbackStoragePaths,
+              fit: BoxFit.cover,
+              errorWidget: const Center(
+                child: Icon(Icons.image_outlined, color: Colors.white30),
+              ),
             ),
-          ),
           if (isVideo)
             const Positioned(
               right: 6,
