@@ -15,6 +15,7 @@ import 'screens/admin_insights_screen.dart';
 import 'screens/admin_operations_screen.dart';
 import 'screens/admin_portal_screen.dart';
 import 'screens/admin_spot_submissions_screen.dart';
+import 'screens/admin_published_spots_screen.dart';
 import 'screens/app_entry_gate.dart';
 import 'screens/business_hub_screen.dart';
 import 'screens/managed_venues_screen.dart';
@@ -287,6 +288,7 @@ class _BestPhotoSpotAppState extends State<BestPhotoSpotApp> {
       '/admin-preview': (_) => const AdminRolePreviewScreen(),
       '/admin-insights': (_) => const AdminInsightsScreen(),
       '/admin-spot-submissions': (_) => const AdminSpotSubmissionsScreen(),
+      '/admin-published-spots': (_) => const AdminPublishedSpotsScreen(),
       '/moderation': (_) => const ModerationCenterScreen(),
       '/safety-privacy': (_) => const SafetyPrivacyCenterScreen(),
       '/search': (_) => const GlobalSearchScreen(),
