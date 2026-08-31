@@ -12,6 +12,7 @@ import '../widgets/story_strip.dart';
 import '../widgets/tbt_brand_mark.dart';
 import 'campus_home_screen.dart';
 import 'chat_inbox_screen.dart';
+import 'collaborative_plans_screen.dart';
 import 'event_create_screen_v2.dart';
 import 'event_photo_create_screen.dart';
 import 'feed_screen.dart';
@@ -745,7 +746,7 @@ class _PlanningHub extends StatelessWidget {
               accent: AppColors.success,
               onTap: () => _openAuthenticated(
                 context,
-                const SmartPlanScreen(inviteAfterSave: true),
+                const CollaborativePlansScreen(),
               ),
             ),
             const SizedBox(height: 10),
