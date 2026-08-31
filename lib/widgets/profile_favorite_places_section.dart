@@ -21,11 +21,15 @@ import '../services/nearby_venue_service.dart';
 class ProfileFavoritePlacesSection extends StatelessWidget {
   final String userId;
   final bool editable;
+  final bool showProgress;
+  final bool showFavorites;
 
   const ProfileFavoritePlacesSection({
     super.key,
     required this.userId,
     this.editable = false,
+    this.showProgress = true,
+    this.showFavorites = true,
   });
 
   static const _types = <_FavoriteType>[
@@ -84,7 +88,7 @@ class ProfileFavoritePlacesSection extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (editable || xp > 0) ...[
+              if (showProgress && (editable || xp > 0)) ...[
                 _ProgressCard(
                   xp: xp,
                   level: _levelName(xp),
@@ -94,7 +98,7 @@ class ProfileFavoritePlacesSection extends StatelessWidget {
                 ),
                 const SizedBox(height: 14),
               ],
-              if (editable || hasAny) ...[
+              if (showFavorites && (editable || hasAny)) ...[
                 Row(
                   children: [
                     const Expanded(

@@ -6,9 +6,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../models/travel_plan.dart';
 import '../services/auth_service.dart';
 import '../services/profile_service.dart';
 import '../services/social_service.dart';
+import '../services/travel_plan_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/firebase_media_image.dart';
 import '../widgets/profile_favorite_places_section.dart';
@@ -17,6 +19,8 @@ import 'follow_list_screen.dart';
 import 'login_screen.dart';
 import 'main_camera_screen.dart';
 import 'post_detail_screen.dart';
+import 'smart_plan_screen.dart';
+import 'travel_plan_detail_screen.dart';
 import 'user_statistics_screen.dart';
 
 class ProfilePage extends StatelessWidget {
@@ -60,7 +64,6 @@ class _ProfileBody extends StatefulWidget {
 }
 
 class _ProfileBodyState extends State<_ProfileBody> {
-  String _contentTab = 'all';
   String _tab = 'all';
 
   @override
@@ -176,25 +179,6 @@ class _ProfileBodyState extends State<_ProfileBody> {
                 if (at is Timestamp && bt is Timestamp) return bt.compareTo(at);
                 return 0;
               });
-              final visiblePosts = posts.where((post) {
-                final data = post.data();
-                final isVideo =
-                    (data['mediaType'] ?? '').toString() == 'video' ||
-                    (data['videoUrl'] ?? '').toString().isNotEmpty;
-                if (_contentTab == 'photos') return !isVideo;
-                if (_contentTab == 'videos') return isVideo;
-                return true;
-              }).toList();
-              final visible = posts.where((doc) {
-                final data = doc.data();
-                final isVideo =
-                    (data['mediaType'] ?? '').toString() == 'video' ||
-                    (data['videoUrl'] ?? '').toString().isNotEmpty;
-                if (_tab == 'photos') return !isVideo;
-                if (_tab == 'videos') return isVideo;
-                return true;
-              }).toList();
-
               return CustomScrollView(
                 slivers: [
                   SliverToBoxAdapter(child: _topBar(name, profile, type)),
@@ -213,14 +197,26 @@ class _ProfileBodyState extends State<_ProfileBody> {
                     child: ProfileFavoritePlacesSection(
                       userId: widget.user.uid,
                       editable: true,
+                      showFavorites: false,
                     ),
                   ),
                   SliverToBoxAdapter(child: _contentTabs()),
-                  if (postSnapshot.connectionState == ConnectionState.waiting)
+                  if (_tab == 'routes')
+                    const SliverToBoxAdapter(child: _ProfileRoutesSection())
+                  else if (_tab == 'favorites')
+                    SliverToBoxAdapter(
+                      child: ProfileFavoritePlacesSection(
+                        userId: widget.user.uid,
+                        editable: true,
+                        showProgress: false,
+                      ),
+                    )
+                  else if (postSnapshot.connectionState ==
+                      ConnectionState.waiting)
                     const SliverFillRemaining(
                       child: Center(child: CircularProgressIndicator()),
                     )
-                  else if (visible.isEmpty)
+                  else if (posts.isEmpty)
                     SliverFillRemaining(hasScrollBody: false, child: _empty())
                   else
                     SliverPadding(
@@ -234,7 +230,7 @@ class _ProfileBodyState extends State<_ProfileBody> {
                               childAspectRatio: 1,
                             ),
                         delegate: SliverChildBuilderDelegate((context, index) {
-                          final doc = visible[index];
+                          final doc = posts[index];
                           final data = doc.data();
                           final imageUrl =
                               (data['imageUrl'] ??
@@ -264,7 +260,7 @@ class _ProfileBodyState extends State<_ProfileBody> {
                               ),
                             ),
                           );
-                        }, childCount: visible.length),
+                        }, childCount: posts.length),
                       ),
                     ),
                 ],
@@ -590,18 +586,18 @@ class _ProfileBodyState extends State<_ProfileBody> {
       segments: const [
         ButtonSegment(
           value: 'all',
-          icon: Icon(Icons.grid_on_rounded),
-          label: Text('Tümü'),
+          tooltip: 'Paylaşımlar',
+          icon: Icon(Icons.grid_view_rounded),
         ),
         ButtonSegment(
-          value: 'photos',
-          icon: Icon(Icons.photo_outlined),
-          label: Text('Fotoğraf'),
+          value: 'routes',
+          tooltip: 'Rotalarım',
+          icon: Icon(Icons.route_rounded),
         ),
         ButtonSegment(
-          value: 'videos',
-          icon: Icon(Icons.play_circle_outline_rounded),
-          label: Text('Video'),
+          value: 'favorites',
+          tooltip: 'Favori Mekanlarım',
+          icon: Icon(Icons.bookmark_rounded),
         ),
       ],
       selected: {_tab},
@@ -787,6 +783,101 @@ class _ModuleCard extends StatelessWidget {
       trailing: const Icon(Icons.chevron_right_rounded),
       onTap: onTap,
     ),
+  );
+}
+
+class _ProfileRoutesSection extends StatelessWidget {
+  const _ProfileRoutesSection();
+
+  @override
+  Widget build(BuildContext context) => StreamBuilder<List<TravelPlan>>(
+    stream: TravelPlanService.instance.watchMine(),
+    builder: (context, snapshot) {
+      if (snapshot.connectionState == ConnectionState.waiting) {
+        return const Padding(
+          padding: EdgeInsets.all(36),
+          child: Center(child: CircularProgressIndicator()),
+        );
+      }
+      final plans = snapshot.data ?? const <TravelPlan>[];
+      if (plans.isEmpty) {
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(24, 30, 24, 100),
+          child: Column(
+            children: [
+              const Icon(
+                Icons.route_outlined,
+                size: 42,
+                color: Colors.white30,
+              ),
+              const SizedBox(height: 10),
+              const Text(
+                'Henüz rotan yok',
+                style: TextStyle(fontWeight: FontWeight.w900),
+              ),
+              const SizedBox(height: 5),
+              const Text(
+                'Planladığın geziler burada kolayca erişebileceğin rotalara dönüşür.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.white54),
+              ),
+              const SizedBox(height: 14),
+              FilledButton.icon(
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const SmartPlanScreen()),
+                ),
+                icon: const Icon(Icons.add_rounded),
+                label: const Text('Yeni Rota Oluştur'),
+              ),
+            ],
+          ),
+        );
+      }
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(14, 2, 14, 100),
+        child: Column(
+          children: [
+            for (final plan in plans) ...[
+              Card(
+                margin: EdgeInsets.zero,
+                child: ListTile(
+                  contentPadding: const EdgeInsets.fromLTRB(14, 7, 8, 7),
+                  leading: Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      gradient: AppColors.subtleGradient,
+                      borderRadius: BorderRadius.circular(13),
+                    ),
+                    child: const Icon(Icons.route_rounded),
+                  ),
+                  title: Text(
+                    plan.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontWeight: FontWeight.w900),
+                  ),
+                  subtitle: Text(
+                    '${plan.city} • ${plan.spotNames.length} durak • ${plan.durationHours} saat',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  trailing: const Icon(Icons.chevron_right_rounded),
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => TravelPlanDetailScreen(plan: plan),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 9),
+            ],
+          ],
+        ),
+      );
+    },
   );
 }
 
