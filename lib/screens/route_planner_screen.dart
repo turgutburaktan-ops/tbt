@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../models/photo_spot.dart';
@@ -60,6 +61,17 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
   bool _gettingLocation = false;
   bool _useCurrentLocation = true;
   RouteTravelMode _travelMode = RouteTravelMode.driving;
+  final TextEditingController _routeNameController = TextEditingController();
+  final TextEditingController _routeNoteController = TextEditingController();
+  bool _detailsExpanded = false;
+
+  @override
+  void dispose() {
+    _routeNameController.dispose();
+    _routeNoteController.dispose();
+    _mapController?.dispose();
+    super.dispose();
+  }
 
   @override
   void initState() {
@@ -196,6 +208,106 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
     await Future<void>.delayed(const Duration(milliseconds: 70));
     await _fitRoute();
     _message('${spot.name} rotaya eklendi.');
+  }
+
+  Future<void> _addCustomStop(LatLng point) async {
+    final nameController = TextEditingController();
+    final name = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Haritadan durak ekle'),
+        content: TextField(
+          controller: nameController,
+          autofocus: true,
+          textCapitalization: TextCapitalization.words,
+          decoration: const InputDecoration(
+            labelText: 'Durak adı',
+            hintText: 'Örn. Buluşma noktası',
+          ),
+          onSubmitted: (value) {
+            if (value.trim().isNotEmpty) Navigator.pop(dialogContext, value);
+          },
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Vazgeç'),
+          ),
+          FilledButton(
+            onPressed: () {
+              if (nameController.text.trim().isNotEmpty) {
+                Navigator.pop(dialogContext, nameController.text.trim());
+              }
+            },
+            child: const Text('Ekle'),
+          ),
+        ],
+      ),
+    );
+    nameController.dispose();
+    if (name == null || !mounted) return;
+    final stop = PhotoSpot(
+      id: 'custom_${DateTime.now().microsecondsSinceEpoch}',
+      name: name,
+      city: 'Haritadan seçildi',
+      latitude: point.latitude,
+      longitude: point.longitude,
+      rating: 0,
+      bestTime: 'Serbest zaman',
+      angle: '',
+      imageUrl: '',
+      category: 'Özel durak',
+      tags: const ['Özel durak'],
+    );
+    setState(() => _stops.add(stop));
+    await _fitRoute();
+    _message('$name rotaya eklendi.');
+  }
+
+  Future<void> _editStop(int index) async {
+    final stop = _stops[index];
+    final controller = TextEditingController(text: stop.name);
+    final updatedName = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Durağı düzenle'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: const InputDecoration(labelText: 'Durak adı'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Vazgeç'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, controller.text.trim()),
+            child: const Text('Kaydet'),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (updatedName == null || updatedName.isEmpty || !mounted) return;
+    setState(() {
+      _stops[index] = PhotoSpot(
+        id: stop.id,
+        name: updatedName,
+        city: stop.city,
+        latitude: stop.latitude,
+        longitude: stop.longitude,
+        rating: stop.rating,
+        bestTime: stop.bestTime,
+        angle: stop.angle,
+        imageUrl: stop.imageUrl,
+        category: stop.category,
+        description: stop.description,
+        recommendedLens: stop.recommendedLens,
+        difficulty: stop.difficulty,
+        tags: stop.tags,
+      );
+    });
   }
 
   void _message(String text) {
@@ -349,6 +461,7 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
     if (_loading) return;
     final queryController = TextEditingController();
     var query = '';
+    var category = 'Tümü';
     final selected = await showModalBottomSheet<PhotoSpot>(
       context: context,
       useSafeArea: true,
@@ -358,8 +471,13 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
         builder: (context, setSheetState) {
           final key = _normalize(query);
           final excluded = _stops.map((s) => s.id).toSet();
+          final categories = <String>['Tümü', ..._allSpots.map((s) => s.category)]
+              .toSet()
+              .take(16)
+              .toList();
           var matches = _allSpots.where((spot) {
             if (excluded.contains(spot.id)) return false;
+            if (category != 'Tümü' && spot.category != category) return false;
             if (key.isEmpty) return true;
             final haystack = _normalize(
               '${spot.name} ${spot.city} ${spot.category} ${spot.tags.join(' ')}',
@@ -409,6 +527,23 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
                   ),
                 ),
                 const SizedBox(height: 8),
+                SizedBox(
+                  height: 42,
+                  child: ListView.separated(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    scrollDirection: Axis.horizontal,
+                    itemCount: categories.length,
+                    separatorBuilder: (_, __) => const SizedBox(width: 8),
+                    itemBuilder: (_, index) => ChoiceChip(
+                      label: Text(categories[index]),
+                      selected: category == categories[index],
+                      onSelected: (_) => setSheetState(
+                        () => category = categories[index],
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 6),
                 Expanded(
                   child: matches.isEmpty
                       ? const Center(
@@ -577,6 +712,26 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
     if (!launched) _message('Google Maps açılamadı.');
   }
 
+  Future<void> _shareRoute() async {
+    if (_stops.isEmpty) {
+      _message('Paylaşmak için rotaya en az bir durak ekle.');
+      return;
+    }
+    final title = _routeNameController.text.trim().isEmpty
+        ? 'Manuel gezi rotam'
+        : _routeNameController.text.trim();
+    final note = _routeNoteController.text.trim();
+    final stopLines = _stops
+        .asMap()
+        .entries
+        .map((entry) => '${entry.key + 1}. ${entry.value.name}')
+        .join('\n');
+    await Share.share(
+      '$title\n${note.isEmpty ? '' : '$note\n'}\n$stopLines\n\nTBT ile oluşturuldu.',
+      subject: title,
+    );
+  }
+
   static String _normalize(String value) => value
       .trim()
       .toLowerCase()
@@ -598,6 +753,11 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
         title: const Text('Rota Oluştur'),
         actions: [
           IconButton(
+            tooltip: 'Rotayı paylaş',
+            onPressed: _stops.isEmpty ? null : _shareRoute,
+            icon: const Icon(Icons.ios_share_rounded),
+          ),
+          IconButton(
             tooltip: 'Rotayı haritaya sığdır',
             onPressed: _fitRoute,
             icon: const Icon(Icons.fit_screen_rounded),
@@ -607,7 +767,7 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
       body: Column(
         children: [
           Container(
-            height: 255,
+            height: MediaQuery.sizeOf(context).height < 720 ? 180 : 220,
             margin: const EdgeInsets.fromLTRB(12, 6, 12, 0),
             clipBehavior: Clip.antiAlias,
             decoration: BoxDecoration(
@@ -630,6 +790,7 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
                 await Future<void>.delayed(const Duration(milliseconds: 120));
                 await _fitRoute();
               },
+              onLongPress: _addCustomStop,
             ),
           ),
           Padding(
@@ -643,6 +804,17 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
               ),
               child: Column(
                 children: [
+                  TextField(
+                    controller: _routeNameController,
+                    textCapitalization: TextCapitalization.sentences,
+                    decoration: const InputDecoration(
+                      labelText: 'Rota adı',
+                      hintText: 'Örn. Harput hafta sonu rotası',
+                      prefixIcon: Icon(Icons.edit_road_rounded),
+                      isDense: true,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
                   Row(
                     children: [
                       Expanded(
@@ -724,6 +896,42 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
                       ),
                     ],
                   ),
+                  InkWell(
+                    borderRadius: BorderRadius.circular(10),
+                    onTap: () => setState(() => _detailsExpanded = !_detailsExpanded),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.tune_rounded, size: 18),
+                          const SizedBox(width: 8),
+                          const Expanded(child: Text('Rota notu ve ayrıntılar')),
+                          Icon(_detailsExpanded
+                              ? Icons.keyboard_arrow_up_rounded
+                              : Icons.keyboard_arrow_down_rounded),
+                        ],
+                      ),
+                    ),
+                  ),
+                  if (_detailsExpanded) ...[
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: _routeNoteController,
+                      minLines: 2,
+                      maxLines: 4,
+                      maxLength: 300,
+                      decoration: const InputDecoration(
+                        hintText: 'Saat, buluşma bilgisi veya rota notu ekle',
+                      ),
+                    ),
+                    const Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'İpucu: Haritada boş bir yere uzun basarak özel durak ekleyebilirsin.',
+                        style: TextStyle(color: Colors.white54, fontSize: 12),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -817,6 +1025,15 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               IconButton(
+                                tooltip: 'Düzenle',
+                                onPressed: () => _editStop(index),
+                                icon: const Icon(
+                                  Icons.edit_outlined,
+                                  color: Colors.white54,
+                                  size: 20,
+                                ),
+                              ),
+                              IconButton(
                                 tooltip: 'Kaldır',
                                 onPressed: () async {
                                   setState(() => _stops.removeAt(index));
@@ -902,12 +1119,14 @@ class _EmptyRoute extends StatelessWidget {
   const _EmptyRoute({required this.onAdd});
 
   @override
-  Widget build(BuildContext context) => Center(
-    child: Padding(
-      padding: const EdgeInsets.all(28),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
+  Widget build(BuildContext context) => SingleChildScrollView(
+    padding: const EdgeInsets.symmetric(vertical: 8),
+    child: Center(
+      child: Padding(
+        padding: const EdgeInsets.all(28),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
           const Icon(Icons.route_outlined, size: 56, color: Colors.white24),
           const SizedBox(height: 12),
           const Text(
@@ -916,7 +1135,7 @@ class _EmptyRoute extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           const Text(
-            'Gün içinde çekmek istediğin noktaları ekle, sırala ve tek dokunuşla Google Maps’te aç.',
+            'Listeden nokta seçebilir veya haritada boş bir yere uzun basarak kendi durağını ekleyebilirsin.',
             textAlign: TextAlign.center,
             style: TextStyle(color: Colors.white54, height: 1.4),
           ),
@@ -926,7 +1145,8 @@ class _EmptyRoute extends StatelessWidget {
             icon: const Icon(Icons.add_location_alt_outlined),
             label: const Text('İlk noktayı ekle'),
           ),
-        ],
+          ],
+        ),
       ),
     ),
   );
