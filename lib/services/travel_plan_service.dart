@@ -194,6 +194,35 @@ class TravelPlanService {
     });
   }
 
+  Future<void> addCustomStop({
+    required String planId,
+    required String name,
+    required double latitude,
+    required double longitude,
+    String city = '',
+  }) async {
+    _requireUser();
+    final cleanName = name.trim().isEmpty ? 'Haritadan seçilen durak' : name.trim();
+    final id =
+        'custom_${latitude.toStringAsFixed(6)}_${longitude.toStringAsFixed(6)}';
+    await _firestore.collection('travel_plans').doc(planId).update({
+      'spotIds': FieldValue.arrayUnion([id]),
+      'spotNames': FieldValue.arrayUnion([cleanName]),
+      'stopSnapshots': FieldValue.arrayUnion([
+        {
+          'id': id,
+          'name': cleanName,
+          'city': city,
+          'latitude': latitude,
+          'longitude': longitude,
+          'category': 'Özel durak',
+          'bestTime': '',
+        },
+      ]),
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
   Stream<List<TravelPlan>> watchPublic() {
     return _firestore
         .collection('travel_plans')
