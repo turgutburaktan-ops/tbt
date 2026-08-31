@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../models/social_event.dart';
+import '../models/travel_plan.dart';
 import '../services/content_engagement_service.dart';
 import '../services/post_service.dart';
 import '../services/social_event_service.dart';
@@ -12,6 +13,7 @@ import '../widgets/content_engagement_bar.dart';
 import '../widgets/firebase_media_image.dart';
 import '../widgets/post_media_carousel.dart';
 import 'social_events_screen.dart';
+import 'travel_plan_detail_screen.dart';
 import 'user_profile_screen.dart';
 
 enum FeedMode { forYou, following }
@@ -39,7 +41,7 @@ class FeedScreen extends StatelessWidget {
             final events=(includeEvents?eventsSnapshot.data??const<SocialEvent>[]:const<SocialEvent>[]).where((event){final visible=event.visibility==EventVisibility.public||event.hostId==currentUser.uid||event.participantIds.contains(currentUser.uid)||event.allowedUserIds.contains(currentUser.uid);if(!visible)return false;if(mode==FeedMode.following&&!(followingIds.contains(event.hostId)||event.participantIds.any(followingIds.contains)))return false;return true;}).toList()..sort((a,b)=>a.startsAt.compareTo(b.startsAt));
             final tonight=events.where((event){final d=event.startsAt.toLocal();return d.year==now.year&&d.month==now.month&&d.day==now.day;}).take(6).toList();
             final items=<Widget>[];if(mode==FeedMode.forYou&&tonight.isNotEmpty)items.add(_TonightStrip(events:tonight,followingIds:followingIds));var eventIndex=0;
-            for(var i=0;i<docs.length;i++){final doc=docs[i],data=doc.data();final videoUrl=(data['videoUrl']??'').toString(),mediaType=(data['mediaType']??'').toString();var mediaUrls=_strings(data['mediaUrls']),mediaPaths=_strings(data['mediaStoragePaths']);final legacyUrl=(data['imageUrl']??'').toString(),legacyPath=(data['storagePath']??'').toString();if(mediaUrls.isEmpty&&legacyUrl.isNotEmpty)mediaUrls=[legacyUrl];if(mediaPaths.isEmpty&&legacyPath.isNotEmpty)mediaPaths=[legacyPath];items.add(_FeedPostCard(postId:doc.id,userId:(data['userId']??'').toString(),userName:(data['userName']??'Topluluk üyesi').toString(),userPhotoUrl:(data['userPhotoUrl']??data['photoUrl']??'').toString(),mediaType:mediaType=='video'||videoUrl.isNotEmpty?'video':'image',imageUrl:legacyUrl,storagePath:legacyPath,mediaUrls:mediaUrls,mediaStoragePaths:mediaPaths,videoUrl:videoUrl,videoStoragePath:(data['videoStoragePath']??'').toString(),thumbnailUrl:(data['thumbnailUrl']??data['imageUrl']??'').toString(),thumbnailStoragePath:(data['thumbnailStoragePath']??data['storagePath']??'').toString(),caption:(data['caption']??'').toString(),spotName:(data['spotName']??'').toString(),createdAt:data['createdAt']));if((i+1)%4==0&&eventIndex<events.length)items.add(_EventFeedCard(event:events[eventIndex++],followingIds:followingIds));}
+            for(var i=0;i<docs.length;i++){final doc=docs[i],data=doc.data();final videoUrl=(data['videoUrl']??'').toString(),mediaType=(data['mediaType']??'').toString();if(mediaType=='route'){items.add(_FeedRouteCard(postId:doc.id,data:data));}else{var mediaUrls=_strings(data['mediaUrls']),mediaPaths=_strings(data['mediaStoragePaths']);final legacyUrl=(data['imageUrl']??'').toString(),legacyPath=(data['storagePath']??'').toString();if(mediaUrls.isEmpty&&legacyUrl.isNotEmpty)mediaUrls=[legacyUrl];if(mediaPaths.isEmpty&&legacyPath.isNotEmpty)mediaPaths=[legacyPath];items.add(_FeedPostCard(postId:doc.id,userId:(data['userId']??'').toString(),userName:(data['userName']??'Topluluk üyesi').toString(),userPhotoUrl:(data['userPhotoUrl']??data['photoUrl']??'').toString(),mediaType:mediaType=='video'||videoUrl.isNotEmpty?'video':'image',imageUrl:legacyUrl,storagePath:legacyPath,mediaUrls:mediaUrls,mediaStoragePaths:mediaPaths,videoUrl:videoUrl,videoStoragePath:(data['videoStoragePath']??'').toString(),thumbnailUrl:(data['thumbnailUrl']??data['imageUrl']??'').toString(),thumbnailStoragePath:(data['thumbnailStoragePath']??data['storagePath']??'').toString(),caption:(data['caption']??'').toString(),spotName:(data['spotName']??'').toString(),createdAt:data['createdAt']));}if((i+1)%4==0&&eventIndex<events.length)items.add(_EventFeedCard(event:events[eventIndex++],followingIds:followingIds));}
             while(eventIndex<events.length&&items.length<10)items.add(_EventFeedCard(event:events[eventIndex++],followingIds:followingIds));if(docs.isEmpty&&events.isEmpty)items.add(_EmptyFeed(mode:mode));
             return RefreshIndicator(onRefresh:()=>Future<void>.delayed(const Duration(milliseconds:450)),child:ListView.builder(physics:const AlwaysScrollableScrollPhysics(),padding:const EdgeInsets.only(bottom:24),itemCount:items.length,itemBuilder:(_,i)=>items[i]));
           });
@@ -54,6 +56,107 @@ class _CompactEventCard extends StatelessWidget{final List<String> followingIds;
 class _EventFeedCard extends StatelessWidget{final SocialEvent event;final List<String> followingIds;const _EventFeedCard({required this.event,required this.followingIds});@override Widget build(BuildContext context){final uid=FirebaseAuth.instance.currentUser?.uid;final joined=uid!=null&&event.participantIds.contains(uid);final local=event.startsAt.toLocal(),date='${local.day.toString().padLeft(2,'0')}.${local.month.toString().padLeft(2,'0')} • ${local.hour.toString().padLeft(2,'0')}:${local.minute.toString().padLeft(2,'0')}';Future<void> join()async{try{await SocialEventService.instance.join(event.id);}catch(e){if(context.mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text(e.toString().replaceFirst('Exception: ',''))));}}return Padding(padding:const EdgeInsets.fromLTRB(14,12,14,18),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(event.title,style:const TextStyle(fontSize:18,fontWeight:FontWeight.w900)),const SizedBox(height:6),Text('$date  •  ${event.locationLabel.isNotEmpty?event.locationLabel:event.city}',maxLines:1,overflow:TextOverflow.ellipsis,style:const TextStyle(color:Colors.white60,fontSize:12)),const SizedBox(height:10),Row(children:[OutlinedButton(onPressed:()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>const SocialEventsScreen())),child:const Text('Etkinliği Gör')),const SizedBox(width:8),FilledButton(onPressed:joined||event.isFull?null:join,child:Text(joined?'Katıldın':event.isFull?'Dolu':'Katıl'))]),ContentEngagementBar(collection:'social_events',contentId:event.id,ownerId:event.hostId,title:event.title,sourceType:'social_event')])) ;}}
 class _SignedOutFeed extends StatelessWidget{const _SignedOutFeed();@override Widget build(BuildContext context)=>const Center(child:Text('Sosyal akış için giriş yap'));}
 class _EmptyFeed extends StatelessWidget{final FeedMode mode;const _EmptyFeed({required this.mode});@override Widget build(BuildContext context)=>Padding(padding:const EdgeInsets.all(30),child:Text(mode==FeedMode.following?'Takip akışın henüz sakin':'Henüz paylaşım yok',textAlign:TextAlign.center,style:const TextStyle(fontSize:19,fontWeight:FontWeight.w900)));}
+
+class _FeedRouteCard extends StatelessWidget {
+  final String postId;
+  final Map<String, dynamic> data;
+  const _FeedRouteCard({required this.postId, required this.data});
+
+  Future<void> _open(BuildContext context) async {
+    final planId = (data['travelPlanId'] ?? '').toString();
+    if (planId.isEmpty) return;
+    final snapshot = await FirebaseFirestore.instance
+        .collection('travel_plans')
+        .doc(planId)
+        .get();
+    if (!context.mounted) return;
+    if (!snapshot.exists) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Bu rota artık kullanılamıyor.')),
+      );
+      return;
+    }
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) =>
+            TravelPlanDetailScreen(plan: TravelPlan.fromDoc(snapshot)),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ownerId = (data['userId'] ?? '').toString();
+    final title = (data['routeTitle'] ?? 'Gezi rotası').toString();
+    final city = (data['routeCity'] ?? '').toString();
+    final stops = (data['routeSpotNames'] as List<dynamic>? ?? const [])
+        .map((item) => item.toString())
+        .where((item) => item.isNotEmpty)
+        .toList();
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 16),
+      child: Card(
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: () => _open(context),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const CircleAvatar(child: Icon(Icons.route_rounded)),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        (data['userName'] ?? 'TBT kullanıcısı').toString(),
+                        style: const TextStyle(fontWeight: FontWeight.w900),
+                      ),
+                    ),
+                    const Icon(Icons.chevron_right_rounded),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  '$city • ${stops.length} durak • ${data['routeDurationHours'] ?? 0} saat',
+                  style: const TextStyle(color: Colors.white60),
+                ),
+                const SizedBox(height: 14),
+                for (final entry in stops.take(3).toList().asMap().entries)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: Text('${entry.key + 1}. ${entry.value}'),
+                  ),
+                if (stops.length > 3)
+                  Text(
+                    '+${stops.length - 3} durak daha',
+                    style: const TextStyle(color: Colors.white54),
+                  ),
+                ContentEngagementBar(
+                  collection: 'posts',
+                  contentId: postId,
+                  ownerId: ownerId,
+                  title: title,
+                  sourceType: 'route',
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
 
 class _FeedPostCard extends StatefulWidget{
  final String postId,userId,userName,userPhotoUrl,mediaType,imageUrl,storagePath,videoUrl,videoStoragePath,thumbnailUrl,thumbnailStoragePath,caption,spotName;final List<String> mediaUrls,mediaStoragePaths;final dynamic createdAt;
