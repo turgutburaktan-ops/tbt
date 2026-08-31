@@ -7,6 +7,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../services/story_context_link_service.dart';
@@ -69,23 +70,37 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
   double _bgStartRotation = 0;
   Offset _bgOffset = Offset.zero;
 
-  String _font = 'sans-serif';
+  String _font = 'Inter';
   Color _textColor = Colors.white;
   Color _drawColor = Colors.white;
 
   static const List<String> _fonts = <String>[
-    'sans-serif',
-    'serif',
-    'monospace',
-    'sans-serif-medium',
-    'sans-serif-light',
+    'Inter',
+    'Poppins',
+    'Montserrat',
+    'Playfair Display',
+    'Bebas Neue',
+    'Oswald',
+    'Roboto Slab',
+    'Space Mono',
+    'Caveat',
+    'Dancing Script',
+    'Pacifico',
+    'Abril Fatface',
   ];
   static const List<String> _fontLabels = <String>[
     'Modern',
+    'Yumuşak',
+    'Temiz',
+    'Editoryal',
+    'Başlık',
+    'Dar',
     'Klasik',
     'Daktilo',
-    'Yuvarlak',
-    'İnce',
+    'El yazısı',
+    'İmza',
+    'Retro',
+    'Poster',
   ];
   static const List<Color> _colors = <Color>[
     Colors.white,
@@ -867,8 +882,23 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
                       maxLength: 180,
                       maxLines: 5,
                       textAlign: TextAlign.center,
-                      style: TextStyle(fontFamily: _font, color: _textColor, fontSize: 34, fontWeight: FontWeight.w900),
-                      decoration: const InputDecoration(border: InputBorder.none, counterText: '', hintText: 'Bir şey yaz…'),
+                      style: GoogleFonts.getFont(
+                        _font,
+                        color: _textColor,
+                        fontSize: 34,
+                        fontWeight: FontWeight.w700,
+                      ),
+                      decoration: const InputDecoration(
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        disabledBorder: InputBorder.none,
+                        filled: false,
+                        fillColor: Colors.transparent,
+                        counterText: '',
+                        hintText: 'Bir şey yaz…',
+                        contentPadding: EdgeInsets.zero,
+                      ),
                     ),
                   ),
                 ),
@@ -882,7 +912,10 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
                     separatorBuilder: (_, __) => const SizedBox(width: 8),
                     itemBuilder: (_, int i) {
                       return ChoiceChip(
-                        label: Text(_fontLabels[i]),
+                        label: Text(
+                          _fontLabels[i],
+                          style: GoogleFonts.getFont(_fonts[i]),
+                        ),
                         selected: _font == _fonts[i],
                         onSelected: (_) => setState(() => _font = _fonts[i]),
                       );
@@ -1009,11 +1042,11 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
         child: Text(
           x.text ?? '',
           textAlign: TextAlign.center,
-          style: TextStyle(
-            fontFamily: x.font,
+          style: GoogleFonts.getFont(
+            x.font ?? 'Inter',
             color: x.color,
             fontSize: 34,
-            fontWeight: FontWeight.w900,
+            fontWeight: FontWeight.w700,
             shadows: const <Shadow>[Shadow(color: Colors.black54, blurRadius: 5)],
           ),
         ),
