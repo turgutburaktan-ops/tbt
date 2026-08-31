@@ -375,10 +375,25 @@ service cloud.firestore {
         request.resource.data.spotIds.size() <= 12 &&
         request.resource.data.title is string && request.resource.data.title.size() >= 1 &&
         request.resource.data.title.size() <= 80;
-      allow update: if signedIn() && resource.data.ownerId == request.auth.uid &&
-        request.resource.data.ownerId == resource.data.ownerId &&
-        request.resource.data.memberIds is list && request.resource.data.memberIds.size() <= 60 &&
-        request.resource.data.memberIds.hasAny([request.auth.uid]);
+      allow update: if signedIn() && (
+        (resource.data.ownerId == request.auth.uid &&
+          request.resource.data.ownerId == resource.data.ownerId &&
+          request.resource.data.memberIds is list && request.resource.data.memberIds.size() <= 60 &&
+          request.resource.data.memberIds.hasAny([request.auth.uid])) ||
+        (resource.data.memberIds.hasAny([request.auth.uid]) &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['meetingPoint', 'updatedAt']) &&
+          request.resource.data.meetingPoint is map &&
+          request.resource.data.meetingPoint.label is string &&
+          request.resource.data.meetingPoint.label.size() >= 1 &&
+          request.resource.data.meetingPoint.label.size() <= 160 &&
+          request.resource.data.meetingPoint.latitude is number &&
+          request.resource.data.meetingPoint.latitude >= -90 &&
+          request.resource.data.meetingPoint.latitude <= 90 &&
+          request.resource.data.meetingPoint.longitude is number &&
+          request.resource.data.meetingPoint.longitude >= -180 &&
+          request.resource.data.meetingPoint.longitude <= 180 &&
+          request.resource.data.meetingPoint.selectedBy == request.auth.uid)
+      );
       allow delete: if signedIn() && resource.data.ownerId == request.auth.uid;
       match /ratings/{uid} {
         allow read: if get(/databases/$(database)/documents/travel_plans/$(planId)).data.get('isPublic', false) == true;
