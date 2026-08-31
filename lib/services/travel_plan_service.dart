@@ -141,6 +141,39 @@ class TravelPlanService {
     });
   }
 
+  Future<void> updateTitle(String planId, String title) async {
+    _requireUser();
+    final clean = title.trim();
+    if (clean.isEmpty || clean.length > 80) {
+      throw Exception('Rota adı 1-80 karakter olmalı.');
+    }
+    await _firestore.collection('travel_plans').doc(planId).update({
+      'title': clean,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  Future<void> updateStops(
+    String planId,
+    List<Map<String, dynamic>> stops,
+  ) async {
+    _requireUser();
+    if (stops.isEmpty || stops.length > 12) {
+      throw Exception('Rotada 1-12 durak bulunmalı.');
+    }
+    final normalized = stops.map((stop) {
+      final item = Map<String, dynamic>.from(stop);
+      item.removeWhere((key, value) => value == null);
+      return item;
+    }).toList(growable: false);
+    await _firestore.collection('travel_plans').doc(planId).update({
+      'spotIds': normalized.map((s) => (s['id'] ?? '').toString()).toList(),
+      'spotNames': normalized.map((s) => (s['name'] ?? 'Durak').toString()).toList(),
+      'stopSnapshots': normalized,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
   Future<String> publishToFeed(TravelPlan plan) async {
     final user = _requireUser();
     if (plan.ownerId != user.uid) {
