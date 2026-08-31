@@ -25,7 +25,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() => AppNotificationService.instance.refreshCampusDigest());
+    Future.microtask(() async {
+      await AppNotificationService.instance.markAllRead();
+      await AppNotificationService.instance.refreshCampusDigest();
+    });
   }
 
   bool _opensEvent(String type) => _eventTypes.contains(type);
