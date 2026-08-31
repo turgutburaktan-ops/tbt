@@ -5,6 +5,8 @@ class TravelPlan {
   final String ownerId;
   final String title;
   final String city;
+  final String area;
+  final List<String> mealPreferences;
   final int durationHours;
   final String budget;
   final String transport;
@@ -27,6 +29,8 @@ class TravelPlan {
     required this.ownerId,
     required this.title,
     required this.city,
+    this.area = '',
+    this.mealPreferences = const [],
     required this.durationHours,
     required this.budget,
     required this.transport,
@@ -64,6 +68,8 @@ class TravelPlan {
       ownerId: (data['ownerId'] ?? '').toString(),
       title: (data['title'] ?? 'Gezi planı').toString(),
       city: (data['city'] ?? '').toString(),
+      area: (data['area'] ?? '').toString(),
+      mealPreferences: strings('mealPreferences'),
       durationHours: (data['durationHours'] as num?)?.toInt() ?? 3,
       budget: (data['budget'] ?? 'Orta').toString(),
       transport: (data['transport'] ?? 'Araç').toString(),
