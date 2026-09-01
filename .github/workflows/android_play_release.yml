@@ -62,7 +62,7 @@ jobs:
           p=Path('android/app/build.gradle.kts')
           s=p.read_text().replace('minSdk = flutter.minSdkVersion','minSdk = 26').replace('com.tbt.best_photo_spot','com.tbt.social')
           marker='    buildTypes {\n'
-          signing='''    signingConfigs {\n        create("release") {\n            storeFile = file("tbt-release.jks")\n            storePassword = System.getenv("PLAY_KEYSTORE_PASSWORD")\n            keyAlias = System.getenv("PLAY_KEY_ALIAS")\n            keyPassword = System.getenv("PLAY_KEY_PASSWORD")\n        }\n    }\n\n'''
+          signing='''    signingConfigs {\n        create("release") {\n            storeFile = file("tbt-release.jks")\n            storeType = "PKCS12"\n            storePassword = System.getenv("PLAY_KEYSTORE_PASSWORD")\n            keyAlias = System.getenv("PLAY_KEY_ALIAS")\n            keyPassword = System.getenv("PLAY_KEY_PASSWORD")\n        }\n    }\n\n'''
           s=s.replace(marker, signing+marker, 1)
           s=s.replace('signingConfig = signingConfigs.getByName("debug")','signingConfig = signingConfigs.getByName("release")')
           p.write_text(s)
