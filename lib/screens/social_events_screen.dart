@@ -10,6 +10,7 @@ import '../services/event_privacy_service.dart';
 import '../services/event_ticket_service.dart';
 import '../services/event_trust_service.dart';
 import '../services/social_event_service.dart';
+import '../theme/app_theme.dart';
 import '../widgets/chat_share_sheet.dart';
 import '../widgets/content_engagement_bar.dart';
 import '../widgets/sponsored_native_ad.dart';
