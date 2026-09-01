@@ -82,7 +82,14 @@ jobs:
           marker='    buildTypes {\n'
           signing='''    signingConfigs {\n        create("release") {\n            storeFile = file("tbt-release.jks")\n            storeType = "JKS"\n            storePassword = System.getenv("PLAY_KEYSTORE_PASSWORD")\n            keyAlias = System.getenv("PLAY_KEY_ALIAS")\n            keyPassword = System.getenv("PLAY_KEY_PASSWORD")\n        }\n    }\n\n'''
           s=s.replace(marker, signing+marker, 1)
-          s=s.replace('signingConfig = signingConfigs.getByName("debug")','signingConfig = signingConfigs.getByName("release")')
+          s=s.replace(
+              'signingConfig = signingConfigs.getByName("debug")',
+              '''signingConfig = signingConfigs.getByName("release")
+            // AGP 9/R8 can remove Room's generated no-argument constructor.
+            // That makes WorkManager crash before Flutter draws its first frame.
+            isMinifyEnabled = false
+            isShrinkResources = false''',
+          )
           p.write_text(s)
           m=Path('android/app/src/main/AndroidManifest.xml')
           text=m.read_text().replace('${MAPS_API_KEY}',os.environ['MAPS_API_KEY']).replace('ca-app-pub-3940256099942544~3347511713',os.environ['ADMOB_ANDROID_APP_ID'])
