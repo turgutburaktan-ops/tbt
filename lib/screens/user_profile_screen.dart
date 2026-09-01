@@ -10,6 +10,7 @@ import '../services/story_service.dart';
 import '../widgets/firebase_media_image.dart';
 import '../widgets/profile_favorite_places_section.dart';
 import '../widgets/public_achievement_badges.dart';
+import '../widgets/profile_reward_surface.dart';
 import '../widgets/story_strip.dart';
 import '../widgets/user_safety_actions.dart';
 import 'chat_screen.dart';
@@ -118,7 +119,9 @@ class UserProfileScreen extends StatelessWidget {
               return CustomScrollView(
                 slivers: [
                   SliverToBoxAdapter(
-                    child: Padding(
+                    child: ProfileRewardSurface(
+                      profile: data,
+                      child: Padding(
                       padding: const EdgeInsets.fromLTRB(18, 10, 18, 16),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -334,6 +337,7 @@ class UserProfileScreen extends StatelessWidget {
                             ),
                           ],
                         ],
+                      ),
                       ),
                     ),
                   ),
