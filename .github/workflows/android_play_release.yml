@@ -55,6 +55,12 @@ jobs:
           # must not participate in release analysis.
           rm -f test/widget_test.dart
           cp /tmp/tbt-manifest.xml android/app/src/main/AndroidManifest.xml
+          # `flutter create` ships Flutter's placeholder launcher icon. Keep
+          # the real TBT brand icon in every Android density instead.
+          for density in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
+            cp assets/spot_thumbnails/tbt_app_icon.png \
+              "android/app/src/main/res/mipmap-${density}/ic_launcher.png"
+          done
           printf '%s' "$PLAY_KEYSTORE_BASE64" | base64 --decode > android/app/tbt-upload.p12
           keytool -importkeystore -noprompt \
             -srckeystore android/app/tbt-upload.p12 \
