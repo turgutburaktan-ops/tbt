@@ -25,6 +25,8 @@ class SocialEventsScreen extends StatefulWidget {
 
 class _SocialEventsScreenState extends State<SocialEventsScreen> {
   SocialEventType? _selectedType;
+  String _dateFilter = 'all';
+  String _priceFilter = 'all';
   final Set<String> _locallyCancelledEventIds = <String>{};
 
   Stream<List<SocialEvent>> get _stream =>
@@ -416,6 +418,35 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
             ],
           ),
         ),
+        SizedBox(
+          height: 48,
+          child: ListView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+            children: [
+              _FilterChip(
+                label: 'Bugün',
+                selected: _dateFilter == 'today',
+                onTap: () => setState(() => _dateFilter = _dateFilter == 'today' ? 'all' : 'today'),
+              ),
+              _FilterChip(
+                label: 'Bu hafta',
+                selected: _dateFilter == 'week',
+                onTap: () => setState(() => _dateFilter = _dateFilter == 'week' ? 'all' : 'week'),
+              ),
+              _FilterChip(
+                label: 'Ücretsiz',
+                selected: _priceFilter == 'free',
+                onTap: () => setState(() => _priceFilter = _priceFilter == 'free' ? 'all' : 'free'),
+              ),
+              _FilterChip(
+                label: 'Ücretli',
+                selected: _priceFilter == 'paid',
+                onTap: () => setState(() => _priceFilter = _priceFilter == 'paid' ? 'all' : 'paid'),
+              ),
+            ],
+          ),
+        ),
         Expanded(
           child: StreamBuilder<List<SocialEvent>>(
             stream: _stream,
@@ -432,10 +463,20 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
                   ),
                 );
               }
+              final now = DateTime.now();
+              final todayEnd = DateTime(now.year, now.month, now.day, 23, 59, 59);
+              final weekEnd = now.add(const Duration(days: 7));
               final events = (snapshot.data ?? const <SocialEvent>[])
                   .where(
                     (event) => !_locallyCancelledEventIds.contains(event.id),
                   )
+                  .where((event) {
+                    if (_priceFilter == 'free' && event.isPaid) return false;
+                    if (_priceFilter == 'paid' && !event.isPaid) return false;
+                    if (_dateFilter == 'today' && event.startsAt.isAfter(todayEnd)) return false;
+                    if (_dateFilter == 'week' && event.startsAt.isAfter(weekEnd)) return false;
+                    return true;
+                  })
                   .toList(growable: false);
               if (events.isEmpty) {
                 return _EmptyEvents(onCreate: _openCreate);
@@ -637,6 +678,25 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
       ],
     );
   }
+}
+
+class _FilterChip extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+  const _FilterChip({required this.label, required this.selected, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 4),
+    child: FilterChip(
+      label: Text(label),
+      selected: selected,
+      onSelected: (_) => onTap(),
+      showCheckmark: false,
+      avatar: selected ? const Icon(Icons.check_rounded, size: 15) : null,
+    ),
+  );
 }
 
 class _CreateEventDiscoveryCard extends StatelessWidget {
