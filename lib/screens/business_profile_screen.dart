@@ -10,6 +10,7 @@ import '../services/business_service.dart';
 import '../services/venue_rating_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/business_public_actions.dart';
+import '../widgets/venue_badge_strip.dart';
 import '../widgets/firebase_media_image.dart';
 import '../widgets/venue_reviews_section.dart';
 import 'business_hub_screen.dart';
@@ -174,6 +175,16 @@ class BusinessProfileScreen extends StatelessWidget {
                             color: Colors.white60,
                             fontWeight: FontWeight.w700,
                           ),
+                        ),
+                        const SizedBox(height: 9),
+                        VenueBadgeStrip(
+                          verified: verified,
+                          premium: profile['premiumEntitled'] == true ||
+                              profile['subscriptionStatus'] == 'active',
+                          rating: rating.average,
+                          ratingCount: rating.count,
+                          category: venue.category.label,
+                          tags: const [],
                         ),
                         if (liveHours != null) ...[
                           const SizedBox(height: 5),
