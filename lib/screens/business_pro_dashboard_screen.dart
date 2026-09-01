@@ -1,4 +1,3 @@
-import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/material.dart';
 
 import '../services/business_service.dart';
@@ -21,7 +20,6 @@ class BusinessProDashboardScreen extends StatefulWidget {
 
 class _BusinessProDashboardScreenState
     extends State<BusinessProDashboardScreen> {
-  final _functions = FirebaseFunctions.instanceFor(region: 'europe-west1');
   bool _loading = true;
   Map<String, dynamic> _entitlement = const {}, _dashboard = const {};
   String get _venueKey =>
@@ -43,10 +41,10 @@ class _BusinessProDashboardScreenState
       final entitled = entitlement['entitled'] == true;
       Map<String, dynamic> dashboard = const {};
       if (entitled) {
-        final result = await _functions
-            .httpsCallable('getBusinessDashboard')
-            .call({'venueKey': _venueKey});
-        dashboard = Map<String, dynamic>.from(result.data as Map);
+        dashboard = await BusinessService.instance.authenticatedCall(
+          'getBusinessDashboard',
+          {'venueKey': _venueKey},
+        );
       }
       if (!mounted) return;
       setState(() {
@@ -62,13 +60,12 @@ class _BusinessProDashboardScreenState
     }
   }
 
-  String _error(Object e) => e is FirebaseFunctionsException
-      ? (e.message ?? 'İşlem tamamlanamadı.')
-      : e.toString().replaceFirst('Exception: ', '');
+  String _error(Object e) => e.toString().replaceFirst('Exception: ', '');
 
   Future<void> _boost() async {
     try {
-      final result = await _functions.httpsCallable('createBusinessBoost').call(
+      final data = await BusinessService.instance.authenticatedCall(
+        'createBusinessBoost',
         {
           'venueKey': _venueKey,
           'targetType': 'business_profile',
@@ -76,7 +73,6 @@ class _BusinessProDashboardScreenState
           'days': 3,
         },
       );
-      final data = Map<String, dynamic>.from(result.data as Map);
       if (mounted)
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -115,7 +111,7 @@ class _BusinessProDashboardScreenState
 
   Future<void> _respondReservation(String id, String decision) async {
     try {
-      await _functions.httpsCallable('respondBusinessReservation').call({
+      await BusinessService.instance.authenticatedCall('respondBusinessReservation', {
         'venueKey': _venueKey,
         'reservationId': id,
         'decision': decision,

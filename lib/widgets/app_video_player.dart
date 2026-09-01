@@ -50,6 +50,7 @@ class _AppVideoPlayerState extends State<AppVideoPlayer> {
   bool _ready = false;
   bool _failed = false;
   bool _muted = true;
+  int _attempt = 0;
 
   @override
   void initState() {
@@ -59,19 +60,22 @@ class _AppVideoPlayerState extends State<AppVideoPlayer> {
   }
 
   Future<void> _init() async {
+    final attempt = ++_attempt;
+    if (mounted) setState(() { _ready = false; _failed = false; });
+    await _controller?.dispose();
     final controller = widget.file != null
         ? VideoPlayerController.file(widget.file!)
         : VideoPlayerController.networkUrl(Uri.parse(widget.url!));
     _controller = controller;
     try {
-      await controller.initialize();
+      await controller.initialize().timeout(const Duration(seconds: 12));
       await controller.setLooping(widget.loop);
       await controller.setVolume(_muted ? 0 : widget.volume.clamp(0, 1));
       if (widget.autoplay) await controller.play();
-      if (!mounted) return;
+      if (!mounted || attempt != _attempt) return;
       setState(() => _ready = true);
     } catch (_) {
-      if (!mounted) return;
+      if (!mounted || attempt != _attempt) return;
       setState(() => _failed = true);
     }
   }
@@ -105,10 +109,19 @@ class _AppVideoPlayerState extends State<AppVideoPlayer> {
   Widget build(BuildContext context) {
     if (_failed) {
       return widget.errorWidget ??
-          const ColoredBox(
+          ColoredBox(
             color: Colors.black,
             child: Center(
-              child: Icon(Icons.broken_image_outlined, color: Colors.white54),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.broken_image_outlined, color: Colors.white54, size: 36),
+                  const SizedBox(height: 10),
+                  const Text('Video yüklenemedi', style: TextStyle(color: Colors.white70)),
+                  const SizedBox(height: 8),
+                  TextButton.icon(onPressed: _init, icon: const Icon(Icons.refresh_rounded), label: const Text('Tekrar dene')),
+                ],
+              ),
             ),
           );
     }

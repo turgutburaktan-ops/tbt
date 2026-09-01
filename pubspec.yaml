@@ -13,6 +13,8 @@ dependencies:
   shared_preferences: ^2.3.2
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
   firebase_auth: 6.5.7
   google_sign_in: ^6.2.2
   cloud_firestore: 6.8.0

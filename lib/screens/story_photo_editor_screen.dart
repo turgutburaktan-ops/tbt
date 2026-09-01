@@ -370,7 +370,11 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
       _layoutCount = selected.slotCount;
       _layoutSlots
         ..clear()
-        ..addAll(List<File?>.filled(selected.slotCount, null));
+        ..addAll(<File?>[
+          widget.photo,
+          ...List<File?>.filled(math.max(0, selected.slotCount - 1), null),
+        ]);
+      _items.removeWhere((item) => item.context);
       if (selected.contextType != 'free' &&
           selected.contextName.trim().isNotEmpty) {
         _items.add(

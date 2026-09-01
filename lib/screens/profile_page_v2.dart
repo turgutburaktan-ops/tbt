@@ -206,7 +206,7 @@ class _ProfileBodyState extends State<_ProfileBody> {
               });
               return CustomScrollView(
                 slivers: [
-                  SliverToBoxAdapter(child: _topBar(name, profile, type)),
+                  SliverToBoxAdapter(child: _topBar(profile, type)),
                   SliverToBoxAdapter(
                     child: _identity(
                       name,
@@ -303,14 +303,14 @@ class _ProfileBodyState extends State<_ProfileBody> {
     );
   }
 
-  Widget _topBar(String name, Map<String, dynamic> profile, String type) =>
+  Widget _topBar(Map<String, dynamic> profile, String type) =>
       Padding(
         padding: const EdgeInsets.fromLTRB(14, 8, 8, 6),
         child: Row(
           children: [
             Expanded(
               child: Text(
-                name,
+                'Profilim',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(

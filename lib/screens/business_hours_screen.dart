@@ -148,12 +148,12 @@ class _BusinessHoursScreenState extends State<BusinessHoursScreen> {
                                 ),
                               ),
                             ),
+                            Text(_closed[e.key] == true ? 'Kapalı' : 'Açık', style: TextStyle(color: _closed[e.key] == true ? Colors.white54 : AppColors.cyan, fontWeight: FontWeight.w800)),
+                            const SizedBox(width: 6),
                             Switch(
-                              value: _closed[e.key] == true,
-                              onChanged: (v) =>
-                                  setState(() => _closed[e.key] = v),
+                              value: _closed[e.key] != true,
+                              onChanged: (v) => setState(() => _closed[e.key] = !v),
                             ),
-                            Text(_closed[e.key] == true ? 'Kapalı' : 'Açık'),
                           ],
                         ),
                         if (_closed[e.key] != true)
@@ -162,7 +162,7 @@ class _BusinessHoursScreenState extends State<BusinessHoursScreen> {
                               Expanded(
                                 child: OutlinedButton(
                                   onPressed: () => _pick(e.key, true),
-                                  child: Text('Açılış ${_fmt(_open[e.key]!)}'),
+                                  child: Text('Açılış\n${_fmt(_open[e.key]!)}', textAlign: TextAlign.center),
                                 ),
                               ),
                               const SizedBox(width: 8),
@@ -170,7 +170,8 @@ class _BusinessHoursScreenState extends State<BusinessHoursScreen> {
                                 child: OutlinedButton(
                                   onPressed: () => _pick(e.key, false),
                                   child: Text(
-                                    'Kapanış ${_fmt(_close[e.key]!)}',
+                                    'Kapanış\n${_fmt(_close[e.key]!)}',
+                                    textAlign: TextAlign.center,
                                   ),
                                 ),
                               ),

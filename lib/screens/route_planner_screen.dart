@@ -599,7 +599,10 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
         },
       ),
     );
-    queryController.dispose();
+    // Keep the controller alive until the bottom-sheet dismissal animation has
+    // fully detached its inherited dependencies. Disposing synchronously here
+    // could trigger framework `_dependents.isEmpty` assertions on Android.
+    Future<void>.delayed(const Duration(milliseconds: 500), queryController.dispose);
     if (selected == null || !mounted) return;
     setState(() {
       _stops.add(selected);
@@ -776,8 +779,8 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
             ),
             child: GoogleMap(
               initialCameraPosition: const CameraPosition(
-                target: LatLng(38.9637, 35.2433),
-                zoom: 5,
+                target: LatLng(38.6810, 39.2264),
+                zoom: 11,
               ),
               markers: _markers,
               polylines: _polylines,
@@ -1063,27 +1066,36 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
             top: false,
             child: Padding(
               padding: const EdgeInsets.fromLTRB(12, 6, 12, 12),
-              child: Row(
+              child: Column(
                 children: [
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: _stops.length < 3 ? null : _optimizeOrder,
-                      icon: const Icon(Icons.auto_awesome_rounded),
-                      label: const Text('Akıllı sırala'),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: FilledButton.icon(
-                      style: FilledButton.styleFrom(
-                        backgroundColor: _accent,
-                        foregroundColor: Colors.black,
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: _stops.length < 3 ? null : _optimizeOrder,
+                          icon: const Icon(Icons.auto_awesome_rounded),
+                          label: const Text('Akıllı sırala'),
+                        ),
                       ),
-                      onPressed: _stops.isEmpty ? null : _openInGoogleMaps,
-                      icon: const Icon(Icons.navigation_rounded),
-                      label: const Text('Google Maps'),
-                    ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: FilledButton.icon(
+                          style: FilledButton.styleFrom(backgroundColor: _accent, foregroundColor: Colors.black),
+                          onPressed: _stops.isEmpty ? null : _openInGoogleMaps,
+                          icon: const Icon(Icons.navigation_rounded),
+                          label: const Text('Google Maps'),
+                        ),
+                      ),
+                    ],
                   ),
+                  if (_stops.length < 3)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 6),
+                      child: Text(
+                        _stops.isEmpty ? 'Başlamak için ilk durağını ekle.' : 'Akıllı sıralama için en az 3 durak ekle.',
+                        style: const TextStyle(color: Colors.white38, fontSize: 11),
+                      ),
+                    ),
                 ],
               ),
             ),

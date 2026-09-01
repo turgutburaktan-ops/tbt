@@ -132,16 +132,15 @@ class SpotImage extends StatelessWidget {
   Widget _loadingPlaceholder() => Container(
     width: width,
     height: height,
-    color: const Color(0xFF1A1D20),
-    alignment: Alignment.center,
-    child: const SizedBox(
-      width: 22,
-      height: 22,
-      child: CircularProgressIndicator(
-        strokeWidth: 2,
-        color: Color(0xFFB7BCC2),
+    decoration: const BoxDecoration(
+      gradient: LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [Color(0xFF20252B), Color(0xFF121519)],
       ),
     ),
+    alignment: Alignment.center,
+    child: const Icon(Icons.landscape_outlined, color: Colors.white24, size: 24),
   );
 
   Widget _legacyOrSearch({bool preview = true}) {

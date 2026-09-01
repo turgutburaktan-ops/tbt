@@ -83,9 +83,7 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
       );
       if (!mounted || remote.isEmpty) return;
 
-      // Remote katalog yerel katalogla birleştirilir. Böylece uygulamanın
-      // sabit/öne çıkan yerleri (özellikle Anıtkabir) uzak veri yenilenince
-      // kaybolmaz; uzak kayıtta aynı id varsa güncel veri onu günceller.
+      // Uzak katalog yerel katalogla birleştirilir; aynı id güncellenir.
       final byId = <String, PhotoSpot>{for (final spot in _all) spot.id: spot};
       for (final spot in remote) {
         byId[spot.id] = spot;
@@ -119,10 +117,6 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
     } catch (_) {}
   }
 
-  bool _isAnitkabir(PhotoSpot spot) =>
-      spot.id.toLowerCase() == 'anitkabir' ||
-      spot.name.toLowerCase().replaceAll('ı', 'i').contains('anitkabir');
-
   void _applyFilter() {
     final key = _search.trim().toLowerCase();
     final next = _all.where((spot) {
@@ -132,11 +126,6 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
           .contains(key);
     }).toList();
     next.sort((a, b) {
-      if (key.isEmpty) {
-        final aPinned = _isAnitkabir(a);
-        final bPinned = _isAnitkabir(b);
-        if (aPinned != bPinned) return aPinned ? -1 : 1;
-      }
       if (_position != null) {
         final distanceOrder = _distance(a).compareTo(_distance(b));
         if (distanceOrder != 0) return distanceOrder;
@@ -292,7 +281,7 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
               );
               return _SpotVenueCard(
                 spot: spot,
-                pinned: _search.isEmpty && _isAnitkabir(spot),
+                pinned: false,
                 selected: selected,
                 distanceLabel: _distanceLabel(spot),
                 onOpen: () => Navigator.push(

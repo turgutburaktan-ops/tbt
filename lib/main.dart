@@ -5,6 +5,7 @@ import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'firebase_options.dart';
 import 'screens/admin_business_premium_screen.dart';
@@ -261,6 +262,9 @@ class _BestPhotoSpotAppState extends State<BestPhotoSpotApp> {
     debugShowCheckedModeBanner: false,
     title: 'En İyi Çekim Noktası',
     theme: AppTheme.dark,
+    locale: const Locale('tr', 'TR'),
+    supportedLocales: const [Locale('tr', 'TR')],
+    localizationsDelegates: GlobalMaterialLocalizations.delegates,
     builder: (context, child) {
       final media = MediaQuery.of(context);
       final currentScale = media.textScaler.scale(1.0);

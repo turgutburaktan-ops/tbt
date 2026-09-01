@@ -75,10 +75,51 @@ class BusinessContentManagerScreen extends StatelessWidget {
                             0,
                       ),
             );
-          if (docs.isEmpty)
-            return const Center(
-              child: Text('Henüz içerik yok. Yeni Ekle ile başlayabilirsin.'),
+          if (docs.isEmpty) {
+            final icon = switch (type) {
+              'menu' => Icons.restaurant_menu_rounded,
+              'campaign' => Icons.local_offer_outlined,
+              _ => Icons.event_available_outlined,
+            };
+            final heading = switch (type) {
+              'menu' => 'Menünü oluşturmaya başla',
+              'campaign' => 'İlk kampanyanı yayınla',
+              _ => 'Programını müşterilerinle paylaş',
+            };
+            final detail = switch (type) {
+              'menu' => 'Ürünlerini fotoğraf, fiyat ve stok bilgisiyle profesyonel biçimde sergile.',
+              'campaign' => 'Süreli fırsatlar ekle; bitiş tarihinde görünürlük otomatik kapansın.',
+              _ => 'Etkinlik, canlı müzik veya özel programlarını tarih ve saat bilgisiyle ekle.',
+            };
+            return Center(
+              child: Container(
+                margin: const EdgeInsets.all(24),
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 64,
+                      height: 64,
+                      decoration: BoxDecoration(color: AppColors.cyan.withValues(alpha: .12), shape: BoxShape.circle),
+                      child: Icon(icon, size: 30, color: AppColors.cyan),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(heading, textAlign: TextAlign.center, style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w900)),
+                    const SizedBox(height: 8),
+                    Text(detail, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white60, height: 1.45)),
+                    const SizedBox(height: 18),
+                    FilledButton.icon(onPressed: () => _edit(context), icon: const Icon(Icons.add_rounded), label: const Text('Yeni içerik ekle')),
+                  ],
+                ),
+              ),
             );
+          }
           return ListView.separated(
             padding: const EdgeInsets.fromLTRB(14, 14, 14, 100),
             itemCount: docs.length,

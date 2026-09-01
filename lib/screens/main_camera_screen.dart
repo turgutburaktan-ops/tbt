@@ -261,6 +261,9 @@ class _MainCameraScreenState extends State<MainCameraScreen> {
     } catch (error) {
       _message('Galeri açılamadı: ${error.toString().replaceFirst('Exception: ', '')}');
     } finally {
+      // Android photo picker dismissal can dispatch the same tap once more to
+      // the underlying camera surface. Keep a short cooldown before rearming.
+      await Future<void>.delayed(const Duration(milliseconds: 450));
       if (mounted) setState(() => _openingGallery = false);
     }
   }

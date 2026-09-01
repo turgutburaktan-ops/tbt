@@ -199,17 +199,20 @@ class _ContextBrowser extends StatelessWidget {
         if (!snapshot.hasData) {
           return const Center(child: CircularProgressIndicator());
         }
-        final items = snapshot.data!.docs.map((doc) {
+        final unique = <String, _ContextItem>{};
+        for (final doc in snapshot.data!.docs) {
           final data = doc.data();
-          return _ContextItem(
+          final item = _ContextItem(
             id: doc.id,
             name: _nameFor(spec.type, data),
             type: spec.type,
           );
-        }).where((item) {
-          if (item.name.trim().isEmpty) return false;
-          return query.isEmpty || item.name.toLowerCase().contains(query);
-        }).toList();
+          final normalized = item.name.trim().toLowerCase();
+          if (normalized.length < 4) continue;
+          if (query.isNotEmpty && !normalized.contains(query)) continue;
+          unique.putIfAbsent(normalized, () => item);
+        }
+        final items = unique.values.toList();
         items.sort((a, b) => a.name.compareTo(b.name));
         if (items.isEmpty) {
           return Center(
