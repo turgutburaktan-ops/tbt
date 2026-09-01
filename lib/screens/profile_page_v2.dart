@@ -14,6 +14,7 @@ import '../services/travel_plan_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/firebase_media_image.dart';
 import '../widgets/profile_favorite_places_section.dart';
+import '../widgets/public_achievement_badges.dart';
 import 'create_post_screen.dart';
 import 'follow_list_screen.dart';
 import 'login_screen.dart';
@@ -213,6 +214,7 @@ class _ProfileBodyState extends State<_ProfileBody> {
                       photo,
                       type,
                       posts.length,
+                      profile,
                     ),
                   ),
                   SliverToBoxAdapter(child: _typeModule(type)),
@@ -391,6 +393,7 @@ class _ProfileBodyState extends State<_ProfileBody> {
     String photo,
     String type,
     int postCount,
+    Map<String, dynamic> profile,
   ) => Padding(
     padding: const EdgeInsets.fromLTRB(16, 4, 16, 14),
     child: Column(
@@ -547,6 +550,8 @@ class _ProfileBodyState extends State<_ProfileBody> {
             height: 1.35,
           ),
         ),
+        const SizedBox(height: 9),
+        PublicAchievementBadges(profile: profile),
         const SizedBox(height: 12),
         Row(
           children: [
