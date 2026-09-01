@@ -55,14 +55,25 @@ jobs:
           # must not participate in release analysis.
           rm -f test/widget_test.dart
           cp /tmp/tbt-manifest.xml android/app/src/main/AndroidManifest.xml
-          printf '%s' "$PLAY_KEYSTORE_BASE64" | base64 --decode > android/app/tbt-release.jks
+          printf '%s' "$PLAY_KEYSTORE_BASE64" | base64 --decode > android/app/tbt-upload.p12
+          keytool -importkeystore -noprompt \
+            -srckeystore android/app/tbt-upload.p12 \
+            -srcstoretype PKCS12 \
+            -srcstorepass "$PLAY_KEYSTORE_PASSWORD" \
+            -srcalias "$PLAY_KEY_ALIAS" \
+            -srckeypass "$PLAY_KEY_PASSWORD" \
+            -destkeystore android/app/tbt-release.jks \
+            -deststoretype JKS \
+            -deststorepass "$PLAY_KEYSTORE_PASSWORD" \
+            -destalias "$PLAY_KEY_ALIAS" \
+            -destkeypass "$PLAY_KEY_PASSWORD"
           python3 - <<'PY'
           import os
           from pathlib import Path
           p=Path('android/app/build.gradle.kts')
           s=p.read_text().replace('minSdk = flutter.minSdkVersion','minSdk = 26').replace('com.tbt.best_photo_spot','com.tbt.social')
           marker='    buildTypes {\n'
-          signing='''    signingConfigs {\n        create("release") {\n            storeFile = file("tbt-release.jks")\n            storeType = "PKCS12"\n            storePassword = System.getenv("PLAY_KEYSTORE_PASSWORD")\n            keyAlias = System.getenv("PLAY_KEY_ALIAS")\n            keyPassword = System.getenv("PLAY_KEY_PASSWORD")\n        }\n    }\n\n'''
+          signing='''    signingConfigs {\n        create("release") {\n            storeFile = file("tbt-release.jks")\n            storeType = "JKS"\n            storePassword = System.getenv("PLAY_KEYSTORE_PASSWORD")\n            keyAlias = System.getenv("PLAY_KEY_ALIAS")\n            keyPassword = System.getenv("PLAY_KEY_PASSWORD")\n        }\n    }\n\n'''
           s=s.replace(marker, signing+marker, 1)
           s=s.replace('signingConfig = signingConfigs.getByName("debug")','signingConfig = signingConfigs.getByName("release")')
           p.write_text(s)
