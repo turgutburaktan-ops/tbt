@@ -9,6 +9,7 @@ import '../services/social_service.dart';
 import '../services/story_service.dart';
 import '../widgets/firebase_media_image.dart';
 import '../widgets/profile_favorite_places_section.dart';
+import '../widgets/public_achievement_badges.dart';
 import '../widgets/story_strip.dart';
 import '../widgets/user_safety_actions.dart';
 import 'chat_screen.dart';
@@ -260,6 +261,8 @@ class UserProfileScreen extends StatelessWidget {
                               ),
                             ),
                           ],
+                          const SizedBox(height: 10),
+                          PublicAchievementBadges(profile: data),
                           if (!isOwnProfile) ...[
                             const SizedBox(height: 16),
                             Row(
