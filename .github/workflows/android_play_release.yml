@@ -50,6 +50,10 @@ jobs:
           cp android/app/src/main/AndroidManifest.xml /tmp/tbt-manifest.xml
           rm -rf android
           flutter create --platforms=android --org com.tbt --project-name best_photo_spot .
+          # `flutter create` adds the stock counter-app test when this repository
+          # has no test directory. It references a non-existent MyApp class and
+          # must not participate in release analysis.
+          rm -f test/widget_test.dart
           cp /tmp/tbt-manifest.xml android/app/src/main/AndroidManifest.xml
           printf '%s' "$PLAY_KEYSTORE_BASE64" | base64 --decode > android/app/tbt-release.jks
           python3 - <<'PY'
