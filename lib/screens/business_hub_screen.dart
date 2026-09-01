@@ -8,6 +8,7 @@ import 'package:image_picker/image_picker.dart';
 import '../services/business_service.dart';
 import '../services/location_service.dart';
 import '../theme/app_theme.dart';
+import '../widgets/business_editor_sheet.dart';
 import 'business_content_manager_screen.dart';
 import 'business_hours_screen.dart';
 import 'business_pro_dashboard_screen.dart';
@@ -641,10 +642,14 @@ class _BusinessHubScreenState extends State<BusinessHubScreen> {
         ),
         p = TextEditingController(text: (existing['phone'] ?? '').toString()),
         w = TextEditingController(text: (existing['website'] ?? '').toString());
-    await showDialog<void>(
+    await showModalBottomSheet<void>(
       context: context,
-      builder: (dc) => AlertDialog(
-        title: const Text('Profil bilgilerini düzenle'),
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
+      builder: (dc) => BusinessEditorSheet(
+        icon: Icons.storefront_rounded,
+        title: 'Profil bilgilerini düzenle',
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,

@@ -1,0 +1,88 @@
+name: Android Play Release
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  appbundle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Verify Play release secrets
+        env:
+          PLAY_KEYSTORE_BASE64: ${{ secrets.PLAY_KEYSTORE_BASE64 }}
+          PLAY_KEYSTORE_PASSWORD: ${{ secrets.PLAY_KEYSTORE_PASSWORD }}
+          PLAY_KEY_ALIAS: ${{ secrets.PLAY_KEY_ALIAS }}
+          PLAY_KEY_PASSWORD: ${{ secrets.PLAY_KEY_PASSWORD }}
+          MAPS_API_KEY: ${{ secrets.MAPS_API_KEY }}
+          ADMOB_ANDROID_APP_ID: ${{ secrets.ADMOB_ANDROID_APP_ID }}
+          ADMOB_NATIVE_ANDROID: ${{ secrets.ADMOB_NATIVE_ANDROID }}
+          GOOGLE_SERVER_CLIENT_ID: ${{ secrets.GOOGLE_SERVER_CLIENT_ID }}
+        run: |
+          set -euo pipefail
+          for name in PLAY_KEYSTORE_BASE64 PLAY_KEYSTORE_PASSWORD PLAY_KEY_ALIAS PLAY_KEY_PASSWORD MAPS_API_KEY ADMOB_ANDROID_APP_ID ADMOB_NATIVE_ANDROID GOOGLE_SERVER_CLIENT_ID; do
+            test -n "${!name:-}" || { echo "$name secret is missing"; exit 1; }
+          done
+          case "$ADMOB_ANDROID_APP_ID" in ca-app-pub-*~*) ;; *) exit 1 ;; esac
+          case "$ADMOB_NATIVE_ANDROID" in ca-app-pub-*/*) ;; *) exit 1 ;; esac
+      - name: Prepare signed Android host
+        env:
+          PLAY_KEYSTORE_BASE64: ${{ secrets.PLAY_KEYSTORE_BASE64 }}
+          PLAY_KEYSTORE_PASSWORD: ${{ secrets.PLAY_KEYSTORE_PASSWORD }}
+          PLAY_KEY_ALIAS: ${{ secrets.PLAY_KEY_ALIAS }}
+          PLAY_KEY_PASSWORD: ${{ secrets.PLAY_KEY_PASSWORD }}
+          MAPS_API_KEY: ${{ secrets.MAPS_API_KEY }}
+          ADMOB_ANDROID_APP_ID: ${{ secrets.ADMOB_ANDROID_APP_ID }}
+        run: |
+          set -euo pipefail
+          cp android/app/src/main/AndroidManifest.xml /tmp/tbt-manifest.xml
+          rm -rf android
+          flutter create --platforms=android --org com.tbt --project-name best_photo_spot .
+          cp /tmp/tbt-manifest.xml android/app/src/main/AndroidManifest.xml
+          printf '%s' "$PLAY_KEYSTORE_BASE64" | base64 --decode > android/app/tbt-release.jks
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          p=Path('android/app/build.gradle.kts')
+          s=p.read_text().replace('minSdk = flutter.minSdkVersion','minSdk = 26').replace('com.tbt.best_photo_spot','com.tbt.social')
+          marker='    buildTypes {\n'
+          signing='''    signingConfigs {\n        create("release") {\n            storeFile = file("tbt-release.jks")\n            storePassword = System.getenv("PLAY_KEYSTORE_PASSWORD")\n            keyAlias = System.getenv("PLAY_KEY_ALIAS")\n            keyPassword = System.getenv("PLAY_KEY_PASSWORD")\n        }\n    }\n\n'''
+          s=s.replace(marker, signing+marker, 1)
+          s=s.replace('signingConfig = signingConfigs.getByName("debug")','signingConfig = signingConfigs.getByName("release")')
+          p.write_text(s)
+          m=Path('android/app/src/main/AndroidManifest.xml')
+          text=m.read_text().replace('${MAPS_API_KEY}',os.environ['MAPS_API_KEY']).replace('ca-app-pub-3940256099942544~3347511713',os.environ['ADMOB_ANDROID_APP_ID'])
+          m.write_text(text)
+          for activity in Path('android/app/src/main/kotlin').rglob('MainActivity.kt'):
+            a=activity.read_text().replace('package com.tbt.best_photo_spot','package com.tbt.social').replace('import io.flutter.embedding.android.FlutterActivity','import io.flutter.embedding.android.FlutterFragmentActivity').replace('FlutterActivity()','FlutterFragmentActivity()')
+            activity.write_text(a)
+          PY
+      - name: Build Play app bundle
+        env:
+          PLAY_KEYSTORE_PASSWORD: ${{ secrets.PLAY_KEYSTORE_PASSWORD }}
+          PLAY_KEY_ALIAS: ${{ secrets.PLAY_KEY_ALIAS }}
+          PLAY_KEY_PASSWORD: ${{ secrets.PLAY_KEY_PASSWORD }}
+          GOOGLE_SERVER_CLIENT_ID: ${{ secrets.GOOGLE_SERVER_CLIENT_ID }}
+          ADMOB_NATIVE_ANDROID: ${{ secrets.ADMOB_NATIVE_ANDROID }}
+        run: |
+          flutter pub get
+          flutter analyze --no-fatal-warnings --no-fatal-infos
+          flutter build appbundle --release --no-pub --dart-define=GOOGLE_SERVER_CLIENT_ID="$GOOGLE_SERVER_CLIENT_ID" --dart-define=ADMOB_NATIVE_ANDROID="$ADMOB_NATIVE_ANDROID"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tbt-play-release-aab
+          path: build/app/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+          retention-days: 14

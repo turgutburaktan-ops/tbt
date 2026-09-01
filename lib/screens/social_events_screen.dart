@@ -536,6 +536,22 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
                                         fontWeight: FontWeight.w700,
                                       ),
                                     ),
+                                    if (event.verifiedBusiness) ...[
+                                      const SizedBox(height: 5),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.cyan.withValues(alpha: .12),
+                                          borderRadius: BorderRadius.circular(99),
+                                          border: Border.all(color: AppColors.cyan.withValues(alpha: .35)),
+                                        ),
+                                        child: const Row(mainAxisSize: MainAxisSize.min, children: [
+                                          Icon(Icons.verified_rounded, size: 14, color: AppColors.cyan),
+                                          SizedBox(width: 5),
+                                          Text('Doğrulanmış işletme', style: TextStyle(color: AppColors.cyan, fontSize: 11, fontWeight: FontWeight.w800)),
+                                        ]),
+                                      ),
+                                    ],
                                   ],
                                 ),
                               ),

@@ -177,9 +177,36 @@ exports.addBusinessProgramItem = onCall({region: 'europe-west1'}, async (request
   const title = clean(d.title, 160), description = clean(d.description, 700), startsAtMs = Number(d.startsAtMs || 0);
   if (!title || !Number.isFinite(startsAtMs) || startsAtMs < Date.now() - 60000) throw new HttpsError('invalid-argument', 'Program bilgileri geçersiz.');
   const venueRef = db.collection('business_venues').doc(id);
-  await venueRef.set({ownerUid: uid, verified: true, updatedAt: FieldValue.serverTimestamp()}, {merge: true});
-  await venueRef.collection('program').add({title, description, startsAt: Timestamp.fromMillis(startsAtMs), active: true, createdBy: uid, createdAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp()});
-  return {ok: true};
+  const venue = (await venueRef.get()).data() || {};
+  const programRef = venueRef.collection('program').doc();
+  const eventRef = db.collection('social_events').doc(`business_${programRef.id}`);
+  const venueName = clean(venue.venueName || d.venueName || 'Doğrulanmış işletme', 160);
+  const city = clean(venue.city || '', 80);
+  const latitude = Number(venue.latitude);
+  const longitude = Number(venue.longitude);
+  const startsAt = Timestamp.fromMillis(startsAtMs);
+  const batch = db.batch();
+  batch.set(venueRef, {ownerUid: uid, verified: true, updatedAt: FieldValue.serverTimestamp()}, {merge: true});
+  batch.set(programRef, {title, description, startsAt, active: true, createdBy: uid, socialEventId: eventRef.id, createdAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp()});
+  batch.set(eventRef, {
+    id: eventRef.id, title, description, startsAt,
+    type: 'other', customTypeLabel: 'İşletme etkinliği',
+    hostId: uid, hostName: venueName, capacity: 500,
+    participantIds: [], city, locationLabel: venueName,
+    latitude: Number.isFinite(latitude) ? latitude : null,
+    longitude: Number.isFinite(longitude) ? longitude : null,
+    status: 'open', visibility: 'public', allowedUserIds: [],
+    approximateLocationOnly: false, accessType: 'free', ticketPriceMinor: 0,
+    currency: 'TRY', paymentStatus: 'notRequired', trustStatus: 'verified_business',
+    salesStatus: 'not_required', riskLevel: 'low', reportCount: 0,
+    paymentReleaseStatus: 'not_applicable', interestedCount: 0,
+    privateParticipantCount: 0, source: 'business_program',
+    businessVenueKey: id, businessVenueName: venueName,
+    businessProgramId: programRef.id, verifiedBusiness: true,
+    createdAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp(),
+  });
+  await batch.commit();
+  return {ok: true, id: programRef.id, socialEventId: eventRef.id};
 });
 
 exports.addBusinessCampaign = onCall({region: 'europe-west1'}, async (request) => {

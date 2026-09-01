@@ -8,6 +8,7 @@ import 'package:image_picker/image_picker.dart';
 import '../services/business_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/firebase_media_image.dart';
+import '../widgets/business_editor_sheet.dart';
 
 class BusinessContentManagerScreen extends StatelessWidget {
   final String category;
@@ -382,11 +383,15 @@ class BusinessContentManagerScreen extends StatelessWidget {
     );
     bool available = data?['available'] != false;
     File? picked;
-    await showDialog<void>(
+    await showModalBottomSheet<void>(
       context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
       builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          title: Text(id == null ? 'Menü ürünü ekle' : 'Menü ürününü düzenle'),
+        builder: (context, setState) => BusinessEditorSheet(
+          icon: Icons.restaurant_menu_rounded,
+          title: id == null ? 'Menü ürünü ekle' : 'Menü ürününü düzenle',
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -532,11 +537,15 @@ class BusinessContentManagerScreen extends StatelessWidget {
     var until =
         (data?['validUntil'] as Timestamp?)?.toDate() ??
         DateTime.now().add(const Duration(days: 7));
-    await showDialog<void>(
+    await showModalBottomSheet<void>(
       context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
       builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          title: Text(id == null ? 'Kampanya ekle' : 'Kampanyayı düzenle'),
+        builder: (context, setState) => BusinessEditorSheet(
+          icon: Icons.local_offer_outlined,
+          title: id == null ? 'Kampanya ekle' : 'Kampanyayı düzenle',
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -642,11 +651,16 @@ class BusinessContentManagerScreen extends StatelessWidget {
     var starts =
         (data?['startsAt'] as Timestamp?)?.toDate() ??
         DateTime.now().add(const Duration(hours: 2));
-    await showDialog<void>(
+    await showModalBottomSheet<void>(
       context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
       builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          title: Text(id == null ? 'Program ekle' : 'Programı düzenle'),
+        builder: (context, setState) => BusinessEditorSheet(
+          icon: Icons.event_available_outlined,
+          subtitle: 'Yayınlandığında Etkinlikler sayfasında da görünür.',
+          title: id == null ? 'Program / etkinlik ekle' : 'Programı düzenle',
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,

@@ -121,10 +121,13 @@ class SocialEvent {
       spotName,
       communityId,
       communityName,
+      businessVenueKey,
+      businessVenueName,
       paymentProvider,
       externalProductId;
   final double? latitude, longitude;
   final bool approximateLocationOnly;
+  final bool verifiedBusiness;
   final EventAccessType accessType;
   final DateTime? ticketSalesEndAt;
   final EventPaymentStatus paymentStatus;
@@ -147,6 +150,9 @@ class SocialEvent {
     required this.spotName,
     this.communityId,
     this.communityName,
+    this.businessVenueKey,
+    this.businessVenueName,
+    this.verifiedBusiness = false,
     required this.status,
     required this.approximateLocationOnly,
     this.latitude,
@@ -233,6 +239,9 @@ class SocialEvent {
       spotName: d['spotName']?.toString(),
       communityId: d['communityId']?.toString(),
       communityName: d['communityName']?.toString(),
+      businessVenueKey: d['businessVenueKey']?.toString(),
+      businessVenueName: d['businessVenueName']?.toString(),
+      verifiedBusiness: d['verifiedBusiness'] == true,
       latitude:
           (d['latitude'] as num?)?.toDouble() ??
           (geo is GeoPoint ? geo.latitude : null),
