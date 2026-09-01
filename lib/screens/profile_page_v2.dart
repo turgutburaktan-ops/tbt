@@ -15,6 +15,7 @@ import '../theme/app_theme.dart';
 import '../widgets/firebase_media_image.dart';
 import '../widgets/profile_favorite_places_section.dart';
 import '../widgets/public_achievement_badges.dart';
+import '../widgets/profile_reward_surface.dart';
 import 'create_post_screen.dart';
 import 'follow_list_screen.dart';
 import 'login_screen.dart';
@@ -394,7 +395,9 @@ class _ProfileBodyState extends State<_ProfileBody> {
     String type,
     int postCount,
     Map<String, dynamic> profile,
-  ) => Padding(
+  ) => ProfileRewardSurface(
+    profile: profile,
+    child: Padding(
     padding: const EdgeInsets.fromLTRB(16, 4, 16, 14),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -573,6 +576,7 @@ class _ProfileBodyState extends State<_ProfileBody> {
           ],
         ),
       ],
+    ),
     ),
   );
 
