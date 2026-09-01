@@ -94,6 +94,25 @@ class _BusinessProDashboardScreenState
     }
   }
 
+  Future<void> _startPremiumTrial() async {
+    try {
+      await BusinessService.instance.startPremiumTrial(
+        widget.category,
+        widget.venueId,
+      );
+      await _load();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('30 günlük Premium denemen başladı.')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(_error(e))));
+      }
+    }
+  }
+
   Future<void> _respondReservation(String id, String decision) async {
     try {
       await _functions.httpsCallable('respondBusinessReservation').call({
@@ -118,9 +137,9 @@ class _BusinessProDashboardScreenState
     final reservations = ((_dashboard['reservations'] as List?) ?? const [])
         .map((e) => Map<String, dynamic>.from(e as Map))
         .toList();
-    final early = _entitlement['earlyAccessActive'] == true;
     final entitled = _entitlement['entitled'] == true;
-    final source = (_entitlement['source'] ?? 'none').toString();
+    final premium = _entitlement['premiumEntitled'] == true;
+    final trialUsed = _entitlement['premiumTrialUsed'] == true;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -156,11 +175,11 @@ class _BusinessProDashboardScreenState
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
-                                early
-                                    ? 'Kurucu İşletme • Pro Ücretsiz'
+                                premium
+                                    ? 'TBT Business Premium'
                                     : entitled
-                                    ? 'TBT Business Pro'
-                                    : 'TBT Business',
+                                        ? 'TBT Business Pro • Ücretsiz'
+                                        : 'TBT Business',
                                 style: const TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.w900,
@@ -171,13 +190,11 @@ class _BusinessProDashboardScreenState
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          early
-                              ? 'Erken katılım avantajın aktif. Pro araçlarını lansman döneminde ücretsiz kullanabilirsin.'
+                          premium
+                              ? 'Premium görünürlük, Boost ve gelişmiş büyüme ayrıcalıkların aktif.'
                               : entitled
-                              ? source == 'admin_grant'
-                                    ? 'TBT tarafından tanımlanan ücretsiz Business Pro hakkın aktif.'
-                                    : 'Gelişmiş işletme araçların aktif.'
-                              : 'Pro erişimin şu anda aktif değil. Temel işletme profilin, menün ve paylaşımların kullanılmaya devam eder.',
+                                  ? 'İstatistik, rezervasyon, menü, kampanya ve içerik araçlarının tamamı ücretsiz Pro planında aktif.'
+                                  : 'İşletme araçları doğrulama sonrasında açılır.',
                           style: const TextStyle(
                             color: Colors.white60,
                             height: 1.4,
@@ -252,6 +269,39 @@ class _BusinessProDashboardScreenState
                       ],
                     ),
                     const SizedBox(height: 20),
+                    if (!premium)
+                      Card(
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Row(
+                                children: [
+                                  Icon(Icons.diamond_outlined, color: Color(0xFFFFC857)),
+                                  SizedBox(width: 9),
+                                  Text('Business Premium', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w900)),
+                                ],
+                              ),
+                              const SizedBox(height: 9),
+                              const Text(
+                                'Haritada ve aramada Boost, kampanya hedefleme, şube analizi, özel işletme rozeti, gelişmiş raporlar ve öncelikli destek.',
+                                style: TextStyle(color: Colors.white60, height: 1.4),
+                              ),
+                              const SizedBox(height: 12),
+                              SizedBox(
+                                width: double.infinity,
+                                child: FilledButton.icon(
+                                  onPressed: trialUsed ? null : _startPremiumTrial,
+                                  icon: const Icon(Icons.bolt_rounded),
+                                  label: Text(trialUsed ? 'Deneme hakkı kullanıldı' : '30 gün ücretsiz dene'),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    if (!premium) const SizedBox(height: 10),
                     Card(
                       child: ListTile(
                         leading: const Icon(
@@ -262,11 +312,11 @@ class _BusinessProDashboardScreenState
                           'Business Boost',
                           style: TextStyle(fontWeight: FontWeight.w900),
                         ),
-                        subtitle: const Text(
-                          'Lansman döneminde işletmeni 3 gün ücretsiz öne çıkar.',
-                        ),
+                        subtitle: Text(premium
+                            ? 'İşletmeni 3 gün boyunca ilgili kullanıcılara öne çıkar.'
+                            : 'Boost, Premium görünürlük ayrıcalığıdır.'),
                         trailing: FilledButton(
-                          onPressed: _boost,
+                          onPressed: premium ? _boost : null,
                           child: const Text('Boost'),
                         ),
                       ),
