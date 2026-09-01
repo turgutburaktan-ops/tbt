@@ -1005,16 +1005,8 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
                   Positioned.fill(
                     child: IgnorePointer(
                       child: Center(
-                        child: Container(
-                          constraints: const BoxConstraints(maxWidth: 300),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 9,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: .52),
-                            borderRadius: BorderRadius.circular(14),
-                          ),
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 320),
                           child: Text(
                             current.caption,
                             textAlign: TextAlign.center,
@@ -1023,7 +1015,8 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
                               fontSize: 20,
                               fontWeight: FontWeight.w900,
                               shadows: [
-                                Shadow(color: Colors.black, blurRadius: 8),
+                                Shadow(color: Colors.black, blurRadius: 12, offset: Offset(0, 2)),
+                                Shadow(color: Colors.black87, blurRadius: 3),
                               ],
                             ),
                           ),

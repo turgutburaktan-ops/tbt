@@ -942,6 +942,14 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
                   ),
                 ),
                 const SizedBox(height: 8),
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text('STİL VE EFEKT', style: TextStyle(color: Colors.white54, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: .9)),
+                  ),
+                ),
+                const SizedBox(height: 4),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 14),
                   child: Row(
