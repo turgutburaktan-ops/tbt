@@ -23,7 +23,7 @@ class RetentionNowOverlay extends StatelessWidget {
       child,
       Positioned(
         left: 12,
-        bottom: 84,
+        bottom: 88,
         child: SafeArea(
           top: false,
           child: Material(
@@ -32,10 +32,8 @@ class RetentionNowOverlay extends StatelessWidget {
               onTap: () => _openNow(context),
               borderRadius: BorderRadius.circular(999),
               child: Ink(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 11,
-                  vertical: 7,
-                ),
+                width: 42,
+                height: 42,
                 decoration: BoxDecoration(
                   color: const Color(0xE60D1118),
                   borderRadius: BorderRadius.circular(999),
@@ -43,25 +41,14 @@ class RetentionNowOverlay extends StatelessWidget {
                     color: Colors.white.withValues(alpha: .11),
                   ),
                 ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _PulseDot(),
-                    SizedBox(width: 6),
-                    Text(
-                      'Buradayım / Buluşalım',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    SizedBox(width: 3),
-                    Icon(
-                      Icons.keyboard_arrow_up_rounded,
-                      size: 15,
-                      color: Colors.white54,
-                    ),
-                  ],
+                child: const Center(
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Icon(Icons.near_me_rounded, size: 21, color: Colors.white),
+                      Positioned(right: 1, top: 1, child: _PulseDot()),
+                    ],
+                  ),
                 ),
               ),
             ),

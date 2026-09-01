@@ -5,6 +5,8 @@ import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import 'firebase_options.dart';
 import 'screens/admin_business_premium_screen.dart';
@@ -15,6 +17,7 @@ import 'screens/admin_insights_screen.dart';
 import 'screens/admin_operations_screen.dart';
 import 'screens/admin_portal_screen.dart';
 import 'screens/admin_spot_submissions_screen.dart';
+import 'screens/admin_published_spots_screen.dart';
 import 'screens/app_entry_gate.dart';
 import 'screens/business_hub_screen.dart';
 import 'screens/managed_venues_screen.dart';
@@ -83,6 +86,11 @@ Future<void> main() async {
       }
 
       if (bootstrapError == null) {
+        if (!kIsWeb &&
+            (defaultTargetPlatform == TargetPlatform.android ||
+                defaultTargetPlatform == TargetPlatform.iOS)) {
+          unawaited(MobileAds.instance.initialize());
+        }
         try {
           await FirebaseAppCheck.instance
               .activate(
@@ -260,6 +268,9 @@ class _BestPhotoSpotAppState extends State<BestPhotoSpotApp> {
     debugShowCheckedModeBanner: false,
     title: 'En İyi Çekim Noktası',
     theme: AppTheme.dark,
+    locale: const Locale('tr', 'TR'),
+    supportedLocales: const [Locale('tr', 'TR')],
+    localizationsDelegates: GlobalMaterialLocalizations.delegates,
     builder: (context, child) {
       final media = MediaQuery.of(context);
       final currentScale = media.textScaler.scale(1.0);
@@ -287,6 +298,7 @@ class _BestPhotoSpotAppState extends State<BestPhotoSpotApp> {
       '/admin-preview': (_) => const AdminRolePreviewScreen(),
       '/admin-insights': (_) => const AdminInsightsScreen(),
       '/admin-spot-submissions': (_) => const AdminSpotSubmissionsScreen(),
+      '/admin-published-spots': (_) => const AdminPublishedSpotsScreen(),
       '/moderation': (_) => const ModerationCenterScreen(),
       '/safety-privacy': (_) => const SafetyPrivacyCenterScreen(),
       '/search': (_) => const GlobalSearchScreen(),

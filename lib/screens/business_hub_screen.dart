@@ -8,6 +8,7 @@ import 'package:image_picker/image_picker.dart';
 import '../services/business_service.dart';
 import '../services/location_service.dart';
 import '../theme/app_theme.dart';
+import '../widgets/business_editor_sheet.dart';
 import 'business_content_manager_screen.dart';
 import 'business_hours_screen.dart';
 import 'business_pro_dashboard_screen.dart';
@@ -532,12 +533,21 @@ class _BusinessHubScreenState extends State<BusinessHubScreen> {
           ),
         ),
       const SizedBox(height: 10),
+      const _ManagementSection(
+        icon: Icons.insights_rounded,
+        title: 'Büyüme ve performans',
+      ),
       _Tile(
         Icons.workspace_premium_rounded,
         'TBT Business Pro',
         'İstatistikler, rezervasyonlar ve Boost.',
         _openPro,
         true,
+      ),
+      const SizedBox(height: 14),
+      const _ManagementSection(
+        icon: Icons.storefront_outlined,
+        title: 'Profil ve görünüm',
       ),
       _Tile(
         Icons.store_mall_directory_outlined,
@@ -564,6 +574,11 @@ class _BusinessHubScreenState extends State<BusinessHubScreen> {
         'Kapak Fotoğrafı',
         _uploadingMedia ? 'Görsel yükleniyor…' : 'Kapak görselini değiştir.',
         () => _pickProfileImage('cover'),
+      ),
+      const SizedBox(height: 14),
+      const _ManagementSection(
+        icon: Icons.dashboard_customize_outlined,
+        title: 'İçerik ve müşteri deneyimi',
       ),
       _Tile(
         Icons.restaurant_menu_rounded,
@@ -627,10 +642,14 @@ class _BusinessHubScreenState extends State<BusinessHubScreen> {
         ),
         p = TextEditingController(text: (existing['phone'] ?? '').toString()),
         w = TextEditingController(text: (existing['website'] ?? '').toString());
-    await showDialog<void>(
+    await showModalBottomSheet<void>(
       context: context,
-      builder: (dc) => AlertDialog(
-        title: const Text('Profil bilgilerini düzenle'),
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
+      builder: (dc) => BusinessEditorSheet(
+        icon: Icons.storefront_rounded,
+        title: 'Profil bilgilerini düzenle',
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -695,6 +714,32 @@ class _BusinessHubScreenState extends State<BusinessHubScreen> {
     'dining' => 'Restoran / Yeme-İçme',
     _ => 'İşletme',
   };
+}
+
+class _ManagementSection extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  const _ManagementSection({required this.icon, required this.title});
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.fromLTRB(4, 2, 4, 8),
+    child: Row(
+      children: [
+        Icon(icon, size: 17, color: AppColors.cyan),
+        const SizedBox(width: 8),
+        Text(
+          title.toUpperCase(),
+          style: const TextStyle(
+            color: Colors.white54,
+            fontSize: 11,
+            fontWeight: FontWeight.w900,
+            letterSpacing: .8,
+          ),
+        ),
+      ],
+    ),
+  );
 }
 
 class _PreviewBanner extends StatelessWidget {

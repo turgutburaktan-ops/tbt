@@ -172,6 +172,22 @@ class ChatService {
     );
   }
 
+  Stream<int> unreadThreadCount() {
+    return switchAuthStream<int>(
+      auth: _auth,
+      signedOutValue: 0,
+      signedIn: (user) => myThreads().map((threads) {
+        return threads.where((thread) {
+          if (thread.lastSenderId == user.uid || thread.lastMessageAt == null) {
+            return false;
+          }
+          final lastRead = thread.lastReadAt[user.uid];
+          return lastRead == null || thread.lastMessageAt!.isAfter(lastRead);
+        }).length;
+      }),
+    ).distinct();
+  }
+
   Stream<ChatThread?> watchThread(String threadId) {
     return switchAuthStream<ChatThread?>(
       auth: _auth,

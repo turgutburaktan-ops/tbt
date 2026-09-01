@@ -1,7 +1,7 @@
 name: best_photo_spot
 description: Smart photography assistant MVP.
 publish_to: "none"
-version: 0.1.0+1
+version: 1.0.0+1
 
 environment:
   sdk: ">=3.7.0 <4.0.0"
@@ -12,6 +12,8 @@ dependencies:
   firebase_app_check: 0.4.6
   shared_preferences: ^2.3.2
   flutter:
+    sdk: flutter
+  flutter_localizations:
     sdk: flutter
   firebase_auth: 6.5.7
   google_sign_in: ^6.2.2
@@ -25,6 +27,9 @@ dependencies:
   google_maps_flutter: ^2.10.0
   image_picker: ^1.1.2
   image: ^4.3.0
+  google_fonts: ^6.3.0
+  # v7 adds Gradle 9 support required by the current Flutter Android host.
+  google_mobile_ads: ^7.0.0
   flutter_image_filters: ^0.0.32
   http: ^1.2.2
   sensors_plus: ^6.1.2

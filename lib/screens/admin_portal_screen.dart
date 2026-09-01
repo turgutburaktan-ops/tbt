@@ -144,6 +144,13 @@ class _AdminPortalScreenState extends State<AdminPortalScreen> {
             accent: true,
           ),
           const SizedBox(height: 10),
+          const _RouteTile(
+            Icons.place_rounded,
+            'Yayınlanan Mekanlar',
+            'Mekanları ara, arşivle, yeniden yayınla veya kalıcı olarak sil.',
+            '/admin-published-spots',
+          ),
+          const SizedBox(height: 10),
           _HeroAction(
             icon: Icons.library_music_rounded,
             title: 'Müzik Kataloğu',

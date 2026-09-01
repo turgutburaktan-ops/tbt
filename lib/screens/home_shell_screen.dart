@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 
 import '../models/nearby_venue.dart';
 import '../services/app_notification_service.dart';
+import '../services/chat_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/nearby_places_view.dart';
 import 'camera_screen.dart';
@@ -597,7 +598,7 @@ class _HomeHeader extends StatelessWidget {
           ),
         ),
         StreamBuilder<int>(
-          stream: AppNotificationService.instance.unreadMessageCount(),
+          stream: ChatService.instance.unreadThreadCount(),
           builder: (_, snapshot) => _HeaderAction(
             tooltip: 'Mesajlar',
             icon: Icons.chat_bubble_outline_rounded,

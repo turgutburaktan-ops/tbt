@@ -117,77 +117,118 @@ class ProfileFavoritePlacesSection extends StatelessWidget {
                       ),
                   ],
                 ),
-                const SizedBox(height: 8),
-                Row(
-                  children: _types.map((type) {
+                const SizedBox(height: 10),
+                Container(
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF11141A),
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(color: const Color(0xFF292E38)),
+                  ),
+                  child: Column(
+                    children: _types.asMap().entries.map((entry) {
+                    final type = entry.value;
                     final value = favorites[type.key];
                     final data = value is Map
                         ? Map<String, dynamic>.from(value)
                         : null;
                     final name = (data?['name'] ?? '').toString().trim();
+                    final subtitle = (data?['subtitle'] ?? '').toString().trim();
                     if (!editable && data == null)
                       return const SizedBox.shrink();
-                    return Expanded(
-                      child: Padding(
-                        padding: EdgeInsets.only(
-                          right: type == _types.last ? 0 : 6,
-                        ),
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(14),
+                    return Column(
+                      children: [
+                        InkWell(
+                          borderRadius: BorderRadius.circular(18),
                           onTap: editable ? () => _pick(context, type) : null,
-                          child: Container(
-                            height: 86,
+                          child: Padding(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 9,
+                              horizontal: 14,
+                              vertical: 12,
                             ),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF11141A),
-                              borderRadius: BorderRadius.circular(14),
-                              border: Border.all(
-                                color: const Color(0xFF292E38),
-                              ),
-                            ),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
+                            child: Row(
                               children: [
-                                Icon(
-                                  type.icon,
-                                  size: 22,
-                                  color: const Color(0xFFB8A1FF),
-                                ),
-                                const SizedBox(height: 6),
-                                Text(
-                                  type.label,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    color: Colors.white54,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w700,
+                                Container(
+                                  width: 44,
+                                  height: 44,
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFB8A1FF)
+                                        .withValues(alpha: .12),
+                                    borderRadius: BorderRadius.circular(13),
+                                  ),
+                                  child: Icon(
+                                    type.icon,
+                                    size: 23,
+                                    color: const Color(0xFFB8A1FF),
                                   ),
                                 ),
-                                const SizedBox(height: 3),
-                                Text(
-                                  name.isEmpty ? 'Seç' : name,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontSize: 10.5,
-                                    fontWeight: FontWeight.w900,
-                                    color: name.isEmpty
-                                        ? Colors.white38
-                                        : Colors.white,
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        type.label,
+                                        style: const TextStyle(
+                                          color: Colors.white54,
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 3),
+                                      Text(
+                                        name.isEmpty ? 'Mekan seç' : name,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w900,
+                                          color: name.isEmpty
+                                              ? Colors.white38
+                                              : Colors.white,
+                                        ),
+                                      ),
+                                      if (subtitle.isNotEmpty) ...[
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          subtitle,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(
+                                            color: Colors.white38,
+                                            fontSize: 10.5,
+                                          ),
+                                        ),
+                                      ],
+                                    ],
                                   ),
                                 ),
+                                if (editable)
+                                  Icon(
+                                    name.isEmpty
+                                        ? Icons.add_circle_outline_rounded
+                                        : Icons.edit_outlined,
+                                    size: 21,
+                                    color: const Color(0xFFB8A1FF),
+                                  )
+                                else
+                                  const Icon(
+                                    Icons.chevron_right_rounded,
+                                    color: Colors.white38,
+                                  ),
                               ],
                             ),
                           ),
                         ),
-                      ),
+                        if (entry.key < _types.length - 1)
+                          const Divider(
+                            height: 1,
+                            indent: 70,
+                            color: Color(0xFF292E38),
+                          ),
+                      ],
                     );
                   }).toList(),
+                  ),
                 ),
               ],
             ],

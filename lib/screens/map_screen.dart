@@ -50,7 +50,7 @@ class _MapScreenState extends State<MapScreen> {
   RoadRouteResult? _roadRoute;
   _MapContentFilter _filter = _MapContentFilter.all;
 
-  static const LatLng _defaultLocation = LatLng(38.9637, 35.2433);
+  static const LatLng _defaultLocation = LatLng(38.6810, 39.2264);
   static const List<String> _pointCategories = <String>[
     'Kafe',
     'Yeme-İçme',
@@ -131,14 +131,19 @@ class _MapScreenState extends State<MapScreen> {
 
     if (_filter == _MapContentFilter.all ||
         _filter == _MapContentFilter.spots) {
-      final visibleSpots = _mapZoom < 7
-          ? _spots.take(48)
+      final candidates = _mapZoom < 7
+          ? _spots.take(120)
           : _mapZoom < 9
-          ? _spots.take(140)
-          : _mapZoom < 11
-          ? _spots.take(420)
+          ? _spots.take(320)
           : _spots;
-      for (final spot in visibleSpots) {
+      final cellSize = _mapZoom < 7 ? 2.2 : _mapZoom < 9 ? .65 : _mapZoom < 11 ? .18 : .025;
+      final grouped = <String, List<PhotoSpot>>{};
+      for (final spot in candidates) {
+        final key = '${(spot.latitude / cellSize).floor()}:${(spot.longitude / cellSize).floor()}';
+        grouped.putIfAbsent(key, () => <PhotoSpot>[]).add(spot);
+      }
+      for (final group in grouped.values) {
+        final spot = group.first;
         final inRoute = _routeSpots.any((item) => item.id == spot.id);
         markers.add(
           Marker(
@@ -151,7 +156,9 @@ class _MapScreenState extends State<MapScreen> {
                 : BitmapDescriptor.defaultMarker,
             infoWindow: InfoWindow(
               title: spot.name,
-              snippet: inRoute
+              snippet: group.length > 1
+                  ? '${group.length} yakın nokta • Yakınlaştırarak keşfet'
+                  : inRoute
                   ? '${spot.city} • Rotaya eklendi'
                   : '${spot.city} • ⭐ ${spot.rating}',
             ),
@@ -700,7 +707,7 @@ class _MapScreenState extends State<MapScreen> {
                   GoogleMap(
                     initialCameraPosition: const CameraPosition(
                       target: _defaultLocation,
-                      zoom: 5,
+                      zoom: 10.5,
                     ),
                     markers: _markers,
                     polylines: _polylines,
@@ -819,6 +826,11 @@ class _MapScreenState extends State<MapScreen> {
                               ),
                             ],
                           ),
+                        ),
+                        const SizedBox(height: 7),
+                        const Align(
+                          alignment: Alignment.centerLeft,
+                          child: _MapLegend(),
                         ),
                         if (activeDemands.isNotEmpty) ...[
                           const SizedBox(height: 8),
@@ -1020,6 +1032,45 @@ class _MapScreenState extends State<MapScreen> {
       },
     );
   }
+}
+
+class _MapLegend extends StatelessWidget {
+  const _MapLegend();
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+    decoration: BoxDecoration(
+      color: const Color(0xE60F1113),
+      borderRadius: BorderRadius.circular(99),
+      border: Border.all(color: Colors.white10),
+    ),
+    child: const Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _LegendDot(Colors.red, 'Yer'),
+        SizedBox(width: 9),
+        _LegendDot(Colors.purple, 'Etkinlik'),
+        SizedBox(width: 9),
+        _LegendDot(Colors.lightBlue, 'Benim'),
+      ],
+    ),
+  );
+}
+
+class _LegendDot extends StatelessWidget {
+  final Color color;
+  final String label;
+  const _LegendDot(this.color, this.label);
+  @override
+  Widget build(BuildContext context) => Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Container(width: 7, height: 7, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+      const SizedBox(width: 4),
+      Text(label, style: const TextStyle(fontSize: 10, color: Colors.white70, fontWeight: FontWeight.w700)),
+    ],
+  );
 }
 
 class _FilterButton extends StatelessWidget {

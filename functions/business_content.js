@@ -104,7 +104,19 @@ exports.updateBusinessContentItem = onCall({region: 'europe-west1'}, async (requ
     if (!nextTitle) throw new HttpsError('invalid-argument', 'Program başlığı zorunlu.');
   }
 
-  await ref.update(update);
+  if (type === 'program' && snap.data()?.socialEventId) {
+    const eventUpdate = {updatedAt: FieldValue.serverTimestamp()};
+    if (update.title !== undefined) eventUpdate.title = update.title;
+    if (update.description !== undefined) eventUpdate.description = update.description;
+    if (update.startsAt !== undefined) eventUpdate.startsAt = update.startsAt;
+    if (update.active !== undefined) eventUpdate.status = update.active ? 'open' : 'cancelled';
+    const batch = db.batch();
+    batch.update(ref, update);
+    batch.set(db.collection('social_events').doc(clean(snap.data().socialEventId, 240)), eventUpdate, {merge: true});
+    await batch.commit();
+  } else {
+    await ref.update(update);
+  }
   return {ok: true};
 });
 
@@ -127,6 +139,11 @@ exports.deleteBusinessContentItem = onCall({region: 'europe-west1'}, async (requ
     }
   }
 
-  await ref.delete();
+  const batch = db.batch();
+  batch.delete(ref);
+  if (type === 'program' && snap.data()?.socialEventId) {
+    batch.delete(db.collection('social_events').doc(clean(snap.data().socialEventId, 240)));
+  }
+  await batch.commit();
   return {ok: true};
 });

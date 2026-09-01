@@ -21,11 +21,15 @@ class _PublicTravelPlansScreenState extends State<PublicTravelPlansScreen> {
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Rotayı puanla'),
-        content: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+        content: Wrap(
+          alignment: WrapAlignment.center,
+          spacing: 2,
+          runSpacing: 2,
           children: List.generate(
             5,
             (index) => IconButton(
+              padding: const EdgeInsets.all(6),
+              constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
               onPressed: () => Navigator.pop(dialogContext, index + 1),
               icon: const Icon(Icons.star_rounded, color: AppColors.warning),
             ),

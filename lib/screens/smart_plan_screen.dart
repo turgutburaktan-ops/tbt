@@ -49,7 +49,10 @@ class _SmartPlanScreenState extends State<SmartPlanScreen> {
   bool _generating = false;
   bool _addFood = true;
   bool _addCafe = true;
+  bool _addBreakfast = false;
+  bool _addDessert = false;
   bool _addHotel = false;
+  String _area = 'Tüm şehir';
   DateTime _startAt = DateTime.now().add(const Duration(hours: 1));
   RouteIntelligence? _intelligence;
   int _estimatedBudget = 0;
@@ -119,6 +122,27 @@ class _SmartPlanScreenState extends State<SmartPlanScreen> {
     return math.sqrt(lat * lat + lng * lng);
   }
 
+  static const _areaCenters = <String, (double, double, double)>{
+    'Harput': (38.7040, 39.2550, .12),
+    'Sivrice': (38.4480, 39.3100, .22),
+    'Palu': (38.6910, 39.9500, .24),
+    'Keban': (38.7970, 38.7330, .26),
+    'Ağın': (38.9440, 38.7110, .24),
+  };
+
+  List<String> get _availableAreas =>
+      _normalize(_city ?? '') == _normalize('Elazığ')
+      ? const ['Tüm şehir', 'Harput', 'Sivrice', 'Palu', 'Keban', 'Ağın']
+      : const ['Tüm şehir'];
+
+  bool _inSelectedArea(PhotoSpot spot) {
+    final area = _areaCenters[_area];
+    if (area == null) return true;
+    final lat = spot.latitude - area.$1;
+    final lng = spot.longitude - area.$2;
+    return math.sqrt(lat * lat + lng * lng) <= area.$3;
+  }
+
   List<PhotoSpot> _orderNearby(List<PhotoSpot> candidates) {
     if (candidates.length < 3) return candidates;
     final remaining = List<PhotoSpot>.from(candidates.skip(1));
@@ -181,6 +205,8 @@ class _SmartPlanScreenState extends State<SmartPlanScreen> {
       }
       _addFood = prompt.contains('yemek') || _addFood;
       _addCafe = prompt.contains('kahve') || _addCafe;
+      _addBreakfast = prompt.contains('kahvalti') || _addBreakfast;
+      _addDessert = prompt.contains('tatli') || _addDessert;
       _addHotel = prompt.contains('otel') || prompt.contains('konaklama');
       _generated = const [];
       _intelligence = null;
@@ -213,7 +239,11 @@ class _SmartPlanScreenState extends State<SmartPlanScreen> {
         ? 5
         : 7;
     final candidates = _allSpots
-        .where((spot) => _normalize(spot.city) == _normalize(city))
+        .where(
+          (spot) =>
+              _normalize(spot.city) == _normalize(city) &&
+              _inSelectedArea(spot),
+        )
         .toList()
       ..sort((a, b) => _score(b).compareTo(_score(a)));
     var selected = _orderNearby(candidates.take(count).toList());
@@ -227,6 +257,8 @@ class _SmartPlanScreenState extends State<SmartPlanScreen> {
       final categories = <NearbyVenueCategory>[
         if (_addCafe) NearbyVenueCategory.cafe,
         if (_addFood) NearbyVenueCategory.dining,
+        if (_addBreakfast) NearbyVenueCategory.dining,
+        if (_addDessert) NearbyVenueCategory.cafe,
         if (_addHotel) NearbyVenueCategory.hotel,
       ];
       final venueGroups = await Future.wait(
@@ -239,10 +271,25 @@ class _SmartPlanScreenState extends State<SmartPlanScreen> {
           ),
         ),
       );
-      final venueStops = venueGroups
-          .where((group) => group.isNotEmpty)
-          .map((group) => _venueSpot(group.first, city));
-      selected = _orderNearby([...selected, ...venueStops]);
+      final usedVenueIds = <String>{};
+      final venueStops = <PhotoSpot>[];
+      for (final group in venueGroups) {
+        for (final venue in group) {
+          if (usedVenueIds.add(venue.id)) {
+            venueStops.add(_venueSpot(venue, city));
+            break;
+          }
+        }
+      }
+      final mealLimit = _duration <= 3
+          ? 1
+          : _duration <= 5
+          ? 2
+          : 4;
+      selected = _orderNearby([
+        ...selected,
+        ...venueStops.take(mealLimit),
+      ]);
     } catch (_) {}
     var intelligence = await TravelIntelligenceService.instance.analyze(
       selected,
@@ -272,7 +319,11 @@ class _SmartPlanScreenState extends State<SmartPlanScreen> {
       stopCount: selected.length,
       budget: _budget,
       transport: _transport,
-      mealStops: (_addFood ? 1 : 0) + (_addCafe ? 1 : 0),
+      mealStops:
+          (_addFood ? 1 : 0) +
+          (_addCafe ? 1 : 0) +
+          (_addBreakfast ? 1 : 0) +
+          (_addDessert ? 1 : 0),
       hotel: _addHotel,
     );
     if (!mounted) return;
@@ -281,7 +332,13 @@ class _SmartPlanScreenState extends State<SmartPlanScreen> {
       _intelligence = intelligence;
       _estimatedBudget = estimated;
       _generating = false;
-      if (_title.text.trim().isEmpty) _title.text = '$city gezi planı';
+      if (_title.text.trim().isEmpty) {
+        final area = _area == 'Tüm şehir' ? city : _area;
+        final flavor = _addFood || _addCafe || _addBreakfast || _addDessert
+            ? ' gezi ve lezzet rotası'
+            : ' gezi rotası';
+        _title.text = '$area$flavor';
+      }
     });
   }
 
@@ -367,6 +424,7 @@ class _SmartPlanScreenState extends State<SmartPlanScreen> {
     if (selected == null || !mounted) return;
     setState(() {
       _city = selected;
+      _area = 'Tüm şehir';
       _generated = const [];
       _title.text = '$selected gezi planı';
     });
@@ -404,6 +462,14 @@ class _SmartPlanScreenState extends State<SmartPlanScreen> {
         transport: _transport,
         interests: _selectedInterests.toList(),
         spots: _generated,
+        area: _area == 'Tüm şehir' ? '' : _area,
+        mealPreferences: [
+          if (_addFood) 'Yerel lezzet',
+          if (_addCafe) 'Kahve',
+          if (_addBreakfast) 'Kahvaltı',
+          if (_addDessert) 'Tatlı',
+          if (_addHotel) 'Konaklama',
+        ],
         startAt: _startAt,
         distanceKm: _intelligence?.distanceKm ?? 0,
         travelMinutes: _intelligence?.travelMinutes ?? 0,
@@ -475,6 +541,41 @@ class _SmartPlanScreenState extends State<SmartPlanScreen> {
                     suffixIcon: Icon(Icons.search_rounded),
                   ),
                 ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _title,
+                  maxLength: 80,
+                  decoration: const InputDecoration(
+                    labelText: 'Rotanın adı',
+                    hintText: 'Örn. Harput tarih ve lezzet rotası',
+                    prefixIcon: Icon(Icons.edit_road_rounded),
+                  ),
+                ),
+                if (_availableAreas.length > 1) ...[
+                  const SizedBox(height: 4),
+                  DropdownButtonFormField<String>(
+                    key: ValueKey('${_city}_$_area'),
+                    initialValue: _availableAreas.contains(_area)
+                        ? _area
+                        : 'Tüm şehir',
+                    decoration: const InputDecoration(
+                      labelText: 'Hangi bölgede gezeceksin?',
+                      prefixIcon: Icon(Icons.near_me_outlined),
+                    ),
+                    items: _availableAreas
+                        .map(
+                          (area) => DropdownMenuItem(
+                            value: area,
+                            child: Text(area),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (value) => setState(() {
+                      _area = value ?? 'Tüm şehir';
+                      _generated = const [];
+                    }),
+                  ),
+                ],
                 const SizedBox(height: 12),
                 ListTile(
                   contentPadding: const EdgeInsets.symmetric(horizontal: 4),
@@ -589,7 +690,7 @@ class _SmartPlanScreenState extends State<SmartPlanScreen> {
                   children: [
                     FilterChip(
                       avatar: const Icon(Icons.restaurant_rounded, size: 17),
-                      label: const Text('Yemek'),
+                      label: const Text('Yerel lezzet'),
                       selected: _addFood,
                       onSelected: (value) => setState(() => _addFood = value),
                     ),
@@ -598,6 +699,20 @@ class _SmartPlanScreenState extends State<SmartPlanScreen> {
                       label: const Text('Kahve'),
                       selected: _addCafe,
                       onSelected: (value) => setState(() => _addCafe = value),
+                    ),
+                    FilterChip(
+                      avatar: const Icon(Icons.breakfast_dining_rounded, size: 17),
+                      label: const Text('Kahvaltı'),
+                      selected: _addBreakfast,
+                      onSelected: (value) =>
+                          setState(() => _addBreakfast = value),
+                    ),
+                    FilterChip(
+                      avatar: const Icon(Icons.cake_outlined, size: 17),
+                      label: const Text('Tatlı'),
+                      selected: _addDessert,
+                      onSelected: (value) =>
+                          setState(() => _addDessert = value),
                     ),
                     FilterChip(
                       avatar: const Icon(Icons.hotel_rounded, size: 17),
@@ -660,14 +775,6 @@ class _SmartPlanScreenState extends State<SmartPlanScreen> {
                         ],
                       ),
                     ),
-                  TextField(
-                    controller: _title,
-                    maxLength: 80,
-                    decoration: const InputDecoration(
-                      labelText: 'Plan adı',
-                      prefixIcon: Icon(Icons.edit_outlined),
-                    ),
-                  ),
                   const Text('Önerilen rota', style: _sectionStyle),
                   const SizedBox(height: 8),
                   ...List.generate(_generated.length, (index) {

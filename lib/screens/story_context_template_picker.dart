@@ -199,17 +199,20 @@ class _ContextBrowser extends StatelessWidget {
         if (!snapshot.hasData) {
           return const Center(child: CircularProgressIndicator());
         }
-        final items = snapshot.data!.docs.map((doc) {
+        final unique = <String, _ContextItem>{};
+        for (final doc in snapshot.data!.docs) {
           final data = doc.data();
-          return _ContextItem(
+          final item = _ContextItem(
             id: doc.id,
             name: _nameFor(spec.type, data),
             type: spec.type,
           );
-        }).where((item) {
-          if (item.name.trim().isEmpty) return false;
-          return query.isEmpty || item.name.toLowerCase().contains(query);
-        }).toList();
+          final normalized = item.name.trim().toLowerCase();
+          if (normalized.length < 4) continue;
+          if (query.isNotEmpty && !normalized.contains(query)) continue;
+          unique.putIfAbsent(normalized, () => item);
+        }
+        final items = unique.values.toList();
         items.sort((a, b) => a.name.compareTo(b.name));
         if (items.isEmpty) {
           return Center(
@@ -296,7 +299,7 @@ class _TemplateList extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
-                    child: _TemplatePreview(slotCount: template.slotCount),
+                    child: _TemplatePreview(template: template),
                   ),
                   const SizedBox(height: 10),
                   Text(
@@ -310,7 +313,7 @@ class _TemplateList extends StatelessWidget {
                   ),
                   const SizedBox(height: 3),
                   Text(
-                    '${template.slotCount} fotoğraf',
+                    template.subtitle,
                     style: const TextStyle(
                       color: Colors.white54,
                       fontSize: 11,
@@ -329,68 +332,133 @@ class _TemplateList extends StatelessWidget {
     switch (type) {
       case 'event':
         return const [
-          _TemplateSpec('event_4_moments', 'Etkinlikten 4 an', 4),
-          _TemplateSpec('event_stage_vibe', 'Sahne + ortam + ekip', 4),
-          _TemplateSpec('event_night_recap', 'Gecenin özeti', 4),
+          _TemplateSpec('event_invite', 'Etkinliğe davet', 1, 'Tarih • saat • konum'),
+          _TemplateSpec('event_countdown', 'Geri sayım', 1, 'Başlangıca kalan süre'),
+          _TemplateSpec('event_schedule', 'Program akışı', 2, 'Saat saat program'),
+          _TemplateSpec('event_last_seats', 'Son kontenjan', 1, 'Harekete geçirici duyuru'),
+          _TemplateSpec('event_4_moments', 'Etkinlikten 4 an', 4, 'Dinamik fotoğraf kolajı'),
+          _TemplateSpec('event_stage_vibe', 'Sahne + ortam + ekip', 4, 'Atmosfer ve ekip'),
+          _TemplateSpec('event_night_recap', 'Gecenin özeti', 4, 'Editoryal gece özeti'),
+          _TemplateSpec('event_thank_you', 'Katılanlara teşekkür', 2, 'Etkinlik kapanışı'),
         ];
       case 'venue':
         return const [
-          _TemplateSpec('venue_what_i_ate', 'Ne yedim?', 4),
-          _TemplateSpec('venue_vibe_favorite', 'Ortam + favorim', 4),
-          _TemplateSpec('venue_3_frames', '3 karede mekan', 3),
+          _TemplateSpec('venue_daily_menu', 'Günün menüsü', 2, 'Ürün ve fiyat alanı'),
+          _TemplateSpec('venue_campaign', 'Kampanya duyurusu', 1, 'İndirim ve son tarih'),
+          _TemplateSpec('venue_new_product', 'Yeni ürün', 2, 'Ürün lansmanı'),
+          _TemplateSpec('venue_review', 'Müşteri yorumu', 1, 'Sosyal kanıt kartı'),
+          _TemplateSpec('venue_what_i_ate', 'Ne yedim?', 4, 'Lezzet kolajı'),
+          _TemplateSpec('venue_vibe_favorite', 'Ortam + favorim', 4, 'Mekan deneyimi'),
+          _TemplateSpec('venue_3_frames', '3 karede mekan', 3, 'Editoryal mekan özeti'),
+          _TemplateSpec('venue_reservation', 'Rezervasyon çağrısı', 1, 'Saat ve iletişim alanı'),
         ];
       case 'spot':
         return const [
-          _TemplateSpec('spot_here_today', 'Bugün buradaydım', 2),
-          _TemplateSpec('spot_route_4', '4 karede rota', 4),
-          _TemplateSpec('spot_view_detail_tip', 'Manzara + detay + önerim', 3),
+          _TemplateSpec('spot_weekend_route', 'Hafta sonu rotası', 3, 'Duraklı rota özeti'),
+          _TemplateSpec('spot_city_24h', 'Şehirde 24 saat', 4, 'Günlük gezi akışı'),
+          _TemplateSpec('spot_hidden_gem', 'Gizli kalmış yer', 2, 'Keşif ve konum'),
+          _TemplateSpec('spot_sunset', 'Gün batımı noktası', 2, 'Saat ve çekim önerisi'),
+          _TemplateSpec('spot_here_today', 'Bugün buradaydım', 2, 'Minimal gezi günlüğü'),
+          _TemplateSpec('spot_route_4', '4 karede rota', 4, 'Haritalı rota özeti'),
+          _TemplateSpec('spot_view_detail_tip', 'Manzara + detay + önerim', 3, 'Rehber düzeni'),
+          _TemplateSpec('spot_before_after', 'Önce / sonra', 2, 'Karşılaştırmalı görünüm'),
         ];
       default:
         return const [
-          _TemplateSpec('free_day_4', '4 karede günüm', 4),
-          _TemplateSpec('free_best_moment', 'Günün en iyi anı', 2),
-          _TemplateSpec('free_week_recap', 'Haftanın özeti', 4),
+          _TemplateSpec('free_minimal', 'Minimal an', 1, 'Temiz tipografi'),
+          _TemplateSpec('free_editorial', 'Editoryal hikâye', 2, 'Dergi görünümü'),
+          _TemplateSpec('free_polaroid', 'Polaroid günlüğü', 3, 'Analog fotoğraf düzeni'),
+          _TemplateSpec('free_day_4', '4 karede günüm', 4, 'Günlük kolaj'),
+          _TemplateSpec('free_best_moment', 'Günün en iyi anı', 2, 'Büyük fotoğraf düzeni'),
+          _TemplateSpec('free_week_recap', 'Haftanın özeti', 4, 'Haftalık özet'),
         ];
     }
   }
 }
 
 class _TemplatePreview extends StatelessWidget {
-  final int slotCount;
-  const _TemplatePreview({required this.slotCount});
+  final _TemplateSpec template;
+  const _TemplatePreview({required this.template});
 
   @override
   Widget build(BuildContext context) {
+    final slotCount = template.slotCount;
     final rows = (slotCount / 2).ceil();
+    final accent = _accent(template.id);
     return ClipRRect(
       borderRadius: BorderRadius.circular(14),
-      child: Column(
-        children: List.generate(
-          rows,
-          (row) => Expanded(
-            child: Row(
-              children: List.generate(2, (col) {
-                final index = row * 2 + col;
-                if (index >= slotCount) {
-                  return const Expanded(child: SizedBox());
-                }
-                return Expanded(
-                  child: Container(
-                    margin: const EdgeInsets.all(1),
-                    color: Colors.white12,
-                    child: const Icon(
-                      Icons.image_outlined,
-                      size: 20,
-                      color: Colors.white38,
-                    ),
-                  ),
-                );
-              }),
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [accent.withValues(alpha: .55), const Color(0xFF101218)],
+              ),
             ),
           ),
-        ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(8, 25, 8, 22),
+            child: Column(
+              children: List.generate(
+                rows,
+                (row) => Expanded(
+                  child: Row(
+                    children: List.generate(2, (col) {
+                      final index = row * 2 + col;
+                      if (index >= slotCount) return const Expanded(child: SizedBox());
+                      return Expanded(
+                        child: Container(
+                          margin: const EdgeInsets.all(2),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: .13),
+                            borderRadius: BorderRadius.circular(index == 0 ? 10 : 6),
+                            border: Border.all(color: Colors.white12),
+                          ),
+                          child: const Icon(Icons.image_outlined, size: 17, color: Colors.white38),
+                        ),
+                      );
+                    }),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            left: 9,
+            top: 8,
+            right: 9,
+            child: Row(
+              children: [
+                Container(width: 22, height: 3, decoration: BoxDecoration(color: accent, borderRadius: BorderRadius.circular(9))),
+                const SizedBox(width: 5),
+                Expanded(child: Container(height: 3, color: Colors.white24)),
+              ],
+            ),
+          ),
+          Positioned(
+            left: 9,
+            right: 9,
+            bottom: 8,
+            child: Text(
+              template.title.toUpperCase(),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 7.5, fontWeight: FontWeight.w900, letterSpacing: .7),
+            ),
+          ),
+        ],
       ),
     );
+  }
+
+  Color _accent(String id) {
+    if (id.startsWith('event_')) return const Color(0xFFFF8A65);
+    if (id.startsWith('venue_')) return const Color(0xFFFFC857);
+    if (id.startsWith('spot_')) return const Color(0xFF45D6C8);
+    return const Color(0xFF9A7CFF);
   }
 }
 
@@ -405,7 +473,8 @@ class _TemplateSpec {
   final String id;
   final String title;
   final int slotCount;
-  const _TemplateSpec(this.id, this.title, this.slotCount);
+  final String subtitle;
+  const _TemplateSpec(this.id, this.title, this.slotCount, this.subtitle);
 }
 
 class _TabSpec {

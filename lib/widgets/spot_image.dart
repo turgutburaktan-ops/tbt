@@ -20,6 +20,20 @@ import '../models/photo_spot.dart';
 import '../services/spot_image_search_service.dart';
 
 class SpotImage extends StatelessWidget {
+  // These automatic matches pointed to a different city or a different
+  // landmark. A neutral placeholder is safer than showing a misleading photo.
+  static const _suppressedAutomaticMatches = <String>{
+    'elazig-agin-tarihi-evleri',
+    'elazig-bakircilar-carsisi-complete',
+    'elazig-meryem-ana-kilisesi',
+    'elazig-palu-tas-koprusu',
+    'elz-agin',
+    'elz-bakircilar',
+    'elz-eski-hukumet',
+    'elz-kapalicarsi',
+    'elz-meryem-ana',
+    'elz-palu-kilise',
+  };
   final PhotoSpot spot;
   final double? width;
   final double? height;
@@ -39,6 +53,11 @@ class SpotImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (_suppressedAutomaticMatches.contains(spot.id)) {
+      return borderRadius == null
+          ? _fallback()
+          : ClipRRect(borderRadius: borderRadius!, child: _fallback());
+    }
     final verified =
         verifiedTravelImageRegistryGenerated[spot.id] ??
         verifiedTravelImageRegistryBatch12[spot.id] ??
@@ -132,16 +151,15 @@ class SpotImage extends StatelessWidget {
   Widget _loadingPlaceholder() => Container(
     width: width,
     height: height,
-    color: const Color(0xFF1A1D20),
-    alignment: Alignment.center,
-    child: const SizedBox(
-      width: 22,
-      height: 22,
-      child: CircularProgressIndicator(
-        strokeWidth: 2,
-        color: Color(0xFFB7BCC2),
+    decoration: const BoxDecoration(
+      gradient: LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [Color(0xFF20252B), Color(0xFF121519)],
       ),
     ),
+    alignment: Alignment.center,
+    child: const Icon(Icons.landscape_outlined, color: Colors.white24, size: 24),
   );
 
   Widget _legacyOrSearch({bool preview = true}) {

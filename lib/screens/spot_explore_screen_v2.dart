@@ -20,6 +20,7 @@ import '../theme/app_theme.dart';
 import '../widgets/chat_share_sheet.dart';
 import '../widgets/route_selection_button.dart';
 import '../widgets/spot_image.dart';
+import '../widgets/sponsored_native_ad.dart';
 import 'spot_detail_screen.dart';
 import 'spot_suggestion_screen.dart';
 
@@ -83,9 +84,7 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
       );
       if (!mounted || remote.isEmpty) return;
 
-      // Remote katalog yerel katalogla birleştirilir. Böylece uygulamanın
-      // sabit/öne çıkan yerleri (özellikle Anıtkabir) uzak veri yenilenince
-      // kaybolmaz; uzak kayıtta aynı id varsa güncel veri onu günceller.
+      // Uzak katalog yerel katalogla birleştirilir; aynı id güncellenir.
       final byId = <String, PhotoSpot>{for (final spot in _all) spot.id: spot};
       for (final spot in remote) {
         byId[spot.id] = spot;
@@ -119,10 +118,6 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
     } catch (_) {}
   }
 
-  bool _isAnitkabir(PhotoSpot spot) =>
-      spot.id.toLowerCase() == 'anitkabir' ||
-      spot.name.toLowerCase().replaceAll('ı', 'i').contains('anitkabir');
-
   void _applyFilter() {
     final key = _search.trim().toLowerCase();
     final next = _all.where((spot) {
@@ -132,11 +127,6 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
           .contains(key);
     }).toList();
     next.sort((a, b) {
-      if (key.isEmpty) {
-        final aPinned = _isAnitkabir(a);
-        final bPinned = _isAnitkabir(b);
-        if (aPinned != bPinned) return aPinned ? -1 : 1;
-      }
       if (_position != null) {
         final distanceOrder = _distance(a).compareTo(_distance(b));
         if (distanceOrder != 0) return distanceOrder;
@@ -284,15 +274,23 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
             ),
           ),
           SliverList.builder(
-            itemCount: _visible.length,
+            itemCount: _visible.length + (_visible.length <= 6 ? 0 : 1 + ((_visible.length - 7) ~/ 10)),
             itemBuilder: (context, index) {
-              final spot = _visible[index];
+              final isAd = index >= 6 && (index - 6) % 11 == 0;
+              if (isAd) {
+                return const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 14),
+                  child: SponsoredNativeAd(),
+                );
+              }
+              final adsBefore = index < 6 ? 0 : 1 + ((index - 6) ~/ 11);
+              final spot = _visible[index - adsBefore];
               final selected = RouteSelectionService.instance.contains(
                 _routeId(spot),
               );
               return _SpotVenueCard(
                 spot: spot,
-                pinned: _search.isEmpty && _isAnitkabir(spot),
+                pinned: false,
                 selected: selected,
                 distanceLabel: _distanceLabel(spot),
                 onOpen: () => Navigator.push(

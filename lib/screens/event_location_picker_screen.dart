@@ -20,6 +20,8 @@ class EventLocationPickerScreen extends StatefulWidget {
   final String addressLabel;
   final double? initialLatitude;
   final double? initialLongitude;
+  final String title;
+  final String instruction;
 
   const EventLocationPickerScreen({
     super.key,
@@ -27,6 +29,9 @@ class EventLocationPickerScreen extends StatefulWidget {
     required this.addressLabel,
     this.initialLatitude,
     this.initialLongitude,
+    this.title = 'Etkinlik Konumunu Seç',
+    this.instruction =
+        'Haritada tam noktaya dokun. Pini sürükleyerek düzeltebilirsin.',
   });
 
   @override
@@ -95,7 +100,7 @@ class _EventLocationPickerScreenState extends State<EventLocationPickerScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFF090A0C),
       appBar: AppBar(
-        title: const Text('Etkinlik Konumunu Seç'),
+        title: Text(widget.title),
         actions: [
           TextButton(
             onPressed: _selected == null
@@ -179,8 +184,8 @@ class _EventLocationPickerScreenState extends State<EventLocationPickerScreen> {
                     ),
                   ],
                   const SizedBox(height: 8),
-                  const Text(
-                    'Haritada etkinliğin tam noktasına dokun. Pini sürükleyerek düzeltebilirsin.',
+                  Text(
+                    widget.instruction,
                     style: TextStyle(color: Colors.white60, fontSize: 12),
                   ),
                 ],

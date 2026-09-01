@@ -41,6 +41,8 @@ class TravelPlanService {
     required String transport,
     required List<String> interests,
     required List<PhotoSpot> spots,
+    String area = '',
+    List<String> mealPreferences = const [],
     DateTime? startAt,
     double distanceKm = 0,
     int travelMinutes = 0,
@@ -57,6 +59,8 @@ class TravelPlanService {
           : user.displayName!.trim(),
       'title': title.trim().isEmpty ? '$city gezi planı' : title.trim(),
       'city': city,
+      'area': area,
+      'mealPreferences': mealPreferences,
       'durationHours': durationHours,
       'budget': budget,
       'transport': transport,
@@ -137,6 +141,76 @@ class TravelPlanService {
     });
   }
 
+  Future<void> updateTitle(String planId, String title) async {
+    _requireUser();
+    final clean = title.trim();
+    if (clean.isEmpty || clean.length > 80) {
+      throw Exception('Rota adı 1-80 karakter olmalı.');
+    }
+    await _firestore.collection('travel_plans').doc(planId).update({
+      'title': clean,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  Future<void> updateStops(
+    String planId,
+    List<Map<String, dynamic>> stops,
+  ) async {
+    _requireUser();
+    if (stops.isEmpty || stops.length > 12) {
+      throw Exception('Rotada 1-12 durak bulunmalı.');
+    }
+    final normalized = stops.map((stop) {
+      final item = Map<String, dynamic>.from(stop);
+      item.removeWhere((key, value) => value == null);
+      return item;
+    }).toList(growable: false);
+    await _firestore.collection('travel_plans').doc(planId).update({
+      'spotIds': normalized.map((s) => (s['id'] ?? '').toString()).toList(),
+      'spotNames': normalized.map((s) => (s['name'] ?? 'Durak').toString()).toList(),
+      'stopSnapshots': normalized,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  Future<String> publishToFeed(TravelPlan plan) async {
+    final user = _requireUser();
+    if (plan.ownerId != user.uid) {
+      throw Exception('Yalnızca kendi rotanı paylaşabilirsin.');
+    }
+    final postRef = _firestore.collection('posts').doc('route_${plan.id}');
+    final existing = await postRef.get();
+    await _firestore.collection('travel_plans').doc(plan.id).update({
+      'isPublic': true,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+    await postRef.set({
+      'userId': user.uid,
+      'userName': (user.displayName ?? '').trim().isEmpty
+          ? 'TBT kullanıcısı'
+          : user.displayName!.trim(),
+      'userPhotoUrl': user.photoURL ?? '',
+      'mediaType': 'route',
+      'contentType': 'route',
+      'travelPlanId': plan.id,
+      'routeTitle': plan.title,
+      'routeCity': plan.city,
+      'routeDurationHours': plan.durationHours,
+      'routeBudget': plan.budget,
+      'routeTransport': plan.transport,
+      'routeSpotIds': plan.spotIds,
+      'routeSpotNames': plan.spotNames,
+      'routeStopSnapshots': plan.stopSnapshots,
+      'caption': '${plan.title} rotasını paylaştı.',
+      'spotName': plan.city,
+      'isPublic': true,
+      if (!existing.exists) 'createdAt': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+    return postRef.id;
+  }
+
   Future<void> addStop(String planId, PhotoSpot spot) async {
     _requireUser();
     await _firestore.collection('travel_plans').doc(planId).update({
@@ -151,6 +225,35 @@ class TravelPlanService {
           'longitude': spot.longitude,
           'category': spot.category,
           'bestTime': spot.bestTime,
+        },
+      ]),
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  Future<void> addCustomStop({
+    required String planId,
+    required String name,
+    required double latitude,
+    required double longitude,
+    String city = '',
+  }) async {
+    _requireUser();
+    final cleanName = name.trim().isEmpty ? 'Haritadan seçilen durak' : name.trim();
+    final id =
+        'custom_${latitude.toStringAsFixed(6)}_${longitude.toStringAsFixed(6)}';
+    await _firestore.collection('travel_plans').doc(planId).update({
+      'spotIds': FieldValue.arrayUnion([id]),
+      'spotNames': FieldValue.arrayUnion([cleanName]),
+      'stopSnapshots': FieldValue.arrayUnion([
+        {
+          'id': id,
+          'name': cleanName,
+          'city': city,
+          'latitude': latitude,
+          'longitude': longitude,
+          'category': 'Özel durak',
+          'bestTime': '',
         },
       ]),
       'updatedAt': FieldValue.serverTimestamp(),

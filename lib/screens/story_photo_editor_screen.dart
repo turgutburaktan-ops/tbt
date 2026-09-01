@@ -7,6 +7,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../services/story_context_link_service.dart';
@@ -69,23 +70,42 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
   double _bgStartRotation = 0;
   Offset _bgOffset = Offset.zero;
 
-  String _font = 'sans-serif';
+  String _font = 'Inter';
   Color _textColor = Colors.white;
+  double _textSize = 34;
+  TextAlign _textAlign = TextAlign.center;
+  int _textBackground = 0;
+  bool _textShadow = true;
+  bool _textOutline = false;
   Color _drawColor = Colors.white;
 
   static const List<String> _fonts = <String>[
-    'sans-serif',
-    'serif',
-    'monospace',
-    'sans-serif-medium',
-    'sans-serif-light',
+    'Inter',
+    'Poppins',
+    'Montserrat',
+    'Playfair Display',
+    'Bebas Neue',
+    'Oswald',
+    'Roboto Slab',
+    'Space Mono',
+    'Caveat',
+    'Dancing Script',
+    'Pacifico',
+    'Abril Fatface',
   ];
   static const List<String> _fontLabels = <String>[
     'Modern',
+    'Yumuşak',
+    'Temiz',
+    'Editoryal',
+    'Başlık',
+    'Dar',
     'Klasik',
     'Daktilo',
-    'Yuvarlak',
-    'İnce',
+    'El yazısı',
+    'İmza',
+    'Retro',
+    'Poster',
   ];
   static const List<Color> _colors = <Color>[
     Colors.white,
@@ -137,6 +157,11 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
       _textController.clear();
       _font = _fonts.first;
       _textColor = Colors.white;
+      _textSize = 34;
+      _textAlign = TextAlign.center;
+      _textBackground = 0;
+      _textShadow = true;
+      _textOutline = false;
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _textFocus.requestFocus();
@@ -165,6 +190,11 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
           Offset(s.width * .5, s.height * .43),
           _font,
           _textColor,
+          size: _textSize,
+          textAlign: _textAlign,
+          backgroundStyle: _textBackground,
+          shadow: _textShadow,
+          outline: _textOutline,
         ),
       );
       _selected = _items.length - 1;
@@ -340,7 +370,11 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
       _layoutCount = selected.slotCount;
       _layoutSlots
         ..clear()
-        ..addAll(List<File?>.filled(selected.slotCount, null));
+        ..addAll(<File?>[
+          widget.photo,
+          ...List<File?>.filled(math.max(0, selected.slotCount - 1), null),
+        ]);
+      _items.removeWhere((item) => item.context);
       if (selected.contextType != 'free' &&
           selected.contextName.trim().isNotEmpty) {
         _items.add(
@@ -866,9 +900,24 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
                       autofocus: true,
                       maxLength: 180,
                       maxLines: 5,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontFamily: _font, color: _textColor, fontSize: 34, fontWeight: FontWeight.w900),
-                      decoration: const InputDecoration(border: InputBorder.none, counterText: '', hintText: 'Bir şey yaz…'),
+                      textAlign: _textAlign,
+                      style: GoogleFonts.getFont(
+                        _font,
+                        color: _textColor,
+                        fontSize: _textSize,
+                        fontWeight: FontWeight.w700,
+                      ),
+                      decoration: const InputDecoration(
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        disabledBorder: InputBorder.none,
+                        filled: false,
+                        fillColor: Colors.transparent,
+                        counterText: '',
+                        hintText: 'Bir şey yaz…',
+                        contentPadding: EdgeInsets.zero,
+                      ),
                     ),
                   ),
                 ),
@@ -882,7 +931,10 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
                     separatorBuilder: (_, __) => const SizedBox(width: 8),
                     itemBuilder: (_, int i) {
                       return ChoiceChip(
-                        label: Text(_fontLabels[i]),
+                        label: Text(
+                          _fontLabels[i],
+                          style: GoogleFonts.getFont(_fonts[i]),
+                        ),
                         selected: _font == _fonts[i],
                         onSelected: (_) => setState(() => _font = _fonts[i]),
                       );
@@ -890,6 +942,75 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
                   ),
                 ),
                 const SizedBox(height: 8),
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text('STİL VE EFEKT', style: TextStyle(color: Colors.white54, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: .9)),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  child: Row(
+                    children: [
+                      IconButton.filledTonal(
+                        tooltip: 'Hizalama',
+                        onPressed: () => setState(() {
+                          _textAlign = switch (_textAlign) {
+                            TextAlign.left => TextAlign.center,
+                            TextAlign.center => TextAlign.right,
+                            _ => TextAlign.left,
+                          };
+                        }),
+                        icon: Icon(switch (_textAlign) {
+                          TextAlign.left => Icons.format_align_left_rounded,
+                          TextAlign.center => Icons.format_align_center_rounded,
+                          _ => Icons.format_align_right_rounded,
+                        }),
+                      ),
+                      IconButton.filledTonal(
+                        tooltip: 'Arka plan',
+                        onPressed: () => setState(
+                          () => _textBackground = (_textBackground + 1) % 4,
+                        ),
+                        icon: const Icon(Icons.format_color_fill_rounded),
+                      ),
+                      IconButton.filledTonal(
+                        tooltip: 'Gölge',
+                        onPressed: () => setState(() => _textShadow = !_textShadow),
+                        icon: Icon(_textShadow ? Icons.layers_rounded : Icons.layers_clear_rounded),
+                      ),
+                      IconButton.filledTonal(
+                        tooltip: 'Kontur',
+                        onPressed: () => setState(() => _textOutline = !_textOutline),
+                        icon: Icon(_textOutline ? Icons.font_download_rounded : Icons.font_download_outlined),
+                      ),
+                      const Spacer(),
+                      Text(
+                        '${_textSize.round()}',
+                        style: const TextStyle(fontWeight: FontWeight.w900),
+                      ),
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.text_decrease_rounded, size: 18),
+                      Expanded(
+                        child: Slider(
+                          value: _textSize,
+                          min: 18,
+                          max: 64,
+                          onChanged: (value) => setState(() => _textSize = value),
+                        ),
+                      ),
+                      const Icon(Icons.text_increase_rounded, size: 18),
+                    ],
+                  ),
+                ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: _colors.map((Color c) {
@@ -1003,21 +1124,55 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
         child: Text(x.text ?? '', textAlign: TextAlign.center, style: TextStyle(fontSize: x.compact ? 14 : 17, fontWeight: FontWeight.w900)),
       );
     }
+    final baseStyle = GoogleFonts.getFont(
+      x.font ?? 'Inter',
+      color: x.color,
+      fontSize: x.textSize,
+      fontWeight: FontWeight.w700,
+      shadows: x.textShadow
+          ? const <Shadow>[Shadow(color: Colors.black87, blurRadius: 7, offset: Offset(1, 2))]
+          : const <Shadow>[],
+    );
+    Widget text = Text(x.text ?? '', textAlign: x.textAlign, style: baseStyle);
+    if (x.textOutline) {
+      text = Stack(
+        alignment: Alignment.center,
+        children: [
+          Text(
+            x.text ?? '',
+            textAlign: x.textAlign,
+            style: baseStyle.copyWith(
+              foreground: Paint()
+                ..style = PaintingStyle.stroke
+                ..strokeWidth = 3
+                ..color = x.color.computeLuminance() > .5 ? Colors.black : Colors.white,
+              shadows: const [],
+            ),
+          ),
+          Text(x.text ?? '', textAlign: x.textAlign, style: baseStyle),
+        ],
+      );
+    }
+    if (x.backgroundStyle > 0) {
+      text = Container(
+        padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
+        decoration: BoxDecoration(
+          color: x.backgroundStyle == 1
+              ? Colors.black.withValues(alpha: .68)
+              : x.backgroundStyle == 2
+                  ? Colors.white.withValues(alpha: .88)
+                  : null,
+          gradient: x.backgroundStyle == 3
+              ? const LinearGradient(colors: [Color(0xCC754CFF), Color(0xCC25C7D9)])
+              : null,
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: text,
+      );
+    }
     return ConstrainedBox(
       constraints: const BoxConstraints(minWidth: 140, minHeight: 52, maxWidth: 320),
-      child: Center(
-        child: Text(
-          x.text ?? '',
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontFamily: x.font,
-            color: x.color,
-            fontSize: 34,
-            fontWeight: FontWeight.w900,
-            shadows: const <Shadow>[Shadow(color: Colors.black54, blurRadius: 5)],
-          ),
-        ),
-      ),
+      child: Center(child: text),
     );
   }
 
@@ -1208,6 +1363,11 @@ class _OverlayItem {
   bool emoji;
   bool context;
   bool compact;
+  double textSize;
+  TextAlign textAlign;
+  int backgroundStyle;
+  bool textShadow;
+  bool textOutline;
   Offset position;
   double scale;
   double rotation;
@@ -1224,6 +1384,11 @@ class _OverlayItem {
     this.emoji = false,
     this.context = false,
     this.compact = false,
+    this.textSize = 34,
+    this.textAlign = TextAlign.center,
+    this.backgroundStyle = 0,
+    this.textShadow = true,
+    this.textOutline = false,
     required this.position,
     this.scale = 1,
     this.rotation = 0,
@@ -1233,8 +1398,28 @@ class _OverlayItem {
 
   bool get isPlainText => photo == null && !emoji && targetUserId == null && !context && music == null;
 
-  factory _OverlayItem.text(String text, Offset position, String font, Color color) {
-    return _OverlayItem(text: text, position: position, font: font, color: color);
+  factory _OverlayItem.text(
+    String text,
+    Offset position,
+    String font,
+    Color color, {
+    double size = 34,
+    TextAlign textAlign = TextAlign.center,
+    int backgroundStyle = 0,
+    bool shadow = true,
+    bool outline = false,
+  }) {
+    return _OverlayItem(
+      text: text,
+      position: position,
+      font: font,
+      color: color,
+      textSize: size,
+      textAlign: textAlign,
+      backgroundStyle: backgroundStyle,
+      textShadow: shadow,
+      textOutline: outline,
+    );
   }
 
   factory _OverlayItem.emoji(String text, Offset position) {

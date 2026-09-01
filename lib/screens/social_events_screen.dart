@@ -10,8 +10,10 @@ import '../services/event_privacy_service.dart';
 import '../services/event_ticket_service.dart';
 import '../services/event_trust_service.dart';
 import '../services/social_event_service.dart';
+import '../theme/app_theme.dart';
 import '../widgets/chat_share_sheet.dart';
 import '../widgets/content_engagement_bar.dart';
+import '../widgets/sponsored_native_ad.dart';
 import 'event_location_picker_screen.dart';
 import 'event_photo_create_screen.dart';
 import 'event_tickets_screen.dart';
@@ -25,6 +27,8 @@ class SocialEventsScreen extends StatefulWidget {
 
 class _SocialEventsScreenState extends State<SocialEventsScreen> {
   SocialEventType? _selectedType;
+  String _dateFilter = 'all';
+  String _priceFilter = 'all';
   final Set<String> _locallyCancelledEventIds = <String>{};
 
   Stream<List<SocialEvent>> get _stream =>
@@ -416,6 +420,35 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
             ],
           ),
         ),
+        SizedBox(
+          height: 48,
+          child: ListView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+            children: [
+              _FilterChip(
+                label: 'Bugün',
+                selected: _dateFilter == 'today',
+                onTap: () => setState(() => _dateFilter = _dateFilter == 'today' ? 'all' : 'today'),
+              ),
+              _FilterChip(
+                label: 'Bu hafta',
+                selected: _dateFilter == 'week',
+                onTap: () => setState(() => _dateFilter = _dateFilter == 'week' ? 'all' : 'week'),
+              ),
+              _FilterChip(
+                label: 'Ücretsiz',
+                selected: _priceFilter == 'free',
+                onTap: () => setState(() => _priceFilter = _priceFilter == 'free' ? 'all' : 'free'),
+              ),
+              _FilterChip(
+                label: 'Ücretli',
+                selected: _priceFilter == 'paid',
+                onTap: () => setState(() => _priceFilter = _priceFilter == 'paid' ? 'all' : 'paid'),
+              ),
+            ],
+          ),
+        ),
         Expanded(
           child: StreamBuilder<List<SocialEvent>>(
             stream: _stream,
@@ -432,20 +465,33 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
                   ),
                 );
               }
+              final now = DateTime.now();
+              final todayEnd = DateTime(now.year, now.month, now.day, 23, 59, 59);
+              final weekEnd = now.add(const Duration(days: 7));
               final events = (snapshot.data ?? const <SocialEvent>[])
                   .where(
                     (event) => !_locallyCancelledEventIds.contains(event.id),
                   )
+                  .where((event) {
+                    if (_priceFilter == 'free' && event.isPaid) return false;
+                    if (_priceFilter == 'paid' && !event.isPaid) return false;
+                    if (_dateFilter == 'today' && event.startsAt.isAfter(todayEnd)) return false;
+                    if (_dateFilter == 'week' && event.startsAt.isAfter(weekEnd)) return false;
+                    return true;
+                  })
                   .toList(growable: false);
               if (events.isEmpty) {
                 return _EmptyEvents(onCreate: _openCreate);
               }
               return ListView.separated(
                 padding: const EdgeInsets.fromLTRB(14, 8, 14, 100),
-                itemCount: events.length,
+                itemCount: events.length + (events.length <= 6 ? 0 : 1 + ((events.length - 7) ~/ 10)),
                 separatorBuilder: (_, __) => const SizedBox(height: 10),
                 itemBuilder: (_, index) {
-                  final event = events[index];
+                  final isAd = index >= 6 && (index - 6) % 11 == 0;
+                  if (isAd) return const SponsoredNativeAd(margin: EdgeInsets.zero);
+                  final adsBefore = index < 6 ? 0 : 1 + ((index - 6) ~/ 11);
+                  final event = events[index - adsBefore];
                   final isHost = uid != null && event.hostId == uid;
                   final attending = uid != null && event.isAttending(uid);
                   final interested = uid != null && event.isInterested(uid);
@@ -491,6 +537,22 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
                                         fontWeight: FontWeight.w700,
                                       ),
                                     ),
+                                    if (event.verifiedBusiness) ...[
+                                      const SizedBox(height: 5),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.cyan.withValues(alpha: .12),
+                                          borderRadius: BorderRadius.circular(99),
+                                          border: Border.all(color: AppColors.cyan.withValues(alpha: .35)),
+                                        ),
+                                        child: const Row(mainAxisSize: MainAxisSize.min, children: [
+                                          Icon(Icons.verified_rounded, size: 14, color: AppColors.cyan),
+                                          SizedBox(width: 5),
+                                          Text('Doğrulanmış işletme', style: TextStyle(color: AppColors.cyan, fontSize: 11, fontWeight: FontWeight.w800)),
+                                        ]),
+                                      ),
+                                    ],
                                   ],
                                 ),
                               ),
@@ -637,6 +699,25 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
       ],
     );
   }
+}
+
+class _FilterChip extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+  const _FilterChip({required this.label, required this.selected, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 4),
+    child: FilterChip(
+      label: Text(label),
+      selected: selected,
+      onSelected: (_) => onTap(),
+      showCheckmark: false,
+      avatar: selected ? const Icon(Icons.check_rounded, size: 15) : null,
+    ),
+  );
 }
 
 class _CreateEventDiscoveryCard extends StatelessWidget {
