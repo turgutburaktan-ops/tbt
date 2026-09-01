@@ -7,6 +7,7 @@ import '../widgets/spot_experience_sections.dart';
 import '../widgets/spot_image.dart';
 import '../widgets/spot_presence_section.dart';
 import '../widgets/spot_user_posts_gallery.dart';
+import '../widgets/venue_badge_strip.dart';
 import 'camera_screen.dart';
 import 'route_planner_screen.dart';
 
@@ -165,6 +166,13 @@ class SpotDetailScreen extends StatelessWidget {
                     color: Colors.white60,
                     fontWeight: FontWeight.w700,
                   ),
+                ),
+                const SizedBox(height: 10),
+                VenueBadgeStrip(
+                  verified: verified,
+                  rating: spot.rating,
+                  category: spot.category,
+                  tags: spot.tags,
                 ),
                 const SizedBox(height: 18),
                 Row(
