@@ -12,6 +12,7 @@ import '../services/event_trust_service.dart';
 import '../services/social_event_service.dart';
 import '../widgets/chat_share_sheet.dart';
 import '../widgets/content_engagement_bar.dart';
+import '../widgets/sponsored_native_ad.dart';
 import 'event_location_picker_screen.dart';
 import 'event_photo_create_screen.dart';
 import 'event_tickets_screen.dart';
@@ -483,10 +484,13 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
               }
               return ListView.separated(
                 padding: const EdgeInsets.fromLTRB(14, 8, 14, 100),
-                itemCount: events.length,
+                itemCount: events.length + (events.length <= 6 ? 0 : 1 + ((events.length - 7) ~/ 10)),
                 separatorBuilder: (_, __) => const SizedBox(height: 10),
                 itemBuilder: (_, index) {
-                  final event = events[index];
+                  final isAd = index >= 6 && (index - 6) % 11 == 0;
+                  if (isAd) return const SponsoredNativeAd(margin: EdgeInsets.zero);
+                  final adsBefore = index < 6 ? 0 : 1 + ((index - 6) ~/ 11);
+                  final event = events[index - adsBefore];
                   final isHost = uid != null && event.hostId == uid;
                   final attending = uid != null && event.isAttending(uid);
                   final interested = uid != null && event.isInterested(uid);

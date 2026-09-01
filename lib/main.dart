@@ -6,6 +6,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import 'firebase_options.dart';
 import 'screens/admin_business_premium_screen.dart';
@@ -85,6 +86,11 @@ Future<void> main() async {
       }
 
       if (bootstrapError == null) {
+        if (!kIsWeb &&
+            (defaultTargetPlatform == TargetPlatform.android ||
+                defaultTargetPlatform == TargetPlatform.iOS)) {
+          unawaited(MobileAds.instance.initialize());
+        }
         try {
           await FirebaseAppCheck.instance
               .activate(

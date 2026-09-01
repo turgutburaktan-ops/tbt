@@ -16,6 +16,7 @@ import '../services/venue_rating_service.dart';
 import '../theme/app_theme.dart';
 import 'chat_share_sheet.dart';
 import 'searchable_selection_field.dart';
+import 'sponsored_native_ad.dart';
 
 class NearbyPlacesView extends StatefulWidget {
   final NearbyVenueCategory category;
@@ -528,8 +529,13 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
       onRefresh: () => _load(forceRefresh: true),
       child: ListView.builder(
         padding: const EdgeInsets.fromLTRB(14, 2, 14, 110),
-        itemCount: items.length,
-        itemBuilder: (_, index) => _venueCard(items[index]),
+        itemCount: items.length + (items.length <= 6 ? 0 : 1 + ((items.length - 7) ~/ 10)),
+        itemBuilder: (_, index) {
+          final isAd = index >= 6 && (index - 6) % 11 == 0;
+          if (isAd) return const SponsoredNativeAd();
+          final adsBefore = index < 6 ? 0 : 1 + ((index - 6) ~/ 11);
+          return _venueCard(items[index - adsBefore]);
+        },
       ),
     );
   }

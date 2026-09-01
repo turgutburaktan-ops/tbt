@@ -20,6 +20,7 @@ import '../theme/app_theme.dart';
 import '../widgets/chat_share_sheet.dart';
 import '../widgets/route_selection_button.dart';
 import '../widgets/spot_image.dart';
+import '../widgets/sponsored_native_ad.dart';
 import 'spot_detail_screen.dart';
 import 'spot_suggestion_screen.dart';
 
@@ -273,9 +274,17 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
             ),
           ),
           SliverList.builder(
-            itemCount: _visible.length,
+            itemCount: _visible.length + (_visible.length <= 6 ? 0 : 1 + ((_visible.length - 7) ~/ 10)),
             itemBuilder: (context, index) {
-              final spot = _visible[index];
+              final isAd = index >= 6 && (index - 6) % 11 == 0;
+              if (isAd) {
+                return const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 14),
+                  child: SponsoredNativeAd(),
+                );
+              }
+              final adsBefore = index < 6 ? 0 : 1 + ((index - 6) ~/ 11);
+              final spot = _visible[index - adsBefore];
               final selected = RouteSelectionService.instance.contains(
                 _routeId(spot),
               );

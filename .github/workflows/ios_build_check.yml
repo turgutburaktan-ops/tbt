@@ -46,8 +46,13 @@ jobs:
           if re.search(r"^\s*#?\s*platform :ios,\s*'[^']+'", s, flags=re.M):
               s = re.sub(r"^\s*#?\s*platform :ios,\s*'[^']+'", "platform :ios, '15.0'", s, count=1, flags=re.M)
           else:
-              s = "platform :ios, '15.0'\n" + s
+            s = "platform :ios, '15.0'\n" + s
           p.write_text(s)
+          info = Path('ios/Runner/Info.plist')
+          plist = info.read_text()
+          if 'GADApplicationIdentifier' not in plist:
+              plist = plist.replace('</dict>', '  <key>GADApplicationIdentifier</key>\n  <string>ca-app-pub-3940256099942544~1458002511</string>\n</dict>')
+              info.write_text(plist)
           PY
           rm -rf ios/Pods ios/Podfile.lock
       - name: Build iOS simulator
