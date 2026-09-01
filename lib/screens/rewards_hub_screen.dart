@@ -159,6 +159,10 @@ class RewardsHubScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 18),
+              const Text('Profil Ödülleri', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w900)),
+              const SizedBox(height: 8),
+              _ProfileRewards(uid: uid, profile: data, xp: xp),
+              const SizedBox(height: 20),
               const Text('Bugünün Görevleri', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w900)),
               const SizedBox(height: 8),
               _Mission(title: 'Bir paylaşım yap', subtitle: '+10 XP', done: dailyPost >= 1, progress: _bounded(dailyPost, 1), target: 1),
@@ -190,6 +194,122 @@ class RewardsHubScreen extends StatelessWidget {
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+class _ProfileRewards extends StatelessWidget {
+  final String uid;
+  final Map<String, dynamic> profile;
+  final int xp;
+  const _ProfileRewards({required this.uid, required this.profile, required this.xp});
+
+  static const themes = <(String, String, int, List<Color>)>[
+    ('default', 'Sade', 0, [Color(0xFF20242B), Color(0xFF111318)]),
+    ('aurora', 'Aurora', 500, [Color(0xFF38E8FF), Color(0xFF9B4DFF)]),
+    ('sunset', 'Gün Batımı', 1000, [Color(0xFFFF8A65), Color(0xFFFF5C8A)]),
+    ('midnight', 'Gece', 1500, [Color(0xFF4F6CFF), Color(0xFF211B45)]),
+    ('emerald', 'Zümrüt', 3000, [Color(0xFF44D7A8), Color(0xFF173A34)]),
+  ];
+
+  Future<void> _selectTheme(BuildContext context, String id, int requiredXp) async {
+    if (xp < requiredXp) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Bu arka plan için $requiredXp XP gerekli.')),
+      );
+      return;
+    }
+    await FirebaseFirestore.instance.collection('users').doc(uid).set({
+      'selectedProfileTheme': id,
+      'profileRewardUpdatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  }
+
+  Future<void> _selectBadge(String id) async {
+    await FirebaseFirestore.instance.collection('users').doc(uid).set({
+      'selectedBadgeIds': [id],
+      'profileRewardUpdatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final selectedTheme = (profile['selectedProfileTheme'] ?? 'default').toString();
+    final selectedBadges = (profile['selectedBadgeIds'] as List<dynamic>? ?? const [])
+        .map((item) => item.toString())
+        .toSet();
+    final earnedBadges = <(String, String, int)>[
+      ('explorer', 'Kaşif', 200),
+      ('photo_hunter', 'Fotoğraf Avcısı', 600),
+      ('local_guide', 'Yerel Rehber', 1500),
+      ('master_explorer', 'Usta Kaşif', 3000),
+      ('turkiye_explorer', 'Türkiye Kaşifi', 6000),
+    ].where((item) => xp >= item.$3).toList();
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFF121416),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: Colors.white10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Profil arka planı', style: TextStyle(fontWeight: FontWeight.w900)),
+          const SizedBox(height: 9),
+          SizedBox(
+            height: 78,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: themes.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 8),
+              itemBuilder: (_, index) {
+                final theme = themes[index];
+                final unlocked = xp >= theme.$3;
+                return InkWell(
+                  onTap: () => _selectTheme(context, theme.$1, theme.$3),
+                  borderRadius: BorderRadius.circular(13),
+                  child: Container(
+                    width: 104,
+                    padding: const EdgeInsets.all(9),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(colors: theme.$4),
+                      borderRadius: BorderRadius.circular(13),
+                      border: Border.all(
+                        color: selectedTheme == theme.$1 ? Colors.white : Colors.white24,
+                        width: selectedTheme == theme.$1 ? 2 : 1,
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(unlocked ? Icons.palette_outlined : Icons.lock_outline_rounded, size: 18),
+                        const Spacer(),
+                        Text(theme.$2, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w900)),
+                        Text(unlocked ? 'Kullanılabilir' : '${theme.$3} XP', style: const TextStyle(fontSize: 8.5, color: Colors.white70)),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          if (earnedBadges.isNotEmpty) ...[
+            const SizedBox(height: 14),
+            const Text('Profilinde öne çıkar', style: TextStyle(fontWeight: FontWeight.w900)),
+            const SizedBox(height: 7),
+            Wrap(
+              spacing: 7,
+              runSpacing: 7,
+              children: earnedBadges.map((badge) => ChoiceChip(
+                label: Text(badge.$2),
+                selected: selectedBadges.contains(badge.$1),
+                onSelected: (_) => _selectBadge(badge.$1),
+              )).toList(),
+            ),
+          ],
+        ],
       ),
     );
   }
