@@ -58,8 +58,9 @@ jobs:
           # `flutter create` ships Flutter's placeholder launcher icon. Keep
           # the real TBT brand icon in every Android density instead.
           for density in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
+            rm "android/app/src/main/res/mipmap-${density}/ic_launcher.png"
             cp assets/spot_thumbnails/tbt_app_icon.png \
-              "android/app/src/main/res/mipmap-${density}/ic_launcher.png"
+              "android/app/src/main/res/mipmap-${density}/ic_launcher.jpg"
           done
           printf '%s' "$PLAY_KEYSTORE_BASE64" | base64 --decode > android/app/tbt-upload.p12
           keytool -importkeystore -noprompt \
