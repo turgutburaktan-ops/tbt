@@ -85,53 +85,6 @@ Future<void> main() async {
         }
       }
 
-      if (bootstrapError == null) {
-        if (!kIsWeb &&
-            (defaultTargetPlatform == TargetPlatform.android ||
-                defaultTargetPlatform == TargetPlatform.iOS)) {
-          unawaited(MobileAds.instance.initialize());
-        }
-        try {
-          await FirebaseAppCheck.instance
-              .activate(
-                providerAndroid: kDebugMode
-                    ? const AndroidDebugProvider()
-                    : const AndroidPlayIntegrityProvider(),
-                providerApple: kDebugMode
-                    ? const AppleDebugProvider()
-                    : const AppleAppAttestWithDeviceCheckFallbackProvider(),
-              )
-              .timeout(const Duration(seconds: 8));
-        } catch (error, stackTrace) {
-          if (kDebugMode) {
-            debugPrint('App Check activation failed: $error');
-            debugPrintStack(stackTrace: stackTrace);
-          }
-        }
-
-        try {
-          await FavoritesService.initialize().timeout(
-            const Duration(seconds: 4),
-          );
-        } catch (error, stackTrace) {
-          if (kDebugMode) {
-            debugPrint('Favorites initialization skipped: $error');
-            debugPrintStack(stackTrace: stackTrace);
-          }
-        }
-
-        try {
-          await AppObservabilityService.instance.initialize().timeout(
-            const Duration(seconds: 4),
-          );
-        } catch (error, stackTrace) {
-          if (kDebugMode) {
-            debugPrint('Observability initialization skipped: $error');
-            debugPrintStack(stackTrace: stackTrace);
-          }
-        }
-      }
-
       runApp(
         bootstrapError == null
             ? const BestPhotoSpotApp()
@@ -139,6 +92,13 @@ Future<void> main() async {
                 debugError: kDebugMode ? bootstrapError.toString() : null,
               ),
       );
+
+      // The first frame must never wait for optional native services. A
+      // missing/unsupported SDK configuration should degrade one feature,
+      // not terminate the whole app on the Android launch screen.
+      if (bootstrapError == null) {
+        unawaited(_initializeDeferredBootstrapServices());
+      }
     },
     (error, stack) {
       if (kDebugMode) {
@@ -156,6 +116,59 @@ Future<void> main() async {
       }
     },
   );
+}
+
+Future<void> _initializeDeferredBootstrapServices() async {
+  if (!kIsWeb &&
+      (defaultTargetPlatform == TargetPlatform.android ||
+          defaultTargetPlatform == TargetPlatform.iOS)) {
+    try {
+      await MobileAds.instance.initialize().timeout(const Duration(seconds: 8));
+    } catch (error, stackTrace) {
+      if (kDebugMode) {
+        debugPrint('Ads initialization skipped: $error');
+        debugPrintStack(stackTrace: stackTrace);
+      }
+    }
+  }
+
+  try {
+    await FirebaseAppCheck.instance
+        .activate(
+          providerAndroid: kDebugMode
+              ? const AndroidDebugProvider()
+              : const AndroidPlayIntegrityProvider(),
+          providerApple: kDebugMode
+              ? const AppleDebugProvider()
+              : const AppleAppAttestWithDeviceCheckFallbackProvider(),
+        )
+        .timeout(const Duration(seconds: 8));
+  } catch (error, stackTrace) {
+    if (kDebugMode) {
+      debugPrint('App Check activation skipped: $error');
+      debugPrintStack(stackTrace: stackTrace);
+    }
+  }
+
+  try {
+    await FavoritesService.initialize().timeout(const Duration(seconds: 4));
+  } catch (error, stackTrace) {
+    if (kDebugMode) {
+      debugPrint('Favorites initialization skipped: $error');
+      debugPrintStack(stackTrace: stackTrace);
+    }
+  }
+
+  try {
+    await AppObservabilityService.instance.initialize().timeout(
+      const Duration(seconds: 4),
+    );
+  } catch (error, stackTrace) {
+    if (kDebugMode) {
+      debugPrint('Observability initialization skipped: $error');
+      debugPrintStack(stackTrace: stackTrace);
+    }
+  }
 }
 
 class BootstrapFailureApp extends StatelessWidget {
