@@ -17,8 +17,25 @@ service cloud.firestore {
         !request.resource.data.diff(resource.data).affectedKeys().hasAny([
           'uid','admin','isAdmin','role','roles','claims','permissions',
           'verified','verificationStatus','businessVerified','venueVerified',
-          'moderationStatus','trustLevel','banned','disabled'
-        ]);
+          'moderationStatus','trustLevel','banned','disabled','xp','dailyXp',
+          'weeklyXp','dailyActions','weeklyActions','stats'
+        ]) && profileRewardsValid();
+    }
+    function profileRewardsValid() {
+      let theme = request.resource.data.get('selectedProfileTheme', 'default');
+      let xp = resource.data.get('xp', 0);
+      let badges = request.resource.data.get('selectedBadgeIds', []);
+      return theme in ['default','aurora','sunset','midnight','emerald'] &&
+        (theme != 'aurora' || xp >= 500) &&
+        (theme != 'sunset' || xp >= 1000) &&
+        (theme != 'midnight' || xp >= 1500) &&
+        (theme != 'emerald' || xp >= 3000) &&
+        badges is list && badges.size() <= 3 &&
+        (!badges.hasAny(['explorer']) || xp >= 200) &&
+        (!badges.hasAny(['photo_hunter']) || xp >= 600) &&
+        (!badges.hasAny(['local_guide']) || xp >= 1500) &&
+        (!badges.hasAny(['master_explorer']) || xp >= 3000) &&
+        (!badges.hasAny(['turkiye_explorer']) || xp >= 6000);
     }
     function eventVisible(d) {
       return !('visibility' in d) || d.visibility == 'public' || (signedIn() && (
