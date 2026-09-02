@@ -16,9 +16,13 @@ class AuthService {
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  late final GoogleSignIn _googleSignIn = GoogleSignIn(
-    serverClientId: _googleServerClientId,
-  );
+  final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
+  Future<void>? _googleInitialization;
+
+  Future<void> _initializeGoogleSignIn() =>
+      _googleInitialization ??= _googleSignIn.initialize(
+        serverClientId: _googleServerClientId,
+      );
 
   User? get currentUser => _auth.currentUser;
   Stream<User?> get authStateChanges => _auth.authStateChanges();
@@ -63,15 +67,14 @@ class AuthService {
   Future<UserCredential?> signInWithGoogle() async {
     try {
       try {
-        final account = await _googleSignIn.signIn();
-        if (account == null) return null;
-        final authentication = await account.authentication;
-        if (authentication.idToken == null || authentication.idToken!.isEmpty) {
+        await _initializeGoogleSignIn();
+        final account = await _googleSignIn.authenticate();
+        final idToken = account.authentication.idToken;
+        if (idToken == null || idToken.isEmpty) {
           throw Exception('Google kimlik belirteci alınamadı.');
         }
         final credential = GoogleAuthProvider.credential(
-          accessToken: authentication.accessToken,
-          idToken: authentication.idToken,
+          idToken: idToken,
         );
         final result = await _auth.signInWithCredential(credential);
         await _ensureSocialProfile(result.user, provider: 'google');
@@ -91,6 +94,8 @@ class AuthService {
       final raw = e.toString().toLowerCase();
       if (raw.contains('invalid-cert-hash') ||
           raw.contains('developer_error') ||
+          raw.contains('clientconfigurationerror') ||
+          raw.contains('client_configuration_error') ||
           raw.contains('10:')) {
         throw Exception(
           'Google ile giriş şu anda doğrulanamıyor. Uygulamayı güncelleyip tekrar deneyin.',
