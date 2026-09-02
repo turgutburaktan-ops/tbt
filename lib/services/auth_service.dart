@@ -8,16 +8,16 @@ class AuthService {
 
   static final AuthService instance = AuthService._();
 
-  static const String _googleServerClientId = String.fromEnvironment(
-    'GOOGLE_SERVER_CLIENT_ID',
-  );
+  // Firebase Authentication > Google > Web SDK configuration.
+  // OAuth client IDs are public identifiers; keeping the verified project
+  // value here prevents a stale CI secret from breaking Android sign-in.
+  static const String _googleServerClientId =
+      '330568532415-vlqf0000qkpp81oel35qv0aar36q5sq7.apps.googleusercontent.com';
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   late final GoogleSignIn _googleSignIn = GoogleSignIn(
-    serverClientId: _googleServerClientId.isEmpty
-        ? null
-        : _googleServerClientId,
+    serverClientId: _googleServerClientId,
   );
 
   User? get currentUser => _auth.currentUser;
