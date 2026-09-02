@@ -68,7 +68,11 @@ class _AccountSecurityGateV2State extends State<AccountSecurityGateV2> {
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null && user.email != null && !user.emailVerified) {
-      return const _EmailVerificationScreen();
+      return _EmailVerificationScreen(
+        onVerified: () {
+          if (mounted) setState(() {});
+        },
+      );
     }
     final phoneDeferred =
         _phoneDeferredForSession ||
@@ -87,7 +91,9 @@ class _AccountSecurityGateV2State extends State<AccountSecurityGateV2> {
 }
 
 class _EmailVerificationScreen extends StatefulWidget {
-  const _EmailVerificationScreen();
+  final VoidCallback onVerified;
+
+  const _EmailVerificationScreen({required this.onVerified});
   @override
   State<_EmailVerificationScreen> createState() =>
       _EmailVerificationScreenState();
@@ -147,10 +153,7 @@ class _EmailVerificationScreenState extends State<_EmailVerificationScreen> {
             }, SetOptions(merge: true))
             .timeout(const Duration(seconds: 7));
         if (mounted) {
-          setState(
-            () => _message =
-                'E-posta doğrulandı. Telefon doğrulamasına geçiliyor.',
-          );
+          widget.onVerified();
         }
       } else if (mounted) {
         setState(

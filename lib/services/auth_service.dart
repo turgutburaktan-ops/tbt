@@ -61,12 +61,6 @@ class AuthService {
   }
 
   Future<UserCredential?> signInWithGoogle() async {
-    if (defaultTargetPlatform == TargetPlatform.android &&
-        _googleServerClientId.isEmpty) {
-      throw Exception(
-        'Google ile giriş yapılandırması eksik. Güncel TBT sürümünü kullanın.',
-      );
-    }
     try {
       try {
         final account = await _googleSignIn.signIn();
