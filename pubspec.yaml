@@ -1,7 +1,7 @@
 name: best_photo_spot
 description: Smart photography assistant MVP.
 publish_to: "none"
-version: 1.0.5+8
+version: 1.0.5+9
 
 environment:
   sdk: ">=3.7.0 <4.0.0"
@@ -16,7 +16,7 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   firebase_auth: 6.5.7
-  google_sign_in: ^6.2.2
+  google_sign_in: ^7.2.0
   cloud_firestore: 6.8.0
   cloud_functions: 6.3.6
   firebase_storage: 13.4.6
