@@ -173,11 +173,9 @@ class SpotImage extends StatelessWidget {
   String _previewAssetPath(String sourcePath) {
     final trimmed = sourcePath.trim();
     if (trimmed.isEmpty) return '';
-    final slash = trimmed.lastIndexOf('/');
-    final filename = slash >= 0 ? trimmed.substring(slash + 1) : trimmed;
-    final dot = filename.lastIndexOf('.');
-    final stem = dot > 0 ? filename.substring(0, dot) : filename;
-    return 'assets/spot_thumbnails/$stem.webp';
+    // Verified registry entries already point at the bundled, audited image.
+    // Rewriting them to generated webp paths left new places without photos.
+    return trimmed;
   }
 
   String _previewUrl(String sourceUrl) {
