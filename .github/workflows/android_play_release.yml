@@ -98,6 +98,26 @@ jobs:
             a=activity.read_text().replace('package com.tbt.best_photo_spot','package com.tbt.social').replace('import io.flutter.embedding.android.FlutterActivity','import io.flutter.embedding.android.FlutterFragmentActivity').replace('FlutterActivity()','FlutterFragmentActivity()')
             activity.write_text(a)
           PY
+      - name: Generate compact travel photo previews
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends imagemagick
+          find assets/spots -maxdepth 1 -type f \
+            \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' \) \
+            -print0 | xargs -0 -P 4 -I{} bash -c '
+              source="$1"
+              filename="${source##*/}"
+              stem="${filename%.*}"
+              convert "$source" -auto-orient -thumbnail "640x640>" -strip \
+                -quality 72 "assets/spot_thumbnails/${stem}.webp"
+            ' _ {}
+
+          source_count="$(find assets/spots -maxdepth 1 -type f \
+            \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' \) | wc -l)"
+          preview_count="$(find assets/spot_thumbnails -maxdepth 1 -type f -name '*.webp' | wc -l)"
+          test "$preview_count" -ge "$source_count"
       - name: Build Play app bundle
         env:
           PLAY_KEYSTORE_PASSWORD: ${{ secrets.PLAY_KEYSTORE_PASSWORD }}
