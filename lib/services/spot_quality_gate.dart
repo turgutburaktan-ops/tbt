@@ -9,6 +9,7 @@ import '../data/spot_coordinate_verification_registry_batch11.dart';
 import '../data/spot_coordinate_verification_registry_batch12.dart';
 import '../data/spot_coordinate_verification_registry_generated.dart';
 import '../models/photo_spot.dart';
+import 'spot_publication_gate.dart';
 
 /// Son savunma hattı: katalog kaynaklarından bağımsız olarak haritaya çıkmadan
 /// önce bariz hatalı veya çakışan koordinatları eler.
@@ -23,7 +24,10 @@ class SpotQualityGate {
   static const Set<String> blockedSpotIds = <String>{};
 
   static List<PhotoSpot> filterSafe(List<PhotoSpot> input) {
-    final valid = input.where(_basicCoordinateCheck).toList();
+    final valid = input
+        .where(_basicCoordinateCheck)
+        .where(SpotPublicationGate.canPublish)
+        .toList();
     final byCoordinate = <String, List<PhotoSpot>>{};
     for (final spot in valid) {
       final key =

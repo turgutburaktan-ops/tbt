@@ -14,6 +14,7 @@ import '../data/verified_travel_places_generated.dart';
 import '../data/curated_photo_spots_verified_expansion.dart';
 import '../data/curated_photo_spots_official_complete.dart';
 import '../models/photo_spot.dart';
+import 'spot_publication_gate.dart';
 
 /// Kullanıcıya açık katalog yalnızca güvenilir kaynakları kabul eder:
 /// 1) Elle kaynak kontrolü tamamlanmış doğrulanmış gezi çekirdeği.
@@ -27,7 +28,9 @@ class NationwideCandidateSpotResolver {
     final resultByPlace = <String, PhotoSpot>{};
 
     for (final spot in current) {
-      if (!_trustedExistingSpot(spot)) continue;
+      if (!_trustedExistingSpot(spot) || !SpotPublicationGate.canPublish(spot)) {
+        continue;
+      }
       resultByPlace[_placeKey(spot.city, spot.name)] = spot;
     }
 
@@ -48,6 +51,7 @@ class NationwideCandidateSpotResolver {
       ...curatedPhotoSpotsVerifiedExpansion,
       ...curatedPhotoSpotsOfficialComplete,
     ]) {
+      if (!SpotPublicationGate.canPublish(verified)) continue;
       resultByPlace.removeWhere((_, spot) => spot.id == verified.id);
       resultByPlace[_placeKey(verified.city, verified.name)] = verified;
     }
