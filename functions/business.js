@@ -222,7 +222,7 @@ exports.addBusinessCampaign = onCall({region: 'europe-west1'}, async (request) =
 
 async function reviewBusinessClaimCore({uid, token, data: d}) {
   if (!uid) throw new HttpsError('unauthenticated', 'Giriş gerekli.');
-  if (token?.admin !== true) throw new HttpsError('permission-denied', 'Admin yetkisi gerekli.');
+  if (token?.admin !== true || String(token?.email || '').toLowerCase() !== 'turgutburaktan@gmail.com') throw new HttpsError('permission-denied', 'Admin yetkisi gerekli.');
   const id = venueKey(d?.category, d?.venueId);
   const decision = clean(d?.decision, 20);
   if (!['verified', 'rejected'].includes(decision)) throw new HttpsError('invalid-argument', 'Geçersiz karar.');

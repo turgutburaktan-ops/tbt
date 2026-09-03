@@ -3,7 +3,7 @@ const {getFirestore} = require('firebase-admin/firestore');
 
 function requireAdmin(request) {
   if (!request.auth?.uid) throw new HttpsError('unauthenticated', 'Giriş gerekli.');
-  if (request.auth.token?.admin !== true) {
+  if (request.auth.token?.admin !== true || String(request.auth.token?.email || '').toLowerCase() !== 'turgutburaktan@gmail.com') {
     throw new HttpsError('permission-denied', 'Yönetici yetkisi gerekli.');
   }
   return request.auth.uid;
