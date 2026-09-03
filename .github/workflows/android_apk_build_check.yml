@@ -2,6 +2,9 @@ name: Android APK Build Check
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - 'codex/business-owner-profile-*'
 
 permissions:
   contents: read
@@ -94,7 +97,7 @@ jobs:
           main_activity=$(find android/app/src/main/kotlin -name MainActivity.kt -print -quit)
           grep -q '^package com.tbt.social$' "$main_activity"
       - name: Build debug APK
-        run: flutter build apk --debug --no-pub
+        run: flutter build apk --debug --no-pub --build-name=1.0.8 --build-number=14
       - name: Verify APK signing identity
         shell: bash
         run: |
@@ -106,6 +109,9 @@ jobs:
           tr '[:lower:]' '[:upper:]' < /tmp/apk-signing.txt | tr -d ':' > /tmp/apk-signing-normalized.txt
           grep -q '758FF21389033ED26375415FAD30E11F9AD1F364' /tmp/apk-signing-normalized.txt
           grep -q '3F9AA496CAF137EAC148CD942923956D3D6A2ADAFF9CDB1051DE024062819625' /tmp/apk-signing-normalized.txt
+          unzip -p "$APK" assets/flutter_assets/kernel_blob.bin |
+            strings -n 20 |
+            grep -Fq '330568532415-vlqf0000qkpp81oel35qv0aar36q5sq7.apps.googleusercontent.com'
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
         with:
