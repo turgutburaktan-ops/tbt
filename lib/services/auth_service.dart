@@ -72,7 +72,7 @@ class AuthService {
       final authentication = await account.authentication;
       final idToken = authentication.idToken;
       if (idToken == null || idToken.isEmpty) {
-        throw const PlatformException(
+        throw PlatformException(
           code: 'missing_id_token',
           message: 'Google kimlik belirteci alınamadı.',
         );
