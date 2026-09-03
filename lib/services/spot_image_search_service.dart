@@ -213,7 +213,7 @@ class SpotImageSearchService {
           .get(
             uri,
             headers: const {
-              'User-Agent': 'BestPhotoSpot/1.0 (https://github.com/turgutburaktan-ops/tbt; contact: turgutburaktan@gmail.com)',
+              'User-Agent': 'TBT/1.0 (https://www.trtbt.com; contact: info@trtbt.com)',
               'Accept': 'application/json',
               'Accept-Language': 'tr-TR,tr;q=0.9,en;q=0.7',
             },

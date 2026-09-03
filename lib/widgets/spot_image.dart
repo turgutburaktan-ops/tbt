@@ -195,7 +195,7 @@ class SpotImage extends StatelessWidget {
       return null;
     }
     return const <String, String>{
-      'User-Agent': 'BestPhotoSpot/1.0 (contact: turgutburaktan@gmail.com)',
+      'User-Agent': 'TBT/1.0 (https://www.trtbt.com; contact: info@trtbt.com)',
       'Accept': 'image/avif,image/webp,image/apng,image/*,*/*;q=0.8',
     };
   }

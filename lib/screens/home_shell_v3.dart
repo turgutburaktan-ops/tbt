@@ -406,7 +406,7 @@ class _HomeFeedHubState extends State<_HomeFeedHub> {
                 top: 150,
                 child: Semantics(
                   button: true,
-                  label: 'Kamerayı aç',
+                  label: 'Kamerayı aç ve paylaş',
                   child: GestureDetector(
                     behavior: HitTestBehavior.opaque,
                     onTap: _openCamera,
@@ -424,8 +424,8 @@ class _HomeFeedHubState extends State<_HomeFeedHub> {
                           ),
                         ),
                         child: const Icon(
-                          Icons.chevron_right_rounded,
-                          size: 17,
+                          Icons.add_a_photo_rounded,
+                          size: 15,
                           color: Colors.white,
                         ),
                       ),

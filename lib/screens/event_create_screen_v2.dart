@@ -12,6 +12,7 @@ import '../data/turkey_selection_data.dart';
 import '../services/event_privacy_service.dart';
 import '../services/social_event_service.dart';
 import '../theme/app_theme.dart';
+import '../widgets/chat_share_sheet.dart';
 import '../widgets/searchable_selection_field.dart';
 import 'event_location_picker_screen.dart';
 
@@ -385,6 +386,36 @@ class _EventCreateScreenV2State extends State<EventCreateScreenV2> {
           .httpsCallable('setSocialEventCover')
           .call({'eventId': eventId, 'coverImageUrl': url, 'coverStoragePath': ref.fullPath})
           .timeout(const Duration(seconds: 12));
+      if (!mounted) return;
+      final shareNow = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: const Text('Etkinlik oluşturuldu'),
+          content: const Text(
+            'Etkinlik profilinde yayınlandı. Şimdi uygulama içinde mesaj olarak da göndermek ister misin?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('Daha Sonra'),
+            ),
+            FilledButton.icon(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              icon: const Icon(Icons.send_outlined, size: 18),
+              label: const Text('Mesajla Paylaş'),
+            ),
+          ],
+        ),
+      );
+      if (shareNow == true && mounted) {
+        await shareCardToChat(
+          context,
+          sharedType: 'event',
+          sharedId: eventId,
+          title: _title.text.trim(),
+          imageUrl: url,
+        );
+      }
       if (mounted) Navigator.pop(context, true);
     } catch (e) {
       if (mounted) setState(() => _error = e.toString().replaceFirst('Exception: ', ''));

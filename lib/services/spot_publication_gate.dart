@@ -82,7 +82,9 @@ class SpotPublicationGate {
         verifiedTravelImageRegistryBatch2[spotId] ??
         verifiedTravelImageRegistry[spotId] ??
         spotImageRegistry[spotId];
-    return image != null &&
-        (image.assetPath.trim().isNotEmpty || image.networkUrl.trim().isNotEmpty);
+    // Public cards use the compact remote catalog. An asset-only registry row
+    // may refer to a source file intentionally excluded from the app bundle;
+    // publishing it would create a photo-less card on the user's device.
+    return image != null && image.networkUrl.trim().isNotEmpty;
   }
 }

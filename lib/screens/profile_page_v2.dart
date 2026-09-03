@@ -9,6 +9,7 @@ import 'package:image_picker/image_picker.dart';
 import '../models/travel_plan.dart';
 import '../services/auth_service.dart';
 import '../services/profile_service.dart';
+import '../services/social_event_service.dart';
 import '../services/social_service.dart';
 import '../services/travel_plan_service.dart';
 import '../theme/app_theme.dart';
@@ -821,6 +822,50 @@ class _ProfileEventsSection extends StatelessWidget {
     return '${d.day.toString().padLeft(2, '0')}.${d.month.toString().padLeft(2, '0')}.${d.year} • ${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
   }
 
+  Future<void> _removeOwnedEvent(
+    BuildContext context,
+    QueryDocumentSnapshot<Map<String, dynamic>> event,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Etkinliği sil?'),
+        content: const Text(
+          'Etkinlik profilinden ve etkinlik listesinden kaldırılacak. Katılımcılara iptal bildirimi gönderilecek.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Vazgeç'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Sil'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
+    try {
+      await SocialEventService.instance.leave(event.id);
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(const SnackBar(content: Text('Etkinlik kaldırıldı.')));
+    } catch (error) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text(
+              error.toString().replaceFirst('Exception: ', ''),
+            ),
+          ),
+        );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     Query<Map<String, dynamic>> query = FirebaseFirestore.instance
@@ -837,6 +882,12 @@ class _ProfileEventsSection extends StatelessWidget {
           );
         }
         final events = [...?snapshot.data?.docs]
+          .where((doc) {
+            final data = doc.data();
+            return (data['hostId'] ?? '').toString() == userId &&
+                (data['status'] ?? 'open').toString() == 'open';
+          })
+          .toList()
           ..sort((a, b) => _date(b.data()['startsAt'])
               .compareTo(_date(a.data()['startsAt'])));
         if (events.isEmpty) {
@@ -897,7 +948,28 @@ class _ProfileEventsSection extends StatelessWidget {
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      trailing: const Icon(Icons.chevron_right_rounded),
+                      trailing: FirebaseAuth.instance.currentUser?.uid == userId
+                          ? PopupMenuButton<String>(
+                              tooltip: 'Etkinlik işlemleri',
+                              onSelected: (value) {
+                                if (value == 'delete') {
+                                  _removeOwnedEvent(context, doc);
+                                }
+                              },
+                              itemBuilder: (_) => const [
+                                PopupMenuItem(
+                                  value: 'delete',
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.delete_outline_rounded),
+                                      SizedBox(width: 10),
+                                      Text('Etkinliği sil'),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            )
+                          : const Icon(Icons.chevron_right_rounded),
                       onTap: () => Navigator.push(
                         context,
                         MaterialPageRoute(

@@ -35,7 +35,16 @@ class _HomeDiscoverScreenState extends State<HomeDiscoverScreen> {
   }
 
   String _normalize(Object? value) =>
-      (value ?? '').toString().trim().toLowerCase().replaceAll('ı', 'i');
+      (value ?? '')
+          .toString()
+          .trim()
+          .toLowerCase()
+          .replaceAll('ı', 'i')
+          .replaceAll('ğ', 'g')
+          .replaceAll('ü', 'u')
+          .replaceAll('ş', 's')
+          .replaceAll('ö', 'o')
+          .replaceAll('ç', 'c');
 
   String _titleCase(String value) => value
       .trim()
@@ -628,7 +637,10 @@ class _HomeDiscoverScreenState extends State<HomeDiscoverScreen> {
           .where('visibility', isEqualTo: 'public');
     }
     return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-      stream: source.limit(80).snapshots(),
+      // Search must not be limited to the first handful of documents. The
+      // bounded client-side scan also covers legacy records that do not yet
+      // contain normalized search fields.
+      stream: source.limit(500).snapshots(),
       builder: (context, snapshot) {
       if (!snapshot.hasData) return const SizedBox.shrink();
       final docs = snapshot.data!.docs

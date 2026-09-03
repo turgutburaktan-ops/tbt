@@ -17,6 +17,7 @@ import '../widgets/sponsored_native_ad.dart';
 import 'event_location_picker_screen.dart';
 import 'event_photo_create_screen.dart';
 import 'event_tickets_screen.dart';
+import 'user_profile_screen.dart';
 
 class SocialEventsScreen extends StatefulWidget {
   const SocialEventsScreen({super.key});
@@ -86,6 +87,146 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(SnackBar(content: Text(text)));
+  }
+
+  Future<List<_VisibleParticipant>> _loadVisibleParticipants(
+    SocialEvent event,
+  ) async {
+    final ids = event.participantIds
+        .where((id) => id.trim().isNotEmpty)
+        .take(30)
+        .toList(growable: false);
+    if (ids.isEmpty) return const [];
+    final snapshot = await FirebaseFirestore.instance
+        .collection('users')
+        .where(FieldPath.documentId, whereIn: ids)
+        .get()
+        .timeout(const Duration(seconds: 8));
+    final byId = {for (final doc in snapshot.docs) doc.id: doc.data()};
+    return ids.map((id) {
+      final data = byId[id] ?? const <String, dynamic>{};
+      final fallback = id == event.hostId ? event.hostName : 'Katılımcı';
+      return _VisibleParticipant(
+        id: id,
+        name: (data['displayName'] ?? data['name'] ?? fallback).toString(),
+        username: (data['username'] ?? data['userName'] ?? '').toString(),
+        photoUrl: (data['photoUrl'] ?? data['photoURL'] ?? '').toString(),
+      );
+    }).toList(growable: false);
+  }
+
+  Future<void> _showParticipants(SocialEvent event) async {
+    try {
+      final participants = await _loadVisibleParticipants(event);
+      if (!mounted) return;
+      await showModalBottomSheet<void>(
+        context: context,
+        useSafeArea: true,
+        isScrollControlled: true,
+        backgroundColor: AppColors.background,
+        builder: (sheetContext) => SizedBox(
+          height: MediaQuery.sizeOf(sheetContext).height * .62,
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(18, 16, 8, 10),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        '${event.participantCount}/${event.capacity} katılımcı',
+                        style: const TextStyle(
+                          fontSize: 19,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.pop(sheetContext),
+                      icon: const Icon(Icons.close_rounded),
+                    ),
+                  ],
+                ),
+              ),
+              if (event.privateParticipantCount > 0)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(18, 0, 18, 8),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      '${event.privateParticipantCount} kişi gizli katılıyor',
+                      style: const TextStyle(color: Colors.white54),
+                    ),
+                  ),
+                ),
+              const Divider(height: 1, color: Colors.white10),
+              Expanded(
+                child: participants.isEmpty
+                    ? const Center(child: Text('Görünen katılımcı yok.'))
+                    : ListView.builder(
+                        itemCount: participants.length,
+                        itemBuilder: (_, index) {
+                          final person = participants[index];
+                          final username = person.username.trim();
+                          return ListTile(
+                            leading: CircleAvatar(
+                              backgroundColor: AppColors.surfaceStrong,
+                              backgroundImage: person.photoUrl.trim().isEmpty
+                                  ? null
+                                  : NetworkImage(person.photoUrl),
+                              child: person.photoUrl.trim().isEmpty
+                                  ? Text(
+                                      person.name.trim().isEmpty
+                                          ? '?'
+                                          : person.name.characters.first
+                                                .toUpperCase(),
+                                    )
+                                  : null,
+                            ),
+                            title: Text(
+                              person.name,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                            subtitle: username.isEmpty
+                                ? null
+                                : Text(
+                                    username.startsWith('@')
+                                        ? username
+                                        : '@$username',
+                                  ),
+                            trailing: person.id == event.hostId
+                                ? const Text(
+                                    'Düzenleyen',
+                                    style: TextStyle(
+                                      color: AppColors.cyan,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  )
+                                : const Icon(Icons.chevron_right_rounded),
+                            onTap: () {
+                              Navigator.pop(sheetContext);
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      UserProfileScreen(userId: person.id),
+                                ),
+                              );
+                            },
+                          );
+                        },
+                      ),
+              ),
+            ],
+          ),
+        ),
+      );
+    } catch (error) {
+      _showMessage('Katılımcılar yüklenemedi. Lütfen tekrar dene.');
+    }
   }
 
   String _friendlyError(Object error) {
@@ -566,10 +707,17 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
                                 ),
                                 icon: const Icon(Icons.send_outlined, size: 19),
                               ),
-                              Text(
-                                '${event.participantCount}/${event.capacity}',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w800,
+                              TextButton.icon(
+                                onPressed: () => _showParticipants(event),
+                                icon: const Icon(
+                                  Icons.groups_2_outlined,
+                                  size: 17,
+                                ),
+                                label: Text(
+                                  '${event.participantCount}/${event.capacity}',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w800,
+                                  ),
                                 ),
                               ),
                             ],
@@ -699,6 +847,20 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
       ],
     );
   }
+}
+
+class _VisibleParticipant {
+  final String id;
+  final String name;
+  final String username;
+  final String photoUrl;
+
+  const _VisibleParticipant({
+    required this.id,
+    required this.name,
+    required this.username,
+    required this.photoUrl,
+  });
 }
 
 class _FilterChip extends StatelessWidget {

@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.tbt.social",
+      "sha256_cert_fingerprints": [
+        "4B:57:30:C5:AE:9F:82:D0:97:BB:21:B7:C6:09:31:A4:FF:72:A3:E3:77:8F:2A:73:97:42:88:C9:16:1F:15:19"
+      ]
+    }
+  }
+]

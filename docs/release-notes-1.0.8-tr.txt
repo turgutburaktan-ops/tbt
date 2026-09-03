@@ -1,0 +1,9 @@
+Sürüm adı: 1.0.8 – Keşif ve Etkinlik İyileştirmeleri
+
+Google ile giriş ve bağlantı doğrulaması güçlendirildi.
+Arama sonuçları ve Türkçe karakter desteği iyileştirildi.
+Etkinlik oluşturma, profilde gösterme, silme ve mesajla paylaşma geliştirildi.
+Etkinlik kartlarına katılımcı listesi eklendi.
+Doğrulanmış fotoğraflı mekan kuralları sıkılaştırıldı.
+Ana sayfa reklam gösterimi ve paylaşım kısayolları düzenlendi.
+TBT bağlantıları trtbt.com alan adına taşındı.
