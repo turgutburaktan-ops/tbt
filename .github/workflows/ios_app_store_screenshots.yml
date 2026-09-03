@@ -1,0 +1,87 @@
+name: iOS App Store Screenshots
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-app-store-screenshots-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  screenshots:
+    name: Capture iPhone 6.9-inch Screenshots
+    runs-on: macos-15
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Use CocoaPods plugin integration
+        run: flutter config --no-enable-swift-package-manager
+      - name: Install dependencies
+        run: flutter pub get
+      - name: Prepare iOS simulator host
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf ios
+          flutter create --platforms=ios --org com.tbt --project-name best_photo_spot .
+          sed -i '' 's/com\.tbt\.bestPhotoSpot/com.tbt.social.screenshots/g' ios/Runner.xcodeproj/project.pbxproj
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          p = Path('ios/Podfile')
+          s = p.read_text()
+          if re.search(r"^\s*#?\s*platform :ios,\s*'[^']+'", s, flags=re.M):
+              s = re.sub(r"^\s*#?\s*platform :ios,\s*'[^']+'", "platform :ios, '15.0'", s, count=1, flags=re.M)
+          else:
+              s = "platform :ios, '15.0'\n" + s
+          p.write_text(s)
+          info = Path('ios/Runner/Info.plist')
+          plist = info.read_text()
+          if 'GADApplicationIdentifier' not in plist:
+              plist = plist.replace('</dict>', '  <key>GADApplicationIdentifier</key>\n  <string>ca-app-pub-3940256099942544~1458002511</string>\n</dict>')
+              info.write_text(plist)
+          PY
+      - name: Build screenshot app
+        run: flutter build ios --simulator --debug --no-pub -t lib/app_store_screenshots.dart
+      - name: Boot iPhone and capture
+        shell: bash
+        run: |
+          set -euo pipefail
+          UDID=$(xcrun simctl list devices available -j | python3 -c 'import json,sys; d=json.load(sys.stdin)["devices"]; print(next(x["udid"] for v in d.values() for x in v if x["name"]=="iPhone 16 Pro Max"))')
+          xcrun simctl boot "$UDID" || true
+          open -a Simulator
+          xcrun simctl bootstatus "$UDID" -b
+          xcrun simctl status_bar "$UDID" override --time 9:41 --batteryState charged --batteryLevel 100 --wifiBars 3 --cellularBars 4
+          xcrun simctl install "$UDID" build/ios/iphonesimulator/Runner.app
+          mkdir -p build/app-store-screenshots
+          for screen in home places detail plan nearby profile; do
+            SIMCTL_CHILD_APP_STORE_SCREEN="$screen" xcrun simctl launch --terminate-running-process "$UDID" com.tbt.social.screenshots
+            sleep 3
+            xcrun simctl io "$UDID" screenshot "build/app-store-screenshots/${screen}.png"
+          done
+          for image in build/app-store-screenshots/*.png; do
+            width=$(sips -g pixelWidth "$image" | awk '/pixelWidth/ {print $2}')
+            height=$(sips -g pixelHeight "$image" | awk '/pixelHeight/ {print $2}')
+            case "${width}x${height}" in
+              1260x2736|1290x2796|1320x2868) ;;
+              *) echo "Unexpected App Store screenshot size: ${width}x${height}"; exit 1 ;;
+            esac
+            sips -s format png "$image" --out "$image" >/dev/null
+            echo "$(basename "$image") ${width}x${height}"
+          done
+      - name: Upload screenshots
+        uses: actions/upload-artifact@v4
+        with:
+          name: tbt-app-store-iphone-6.9-screenshots
+          path: build/app-store-screenshots/*.png
+          if-no-files-found: error
+          retention-days: 14
