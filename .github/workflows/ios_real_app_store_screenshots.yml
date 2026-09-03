@@ -2,6 +2,10 @@ name: iOS Real App Store Screenshots
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/ios_real_app_store_screenshots.yml
 
 permissions:
   contents: read
