@@ -65,6 +65,13 @@ jobs:
                   'CFBundleURLName': 'com.tbt.social',
                   'CFBundleURLSchemes': ['tbt'],
               })
+          google_scheme = 'com.googleusercontent.apps.330568532415-vq9ighb74m02f36pfdf6mq369t6utjj0'
+          if not any(google_scheme in item.get('CFBundleURLSchemes', []) for item in existing):
+              existing.append({
+                  'CFBundleTypeRole': 'Editor',
+                  'CFBundleURLName': 'Google Sign-In',
+                  'CFBundleURLSchemes': [google_scheme],
+              })
           info['CFBundleURLTypes'] = existing
 
           with info_path.open('wb') as f:
@@ -82,6 +89,8 @@ jobs:
               plistlib.dump(entitlements, f, sort_keys=False)
           PY
 
+          cp ios_config/GoogleService-Info.plist ios/Runner/GoogleService-Info.plist
+
       - name: Configure Xcode project
         shell: bash
         run: |
@@ -92,6 +101,10 @@ jobs:
           project = Xcodeproj::Project.open(project_path)
           target = project.targets.find { |t| t.name == 'Runner' }
           abort('Runner target missing') unless target
+          config_file = project.main_group.find_subpath('Runner/GoogleService-Info.plist', true)
+          unless target.resources_build_phase.files_references.include?(config_file)
+            target.resources_build_phase.add_file_reference(config_file)
+          end
           target.build_configurations.each do |config|
             config.build_settings['CODE_SIGN_ENTITLEMENTS'] = 'Runner/Runner.entitlements'
             config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'
