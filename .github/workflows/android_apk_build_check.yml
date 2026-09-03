@@ -98,8 +98,8 @@ jobs:
           grep -q '^package com.tbt.social$' "$main_activity"
       - name: Build debug APK
         run: |
-          flutter build apk --debug --no-pub \\
-            --build-name=1.0.8 \\
+          flutter build apk --debug --no-pub \
+            --build-name=1.0.8 \
             --build-number=14
       - name: Verify APK signing identity
         shell: bash
