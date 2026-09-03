@@ -41,7 +41,11 @@ jobs:
 
       - name: Add production iOS permissions and capabilities
         shell: bash
+        env:
+          FIREBASE_IOS_GOOGLE_SERVICE_INFO_PLIST_BASE64: ${{ secrets.FIREBASE_IOS_GOOGLE_SERVICE_INFO_PLIST_BASE64 }}
         run: |
+          set -euo pipefail
+          test -n "$FIREBASE_IOS_GOOGLE_SERVICE_INFO_PLIST_BASE64"
           python3 - <<'PY'
           import plistlib
           from pathlib import Path
@@ -89,7 +93,8 @@ jobs:
               plistlib.dump(entitlements, f, sort_keys=False)
           PY
 
-          cp ios_config/GoogleService-Info.plist ios/Runner/GoogleService-Info.plist
+          printf '%s' "$FIREBASE_IOS_GOOGLE_SERVICE_INFO_PLIST_BASE64" \
+            | base64 --decode > ios/Runner/GoogleService-Info.plist
 
       - name: Configure Xcode project
         shell: bash
@@ -156,11 +161,15 @@ jobs:
           SWIFT
 
       - name: Validate generated iOS host
+        shell: bash
         run: |
+          set -euo pipefail
+          FIREBASE_IOS_API_KEY=$(/usr/libexec/PlistBuddy -c 'Print :API_KEY' ios/Runner/GoogleService-Info.plist)
+          FIREBASE_IOS_APP_ID=$(/usr/libexec/PlistBuddy -c 'Print :GOOGLE_APP_ID' ios/Runner/GoogleService-Info.plist)
           flutter pub get
           flutter build ios --debug --no-codesign --no-pub \
-            --dart-define=FIREBASE_IOS_API_KEY=ci-placeholder \
-            --dart-define=FIREBASE_IOS_APP_ID=1:330568532415:ios:ci-placeholder \
+            --dart-define="FIREBASE_IOS_API_KEY=$FIREBASE_IOS_API_KEY" \
+            --dart-define="FIREBASE_IOS_APP_ID=$FIREBASE_IOS_APP_ID" \
             --dart-define=IOS_BUNDLE_ID=com.tbt.social
 
       - name: Commit iOS host to branch
