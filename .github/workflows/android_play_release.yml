@@ -81,7 +81,10 @@ jobs:
             -storepass "$PLAY_KEYSTORE_PASSWORD" \
             -alias "$PLAY_KEY_ALIAS" | tee /tmp/tbt-release-key.txt
           tr '[:lower:]' '[:upper:]' < /tmp/tbt-release-key.txt | tr -d ':' > /tmp/tbt-release-key-normalized.txt
-          grep -Eq '2B2A7552F8F36BC6B60947002C18723597762B99|89BB21DB902BE269874A39ACA2DEEFB480563236' /tmp/tbt-release-key-normalized.txt
+          # GitHub signs the bundle with the Play upload certificate. Google Play
+          # re-signs distributed APKs with the app-signing certificate registered
+          # in Firebase, so validate the upload key here (not the runtime key).
+          grep -Eq '73557719D69700739FCA874F7D5EC84AB6C760E4' /tmp/tbt-release-key-normalized.txt
           python3 - <<'PY'
           import os
           from pathlib import Path
