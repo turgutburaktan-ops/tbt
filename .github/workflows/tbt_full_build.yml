@@ -191,6 +191,7 @@ jobs:
           flutter config --no-enable-swift-package-manager
           rm -rf ios
           flutter create --platforms=ios --org com.tbt --project-name best_photo_spot .
+          sed -i '' 's/com\.tbt\.bestPhotoSpot/com.tbt.social/g' ios/Runner.xcodeproj/project.pbxproj
           test -f ios/Podfile
           python3 - <<'PY'
           from pathlib import Path
@@ -213,7 +214,7 @@ jobs:
           flutter build ios --debug --no-codesign --no-pub
           --dart-define=FIREBASE_IOS_API_KEY=ci-placeholder
           --dart-define=FIREBASE_IOS_APP_ID=1:330568532415:ios:ci-placeholder
-          --dart-define=IOS_BUNDLE_ID=com.tbt.bestPhotoSpot
+          --dart-define=IOS_BUNDLE_ID=com.tbt.social
       - name: Verify iOS App
         run: test -d build/ios/iphoneos/Runner.app
       - name: Upload unsigned iOS app

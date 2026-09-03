@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - feature/video-v1
+      - main
     paths:
       - '.github/workflows/generate_ios_host.yml'
 
@@ -20,7 +20,7 @@ jobs:
       - name: Checkout branch
         uses: actions/checkout@v4
         with:
-          ref: feature/video-v1
+          ref: main
           fetch-depth: 0
 
       - name: Setup Flutter
@@ -62,7 +62,7 @@ jobs:
           if not any('tbt' in item.get('CFBundleURLSchemes', []) for item in existing):
               existing.append({
                   'CFBundleTypeRole': 'Editor',
-                  'CFBundleURLName': 'com.tbt.bestPhotoSpot',
+                  'CFBundleURLName': 'com.tbt.social',
                   'CFBundleURLSchemes': ['tbt'],
               })
           info['CFBundleURLTypes'] = existing
@@ -73,8 +73,8 @@ jobs:
           entitlements = {
               'com.apple.developer.applesignin': ['Default'],
               'com.apple.developer.associated-domains': [
-                  'applinks:en-iyi-cekim-noktasi.web.app',
-                  'applinks:en-iyi-cekim-noktasi.firebaseapp.com',
+                  'applinks:trtbt.com',
+                  'applinks:www.trtbt.com',
               ],
           }
           entitlements_path = Path('ios/Runner/Runner.entitlements')
@@ -95,7 +95,7 @@ jobs:
           target.build_configurations.each do |config|
             config.build_settings['CODE_SIGN_ENTITLEMENTS'] = 'Runner/Runner.entitlements'
             config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'
-            config.build_settings['PRODUCT_BUNDLE_IDENTIFIER'] = 'com.tbt.bestPhotoSpot'
+            config.build_settings['PRODUCT_BUNDLE_IDENTIFIER'] = 'com.tbt.social'
           end
           project.save
           RUBY
@@ -148,7 +148,7 @@ jobs:
           flutter build ios --debug --no-codesign --no-pub \
             --dart-define=FIREBASE_IOS_API_KEY=ci-placeholder \
             --dart-define=FIREBASE_IOS_APP_ID=1:330568532415:ios:ci-placeholder \
-            --dart-define=IOS_BUNDLE_ID=com.tbt.bestPhotoSpot
+            --dart-define=IOS_BUNDLE_ID=com.tbt.social
 
       - name: Commit iOS host to branch
         shell: bash
@@ -161,4 +161,4 @@ jobs:
             exit 0
           fi
           git commit -m 'ios: add generated iOS host project'
-          git push origin HEAD:feature/video-v1
+          git push origin HEAD:main
