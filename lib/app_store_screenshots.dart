@@ -118,7 +118,32 @@ class _Nav extends StatelessWidget {
     return Container(
       height: 65,
       decoration: const BoxDecoration(color: AppColors.navigation, border: Border(top: BorderSide(color: AppColors.border))),
-      child: Row(children: List.generate(items.length, (i) => Expanded(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(items[i].$1, size: 21, color: i == selected ? AppColors.cyan : Colors.white30), const SizedBox(height: 3), Text(items[i].$2, style: TextStyle(fontSize: 8.5, fontWeight: FontWeight.w800, color: i == selected ? Colors.white : Colors.white38))]))),
+      child: Row(
+        children: List.generate(
+          items.length,
+          (i) => Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  items[i].$1,
+                  size: 21,
+                  color: i == selected ? AppColors.cyan : Colors.white30,
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  items[i].$2,
+                  style: TextStyle(
+                    fontSize: 8.5,
+                    fontWeight: FontWeight.w800,
+                    color: i == selected ? Colors.white : Colors.white38,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
