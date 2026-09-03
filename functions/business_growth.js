@@ -30,11 +30,11 @@ exports.getBusinessDashboard = onCall({region:'europe-west1'}, async request=>{
   const venueKey=clean(request.data?.venueKey,240),{db}=await owner(request,venueKey),base=db.collection('business_venues').doc(venueKey),venue=await base.get(),venueData=venue.data()||{};
   const boostId=clean(venueData.activeBoostId,180);
   const [metrics,days,followers,reservations,boost]=await Promise.all([
-    base.collection('metrics').get(),
-    base.collection('metric_days').orderBy(FieldPath.documentId(),'desc').limit(7).get(),
-    base.collection('followers').count().get(),
-    base.collection('reservations').orderBy('createdAt','desc').limit(30).get(),
-    boostId?base.collection('boosts').doc(boostId).get():Promise.resolve(null)
+    base.collection('metrics').get().catch(error=>{console.error('dashboard metrics',error);return{docs:[]};}),
+    base.collection('metric_days').orderBy(FieldPath.documentId(),'desc').limit(7).get().catch(error=>{console.error('dashboard days',error);return{docs:[]};}),
+    base.collection('followers').count().get().catch(error=>{console.error('dashboard followers',error);return{data:()=>({count:0})};}),
+    base.collection('reservations').orderBy('createdAt','desc').limit(30).get().catch(error=>{console.error('dashboard reservations',error);return{docs:[]};}),
+    boostId?base.collection('boosts').doc(boostId).get().catch(error=>{console.error('dashboard boost',error);return null;}):Promise.resolve(null)
   ]);
   const out={};metrics.docs.forEach(d=>out[d.id]=Number(d.data().count||0));
   const daily=days.docs.map(doc=>({date:doc.id,...doc.data()}));
