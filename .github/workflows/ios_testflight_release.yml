@@ -37,6 +37,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          flutter config --no-enable-swift-package-manager
           rm -rf ios
           flutter create --platforms=ios --org com.tbt --project-name best_photo_spot .
 
@@ -120,13 +121,20 @@ jobs:
           target = project.targets.find { |item| item.name == 'Runner' }
           abort('Runner target missing') unless target
 
-          config_file = project.main_group.find_subpath('Runner/GoogleService-Info.plist', true)
+          runner_group = project.main_group.find_subpath('Runner', false)
+          abort('Runner group missing') unless runner_group
+          config_file = runner_group.files.find do |file|
+            file.path == 'GoogleService-Info.plist'
+          end
+          config_file ||= runner_group.new_file('GoogleService-Info.plist')
           unless target.resources_build_phase.files_references.include?(config_file)
             target.resources_build_phase.add_file_reference(config_file)
           end
 
           target.build_configurations.each do |config|
             config.build_settings['CODE_SIGN_ENTITLEMENTS'] = 'Runner/Runner.entitlements'
+            config.build_settings['CODE_SIGN_IDENTITY'] = 'Apple Distribution'
+            config.build_settings['CODE_SIGN_IDENTITY[sdk=iphoneos*]'] = 'Apple Distribution'
             config.build_settings['CODE_SIGN_STYLE'] = 'Manual'
             config.build_settings['DEVELOPMENT_TEAM'] = ENV.fetch('DEVELOPMENT_TEAM')
             config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.0'
