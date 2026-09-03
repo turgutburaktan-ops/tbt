@@ -48,3 +48,47 @@ jobs:
           --project en-iyi-cekim-noktasi
           --force
           --non-interactive
+      - name: Restore callable invoker access
+        run: |
+          set -euo pipefail
+          gcloud auth activate-service-account --key-file="$GOOGLE_APPLICATION_CREDENTIALS"
+          functions=(
+            addBusinessCampaign
+            addBusinessMenuItem
+            addBusinessProgramItem
+            adminReviewBusinessClaim
+            adminSetBusinessPremium
+            createBusinessBoost
+            createBusinessCandidate
+            deleteBusinessContentItem
+            followBusiness
+            getAdminBusinessClaims
+            getAdminInsights
+            getBusinessClaim
+            getBusinessDashboard
+            getBusinessEntitlement
+            getBusinessFollowStatus
+            getBusinessPublicFeatures
+            listPendingSpotSuggestions
+            recordBusinessMetric
+            requestBusinessReservation
+            respondBusinessReservation
+            reviewSpotSuggestion
+            setSocialEventCover
+            startBusinessPremiumTrial
+            submitBusinessClaim
+            submitBusinessClaimV2
+            submitSpotSuggestion
+            updateBusinessContentItem
+            updateBusinessProfile
+            updateBusinessProfileMedia
+            updateBusinessWeeklyHours
+          )
+          for function_name in "${functions[@]}"; do
+            gcloud functions add-invoker-policy-binding "$function_name" \
+              --gen2 \
+              --region=europe-west1 \
+              --project=en-iyi-cekim-noktasi \
+              --member=allUsers \
+              --quiet
+          done
