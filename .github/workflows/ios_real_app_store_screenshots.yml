@@ -33,6 +33,16 @@ jobs:
           rm -rf ios
           flutter create --platforms=ios --org com.tbt --project-name best_photo_spot .
           cp lib/screens/home_shell_v3_screenshot.dart lib/screens/home_shell_v3.dart
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('lib/main.dart')
+          source = path.read_text()
+          needle = '  Future<void> _initializePostFrameServices() async {\n'
+          replacement = needle + "    if (const bool.fromEnvironment('APP_STORE_SCREENSHOT_MODE')) return;\n"
+          if needle not in source:
+              raise SystemExit('Post-frame service initializer not found')
+          path.write_text(source.replace(needle, replacement, 1))
+          PY
           printf '%s' "$FIREBASE_IOS_GOOGLE_SERVICE_INFO_PLIST_BASE64" | base64 --decode > ios/Runner/GoogleService-Info.plist
           sed -i '' 's/com\.tbt\.bestPhotoSpot/com.tbt.social/g' ios/Runner.xcodeproj/project.pbxproj
           /usr/libexec/PlistBuddy -c "Add :GADApplicationIdentifier string ca-app-pub-3940256099942544~1458002511" ios/Runner/Info.plist || true
@@ -60,6 +70,7 @@ jobs:
           xcrun simctl status_bar "$UDID" override --time 9:41 --batteryState charged --batteryLevel 100 --wifiBars 3 --cellularBars 4
           xcrun simctl install "$UDID" build/ios/iphonesimulator/Runner.app
           xcrun simctl privacy "$UDID" grant notifications com.tbt.social || true
+          xcrun simctl privacy "$UDID" grant location com.tbt.social || true
           xcrun simctl launch "$UDID" com.tbt.social
           mkdir -p build/real-app-store-screenshots
           sleep 5
