@@ -1,5 +1,5 @@
 const {onCall, HttpsError} = require('firebase-functions/v2/https');
-const {getFirestore} = require('firebase-admin/firestore');
+const {getFirestore, Timestamp} = require('firebase-admin/firestore');
 
 function requireAdmin(request) {
   if (!request.auth?.uid) throw new HttpsError('unauthenticated', 'Giriş gerekli.');
@@ -67,28 +67,74 @@ exports.getAdminBusinessClaims = onCall({region: 'europe-west1'}, async (request
 exports.getAdminInsights = onCall({region: 'europe-west1'}, async (request) => {
   requireAdmin(request);
   const db = getFirestore();
+  const now = Date.now();
+  const since24h = Timestamp.fromMillis(now - 24 * 60 * 60 * 1000);
+  const since7d = Timestamp.fromMillis(now - 7 * 24 * 60 * 60 * 1000);
+  const since30d = Timestamp.fromMillis(now - 30 * 24 * 60 * 60 * 1000);
   const count = async (query) => (await query.count().get()).data().count || 0;
-  const [reports, deletes, analytics, errors, trustReports] = await Promise.all([
-    count(db.collection('moderation_reports').where('status', '==', 'open')).catch(() => 0),
-    count(db.collection('account_delete_requests').where('status', '==', 'requested')).catch(() => 0),
-    count(db.collection('analytics_events')).catch(() => 0),
-    count(db.collection('app_errors')).catch(() => 0),
-    count(db.collectionGroup('trust_reports').where('status', '==', 'open')).catch(() => 0),
+  const safeCount = (query) => count(query).catch(() => 0);
+
+  const countEntries = {
+    totalUsers: db.collection('users'),
+    newUsers24h: db.collection('users').where('createdAt', '>=', since24h),
+    newUsers7d: db.collection('users').where('createdAt', '>=', since7d),
+    newUsers30d: db.collection('users').where('createdAt', '>=', since30d),
+    activeUsers7d: db.collection('users').where('lastActiveAt', '>=', since7d),
+    activeUsers30d: db.collection('users').where('lastActiveAt', '>=', since30d),
+    posts: db.collection('posts'),
+    stories: db.collection('stories'),
+    comments: db.collectionGroup('comments'),
+    events: db.collection('social_events'),
+    upcomingEvents: db.collection('social_events').where('startsAt', '>=', Timestamp.now()),
+    verifiedBusinesses: db.collection('business_venues').where('verified', '==', true),
+    pendingBusinessClaims: db.collection('business_claims').where('status', '==', 'pending_review'),
+    openReports: db.collection('moderation_reports').where('status', '==', 'open'),
+    deleteRequests: db.collection('account_delete_requests').where('status', '==', 'requested'),
+    analyticsEvents: db.collection('analytics_events'),
+    appErrors: db.collection('app_errors'),
+    trustReports: db.collectionGroup('trust_reports').where('status', '==', 'open'),
+  };
+  const entries = Object.entries(countEntries);
+  const values = await Promise.all(entries.map(([, query]) => safeCount(query)));
+  const counts = Object.fromEntries(entries.map(([key], index) => [key, values[index]]));
+
+  const [recentUsersSnap, topPostsSnap, errorSnap] = await Promise.all([
+    db.collection('users').orderBy('createdAt', 'desc').limit(12).get().catch(() => ({docs: []})),
+    db.collection('posts').orderBy('likesCount', 'desc').limit(8).get().catch(() => ({docs: []})),
+    db.collection('app_errors').orderBy('createdAt', 'desc').limit(20).get().catch(() => ({docs: []})),
   ]);
-  const errorSnap = await db
-    .collection('app_errors')
-    .orderBy('createdAt', 'desc')
-    .limit(20)
-    .get()
-    .catch(() => ({docs: []}));
+
+  const recentUsers = recentUsersSnap.docs.map((doc) => {
+    const d = doc.data() || {};
+    return {
+      id: doc.id,
+      displayName: String(d.displayName || d.name || d.username || 'TBT kullanıcısı'),
+      username: String(d.username || ''),
+      email: String(d.email || ''),
+      photoURL: String(d.photoURL || d.photoUrl || ''),
+      createdAt: d.createdAt || null,
+      lastActiveAt: d.lastActiveAt || null,
+    };
+  });
+  const topPosts = topPostsSnap.docs.map((doc) => {
+    const d = doc.data() || {};
+    return {
+      id: doc.id,
+      userName: String(d.userName || 'TBT kullanıcısı'),
+      caption: String(d.caption || '').slice(0, 180),
+      spotName: String(d.spotName || ''),
+      imageUrl: String(d.imageUrl || d.thumbnailUrl || ''),
+      likesCount: Number(d.likesCount || 0),
+      commentsCount: Number(d.commentsCount || 0),
+      createdAt: d.createdAt || null,
+    };
+  });
+
   return {
-    counts: {
-      openReports: reports,
-      deleteRequests: deletes,
-      analyticsEvents: analytics,
-      appErrors: errors,
-      trustReports,
-    },
+    generatedAtMs: now,
+    counts,
+    recentUsers,
+    topPosts,
     errors: errorSnap.docs.map((doc) => ({id: doc.id, ...doc.data()})),
   };
 });
