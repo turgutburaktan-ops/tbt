@@ -6,13 +6,20 @@ function clean(value, max = 500) { return String(value || '').trim().slice(0, ma
 function venueKey(category, venueId) { return `${clean(category, 40)}:${clean(venueId, 180)}`; }
 function requireAuth(request) { if (!request.auth?.uid) throw new HttpsError('unauthenticated', 'Giriş gerekli.'); return request.auth.uid; }
 
-async function ownerContext(request, category, venueId) {
+async function ownerContext(request, category, venueId, venueKeyValue) {
   const uid = requireAuth(request);
   const db = getFirestore();
-  const id = venueKey(category, venueId);
-  const snap = await db.collection('business_claims').doc(id).get();
-  const data = snap.data() || {};
-  if (data.status !== 'verified' || data.applicantUid !== uid) throw new HttpsError('permission-denied', 'Yalnız doğrulanmış işletme sahibi bu işlemi yapabilir.');
+  const id = clean(venueKeyValue, 240) || venueKey(category, venueId);
+  if (!id || id === ':') throw new HttpsError('invalid-argument', 'İşletme kimliği eksik.');
+  const [venueSnap, claimSnap] = await Promise.all([
+    db.collection('business_venues').doc(id).get(),
+    db.collection('business_claims').doc(id).get(),
+  ]);
+  const venue = venueSnap.data() || {};
+  const claim = claimSnap.data() || {};
+  const ownsVenue = venue.verified === true && venue.ownerUid === uid;
+  const ownsClaim = claim.status === 'verified' && claim.applicantUid === uid;
+  if (!ownsVenue && !ownsClaim) throw new HttpsError('permission-denied', 'Yalnız doğrulanmış işletme sahibi bu işlemi yapabilir.');
   return {uid, db, id};
 }
 
@@ -39,7 +46,7 @@ async function verifyMenuImage(uid, venueKeyValue, itemId, storagePath) {
 
 exports.updateBusinessContentItem = onCall({region: 'europe-west1'}, async (request) => {
   const d = request.data || {};
-  const {uid, db, id} = await ownerContext(request, d.category, d.venueId);
+  const {uid, db, id} = await ownerContext(request, d.category, d.venueId, d.venueKey);
   const type = clean(d.type, 20);
   const itemId = clean(d.itemId, 180);
   const cfg = configFor(type);
@@ -122,7 +129,7 @@ exports.updateBusinessContentItem = onCall({region: 'europe-west1'}, async (requ
 
 exports.deleteBusinessContentItem = onCall({region: 'europe-west1'}, async (request) => {
   const d = request.data || {};
-  const {uid, db, id} = await ownerContext(request, d.category, d.venueId);
+  const {uid, db, id} = await ownerContext(request, d.category, d.venueId, d.venueKey);
   const type = clean(d.type, 20);
   const itemId = clean(d.itemId, 180);
   const cfg = configFor(type);
