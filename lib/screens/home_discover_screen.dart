@@ -3,11 +3,17 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../services/content_engagement_service.dart';
+import '../services/spot_repository.dart';
+import '../models/photo_spot.dart';
+import '../models/nearby_venue.dart';
 import '../theme/app_theme.dart';
 import '../widgets/firebase_media_image.dart';
 import 'post_detail_screen.dart';
 import 'reels_screen.dart';
 import 'user_profile_screen.dart';
+import 'event_deep_link_screen.dart';
+import 'spot_detail_screen.dart';
+import 'business_profile_screen.dart';
 
 class HomeDiscoverScreen extends StatefulWidget {
   const HomeDiscoverScreen({super.key});
@@ -20,6 +26,7 @@ class _HomeDiscoverScreenState extends State<HomeDiscoverScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _query = '';
   Future<List<QueryDocumentSnapshot<Map<String, dynamic>>>>? _userSearchFuture;
+  Future<List<PhotoSpot>>? _spotSearchFuture;
 
   @override
   void dispose() {
@@ -146,6 +153,9 @@ class _HomeDiscoverScreenState extends State<HomeDiscoverScreen> {
     setState(() {
       _query = next;
       _userSearchFuture = next.length < 2 ? null : _findUsers(next);
+      _spotSearchFuture = next.length < 2
+          ? null
+          : SpotRepository.instance.search(next, limit: 3000);
     });
   }
 
@@ -415,22 +425,62 @@ class _HomeDiscoverScreenState extends State<HomeDiscoverScreen> {
     padding: const EdgeInsets.fromLTRB(14, 0, 14, 24),
     children: [
       _userResults(),
+      _spotResults(),
       _postResults(),
-      _genericResults('businesses', 'Mekanlar', const [
+      _genericResults('business_venues', 'Mekanlar', const [
+        'venueName',
         'name',
-        'title',
-        'businessName',
         'city',
         'address',
       ], Icons.storefront_outlined),
-      _genericResults('events', 'Etkinlikler', const [
+      _genericResults('social_events', 'Etkinlikler', const [
         'title',
-        'name',
-        'locationName',
+        'locationLabel',
         'city',
       ], Icons.event_outlined),
     ],
   );
+
+  Widget _spotResults() {
+    final future = _spotSearchFuture;
+    if (_query.length < 2 || future == null) return const SizedBox.shrink();
+    return FutureBuilder<List<PhotoSpot>>(
+      future: future,
+      builder: (context, snapshot) {
+        final spots = snapshot.data ?? const <PhotoSpot>[];
+        if (spots.isEmpty) return const SizedBox.shrink();
+        return _ResultSection(
+          title: 'Gezilecek Yerler',
+          children: spots
+              .take(12)
+              .map(
+                (spot) => ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const CircleAvatar(
+                    backgroundColor: AppColors.surfaceStrong,
+                    child: Icon(Icons.place_outlined, color: AppColors.cyan),
+                  ),
+                  title: Text(
+                    spot.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontWeight: FontWeight.w800),
+                  ),
+                  subtitle: Text('${spot.city} • ${spot.category}'),
+                  trailing: const Icon(Icons.chevron_right_rounded),
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => SpotDetailScreen(spot: spot),
+                    ),
+                  ),
+                ),
+              )
+              .toList(),
+        );
+      },
+    );
+  }
 
   Widget _userResults() {
     final future = _userSearchFuture;
@@ -569,12 +619,17 @@ class _HomeDiscoverScreenState extends State<HomeDiscoverScreen> {
     String title,
     List<String> keys,
     IconData icon,
-  ) => StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-    stream: FirebaseFirestore.instance
-        .collection(collection)
-        .limit(80)
-        .snapshots(),
-    builder: (context, snapshot) {
+  ) {
+    Query<Map<String, dynamic>> source =
+        FirebaseFirestore.instance.collection(collection);
+    if (collection == 'social_events') {
+      source = source
+          .where('status', isEqualTo: 'open')
+          .where('visibility', isEqualTo: 'public');
+    }
+    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      stream: source.limit(80).snapshots(),
+      builder: (context, snapshot) {
       if (!snapshot.hasData) return const SizedBox.shrink();
       final docs = snapshot.data!.docs
           .where((d) => _matches(d.data(), keys))
@@ -608,11 +663,43 @@ class _HomeDiscoverScreenState extends State<HomeDiscoverScreen> {
             subtitle: city.trim().isEmpty
                 ? null
                 : Text(city, maxLines: 1, overflow: TextOverflow.ellipsis),
+            trailing: const Icon(Icons.chevron_right_rounded),
+            onTap: collection == 'social_events'
+                ? () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => EventDeepLinkScreen(eventId: doc.id),
+                    ),
+                  )
+                : () {
+                    final category = (data['category'] ?? 'dining').toString();
+                    final venueId = (data['venueId'] ?? doc.id).toString();
+                    final venue = NearbyVenue.fromJson({
+                      'id': venueId,
+                      'category': category,
+                      'name': data['venueName'] ?? data['name'] ?? 'Mekan',
+                      'latitude': data['latitude'] ?? 0,
+                      'longitude': data['longitude'] ?? 0,
+                      'address': data['address'] ?? '',
+                      'openingHours': data['openingHours'] ?? '',
+                      'phone': data['phone'] ?? '',
+                      'website': data['website'] ?? '',
+                      'imageUrl': data['coverImageUrl'] ?? data['imageUrl'] ?? '',
+                      'description': data['description'] ?? '',
+                    });
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => BusinessProfileScreen(venue: venue),
+                      ),
+                    );
+                  },
           );
         }).toList(),
       );
-    },
-  );
+      },
+    );
+  }
 }
 
 class _ResultSection extends StatelessWidget {

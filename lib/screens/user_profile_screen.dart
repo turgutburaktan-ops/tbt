@@ -14,6 +14,7 @@ import '../widgets/profile_reward_surface.dart';
 import '../widgets/story_strip.dart';
 import '../widgets/user_safety_actions.dart';
 import 'chat_screen.dart';
+import 'event_deep_link_screen.dart';
 import 'post_detail_screen.dart';
 
 class UserProfileScreen extends StatelessWidget {
@@ -347,6 +348,9 @@ class UserProfileScreen extends StatelessWidget {
                       editable: isOwnProfile,
                     ),
                   ),
+                  SliverToBoxAdapter(
+                    child: _PublicProfileEvents(userId: userId),
+                  ),
                   const SliverToBoxAdapter(
                     child: Divider(height: 1, color: Color(0xFF2A2E33)),
                   ),
@@ -419,6 +423,70 @@ class UserProfileScreen extends StatelessWidget {
       ),
     );
   }
+}
+
+class _PublicProfileEvents extends StatelessWidget {
+  final String userId;
+  const _PublicProfileEvents({required this.userId});
+
+  String _dateLabel(Object? value) {
+    final d = value is Timestamp
+        ? value.toDate().toLocal()
+        : DateTime.tryParse(value?.toString() ?? '')?.toLocal();
+    if (d == null) return '';
+    return '${d.day.toString().padLeft(2, '0')}.${d.month.toString().padLeft(2, '0')} • ${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
+  }
+
+  @override
+  Widget build(BuildContext context) => StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+    stream: FirebaseFirestore.instance
+        .collection('social_events')
+        .where('hostId', isEqualTo: userId)
+        .where('visibility', isEqualTo: 'public')
+        .limit(10)
+        .snapshots(),
+    builder: (context, snapshot) {
+      final docs = [...?snapshot.data?.docs]
+        ..sort((a, b) {
+          final av = a.data()['startsAt'];
+          final bv = b.data()['startsAt'];
+          final at = av is Timestamp ? av.millisecondsSinceEpoch : 0;
+          final bt = bv is Timestamp ? bv.millisecondsSinceEpoch : 0;
+          return bt.compareTo(at);
+        });
+      if (docs.isEmpty) return const SizedBox.shrink();
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(14, 6, 14, 14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Etkinlikler',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900)),
+            const SizedBox(height: 8),
+            for (final doc in docs.take(4))
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const CircleAvatar(child: Icon(Icons.event_outlined)),
+                title: Text((doc.data()['title'] ?? 'Etkinlik').toString(),
+                    maxLines: 1, overflow: TextOverflow.ellipsis),
+                subtitle: Text(
+                  '${_dateLabel(doc.data()['startsAt'])} • ${(doc.data()['city'] ?? '').toString()}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                trailing: const Icon(Icons.chevron_right_rounded),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => EventDeepLinkScreen(eventId: doc.id),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      );
+    },
+  );
 }
 
 class _Stat extends StatelessWidget {

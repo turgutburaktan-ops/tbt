@@ -9,7 +9,7 @@ import '../data/spot_coordinate_verification_registry_batch11.dart';
 import '../data/spot_coordinate_verification_registry_batch12.dart';
 import '../data/spot_coordinate_verification_registry_generated.dart';
 import '../models/photo_spot.dart';
-import 'spot_publication_gate.dart';
+import 'verified_spot_image_gate.dart';
 
 /// Son savunma hattı: katalog kaynaklarından bağımsız olarak haritaya çıkmadan
 /// önce bariz hatalı veya çakışan koordinatları eler.
@@ -24,10 +24,7 @@ class SpotQualityGate {
   static const Set<String> blockedSpotIds = <String>{};
 
   static List<PhotoSpot> filterSafe(List<PhotoSpot> input) {
-    final valid = input
-        .where(_basicCoordinateCheck)
-        .where(SpotPublicationGate.canPublish)
-        .toList();
+    final valid = input.where(_basicCoordinateCheck).toList();
     final byCoordinate = <String, List<PhotoSpot>>{};
     for (final spot in valid) {
       final key =
@@ -84,6 +81,15 @@ class SpotQualityGate {
     if (blockedSpotIds.contains(spot.id)) return false;
     if (!spot.latitude.isFinite || !spot.longitude.isFinite) return false;
     if (spot.latitude == 0 || spot.longitude == 0) return false;
+    final firestoreVerified = spot.tags.contains('FirestoreDoğrulanmış');
+    final sourceVerified = spot.tags.contains('Doğrulanmış') ||
+        spot.tags.contains('KaynakDoğrulanmış');
+    if (!firestoreVerified && !sourceVerified) return false;
+    if (firestoreVerified) {
+      if (spot.imageUrl.trim().isEmpty) return false;
+    } else if (!hasVerifiedSpotImage(spot.id)) {
+      return false;
+    }
     return spot.latitude >= _minLat &&
         spot.latitude <= _maxLat &&
         spot.longitude >= _minLng &&

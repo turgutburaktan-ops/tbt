@@ -55,6 +55,9 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="tbt" android:host="event" />
                 <data android:scheme="tbt" android:host="community" />
+                <data android:scheme="tbt" android:host="profile" />
+                <data android:scheme="tbt" android:host="post" />
+                <data android:scheme="tbt" android:host="spot" />
             </intent-filter>
 
             <!-- Verified HTTPS links are preferred for production sharing. -->

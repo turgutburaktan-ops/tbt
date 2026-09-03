@@ -17,6 +17,7 @@ import '../widgets/profile_favorite_places_section.dart';
 import '../widgets/public_achievement_badges.dart';
 import '../widgets/profile_reward_surface.dart';
 import 'create_post_screen.dart';
+import 'event_deep_link_screen.dart';
 import 'follow_list_screen.dart';
 import 'login_screen.dart';
 import 'main_camera_screen.dart';
@@ -229,6 +230,10 @@ class _ProfileBodyState extends State<_ProfileBody> {
                   SliverToBoxAdapter(child: _contentTabs()),
                   if (_tab == 'routes')
                     const SliverToBoxAdapter(child: _ProfileRoutesSection())
+                  else if (_tab == 'events')
+                    SliverToBoxAdapter(
+                      child: _ProfileEventsSection(userId: widget.user.uid),
+                    )
                   else if (_tab == 'favorites')
                     SliverToBoxAdapter(
                       child: ProfileFavoritePlacesSection(
@@ -632,6 +637,11 @@ class _ProfileBodyState extends State<_ProfileBody> {
           icon: Icon(Icons.route_rounded),
         ),
         ButtonSegment(
+          value: 'events',
+          tooltip: 'Etkinliklerim',
+          icon: Icon(Icons.event_available_outlined),
+        ),
+        ButtonSegment(
           value: 'favorites',
           tooltip: 'Favori Mekanlarım',
           icon: Icon(Icons.bookmark_rounded),
@@ -793,6 +803,117 @@ class _ProfileBodyState extends State<_ProfileBody> {
     );
     nameController.dispose();
     bioController.dispose();
+  }
+}
+
+class _ProfileEventsSection extends StatelessWidget {
+  final String userId;
+  final bool publicOnly;
+
+  const _ProfileEventsSection({required this.userId, this.publicOnly = false});
+
+  DateTime _date(Object? value) => value is Timestamp
+      ? value.toDate()
+      : DateTime.tryParse(value?.toString() ?? '') ?? DateTime.now();
+
+  String _dateLabel(Object? value) {
+    final d = _date(value).toLocal();
+    return '${d.day.toString().padLeft(2, '0')}.${d.month.toString().padLeft(2, '0')}.${d.year} • ${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    Query<Map<String, dynamic>> query = FirebaseFirestore.instance
+        .collection('social_events')
+        .where('hostId', isEqualTo: userId);
+    if (publicOnly) query = query.where('visibility', isEqualTo: 'public');
+    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      stream: query.limit(40).snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Padding(
+            padding: EdgeInsets.all(36),
+            child: Center(child: CircularProgressIndicator()),
+          );
+        }
+        final events = [...?snapshot.data?.docs]
+          ..sort((a, b) => _date(b.data()['startsAt'])
+              .compareTo(_date(a.data()['startsAt'])));
+        if (events.isEmpty) {
+          return const Padding(
+            padding: EdgeInsets.fromLTRB(24, 30, 24, 100),
+            child: Column(
+              children: [
+                Icon(Icons.event_busy_outlined, size: 42, color: Colors.white30),
+                SizedBox(height: 10),
+                Text('Henüz etkinlik yok',
+                    style: TextStyle(fontWeight: FontWeight.w900)),
+                SizedBox(height: 5),
+                Text('Oluşturduğun etkinlikler burada profilinde görünür.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.white54)),
+              ],
+            ),
+          );
+        }
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(14, 2, 14, 100),
+          child: Column(
+            children: [
+              for (final doc in events) ...[
+                Builder(builder: (context) {
+                  final data = doc.data();
+                  final cover = (data['coverImageUrl'] ?? '').toString();
+                  final storage = (data['coverStoragePath'] ?? '').toString();
+                  final title = (data['title'] ?? 'Etkinlik').toString();
+                  final city = (data['city'] ?? '').toString();
+                  return Card(
+                    margin: EdgeInsets.zero,
+                    clipBehavior: Clip.antiAlias,
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.fromLTRB(8, 7, 8, 7),
+                      leading: SizedBox(
+                        width: 58,
+                        height: 58,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: FirebaseMediaImage(
+                            imageUrl: cover,
+                            storagePath: storage,
+                            fit: BoxFit.cover,
+                            errorWidget: const ColoredBox(
+                              color: AppColors.surfaceStrong,
+                              child: Icon(Icons.event_outlined),
+                            ),
+                          ),
+                        ),
+                      ),
+                      title: Text(title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontWeight: FontWeight.w900)),
+                      subtitle: Text(
+                        '${_dateLabel(data['startsAt'])}${city.isEmpty ? '' : ' • $city'}',
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      trailing: const Icon(Icons.chevron_right_rounded),
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => EventDeepLinkScreen(eventId: doc.id),
+                        ),
+                      ),
+                    ),
+                  );
+                }),
+                const SizedBox(height: 9),
+              ],
+            ],
+          ),
+        );
+      },
+    );
   }
 }
 

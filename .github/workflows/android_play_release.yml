@@ -2,6 +2,9 @@ name: Android Play Release
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - 'codex/release-*'
 
 permissions:
   contents: read
@@ -29,10 +32,9 @@ jobs:
           MAPS_API_KEY: ${{ secrets.MAPS_API_KEY }}
           ADMOB_ANDROID_APP_ID: ${{ secrets.ADMOB_ANDROID_APP_ID }}
           ADMOB_NATIVE_ANDROID: ${{ secrets.ADMOB_NATIVE_ANDROID }}
-          GOOGLE_SERVER_CLIENT_ID: ${{ secrets.GOOGLE_SERVER_CLIENT_ID }}
         run: |
           set -euo pipefail
-          for name in PLAY_KEYSTORE_BASE64 PLAY_KEYSTORE_PASSWORD PLAY_KEY_ALIAS PLAY_KEY_PASSWORD MAPS_API_KEY ADMOB_ANDROID_APP_ID ADMOB_NATIVE_ANDROID GOOGLE_SERVER_CLIENT_ID; do
+          for name in PLAY_KEYSTORE_BASE64 PLAY_KEYSTORE_PASSWORD PLAY_KEY_ALIAS PLAY_KEY_PASSWORD MAPS_API_KEY ADMOB_ANDROID_APP_ID ADMOB_NATIVE_ANDROID; do
             test -n "${!name:-}" || { echo "$name secret is missing"; exit 1; }
           done
           case "$ADMOB_ANDROID_APP_ID" in ca-app-pub-*~*) ;; *) exit 1 ;; esac
@@ -48,7 +50,6 @@ jobs:
         run: |
           set -euo pipefail
           cp android/app/src/main/AndroidManifest.xml /tmp/tbt-manifest.xml
-          cp .ci/google-services.json /tmp/tbt-google-services.json
           rm -rf android
           flutter create --platforms=android --org com.tbt --project-name best_photo_spot .
           # `flutter create` adds the stock counter-app test when this repository
@@ -56,7 +57,6 @@ jobs:
           # must not participate in release analysis.
           rm -f test/widget_test.dart
           cp /tmp/tbt-manifest.xml android/app/src/main/AndroidManifest.xml
-          cp /tmp/tbt-google-services.json android/app/google-services.json
           # `flutter create` ships Flutter's placeholder launcher icon. Keep
           # the real TBT brand icon in every Android density instead.
           for density in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
@@ -76,24 +76,17 @@ jobs:
             -deststorepass "$PLAY_KEYSTORE_PASSWORD" \
             -destalias "$PLAY_KEY_ALIAS" \
             -destkeypass "$PLAY_KEY_PASSWORD"
+          keytool -list -v \
+            -keystore android/app/tbt-release.jks \
+            -storepass "$PLAY_KEYSTORE_PASSWORD" \
+            -alias "$PLAY_KEY_ALIAS" | tee /tmp/tbt-release-key.txt
+          tr '[:lower:]' '[:upper:]' < /tmp/tbt-release-key.txt | tr -d ':' > /tmp/tbt-release-key-normalized.txt
+          grep -Eq '2B2A7552F8F36BC6B60947002C18723597762B99|89BB21DB902BE269874A39ACA2DEEFB480563236' /tmp/tbt-release-key-normalized.txt
           python3 - <<'PY'
           import os
           from pathlib import Path
-          settings=Path('android/settings.gradle.kts')
-          settings_text=settings.read_text()
-          settings_text=settings_text.replace(
-              'id("com.android.application") version',
-              'id("com.google.gms.google-services") version "4.4.4" apply false\n    id("com.android.application") version',
-              1,
-          )
-          settings.write_text(settings_text)
           p=Path('android/app/build.gradle.kts')
           s=p.read_text().replace('minSdk = flutter.minSdkVersion','minSdk = 26').replace('com.tbt.best_photo_spot','com.tbt.social')
-          s=s.replace(
-              'id("com.android.application")',
-              'id("com.android.application")\n    id("com.google.gms.google-services")',
-              1,
-          )
           marker='    buildTypes {\n'
           signing='''    signingConfigs {\n        create("release") {\n            storeFile = file("tbt-release.jks")\n            storeType = "JKS"\n            storePassword = System.getenv("PLAY_KEYSTORE_PASSWORD")\n            keyAlias = System.getenv("PLAY_KEY_ALIAS")\n            keyPassword = System.getenv("PLAY_KEY_PASSWORD")\n        }\n    }\n\n'''
           s=s.replace(marker, signing+marker, 1)
@@ -113,40 +106,37 @@ jobs:
             a=activity.read_text().replace('package com.tbt.best_photo_spot','package com.tbt.social').replace('import io.flutter.embedding.android.FlutterActivity','import io.flutter.embedding.android.FlutterFragmentActivity').replace('FlutterActivity()','FlutterFragmentActivity()')
             activity.write_text(a)
           PY
-      - name: Generate compact travel photo previews
-        shell: bash
-        run: |
-          set -euo pipefail
-          sudo apt-get update -qq
-          sudo apt-get install -y --no-install-recommends imagemagick
-          find assets/spots -maxdepth 1 -type f \
-            \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' \) \
-            -print0 | xargs -0 -P 4 -I{} bash -c '
-              source="$1"
-              filename="${source##*/}"
-              stem="${filename%.*}"
-              convert "$source" -auto-orient -thumbnail "640x640>" -strip \
-                -quality 72 "assets/spot_thumbnails/${stem}.webp"
-            ' _ {}
-
-          source_count="$(find assets/spots -maxdepth 1 -type f \
-            \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' \) | wc -l)"
-          preview_count="$(find assets/spot_thumbnails -maxdepth 1 -type f -name '*.webp' | wc -l)"
-          test "$preview_count" -ge "$source_count"
       - name: Build Play app bundle
         env:
           PLAY_KEYSTORE_PASSWORD: ${{ secrets.PLAY_KEYSTORE_PASSWORD }}
           PLAY_KEY_ALIAS: ${{ secrets.PLAY_KEY_ALIAS }}
           PLAY_KEY_PASSWORD: ${{ secrets.PLAY_KEY_PASSWORD }}
-          GOOGLE_SERVER_CLIENT_ID: ${{ secrets.GOOGLE_SERVER_CLIENT_ID }}
           ADMOB_NATIVE_ANDROID: ${{ secrets.ADMOB_NATIVE_ANDROID }}
         run: |
           flutter pub get
           flutter analyze --no-fatal-warnings --no-fatal-infos
-          flutter build appbundle --release --no-pub --dart-define=GOOGLE_SERVER_CLIENT_ID="$GOOGLE_SERVER_CLIENT_ID" --dart-define=ADMOB_NATIVE_ANDROID="$ADMOB_NATIVE_ANDROID"
+          flutter build appbundle --release --no-pub \
+            --build-name=1.0.7 \
+            --build-number=12 \
+            --dart-define=ADMOB_NATIVE_ANDROID="$ADMOB_NATIVE_ANDROID"
+      - name: Verify Play bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          AAB=build/app/outputs/bundle/release/app-release.aab
+          test -s "$AAB"
+          jarsigner -verify "$AAB"
+          {
+            echo 'applicationId=com.tbt.social'
+            echo 'versionName=1.0.7'
+            echo 'versionCode=12'
+            sha256sum "$AAB"
+          } > build/app/outputs/bundle/release/release-info.txt
       - uses: actions/upload-artifact@v4
         with:
-          name: tbt-play-release-aab
-          path: build/app/outputs/bundle/release/app-release.aab
+          name: tbt-play-release-1.0.7-code12
+          path: |
+            build/app/outputs/bundle/release/app-release.aab
+            build/app/outputs/bundle/release/release-info.txt
           if-no-files-found: error
           retention-days: 14

@@ -70,4 +70,12 @@ const verifiedTravelImageRegistry = <String, SpotImageInfo>{
     license: 'CC BY-SA 3.0',
     sourcePage: 'https://commons.wikimedia.org/wiki/File:Festung_Harput.jpg',
   ),
+  'elazig-hazarbaba': SpotImageInfo(
+    assetPath: 'assets/spots/auto-elz-hazarbaba.jpg',
+    networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Hazarbaba.jpg?width=1280',
+    sourceName: 'Wikimedia Commons',
+    author: 'theoryyo',
+    license: 'CC BY 2.0',
+    sourcePage: 'https://commons.wikimedia.org/wiki/File:Hazarbaba.jpg',
+  ),
 };

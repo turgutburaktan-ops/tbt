@@ -13,7 +13,7 @@ import '../services/chat_service.dart';
 import '../widgets/chat_voice_message.dart';
 import '../widgets/firebase_media_image.dart';
 import 'post_detail_screen.dart';
-import 'social_events_screen.dart';
+import 'event_deep_link_screen.dart';
 
 class ChatScreen extends StatefulWidget {
   final String otherUserId;
@@ -499,7 +499,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     if (message.sharedType == 'event') {
       await Navigator.push(
         context,
-        MaterialPageRoute(builder: (_) => const SocialEventsScreen()),
+        MaterialPageRoute(builder: (_) => EventDeepLinkScreen(eventId: id)),
       );
       return;
     }
