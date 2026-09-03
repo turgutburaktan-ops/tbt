@@ -62,7 +62,7 @@ jobs:
           xcrun simctl launch "$UDID" com.tbt.social
           mkdir -p build/real-app-store-screenshots
           sleep 5
-          for index in $(seq -w 1 24); do
+          for index in $(seq -w 1 8); do
             xcrun simctl io "$UDID" screenshot "build/real-app-store-screenshots/sample-${index}.png"
             sleep 5
           done
