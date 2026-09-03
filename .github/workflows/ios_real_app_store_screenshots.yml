@@ -1,0 +1,76 @@
+name: iOS Real App Store Screenshots
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  screenshots:
+    name: Capture Real TBT iPhone Screens
+    runs-on: macos-15
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Prepare real iOS app
+        shell: bash
+        env:
+          FIREBASE_IOS_GOOGLE_SERVICE_INFO_PLIST_BASE64: ${{ secrets.FIREBASE_IOS_GOOGLE_SERVICE_INFO_PLIST_BASE64 }}
+        run: |
+          set -euo pipefail
+          test -n "$FIREBASE_IOS_GOOGLE_SERVICE_INFO_PLIST_BASE64"
+          flutter pub get
+          flutter config --no-enable-swift-package-manager
+          rm -rf ios
+          flutter create --platforms=ios --org com.tbt --project-name best_photo_spot .
+          cp lib/screens/home_shell_v3_screenshot.dart lib/screens/home_shell_v3.dart
+          printf '%s' "$FIREBASE_IOS_GOOGLE_SERVICE_INFO_PLIST_BASE64" | base64 --decode > ios/Runner/GoogleService-Info.plist
+          sed -i '' 's/com\.tbt\.bestPhotoSpot/com.tbt.social/g' ios/Runner.xcodeproj/project.pbxproj
+          /usr/libexec/PlistBuddy -c "Add :GADApplicationIdentifier string ca-app-pub-3940256099942544~1458002511" ios/Runner/Info.plist || true
+          FIREBASE_IOS_API_KEY=$(/usr/libexec/PlistBuddy -c 'Print :API_KEY' ios/Runner/GoogleService-Info.plist)
+          FIREBASE_IOS_APP_ID=$(/usr/libexec/PlistBuddy -c 'Print :GOOGLE_APP_ID' ios/Runner/GoogleService-Info.plist)
+          printf '%s\n' "FIREBASE_IOS_API_KEY=$FIREBASE_IOS_API_KEY" "FIREBASE_IOS_APP_ID=$FIREBASE_IOS_APP_ID" >> "$GITHUB_ENV"
+
+      - name: Build real TBT app
+        shell: bash
+        run: |
+          flutter build ios --simulator --debug \
+            --dart-define=APP_STORE_SCREENSHOT_MODE=true \
+            --dart-define="FIREBASE_IOS_API_KEY=$FIREBASE_IOS_API_KEY" \
+            --dart-define="FIREBASE_IOS_APP_ID=$FIREBASE_IOS_APP_ID" \
+            --dart-define=IOS_BUNDLE_ID=com.tbt.social
+
+      - name: Capture real app screens
+        shell: bash
+        run: |
+          set -euo pipefail
+          UDID=$(xcrun simctl list devices available -j | python3 -c 'import json,sys; d=json.load(sys.stdin)["devices"]; print(next(x["udid"] for v in d.values() for x in v if x["name"]=="iPhone 16 Pro Max"))')
+          xcrun simctl boot "$UDID" || true
+          open -a Simulator
+          xcrun simctl bootstatus "$UDID" -b
+          xcrun simctl status_bar "$UDID" override --time 9:41 --batteryState charged --batteryLevel 100 --wifiBars 3 --cellularBars 4
+          xcrun simctl install "$UDID" build/ios/iphonesimulator/Runner.app
+          xcrun simctl launch "$UDID" com.tbt.social
+          mkdir -p build/real-app-store-screenshots
+          sleep 5
+          for index in $(seq -w 1 24); do
+            xcrun simctl io "$UDID" screenshot "build/real-app-store-screenshots/sample-${index}.png"
+            sleep 5
+          done
+
+      - name: Upload real screenshots
+        uses: actions/upload-artifact@v4
+        with:
+          name: tbt-real-iphone-screenshot-samples
+          path: build/real-app-store-screenshots/*.png
+          if-no-files-found: error
+          retention-days: 14
