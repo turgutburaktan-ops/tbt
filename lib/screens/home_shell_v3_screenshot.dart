@@ -52,7 +52,7 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     if (_appStoreScreenshotMode) {
       _appStoreScreenshotTimer = Timer.periodic(
-        const Duration(seconds: 15),
+        const Duration(seconds: 7),
         (timer) {
           if (!mounted) return;
           final index = timer.tick % 5;
