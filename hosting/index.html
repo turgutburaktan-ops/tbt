@@ -4,7 +4,10 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#090A0C" />
-  <title>Davet • En İyi Çekim Noktası</title>
+  <meta name="description" content="TBT'deki paylaşımı, etkinliği, profili veya gezilecek yeri aç." />
+  <meta property="og:title" content="TBT'de aç" />
+  <meta property="og:description" content="Keşfet, paylaş ve topluluğa katıl." />
+  <title>TBT'de Aç</title>
   <style>
     * { box-sizing: border-box; }
     body {
@@ -50,16 +53,23 @@
       font-weight: 800;
       cursor: pointer;
     }
+    .button.secondary {
+      margin-top: 10px;
+      background: transparent;
+      color: #F3F4F6;
+      border: 1px solid #343A44;
+    }
     .hint { margin-top: 14px; font-size: 13px; color: #747B83; }
   </style>
 </head>
 <body>
   <main class="card">
     <div class="icon" id="icon">↗</div>
-    <h1 id="title">Davet açılıyor…</h1>
+    <h1 id="title">TBT bağlantısı açılıyor…</h1>
     <p id="description">Uygulama yüklüyse ilgili sayfaya yönlendirileceksin.</p>
-    <button class="button" id="openButton" type="button">Uygulamada Aç</button>
-    <div class="hint" id="hint">Açılmazsa En İyi Çekim Noktası uygulamasının güncel sürümünün yüklü olduğundan emin ol.</div>
+    <button class="button" id="openButton" type="button">TBT'de Aç</button>
+    <button class="button secondary" id="storeButton" type="button">Google Play'den TBT'yi Aç</button>
+    <div class="hint" id="hint">Açılmazsa TBT'nin güncel sürümünün yüklü olduğundan emin ol.</div>
   </main>
 
   <script>
@@ -67,11 +77,19 @@
       const parts = location.pathname.split('/').filter(Boolean);
       const type = parts[0] || '';
       const id = parts[1] || '';
-      const valid = (type === 'event' || type === 'community') && id.length > 0;
+      const types = {
+        event: { title: 'Etkinlik', description: "Bu etkinliği TBT'de aç.", icon: '◉' },
+        community: { title: 'Topluluk', description: "Bu topluluğu TBT'de aç.", icon: '◎' },
+        profile: { title: 'TBT Profili', description: "Bu profili TBT'de gör.", icon: '●' },
+        post: { title: 'TBT Paylaşımı', description: "Bu paylaşımı TBT'de aç.", icon: '▣' },
+        spot: { title: 'Gezilecek Yer', description: "Bu yeri TBT'de keşfet.", icon: '⌖' }
+      };
+      const valid = Object.hasOwn(types, type) && /^[A-Za-z0-9_-]{1,128}$/.test(id);
       const title = document.getElementById('title');
       const description = document.getElementById('description');
       const icon = document.getElementById('icon');
       const button = document.getElementById('openButton');
+      const storeButton = document.getElementById('storeButton');
       const hint = document.getElementById('hint');
 
       if (!valid) {
@@ -79,25 +97,25 @@
         description.textContent = 'Bu bağlantı eksik veya geçersiz.';
         icon.textContent = '!';
         button.hidden = true;
+        storeButton.hidden = true;
         hint.hidden = true;
         return;
       }
 
       const cleanId = encodeURIComponent(id);
       const appUrl = `tbt://${type}/${cleanId}`;
-      title.textContent = type === 'event' ? 'Etkinlik daveti' : 'Topluluk daveti';
-      description.textContent = 'En İyi Çekim Noktası uygulamasında bu daveti aç.';
-      icon.textContent = type === 'event' ? '◉' : '◎';
+      title.textContent = types[type].title;
+      description.textContent = types[type].description;
+      icon.textContent = types[type].icon;
 
       const openApp = () => {
         window.location.href = appUrl;
       };
 
       button.addEventListener('click', openApp);
-
-      if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-        setTimeout(openApp, 500);
-      }
+      storeButton.addEventListener('click', () => {
+        window.location.href = 'https://play.google.com/store/apps/details?id=com.tbt.social';
+      });
     })();
   </script>
 </body>

@@ -87,15 +87,9 @@ jobs:
       - name: Verify runtime secrets
         shell: bash
         env:
-          GOOGLE_SERVER_CLIENT_ID: ${{ secrets.GOOGLE_SERVER_CLIENT_ID }}
           MAPS_API_KEY: ${{ secrets.MAPS_API_KEY }}
         run: |
           set -euo pipefail
-          test -n "${GOOGLE_SERVER_CLIENT_ID:-}" || { echo 'GOOGLE_SERVER_CLIENT_ID GitHub secret is missing.'; exit 1; }
-          case "$GOOGLE_SERVER_CLIENT_ID" in
-            *.apps.googleusercontent.com) ;;
-            *) echo 'GOOGLE_SERVER_CLIENT_ID has an invalid format.'; exit 1 ;;
-          esac
           test -n "${MAPS_API_KEY:-}" || { echo 'MAPS_API_KEY GitHub secret is missing.'; exit 1; }
       - name: Install stable Android debug signing certificate
         shell: bash
@@ -143,9 +137,7 @@ jobs:
           ! grep -q '\${MAPS_API_KEY}' android/app/src/main/AndroidManifest.xml
           ! grep -q 'CI_DUMMY_MAPS_KEY' android/app/src/main/AndroidManifest.xml
       - name: Build Android APK
-        env:
-          GOOGLE_SERVER_CLIENT_ID: ${{ secrets.GOOGLE_SERVER_CLIENT_ID }}
-        run: flutter build apk --debug --no-pub --dart-define=GOOGLE_SERVER_CLIENT_ID="$GOOGLE_SERVER_CLIENT_ID"
+        run: flutter build apk --debug --no-pub
       - name: Verify APK signing identity
         shell: bash
         run: |
@@ -199,6 +191,7 @@ jobs:
           flutter config --no-enable-swift-package-manager
           rm -rf ios
           flutter create --platforms=ios --org com.tbt --project-name best_photo_spot .
+          sed -i '' 's/com\.tbt\.bestPhotoSpot/com.tbt.social/g' ios/Runner.xcodeproj/project.pbxproj
           test -f ios/Podfile
           python3 - <<'PY'
           from pathlib import Path
@@ -221,7 +214,7 @@ jobs:
           flutter build ios --debug --no-codesign --no-pub
           --dart-define=FIREBASE_IOS_API_KEY=ci-placeholder
           --dart-define=FIREBASE_IOS_APP_ID=1:330568532415:ios:ci-placeholder
-          --dart-define=IOS_BUNDLE_ID=com.tbt.bestPhotoSpot
+          --dart-define=IOS_BUNDLE_ID=com.tbt.social
       - name: Verify iOS App
         run: test -d build/ios/iphoneos/Runner.app
       - name: Upload unsigned iOS app

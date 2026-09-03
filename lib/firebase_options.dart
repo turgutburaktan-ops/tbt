@@ -12,12 +12,17 @@ class AppFirebaseOptions {
     storageBucket: 'en-iyi-cekim-noktasi.firebasestorage.app',
   );
 
-  // iOS Firebase uygulaması oluşturulduktan sonra bu iki değer CI/Store
-  // derlemesine --dart-define ile verilir. Proje/sender/bucket aynı Firebase
-  // projesini kullanır; iOS appId ise platforma özeldir.
+  // CI gerektiğinde bu değerleri --dart-define ile değiştirebilir. Varsayılanlar
+  // Firebase'de com.tbt.social için kayıtlı üretim iOS uygulamasına aittir.
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: String.fromEnvironment('FIREBASE_IOS_API_KEY'),
-    appId: String.fromEnvironment('FIREBASE_IOS_APP_ID'),
+    apiKey: String.fromEnvironment(
+      'FIREBASE_IOS_API_KEY',
+      defaultValue: '',
+    ),
+    appId: String.fromEnvironment(
+      'FIREBASE_IOS_APP_ID',
+      defaultValue: '',
+    ),
     messagingSenderId: '330568532415',
     projectId: 'en-iyi-cekim-noktasi',
     storageBucket: 'en-iyi-cekim-noktasi.firebasestorage.app',

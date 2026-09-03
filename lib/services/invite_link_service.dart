@@ -12,8 +12,14 @@ class InviteLinkService {
   static final InviteLinkService instance = InviteLinkService._();
 
   static const String scheme = 'tbt';
-  static const String webHost = 'en-iyi-cekim-noktasi.web.app';
-  static const String firebaseHost = 'en-iyi-cekim-noktasi.firebaseapp.com';
+  static const String webHost = 'www.trtbt.com';
+  static const Set<String> _acceptedWebHosts = {
+    'www.trtbt.com',
+    'trtbt.com',
+    // Keep previously shared links working after the public-domain migration.
+    'en-iyi-cekim-noktasi.web.app',
+    'en-iyi-cekim-noktasi.firebaseapp.com',
+  };
   static final RegExp _safeId = RegExp(r'^[A-Za-z0-9_-]{1,128}$');
 
   Uri communityUri(String communityId) =>
@@ -57,7 +63,7 @@ class InviteLinkService {
     }
     final isWebInvite =
         incomingScheme == 'https' &&
-        (incomingHost == webHost || incomingHost == firebaseHost);
+        _acceptedWebHosts.contains(incomingHost);
     if (!isWebInvite || uri.pathSegments.length != 2) return null;
     final type = uri.pathSegments[0].trim().toLowerCase();
     final id = uri.pathSegments[1].trim();

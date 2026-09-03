@@ -8,9 +8,11 @@ import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../models/social_event.dart';
+import '../data/turkey_selection_data.dart';
 import '../services/event_privacy_service.dart';
 import '../services/social_event_service.dart';
 import '../theme/app_theme.dart';
+import '../widgets/searchable_selection_field.dart';
 import 'event_location_picker_screen.dart';
 
 class EventCreateScreenV2 extends StatefulWidget {
@@ -61,6 +63,24 @@ class _EventCreateScreenV2State extends State<EventCreateScreenV2> {
   String? _error;
 
   bool get _fromTemplate => widget.initialTitle.trim().isNotEmpty;
+
+  String _normalizeCity(String value) => value
+      .trim()
+      .toLowerCase()
+      .replaceAll('ı', 'i')
+      .replaceAll('ğ', 'g')
+      .replaceAll('ü', 'u')
+      .replaceAll('ş', 's')
+      .replaceAll('ö', 'o')
+      .replaceAll('ç', 'c');
+
+  String? _selectedCanonicalCity() {
+    final key = _normalizeCity(_city.text);
+    for (final city in turkeyCities) {
+      if (_normalizeCity(city) == key) return city;
+    }
+    return null;
+  }
 
   @override
   void initState() {
@@ -310,10 +330,12 @@ class _EventCreateScreenV2State extends State<EventCreateScreenV2> {
       setState(() => _error = 'Etkinlik başlığını tamamla.');
       return;
     }
-    if (_city.text.trim().length < 2) {
-      setState(() => _error = 'Şehir bilgisini gir.');
+    final selectedCity = _selectedCanonicalCity();
+    if (selectedCity == null) {
+      setState(() => _error = 'Listeden bir şehir seç.');
       return;
     }
+    _city.text = selectedCity;
     if (_image == null) {
       setState(() => _error = 'Etkinlik için bir kapak fotoğrafı ekle.');
       return;
@@ -448,9 +470,19 @@ class _EventCreateScreenV2State extends State<EventCreateScreenV2> {
             decoration: const InputDecoration(labelText: 'Plan başlığı', prefixIcon: Icon(Icons.title)),
           ),
           const SizedBox(height: 10),
-          TextField(
+          SearchableSelectionField(
             controller: _city,
-            decoration: const InputDecoration(labelText: 'Şehir', prefixIcon: Icon(Icons.location_city_outlined)),
+            options: turkeyCities,
+            labelText: 'Şehir',
+            hintText: 'Yaz veya listeden seç',
+            prefixIcon: Icons.location_city_outlined,
+            enabled: !_saving,
+            maxSuggestions: 12,
+            onChanged: (_) {
+              if (_selectedLocation != null) {
+                setState(() => _selectedLocation = null);
+              }
+            },
           ),
           const SizedBox(height: 10),
           TextField(

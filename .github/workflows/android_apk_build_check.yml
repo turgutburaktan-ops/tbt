@@ -28,15 +28,9 @@ jobs:
       - name: Verify runtime secrets
         shell: bash
         env:
-          GOOGLE_SERVER_CLIENT_ID: ${{ secrets.GOOGLE_SERVER_CLIENT_ID }}
           MAPS_API_KEY: ${{ secrets.MAPS_API_KEY }}
         run: |
           set -euo pipefail
-          test -n "${GOOGLE_SERVER_CLIENT_ID:-}" || { echo 'GOOGLE_SERVER_CLIENT_ID GitHub secret is missing.'; exit 1; }
-          case "$GOOGLE_SERVER_CLIENT_ID" in
-            *.apps.googleusercontent.com) ;;
-            *) echo 'GOOGLE_SERVER_CLIENT_ID has an invalid format.'; exit 1 ;;
-          esac
           test -n "${MAPS_API_KEY:-}" || { echo 'MAPS_API_KEY GitHub secret is missing.'; exit 1; }
       - name: Install stable CI debug signing certificate
         shell: bash
@@ -100,9 +94,7 @@ jobs:
           main_activity=$(find android/app/src/main/kotlin -name MainActivity.kt -print -quit)
           grep -q '^package com.tbt.social$' "$main_activity"
       - name: Build debug APK
-        env:
-          GOOGLE_SERVER_CLIENT_ID: ${{ secrets.GOOGLE_SERVER_CLIENT_ID }}
-        run: flutter build apk --debug --no-pub --dart-define=GOOGLE_SERVER_CLIENT_ID="$GOOGLE_SERVER_CLIENT_ID"
+        run: flutter build apk --debug --no-pub
       - name: Verify APK signing identity
         shell: bash
         run: |

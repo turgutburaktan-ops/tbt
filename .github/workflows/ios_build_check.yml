@@ -38,6 +38,7 @@ jobs:
           set -euo pipefail
           rm -rf ios
           flutter create --platforms=ios --org com.tbt --project-name best_photo_spot .
+          sed -i '' 's/com\.tbt\.bestPhotoSpot/com.tbt.social/g' ios/Runner.xcodeproj/project.pbxproj
           python3 - <<'PY'
           from pathlib import Path
           import re
@@ -60,7 +61,7 @@ jobs:
           flutter build ios --simulator --debug --no-pub
           --dart-define=FIREBASE_IOS_API_KEY=ci-placeholder
           --dart-define=FIREBASE_IOS_APP_ID=1:330568532415:ios:ci-placeholder
-          --dart-define=IOS_BUNDLE_ID=com.tbt.bestPhotoSpot
+          --dart-define=IOS_BUNDLE_ID=com.tbt.social
       - name: Verify simulator app bundle
         run: test -d build/ios/iphonesimulator/Runner.app
       - name: Upload iOS simulator app

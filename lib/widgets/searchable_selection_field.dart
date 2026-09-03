@@ -66,7 +66,7 @@ class _SearchableSelectionFieldState extends State<SearchableSelectionField> {
 
   Iterable<String> _matches(TextEditingValue value) {
     final query = _normalize(value.text);
-    if (query.isEmpty) return const <String>[];
+    if (query.isEmpty) return widget.options.take(widget.maxSuggestions);
 
     final starts = <String>[];
     final contains = <String>[];
@@ -118,7 +118,16 @@ class _SearchableSelectionFieldState extends State<SearchableSelectionField> {
                       setState(() {});
                     },
                   )
-                : const Icon(Icons.keyboard_arrow_down_rounded),
+                : IconButton(
+                    tooltip: 'Listeyi aç',
+                    onPressed: widget.enabled
+                        ? () {
+                            focusNode.requestFocus();
+                            controller.notifyListeners();
+                          }
+                        : null,
+                    icon: const Icon(Icons.keyboard_arrow_down_rounded),
+                  ),
           ),
         );
       },

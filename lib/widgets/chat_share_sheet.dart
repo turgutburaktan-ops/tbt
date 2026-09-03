@@ -118,6 +118,19 @@ Future<void> shareCardToChat(
   if (target == null || !context.mounted) return;
   try {
     final targetId = target['id'] ?? '';
+    String? resolvedImageUrl = imageUrl;
+    if ((resolvedImageUrl ?? '').trim().isEmpty && sharedType == 'event') {
+      try {
+        final event = await FirebaseFirestore.instance
+            .collection('social_events')
+            .doc(sharedId)
+            .get();
+        final data = event.data();
+        resolvedImageUrl = (data?['coverImageUrl'] ?? '').toString().trim();
+      } catch (_) {
+        // Kapak olmasa da gerçek etkinlik kimliğiyle mesaj gönderilir.
+      }
+    }
     final threadId = await ChatService.instance.ensureDirectThread(
       targetId,
       sourceType: sharedType,
@@ -129,7 +142,7 @@ Future<void> shareCardToChat(
       sharedType: sharedType,
       sharedId: sharedId,
       title: title,
-      imageUrl: imageUrl,
+      imageUrl: resolvedImageUrl,
     );
     if (context.mounted) {
       _notice(context, '${target['name']} kullanıcısına gönderildi.');

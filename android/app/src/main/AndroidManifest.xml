@@ -55,6 +55,9 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="tbt" android:host="event" />
                 <data android:scheme="tbt" android:host="community" />
+                <data android:scheme="tbt" android:host="profile" />
+                <data android:scheme="tbt" android:host="post" />
+                <data android:scheme="tbt" android:host="spot" />
             </intent-filter>
 
             <!-- Verified HTTPS links are preferred for production sharing. -->
@@ -62,6 +65,9 @@
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="www.trtbt.com" />
+                <data android:scheme="https" android:host="trtbt.com" />
+                <!-- Previously shared links remain supported during migration. -->
                 <data android:scheme="https" android:host="en-iyi-cekim-noktasi.web.app" />
                 <data android:scheme="https" android:host="en-iyi-cekim-noktasi.firebaseapp.com" />
             </intent-filter>

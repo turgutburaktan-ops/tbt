@@ -4888,11 +4888,12 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourcePage: 'https://commons.wikimedia.org/wiki/File:Aydin_Cihanzade_mosque_4748.jpg',
   ),
   'wd-q6037253-alacali-cami': SpotImageInfo(
-    networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/Festung_Harput.jpg/1920px-Festung_Harput.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
-    sourceName: 'Wikimedia Commons (Wikidata P18)',
-    author: 'Ingeborg Simon',
-    license: 'CC BY-SA 3.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Festung_Harput.jpg',
+    assetPath: 'assets/spots/elazig-alacali-camii.webp',
+    networkUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Harput_Alacal%C4%B1_Camii.webp?width=1280',
+    sourceName: 'Wikimedia Commons',
+    author: 'Dkask',
+    license: 'CC BY-SA 4.0',
+    sourcePage: 'https://commons.wikimedia.org/wiki/File:Harput_Alacal%C4%B1_Camii.webp',
   ),
   'wd-q6023683-harput-ulu-camii': SpotImageInfo(
     networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/Minarett_Ulu_Camii_Harput.jpg/1920px-Minarett_Ulu_Camii_Harput.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',

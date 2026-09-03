@@ -218,6 +218,15 @@ const curatedPhotoSpotsVerifiedExpansion = <PhotoSpot>[
     description: 'Hazar Gölü ve dağ sıralarını yüksek perspektiften gösteren geniş manzara alanı.',
     recommendedLens: '35-135mm',
     difficulty: 'Orta',
-    tags: ['Elazığ', 'Hazarbaba', 'Hazar Gölü', 'Gün Batımı', 'Manzara'],
+    tags: [
+      'Gezilecek Yer',
+      'Doğrulanmış',
+      'KaynakDoğrulanmış',
+      'Elazığ',
+      'Hazarbaba',
+      'Hazar Gölü',
+      'Gün Batımı',
+      'Manzara',
+    ],
   ),
 ];
