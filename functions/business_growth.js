@@ -3,7 +3,7 @@ const {getFirestore, FieldValue, Timestamp} = require('firebase-admin/firestore'
 
 function auth(request) { if (!request.auth?.uid) throw new HttpsError('unauthenticated','Giriş gerekli.'); return request.auth.uid; }
 function clean(v,n=200){return String(v||'').trim().slice(0,n)}
-function isPremium(d){const now=Date.now(),trial=d.premiumTrialUntil?.toMillis?.()||0,admin=d.adminPremiumUntil?.toMillis?.()||0;return d.subscriptionStatus==='active'||(d.adminPremiumStatus==='active'&&admin>now)||(d.premiumTrialStatus==='active'&&trial>now)}
+function isPremium(d){return d.status==='verified'||d.proEntitled===true||d.plan==='business_pro_free'||d.premiumEntitled===true}
 async function claimFor(db,venueKey){const s=await db.collection('business_claims').doc(venueKey).get();return{s,data:s.data()||{}}}
 async function owner(request, venueKey,{premium=false}={}){const uid=auth(request),db=getFirestore(),c=await claimFor(db,venueKey),d=c.data;if(d.status!=='verified'||d.applicantUid!==uid)throw new HttpsError('permission-denied','Doğrulanmış işletme sahibi gerekli.');if(premium&&!isPremium(d))throw new HttpsError('failed-precondition','Bu özellik TBT Business Premium gerektiriyor.');return{uid,db,claim:d}}
 
