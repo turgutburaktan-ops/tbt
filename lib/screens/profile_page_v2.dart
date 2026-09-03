@@ -369,15 +369,14 @@ class _ProfileBodyState extends State<_ProfileBody> {
                     title: Text('Gizlilik ve Güvenlik'),
                   ),
                 ),
-                if (type == 'business_owner' || type == 'venue_manager')
-                  const PopupMenuItem(
-                    value: 'business',
-                    child: ListTile(
-                      dense: true,
-                      leading: Icon(Icons.storefront_outlined),
-                      title: Text('Yönettiğim Mekanlar'),
-                    ),
+                const PopupMenuItem(
+                  value: 'business',
+                  child: ListTile(
+                    dense: true,
+                    leading: Icon(Icons.storefront_outlined),
+                    title: Text('Mekanlarım'),
                   ),
+                ),
                 const PopupMenuDivider(),
                 const PopupMenuItem(
                   value: 'logout',
@@ -587,40 +586,38 @@ class _ProfileBodyState extends State<_ProfileBody> {
   );
 
   Widget _typeModule(String type) {
-    if (type == 'business_owner' || type == 'venue_manager') {
-      return Padding(
-        padding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
-        child: _ModuleCard(
-          icon: Icons.storefront_outlined,
-          title: 'Yönettiğim Mekanlar',
-          subtitle: 'Mekan profilleri, menü, kampanya ve etkinlik yönetimi',
-          onTap: () => Navigator.pushNamed(context, '/business'),
-        ),
-      );
-    }
-    if (type == 'organizer') {
-      return Padding(
-        padding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
-        child: _ModuleCard(
-          icon: Icons.event_available_outlined,
-          title: 'Organizatör Profili',
-          subtitle: 'Etkinliklerin ve içeriklerin profilinde öne çıkar',
-          onTap: _openStatistics,
-        ),
-      );
-    }
-    if (type == 'creator') {
-      return Padding(
-        padding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
-        child: _ModuleCard(
-          icon: Icons.auto_awesome_outlined,
-          title: 'İçerik Üreticisi',
-          subtitle: 'İçerik performansını ve büyümeni takip et',
-          onTap: _openStatistics,
-        ),
-      );
-    }
-    return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
+      child: Column(
+        children: [
+          _ModuleCard(
+            icon: Icons.storefront_outlined,
+            title: 'Mekanlarım',
+            subtitle:
+                'İstatistik, paylaşım, menü, kampanya ve etkinlik yönetimi',
+            onTap: () => Navigator.pushNamed(context, '/business'),
+          ),
+          if (type == 'organizer') ...[
+            const SizedBox(height: 10),
+            _ModuleCard(
+              icon: Icons.event_available_outlined,
+              title: 'Organizatör Profili',
+              subtitle: 'Etkinliklerin ve içeriklerin profilinde öne çıkar',
+              onTap: _openStatistics,
+            ),
+          ],
+          if (type == 'creator') ...[
+            const SizedBox(height: 10),
+            _ModuleCard(
+              icon: Icons.auto_awesome_outlined,
+              title: 'İçerik Üreticisi',
+              subtitle: 'İçerik performansını ve büyümeni takip et',
+              onTap: _openStatistics,
+            ),
+          ],
+        ],
+      ),
+    );
   }
 
   Widget _contentTabs() => Padding(
