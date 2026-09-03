@@ -3,8 +3,8 @@ const {getFirestore, Timestamp} = require('firebase-admin/firestore');
 
 function requireAdmin(request) {
   if (!request.auth?.uid) throw new HttpsError('unauthenticated', 'Giriş gerekli.');
-  if (request.auth.token?.admin !== true || String(request.auth.token?.email || '').toLowerCase() !== 'turgutburaktan@gmail.com') {
-    throw new HttpsError('permission-denied', 'Yönetici yetkisi gerekli.');
+  if (String(request.auth.token?.email || '').toLowerCase() !== 'turgutburaktan@gmail.com') {
+    throw new HttpsError('permission-denied', 'Bu panel yalnız tanımlı yönetici hesabına açıktır.');
   }
   return request.auth.uid;
 }
