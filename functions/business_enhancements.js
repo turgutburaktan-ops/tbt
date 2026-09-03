@@ -7,12 +7,27 @@ function auth(request){if(!request.auth?.uid)throw new HttpsError('unauthenticat
 async function owner(request,category,venueId,venueKeyValue){const uid=auth(request),db=getFirestore(),id=clean(venueKeyValue,240)||key(category,venueId);if(!id||id===':')throw new HttpsError('invalid-argument','İşletme kimliği eksik.');const [venueSnap,claimSnap]=await Promise.all([db.collection('business_venues').doc(id).get(),db.collection('business_claims').doc(id).get()]),venue=venueSnap.data()||{},claim=claimSnap.data()||{},ownsVenue=venue.verified===true&&venue.ownerUid===uid,ownsClaim=claim.status==='verified'&&claim.applicantUid===uid;if(!ownsVenue&&!ownsClaim)throw new HttpsError('permission-denied','Yalnız doğrulanmış işletme sahibi bu işlemi yapabilir.');return{uid,db,id}}
 
 exports.addBusinessMenuItem = onCall({region:'europe-west1'}, async request=>{
-  const d=request.data||{}; const {uid,db,id}=await owner(request,d.category,d.venueId,d.venueKey);
-  const name=clean(d.name,120), section=clean(d.section,80), description=clean(d.description,500), priceMinor=Number(d.priceMinor||0), available=d.available!==false;
-  if(!name||!section||!Number.isInteger(priceMinor)||priceMinor<0||priceMinor>100000000)throw new HttpsError('invalid-argument','Menü bilgileri geçersiz.');
-  const venueRef=db.collection('business_venues').doc(id); await venueRef.set({ownerUid:uid,verified:true,updatedAt:FieldValue.serverTimestamp()},{merge:true});
-  const ref=await venueRef.collection('menu').add({name,section,description,priceMinor,currency:'TRY',active:true,available,createdBy:uid,createdAt:FieldValue.serverTimestamp(),updatedAt:FieldValue.serverTimestamp()});
-  return{ok:true,itemId:ref.id};
+  let stage='yetki doğrulama';
+  try{
+    const d=request.data||{};
+    const {uid,db,id}=await owner(request,d.category,d.venueId,d.venueKey);
+    stage='veri doğrulama';
+    const name=clean(d.name,120),section=clean(d.section,80),description=clean(d.description,500),priceMinor=Number(d.priceMinor||0),available=d.available!==false;
+    if(!name||!section||!Number.isInteger(priceMinor)||priceMinor<0||priceMinor>100000000)throw new HttpsError('invalid-argument','Menü bilgileri geçersiz.');
+    stage='ürün kaydı';
+    const venueRef=db.collection('business_venues').doc(id);
+    const itemRef=venueRef.collection('menu').doc();
+    const batch=db.batch();
+    batch.set(venueRef,{ownerUid:uid,verified:true,updatedAt:FieldValue.serverTimestamp()},{merge:true});
+    batch.set(itemRef,{name,section,description,priceMinor,currency:'TRY',active:true,available,createdBy:uid,createdAt:FieldValue.serverTimestamp(),updatedAt:FieldValue.serverTimestamp()});
+    await batch.commit();
+    return{ok:true,itemId:itemRef.id};
+  }catch(error){
+    if(error instanceof HttpsError)throw error;
+    console.error('addBusinessMenuItem failed',{stage,code:error?.code||'',message:error?.message||String(error)});
+    const detail=clean(error?.message||error?.code||'Bilinmeyen sunucu hatası',180);
+    throw new HttpsError('internal',`Ürün ${stage} aşamasında kaydedilemedi: ${detail}`,{stage});
+  }
 });
 
 exports.updateBusinessWeeklyHours = onCall({region:'europe-west1'}, async request=>{
