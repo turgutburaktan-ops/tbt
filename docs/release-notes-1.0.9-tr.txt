@@ -1,0 +1,7 @@
+Sürüm adı: 1.0.9 – İşletme Yönetimi ve Giriş Düzeltmeleri
+
+Google ile giriş ve bağlantı doğrulaması güçlendirildi.
+Profil ekranına Mekanlarım yönetim merkezi eklendi.
+Doğrulanmış işletmeler için istatistik, paylaşım, menü, kampanya ve etkinlik araçları bağlandı.
+İşletme ekleme ve sahiplik doğrulama akışı kolaylaştırıldı.
+Arama, etkinlik, reklam ve TBT paylaşım bağlantısı iyileştirmeleri korundu.
