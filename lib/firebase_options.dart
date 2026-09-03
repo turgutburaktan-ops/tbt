@@ -17,11 +17,11 @@ class AppFirebaseOptions {
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: String.fromEnvironment(
       'FIREBASE_IOS_API_KEY',
-      defaultValue: 'AIzaSyD4K_4viTADCMtYfC0xcOHGhCqh-6WibPs',
+      defaultValue: '',
     ),
     appId: String.fromEnvironment(
       'FIREBASE_IOS_APP_ID',
-      defaultValue: '1:330568532415:ios:09e96cf59344065641a10a',
+      defaultValue: '',
     ),
     messagingSenderId: '330568532415',
     projectId: 'en-iyi-cekim-noktasi',
