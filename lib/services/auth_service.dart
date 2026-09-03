@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 class AuthService {
@@ -16,13 +17,12 @@ class AuthService {
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
-  Future<void>? _googleInitialization;
-
-  Future<void> _initializeGoogleSignIn() =>
-      _googleInitialization ??= _googleSignIn.initialize(
-        serverClientId: _googleServerClientId,
-      );
+  // The classic Android flow is intentionally used here. The newer
+  // Credential Manager flow can surface account re-authentication failures
+  // as a cancellation after the user has already selected an account.
+  late final GoogleSignIn _googleSignIn = GoogleSignIn(
+    serverClientId: _googleServerClientId,
+  );
 
   User? get currentUser => _auth.currentUser;
   Stream<User?> get authStateChanges => _auth.authStateChanges();
@@ -66,43 +66,51 @@ class AuthService {
 
   Future<UserCredential?> signInWithGoogle() async {
     try {
-      try {
-        await _initializeGoogleSignIn();
-        final account = await _googleSignIn.authenticate();
-        final idToken = account.authentication.idToken;
-        if (idToken == null || idToken.isEmpty) {
-          throw Exception('Google kimlik belirteci alınamadı.');
-        }
-        final credential = GoogleAuthProvider.credential(
-          idToken: idToken,
+      final account = await _googleSignIn.signIn();
+      if (account == null) return null;
+
+      final authentication = await account.authentication;
+      final idToken = authentication.idToken;
+      if (idToken == null || idToken.isEmpty) {
+        throw PlatformException(
+          code: 'missing_id_token',
+          message: 'Google kimlik belirteci alınamadı.',
         );
-        final result = await _auth.signInWithCredential(credential);
-        await _ensureSocialProfile(result.user, provider: 'google');
-        return result;
-      } catch (e) {
-        debugPrint('Native Google sign-in failed: $e');
-        try {
-          await _googleSignIn.signOut();
-        } catch (_) {}
-        rethrow;
       }
+
+      final credential = GoogleAuthProvider.credential(
+        accessToken: authentication.accessToken,
+        idToken: idToken,
+      );
+      final result = await _auth.signInWithCredential(credential);
+      await _ensureSocialProfile(result.user, provider: 'google');
+      return result;
     } on FirebaseAuthException catch (e) {
       _logAuthFailure('google-login', e);
       throw Exception(_messageFromCode(e.code));
+    } on PlatformException catch (e) {
+      debugPrint(
+        'Google platform sign-in failure: code=${e.code} '
+        'message=${e.message ?? '-'} details=${e.details ?? '-'}',
+      );
+      try {
+        await _googleSignIn.signOut();
+      } catch (_) {}
+
+      final code = e.code.trim().isEmpty ? 'unknown' : e.code.trim();
+      final message = (e.message ?? '').trim();
+      final detail = message.isEmpty ? '' : ' – $message';
+      throw Exception(
+        'Google ile giriş tamamlanamadı (kod: $code$detail).',
+      );
     } catch (e) {
       debugPrint('Google sign-in failure: $e');
-      final raw = e.toString().toLowerCase();
-      if (raw.contains('invalid-cert-hash') ||
-          raw.contains('developer_error') ||
-          raw.contains('clientconfigurationerror') ||
-          raw.contains('client_configuration_error') ||
-          raw.contains('10:')) {
-        throw Exception(
-          'Google ile giriş şu anda doğrulanamıyor. Uygulamayı güncelleyip tekrar deneyin.',
-        );
-      }
-      if (raw.contains('yapılandırması eksik')) rethrow;
-      throw Exception('Google ile giriş tamamlanamadı. Lütfen tekrar deneyin.');
+      try {
+        await _googleSignIn.signOut();
+      } catch (_) {}
+      throw Exception(
+        'Google ile giriş tamamlanamadı (kod: unexpected).',
+      );
     }
   }
 
