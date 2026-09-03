@@ -28,7 +28,7 @@ class ManagedVenuesScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('Yönettiğim Mekanlar')),
+      appBar: AppBar(title: const Text('Mekanlarım')),
       body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
         stream: FirebaseFirestore.instance
             .collection('business_venues')
@@ -89,10 +89,15 @@ class ManagedVenuesScreen extends StatelessWidget {
                       style: TextStyle(color: Colors.white54, height: 1.4),
                     ),
                     const SizedBox(height: 16),
-                    OutlinedButton.icon(
-                      onPressed: () => Navigator.pop(context),
-                      icon: const Icon(Icons.place_outlined),
-                      label: const Text('Mekanlara dön'),
+                    FilledButton.icon(
+                      onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const BusinessHubScreen(),
+                        ),
+                      ),
+                      icon: const Icon(Icons.add_business_rounded),
+                      label: const Text('İşletmemi ekle veya doğrula'),
                     ),
                   ],
                 ),
