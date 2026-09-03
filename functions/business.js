@@ -167,8 +167,8 @@ exports.addBusinessMenuItem = onCall({region: 'europe-west1'}, async (request) =
   if (!name || !section || !Number.isInteger(priceMinor) || priceMinor < 0 || priceMinor > 100000000) throw new HttpsError('invalid-argument', 'Menü bilgileri geçersiz.');
   const venueRef = db.collection('business_venues').doc(id);
   await venueRef.set({ownerUid: uid, verified: true, updatedAt: FieldValue.serverTimestamp()}, {merge: true});
-  await venueRef.collection('menu').add({name, section, description, priceMinor, currency: 'TRY', active: true, createdBy: uid, createdAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp()});
-  return {ok: true};
+  const itemRef = await venueRef.collection('menu').add({name, section, description, priceMinor, currency: 'TRY', active: true, createdBy: uid, createdAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp()});
+  return {ok: true, itemId: itemRef.id};
 });
 
 exports.addBusinessProgramItem = onCall({region: 'europe-west1'}, async (request) => {
