@@ -1,5 +1,5 @@
 const {onCall, HttpsError} = require('firebase-functions/v2/https');
-const {getFirestore, FieldValue, Timestamp} = require('firebase-admin/firestore');
+const {getFirestore, FieldValue, Timestamp, FieldPath} = require('firebase-admin/firestore');
 
 function auth(request) { if (!request.auth?.uid) throw new HttpsError('unauthenticated','Giriş gerekli.'); return request.auth.uid; }
 function clean(v,n=200){return String(v||'').trim().slice(0,n)}
@@ -31,7 +31,7 @@ exports.getBusinessDashboard = onCall({region:'europe-west1'}, async request=>{
   const boostId=clean(venueData.activeBoostId,180);
   const [metrics,days,followers,reservations,boost]=await Promise.all([
     base.collection('metrics').get(),
-    base.collection('metric_days').orderBy('__name__','desc').limit(7).get(),
+    base.collection('metric_days').orderBy(FieldPath.documentId(),'desc').limit(7).get(),
     base.collection('followers').count().get(),
     base.collection('reservations').orderBy('createdAt','desc').limit(30).get(),
     boostId?base.collection('boosts').doc(boostId).get():Promise.resolve(null)
