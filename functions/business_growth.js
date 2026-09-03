@@ -19,4 +19,23 @@ exports.requestBusinessReservation = onCall({region:'europe-west1'}, async reque
 
 exports.respondBusinessReservation = onCall({region:'europe-west1'}, async request=>{const venueKey=clean(request.data?.venueKey,240),reservationId=clean(request.data?.reservationId,180),decision=clean(request.data?.decision,20),{db}=await owner(request,venueKey);if(!['accepted','rejected'].includes(decision))throw new HttpsError('invalid-argument','Geçersiz karar.');const ref=db.collection('business_venues').doc(venueKey).collection('reservations').doc(reservationId);const snap=await ref.get();if(!snap.exists)throw new HttpsError('not-found','Rezervasyon bulunamadı.');if((snap.data()?.status||'')!=='pending')throw new HttpsError('failed-precondition','Bu rezervasyon zaten sonuçlandırılmış.');await ref.update({status:decision,updatedAt:FieldValue.serverTimestamp()});return{status:decision};});
 
-exports.createBusinessBoost = onCall({region:'europe-west1'}, async request=>{const venueKey=clean(request.data?.venueKey,240),targetType=clean(request.data?.targetType,30),targetId=clean(request.data?.targetId,180),days=Math.min(30,Math.max(1,Number(request.data?.days||3))),{uid,db}=await owner(request,venueKey,{premium:true});const base=db.collection('business_venues').doc(venueKey);const active=await base.collection('boosts').where('endsAt','>',Timestamp.now()).limit(1).get();if(!active.empty)throw new HttpsError('already-exists','Bu işletmede aktif bir Boost zaten var.');const until=Timestamp.fromMillis(Date.now()+days*86400000);await base.collection('boosts').add({targetType,targetId,days,status:'trial',billingStatus:'free_launch',startsAt:FieldValue.serverTimestamp(),endsAt:until,createdBy:uid});await base.set({boostActive:true,boostActiveUntil:until,boostTargetType:targetType,updatedAt:FieldValue.serverTimestamp()},{merge:true});return{status:'trial',endsAtMs:until.toMillis()};});
+exports.createBusinessBoost = onCall({region:'europe-west1'}, async request=>{
+  const venueKey=clean(request.data?.venueKey,240),targetType=clean(request.data?.targetType,30),targetId=clean(request.data?.targetId,180),days=Math.min(30,Math.max(1,Number(request.data?.days||3))),{uid,db}=await owner(request,venueKey,{premium:true});
+  if(!['profile','campaign','event'].includes(targetType))throw new HttpsError('invalid-argument','Geçersiz Boost hedefi.');
+  const base=db.collection('business_venues').doc(venueKey);
+  if(targetType!=='profile'){
+    if(!targetId)throw new HttpsError('invalid-argument','Öne çıkarılacak içerik seçilmedi.');
+    const collectionName=targetType==='campaign'?'campaigns':'program';
+    const target=await base.collection(collectionName).doc(targetId).get();
+    const data=target.data()||{};
+    if(!target.exists||data.active===false)throw new HttpsError('failed-precondition','Seçilen içerik yayında değil veya bulunamadı.');
+    const targetDate=targetType==='campaign'?data.validUntil:data.startsAt;
+    if(targetDate?.toMillis?.()<=Date.now())throw new HttpsError('failed-precondition','Süresi geçmiş içerik öne çıkarılamaz.');
+  }
+  const active=await base.collection('boosts').where('endsAt','>',Timestamp.now()).limit(1).get();
+  if(!active.empty)throw new HttpsError('already-exists','Bu işletmede aktif bir Boost zaten var.');
+  const until=Timestamp.fromMillis(Date.now()+days*86400000);
+  await base.collection('boosts').add({targetType,targetId,days,status:'active',billingStatus:'free_launch',startsAt:FieldValue.serverTimestamp(),endsAt:until,createdBy:uid});
+  await base.set({boostActive:true,boostActiveUntil:until,boostTargetType:targetType,boostTargetId:targetId,updatedAt:FieldValue.serverTimestamp()},{merge:true});
+  return{status:'active',endsAtMs:until.toMillis()};
+});
