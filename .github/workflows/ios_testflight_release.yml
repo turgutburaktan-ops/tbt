@@ -16,7 +16,7 @@ concurrency:
 jobs:
   build-and-upload:
     name: Build and upload to TestFlight
-    runs-on: macos-15
+    runs-on: macos-26
     timeout-minutes: 60
     env:
       BUNDLE_ID: com.tbt.social
@@ -24,6 +24,17 @@ jobs:
       PROFILE_NAME: TBT App Store 2026
 
     steps:
+      - name: Verify Xcode 26 toolchain
+        shell: bash
+        run: |
+          set -euo pipefail
+          xcodebuild -version
+          SDK_VERSION=$(xcrun --sdk iphoneos --show-sdk-version)
+          case "$SDK_VERSION" in
+            26.*) ;;
+            *) echo "Expected iOS 26 SDK, found $SDK_VERSION"; exit 1 ;;
+          esac
+
       - name: Checkout
         uses: actions/checkout@v4
 
