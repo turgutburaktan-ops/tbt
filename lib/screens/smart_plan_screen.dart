@@ -274,6 +274,12 @@ class _SmartPlanScreenState extends State<SmartPlanScreen> {
       final usedVenueIds = <String>{};
       final venueStops = <PhotoSpot>[];
       for (final group in venueGroups) {
+        group.sort((a, b) {
+          final routeOrder = (b.routeRecommended ? 1 : 0)
+              .compareTo(a.routeRecommended ? 1 : 0);
+          if (routeOrder != 0) return routeOrder;
+          return (b.sponsored ? 1 : 0).compareTo(a.sponsored ? 1 : 0);
+        });
         for (final venue in group) {
           if (usedVenueIds.add(venue.id)) {
             venueStops.add(_venueSpot(venue, city));

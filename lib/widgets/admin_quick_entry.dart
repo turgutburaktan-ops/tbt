@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
+import '../services/admin_access.dart';
 
 class AdminQuickEntry extends StatefulWidget {
   final Widget child;
@@ -29,7 +30,7 @@ class _AdminQuickEntryState extends State<AdminQuickEntry> {
     }
     try {
       final token = await user.getIdTokenResult(true);
-      if (mounted) setState(() => _isAdmin = token.claims?['admin'] == true);
+      if (mounted) setState(() => _isAdmin = AdminAccess.tokenMatches(user, token));
     } catch (_) {
       if (mounted) setState(() => _isAdmin = false);
     }

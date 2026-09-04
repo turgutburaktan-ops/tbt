@@ -13,7 +13,8 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
-  final _nameController = TextEditingController();
+  final _fullNameController = TextEditingController();
+  final _usernameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _passwordAgainController = TextEditingController();
@@ -70,7 +71,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   void dispose() {
-    _nameController.dispose();
+    _fullNameController.dispose();
+    _usernameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     _passwordAgainController.dispose();
@@ -78,16 +80,27 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   Future<void> _register() async {
-    final username = _nameController.text.trim();
+    final fullName = _fullNameController.text.trim().replaceAll(RegExp(r'\s+'), ' ');
+    final nameParts = fullName.split(' ').where((part) => part.isNotEmpty).toList();
+    final username = _usernameController.text.trim();
     final email = _emailController.text.trim();
     final password = _passwordController.text;
     final passwordAgain = _passwordAgainController.text;
 
-    if (username.isEmpty ||
+    if (fullName.isEmpty ||
+        username.isEmpty ||
         email.isEmpty ||
         password.isEmpty ||
         passwordAgain.isEmpty) {
       _showMessage('Tüm alanları doldur.');
+      return;
+    }
+    if (fullName.length < 5 || fullName.length > 80 || nameParts.length < 2) {
+      _showMessage('Ad ve soyadını eksiksiz gir.');
+      return;
+    }
+    if (!RegExp(r"^[A-Za-zÇĞİÖŞÜçğıöşüÀ-ÿ' -]+$").hasMatch(fullName)) {
+      _showMessage('Ad soyad yalnızca harf, boşluk, tire ve kesme işareti içerebilir.');
       return;
     }
     final usernameError = UsernameService.instance.validate(username);
@@ -112,14 +125,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
       await AuthService.instance.register(email: email, password: password);
       accountCreated = true;
-      await AuthService.instance.updateDisplayName(username);
+      await AuthService.instance.updateDisplayName(fullName);
       await FirebaseAuth.instance.currentUser?.sendEmailVerification();
 
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
         await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
           'uid': user.uid,
-          'displayName': username,
+          'displayName': fullName,
+          'fullName': fullName,
+          'firstName': nameParts.first,
+          'lastName': nameParts.skip(1).join(' '),
           'email': email,
           'profileType': _profileType,
           'onboardingRequired': true,
@@ -298,7 +314,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 18),
               TextField(
-                controller: _nameController,
+                controller: _fullNameController,
+                keyboardType: TextInputType.name,
+                textCapitalization: TextCapitalization.words,
+                autofillHints: const [AutofillHints.name],
+                maxLength: 80,
+                style: const TextStyle(color: Colors.white),
+                decoration: _decoration(
+                  label: 'Ad Soyad',
+                  icon: Icons.badge_outlined,
+                ),
+              ),
+              const SizedBox(height: 6),
+              TextField(
+                controller: _usernameController,
                 autocorrect: false,
                 enableSuggestions: false,
                 textCapitalization: TextCapitalization.none,

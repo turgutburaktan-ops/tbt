@@ -382,6 +382,7 @@ class BusinessContentManagerScreen extends StatelessWidget {
       text: id == null ? '' : old.toStringAsFixed(2),
     );
     bool available = data?['available'] != false;
+    bool saving = false;
     File? picked;
     await showModalBottomSheet<void>(
       context: context,
@@ -453,18 +454,32 @@ class BusinessContentManagerScreen extends StatelessWidget {
               child: const Text('Vazgeç'),
             ),
             FilledButton(
-              onPressed: () async {
+              onPressed: saving ? null : () async {
+                final cleanName = name.text.trim();
+                final cleanSection = section.text.trim();
                 final parsed = double.tryParse(price.text.replaceAll(',', '.'));
-                if (parsed == null || parsed < 0) return;
+                if (cleanName.length < 2) {
+                  _message(context, 'Ürün adını gir.');
+                  return;
+                }
+                if (cleanSection.isEmpty) {
+                  _message(context, 'Menü kategorisini gir.');
+                  return;
+                }
+                if (parsed == null || parsed < 0) {
+                  _message(context, 'Geçerli bir fiyat gir.');
+                  return;
+                }
+                setState(() => saving = true);
                 try {
                   String itemId = id ?? '';
                   if (id == null) {
                     itemId = await BusinessService.instance.addMenuItem(
                       category: category,
                       venueId: venueId,
-                      name: name.text,
-                      section: section.text,
-                      description: description.text,
+                      name: cleanName,
+                      section: cleanSection,
+                      description: description.text.trim(),
                       priceMinor: (parsed * 100).round(),
                       available: available,
                     );
@@ -475,9 +490,9 @@ class BusinessContentManagerScreen extends StatelessWidget {
                       type: type,
                       itemId: id,
                       changes: {
-                        'name': name.text,
-                        'section': section.text,
-                        'description': description.text,
+                        'name': cleanName,
+                        'section': cleanSection,
+                        'description': description.text.trim(),
                         'priceMinor': (parsed * 100).round(),
                         'available': available,
                       },
@@ -509,9 +524,10 @@ class BusinessContentManagerScreen extends StatelessWidget {
                     );
                 } catch (e) {
                   if (context.mounted) _message(context, _error(e));
+                  if (dialogContext.mounted) setState(() => saving = false);
                 }
               },
-              child: const Text('Kaydet'),
+              child: Text(saving ? 'Kaydediliyor…' : 'Kaydet'),
             ),
           ],
         ),

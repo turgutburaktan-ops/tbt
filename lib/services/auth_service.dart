@@ -128,13 +128,22 @@ class AuthService {
       final existing = await ref.get().timeout(const Duration(seconds: 4));
       final data = existing.data();
       final fallbackName = (user.displayName ?? '').trim();
+      final resolvedFullName = fallbackName.isNotEmpty
+          ? fallbackName
+          : (data?['fullName'] ?? data?['displayName'] ?? '').toString().trim();
+      final nameParts = resolvedFullName
+          .split(RegExp(r'\s+'))
+          .where((part) => part.isNotEmpty)
+          .toList();
       await ref.set({
         'uid': user.uid,
         'email': user.email ?? data?['email'] ?? '',
         'phoneNumber': user.phoneNumber ?? data?['phoneNumber'] ?? '',
-        'displayName': fallbackName.isNotEmpty
-            ? fallbackName
-            : (data?['displayName'] ?? '').toString(),
+        'displayName': resolvedFullName,
+        if (resolvedFullName.isNotEmpty) 'fullName': resolvedFullName,
+        if (nameParts.isNotEmpty) 'firstName': nameParts.first,
+        if (nameParts.length > 1) 'lastName': nameParts.skip(1).join(' '),
+        'fullNameRequired': nameParts.length < 2,
         'authProvider': provider,
         'onboardingRequired': data == null
             ? true

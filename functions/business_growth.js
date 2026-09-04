@@ -3,9 +3,9 @@ const {getFirestore, FieldValue, Timestamp, FieldPath} = require('firebase-admin
 
 function auth(request) { if (!request.auth?.uid) throw new HttpsError('unauthenticated','Giriş gerekli.'); return request.auth.uid; }
 function clean(v,n=200){return String(v||'').trim().slice(0,n)}
-function isPremium(d){return d.status==='verified'||d.proEntitled===true||d.plan==='business_pro_free'||d.premiumEntitled===true}
+function isPremium(d){const now=Date.now(),trialUntil=d.premiumTrialUntil?.toMillis?.()||0,adminUntil=d.adminPremiumUntil?.toMillis?.()||0;return d.subscriptionStatus==='active'||(d.premiumTrialStatus==='active'&&trialUntil>now)||(d.adminPremiumStatus==='active'&&adminUntil>now)}
 async function claimFor(db,venueKey){const s=await db.collection('business_claims').doc(venueKey).get();return{s,data:s.data()||{}}}
-async function owner(request,venueKey,{premium=false}={}){const uid=auth(request),db=getFirestore(),[c,v]=await Promise.all([claimFor(db,venueKey),db.collection('business_venues').doc(venueKey).get()]),d=c.data,venue=v.data()||{},ownsClaim=d.status==='verified'&&d.applicantUid===uid,ownsVenue=venue.verified===true&&venue.ownerUid===uid;if(!ownsClaim&&!ownsVenue)throw new HttpsError('permission-denied','Doğrulanmış işletme sahibi gerekli.');if(premium&&!isPremium(d)&&venue.verified!==true)throw new HttpsError('failed-precondition','Bu özellik TBT Business gerektiriyor.');return{uid,db,claim:d,venue}}
+async function owner(request,venueKey,{premium=false,adminRead=false}={}){const uid=auth(request),db=getFirestore(),[c,v]=await Promise.all([claimFor(db,venueKey),db.collection('business_venues').doc(venueKey).get()]),d=c.data,venue=v.data()||{},ownsClaim=d.status==='verified'&&d.applicantUid===uid,ownsVenue=venue.verified===true&&venue.ownerUid===uid,isNamedAdmin=request.auth?.token?.admin===true&&String(request.auth?.token?.email||'').toLowerCase()==='turgutburaktan@gmail.com';if(!ownsClaim&&!ownsVenue&&!(adminRead&&isNamedAdmin))throw new HttpsError('permission-denied','Doğrulanmış işletme sahibi gerekli.');if(premium&&!isPremium(d)&&!isPremium(venue))throw new HttpsError('failed-precondition','Bu özellik TBT Business Premium gerektiriyor.');return{uid,db,claim:d,venue}}
 
 exports.followBusiness = onCall({region:'europe-west1'}, async request=>{const uid=auth(request),venueKey=clean(request.data?.venueKey,240),follow=request.data?.follow!==false;if(!venueKey)throw new HttpsError('invalid-argument','İşletme gerekli.');const db=getFirestore(),ref=db.collection('business_venues').doc(venueKey).collection('followers').doc(uid);if(follow)await ref.set({uid,createdAt:FieldValue.serverTimestamp()});else await ref.delete();return{following:follow};});
 exports.getBusinessFollowStatus = onCall({region:'europe-west1'}, async request=>{const uid=auth(request),venueKey=clean(request.data?.venueKey,240);if(!venueKey)throw new HttpsError('invalid-argument','İşletme gerekli.');const snap=await getFirestore().collection('business_venues').doc(venueKey).collection('followers').doc(uid).get();return{following:snap.exists};});
@@ -27,7 +27,7 @@ exports.recordBusinessMetric = onCall({region:'europe-west1'}, async request=>{
 });
 
 exports.getBusinessDashboard = onCall({region:'europe-west1'}, async request=>{
-  const venueKey=clean(request.data?.venueKey,240),{db}=await owner(request,venueKey),base=db.collection('business_venues').doc(venueKey),venue=await base.get(),venueData=venue.data()||{};
+  const venueKey=clean(request.data?.venueKey,240),{db}=await owner(request,venueKey,{adminRead:true}),base=db.collection('business_venues').doc(venueKey),venue=await base.get(),venueData=venue.data()||{};
   const boostId=clean(venueData.activeBoostId,180);
   const [metrics,days,followers,reservations,boost]=await Promise.all([
     base.collection('metrics').get().catch(error=>{console.error('dashboard metrics',error);return{docs:[]};}),

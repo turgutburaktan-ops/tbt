@@ -4,6 +4,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
+import '../services/admin_access.dart';
+import 'admin_business_performance_screen.dart';
 
 class AdminBusinessPremiumScreen extends StatefulWidget {
   const AdminBusinessPremiumScreen({super.key});
@@ -26,10 +28,11 @@ class _AdminBusinessPremiumScreenState
   }
 
   Future<void> _check() async {
-    final token = await FirebaseAuth.instance.currentUser?.getIdTokenResult(
+    final user = FirebaseAuth.instance.currentUser;
+    final token = await user?.getIdTokenResult(
       true,
     );
-    if (mounted) setState(() => _allowed = token?.claims?['admin'] == true);
+    if (mounted) setState(() => _allowed = AdminAccess.tokenMatches(user, token));
   }
 
   @override
@@ -67,7 +70,7 @@ class _AdminBusinessPremiumScreenState
         SnackBar(
           content: Text(
             enabled
-                ? 'Business Pro ücretsiz olarak tanımlandı.'
+                ? 'Business Premium erişimi tanımlandı.'
                 : 'Admin Premium kaldırıldı.',
           ),
         ),
@@ -84,28 +87,34 @@ class _AdminBusinessPremiumScreenState
   }
 
   Future<void> _openGrantDialog(String venueKey, String name) async {
-    var days = 30;
+    var days = 90;
     final note = TextEditingController();
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setLocal) => AlertDialog(
-          title: Text('$name • Ücretsiz Pro'),
+          icon: const Icon(Icons.workspace_premium_rounded, color: Color(0xFFFFC857), size: 34),
+          title: Text('$name için Premium'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              const Text(
+                'Premium; gelişmiş raporları ve Business Boost kullanımını açar. Ödeme alınmaz.',
+                style: TextStyle(color: Colors.white60, height: 1.4),
+              ),
+              const SizedBox(height: 14),
               DropdownButtonFormField<int>(
                 value: days,
                 decoration: const InputDecoration(labelText: 'Süre'),
                 items: const [
                   DropdownMenuItem(value: 7, child: Text('7 gün')),
                   DropdownMenuItem(value: 30, child: Text('30 gün')),
-                  DropdownMenuItem(value: 90, child: Text('90 gün')),
+                  DropdownMenuItem(value: 90, child: Text('3 ay')),
                   DropdownMenuItem(value: 180, child: Text('6 ay')),
                   DropdownMenuItem(value: 365, child: Text('1 yıl')),
                   DropdownMenuItem(value: 3650, child: Text('10 yıl')),
                 ],
-                onChanged: (value) => setLocal(() => days = value ?? 30),
+                onChanged: (value) => setLocal(() => days = value ?? 90),
               ),
               const SizedBox(height: 12),
               TextField(
@@ -122,7 +131,7 @@ class _AdminBusinessPremiumScreenState
             ),
             FilledButton(
               onPressed: () => Navigator.pop(dialogContext, true),
-              child: const Text('Ücretsiz Pro Ver'),
+              child: const Text('Premium’u Tanımla'),
             ),
           ],
         ),
@@ -132,6 +141,27 @@ class _AdminBusinessPremiumScreenState
       await _setPremium(venueKey, true, days, note.text.trim());
     }
     note.dispose();
+  }
+
+  void _openPerformance({
+    required String venueKey,
+    required String name,
+    required String category,
+    required bool premiumActive,
+    DateTime? premiumUntil,
+  }) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => AdminBusinessPerformanceScreen(
+          venueKey: venueKey,
+          venueName: name,
+          category: category,
+          premiumActive: premiumActive,
+          premiumUntil: premiumUntil,
+        ),
+      ),
+    );
   }
 
   @override
@@ -147,7 +177,7 @@ class _AdminBusinessPremiumScreenState
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('Business Pro Yönetimi')),
+      appBar: AppBar(title: const Text('Business Premium Yönetimi')),
       body: Column(
         children: [
           Padding(
@@ -243,12 +273,22 @@ class _AdminBusinessPremiumScreenState
                     final name = (d['venueName'] ?? d['name'] ?? 'İşletme')
                         .toString();
                     final until = d['adminPremiumUntil'] as Timestamp?;
+                    final trialUntil = d['premiumTrialUntil'] as Timestamp?;
                     final adminActive =
                         d['adminPremiumStatus'] == 'active' &&
                         until != null &&
                         until.toDate().isAfter(DateTime.now());
-                    final early = d['earlyAccessStatus'] == 'active';
                     final paid = d['subscriptionStatus'] == 'active';
+                    final trialActive =
+                        d['premiumTrialStatus'] == 'active' &&
+                        trialUntil != null &&
+                        trialUntil.toDate().isAfter(DateTime.now());
+                    final premiumActive = adminActive || paid || trialActive;
+                    final premiumUntil = adminActive
+                        ? until?.toDate()
+                        : trialActive
+                            ? trialUntil.toDate()
+                            : null;
                     final verified = d['verified'] == true;
                     final busy = _busyId == doc.id;
                     final category = _category(
@@ -259,12 +299,12 @@ class _AdminBusinessPremiumScreenState
                       margin: const EdgeInsets.only(bottom: 8),
                       child: ListTile(
                         leading: Icon(
-                          adminActive || paid || early
+                          premiumActive
                               ? Icons.workspace_premium_rounded
                               : verified
                               ? Icons.verified_rounded
                               : Icons.storefront_outlined,
-                          color: adminActive || paid || early || verified
+                          color: premiumActive || verified
                               ? AppColors.cyan
                               : Colors.white54,
                         ),
@@ -276,10 +316,18 @@ class _AdminBusinessPremiumScreenState
                           [
                             category,
                             verified ? 'Doğrulanmış' : 'Doğrulanmamış',
-                            if (paid) 'Ücretli Pro',
-                            if (adminActive) 'Admin Pro',
-                            if (!adminActive && !paid && early) 'Kurucu Pro',
+                            if (paid) 'Premium',
+                            if (adminActive) 'Admin Premium',
+                            if (trialActive) '3 aylık Premium',
+                            'Performansı görüntüle',
                           ].join(' • '),
+                        ),
+                        onTap: () => _openPerformance(
+                          venueKey: doc.id,
+                          name: name,
+                          category: category,
+                          premiumActive: premiumActive,
+                          premiumUntil: premiumUntil,
                         ),
                         trailing: busy
                             ? const SizedBox(

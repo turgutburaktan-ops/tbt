@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../theme/app_theme.dart';
+import '../services/admin_access.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -31,7 +32,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     try {
       final user = FirebaseAuth.instance.currentUser;
       final token = await user?.getIdTokenResult(true);
-      final allowed = token?.claims?['admin'] == true;
+      final allowed = AdminAccess.tokenMatches(user, token);
       if (!mounted) return;
       setState(() {
         _isAdmin = allowed;

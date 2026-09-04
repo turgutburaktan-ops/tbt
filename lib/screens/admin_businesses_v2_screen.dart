@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../services/admin_console_service.dart';
+import '../services/admin_access.dart';
 import '../theme/app_theme.dart';
 import 'business_panel_preview_screen.dart';
 
@@ -40,8 +41,9 @@ class _AdminBusinessesV2ScreenState extends State<AdminBusinessesV2Screen> {
   Future<void> _load() async {
     if (mounted) setState(() { _loading = true; _error = null; });
     try {
-      final token = await FirebaseAuth.instance.currentUser?.getIdTokenResult(true);
-      if (token?.claims?['admin'] != true) {
+      final user = FirebaseAuth.instance.currentUser;
+      final token = await user?.getIdTokenResult(true);
+      if (!AdminAccess.tokenMatches(user, token)) {
         if (mounted) setState(() { _allowed = false; _loading = false; });
         return;
       }

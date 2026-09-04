@@ -34,6 +34,8 @@ class NearbyVenue {
   final String website;
   final String imageUrl;
   final String description;
+  final bool sponsored;
+  final bool routeRecommended;
 
   const NearbyVenue({
     required this.id,
@@ -47,6 +49,8 @@ class NearbyVenue {
     this.website = '',
     this.imageUrl = '',
     this.description = '',
+    this.sponsored = false,
+    this.routeRecommended = false,
   });
 
   Map<String, Object?> toJson() => {
@@ -61,6 +65,8 @@ class NearbyVenue {
     'website': website,
     'imageUrl': imageUrl,
     'description': description,
+    'sponsored': sponsored,
+    'routeRecommended': routeRecommended,
   };
 
   factory NearbyVenue.fromJson(Map<String, dynamic> json) {
@@ -81,6 +87,8 @@ class NearbyVenue {
       website: (json['website'] ?? '').toString(),
       imageUrl: (json['imageUrl'] ?? '').toString(),
       description: (json['description'] ?? '').toString(),
+      sponsored: json['sponsored'] == true,
+      routeRecommended: json['routeRecommended'] == true,
     );
   }
 }

@@ -9,6 +9,7 @@ Object.assign(exports, require('./business'));
 Object.assign(exports, require('./business_content'));
 Object.assign(exports, require('./business_enhancements'));
 Object.assign(exports, require('./business_growth'));
+Object.assign(exports, require('./business_web_tools'));
 Object.assign(exports, require('./business_maintenance'));
 Object.assign(exports, require('./business_candidate'));
 Object.assign(exports, require('./business_candidate_publish'));

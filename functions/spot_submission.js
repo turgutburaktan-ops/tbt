@@ -8,7 +8,9 @@ function requireAuth(request) {
 }
 function requireAdmin(request) {
   requireAuth(request);
-  if (request.auth.token.admin !== true) throw new HttpsError('permission-denied', 'Admin yetkisi gerekli.');
+  if (request.auth.token.admin !== true || String(request.auth.token.email || '').toLowerCase() !== 'turgutburaktan@gmail.com') {
+    throw new HttpsError('permission-denied', 'Bu panel yalnız tanımlı yönetici hesabına açıktır.');
+  }
 }
 function validCoord(lat, lon) {
   return Number.isFinite(lat) && Number.isFinite(lon) && lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180;

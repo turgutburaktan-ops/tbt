@@ -414,6 +414,15 @@ class NearbyVenueService {
         }
         final n = (d['venueName'] ?? '').toString().trim();
         if (n.isEmpty) continue;
+        final boostUntil = d['boostActiveUntil'] is Timestamp
+            ? (d['boostActiveUntil'] as Timestamp).toDate()
+            : null;
+        final sponsored = d['boostActive'] == true &&
+            boostUntil != null &&
+            boostUntil.isAfter(DateTime.now());
+        final routeSettings = d['routeSettings'] is Map
+            ? Map<String, dynamic>.from(d['routeSettings'] as Map)
+            : const <String, dynamic>{};
         out.add(
           NearbyVenue(
             id: (d['venueId'] ?? doc.id).toString(),
@@ -435,9 +444,16 @@ class NearbyVenueService {
             description: (
               d['shortDescription'] ?? d['description'] ?? ''
             ).toString(),
+            sponsored: sponsored,
+            routeRecommended: routeSettings['enabled'] == true,
           ),
         );
       }
+      out.sort((a, b) {
+        final sponsoredOrder = (b.sponsored ? 1 : 0).compareTo(a.sponsored ? 1 : 0);
+        if (sponsoredOrder != 0) return sponsoredOrder;
+        return (b.routeRecommended ? 1 : 0).compareTo(a.routeRecommended ? 1 : 0);
+      });
       return out;
     } catch (_) {
       return const [];

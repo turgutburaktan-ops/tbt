@@ -3,7 +3,9 @@ const {getFirestore, FieldValue, Timestamp} = require('firebase-admin/firestore'
 
 function requireAdmin(request) {
   if (!request.auth?.uid) throw new HttpsError('unauthenticated', 'Giriş gerekli.');
-  if (request.auth.token.admin !== true) throw new HttpsError('permission-denied', 'Admin yetkisi gerekli.');
+  if (request.auth.token.admin !== true || String(request.auth.token.email || '').toLowerCase() !== 'turgutburaktan@gmail.com') {
+    throw new HttpsError('permission-denied', 'Bu panel yalnız tanımlı yönetici hesabına açıktır.');
+  }
   return request.auth.uid;
 }
 
@@ -11,7 +13,7 @@ exports.adminSetBusinessPremium = onCall({region: 'europe-west1'}, async (reques
   const adminUid = requireAdmin(request);
   const venueKey = String(request.data?.venueKey || '').trim();
   const enabled = request.data?.enabled === true;
-  const days = Math.min(3650, Math.max(1, Number(request.data?.days || 30)));
+  const days = Math.min(3650, Math.max(1, Number(request.data?.days || 90)));
   const note = String(request.data?.note || '').trim().slice(0, 300);
   if (!venueKey || venueKey.length > 240) throw new HttpsError('invalid-argument', 'İşletme kimliği geçersiz.');
 

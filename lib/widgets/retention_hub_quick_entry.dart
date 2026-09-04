@@ -4,6 +4,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import '../services/admin_access.dart';
+
 class RetentionHubQuickEntry extends StatefulWidget {
   final Widget child;
   const RetentionHubQuickEntry({super.key, required this.child});
@@ -39,7 +41,7 @@ class _RetentionHubQuickEntryState extends State<RetentionHubQuickEntry> {
       final token = await user
           .getIdTokenResult()
           .timeout(const Duration(seconds: 6));
-      final next = token.claims?['admin'] == true;
+      final next = AdminAccess.tokenMatches(user, token);
       if (mounted && next != _isAdmin) setState(() => _isAdmin = next);
     } catch (_) {
       if (mounted && _isAdmin) setState(() => _isAdmin = false);

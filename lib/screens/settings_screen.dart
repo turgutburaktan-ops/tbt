@@ -1,10 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../services/auth_service.dart';
 import '../theme/app_theme.dart';
-import 'managed_venues_screen.dart';
 import 'password_change_screen.dart';
 import 'phone_verification_screen.dart';
 import 'safety_privacy_center_screen.dart';
@@ -554,13 +554,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       _section('Mekanlar ve Yönetim'),
                       _tile(
                         Icons.storefront_outlined,
-                        'Yönettiğim Mekanlar',
-                        'Yetkili olduğun mekanları tek yerden yönet',
-                        () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const ManagedVenuesScreen(),
-                          ),
+                        'İşletme Yönetim Merkezi',
+                        'Profil, menü, kampanya ve raporlarını internet sitesinden yönet',
+                        () => launchUrl(
+                          Uri.parse('https://trtbt.com/#/profil'),
+                          mode: LaunchMode.externalApplication,
                         ),
                       ),
                     ],

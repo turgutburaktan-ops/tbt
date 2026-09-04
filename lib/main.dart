@@ -19,8 +19,7 @@ import 'screens/admin_portal_screen.dart';
 import 'screens/admin_spot_submissions_screen.dart';
 import 'screens/admin_published_spots_screen.dart';
 import 'screens/app_entry_gate.dart';
-import 'screens/business_hub_screen.dart';
-import 'screens/managed_venues_screen.dart';
+import 'screens/business_web_portal_screen.dart';
 import 'screens/campus_home_screen.dart';
 import 'screens/campus_profile_screen.dart';
 import 'screens/chat_inbox_screen.dart';
@@ -299,8 +298,8 @@ class _BestPhotoSpotAppState extends State<BestPhotoSpotApp> {
       '/rewards': (_) => const RewardsHubScreen(),
       '/settings': (_) => const SettingsScreen(),
       '/story-archive': (_) => const StoryArchiveScreen(),
-      '/business': (_) => const ManagedVenuesScreen(),
-      '/business-claim': (_) => const BusinessHubScreen(),
+      '/business': (_) => const BusinessWebPortalScreen(),
+      '/business-claim': (_) => const BusinessWebPortalScreen(),
       '/admin': (_) => const AdminPortalScreen(),
       '/admin-dashboard': (_) => const AdminDashboardScreen(),
       '/admin-users': (_) => const AdminUsersScreen(),

@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../services/admin_console_service.dart';
+import '../services/admin_access.dart';
 import '../theme/app_theme.dart';
 import 'admin_business_sandbox_screen.dart';
 
@@ -28,10 +29,11 @@ class _AdminBusinessPreviewScreenState
 
   Future<void> _load() async {
     if (mounted) setState(() => _loading = true);
-    final token = await FirebaseAuth.instance.currentUser?.getIdTokenResult(
+    final user = FirebaseAuth.instance.currentUser;
+    final token = await user?.getIdTokenResult(
       true,
     );
-    final allowed = token?.claims?['admin'] == true;
+    final allowed = AdminAccess.tokenMatches(user, token);
     if (!allowed) {
       if (mounted) {
         setState(() {

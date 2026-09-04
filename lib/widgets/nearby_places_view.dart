@@ -207,6 +207,8 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
         )
         .toList();
     out.sort((a, b) {
+      final sponsoredOrder = (b.sponsored ? 1 : 0).compareTo(a.sponsored ? 1 : 0);
+      if (sponsoredOrder != 0) return sponsoredOrder;
       final ar = _ratings[_key(a)] ?? VenueRatingSummary.empty;
       final br = _ratings[_key(b)] ?? VenueRatingSummary.empty;
       if (_sort == 'nearest' && _userPosition != null) {
@@ -594,6 +596,16 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
                       spacing: 7,
                       runSpacing: 5,
                       children: [
+                        if (venue.sponsored)
+                          const _MetaPill(
+                            label: 'Öne çıkarıldı',
+                            color: Color(0xFFB68CFF),
+                          ),
+                        if (venue.routeRecommended)
+                          const _MetaPill(
+                            label: 'Akıllı Rota önerisi',
+                            color: AppColors.cyan,
+                          ),
                         _MetaPill(label: venue.category.label, color: AppColors.cyan),
                         if (rating.count > 0)
                           _MetaPill(

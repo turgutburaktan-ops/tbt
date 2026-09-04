@@ -60,8 +60,12 @@ jobs:
             adminSetBusinessPremium
             createBusinessBoost
             createBusinessCandidate
+            createBusinessCollaboration
+            createBusinessCoupon
             deleteBusinessContentItem
             followBusiness
+            getBusinessReviews
+            getBusinessWebTools
             getAdminBusinessClaims
             getAdminInsights
             getBusinessClaim
@@ -71,18 +75,27 @@ jobs:
             getBusinessPublicFeatures
             listPendingSpotSuggestions
             recordBusinessMetric
+            removeBusinessStaff
+            reportBusinessReview
             requestBusinessReservation
+            respondBusinessReview
             respondBusinessReservation
             reviewSpotSuggestion
             setSocialEventCover
             startBusinessPremiumTrial
             submitBusinessClaim
             submitBusinessClaimV2
+            submitBusinessBadgeApplication
             submitSpotSuggestion
+            addBusinessStaff
+            claimBusinessCoupon
+            saveBusinessRouteSettings
+            sendBusinessFollowerNotification
             updateBusinessContentItem
             updateBusinessProfile
             updateBusinessProfileMedia
             updateBusinessWeeklyHours
+            validateBusinessCoupon
           )
           for function_name in "${functions[@]}"; do
             gcloud functions add-invoker-policy-binding "$function_name" \

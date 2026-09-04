@@ -2,6 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import '../services/admin_access.dart';
+
 class ModerationCenterScreen extends StatefulWidget {
   const ModerationCenterScreen({super.key});
 
@@ -19,10 +21,11 @@ class _ModerationCenterScreenState extends State<ModerationCenterScreen> {
   }
 
   Future<void> _check() async {
-    final token = await FirebaseAuth.instance.currentUser?.getIdTokenResult(
+    final user = FirebaseAuth.instance.currentUser;
+    final token = await user?.getIdTokenResult(
       true,
     );
-    if (mounted) setState(() => _admin = token?.claims?['admin'] == true);
+    if (mounted) setState(() => _admin = AdminAccess.tokenMatches(user, token));
   }
 
   @override

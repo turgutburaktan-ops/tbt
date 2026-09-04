@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
+import '../services/admin_access.dart';
 import 'admin_businesses_v2_screen.dart';
 import 'admin_music_screen.dart';
 
@@ -22,10 +23,11 @@ class _AdminPortalScreenState extends State<AdminPortalScreen> {
   }
 
   Future<void> _check() async {
-    final token = await FirebaseAuth.instance.currentUser?.getIdTokenResult(
+    final user = FirebaseAuth.instance.currentUser;
+    final token = await user?.getIdTokenResult(
       true,
     );
-    if (mounted) setState(() => _allowed = token?.claims?['admin'] == true);
+    if (mounted) setState(() => _allowed = AdminAccess.tokenMatches(user, token));
   }
 
   void _open(Widget page) {

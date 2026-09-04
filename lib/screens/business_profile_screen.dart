@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
 import '../models/nearby_venue.dart';
 import '../services/business_service.dart';
@@ -13,7 +14,6 @@ import '../widgets/business_public_actions.dart';
 import '../widgets/venue_badge_strip.dart';
 import '../widgets/firebase_media_image.dart';
 import '../widgets/venue_reviews_section.dart';
-import 'business_hub_screen.dart';
 import 'create_post_screen.dart';
 import 'post_detail_screen.dart';
 
@@ -71,19 +71,6 @@ class BusinessProfileScreen extends StatelessWidget {
     }
   }
 
-  void _openBusinessHub(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => BusinessHubScreen(
-          initialCategory: venue.category.name,
-          initialVenueId: venue.id,
-          initialVenueName: venue.name,
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final venueRef = FirebaseFirestore.instance
@@ -94,11 +81,6 @@ class BusinessProfileScreen extends StatelessWidget {
       builder: (context, snapshot) {
         final profile = snapshot.data?.data() ?? const <String, dynamic>{};
         final verified = profile['verified'] == true;
-        final ownerUid = (profile['ownerUid'] ?? '').toString();
-        final isOwner =
-            verified &&
-            ownerUid.isNotEmpty &&
-            FirebaseAuth.instance.currentUser?.uid == ownerUid;
         final coverUrl = (profile['coverUrl'] ?? '').toString();
         final logoUrl = (profile['logoUrl'] ?? '').toString();
         final managedPhone = (profile['phone'] ?? '').toString().trim();
@@ -110,9 +92,18 @@ class BusinessProfileScreen extends StatelessWidget {
             ? managedWebsite
             : venue.website.trim();
         final liveHours = _HoursStatus.from(profile['weeklyHours']);
+        final trialUntil = profile['premiumTrialUntil'] as Timestamp?;
+        final adminUntil = profile['adminPremiumUntil'] as Timestamp?;
+        final premiumActive = profile['subscriptionStatus'] == 'active' ||
+            (profile['premiumTrialStatus'] == 'active' &&
+                trialUntil != null &&
+                trialUntil.toDate().isAfter(DateTime.now())) ||
+            (profile['adminPremiumStatus'] == 'active' &&
+                adminUntil != null &&
+                adminUntil.toDate().isAfter(DateTime.now()));
 
         return DefaultTabController(
-          length: 5,
+          length: 6,
           child: Scaffold(
             backgroundColor: AppColors.background,
             body: NestedScrollView(
@@ -179,8 +170,7 @@ class BusinessProfileScreen extends StatelessWidget {
                         const SizedBox(height: 9),
                         VenueBadgeStrip(
                           verified: verified,
-                          premium: profile['premiumEntitled'] == true ||
-                              profile['subscriptionStatus'] == 'active',
+                          premium: premiumActive,
                           rating: rating.average,
                           ratingCount: rating.count,
                           category: venue.category.label,
@@ -251,21 +241,13 @@ class BusinessProfileScreen extends StatelessWidget {
                                 if (uri != null) _launch(context, uri);
                               },
                             ),
-                            if (isOwner)
-                              _QuickAction(
-                                icon: Icons.dashboard_customize_outlined,
-                                label: 'Yönet',
-                                onTap: () => _openBusinessHub(context),
-                              ),
                           ],
                         ),
-                        if (!isOwner) ...[
-                          const SizedBox(height: 12),
-                          BusinessPublicActions(
-                            venueKey: _key,
-                            reservationsEnabled: verified,
-                          ),
-                        ],
+                        const SizedBox(height: 12),
+                        BusinessPublicActions(
+                          venueKey: _key,
+                          reservationsEnabled: verified,
+                        ),
                         const SizedBox(height: 14),
                         StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
                           stream: FirebaseFirestore.instance
@@ -362,30 +344,6 @@ class BusinessProfileScreen extends StatelessWidget {
                             ),
                           ),
                         ],
-                        if (!verified &&
-                            FirebaseAuth.instance.currentUser != null) ...[
-                          const SizedBox(height: 6),
-                          Align(
-                            alignment: Alignment.center,
-                            child: TextButton.icon(
-                              onPressed: () => _openBusinessHub(context),
-                              icon: const Icon(
-                                Icons.verified_user_outlined,
-                                size: 16,
-                              ),
-                              label: const Text(
-                                'Bu işletmeyi mi yönetiyorsunuz? İşletme doğrulaması',
-                              ),
-                              style: TextButton.styleFrom(
-                                foregroundColor: Colors.white54,
-                                textStyle: const TextStyle(
-                                  fontSize: 11.5,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
                       ],
                     ),
                   ),
@@ -406,6 +364,7 @@ class BusinessProfileScreen extends StatelessWidget {
                         Tab(text: _menuLabel),
                         const Tab(text: 'Kampanyalar'),
                         const Tab(text: 'Etkinlikler'),
+                        const Tab(text: 'Kuponlar'),
                         const Tab(text: 'Paylaşımlar'),
                       ],
                     ),
@@ -440,6 +399,14 @@ class BusinessProfileScreen extends StatelessWidget {
                     activeOnly: true,
                     hidePastPrograms: true,
                     builder: (data) => _ProgramCard(data: data),
+                  ),
+                  _BusinessCollectionTab(
+                    stream: venueRef.collection('coupons').snapshots(),
+                    emptyIcon: Icons.qr_code_2_rounded,
+                    emptyText: 'Aktif QR kupon bulunmuyor.',
+                    activeOnly: true,
+                    hideExpiredCampaigns: true,
+                    builder: (data) => _CouponCard(data: data, venueKey: _key),
                   ),
                   _BusinessPostsTab(venueKey: _key),
                 ],
@@ -700,7 +667,10 @@ class _BusinessCollectionTab extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 36),
             itemCount: docs.length,
             separatorBuilder: (_, __) => const SizedBox(height: 8),
-            itemBuilder: (_, index) => builder(docs[index].data()),
+            itemBuilder: (_, index) => builder({
+              ...docs[index].data(),
+              'id': docs[index].id,
+            }),
           );
         },
       );
@@ -871,6 +841,95 @@ class _ProgramCard extends StatelessWidget {
               '${d.day}.${d.month}.${d.year} • ${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}',
           ].where((e) => e.isNotEmpty).join('\n'),
         ),
+      ),
+    );
+  }
+}
+
+class _CouponCard extends StatefulWidget {
+  final Map<String, dynamic> data;
+  final String venueKey;
+  const _CouponCard({required this.data, required this.venueKey});
+
+  @override
+  State<_CouponCard> createState() => _CouponCardState();
+}
+
+class _CouponCardState extends State<_CouponCard> {
+  bool _busy = false;
+
+  Future<void> _claim() async {
+    if (FirebaseAuth.instance.currentUser == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Kuponu almak için giriş yapmalısın.')),
+      );
+      return;
+    }
+    setState(() => _busy = true);
+    try {
+      final result = await FirebaseFunctions.instanceFor(region: 'europe-west1')
+          .httpsCallable('claimBusinessCoupon')
+          .call({'venueKey': widget.venueKey, 'couponId': widget.data['id']});
+      final data = Map<String, dynamic>.from(result.data as Map);
+      final token = (data['token'] ?? '').toString();
+      if (!mounted || token.isEmpty) return;
+      await showDialog<void>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: const Text('Müşteri kuponun'),
+          content: Column(mainAxisSize: MainAxisSize.min, children: [
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18)),
+              child: QrImageView(data: token, size: 210),
+            ),
+            const SizedBox(height: 14),
+            Text((widget.data['title'] ?? 'TBT Kuponu').toString(), textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.w900)),
+            const SizedBox(height: 6),
+            const Text('İşletmede bu QR kodunu göster. Kupon yalnız bir kez kullanılabilir.', textAlign: TextAlign.center, style: TextStyle(color: Colors.white60, height: 1.35)),
+          ]),
+          actions: [FilledButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Tamam'))],
+        ),
+      );
+    } on FirebaseFunctionsException catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(error.message ?? 'Kupon alınamadı.')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final until = widget.data['validUntil'] as Timestamp?;
+    final remaining = (widget.data['maxClaims'] as num?)?.toInt() ?? 0;
+    final claimed = (widget.data['claimCount'] as num?)?.toInt() ?? 0;
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(15),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          const Row(children: [
+            Icon(Icons.qr_code_2_rounded, color: AppColors.cyan),
+            SizedBox(width: 8),
+            Text('QR KUPON', style: TextStyle(color: AppColors.cyan, fontSize: 11, fontWeight: FontWeight.w900)),
+          ]),
+          const SizedBox(height: 9),
+          Text((widget.data['title'] ?? '').toString(), style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900)),
+          if ((widget.data['description'] ?? '').toString().isNotEmpty) ...[
+            const SizedBox(height: 5),
+            Text((widget.data['description'] ?? '').toString(), style: const TextStyle(color: Colors.white60, height: 1.4)),
+          ],
+          const SizedBox(height: 10),
+          Row(children: [
+            Expanded(child: Text(until == null ? '' : '${until.toDate().day}.${until.toDate().month}.${until.toDate().year} tarihine kadar', style: const TextStyle(color: Colors.white54, fontSize: 11))),
+            if (remaining > 0) Text('${(remaining - claimed).clamp(0, remaining)} kupon kaldı', style: const TextStyle(color: Colors.white54, fontSize: 11)),
+          ]),
+          const SizedBox(height: 11),
+          SizedBox(width: double.infinity, child: FilledButton.icon(onPressed: _busy ? null : _claim, icon: const Icon(Icons.confirmation_number_outlined), label: Text(_busy ? 'Hazırlanıyor…' : 'Kuponu Al'))),
+        ]),
       ),
     );
   }

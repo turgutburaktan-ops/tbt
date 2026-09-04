@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
+import '../services/admin_access.dart';
 
 class AdminUsersScreen extends StatefulWidget {
   const AdminUsersScreen({super.key});
@@ -22,10 +23,11 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
   }
 
   Future<void> _check() async {
-    final token = await FirebaseAuth.instance.currentUser?.getIdTokenResult(
+    final user = FirebaseAuth.instance.currentUser;
+    final token = await user?.getIdTokenResult(
       true,
     );
-    if (mounted) setState(() => _allowed = token?.claims?['admin'] == true);
+    if (mounted) setState(() => _allowed = AdminAccess.tokenMatches(user, token));
   }
 
   @override
@@ -185,10 +187,11 @@ class _AdminBusinessesScreenState extends State<AdminBusinessesScreen> {
   }
 
   Future<void> _check() async {
-    final token = await FirebaseAuth.instance.currentUser?.getIdTokenResult(
+    final user = FirebaseAuth.instance.currentUser;
+    final token = await user?.getIdTokenResult(
       true,
     );
-    if (mounted) setState(() => _allowed = token?.claims?['admin'] == true);
+    if (mounted) setState(() => _allowed = AdminAccess.tokenMatches(user, token));
   }
 
   @override
@@ -350,10 +353,11 @@ class _AdminGrowthScreenState extends State<AdminGrowthScreen> {
       (await q.count().get()).count ?? 0;
 
   Future<void> _load() async {
-    final token = await FirebaseAuth.instance.currentUser?.getIdTokenResult(
+    final user = FirebaseAuth.instance.currentUser;
+    final token = await user?.getIdTokenResult(
       true,
     );
-    final allowed = token?.claims?['admin'] == true;
+    final allowed = AdminAccess.tokenMatches(user, token);
     if (!allowed) {
       if (mounted)
         setState(() {
@@ -499,10 +503,11 @@ class _AdminRolePreviewScreenState extends State<AdminRolePreviewScreen> {
   }
 
   Future<void> _check() async {
-    final token = await FirebaseAuth.instance.currentUser?.getIdTokenResult(
+    final user = FirebaseAuth.instance.currentUser;
+    final token = await user?.getIdTokenResult(
       true,
     );
-    if (mounted) setState(() => _allowed = token?.claims?['admin'] == true);
+    if (mounted) setState(() => _allowed = AdminAccess.tokenMatches(user, token));
   }
 
   @override
@@ -634,7 +639,7 @@ class _RolePreviewBody extends StatelessWidget {
         title: 'Premium işletme görünümü',
         subtitle: 'İlk işletmelere ücretsiz sunduğumuz ileri araçlar.',
         items: const [
-          ('Erken İşletme Premium', '180 günlük ücretsiz premium erişim.'),
+          ('İşletme Premium', 'İlk 3 ay ücretsiz Premium erişimi.'),
           (
             'Gelişmiş istatistik',
             'İçerik ve etkinlik performansını karşılaştırır.',

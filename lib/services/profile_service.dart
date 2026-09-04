@@ -54,6 +54,10 @@ class ProfileService {
       throw Exception('Profilini düzenlemek için giriş yapmalısın.');
     }
     final cleanName = displayName.trim();
+    final nameParts = cleanName
+        .split(RegExp(r'\s+'))
+        .where((part) => part.isNotEmpty)
+        .toList();
     final cleanBio = bio.trim();
     if (cleanName.length < 2) {
       throw Exception('Kullanıcı adı en az 2 karakter olmalı.');
@@ -87,6 +91,12 @@ class ProfileService {
     await _firestore.collection('users').doc(user.uid).set({
       'uid': user.uid,
       'displayName': cleanName,
+      if (nameParts.length >= 2) ...{
+        'fullName': cleanName,
+        'firstName': nameParts.first,
+        'lastName': nameParts.skip(1).join(' '),
+        'fullNameRequired': false,
+      },
       'bio': cleanBio,
       'photoUrl': photoUrl,
       'updatedAt': FieldValue.serverTimestamp(),

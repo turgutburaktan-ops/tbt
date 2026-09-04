@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../services/admin_console_service.dart';
+import '../services/admin_access.dart';
 import '../theme/app_theme.dart';
 
 class AdminInsightsScreen extends StatefulWidget {
@@ -30,10 +31,11 @@ class _AdminInsightsScreenState extends State<AdminInsightsScreen> {
         _error = null;
       });
     try {
-      final token = await FirebaseAuth.instance.currentUser?.getIdTokenResult(
+      final user = FirebaseAuth.instance.currentUser;
+      final token = await user?.getIdTokenResult(
         true,
       );
-      if (token?.claims?['admin'] != true) {
+      if (!AdminAccess.tokenMatches(user, token)) {
         if (mounted)
           setState(() {
             _allowed = false;

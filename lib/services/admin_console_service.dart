@@ -5,6 +5,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:http/http.dart' as http;
 
+import 'admin_access.dart';
+
 class AdminConsoleService {
   AdminConsoleService._();
   static final instance = AdminConsoleService._();
@@ -36,7 +38,7 @@ class AdminConsoleService {
     }
     await refreshed.getIdToken(true);
     final token = await refreshed.getIdTokenResult();
-    if (token.claims?['admin'] != true) {
+    if (!AdminAccess.tokenMatches(refreshed, token)) {
       throw FirebaseAuthException(
         code: 'admin-claim-missing',
         message: 'Yönetici yetkisi doğrulanamadı.',

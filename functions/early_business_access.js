@@ -2,7 +2,8 @@ const {onDocumentUpdated} = require('firebase-functions/v2/firestore');
 const {onCall, HttpsError} = require('firebase-functions/v2/https');
 const {getFirestore, FieldValue, Timestamp} = require('firebase-admin/firestore');
 
-const PREMIUM_TRIAL_DAYS = 30;
+// Premium is currently offered without payment for the first three months.
+const PREMIUM_TRIAL_DAYS = 90;
 
 function requireAuth(request) {
   if (!request.auth?.uid) throw new HttpsError('unauthenticated', 'Giriş gerekli.');
@@ -77,6 +78,26 @@ exports.getBusinessEntitlement = onCall({region: 'europe-west1'}, async (request
     throw new HttpsError('permission-denied', 'Bu işletmenin plan bilgisine erişemezsin.');
   }
   if (data.status !== 'verified') return {exists: true, verified: false, entitled: false, source: 'none'};
+
+  // Extend trials that were started while the former 30-day offer was active.
+  if (data.premiumTrialStartedAt instanceof Timestamp) {
+    const expectedUntilMs = data.premiumTrialStartedAt.toMillis() + PREMIUM_TRIAL_DAYS * 86400000;
+    const currentUntilMs = data.premiumTrialUntil instanceof Timestamp ? data.premiumTrialUntil.toMillis() : 0;
+    if (currentUntilMs < expectedUntilMs) {
+      const premiumTrialUntil = Timestamp.fromMillis(expectedUntilMs);
+      const extension = {
+        premiumTrialStatus: 'active',
+        premiumTrialUntil,
+        billingRequired: false,
+        updatedAt: FieldValue.serverTimestamp(),
+      };
+      await Promise.all([
+        ref.set(extension, {merge: true}),
+        db.collection('business_venues').doc(claimId).set(extension, {merge: true}),
+      ]);
+      data = {...data, ...extension, premiumTrialUntil};
+    }
+  }
 
   return {exists: true, verified: true, ...entitlementFor(data)};
 });

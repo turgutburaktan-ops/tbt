@@ -22,6 +22,7 @@ class _BusinessProDashboardScreenState
     extends State<BusinessProDashboardScreen> {
   bool _loading = true;
   Map<String, dynamic> _entitlement = const {}, _dashboard = const {};
+  String? _loadWarning;
   String get _venueKey =>
       BusinessService.instance.venueKey(widget.category, widget.venueId);
 
@@ -33,31 +34,35 @@ class _BusinessProDashboardScreenState
 
   Future<void> _load() async {
     if (mounted) setState(() => _loading = true);
+    Map<String, dynamic> entitlement = const {};
+    Map<String, dynamic> dashboard = const {};
+    final warnings = <String>[];
     try {
-      final entitlement = await BusinessService.instance.entitlementStatus(
+      entitlement = await BusinessService.instance.entitlementStatus(
         widget.category,
         widget.venueId,
       );
-      final entitled = entitlement['entitled'] == true;
-      Map<String, dynamic> dashboard = const {};
-      if (entitled) {
+    } catch (e) {
+      warnings.add('Paket bilgisi yenilenemedi.');
+    }
+    if (entitlement.isEmpty || entitlement['entitled'] == true) {
+      try {
         dashboard = await BusinessService.instance.authenticatedCall(
           'getBusinessDashboard',
           {'venueKey': _venueKey},
         );
+      } catch (e) {
+        warnings.add('Bazı istatistikler şu anda alınamadı.');
       }
-      if (!mounted) return;
+    }
+    if (mounted) {
       setState(() {
         _entitlement = entitlement;
         _dashboard = dashboard;
+        _loadWarning = warnings.isEmpty ? null : warnings.join(' ');
       });
-    } catch (e) {
-      if (mounted)
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(_error(e))));
-    } finally {
-      if (mounted) setState(() => _loading = false);
     }
+    if (mounted) setState(() => _loading = false);
   }
 
   String _error(Object e) => e.toString().replaceFirst('Exception: ', '');
@@ -68,7 +73,7 @@ class _BusinessProDashboardScreenState
         'createBusinessBoost',
         {
           'venueKey': _venueKey,
-          'targetType': 'business_profile',
+          'targetType': 'profile',
           'targetId': _venueKey,
           'days': 3,
         },
@@ -99,7 +104,7 @@ class _BusinessProDashboardScreenState
       await _load();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('30 günlük Premium denemen başladı.')),
+          const SnackBar(content: Text('3 aylık ücretsiz Premium erişimin başladı.')),
         );
       }
     } catch (e) {
@@ -133,9 +138,13 @@ class _BusinessProDashboardScreenState
     final reservations = ((_dashboard['reservations'] as List?) ?? const [])
         .map((e) => Map<String, dynamic>.from(e as Map))
         .toList();
-    final entitled = _entitlement['entitled'] == true;
+    final entitled = _entitlement['entitled'] == true || _dashboard.isNotEmpty;
     final premium = _entitlement['premiumEntitled'] == true;
     final trialUsed = _entitlement['premiumTrialUsed'] == true;
+    final trialUntilMs = (_entitlement['premiumTrialUntilMs'] as num?)?.toInt() ?? 0;
+    final boost = _dashboard['boost'] is Map
+        ? Map<String, dynamic>.from(_dashboard['boost'] as Map)
+        : null;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -148,6 +157,22 @@ class _BusinessProDashboardScreenState
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.fromLTRB(16, 14, 16, 32),
                 children: [
+                  if (_loadWarning != null) ...[
+                    Container(
+                      padding: const EdgeInsets.all(13),
+                      decoration: BoxDecoration(
+                        color: const Color(0x22FFC857),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: const Color(0x66FFC857)),
+                      ),
+                      child: Row(children: [
+                        const Icon(Icons.info_outline_rounded, color: Color(0xFFFFC857)),
+                        const SizedBox(width: 9),
+                        Expanded(child: Text(_loadWarning!, style: const TextStyle(height: 1.35))),
+                      ]),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
                   Container(
                     padding: const EdgeInsets.all(18),
                     decoration: BoxDecoration(
@@ -196,6 +221,13 @@ class _BusinessProDashboardScreenState
                             height: 1.4,
                           ),
                         ),
+                        if (premium && trialUntilMs > 0) ...[
+                          const SizedBox(height: 9),
+                          Text(
+                            'Ücretsiz Premium bitişi: ${_date(trialUntilMs)}',
+                            style: const TextStyle(color: Color(0xFFFFC857), fontWeight: FontWeight.w800),
+                          ),
+                        ],
                       ],
                     ),
                   ),
@@ -290,7 +322,7 @@ class _BusinessProDashboardScreenState
                                 child: FilledButton.icon(
                                   onPressed: trialUsed ? null : _startPremiumTrial,
                                   icon: const Icon(Icons.bolt_rounded),
-                                  label: Text(trialUsed ? 'Deneme hakkı kullanıldı' : '30 gün ücretsiz dene'),
+                                  label: Text(trialUsed ? '3 aylık erişim kullanıldı' : '3 ay ücretsiz Premium'),
                                 ),
                               ),
                             ],
@@ -298,25 +330,7 @@ class _BusinessProDashboardScreenState
                         ),
                       ),
                     if (!premium) const SizedBox(height: 10),
-                    Card(
-                      child: ListTile(
-                        leading: const Icon(
-                          Icons.rocket_launch_outlined,
-                          color: AppColors.cyan,
-                        ),
-                        title: const Text(
-                          'Business Boost',
-                          style: TextStyle(fontWeight: FontWeight.w900),
-                        ),
-                        subtitle: Text(premium
-                            ? 'İşletmeni 3 gün boyunca ilgili kullanıcılara öne çıkar.'
-                            : 'Boost, Premium görünürlük ayrıcalığıdır.'),
-                        trailing: FilledButton(
-                          onPressed: premium ? _boost : null,
-                          child: const Text('Boost'),
-                        ),
-                      ),
-                    ),
+                    _BoostCard(boost: boost, premium: premium, onStart: _boost),
                     const SizedBox(height: 18),
                     const Text(
                       'Rezervasyon Talepleri',
@@ -384,6 +398,10 @@ class _BusinessProDashboardScreenState
   }
 
   int _n(dynamic v) => (v as num?)?.toInt() ?? 0;
+  String _date(int milliseconds) {
+    final date = DateTime.fromMillisecondsSinceEpoch(milliseconds);
+    return '${date.day.toString().padLeft(2, '0')}.${date.month.toString().padLeft(2, '0')}.${date.year}';
+  }
   String _statusText(String v) => switch (v) {
     'accepted' => 'Onaylandı',
     'rejected' => 'Reddedildi',
@@ -417,5 +435,90 @@ class _Metric extends StatelessWidget {
         ),
       ],
     ),
+  );
+}
+
+class _BoostCard extends StatelessWidget {
+  final Map<String, dynamic>? boost;
+  final bool premium;
+  final VoidCallback onStart;
+  const _BoostCard({required this.boost, required this.premium, required this.onStart});
+
+  @override
+  Widget build(BuildContext context) {
+    final active = boost != null && boost!['status'] == 'active';
+    final impressions = (boost?['impressions'] as num?)?.toInt() ?? 0;
+    final clicks = (boost?['clicks'] as num?)?.toInt() ?? 0;
+    final endsAtMs = (boost?['endsAtMs'] as num?)?.toInt() ?? 0;
+    final clickRate = impressions == 0 ? 0 : (clicks * 100 / impressions);
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Row(children: [
+              Icon(Icons.rocket_launch_outlined, color: AppColors.cyan),
+              SizedBox(width: 9),
+              Text('Business Boost', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w900)),
+            ]),
+            const SizedBox(height: 8),
+            Text(
+              !premium
+                  ? 'Boost, yalnızca Premium işletmelerin şehir ve kategori sonuçlarında öne çıkmasını sağlar.'
+                  : active
+                      ? 'Profil görünürlüğü Boost ile artırılıyor.'
+                      : 'İşletmeni 3 gün boyunca şehir ve kategori sonuçlarında öne çıkar.',
+              style: const TextStyle(color: Colors.white60, height: 1.4),
+            ),
+            if (active) ...[
+              const SizedBox(height: 13),
+              Row(children: [
+                Expanded(child: _BoostStat(label: 'Gösterim', value: '$impressions')),
+                const SizedBox(width: 8),
+                Expanded(child: _BoostStat(label: 'Tıklama', value: '$clicks')),
+                const SizedBox(width: 8),
+                Expanded(child: _BoostStat(label: 'Oran', value: '${clickRate.toStringAsFixed(1)}%')),
+              ]),
+              if (endsAtMs > 0) ...[
+                const SizedBox(height: 10),
+                Text('Bitiş: ${_formatDate(endsAtMs)}', style: const TextStyle(color: Colors.white54, fontSize: 12)),
+              ],
+            ] else ...[
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: premium ? onStart : null,
+                  icon: Icon(premium ? Icons.bolt_rounded : Icons.lock_outline_rounded),
+                  label: Text(premium ? '3 Günlük Boost Başlat' : 'Premium Gerekli'),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  static String _formatDate(int milliseconds) {
+    final date = DateTime.fromMillisecondsSinceEpoch(milliseconds);
+    return '${date.day.toString().padLeft(2, '0')}.${date.month.toString().padLeft(2, '0')}.${date.year} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+  }
+}
+
+class _BoostStat extends StatelessWidget {
+  final String label;
+  final String value;
+  const _BoostStat({required this.label, required this.value});
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+    decoration: BoxDecoration(color: Colors.white.withValues(alpha: .04), borderRadius: BorderRadius.circular(12)),
+    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Text(value, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
+      const SizedBox(height: 2),
+      Text(label, style: const TextStyle(color: Colors.white54, fontSize: 10)),
+    ]),
   );
 }
