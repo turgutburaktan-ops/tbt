@@ -2,6 +2,9 @@ name: iOS TestFlight Release
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - 'codex/release-*'
 
 permissions:
   contents: read
