@@ -13,6 +13,8 @@ jobs:
   appbundle:
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    env:
+      GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON || secrets.PLAY_SERVICE_ACCOUNT_JSON }}
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
@@ -32,10 +34,9 @@ jobs:
           MAPS_API_KEY: ${{ secrets.MAPS_API_KEY }}
           ADMOB_ANDROID_APP_ID: ${{ secrets.ADMOB_ANDROID_APP_ID }}
           ADMOB_NATIVE_ANDROID: ${{ secrets.ADMOB_NATIVE_ANDROID }}
-          GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON || secrets.PLAY_SERVICE_ACCOUNT_JSON }}
         run: |
           set -euo pipefail
-          for name in PLAY_KEYSTORE_BASE64 PLAY_KEYSTORE_PASSWORD PLAY_KEY_ALIAS PLAY_KEY_PASSWORD MAPS_API_KEY ADMOB_ANDROID_APP_ID ADMOB_NATIVE_ANDROID GOOGLE_PLAY_SERVICE_ACCOUNT_JSON; do
+          for name in PLAY_KEYSTORE_BASE64 PLAY_KEYSTORE_PASSWORD PLAY_KEY_ALIAS PLAY_KEY_PASSWORD MAPS_API_KEY ADMOB_ANDROID_APP_ID ADMOB_NATIVE_ANDROID; do
             test -n "${!name:-}" || { echo "$name secret is missing"; exit 1; }
           done
           case "$ADMOB_ANDROID_APP_ID" in ca-app-pub-*~*) ;; *) exit 1 ;; esac
@@ -145,9 +146,10 @@ jobs:
           if-no-files-found: error
           retention-days: 14
       - name: Upload to Google Play internal testing
+        if: ${{ env.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON != '' }}
         uses: r0adkll/upload-google-play@v1
         with:
-          serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON || secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          serviceAccountJsonPlainText: ${{ env.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
           packageName: com.tbt.social
           releaseFiles: build/app/outputs/bundle/release/app-release.aab
           track: internal
