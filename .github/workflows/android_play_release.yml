@@ -122,7 +122,7 @@ jobs:
           flutter analyze --no-fatal-warnings --no-fatal-infos
           flutter build appbundle --release --no-pub \
             --build-name=1.0.8 \
-            --build-number=15 \
+            --build-number=16 \
             --dart-define=ADMOB_NATIVE_ANDROID="$ADMOB_NATIVE_ANDROID"
       - name: Verify Play bundle
         shell: bash
@@ -134,12 +134,12 @@ jobs:
           {
             echo 'applicationId=com.tbt.social'
             echo 'versionName=1.0.8'
-            echo 'versionCode=15'
+            echo 'versionCode=16'
             sha256sum "$AAB"
           } > build/app/outputs/bundle/release/release-info.txt
       - uses: actions/upload-artifact@v4
         with:
-          name: tbt-play-release-1.0.8-code15
+          name: tbt-play-release-1.0.8-code16
           path: |
             build/app/outputs/bundle/release/app-release.aab
             build/app/outputs/bundle/release/release-info.txt
