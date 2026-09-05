@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -47,15 +48,28 @@ class AuthService {
     required String password,
   }) async {
     try {
+      final identifier = email.trim();
+      if (!identifier.contains('@') || identifier.startsWith('@')) {
+        final result = await FirebaseFunctions.instanceFor(region: 'europe-west1')
+            .httpsCallable('signInWithUsername')
+            .call({'username': identifier, 'password': password});
+        final token = ((result.data as Map?)?['customToken'] ?? '').toString();
+        if (token.isEmpty) {
+          throw const FormatException('Missing authenticated session');
+        }
+        return await _auth.signInWithCustomToken(token);
+      }
       return await _auth.signInWithEmailAndPassword(
-        email: email.trim(),
+        email: identifier,
         password: password,
       );
+    } on FirebaseFunctionsException catch (e) {
+      throw Exception(e.message ?? 'Giriş tamamlanamadı.');
     } on FirebaseAuthException catch (e) {
       _logAuthFailure('email-login', e);
       throw Exception(_messageFromCode(e.code));
     } catch (e) {
-      debugPrint('Auth email login failure: $e');
+      debugPrint('Auth login failure: ${e.runtimeType}');
       throw Exception('Giriş yapılırken bir hata oluştu.');
     }
   }

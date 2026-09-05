@@ -10,7 +10,8 @@ class AdminAccess {
       (user?.email ?? '').trim().toLowerCase() == email;
 
   static bool tokenMatches(User? user, IdTokenResult? token) =>
-      emailMatches(user) && token?.claims?['admin'] == true;
+      emailMatches(user) && token?.claims?['admin'] == true &&
+      token?.claims?['email_verified'] == true;
 
   static Future<bool> currentUserIsAuthorized({bool forceRefresh = true}) async {
     final user = FirebaseAuth.instance.currentUser;

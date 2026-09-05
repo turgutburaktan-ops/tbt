@@ -22,6 +22,7 @@ import 'follow_list_screen.dart';
 import 'login_screen.dart';
 import 'main_camera_screen.dart';
 import 'post_detail_screen.dart';
+import 'fullscreen_video_post_screen.dart';
 import 'smart_plan_screen.dart';
 import 'travel_plan_detail_screen.dart';
 import 'user_statistics_screen.dart';
@@ -290,9 +291,13 @@ class _ProfileBodyState extends State<_ProfileBody> {
                                 : Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (_) => PostDetailScreen(
-                                        post: {...data, 'id': doc.id},
-                                      ),
+                                      builder: (_) => isVideo
+                                          ? FullscreenVideoPostScreen(
+                                              post: {...data, 'id': doc.id},
+                                            )
+                                          : PostDetailScreen(
+                                              post: {...data, 'id': doc.id},
+                                            ),
                                     ),
                                   ),
                           );

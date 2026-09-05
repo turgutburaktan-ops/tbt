@@ -156,6 +156,13 @@ class _AdminBusinessesV2ScreenState extends State<AdminBusinessesV2Screen> {
               ]),
             const SizedBox(height: 10),
             OutlinedButton.icon(onPressed: () => Navigator.pop(sheetContext, 'preview'), icon: const Icon(Icons.dashboard_customize_outlined), label: const Text('Paneli Görüntüle')),
+            const SizedBox(height: 10),
+            OutlinedButton.icon(
+              style: OutlinedButton.styleFrom(foregroundColor: Colors.redAccent),
+              onPressed: () => Navigator.pop(sheetContext, 'delete'),
+              icon: const Icon(Icons.delete_forever_outlined),
+              label: const Text('İşletmeyi kalıcı sil'),
+            ),
           ],
         ),
       ),
@@ -169,6 +176,13 @@ class _AdminBusinessesV2ScreenState extends State<AdminBusinessesV2Screen> {
       await _review(data, approve: false);
     } else if (action == 'preview') {
       await Navigator.push(context, MaterialPageRoute(builder: (_) => BusinessPanelPreviewScreen(venueName: (data['venueName'] ?? 'İşletme').toString(), category: (data['category'] ?? 'cafe').toString())));
+    } else if (action == 'delete') {
+      final name = (data['venueName'] ?? data['legalName'] ?? 'İşletme').toString();
+      final confirmed = await showDialog<bool>(context: context, builder: (context) => AlertDialog(title: const Text('İşletmeyi kalıcı sil'), content: Text('$name kalıcı olarak silinecek. Bu işlem geri alınamaz.'), actions: [TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Vazgeç')), FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Kalıcı Sil'))]));
+      if (confirmed == true) {
+        await AdminConsoleService.instance.deleteVenue(collection: 'business_venues', id: (data['venueKey'] ?? data['id'] ?? '').toString());
+        await _load();
+      }
     }
   }
 

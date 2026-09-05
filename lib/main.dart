@@ -19,6 +19,7 @@ import 'screens/admin_portal_screen.dart';
 import 'screens/admin_spot_submissions_screen.dart';
 import 'screens/admin_published_spots_screen.dart';
 import 'screens/app_entry_gate.dart';
+import 'screens/install_onboarding_gate.dart';
 import 'screens/business_web_portal_screen.dart';
 import 'screens/campus_home_screen.dart';
 import 'screens/campus_profile_screen.dart';
@@ -32,6 +33,7 @@ import 'screens/safety_privacy_center_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/story_archive_screen.dart';
 import 'services/app_observability_service.dart';
+import 'services/app_locale_service.dart';
 import 'services/deep_link_service.dart';
 import 'services/favorites_service.dart';
 import 'services/push_notification_service.dart';
@@ -83,6 +85,7 @@ Future<void> main() async {
           debugPrintStack(stackTrace: stackTrace);
         }
       }
+      await AppLocaleService.instance.initialize();
 
       runApp(
         bootstrapError == null
@@ -275,13 +278,15 @@ class _BestPhotoSpotAppState extends State<BestPhotoSpotApp> {
   }
 
   @override
-  Widget build(BuildContext context) => MaterialApp(
+  Widget build(BuildContext context) => ValueListenableBuilder<Locale>(
+    valueListenable: AppLocaleService.instance.locale,
+    builder: (context, locale, _) => MaterialApp(
     navigatorKey: _navigatorKey,
     debugShowCheckedModeBanner: false,
     title: 'En İyi Çekim Noktası',
     theme: AppTheme.dark,
-    locale: const Locale('tr', 'TR'),
-    supportedLocales: const [Locale('tr', 'TR')],
+    locale: locale,
+    supportedLocales: const [Locale('tr'), Locale('en'), Locale('de'), Locale('ar')],
     localizationsDelegates: GlobalMaterialLocalizations.delegates,
     builder: (context, child) {
       final media = MediaQuery.of(context);
@@ -318,6 +323,7 @@ class _BestPhotoSpotAppState extends State<BestPhotoSpotApp> {
       '/campus-profile': (_) => const CampusProfileScreen(),
       '/communities': (_) => const CommunitiesScreen(),
     },
-    home: const AppEntryGate(),
+    home: const InstallOnboardingGate(child: AppEntryGate()),
+    ),
   );
 }

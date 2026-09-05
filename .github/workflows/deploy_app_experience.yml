@@ -1,0 +1,74 @@
+name: Deploy App Experience Backend
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [codex/backend-experience-1-0-11]
+    paths:
+      - '.github/workflows/deploy_app_experience.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tbt-app-experience-backend
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install and test server dependencies
+        run: |
+          npm install --prefix functions --ignore-scripts --no-audit --no-fund
+          node --test functions/test/*.test.js
+          npm install -g firebase-tools
+      - name: Authenticate existing Firebase deployment connection
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          credential = json.loads(os.environ['FIREBASE_SERVICE_ACCOUNT'])
+          if credential.get('project_id') != 'en-iyi-cekim-noktasi':
+              raise SystemExit('Unexpected Firebase project')
+          target = Path(os.environ['RUNNER_TEMP']) / 'firebase-deployment.json'
+          target.write_text(json.dumps(credential))
+          target.chmod(0o600)
+          with open(os.environ['GITHUB_ENV'], 'a') as out:
+              out.write(f'GOOGLE_APPLICATION_CREDENTIALS={target}\n')
+          PY
+      - name: Publish approved Firestore rules
+        run: firebase deploy --only firestore:rules --project en-iyi-cekim-noktasi --non-interactive
+      - name: Publish updated notification consent handler
+        run: firebase deploy --only functions:pushOnNotificationCreated --project en-iyi-cekim-noktasi --non-interactive
+      - name: Publish new login and admin services
+        run: >-
+          firebase deploy
+          --only functions:signInWithUsername,functions:resolveUsernameForLogin,functions:getAdminBusinessClaims,functions:getAdminInsights,functions:sendAdminBroadcast,functions:adminDeleteVenue
+          --project en-iyi-cekim-noktasi
+          --non-interactive
+      - name: Publish idempotent broadcast worker with approved retry policy
+        run: firebase deploy --only functions:deliverAdminBroadcast --project en-iyi-cekim-noktasi --non-interactive --force
+      - name: Verify Android release prerequisites
+        env:
+          RELEASE_PLATFORM: android
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          PLAY_KEYSTORE_BASE64: ${{ secrets.PLAY_KEYSTORE_BASE64 }}
+          PLAY_KEYSTORE_PASSWORD: ${{ secrets.PLAY_KEYSTORE_PASSWORD }}
+          PLAY_KEY_ALIAS: ${{ secrets.PLAY_KEY_ALIAS }}
+          PLAY_KEY_PASSWORD: ${{ secrets.PLAY_KEY_PASSWORD }}
+          MAPS_API_KEY: ${{ secrets.MAPS_API_KEY }}
+          ADMOB_ANDROID_APP_ID: ${{ secrets.ADMOB_ANDROID_APP_ID }}
+          ADMOB_NATIVE_ANDROID: ${{ secrets.ADMOB_NATIVE_ANDROID }}
+        run: node functions/scripts/store_release_preflight.cjs
+      - name: Remove temporary deployment credential
+        if: always()
+        run: rm -f "$RUNNER_TEMP/firebase-deployment.json"

@@ -2,6 +2,9 @@ name: iOS TestFlight Release
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - 'codex/release-*'
 
 permissions:
   contents: read
@@ -11,9 +14,21 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  preflight:
+    uses: ./.github/workflows/store_release_preflight.yml
+    with:
+      platform: ios
+    secrets: inherit
+
+  auth-check:
+    needs: preflight
+    uses: ./.github/workflows/store_auth_smoke.yml
+    secrets: inherit
+
   build-and-upload:
+    needs: [preflight, auth-check]
     name: Build and upload to TestFlight
-    runs-on: macos-15
+    runs-on: macos-26
     timeout-minutes: 60
     env:
       BUNDLE_ID: com.tbt.social
@@ -21,6 +36,17 @@ jobs:
       PROFILE_NAME: TBT App Store 2026
 
     steps:
+      - name: Verify Xcode 26 toolchain
+        shell: bash
+        run: |
+          set -euo pipefail
+          xcodebuild -version
+          SDK_VERSION=$(xcrun --sdk iphoneos --show-sdk-version)
+          case "$SDK_VERSION" in
+            26.*) ;;
+            *) echo "Expected iOS 26 SDK, found $SDK_VERSION"; exit 1 ;;
+          esac
+
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -45,10 +71,12 @@ jobs:
         shell: bash
         env:
           FIREBASE_IOS_GOOGLE_SERVICE_INFO_PLIST_BASE64: ${{ secrets.FIREBASE_IOS_GOOGLE_SERVICE_INFO_PLIST_BASE64 }}
+          ADMOB_IOS_APP_ID: ca-app-pub-3462343788063276~3452529921
         run: |
           set -euo pipefail
           test -n "$FIREBASE_IOS_GOOGLE_SERVICE_INFO_PLIST_BASE64"
           python3 - <<'PY'
+          import os
           import plistlib
           from pathlib import Path
 
@@ -62,7 +90,7 @@ jobs:
           info['NSPhotoLibraryUsageDescription'] = 'Story ve paylaşım için galerinden fotoğraf veya video seçebilmek için erişim gerekir.'
           info['NSPhotoLibraryAddUsageDescription'] = 'Düzenlediğin içerikleri fotoğraf arşivine kaydedebilmek için izin gerekir.'
           info['UIBackgroundModes'] = ['fetch', 'remote-notification']
-          info['GADApplicationIdentifier'] = 'ca-app-pub-3940256099942544~1458002511'
+          info['GADApplicationIdentifier'] = os.environ['ADMOB_IOS_APP_ID']
 
           schemes = info.get('CFBundleURLTypes', [])
           for name, scheme in (
@@ -217,22 +245,26 @@ jobs:
 
       - name: Build signed IPA
         shell: bash
+        env:
+          ADMOB_NATIVE_IOS: ca-app-pub-3462343788063276/9247782088
         run: |
           set -euo pipefail
           FIREBASE_IOS_API_KEY=$(/usr/libexec/PlistBuddy -c 'Print :API_KEY' ios/Runner/GoogleService-Info.plist)
           FIREBASE_IOS_APP_ID=$(/usr/libexec/PlistBuddy -c 'Print :GOOGLE_APP_ID' ios/Runner/GoogleService-Info.plist)
           flutter build ipa \
             --release \
-            --build-number="${GITHUB_RUN_NUMBER}" \
+            --build-name=1.0.11 \
+            --build-number=18 \
             --export-options-plist=ios/ExportOptions.plist \
             --dart-define="FIREBASE_IOS_API_KEY=$FIREBASE_IOS_API_KEY" \
             --dart-define="FIREBASE_IOS_APP_ID=$FIREBASE_IOS_APP_ID" \
-            --dart-define=IOS_BUNDLE_ID=com.tbt.social
+            --dart-define=IOS_BUNDLE_ID=com.tbt.social \
+            --dart-define="ADMOB_NATIVE_IOS=$ADMOB_NATIVE_IOS"
 
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
         with:
-          name: tbt-ios-ipa
+          name: tbt-ios-ipa-1.0.11-build18
           path: build/ios/ipa/*.ipa
           if-no-files-found: error
           retention-days: 14

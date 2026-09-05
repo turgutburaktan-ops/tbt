@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../widgets/retention_hub_quick_entry.dart';
 import '../widgets/retention_now_overlay.dart';
+import '../widgets/daily_goals_prompt.dart';
 import 'account_security_gate_v2.dart';
 import 'app_onboarding_screen.dart';
 import 'home_shell_v3.dart';
@@ -48,8 +49,12 @@ class AppEntryGate extends StatelessWidget {
             } else if (gate.onboardingRequired && !gate.onboardingCompleted) {
               next = const StudentOnboardingScreen();
             } else {
-              next = const RetentionHubQuickEntry(
-                child: RetentionNowOverlay(child: HomeScreen()),
+              next = DailyGoalsPrompt(
+                key: ValueKey(user.uid),
+                userId: user.uid,
+                child: const RetentionHubQuickEntry(
+                  child: RetentionNowOverlay(child: HomeScreen()),
+                ),
               );
             }
 

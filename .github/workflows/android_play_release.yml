@@ -10,7 +10,19 @@ permissions:
   contents: read
 
 jobs:
+  preflight:
+    uses: ./.github/workflows/store_release_preflight.yml
+    with:
+      platform: android
+    secrets: inherit
+
+  auth-check:
+    needs: preflight
+    uses: ./.github/workflows/store_auth_smoke.yml
+    secrets: inherit
+
   appbundle:
+    needs: [preflight, auth-check]
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
@@ -119,8 +131,8 @@ jobs:
           flutter pub get
           flutter analyze --no-fatal-warnings --no-fatal-infos
           flutter build appbundle --release --no-pub \
-            --build-name=1.0.7 \
-            --build-number=13 \
+            --build-name=1.0.11 \
+            --build-number=18 \
             --dart-define=ADMOB_NATIVE_ANDROID="$ADMOB_NATIVE_ANDROID"
       - name: Verify Play bundle
         shell: bash
@@ -131,13 +143,13 @@ jobs:
           jarsigner -verify "$AAB"
           {
             echo 'applicationId=com.tbt.social'
-            echo 'versionName=1.0.7'
-            echo 'versionCode=13'
+            echo 'versionName=1.0.11'
+            echo 'versionCode=18'
             sha256sum "$AAB"
           } > build/app/outputs/bundle/release/release-info.txt
       - uses: actions/upload-artifact@v4
         with:
-          name: tbt-play-release-1.0.7-code13
+          name: tbt-play-release-1.0.11-code18
           path: |
             build/app/outputs/bundle/release/app-release.aab
             build/app/outputs/bundle/release/release-info.txt

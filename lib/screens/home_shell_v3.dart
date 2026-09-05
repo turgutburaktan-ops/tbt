@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../models/nearby_venue.dart';
+import '../l10n/app_strings.dart';
 import '../services/app_notification_service.dart';
 import '../services/chat_service.dart';
 import '../services/nearby_venue_service.dart';
@@ -36,6 +37,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  final _feedHubKey = GlobalKey<_HomeFeedHubState>();
   int _selectedIndex = 0;
   DateTime? _lastBackPressedAt;
   final Set<int> _loadedTabs = <int>{0};
@@ -43,7 +45,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _tabPage(int index) {
     if (!_loadedTabs.contains(index)) return const SizedBox.shrink();
     return switch (index) {
-      0 => const _HomeFeedHub(),
+      0 => _HomeFeedHub(key: _feedHubKey),
       1 => const _PlacesHub(),
       2 => _PlanningHub(onOpenNearby: () => _selectDestination(3)),
       3 => const _NearbyUnifiedHub(),
@@ -70,6 +72,10 @@ class _HomeScreenState extends State<HomeScreen> {
         _loadedTabs.add(0);
         _selectedIndex = 0;
       });
+      return;
+    }
+    if (_feedHubKey.currentState?.returnToHome() == true) {
+      _lastBackPressedAt = null;
       return;
     }
     final now = DateTime.now();
@@ -121,12 +127,13 @@ class _BottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const items = [
-      (Icons.home_outlined, Icons.home_rounded, 'Ana Sayfa'),
-      (Icons.place_outlined, Icons.place_rounded, 'Mekanlar'),
-      (Icons.explore_outlined, Icons.explore_rounded, 'Planla'),
-      (Icons.near_me_outlined, Icons.near_me_rounded, 'Çevrende'),
-      (Icons.person_outline_rounded, Icons.person_rounded, 'Profil'),
+    final strings = AppStrings.of(context);
+    final items = [
+      (Icons.home_outlined, Icons.home_rounded, strings.text('home')),
+      (Icons.place_outlined, Icons.place_rounded, strings.text('places')),
+      (Icons.explore_outlined, Icons.explore_rounded, strings.text('plan')),
+      (Icons.near_me_outlined, Icons.near_me_rounded, strings.text('nearby')),
+      (Icons.person_outline_rounded, Icons.person_rounded, strings.text('profile')),
     ];
     return SafeArea(
       top: false,
@@ -202,12 +209,17 @@ class _BottomNav extends StatelessWidget {
 }
 
 class _HomeFeedHub extends StatefulWidget {
-  const _HomeFeedHub();
+  const _HomeFeedHub({super.key});
   @override
   State<_HomeFeedHub> createState() => _HomeFeedHubState();
 }
 
 class _HomeFeedHubState extends State<_HomeFeedHub> {
+  bool returnToHome() {
+    if (_section == 0) return false;
+    _setSection(0);
+    return true;
+  }
   static const double _chromeCollapseExtent = 132;
 
   int _section = 0;
@@ -354,7 +366,7 @@ class _HomeFeedHubState extends State<_HomeFeedHub> {
             Padding(
               padding: const EdgeInsets.fromLTRB(10, 0, 10, 2),
               child: _SegmentTabs(
-                labels: const ['Ana Sayfa', 'Keşfet'],
+                labels: [AppStrings.of(context).text('home'), AppStrings.of(context).text('discover')],
                 selected: _section,
                 prominent: true,
                 onChanged: _setSection,
