@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -47,8 +48,28 @@ class AuthService {
     required String password,
   }) async {
     try {
+      final identifier = email.trim();
+      var resolvedEmail = identifier;
+      if (!identifier.contains('@') || identifier.startsWith('@')) {
+        final normalized = identifier
+            .replaceFirst(RegExp(r'^@'), '')
+            .toLowerCase()
+            .replaceAll('ı', 'i')
+            .replaceAll('ç', 'c')
+            .replaceAll('ğ', 'g')
+            .replaceAll('ö', 'o')
+            .replaceAll('ş', 's')
+            .replaceAll('ü', 'u');
+        final result = await FirebaseFunctions.instanceFor(region: 'europe-west1')
+            .httpsCallable('resolveUsernameForLogin')
+            .call({'username': normalized});
+        resolvedEmail = ((result.data as Map?)?['email'] ?? '').toString().trim();
+        if (resolvedEmail.isEmpty) {
+          throw Exception('Bu hesap için e-posta ile giriş kullanılamıyor.');
+        }
+      }
       return await _auth.signInWithEmailAndPassword(
-        email: email.trim(),
+        email: resolvedEmail,
         password: password,
       );
     } on FirebaseAuthException catch (e) {

@@ -17,19 +17,16 @@ class PublicAchievementBadges extends StatelessWidget {
     _BadgeDefinition('local_guide', 'Yerel Rehber', Icons.explore_rounded, Color(0xFF55D6BE), 1500),
     _BadgeDefinition('photo_hunter', 'Fotoğraf Avcısı', Icons.photo_camera_rounded, Color(0xFFFF8FA3), 600),
     _BadgeDefinition('explorer', 'Kaşif', Icons.hiking_rounded, Color(0xFF8EA7FF), 200),
-    _BadgeDefinition('phone', 'Telefon Onaylı', Icons.phonelink_lock_rounded, Color(0xFF6DE4A8), 0),
   ];
 
   List<_BadgeDefinition> _earned() {
     final xp = (profile['xp'] as num?)?.toInt() ?? 0;
     final verified = profile['identityVerified'] == true || profile['verified'] == true;
-    final phone = profile['phoneVerified'] == true;
     final selected = (profile['selectedBadgeIds'] as List<dynamic>? ?? const [])
         .map((item) => item.toString())
         .toSet();
     final result = _catalog.where((badge) {
       if (badge.id == 'verified') return verified;
-      if (badge.id == 'phone') return phone;
       return xp >= badge.requiredXp;
     }).toList();
     if (selected.isNotEmpty) {

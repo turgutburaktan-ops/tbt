@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import '../widgets/daily_goals_prompt.dart';
 
 class RewardsHubScreen extends StatelessWidget {
   const RewardsHubScreen({super.key});
@@ -24,6 +25,8 @@ class RewardsHubScreen extends StatelessWidget {
   }
 
   int _count(Map<String, dynamic> data, String period, String action) {
+    if (period == 'dailyActions' &&
+        data['dailyXpKey'] != dailyGoalsDayKey(DateTime.now())) return 0;
     final raw = data[period];
     if (raw is! Map) return 0;
     return (raw[action] as num?)?.toInt() ?? 0;
@@ -58,7 +61,8 @@ class RewardsHubScreen extends StatelessWidget {
 
           final data = snapshot.data?.data() ?? const <String, dynamic>{};
           final xp = (data['xp'] as num?)?.toInt() ?? 0;
-          final dailyXp = (data['dailyXp'] as num?)?.toInt() ?? 0;
+          final dailyXp = data['dailyXpKey'] == dailyGoalsDayKey(DateTime.now())
+              ? (data['dailyXp'] as num?)?.toInt() ?? 0 : 0;
           final weeklyXp = (data['weeklyXp'] as num?)?.toInt() ?? 0;
           final info = _levelInfo(xp);
           final currentFloor = _levels[info.$1 - 1].$1;

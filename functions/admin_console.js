@@ -1,5 +1,5 @@
 const {onCall, HttpsError} = require('firebase-functions/v2/https');
-const {getFirestore, Timestamp} = require('firebase-admin/firestore');
+const {getFirestore, Timestamp, FieldValue} = require('firebase-admin/firestore');
 
 function requireAdmin(request) {
   if (!request.auth?.uid) throw new HttpsError('unauthenticated', 'Giriş gerekli.');
@@ -137,4 +137,61 @@ exports.getAdminInsights = onCall({region: 'europe-west1'}, async (request) => {
     topPosts,
     errors: errorSnap.docs.map((doc) => ({id: doc.id, ...doc.data()})),
   };
+});
+
+exports.sendAdminBroadcast = onCall({region: 'europe-west1'}, async (request) => {
+  const adminUid = requireAdmin(request);
+  const title = String(request.data?.title || '').trim().slice(0, 100);
+  const body = String(request.data?.body || '').trim().slice(0, 600);
+  if (!title || !body) {
+    throw new HttpsError('invalid-argument', 'Başlık ve mesaj zorunludur.');
+  }
+  const db = getFirestore();
+  const users = await db.collection('users').select().get();
+  const writer = db.bulkWriter();
+  const broadcastId = db.collection('admin_broadcasts').doc().id;
+  for (const user of users.docs) {
+    writer.set(user.ref.collection('notifications').doc(`broadcast_${broadcastId}`), {
+      type: 'tbt_broadcast',
+      title,
+      body,
+      sourceId: broadcastId,
+      actorId: adminUid,
+      senderName: 'TBT',
+      read: false,
+      createdAt: FieldValue.serverTimestamp(),
+    });
+  }
+  writer.set(db.collection('admin_broadcasts').doc(broadcastId), {
+    title,
+    body,
+    recipientCount: users.size,
+    sentBy: adminUid,
+    createdAt: FieldValue.serverTimestamp(),
+  });
+  await writer.close();
+  return {ok: true, recipientCount: users.size};
+});
+
+exports.adminDeleteVenue = onCall({region: 'europe-west1'}, async (request) => {
+  const adminUid = requireAdmin(request);
+  const collection = String(request.data?.collection || '').trim();
+  const id = String(request.data?.id || '').trim();
+  if (!['photo_spots', 'business_venues'].includes(collection) || !id) {
+    throw new HttpsError('invalid-argument', 'Geçersiz mekan kaydı.');
+  }
+  const db = getFirestore();
+  const ref = db.collection(collection).doc(id);
+  const snapshot = await ref.get();
+  if (!snapshot.exists) throw new HttpsError('not-found', 'Mekan bulunamadı.');
+  await ref.delete();
+  await db.collection('admin_audit_logs').add({
+    action: 'venue_delete',
+    collection,
+    documentId: id,
+    name: String(snapshot.data()?.name || snapshot.data()?.venueName || ''),
+    adminUid,
+    createdAt: FieldValue.serverTimestamp(),
+  });
+  return {ok: true};
 });

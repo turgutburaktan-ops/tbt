@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 
 import '../theme/app_theme.dart';
 
@@ -58,7 +59,9 @@ class _AdminPublishedSpotsScreenState
     if (approved != true) return;
     setState(() => _workingId = reference.id);
     try {
-      await reference.delete();
+      await FirebaseFunctions.instanceFor(region: 'europe-west1')
+          .httpsCallable('adminDeleteVenue')
+          .call({'collection': 'photo_spots', 'id': reference.id});
     } finally {
       if (mounted) setState(() => _workingId = null);
     }

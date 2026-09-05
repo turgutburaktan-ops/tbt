@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../services/auth_service.dart';
+import '../services/app_locale_service.dart';
 import '../theme/app_theme.dart';
 import 'password_change_screen.dart';
 import 'phone_verification_screen.dart';
@@ -40,6 +41,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
         'settings': {key: value},
       }, SetOptions(merge: true));
     }
+  }
+
+  Future<void> _language() async {
+    final current = AppLocaleService.instance.locale.value.languageCode;
+    final selected = await showDialog<String>(context: context, builder: (context) => SimpleDialog(title: const Text('Uygulama dili'), children: ['tr', 'en', 'de', 'ar'].map((code) => RadioListTile<String>(value: code, groupValue: current, title: Text(AppLocaleService.instance.languageName(code)), onChanged: (value) => Navigator.pop(context, value))).toList()));
+    if (selected != null) await AppLocaleService.instance.setLanguage(selected);
+    if (mounted) setState(() {});
   }
 
   Future<void> _editProfile(Map<String, dynamic> data) async {
@@ -577,7 +585,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                     ],
                     _section('Uygulama'),
-                    _staticTile(Icons.language_rounded, 'Dil', 'Türkçe'),
+                    _tile(Icons.language_rounded, 'Dil', AppLocaleService.instance.languageName(AppLocaleService.instance.locale.value.languageCode), _language),
                     _tile(
                       Icons.storage_outlined,
                       'Veri ve depolama',

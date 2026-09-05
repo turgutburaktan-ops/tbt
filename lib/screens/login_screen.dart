@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../services/auth_service.dart';
+import '../l10n/app_strings.dart';
 import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -17,8 +18,6 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
 
   bool _loading = false;
-  bool _googleLoading = false;
-  bool _appleLoading = false;
   bool _hidePassword = true;
 
   @override
@@ -28,13 +27,13 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  bool get _busy => _loading || _googleLoading || _appleLoading;
+  bool get _busy => _loading;
 
   Future<void> _login() async {
     final email = _emailController.text.trim();
     final password = _passwordController.text;
     if (email.isEmpty || password.isEmpty) {
-      _showMessage('E-posta ve şifre alanlarını doldur.');
+      _showMessage('Kullanıcı adı/e-posta ve şifre alanlarını doldur.');
       return;
     }
     setState(() => _loading = true);
@@ -46,34 +45,6 @@ class _LoginScreenState extends State<LoginScreen> {
       if (mounted) _showMessage(e.toString().replaceFirst('Exception: ', ''));
     } finally {
       if (mounted) setState(() => _loading = false);
-    }
-  }
-
-  Future<void> _googleLogin() async {
-    if (_busy) return;
-    setState(() => _googleLoading = true);
-    try {
-      final credential = await AuthService.instance.signInWithGoogle();
-      if (!mounted || credential == null) return;
-      if (!widget.embedded) Navigator.pop(context);
-    } catch (e) {
-      if (mounted) _showMessage(e.toString().replaceFirst('Exception: ', ''));
-    } finally {
-      if (mounted) setState(() => _googleLoading = false);
-    }
-  }
-
-  Future<void> _appleLogin() async {
-    if (_busy) return;
-    setState(() => _appleLoading = true);
-    try {
-      await AuthService.instance.signInWithApple();
-      if (!mounted) return;
-      if (!widget.embedded) Navigator.pop(context);
-    } catch (e) {
-      if (mounted) _showMessage(e.toString().replaceFirst('Exception: ', ''));
-    } finally {
-      if (mounted) setState(() => _appleLoading = false);
     }
   }
 
@@ -138,6 +109,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     const accent = Color(0xFFB7BCC2);
+    final strings = AppStrings.of(context);
 
     final body = SafeArea(
       child: SingleChildScrollView(
@@ -165,85 +137,26 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
             const SizedBox(height: 18),
-            const Text(
-              'TBT’ye hoş geldin',
+            Text(
+              strings.text('welcome'),
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 27, fontWeight: FontWeight.w900),
             ),
             const SizedBox(height: 7),
-            const Text(
-              'Keşfet, paylaş ve topluluğa katıl.',
+            Text(
+              strings.text('welcomeBody'),
               textAlign: TextAlign.center,
               style: TextStyle(color: Colors.white54),
             ),
             const SizedBox(height: 28),
-            SizedBox(
-              width: double.infinity,
-              height: 52,
-              child: OutlinedButton.icon(
-                onPressed: _busy ? null : _googleLogin,
-                icon: _googleLoading
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Text(
-                        'G',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                label: const Text(
-                  'Google ile devam et',
-                  style: TextStyle(fontWeight: FontWeight.w900),
-                ),
-              ),
-            ),
-            const SizedBox(height: 10),
-            SizedBox(
-              width: double.infinity,
-              height: 52,
-              child: OutlinedButton.icon(
-                onPressed: _busy ? null : _appleLogin,
-                icon: _appleLoading
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.apple_rounded, size: 24),
-                label: const Text(
-                  'Apple ile devam et',
-                  style: TextStyle(fontWeight: FontWeight.w900),
-                ),
-              ),
-            ),
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 20),
-              child: Row(
-                children: [
-                  Expanded(child: Divider(color: Colors.white12)),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 12),
-                    child: Text(
-                      'veya e-posta',
-                      style: TextStyle(color: Colors.white38, fontSize: 12),
-                    ),
-                  ),
-                  Expanded(child: Divider(color: Colors.white12)),
-                ],
-              ),
-            ),
             TextField(
               controller: _emailController,
               keyboardType: TextInputType.emailAddress,
-              autofillHints: const [AutofillHints.email],
+              autofillHints: const [AutofillHints.username, AutofillHints.email],
               style: const TextStyle(color: Colors.white),
               decoration: _decoration(
-                label: 'E-posta',
-                icon: Icons.email_outlined,
+                label: strings.text('identifier'),
+                icon: Icons.alternate_email_rounded,
               ),
             ),
             const SizedBox(height: 14),
@@ -254,7 +167,7 @@ class _LoginScreenState extends State<LoginScreen> {
               onSubmitted: (_) => _busy ? null : _login(),
               style: const TextStyle(color: Colors.white),
               decoration: _decoration(
-                label: 'Şifre',
+                label: strings.text('password'),
                 icon: Icons.lock_outline,
                 suffix: IconButton(
                   tooltip: _hidePassword ? 'Şifreyi göster' : 'Şifreyi gizle',
@@ -292,9 +205,9 @@ class _LoginScreenState extends State<LoginScreen> {
                           color: Colors.black,
                         ),
                       )
-                    : const Text(
-                        'E-posta ile Giriş Yap',
-                        style: TextStyle(
+                    : Text(
+                        strings.text('login'),
+                        style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w900,
                         ),

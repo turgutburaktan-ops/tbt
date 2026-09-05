@@ -154,6 +154,17 @@ class AdminConsoleService {
         .toList();
     return AdminInsightsData(counts: counts, errors: errors);
   }
+
+  Future<void> deleteVenue({
+    required String collection,
+    required String id,
+  }) async {
+    await _ensureFreshAdminAuth();
+    await _functions.httpsCallable('adminDeleteVenue').call({
+      'collection': collection,
+      'id': id,
+    });
+  }
 }
 
 class AdminInsightsData {
