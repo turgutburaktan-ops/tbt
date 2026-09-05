@@ -18,7 +18,7 @@ on:
       - '.github/workflows/build_1000_verified_spots.yml'
   pull_request:
     branches:
-      - feature/verified-travel-batch-11
+      - main
     paths:
       - 'docs/spot-catalog-trigger.txt'
   schedule:
@@ -78,7 +78,7 @@ jobs:
         if: steps.generate.outputs.exit_code == '0'
         continue-on-error: true
         env:
-          MIN_VERIFIED_SPOTS: ${{ inputs.target_total || '1100' }}
+          MIN_VERIFIED_SPOTS: '1100'
           MIN_IMAGE_LONG_EDGE: '1600'
           MIN_IMAGE_SHORT_EDGE: '900'
         run: |
@@ -94,7 +94,7 @@ jobs:
         env:
           GENERATOR_EXIT: ${{ steps.generate.outputs.exit_code || 'not-run' }}
           AUDIT_EXIT: ${{ steps.catalog_audit.outputs.exit_code || 'not-run' }}
-          TARGET_TOTAL: ${{ inputs.target_total || '1100' }}
+          TARGET_TOTAL: ${{ inputs.target_total || '10000' }}
         run: |
           mkdir -p docs
           python3 - <<'PY'
