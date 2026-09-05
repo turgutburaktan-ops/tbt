@@ -30,14 +30,27 @@ jobs:
           target.chmod(0o600)
           PY
           gcloud auth activate-service-account --key-file="$RUNNER_TEMP/firebase-inspection.json"
-      - name: Read runtime identity and signing denial audit records
+      - name: Read runtime identity and signing configuration
         run: |
           set -euo pipefail
           gcloud functions describe signInWithUsername --gen2 --region=europe-west1 --project=en-iyi-cekim-noktasi \
             --format='json(name,state,serviceConfig.serviceAccountEmail)'
-          gcloud logging read 'protoPayload.methodName="google.iam.credentials.v1.IAMCredentials.SignBlob" AND protoPayload.status.code=7' \
-            --project=en-iyi-cekim-noktasi --freshness=1h --limit=10 \
-            --format='json(timestamp,protoPayload.methodName,protoPayload.status.message,protoPayload.authorizationInfo.permission,protoPayload.authorizationInfo.granted)'
+          gcloud services list --enabled --project=en-iyi-cekim-noktasi \
+            --filter='config.name:iamcredentials.googleapis.com' --format='value(config.name)'
+          gcloud iam service-accounts get-iam-policy 330568532415-compute@developer.gserviceaccount.com \
+            --project=en-iyi-cekim-noktasi --format=json > "$RUNNER_TEMP/signing-account-policy.json"
+          gcloud projects get-iam-policy en-iyi-cekim-noktasi \
+            --format=json > "$RUNNER_TEMP/signing-project-policy.json"
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          member = 'serviceAccount:330568532415-compute@developer.gserviceaccount.com'
+          for scope in ['account', 'project']:
+              policy = json.loads((Path(os.environ['RUNNER_TEMP']) / f'signing-{scope}-policy.json').read_text())
+              bindings = [dict(role=b['role'], conditional='condition' in b)
+                          for b in policy.get('bindings', []) if member in b.get('members', [])]
+              print(json.dumps(dict(scope=scope, runtime_identity_roles=bindings)))
+          PY
       - name: Remove temporary credential
         if: always()
         run: rm -f "$RUNNER_TEMP/firebase-inspection.json"
