@@ -1,0 +1,60 @@
+name: Upload Android 1.0.11 to Play
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [codex/play-api-upload-1.0.11-18]
+    paths: [.github/workflows/play_api_upload_1_0_11.yml]
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download verified AAB artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh api /repos/turgutburaktan-ops/tbt/actions/artifacts/9972158207/zip > artifact.zip
+          unzip -q artifact.zip -d artifact
+          test -s artifact/app-release.aab
+      - name: Authenticate Play API
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          set -euo pipefail
+          printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/play-service-account.json"
+          gcloud auth activate-service-account --key-file="$RUNNER_TEMP/play-service-account.json"
+          gcloud auth print-access-token > "$RUNNER_TEMP/play-access-token"
+      - name: Upload bundle to Google Play
+        run: |
+          set -euo pipefail
+          TOKEN=$(cat "$RUNNER_TEMP/play-access-token")
+          EDIT_JSON=$(curl --fail-with-body -sS -X POST \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{}' \
+            "https://androidpublisher.googleapis.com/androidpublisher/v3/applications/com.tbt.social/edits")
+          EDIT_ID=$(python3 -c 'import json,sys; print(json.load(sys.stdin)["id"])' <<< "$EDIT_JSON")
+          UPLOAD_JSON=$(curl --fail-with-body -sS -X POST \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Content-Type: application/octet-stream" \
+            --data-binary @artifact/app-release.aab \
+            "https://androidpublisher.googleapis.com/upload/androidpublisher/v3/applications/com.tbt.social/edits/$EDIT_ID/bundles?uploadType=media")
+          VERSION_CODE=$(python3 -c 'import json,sys; print(json.load(sys.stdin)["versionCode"])' <<< "$UPLOAD_JSON")
+          test "$VERSION_CODE" = "18"
+          curl --fail-with-body -sS -X POST \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{}' \
+            "https://androidpublisher.googleapis.com/androidpublisher/v3/applications/com.tbt.social/edits/$EDIT_ID:commit"
+      - name: Remove temporary credentials
+        if: always()
+        run: |
+          rm -f "$RUNNER_TEMP/play-service-account.json" "$RUNNER_TEMP/play-access-token"
