@@ -30,7 +30,7 @@ jobs:
         run: |
           set -euo pipefail
           printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/play-service-account.json"
-          gcloud auth activate-service-account --key-file="$RUNNER_TEMP/play-service-account.json"
+          gcloud auth activate-service-account --key-file="$RUNNER_TEMP/play-service-account.json"\n          gcloud services enable androidpublisher.googleapis.com --project=en-iyi-cekim-noktasi
           gcloud auth print-access-token > "$RUNNER_TEMP/play-access-token"
       - name: Upload bundle to Google Play
         run: |
