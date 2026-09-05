@@ -1,0 +1,27 @@
+name: Store Live Auth Check
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [codex/check-app-experience-auth]
+    paths:
+      - '.github/workflows/store_auth_smoke.yml'
+      - 'functions/scripts/store_auth_smoke.cjs'
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm install --prefix functions --ignore-scripts --no-audit --no-fund
+      - name: Verify deployed login with an isolated temporary account
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: node functions/scripts/store_auth_smoke.cjs
