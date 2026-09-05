@@ -1,4 +1,4 @@
-name: Build 1000+ Verified Photo Spots
+name: Build 10,000 Verified Photo Spots
 
 on:
   workflow_dispatch:
@@ -6,15 +6,15 @@ on:
       target_total:
         description: 'Minimum verified spot count'
         required: true
-        default: '1100'
+        default: '10000'
   push:
     branches:
-      - feature/verified-travel-batch-11
+      - feature/turkey-10000-verified-spots
     # Generated catalog/data/status commits are intentionally excluded to prevent loops.
     paths:
-      - 'tool/generate_verified_spot_catalog.py'
-      - 'tool/audit_verified_spot_catalog.py'
-      - 'tool/upgrade_verified_spot_images.py'
+      - 'tool/generate_verified_spot_catalog.py'\n      - 'tool/generate_verified_spot_catalog_v2.py'
+      - 'tool/audit_verified_spot_catalog.py'\n      - 'tool/audit_verified_spot_catalog_v2.py'
+      - 'tool/upgrade_verified_spot_images.py'\n      - 'tool/upgrade_verified_spot_images_v2.py'
       - '.github/workflows/build_1000_verified_spots.yml'
   pull_request:
     branches:
@@ -56,18 +56,18 @@ jobs:
         id: generate
         continue-on-error: true
         env:
-          TARGET_TOTAL: ${{ inputs.target_total || '1100' }}
+          TARGET_TOTAL: ${{ inputs.target_total || '10000' }}
         run: |
           mkdir -p build/spot_import
           set +e
-          python3 tool/generate_verified_spot_catalog.py --target-total "$TARGET_TOTAL" 2>&1 | tee build/spot_import/generator.log
+          python3 tool/generate_verified_spot_catalog_v2.py --target-total "$TARGET_TOTAL" --allow-shortfall 2>&1 | tee build/spot_import/generator.log
           code=${PIPESTATUS[0]}
           echo "exit_code=$code" >> "$GITHUB_OUTPUT"
           exit 0
 
       - name: Upgrade hand-verified local photos
         if: steps.generate.outputs.exit_code == '0'
-        run: python3 tool/upgrade_verified_spot_images.py --long-edge 1600 --short-edge 900 --request-width 1920
+        run: python3 tool/upgrade_verified_spot_images_v2.py --long-edge 1600 --short-edge 900 --request-width 1920
 
       - name: Coordinate and evidence audit
         if: steps.generate.outputs.exit_code == '0'
@@ -84,7 +84,7 @@ jobs:
         run: |
           mkdir -p build/spot_quality
           set +e
-          python3 tool/audit_verified_spot_catalog.py 2>&1 | tee build/spot_quality/verified_catalog_audit.log
+          python3 tool/audit_verified_spot_catalog_v2.py 2>&1 | tee build/spot_quality/verified_catalog_audit.log
           code=${PIPESTATUS[0]}
           echo "exit_code=$code" >> "$GITHUB_OUTPUT"
           exit 0
@@ -112,7 +112,7 @@ jobs:
               lines = generator_log.read_text(encoding='utf-8', errors='replace').splitlines()
               log_tail = '\n'.join(lines[-80:])
           status = {
-              'target_total': int(os.environ.get('TARGET_TOTAL', '1100')),
+              'target_total': int(os.environ.get('TARGET_TOTAL', '10000')),
               'generator_exit': os.environ.get('GENERATOR_EXIT', 'not-run'),
               'audit_exit': os.environ.get('AUDIT_EXIT', 'not-run'),
               'generation_report': report,
@@ -174,5 +174,5 @@ jobs:
             echo 'No verified catalog changes.'
             exit 0
           fi
-          git commit -m 'data: refresh 1000+ verified photo spot catalog'
+          git commit -m 'data: grow verified photo spot catalog toward 10000'
           git push origin HEAD:"${TARGET_BRANCH}"
