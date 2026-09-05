@@ -165,6 +165,16 @@ class AdminConsoleService {
       'id': id,
     });
   }
+
+  Future<Map<String, dynamic>> sendBroadcast({
+    required String requestId, required String title, required String body,
+  }) async {
+    await _ensureFreshAdminAuth();
+    final result = await _functions.httpsCallable('sendAdminBroadcast').call({
+      'requestId': requestId, 'title': title, 'body': body,
+    });
+    return Map<String, dynamic>.from(result.data as Map);
+  }
 }
 
 class AdminInsightsData {

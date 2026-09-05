@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../services/auth_service.dart';
 import '../services/app_locale_service.dart';
+import '../l10n/app_strings.dart';
 import '../theme/app_theme.dart';
 import 'password_change_screen.dart';
 import 'phone_verification_screen.dart';
@@ -45,9 +46,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _language() async {
     final current = AppLocaleService.instance.locale.value.languageCode;
-    final selected = await showDialog<String>(context: context, builder: (context) => SimpleDialog(title: const Text('Uygulama dili'), children: ['tr', 'en', 'de', 'ar'].map((code) => RadioListTile<String>(value: code, groupValue: current, title: Text(AppLocaleService.instance.languageName(code)), onChanged: (value) => Navigator.pop(context, value))).toList()));
+    final selected = await showDialog<String>(context: context, builder: (context) => SimpleDialog(title: Text(AppStrings.of(context).text('appLanguage')), children: ['tr', 'en', 'de', 'ar'].map((code) => RadioListTile<String>(value: code, groupValue: current, title: Text(AppLocaleService.instance.languageName(code)), onChanged: (value) => Navigator.pop(context, value))).toList()));
     if (selected != null) await AppLocaleService.instance.setLanguage(selected);
     if (mounted) setState(() {});
+  }
+
+  Future<void> _marketing(bool value) async {
+    try {
+      await _userRef?.set({
+        'notificationPreferences': {'marketing': value},
+        'settings': {'notifyMarketing': value},
+      }, SetOptions(merge: true));
+    } catch (_) {
+      if (mounted) _message(AppStrings.of(context).text('preferenceFailed'));
+    }
   }
 
   Future<void> _editProfile(Map<String, dynamic> data) async {
@@ -441,7 +453,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final user = _user;
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('Ayarlar')),
+      appBar: AppBar(title: Text(AppStrings.of(context).text('settings'))),
       body: user == null
           ? const Center(child: Text('Ayarlar için giriş yapmalısın.'))
           : StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
@@ -501,7 +513,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ),
                       ),
                     ),
-                    _section('Bildirimler'),
+                    _section(AppStrings.of(context).text('notifications')),
+                    _switchTile(
+                      Icons.campaign_outlined,
+                      AppStrings.of(context).text('marketing'),
+                      AppStrings.of(context).text('marketingBody'),
+                      (data['notificationPreferences'] as Map?)?['marketing'] == true && settings['notifyMarketing'] != false,
+                      _marketing,
+                    ),
                     _switchTile(
                       Icons.chat_bubble_outline_rounded,
                       'Mesajlar',
@@ -585,7 +604,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                     ],
                     _section('Uygulama'),
-                    _tile(Icons.language_rounded, 'Dil', AppLocaleService.instance.languageName(AppLocaleService.instance.locale.value.languageCode), _language),
+                    Padding(padding: const EdgeInsets.all(16), child: Text(AppStrings.of(context).text('translationBeta'), style: const TextStyle(color: Colors.white60))),
+                    _tile(Icons.language_rounded, AppStrings.of(context).text('language'), AppLocaleService.instance.languageName(AppLocaleService.instance.locale.value.languageCode), _language),
                     _tile(
                       Icons.storage_outlined,
                       'Veri ve depolama',

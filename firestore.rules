@@ -2,7 +2,7 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     function signedIn() { return request.auth != null; }
-    function isAdmin() { return signedIn() && request.auth.token.admin == true; }
+    function isAdmin() { return signedIn() && request.auth.token.admin == true && request.auth.token.email_verified == true && request.auth.token.email == 'turgutburaktan@gmail.com'; }
     function isSelf(uid) { return signedIn() && request.auth.uid == uid; }
     function safeUserCreate(uid) {
       return isSelf(uid) && request.resource.data.uid == uid &&
@@ -230,9 +230,11 @@ service cloud.firestore {
       match /blocked/{blockedId} { allow read: if signedIn() && (uid == request.auth.uid || blockedId == request.auth.uid); allow create, update, delete: if isSelf(uid); }
       match /close_friends/{friendId} { allow read, create, update, delete: if isSelf(uid); }
       match /notifications/{notificationId} {
-        allow read, update, delete: if isSelf(uid);
+        allow read, delete: if isSelf(uid);
+        allow update: if isSelf(uid) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read', 'readAt']);
         allow create: if signedIn() && request.resource.data.keys().hasAll(['type','title','body','actorId']) &&
           request.resource.data.type is string && request.resource.data.title is string && request.resource.data.body is string &&
+          request.resource.data.type != 'tbt_broadcast' && !request.resource.data.keys().hasAny(['senderName', 'pushAllowed']) &&
           request.resource.data.actorId == request.auth.uid && request.resource.data.title.size() > 0 &&
           request.resource.data.title.size() <= 160 && request.resource.data.body.size() > 0 && request.resource.data.body.size() <= 600;
       }
@@ -250,6 +252,7 @@ service cloud.firestore {
       }
     }
 
+    match /admin_broadcasts/{broadcastId} { allow read: if isAdmin(); allow write: if false; }
     match /usernames/{usernameId} {
       allow read: if true;
       allow create: if signedIn() && request.resource.data.uid == request.auth.uid && request.resource.data.normalized == usernameId && request.resource.data.username is string;

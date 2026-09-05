@@ -3,6 +3,7 @@ const {onSchedule} = require('firebase-functions/v2/scheduler');
 const {initializeApp} = require('firebase-admin/app');
 const {getFirestore, FieldValue, Timestamp} = require('firebase-admin/firestore');
 const {getMessaging} = require('firebase-admin/messaging');
+const {marketingPushAllowed} = require('./broadcast_policy');
 
 initializeApp();
 
@@ -30,6 +31,17 @@ exports.pushOnNotificationCreated = onDocumentCreated(
 
     const userId = event.params.userId;
     const db = getFirestore();
+    if (data.type === 'tbt_broadcast') {
+      // Re-check consent at delivery time, not only when the queue was made.
+      if (data.pushAllowed !== true || !/^[a-zA-Z0-9_-]{16,80}$/.test(data.sourceId || '')) return;
+      const [user, job] = await Promise.all([
+        db.collection('users').doc(userId).get(),
+        db.collection('admin_broadcasts').doc(data.sourceId).get(),
+      ]);
+      if (!marketingPushAllowed(user.data()) || !job.exists ||
+          job.data().sentBy !== data.actorId || job.data().title !== data.title ||
+          job.data().body !== data.body) return;
+    }
     const tokensSnap = await db.collection('users').doc(userId).collection('push_tokens').get();
     const tokens = tokensSnap.docs
       .map((doc) => (doc.data().token || '').trim())

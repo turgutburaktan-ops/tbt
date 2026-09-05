@@ -8,14 +8,20 @@ class AppLocaleService {
   final ValueNotifier<Locale> locale = ValueNotifier(const Locale('tr'));
 
   Future<void> initialize() async {
-    final prefs = await SharedPreferences.getInstance();
-    locale.value = Locale(prefs.getString('app_language') ?? 'tr');
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final code = prefs.getString('app_language') ?? 'tr';
+      locale.value = Locale(['tr', 'en', 'de', 'ar'].contains(code) ? code : 'tr');
+    } catch (_) { /* Keep the app usable when local preferences are unavailable. */ }
   }
 
   Future<void> setLanguage(String code) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('app_language', code);
+    if (!['tr', 'en', 'de', 'ar'].contains(code)) return;
     locale.value = Locale(code);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('app_language', code);
+    } catch (_) { /* The selection still applies to this session. */ }
   }
 
   String languageName(String code) => switch (code) {

@@ -49,34 +49,27 @@ class AuthService {
   }) async {
     try {
       final identifier = email.trim();
-      var resolvedEmail = identifier;
       if (!identifier.contains('@') || identifier.startsWith('@')) {
-        final normalized = identifier
-            .replaceFirst(RegExp(r'^@'), '')
-            .toLowerCase()
-            .replaceAll('ı', 'i')
-            .replaceAll('ç', 'c')
-            .replaceAll('ğ', 'g')
-            .replaceAll('ö', 'o')
-            .replaceAll('ş', 's')
-            .replaceAll('ü', 'u');
         final result = await FirebaseFunctions.instanceFor(region: 'europe-west1')
-            .httpsCallable('resolveUsernameForLogin')
-            .call({'username': normalized});
-        resolvedEmail = ((result.data as Map?)?['email'] ?? '').toString().trim();
-        if (resolvedEmail.isEmpty) {
-          throw Exception('Bu hesap için e-posta ile giriş kullanılamıyor.');
+            .httpsCallable('signInWithUsername')
+            .call({'username': identifier, 'password': password});
+        final token = ((result.data as Map?)?['customToken'] ?? '').toString();
+        if (token.isEmpty) {
+          throw const FormatException('Missing authenticated session');
         }
+        return await _auth.signInWithCustomToken(token);
       }
       return await _auth.signInWithEmailAndPassword(
-        email: resolvedEmail,
+        email: identifier,
         password: password,
       );
+    } on FirebaseFunctionsException catch (e) {
+      throw Exception(e.message ?? 'Giriş tamamlanamadı.');
     } on FirebaseAuthException catch (e) {
       _logAuthFailure('email-login', e);
       throw Exception(_messageFromCode(e.code));
     } catch (e) {
-      debugPrint('Auth email login failure: $e');
+      debugPrint('Auth login failure: ${e.runtimeType}');
       throw Exception('Giriş yapılırken bir hata oluştu.');
     }
   }
