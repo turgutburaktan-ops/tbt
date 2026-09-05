@@ -38,6 +38,13 @@ async function main() {
     const login = await post(`${BASE}signInWithUsername`, {data: {username, password}});
     if (!login.ok || typeof login.body?.result?.customToken !== 'string') {
       console.error(`::error::Username login rejected the isolated test (HTTP ${login.status}, ${login.body?.error?.status || 'unexpected response'})`);
+      // Classify only existing public messages. Never print response bodies,
+      // account data or credentials, and never read private runtime logs.
+      const publicFailures = new Map([
+        ['Kullanıcı adıyla giriş şu anda kullanılamıyor. E-posta ile giriş yap.', 'custom-token signing'],
+        ['Giriş servisine ulaşılamadı. Tekrar dene.', 'password-service timeout'],
+      ]);
+      console.error(`::error::Public login failure stage: ${publicFailures.get(login.body?.error?.message) || 'unclassified'}`);
       throw new Error();
     }
     if (Object.keys(login.body.result).some(key => key !== 'customToken')) throw new Error();

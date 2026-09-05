@@ -23,12 +23,17 @@ function harness(options = {}) {
       if (options.revoked) throw new Error('revoked');
       return {uid: options.mismatch ? 'wrong' : 'user1'};
     },
-    createCustomToken: async uid => { assert.equal(uid, 'user1'); minted++; return 'signed-custom-token'; },
+    createCustomToken: async uid => {
+      assert.equal(uid, 'user1'); minted++;
+      if (options.signingFailure) throw new Error('private signing failure detail');
+      return 'signed-custom-token';
+    },
   };
   const ctx = {
     exports: {}, AbortSignal, Date,
     fetch: async (url, init) => {
       fetches++;
+      if (options.timeout) { const error = new Error('private transport detail'); error.name = 'TimeoutError'; throw error; }
       assert.ok(url.startsWith('https://identitytoolkit.googleapis.com/'));
       assert.equal(JSON.parse(init.body).email, 'private@example.com');
       return {ok: !options.badPassword, json: async () => options.mfa ? {mfaPendingCredential: 'pending'} :
@@ -70,6 +75,15 @@ test('MFA challenge cannot be bypassed with a custom token', async () => {
   const h = harness({mfa: true});
   await assert.rejects(() => h.signInWithUsername(request), e => e.code === 'failed-precondition');
   assert.equal(h.counts().minted, 0);
+});
+test('signing failure is distinguishable from timeout without exposing internal errors', async () => {
+  const signing = harness({signingFailure: true});
+  await assert.rejects(() => signing.signInWithUsername(request), e => e.code === 'unavailable' &&
+    e.message === 'Kullanıcı adıyla giriş şu anda kullanılamıyor. E-posta ile giriş yap.');
+  const timeout = harness({timeout: true});
+  await assert.rejects(() => timeout.signInWithUsername(request), e => e.code === 'unavailable' &&
+    e.message === 'Giriş servisine ulaşılamadı. Tekrar dene.');
+  assert.equal(timeout.counts().minted, 0);
 });
 test('rate limit rejects the twenty-first attempt before password verification', async () => {
   const h = harness();
