@@ -49,10 +49,24 @@ async function main() {
     }
     if (Object.keys(login.body.result).some(key => key !== 'customToken')) throw new Error();
 
-    stage = 'exchange custom token and verify identity';
+    console.log('Live username/password verification and custom-token signing passed.');
+    stage = 'exchange custom token';
     const exchange = await post(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithCustomToken?key=${API_KEY}`,
       {token: login.body.result.customToken, returnSecureToken: true});
-    if (!exchange.ok || exchange.body?.localId !== username || !exchange.body.idToken) throw new Error();
+    if (!exchange.ok) {
+      const allowedCodes = new Set(['INVALID_CUSTOM_TOKEN', 'CREDENTIAL_MISMATCH',
+        'CONFIGURATION_NOT_FOUND', 'OPERATION_NOT_ALLOWED', 'TOO_MANY_ATTEMPTS_TRY_LATER',
+        'API_KEY_INVALID', 'USER_DISABLED']);
+      const code = String(exchange.body?.error?.message || '').split(' : ')[0];
+      console.error(`::error::Custom-token exchange HTTP ${exchange.status}: ${allowedCodes.has(code) ? code : 'unclassified response'}`);
+      throw new Error();
+    }
+    stage = 'validate custom-token exchange response';
+    // Unlike signInWithPassword, signInWithCustomToken does not promise localId.
+    // Verify identity from the signed ID token below, including revocation.
+    // https://firebase.google.com/docs/reference/rest/auth#section-verify-custom-token
+    if (typeof exchange.body?.idToken !== 'string' || !exchange.body.idToken) throw new Error();
+    stage = 'verify exchanged identity and revocation';
     const decoded = await auth.verifyIdToken(exchange.body.idToken, true);
     if (decoded.uid !== username || decoded.admin === true) throw new Error();
 

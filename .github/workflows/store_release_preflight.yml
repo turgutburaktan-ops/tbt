@@ -12,6 +12,8 @@ on:
     paths:
       - '.github/workflows/store_release_preflight.yml'
       - 'functions/scripts/store_release_preflight.cjs'
+      - 'functions/scripts/store_auth_smoke.cjs'
+      - 'functions/auth_helpers.js'
 
 permissions:
   contents: read
