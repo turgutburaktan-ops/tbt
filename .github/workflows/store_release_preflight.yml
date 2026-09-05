@@ -38,8 +38,9 @@ jobs:
           MAPS_API_KEY: ${{ secrets.MAPS_API_KEY }}
           ADMOB_ANDROID_APP_ID: ${{ secrets.ADMOB_ANDROID_APP_ID }}
           ADMOB_NATIVE_ANDROID: ${{ secrets.ADMOB_NATIVE_ANDROID }}
-          ADMOB_IOS_APP_ID: ${{ secrets.ADMOB_IOS_APP_ID }}
-          ADMOB_NATIVE_IOS: ${{ secrets.ADMOB_NATIVE_IOS }}
+          # Public identifiers from the owner's TBT iOS AdMob registration.
+          ADMOB_IOS_APP_ID: ca-app-pub-3462343788063276~3452529921
+          ADMOB_NATIVE_IOS: ca-app-pub-3462343788063276/9247782088
           FIREBASE_IOS_GOOGLE_SERVICE_INFO_PLIST_BASE64: ${{ secrets.FIREBASE_IOS_GOOGLE_SERVICE_INFO_PLIST_BASE64 }}
           IOS_DISTRIBUTION_P12_BASE64: ${{ secrets.IOS_DISTRIBUTION_P12_BASE64 }}
           IOS_DISTRIBUTION_P12_PASSWORD: ${{ secrets.IOS_DISTRIBUTION_P12_PASSWORD }}

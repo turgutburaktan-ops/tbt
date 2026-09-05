@@ -2,6 +2,7 @@ name: Store Live Auth Check
 
 on:
   workflow_dispatch:
+  workflow_call:
   push:
     branches: [codex/check-app-experience-auth]
     paths:

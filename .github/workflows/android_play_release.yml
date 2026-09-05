@@ -16,8 +16,13 @@ jobs:
       platform: android
     secrets: inherit
 
-  appbundle:
+  auth-check:
     needs: preflight
+    uses: ./.github/workflows/store_auth_smoke.yml
+    secrets: inherit
+
+  appbundle:
+    needs: [preflight, auth-check]
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
