@@ -56,7 +56,11 @@ exports.signInWithUsername = onCall({region: 'europe-west1', timeoutSeconds: 30}
     const verified = await adminAuth.verifyIdToken(result.idToken, true);
     if (verified.uid !== uid || account.multiFactor?.enrolledFactors?.length) throw invalidLogin();
     // Never return email, password or upstream token, or log request payloads.
-    return {customToken: await adminAuth.createCustomToken(uid)};
+    try {
+      return {customToken: await adminAuth.createCustomToken(uid)};
+    } catch (_) {
+      throw new HttpsError('unavailable', 'Kullanıcı adıyla giriş şu anda kullanılamıyor. E-posta ile giriş yap.');
+    }
   } catch (error) {
     if (error instanceof HttpsError) throw error;
     if (['TimeoutError', 'AbortError'].includes(error?.name)) {

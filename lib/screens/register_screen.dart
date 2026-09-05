@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../services/auth_service.dart';
 import '../services/username_service.dart';
+import '../services/full_name_validator.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -95,12 +96,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
       _showMessage('Tüm alanları doldur.');
       return;
     }
-    if (fullName.length < 5 || fullName.length > 80 || nameParts.length < 2) {
+    if (!validFullName(fullName)) {
       _showMessage('Ad ve soyadını eksiksiz gir.');
-      return;
-    }
-    if (!RegExp(r"^[A-Za-zÇĞİÖŞÜçğıöşüÀ-ÿ' -]+$").hasMatch(fullName)) {
-      _showMessage('Ad soyad yalnızca harf, boşluk, tire ve kesme işareti içerebilir.');
       return;
     }
     final usernameError = UsernameService.instance.validate(username);
