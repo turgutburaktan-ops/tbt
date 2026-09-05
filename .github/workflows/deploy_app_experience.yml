@@ -52,9 +52,11 @@ jobs:
       - name: Publish new login and admin services
         run: >-
           firebase deploy
-          --only functions:signInWithUsername,functions:resolveUsernameForLogin,functions:getAdminBusinessClaims,functions:getAdminInsights,functions:sendAdminBroadcast,functions:adminDeleteVenue,functions:deliverAdminBroadcast
+          --only functions:signInWithUsername,functions:resolveUsernameForLogin,functions:getAdminBusinessClaims,functions:getAdminInsights,functions:sendAdminBroadcast,functions:adminDeleteVenue
           --project en-iyi-cekim-noktasi
           --non-interactive
+      - name: Publish idempotent broadcast worker with approved retry policy
+        run: firebase deploy --only functions:deliverAdminBroadcast --project en-iyi-cekim-noktasi --non-interactive --force
       - name: Verify Android release prerequisites
         env:
           RELEASE_PLATFORM: android
