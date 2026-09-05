@@ -1,0 +1,43 @@
+name: Inspect Username Signing
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [codex/check-username-signing]
+    paths: ['.github/workflows/inspect_username_signing.yml']
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Authenticate existing deployment connection
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          credential = json.loads(os.environ['FIREBASE_SERVICE_ACCOUNT'])
+          if credential.get('project_id') != 'en-iyi-cekim-noktasi':
+              raise SystemExit('Unexpected Firebase project')
+          target = Path(os.environ['RUNNER_TEMP']) / 'firebase-inspection.json'
+          target.write_text(json.dumps(credential))
+          target.chmod(0o600)
+          PY
+          gcloud auth activate-service-account --key-file="$RUNNER_TEMP/firebase-inspection.json"
+      - name: Read runtime identity and signing denial audit records
+        run: |
+          set -euo pipefail
+          gcloud functions describe signInWithUsername --gen2 --region=europe-west1 --project=en-iyi-cekim-noktasi \
+            --format='json(name,state,serviceConfig.serviceAccountEmail)'
+          gcloud logging read 'protoPayload.methodName="google.iam.credentials.v1.IAMCredentials.SignBlob" AND protoPayload.status.code=7' \
+            --project=en-iyi-cekim-noktasi --freshness=1h --limit=10 \
+            --format='json(timestamp,protoPayload.methodName,protoPayload.status.message,protoPayload.authorizationInfo.permission,protoPayload.authorizationInfo.granted)'
+      - name: Remove temporary credential
+        if: always()
+        run: rm -f "$RUNNER_TEMP/firebase-inspection.json"
