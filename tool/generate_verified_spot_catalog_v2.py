@@ -65,6 +65,11 @@ ELAZIG_DISTRICT_QIDS = {
 # to the newer dedicated district item. Both are explicit Wikidata
 # administrative entities; the dedicated district QID remains the evidence
 # written to the generated catalog.
+# A bounding box is used only for discovery. Publication still requires the
+# coordinate to fall inside exactly one official HDX/OCHA ADM2 polygon and
+# that district name to map to exactly one Wikidata administrative identity.
+ELAZIG_DISCOVERY_BOX = ((37.75, 38.00), (39.55, 40.45))
+
 ELAZIG_DISTRICT_ADMIN_QIDS = {
     'Merkez': ('Q2963425', 'Q174060'),
     'Ağın': ('Q49101030', 'Q794737'),
@@ -165,6 +170,34 @@ def elazig_district_query(
   VALUES ?districtAdmin {{ {admins} }}
   ?item wdt:P17 wd:Q43 ; wdt:P625 ?coord ; wdt:P18 ?image ;
         wdt:P131+ ?districtAdmin .
+  {class_clause}
+  SERVICE wikibase:label {{ bd:serviceParam wikibase:language "tr,en". }}
+}} ORDER BY ?item LIMIT {limit} OFFSET {offset}'''
+
+
+def elazig_region_query(
+    *,
+    roots: tuple[str, ...] = (),
+    heritage: bool = False,
+    limit: int,
+    offset: int,
+) -> str:
+    """Discover Elazığ-area items even when their P131 claim is incomplete."""
+    (south, west), (north, east) = ELAZIG_DISCOVERY_BOX
+    if heritage:
+        class_clause = '?item wdt:P1435 ?heritage .'
+    else:
+        root_values = ' '.join(f'wd:{qid}' for qid in roots)
+        class_clause = f'''?item wdt:P31 ?class .
+  VALUES ?root {{ {root_values} }}
+  ?class wdt:P279* ?root .'''
+    return f'''SELECT DISTINCT ?item ?itemLabel ?coord ?image WHERE {{
+  SERVICE wikibase:box {{
+    ?item wdt:P625 ?coord .
+    bd:serviceParam wikibase:cornerWest "Point({west} {south})"^^geo:wktLiteral ;
+                    wikibase:cornerEast "Point({east} {north})"^^geo:wktLiteral .
+  }}
+  ?item wdt:P17 wd:Q43 ; wdt:P18 ?image .
   {class_clause}
   SERVICE wikibase:label {{ bd:serviceParam wikibase:language "tr,en". }}
 }} ORDER BY ?item LIMIT {limit} OFFSET {offset}'''
@@ -310,6 +343,44 @@ def collect_elazig_district_candidates(
                 break
             base.time.sleep(.35)
     return len(matched_qids), added
+
+
+def collect_elazig_region_candidates(
+    page_size: int,
+    max_rows: int,
+    out: dict[str, dict],
+) -> int:
+    """Add coordinate-discovered candidates; official polygons decide district."""
+    before = len(out)
+    root_qids = tuple(base.ROOT_CLASSES)
+    query_specs = [('heritage', ())]
+    query_specs.extend(
+        ('classes', root_qids[index:index + 8])
+        for index in range(0, len(root_qids), 8)
+    )
+    for query_kind, roots in query_specs:
+        try:
+            candidate_collect_query(
+                lambda limit, offset, kind=query_kind, group=roots:
+                    elazig_region_query(
+                        roots=group,
+                        heritage=kind == 'heritage',
+                        limit=limit,
+                        offset=offset,
+                    ),
+                'Elazığ boundary discovery',
+                page_size,
+                max_rows,
+                out,
+            )
+        except RuntimeError as error:
+            print(
+                f'warning: Elazığ boundary discovery {query_kind} skipped '
+                f'after retries: {error}'
+            )
+    added = len(out) - before
+    print(f'Elazığ boundary-discovery additions: {added}')
+    return added
 
 
 def ranked_claim_qids(entity: dict, prop: str) -> list[str]:
@@ -625,6 +696,7 @@ def district_resolved_candidates(page_size: int, per_source_limit: int) -> dict[
         'Elazığ district-priority matches/additions: '
         f'{district_matches}/{district_additions}'
     )
+    collect_elazig_region_candidates(page_size, per_source_limit, candidates)
     entities = fetch_admin_entities(candidates)
     try:
         boundaries = load_hdx_district_boundaries()
