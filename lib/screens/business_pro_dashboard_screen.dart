@@ -135,6 +135,15 @@ class _BusinessProDashboardScreenState
       (_dashboard['metrics'] as Map?) ?? const {},
     );
     final followers = (_dashboard['followers'] as num?)?.toInt() ?? 0;
+    final interest =
+        _n(metrics['profile_view']) +
+        _n(metrics['menu_view']) +
+        _n(metrics['campaign_view']) +
+        _n(metrics['event_view']);
+    final customerActions =
+        _n(metrics['directions']) +
+        _n(metrics['phone']) +
+        _n(metrics['reservation_open']);
     final reservations = ((_dashboard['reservations'] as List?) ?? const [])
         .map((e) => Map<String, dynamic>.from(e as Map))
         .toList();
@@ -259,6 +268,12 @@ class _BusinessProDashboardScreenState
                     ),
                   ] else ...[
                     const SizedBox(height: 18),
+                    _OutcomeSummaryCard(
+                      interest: interest,
+                      customerActions: customerActions,
+                      followers: followers,
+                    ),
+                    const SizedBox(height: 20),
                     const Text(
                       'Performans',
                       style: TextStyle(
@@ -322,9 +337,26 @@ class _BusinessProDashboardScreenState
                                 child: FilledButton.icon(
                                   onPressed: trialUsed ? null : _startPremiumTrial,
                                   icon: const Icon(Icons.bolt_rounded),
-                                  label: Text(trialUsed ? '3 aylık erişim kullanıldı' : '3 ay ücretsiz Premium'),
+                                  label: Text(
+                                    trialUsed
+                                        ? '3 aylık erişim kullanıldı'
+                                        : '3 Ay Ücretsiz Başlat',
+                                  ),
                                 ),
                               ),
+                              if (!trialUsed) ...[
+                                const SizedBox(height: 8),
+                                const Center(
+                                  child: Text(
+                                    'Ödeme yöntemi gerekmez.',
+                                    style: TextStyle(
+                                      color: Colors.white54,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ],
                           ),
                         ),
@@ -407,6 +439,107 @@ class _BusinessProDashboardScreenState
     'rejected' => 'Reddedildi',
     _ => 'Yanıt bekliyor',
   };
+}
+
+class _OutcomeSummaryCard extends StatelessWidget {
+  final int interest;
+  final int customerActions;
+  final int followers;
+
+  const _OutcomeSummaryCard({
+    required this.interest,
+    required this.customerActions,
+    required this.followers,
+  });
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.all(17),
+    decoration: BoxDecoration(
+      gradient: const LinearGradient(
+        colors: [Color(0xFF13252B), Color(0xFF171B2B)],
+      ),
+      borderRadius: BorderRadius.circular(20),
+      border: Border.all(color: AppColors.cyan.withValues(alpha: .42)),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Row(
+          children: [
+            Icon(Icons.trending_up_rounded, color: AppColors.cyan),
+            SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'TBT’nin işletmene etkisi',
+                style: TextStyle(fontSize: 17, fontWeight: FontWeight.w900),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 5),
+        const Text(
+          'Panelde kayıtlı toplam sonuçlar',
+          style: TextStyle(color: Colors.white54, fontSize: 12),
+        ),
+        const SizedBox(height: 13),
+        Row(
+          children: [
+            Expanded(
+              child: _OutcomeValue(label: 'İlgi', value: interest),
+            ),
+            const SizedBox(width: 9),
+            Expanded(
+              child: _OutcomeValue(
+                label: 'Müşteri aksiyonu',
+                value: customerActions,
+              ),
+            ),
+            const SizedBox(width: 9),
+            Expanded(
+              child: _OutcomeValue(label: 'Takipçi', value: followers),
+            ),
+          ],
+        ),
+        const SizedBox(height: 11),
+        const Text(
+          'Yol tarifi, telefon ve rezervasyon açılışları müşteri aksiyonu olarak sayılır.',
+          style: TextStyle(color: Colors.white54, fontSize: 11, height: 1.35),
+        ),
+      ],
+    ),
+  );
+}
+
+class _OutcomeValue extends StatelessWidget {
+  final String label;
+  final int value;
+
+  const _OutcomeValue({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 11),
+    decoration: BoxDecoration(
+      color: Colors.white.withValues(alpha: .05),
+      borderRadius: BorderRadius.circular(13),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '$value',
+          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
+        ),
+        const SizedBox(height: 3),
+        Text(
+          label,
+          maxLines: 2,
+          style: const TextStyle(color: Colors.white60, fontSize: 10),
+        ),
+      ],
+    ),
+  );
 }
 
 class _Metric extends StatelessWidget {
