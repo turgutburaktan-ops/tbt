@@ -134,4 +134,24 @@ if __name__ == '__main__':
 
     base.MIN_LONG = LEGACY_LONG
     base.MIN_SHORT = LEGACY_SHORT
-    raise SystemExit(base.main())
+    result = base.main()
+
+    # Keep legacy cards available without ever counting sub-1600x900 images
+    # toward the nationwide strict target.
+    payload = json.loads(base.OUT.read_text(encoding='utf-8'))
+    summary = payload.setdefault('summary', {})
+    summary.update({
+        'strict_verified_places': len(base.places()) - len(warnings),
+        'legacy_below_strict': len(warnings),
+        'strict_min_long_edge': STRICT_LONG,
+        'strict_min_short_edge': STRICT_SHORT,
+    })
+    base.OUT.write_text(
+        json.dumps(payload, ensure_ascii=False, indent=2) + '\n',
+        encoding='utf-8',
+    )
+    print(json.dumps({
+        'strict_verified_places': summary['strict_verified_places'],
+        'legacy_below_strict': summary['legacy_below_strict'],
+    }, ensure_ascii=False, indent=2))
+    raise SystemExit(result)
