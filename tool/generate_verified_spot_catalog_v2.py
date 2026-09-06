@@ -137,9 +137,9 @@ EXPANSION_ROOT_CLASSES = {
 
 
 def candidate_query_body(class_clause: str, limit: int, offset: int) -> str:
-    """Keep WDQS discovery cheap; resolve P131 ancestry through the API later."""
+    """Discover direct P625/P18 rows; official ADM2 gates prove Turkey later.\n\n    P17 is intentionally not a discovery prerequisite because many otherwise\n    valid Wikidata place items omit it. Publication still requires one Turkish\n    district/province identity or one unambiguous HDX/OCHA ADM2 polygon plus\n    its unique Wikidata administrative identity.\n    """
     return f'''SELECT DISTINCT ?item ?itemLabel ?coord ?image WHERE {{
-  ?item wdt:P17 wd:Q43 ; wdt:P625 ?coord ; wdt:P18 ?image {class_clause} .
+  ?item wdt:P625 ?coord ; wdt:P18 ?image {class_clause} .
   SERVICE wikibase:label {{ bd:serviceParam wikibase:language "tr,en". }}
 }} ORDER BY ?item LIMIT {limit} OFFSET {offset}'''
 
@@ -204,7 +204,7 @@ def elazig_region_query(
     bd:serviceParam wikibase:cornerWest "Point({west} {south})"^^geo:wktLiteral ;
                     wikibase:cornerEast "Point({east} {north})"^^geo:wktLiteral .
   }}
-  ?item wdt:P17 wd:Q43 ; wdt:P18 ?image .
+  ?item wdt:P18 ?image .
   {class_clause}
   SERVICE wikibase:label {{ bd:serviceParam wikibase:language "tr,en". }}
 }} ORDER BY ?item LIMIT {limit} OFFSET {offset}'''
