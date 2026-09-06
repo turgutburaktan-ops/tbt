@@ -167,7 +167,6 @@ jobs:
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git pull --rebase origin "${TARGET_BRANCH}"
           git add \
             lib/data/verified_travel_places_generated.dart \
             lib/data/spot_coordinate_verification_registry_generated.dart \
@@ -179,4 +178,5 @@ jobs:
             exit 0
           fi
           git commit -m 'data: grow verified photo spot catalog toward 10000'
+          git pull --rebase origin "${TARGET_BRANCH}"
           git push origin HEAD:"${TARGET_BRANCH}"
