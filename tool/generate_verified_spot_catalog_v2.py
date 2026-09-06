@@ -24,6 +24,20 @@ PRIORITY_PROVINCES = (
     'bingol',
 )
 
+ELAZIG_DISTRICTS = (
+    'Merkez',
+    'Ağın',
+    'Alacakaya',
+    'Arıcak',
+    'Baskil',
+    'Karakoçan',
+    'Keban',
+    'Kovancılar',
+    'Maden',
+    'Palu',
+    'Sivrice',
+)
+
 # Conservative second pass: only notable, mappable place/structure classes.
 # Each candidate still has to pass the same direct P625 + P18, Commons licence,
 # source-resolution, province ancestry and 18-metre duplicate gates.
@@ -237,6 +251,8 @@ def district_resolved_candidates(page_size: int, per_source_limit: int) -> dict[
         province_qid, district_qid = next(iter(pairs))
         city = entity_label(entities.get(province_qid, {}), province_qid)
         district = entity_label(entities.get(district_qid, {}), district_qid)
+        if province_key(city) == 'elazig':
+            district = canonical_elazig_district(district)
         if not city or not district:
             item['ambiguous_admin'] = True
             ambiguous += 1
@@ -258,6 +274,22 @@ def province_key(value: str) -> str:
         if key.endswith(suffix):
             key = key[:-len(suffix)]
     return key
+
+
+def canonical_elazig_district(value: str) -> str:
+    key = base.norm(value)
+    for suffix in ('-district', '-ilcesi', '-ilce'):
+        if key.endswith(suffix):
+            key = key[:-len(suffix)]
+    for prefix in ('elazig-', 'elazig-merkez-'):
+        if key.startswith(prefix):
+            key = key[len(prefix):]
+    if key in {'', 'elazig', 'merkez', 'central'}:
+        return 'Merkez'
+    for district in ELAZIG_DISTRICTS:
+        if key == base.norm(district):
+            return district
+    return ''
 
 
 def priority_rank(city: str) -> int:
@@ -338,6 +370,14 @@ def priority_select(
     stats['accepted_by_province'] = {
         city: sum(1 for item in accepted if item['city'] == city)
         for city in sorted({item['city'] for item in accepted})
+    }
+    stats['elazig_district_coverage'] = {
+        district: sum(
+            1 for item in accepted
+            if province_key(item['city']) == 'elazig'
+            and item['district'] == district
+        )
+        for district in ELAZIG_DISTRICTS
     }
     stats['accepted_by_priority_district'] = {
         f"{item['city']} / {item['district']}": sum(
