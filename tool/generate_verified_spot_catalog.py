@@ -273,13 +273,28 @@ def write_files(items: list[dict]) -> None:
     quality = {}
     for item in items:
         sid = spot_id(item); bt, angle, lens, diff = defaults(item['category']); meta = item['commons']
-        tags = ['Gezilecek Yer','Doğrulanmış','KaynakDoğrulanmış',item['city'],item['category'],'Wikidata']
-        desc = f"{item['name']}, doğrudan Wikidata konumu ve temsil fotoğrafı ile doğrulanmış Türkiye gezi ve fotoğraf noktasıdır."
+        district = item.get('district', '').strip()
+        tags = ['Gezilecek Yer','Doğrulanmış','KaynakDoğrulanmış',item['city']]
+        if district:
+            tags.append(district)
+        tags += [item['category'],'Wikidata']
+        admin_text = (
+            f"{district} ilçesi, {item['city']}"
+            if district
+            else item['city']
+        )
+        desc = f"{item['name']}, {admin_text} konumu ve temsil fotoğrafı doğrudan Wikidata ile doğrulanmış Türkiye gezi ve fotoğraf noktasıdır."
         p += ['  PhotoSpot(', f"    id: '{ds(sid)}',", f"    name: '{ds(item['name'])}',", f"    city: '{ds(item['city'])}',", f"    latitude: {item['lat']:.6f},", f"    longitude: {item['lng']:.6f},", '    rating: 4.8,', f"    bestTime: '{ds(bt)}',", f"    angle: '{ds(angle)}',", "    imageUrl: '',", f"    category: '{ds(item['category'])}',", f"    description: '{ds(desc)}',", f"    recommendedLens: '{lens}',", f"    difficulty: '{diff}',", '    tags: [' + ', '.join(f"'{ds(t)}'" for t in tags) + '],', '  ),']
-        e += [f"  '{ds(sid)}': SpotCoordinateVerificationEvidence(", "    sourceName: 'Wikidata P625',", f"    sourceRef: '{item['qid']} / {item['lat']:.6f},{item['lng']:.6f}',", "    verifiedAt: 'generated',", '  ),']
+        admin_ref = (
+            f" / province={item.get('province_qid', '')}:{item['city']}"
+            f" / district={item.get('district_qid', '')}:{district}"
+            if district
+            else ''
+        )
+        e += [f"  '{ds(sid)}': SpotCoordinateVerificationEvidence(", "    sourceName: 'Wikidata P625 + P131',", f"    sourceRef: '{item['qid']} / {item['lat']:.6f},{item['lng']:.6f}{ds(admin_ref)}',", "    verifiedAt: 'generated',", '  ),']
         author = meta.get('artist') or meta.get('credit') or 'Wikimedia Commons contributor'
         im += [f"  '{ds(sid)}': SpotImageInfo(", f"    networkUrl: '{ds(meta['url'])}',", "    sourceName: 'Wikimedia Commons (Wikidata P18)',", f"    author: '{ds(author)}',", f"    license: '{ds(meta['license'])}',", f"    sourcePage: '{ds(meta['source'])}',", '  ),']
-        quality[sid] = {'wikidataQid': item['qid'], 'width': meta['width'], 'height': meta['height'], 'mime': meta['mime'], 'license': meta['license'], 'sourcePage': meta['source'], 'originalUrl': meta['original_url'], 'displayUrl': meta['url']}
+        quality[sid] = {'wikidataQid': item['qid'], 'province': item['city'], 'provinceQid': item.get('province_qid', ''), 'district': district, 'districtQid': item.get('district_qid', ''), 'width': meta['width'], 'height': meta['height'], 'mime': meta['mime'], 'license': meta['license'], 'sourcePage': meta['source'], 'originalUrl': meta['original_url'], 'displayUrl': meta['url']}
     p.append('];'); e += ['};', '', 'bool isSpotCoordinateIndependentlyVerifiedGenerated(String spotId) =>', '    verifiedSpotCoordinateEvidenceGenerated.containsKey(spotId);']; im.append('};')
     PLACES.write_text('\n'.join(p)+'\n', encoding='utf-8'); EVIDENCE.write_text('\n'.join(e)+'\n', encoding='utf-8'); IMAGES.write_text('\n'.join(im)+'\n', encoding='utf-8'); QUALITY.write_text(json.dumps(quality, ensure_ascii=False, indent=2)+'\n', encoding='utf-8')
 
