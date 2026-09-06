@@ -11,6 +11,11 @@ wrapper adds publication gates needed for safe growth toward 10,000:
 """
 from __future__ import annotations
 
+import io
+import json
+import urllib.request
+import zipfile
+
 import generate_verified_spot_catalog as base
 
 PROVINCE_CLASS = 'Q48336'
@@ -419,6 +424,185 @@ def admin_pairs(qid: str, entities: dict[str, dict]) -> set[tuple[str, str]]:
     return pairs
 
 
+HDX_PACKAGE_API = 'https://data.humdata.org/api/3/action/package_show'
+
+
+def boundary_key(value: str) -> str:
+    key = base.norm(value)
+    for suffix in ('-province', '-ili', '-il', '-district', '-ilcesi', '-ilce'):
+        if key.endswith(suffix):
+            key = key[:-len(suffix)]
+    return key
+
+
+def property_value(properties: dict, candidates: tuple[str, ...]) -> str:
+    normalized = {base.norm(str(key)): value for key, value in properties.items()}
+    for candidate in candidates:
+        value = normalized.get(base.norm(candidate))
+        if value is not None and str(value).strip():
+            return str(value).strip()
+    return ''
+
+
+def coordinate_bounds(value, bounds=None):
+    if bounds is None:
+        bounds = [180.0, 90.0, -180.0, -90.0]
+    if (
+        isinstance(value, (list, tuple))
+        and len(value) >= 2
+        and isinstance(value[0], (int, float))
+        and isinstance(value[1], (int, float))
+    ):
+        x, y = float(value[0]), float(value[1])
+        bounds[0] = min(bounds[0], x)
+        bounds[1] = min(bounds[1], y)
+        bounds[2] = max(bounds[2], x)
+        bounds[3] = max(bounds[3], y)
+    elif isinstance(value, (list, tuple)):
+        for child in value:
+            coordinate_bounds(child, bounds)
+    return tuple(bounds)
+
+
+def point_in_ring(x: float, y: float, ring: list) -> bool:
+    inside = False
+    previous = ring[-1]
+    for current in ring:
+        x1, y1 = float(previous[0]), float(previous[1])
+        x2, y2 = float(current[0]), float(current[1])
+        if ((y1 > y) != (y2 > y)):
+            cross_x = (x2 - x1) * (y - y1) / (y2 - y1) + x1
+            if x < cross_x:
+                inside = not inside
+        previous = current
+    return inside
+
+
+def point_in_geometry(x: float, y: float, geometry: dict) -> bool:
+    coordinates = geometry.get('coordinates') or []
+    geometry_type = geometry.get('type')
+    polygons = [coordinates] if geometry_type == 'Polygon' else coordinates
+    if geometry_type not in {'Polygon', 'MultiPolygon'}:
+        return False
+    for polygon in polygons:
+        if not polygon or not point_in_ring(x, y, polygon[0]):
+            continue
+        if any(point_in_ring(x, y, hole) for hole in polygon[1:]):
+            continue
+        return True
+    return False
+
+
+def load_hdx_district_boundaries() -> list[dict]:
+    """Download COD-AB only for generation; never bundle polygons in the app."""
+    package = base.get_json(HDX_PACKAGE_API, {'id': 'cod-ab-tur'})
+    resources = package.get('result', {}).get('resources', [])
+    geojson_resources = [
+        resource for resource in resources
+        if 'geojson' in (
+            str(resource.get('format', '')) + ' ' + str(resource.get('name', ''))
+        ).lower()
+    ]
+    if not geojson_resources:
+        raise RuntimeError('HDX Turkey ADM2 GeoJSON resource was not found')
+    resource = next(
+        (
+            item for item in geojson_resources
+            if 'admin_boundaries.geojson.zip' in str(item.get('name', '')).lower()
+        ),
+        geojson_resources[0],
+    )
+    request = urllib.request.Request(
+        resource['url'],
+        headers={'User-Agent': base.UA},
+    )
+    with urllib.request.urlopen(request, timeout=180) as response:
+        payload = response.read()
+    with zipfile.ZipFile(io.BytesIO(payload)) as archive:
+        members = [
+            name for name in archive.namelist()
+            if name.lower().endswith(('.geojson', '.json'))
+            and ('adm2' in name.lower() or 'admin2' in name.lower())
+        ]
+        if not members:
+            members = [
+                name for name in archive.namelist()
+                if name.lower().endswith(('.geojson', '.json'))
+            ]
+        if not members:
+            raise RuntimeError('HDX archive contains no GeoJSON')
+        data = json.loads(archive.read(members[-1]).decode('utf-8'))
+    boundaries = []
+    for feature in data.get('features', []):
+        properties = feature.get('properties') or {}
+        province = property_value(
+            properties,
+            ('ADM1_TR', 'ADM1_EN', 'adm1_name', 'province', 'il'),
+        )
+        district = property_value(
+            properties,
+            ('ADM2_TR', 'ADM2_EN', 'adm2_name', 'district', 'ilce', 'ilçe'),
+        )
+        geometry = feature.get('geometry') or {}
+        if not province or not district or not geometry:
+            continue
+        boundaries.append({
+            'province': province,
+            'district': district,
+            'geometry': geometry,
+            'bounds': coordinate_bounds(geometry.get('coordinates') or []),
+        })
+    if len(boundaries) < 900:
+        raise RuntimeError(
+            f'HDX district coverage unexpectedly small: {len(boundaries)}'
+        )
+    print(f'HDX district boundaries loaded: {len(boundaries)}')
+    return boundaries
+
+
+def admin_identity_index(entities: dict[str, dict]) -> dict[tuple[str, str], set[tuple[str, str, str, str]]]:
+    index: dict[tuple[str, str], set[tuple[str, str, str, str]]] = {}
+    for qid, entity in entities.items():
+        if not entity_is_admin_class(entity, DISTRICT_CLASS, entities):
+            continue
+        district_label = entity_label(entity, qid)
+        for province_qid, district_qid in admin_pairs(qid, entities):
+            province_label = entity_label(entities.get(province_qid, {}), province_qid)
+            if not province_label or not district_label:
+                continue
+            key = (boundary_key(province_label), boundary_key(district_label))
+            index.setdefault(key, set()).add(
+                (province_qid, district_qid, province_label, district_label)
+            )
+    return index
+
+
+def boundary_admin_pair(
+    item: dict,
+    boundaries: list[dict],
+    identities: dict[tuple[str, str], set[tuple[str, str, str, str]]],
+):
+    x, y = item['lng'], item['lat']
+    matches = []
+    for boundary in boundaries:
+        min_x, min_y, max_x, max_y = boundary['bounds']
+        if not (min_x <= x <= max_x and min_y <= y <= max_y):
+            continue
+        if point_in_geometry(x, y, boundary['geometry']):
+            matches.append(boundary)
+    if len(matches) != 1:
+        return None
+    boundary = matches[0]
+    key = (
+        boundary_key(boundary['province']),
+        boundary_key(boundary['district']),
+    )
+    candidates = identities.get(key, set())
+    if len(candidates) != 1:
+        return None
+    return next(iter(candidates))
+
+
 _base_wikidata_candidates = base.wikidata_candidates
 
 
@@ -442,7 +626,15 @@ def district_resolved_candidates(page_size: int, per_source_limit: int) -> dict[
         f'{district_matches}/{district_additions}'
     )
     entities = fetch_admin_entities(candidates)
+    try:
+        boundaries = load_hdx_district_boundaries()
+        identities = admin_identity_index(entities)
+    except Exception as error:
+        print(f'warning: HDX district boundary fallback unavailable: {error}')
+        boundaries = []
+        identities = {}
     resolved = 0
+    boundary_resolved = 0
     ambiguous = 0
     for qid, item in candidates.items():
         pairs = admin_pairs(qid, entities)
@@ -462,9 +654,14 @@ def district_resolved_candidates(page_size: int, per_source_limit: int) -> dict[
             city = entity_label(entities.get(province_qid, {}), province_qid)
             district = entity_label(entities.get(district_qid, {}), district_qid)
         else:
-            item['ambiguous_admin'] = True
-            ambiguous += 1
-            continue
+            boundary_pair = boundary_admin_pair(item, boundaries, identities)
+            if not boundary_pair:
+                item['ambiguous_admin'] = True
+                ambiguous += 1
+                continue
+            province_qid, district_qid, city, district = boundary_pair
+            item['admin_source'] = 'HDX COD-AB boundary + Wikidata identity'
+            boundary_resolved += 1
         if province_key(city) == 'elazig':
             district = canonical_elazig_district(district)
         if not city or not district:
@@ -478,7 +675,7 @@ def district_resolved_candidates(page_size: int, per_source_limit: int) -> dict[
             'district_qid': district_qid,
         })
         resolved += 1
-    print(f'district resolved: {resolved}; unresolved/ambiguous: {ambiguous}')
+    print(\n        f'district resolved: {resolved}; boundary resolved: {boundary_resolved}; '\n        f'unresolved/ambiguous: {ambiguous}'\n    )
     return candidates
 
 
