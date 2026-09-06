@@ -13,6 +13,7 @@ VERIFIED_TRAVEL_FILES = sorted(DATA_DIR.glob('verified_travel_places*.dart'))
 EVIDENCE_FILES = [
     DATA_DIR / 'spot_coordinate_verification_registry.dart',
     *sorted(DATA_DIR.glob('spot_coordinate_verification_registry_batch*.dart')),
+    *sorted(DATA_DIR.glob('spot_coordinate_verification_registry_generated*.dart')),
 ]
 IMAGE_FILES = [
     DATA_DIR / 'spot_image_registry.dart',
