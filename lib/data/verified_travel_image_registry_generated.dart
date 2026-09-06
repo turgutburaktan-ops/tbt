@@ -1,6 +1,48 @@
 import 'spot_image_registry.dart';
 
 const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
+  'wd-q6037253-alacali-cami': SpotImageInfo(
+    networkUrl: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5f/Festung_Harput.jpg/1920px-Festung_Harput.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
+    sourceName: 'Wikimedia Commons (Wikidata P18)',
+    author: 'Ingeborg Simon',
+    license: 'CC BY-SA 3.0',
+    sourcePage: 'https://commons.wikimedia.org/wiki/File:Festung_Harput.jpg',
+  ),
+  'wd-q6023683-harput-ulu-camii': SpotImageInfo(
+    networkUrl: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9e/Minarett_Ulu_Camii_Harput.jpg/1920px-Minarett_Ulu_Camii_Harput.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
+    sourceName: 'Wikimedia Commons (Wikidata P18)',
+    author: 'Ingeborg Simon',
+    license: 'CC BY-SA 3.0',
+    sourcePage: 'https://commons.wikimedia.org/wiki/File:Minarett_Ulu_Camii_Harput.jpg',
+  ),
+  'wd-q28221529-izzet-pasa-camii': SpotImageInfo(
+    networkUrl: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b6/Elazig_Izzetpascha-Moschee.jpg/1920px-Elazig_Izzetpascha-Moschee.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
+    sourceName: 'Wikimedia Commons (Wikidata P18)',
+    author: 'Klaus-Peter Simon',
+    license: 'CC BY-SA 3.0',
+    sourcePage: 'https://commons.wikimedia.org/wiki/File:Elazig_Izzetpascha-Moschee.jpg',
+  ),
+  'wd-q132752850-denizli-kervansarayi': SpotImageInfo(
+    networkUrl: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/0/06/Elaz%C4%B1%C4%9F_Keban_Denizli_Kervansaray%C4%B1.jpg/1920px-Elaz%C4%B1%C4%9F_Keban_Denizli_Kervansaray%C4%B1.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
+    sourceName: 'Wikimedia Commons (Wikidata P18)',
+    author: 'Engin Mutlu 58',
+    license: 'CC BY-SA 4.0',
+    sourcePage: 'https://commons.wikimedia.org/wiki/File:Elaz%C4%B1%C4%9F_Keban_Denizli_Kervansaray%C4%B1.jpg',
+  ),
+  'wd-q118176545-elazig-surp-asdvadsadzin-kilisesi': SpotImageInfo(
+    networkUrl: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/4/49/Surp_Asdvadzadzin_Kilisesi_D%C4%B1%C5%9F%C4%B1.jpg/1920px-Surp_Asdvadzadzin_Kilisesi_D%C4%B1%C5%9F%C4%B1.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
+    sourceName: 'Wikimedia Commons (Wikidata P18)',
+    author: 'Aemreuzun',
+    license: 'CC BY-SA 4.0',
+    sourcePage: 'https://commons.wikimedia.org/wiki/File:Surp_Asdvadzadzin_Kilisesi_D%C4%B1%C5%9F%C4%B1.jpg',
+  ),
+  'wd-q131738523-palu-hamami': SpotImageInfo(
+    networkUrl: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/c/cf/Eski_Palu_Hamam01.jpg/1920px-Eski_Palu_Hamam01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
+    sourceName: 'Wikimedia Commons (Wikidata P18)',
+    author: 'Ingeborg Simon',
+    license: 'CC BY-SA 3.0',
+    sourcePage: 'https://commons.wikimedia.org/wiki/File:Eski_Palu_Hamam01.jpg',
+  ),
   'wd-q66105199-sirzi-kaya-yaziti': SpotImageInfo(
     networkUrl: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d0/%C5%9E%C4%B1rz%C4%B1_05.jpg/1920px-%C5%9E%C4%B1rz%C4%B1_05.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
     sourceName: 'Wikimedia Commons (Wikidata P18)',
@@ -4523,6 +4565,13 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     license: 'CC BY-SA 4.0',
     sourcePage: 'https://commons.wikimedia.org/wiki/File:E%C4%9Frikap%C4%B1_%C3%87e%C5%9Fmesi_02.jpg',
   ),
+  'wd-q134728438-fahri-koruturk-bustu': SpotImageInfo(
+    networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/4/4f/Fahri_Korut%C3%BCrk_B%C3%BCst%C3%BC.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled',
+    sourceName: 'Wikimedia Commons (Wikidata P18)',
+    author: 'Özgür Arda BAYRAM',
+    license: 'CC BY-SA 4.0',
+    sourcePage: 'https://commons.wikimedia.org/wiki/File:Fahri_Korut%C3%BCrk_B%C3%BCst%C3%BC.jpg',
+  ),
   'wd-q135430270-fatih-camii-sadirvani': SpotImageInfo(
     networkUrl: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1c/Fatih_Camii_%C5%9Ead%C4%B1rvan%C4%B1_%281%29.jpg/1920px-Fatih_Camii_%C5%9Ead%C4%B1rvan%C4%B1_%281%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
     sourceName: 'Wikimedia Commons (Wikidata P18)',
@@ -4935,6 +4984,13 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     author: 'Ali Osman Dilekoğlu',
     license: 'CC BY-SA 4.0',
     sourcePage: 'https://commons.wikimedia.org/wiki/File:Haf%C4%B1z_Ahmet_Pa%C5%9Fa_%C3%87e%C5%9Fmesi_IMG_5155.jpg',
+  ),
+  'wd-q134728446-haldun-taner-bustu': SpotImageInfo(
+    networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/9/96/Haldun_Taner_B%C3%BCst%C3%BC.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled',
+    sourceName: 'Wikimedia Commons (Wikidata P18)',
+    author: 'Özgür Arda BAYRAM',
+    license: 'CC BY-SA 4.0',
+    sourcePage: 'https://commons.wikimedia.org/wiki/File:Haldun_Taner_B%C3%BCst%C3%BC.jpg',
   ),
   'wd-q97368741-halid-aga-cesmesi': SpotImageInfo(
     networkUrl: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/9/92/Halid_A%C4%9Fa_Fountain%2C_Kad%C4%B1k%C3%B6y.jpg/1920px-Halid_A%C4%9Fa_Fountain%2C_Kad%C4%B1k%C3%B6y.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -7441,6 +7497,13 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     author: 'Karakalem',
     license: 'CC BY 4.0',
     sourcePage: 'https://commons.wikimedia.org/wiki/File:%C4%B0ncirk%C3%B6y_%C3%87e%C5%9Fmesi2,_Beykoz,_%C4%B0stanbul_2024.jpg',
+  ),
+  'wd-q134728478-insan-sirri-arar-heykeli': SpotImageInfo(
+    networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/6/69/%C4%B0nsan_S%C4%B1rr%C4%B1_Arar_Heykeli.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled',
+    sourceName: 'Wikimedia Commons (Wikidata P18)',
+    author: 'Özgür Arda BAYRAM',
+    license: 'CC BY-SA 4.0',
+    sourcePage: 'https://commons.wikimedia.org/wiki/File:%C4%B0nsan_S%C4%B1rr%C4%B1_Arar_Heykeli.jpg',
   ),
   'wd-q121944526-ishak-aga-cesmesi': SpotImageInfo(
     networkUrl: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b5/%C4%B0shak_A%C4%9Fa_Fountain%2C_Beykoz_Meadow-1.jpg/1920px-%C4%B0shak_A%C4%9Fa_Fountain%2C_Beykoz_Meadow-1.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',

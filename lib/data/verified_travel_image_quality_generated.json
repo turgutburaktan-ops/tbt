@@ -1,4 +1,88 @@
 {
+  "wd-q6037253-alacali-cami": {
+    "wikidataQid": "Q6037253",
+    "province": "Elazığ",
+    "provinceQid": "Q483091",
+    "district": "Merkez",
+    "districtQid": "Q2963425",
+    "width": 5184,
+    "height": 3371,
+    "mime": "image/jpeg",
+    "license": "CC BY-SA 3.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Festung_Harput.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/5/5f/Festung_Harput.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5f/Festung_Harput.jpg/1920px-Festung_Harput.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  "wd-q6023683-harput-ulu-camii": {
+    "wikidataQid": "Q6023683",
+    "province": "Elazığ",
+    "provinceQid": "Q483091",
+    "district": "Merkez",
+    "districtQid": "Q2963425",
+    "width": 3456,
+    "height": 5184,
+    "mime": "image/jpeg",
+    "license": "CC BY-SA 3.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Minarett_Ulu_Camii_Harput.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/9/9e/Minarett_Ulu_Camii_Harput.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9e/Minarett_Ulu_Camii_Harput.jpg/1920px-Minarett_Ulu_Camii_Harput.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  "wd-q28221529-izzet-pasa-camii": {
+    "wikidataQid": "Q28221529",
+    "province": "Elazığ",
+    "provinceQid": "Q483091",
+    "district": "Merkez",
+    "districtQid": "Q2963425",
+    "width": 5184,
+    "height": 3456,
+    "mime": "image/jpeg",
+    "license": "CC BY-SA 3.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Elazig_Izzetpascha-Moschee.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/b/b6/Elazig_Izzetpascha-Moschee.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b6/Elazig_Izzetpascha-Moschee.jpg/1920px-Elazig_Izzetpascha-Moschee.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  "wd-q132752850-denizli-kervansarayi": {
+    "wikidataQid": "Q132752850",
+    "province": "Elazığ",
+    "provinceQid": "Q483091",
+    "district": "Keban",
+    "districtQid": "Q115978913",
+    "width": 5500,
+    "height": 3704,
+    "mime": "image/jpeg",
+    "license": "CC BY-SA 4.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Elaz%C4%B1%C4%9F_Keban_Denizli_Kervansaray%C4%B1.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/0/06/Elaz%C4%B1%C4%9F_Keban_Denizli_Kervansaray%C4%B1.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/06/Elaz%C4%B1%C4%9F_Keban_Denizli_Kervansaray%C4%B1.jpg/1920px-Elaz%C4%B1%C4%9F_Keban_Denizli_Kervansaray%C4%B1.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  "wd-q118176545-elazig-surp-asdvadsadzin-kilisesi": {
+    "wikidataQid": "Q118176545",
+    "province": "Elazığ",
+    "provinceQid": "Q483091",
+    "district": "Merkez",
+    "districtQid": "Q2963425",
+    "width": 2976,
+    "height": 3968,
+    "mime": "image/jpeg",
+    "license": "CC BY-SA 4.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Surp_Asdvadzadzin_Kilisesi_D%C4%B1%C5%9F%C4%B1.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/4/49/Surp_Asdvadzadzin_Kilisesi_D%C4%B1%C5%9F%C4%B1.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/49/Surp_Asdvadzadzin_Kilisesi_D%C4%B1%C5%9F%C4%B1.jpg/1920px-Surp_Asdvadzadzin_Kilisesi_D%C4%B1%C5%9F%C4%B1.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  "wd-q131738523-palu-hamami": {
+    "wikidataQid": "Q131738523",
+    "province": "Elazığ",
+    "provinceQid": "Q483091",
+    "district": "Palu",
+    "districtQid": "Q2341599",
+    "width": 5184,
+    "height": 3092,
+    "mime": "image/jpeg",
+    "license": "CC BY-SA 3.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Eski_Palu_Hamam01.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/c/cf/Eski_Palu_Hamam01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/cf/Eski_Palu_Hamam01.jpg/1920px-Eski_Palu_Hamam01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
   "wd-q66105199-sirzi-kaya-yaziti": {
     "wikidataQid": "Q66105199",
     "province": "Malatya",
@@ -9043,6 +9127,20 @@
     "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/4/4d/E%C4%9Frikap%C4%B1_%C3%87e%C5%9Fmesi_02.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
     "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4d/E%C4%9Frikap%C4%B1_%C3%87e%C5%9Fmesi_02.jpg/1920px-E%C4%9Frikap%C4%B1_%C3%87e%C5%9Fmesi_02.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
+  "wd-q134728438-fahri-koruturk-bustu": {
+    "wikidataQid": "Q134728438",
+    "province": "İstanbul",
+    "provinceQid": "Q534799",
+    "district": "Kadıköy",
+    "districtQid": "Q932886",
+    "width": 1836,
+    "height": 4080,
+    "mime": "image/jpeg",
+    "license": "CC BY-SA 4.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Fahri_Korut%C3%BCrk_B%C3%BCst%C3%BC.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/4/4f/Fahri_Korut%C3%BCrk_B%C3%BCst%C3%BC.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://upload.wikimedia.org/wikipedia/commons/4/4f/Fahri_Korut%C3%BCrk_B%C3%BCst%C3%BC.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled"
+  },
   "wd-q135430270-fatih-camii-sadirvani": {
     "wikidataQid": "Q135430270",
     "province": "İstanbul",
@@ -9868,6 +9966,20 @@
     "sourcePage": "https://commons.wikimedia.org/wiki/File:Haf%C4%B1z_Ahmet_Pa%C5%9Fa_%C3%87e%C5%9Fmesi_IMG_5155.jpg",
     "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/0/01/Haf%C4%B1z_Ahmet_Pa%C5%9Fa_%C3%87e%C5%9Fmesi_IMG_5155.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
     "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/01/Haf%C4%B1z_Ahmet_Pa%C5%9Fa_%C3%87e%C5%9Fmesi_IMG_5155.jpg/1920px-Haf%C4%B1z_Ahmet_Pa%C5%9Fa_%C3%87e%C5%9Fmesi_IMG_5155.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  "wd-q134728446-haldun-taner-bustu": {
+    "wikidataQid": "Q134728446",
+    "province": "İstanbul",
+    "provinceQid": "Q534799",
+    "district": "Kadıköy",
+    "districtQid": "Q932886",
+    "width": 1836,
+    "height": 4080,
+    "mime": "image/jpeg",
+    "license": "CC BY-SA 4.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Haldun_Taner_B%C3%BCst%C3%BC.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/9/96/Haldun_Taner_B%C3%BCst%C3%BC.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://upload.wikimedia.org/wikipedia/commons/9/96/Haldun_Taner_B%C3%BCst%C3%BC.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled"
   },
   "wd-q97368741-halid-aga-cesmesi": {
     "wikidataQid": "Q97368741",
@@ -14880,6 +14992,20 @@
     "sourcePage": "https://commons.wikimedia.org/wiki/File:%C4%B0ncirk%C3%B6y_%C3%87e%C5%9Fmesi2,_Beykoz,_%C4%B0stanbul_2024.jpg",
     "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/7/75/%C4%B0ncirk%C3%B6y_%C3%87e%C5%9Fmesi2%2C_Beykoz%2C_%C4%B0stanbul_2024.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
     "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/75/%C4%B0ncirk%C3%B6y_%C3%87e%C5%9Fmesi2%2C_Beykoz%2C_%C4%B0stanbul_2024.jpg/1920px-%C4%B0ncirk%C3%B6y_%C3%87e%C5%9Fmesi2%2C_Beykoz%2C_%C4%B0stanbul_2024.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  "wd-q134728478-insan-sirri-arar-heykeli": {
+    "wikidataQid": "Q134728478",
+    "province": "İstanbul",
+    "provinceQid": "Q534799",
+    "district": "Kadıköy",
+    "districtQid": "Q932886",
+    "width": 1836,
+    "height": 4080,
+    "mime": "image/jpeg",
+    "license": "CC BY-SA 4.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:%C4%B0nsan_S%C4%B1rr%C4%B1_Arar_Heykeli.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/6/69/%C4%B0nsan_S%C4%B1rr%C4%B1_Arar_Heykeli.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://upload.wikimedia.org/wikipedia/commons/6/69/%C4%B0nsan_S%C4%B1rr%C4%B1_Arar_Heykeli.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled"
   },
   "wd-q121944526-ishak-aga-cesmesi": {
     "wikidataQid": "Q121944526",

@@ -1,6 +1,36 @@
 import 'spot_coordinate_verification_registry.dart';
 
 const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificationEvidence>{
+  'wd-q6037253-alacali-cami': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + P131',
+    sourceRef: 'Q6037253 / 38.702333,39.250528/ province=Q483091:Elazığ / district=Q2963425:Merkez',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6023683-harput-ulu-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + P131',
+    sourceRef: 'Q6023683 / 38.706111,39.255139/ province=Q483091:Elazığ / district=Q2963425:Merkez',
+    verifiedAt: 'generated',
+  ),
+  'wd-q28221529-izzet-pasa-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + P131',
+    sourceRef: 'Q28221529 / 38.674722,39.223611/ province=Q483091:Elazığ / district=Q2963425:Merkez',
+    verifiedAt: 'generated',
+  ),
+  'wd-q132752850-denizli-kervansarayi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + P131',
+    sourceRef: 'Q132752850 / 38.835960,38.681461/ province=Q483091:Elazığ / district=Q115978913:Keban',
+    verifiedAt: 'generated',
+  ),
+  'wd-q118176545-elazig-surp-asdvadsadzin-kilisesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + P131',
+    sourceRef: 'Q118176545 / 38.572639,39.173000/ province=Q483091:Elazığ / district=Q2963425:Merkez',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131738523-palu-hamami': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + P131',
+    sourceRef: 'Q131738523 / 38.699876,39.953406/ province=Q483091:Elazığ / district=Q2341599:Palu',
+    verifiedAt: 'generated',
+  ),
   'wd-q66105199-sirzi-kaya-yaziti': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + P131',
     sourceRef: 'Q66105199 / 38.878500,37.913556/ province=Q131384:Malatya / district=Q990206:Hekimhan',
@@ -3231,6 +3261,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q122050868 / 41.036434,28.939707/ province=Q534799:İstanbul / district=Q732923:Fatih',
     verifiedAt: 'generated',
   ),
+  'wd-q134728438-fahri-koruturk-bustu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + P131',
+    sourceRef: 'Q134728438 / 40.981281,29.021158/ province=Q534799:İstanbul / district=Q932886:Kadıköy',
+    verifiedAt: 'generated',
+  ),
   'wd-q135430270-fatih-camii-sadirvani': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + P131',
     sourceRef: 'Q135430270 / 41.019886,28.949596/ province=Q534799:İstanbul / district=Q732923:Fatih',
@@ -3524,6 +3559,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q131368285-hafiz-ahmet-pasa-cesmesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + P131',
     sourceRef: 'Q131368285 / 41.035352,28.985761/ province=Q534799:İstanbul / district=Q217411:Beyoğlu',
+    verifiedAt: 'generated',
+  ),
+  'wd-q134728446-haldun-taner-bustu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + P131',
+    sourceRef: 'Q134728446 / 40.985905,29.021303/ province=Q534799:İstanbul / district=Q932886:Kadıköy',
     verifiedAt: 'generated',
   ),
   'wd-q97368741-halid-aga-cesmesi': SpotCoordinateVerificationEvidence(
@@ -5314,6 +5354,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q131368855-incirkoy-cesmesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + P131',
     sourceRef: 'Q131368855 / 41.119404,29.097576/ province=Q534799:İstanbul / district=Q794351:Beykoz',
+    verifiedAt: 'generated',
+  ),
+  'wd-q134728478-insan-sirri-arar-heykeli': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + P131',
+    sourceRef: 'Q134728478 / 40.981361,29.023085/ province=Q534799:İstanbul / district=Q932886:Kadıköy',
     verifiedAt: 'generated',
   ),
   'wd-q121944526-ishak-aga-cesmesi': SpotCoordinateVerificationEvidence(
