@@ -648,6 +648,44 @@ def admin_identity_index(entities: dict[str, dict]) -> dict[tuple[str, str], set
     return index
 
 
+
+def fetch_turkey_admin_identity_index() -> dict[tuple[str, str], set[tuple[str, str, str, str]]]:
+    """Load every Turkish district/province identity for polygon resolution.
+
+    This does not infer administration from a label: Wikidata must explicitly
+    type the two entities as a Turkish district and province and connect the
+    district to the province. HDX/OCHA still decides the containing polygon.
+    """
+    query = f'''SELECT DISTINCT ?province ?provinceLabel ?district ?districtLabel WHERE {{
+  ?district wdt:P31/wdt:P279* wd:{DISTRICT_CLASS} ;
+            wdt:P131+ ?province .
+  ?province wdt:P31/wdt:P279* wd:{PROVINCE_CLASS} .
+  SERVICE wikibase:label {{ bd:serviceParam wikibase:language "tr,en". }}
+}} ORDER BY ?province ?district'''
+    payload = base.get_json(base.WDQS, {'query': query, 'format': 'json'})
+    index: dict[tuple[str, str], set[tuple[str, str, str, str]]] = {}
+    for row in payload.get('results', {}).get('bindings', []):
+        province_uri = row.get('province', {}).get('value', '')
+        district_uri = row.get('district', {}).get('value', '')
+        province_qid = province_uri.rsplit('/', 1)[-1]
+        district_qid = district_uri.rsplit('/', 1)[-1]
+        province_label = row.get('provinceLabel', {}).get('value', '').strip()
+        district_label = row.get('districtLabel', {}).get('value', '').strip()
+        if not (
+            province_qid.startswith('Q')
+            and district_qid.startswith('Q')
+            and usable_label(province_label, province_qid)
+            and usable_label(district_label, district_qid)
+        ):
+            continue
+        key = (boundary_key(province_label), boundary_key(district_label))
+        index.setdefault(key, set()).add(
+            (province_qid, district_qid, province_label, district_label)
+        )
+    print(f'Wikidata Turkish district identities loaded: {len(index)}')
+    return index
+
+
 def boundary_admin_pair(
     item: dict,
     boundaries: list[dict],
@@ -701,6 +739,15 @@ def district_resolved_candidates(page_size: int, per_source_limit: int) -> dict[
     try:
         boundaries = load_hdx_district_boundaries()
         identities = admin_identity_index(entities)
+        try:
+            complete_identities = fetch_turkey_admin_identity_index()
+            for key, values in complete_identities.items():
+                identities.setdefault(key, set()).update(values)
+        except Exception as error:
+            print(
+                'warning: complete Wikidata district identity lookup unavailable: '
+                f'{error}'
+            )
     except Exception as error:
         print(f'warning: HDX district boundary fallback unavailable: {error}')
         boundaries = []
