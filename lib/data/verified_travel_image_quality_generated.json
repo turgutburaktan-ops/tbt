@@ -215,13 +215,13 @@
     "provinceQid": "Q131384",
     "district": "Battalgazi",
     "districtQid": "Q810916",
-    "width": 5184,
-    "height": 2660,
+    "width": 5112,
+    "height": 3040,
     "mime": "image/jpeg",
     "license": "CC BY-SA 3.0",
-    "sourcePage": "https://commons.wikimedia.org/wiki/File:MalatyaMuseum.jpg",
-    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/9/92/MalatyaMuseum.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
-    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/92/MalatyaMuseum.jpg/1920px-MalatyaMuseum.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:MalatyaMuseum2.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/4/45/MalatyaMuseum2.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/45/MalatyaMuseum2.jpg/1920px-MalatyaMuseum2.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
   "wd-q31189554-gunpinar-selalesi": {
     "wikidataQid": "Q31189554",
@@ -474,6 +474,20 @@
     "sourcePage": "https://commons.wikimedia.org/wiki/File:Diyarbak%C4%B1r_Salos_Mosque_in_2025_1124.jpg",
     "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/5/5d/Diyarbak%C4%B1r_Salos_Mosque_in_2025_1124.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
     "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5d/Diyarbak%C4%B1r_Salos_Mosque_in_2025_1124.jpg/1920px-Diyarbak%C4%B1r_Salos_Mosque_in_2025_1124.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  "wd-q87270204-sur-diyarbakir-da-cami": {
+    "wikidataQid": "Q87270204",
+    "province": "Diyarbakır",
+    "provinceQid": "Q83081",
+    "district": "Sur",
+    "districtQid": "Q664716",
+    "width": 4592,
+    "height": 3056,
+    "mime": "image/jpeg",
+    "license": "CC BY-SA 3.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Mizgefta_El%C3%AE_Pasha_Amed_2010.JPG",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/7/77/Mizgefta_El%C3%AE_Pasha_Amed_2010.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/77/Mizgefta_El%C3%AE_Pasha_Amed_2010.JPG/1920px-Mizgefta_El%C3%AE_Pasha_Amed_2010.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
   "wd-q3675546-ulu-camii": {
     "wikidataQid": "Q3675546",
@@ -761,13 +775,13 @@
     "provinceQid": "Q83081",
     "district": "Sur",
     "districtQid": "Q664716",
-    "width": 3000,
-    "height": 4000,
+    "width": 5736,
+    "height": 7648,
     "mime": "image/jpeg",
     "license": "CC BY-SA 4.0",
-    "sourcePage": "https://commons.wikimedia.org/wiki/File:Da%C4%9Fkap%C4%B1_Meydan%C4%B1_Kale.jpg",
-    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/9/9d/Da%C4%9Fkap%C4%B1_Meydan%C4%B1_Kale.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
-    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9d/Da%C4%9Fkap%C4%B1_Meydan%C4%B1_Kale.jpg/1920px-Da%C4%9Fkap%C4%B1_Meydan%C4%B1_Kale.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Da%C4%9Fkap%C4%B1_Meydan%C4%B1_surlar.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/0/02/Da%C4%9Fkap%C4%B1_Meydan%C4%B1_surlar.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/02/Da%C4%9Fkap%C4%B1_Meydan%C4%B1_surlar.jpg/1920px-Da%C4%9Fkap%C4%B1_Meydan%C4%B1_surlar.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
   "wd-q30624100-cahit-sitki-taranci-muzesi": {
     "wikidataQid": "Q30624100",
@@ -803,13 +817,13 @@
     "provinceQid": "Q83081",
     "district": "Sur",
     "districtQid": "Q664716",
-    "width": 4000,
-    "height": 3000,
+    "width": 3456,
+    "height": 5184,
     "mime": "image/jpeg",
-    "license": "CC BY-SA 3.0",
-    "sourcePage": "https://commons.wikimedia.org/wiki/File:Gazi_Pavillion.jpg",
-    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/4/4c/Gazi_Pavillion.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
-    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4c/Gazi_Pavillion.jpg/1920px-Gazi_Pavillion.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+    "license": "CC BY-SA 4.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:GaziKoskuAtaturkHeykeli.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/0/09/GaziKoskuAtaturkHeykeli.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/09/GaziKoskuAtaturkHeykeli.jpg/1920px-GaziKoskuAtaturkHeykeli.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
   "wd-q30624138-ziya-gokalp-muzesi": {
     "wikidataQid": "Q30624138",
@@ -2337,6 +2351,20 @@
     "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/c/c0/Avdalaz_Castle_from_afar_in_Ayazini%2C_Afyon.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
     "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c0/Avdalaz_Castle_from_afar_in_Ayazini%2C_Afyon.jpg/1920px-Avdalaz_Castle_from_afar_in_Ayazini%2C_Afyon.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
+  "wd-q705110-aslankaya": {
+    "wikidataQid": "Q705110",
+    "province": "Afyonkarahisar",
+    "provinceQid": "Q45220",
+    "district": "İhsaniye ilçesi",
+    "districtQid": "Q116634166",
+    "width": 3456,
+    "height": 5184,
+    "mime": "image/jpeg",
+    "license": "CC BY-SA 3.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Arslankaya_04.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/c/cd/Arslankaya_04.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/cd/Arslankaya_04.jpg/1920px-Arslankaya_04.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
   "wd-q127787917-eski-bayezid-camii": {
     "wikidataQid": "Q127787917",
     "province": "Ağrı",
@@ -2385,13 +2413,13 @@
     "provinceQid": "Q80051",
     "district": "Doğubayazıt",
     "districtQid": "Q2301990",
-    "width": 2000,
-    "height": 1284,
+    "width": 3300,
+    "height": 2200,
     "mime": "image/jpeg",
-    "license": "Public domain",
-    "sourcePage": "https://commons.wikimedia.org/wiki/File:NEO_ararat_big.jpg",
-    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/9/93/NEO_ararat_big.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
-    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/93/NEO_ararat_big.jpg/1920px-NEO_ararat_big.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+    "license": "CC BY-SA 4.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:00_2399_Mount_Ararat,_Turkey.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/2/28/00_2399_Mount_Ararat%2C_Turkey.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/28/00_2399_Mount_Ararat%2C_Turkey.jpg/1920px-00_2399_Mount_Ararat%2C_Turkey.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
   "wd-q18868213-agri-dagi-milli-parki": {
     "wikidataQid": "Q18868213",
@@ -2399,13 +2427,13 @@
     "provinceQid": "Q80051",
     "district": "Doğubayazıt",
     "districtQid": "Q2301990",
-    "width": 2000,
-    "height": 1284,
+    "width": 5184,
+    "height": 3456,
     "mime": "image/jpeg",
-    "license": "Public domain",
-    "sourcePage": "https://commons.wikimedia.org/wiki/File:NEO_ararat_big.jpg",
-    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/9/93/NEO_ararat_big.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
-    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/93/NEO_ararat_big.jpg/1920px-NEO_ararat_big.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+    "license": "CC BY-SA 4.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Inbound4754975513580888305.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/f/f1/Inbound4754975513580888305.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f1/Inbound4754975513580888305.jpg/1920px-Inbound4754975513580888305.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
   "wd-q112845176-dogubayazit-kalesi": {
     "wikidataQid": "Q112845176",
@@ -4157,6 +4185,20 @@
     "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/9/99/Banks_Street_%28Atat%C3%BCrk_Boulevard%29_the_Building_of_Ziraat_Bankas%C4%B1_%28Agricultural_Bank%29%2C_1930s_%2816851406391%29_%28Colourised%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
     "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/99/Banks_Street_%28Atat%C3%BCrk_Boulevard%29_the_Building_of_Ziraat_Bankas%C4%B1_%28Agricultural_Bank%29%2C_1930s_%2816851406391%29_%28Colourised%29.jpg/1920px-Banks_Street_%28Atat%C3%BCrk_Boulevard%29_the_Building_of_Ziraat_Bankas%C4%B1_%28Agricultural_Bank%29%2C_1930s_%2816851406391%29_%28Colourised%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
+  "wd-q794382-beypazari": {
+    "wikidataQid": "Q794382",
+    "province": "Ankara",
+    "provinceQid": "Q2297724",
+    "district": "Beypazarı (ilçe)",
+    "districtQid": "Q2196741",
+    "width": 2592,
+    "height": 1944,
+    "mime": "image/jpeg",
+    "license": "CC BY-SA 3.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Beypazari_Tasmektep_06065.JPG",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/0/01/Beypazari_Tasmektep_06065.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/01/Beypazari_Tasmektep_06065.JPG/1920px-Beypazari_Tasmektep_06065.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
   "wd-q769575-haci-bayram-camii": {
     "wikidataQid": "Q769575",
     "province": "Ankara",
@@ -4247,13 +4289,13 @@
     "provinceQid": "Q2297724",
     "district": "Altındağ",
     "districtQid": "Q682981",
-    "width": 2048,
-    "height": 1536,
+    "width": 4928,
+    "height": 3280,
     "mime": "image/jpeg",
-    "license": "CC BY-SA 3.0",
-    "sourcePage": "https://commons.wikimedia.org/wiki/File:Museum_of_Anatolian_Civilizations001.jpg",
-    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/4/49/Museum_of_Anatolian_Civilizations001.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
-    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/49/Museum_of_Anatolian_Civilizations001.jpg/1920px-Museum_of_Anatolian_Civilizations001.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+    "license": "CC BY-SA 4.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Museum_of_Anatolian_Civilizations_Phrygian_Small_table_fom_tomb_of_Midas_in_2014_04.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/d/d2/Museum_of_Anatolian_Civilizations_Phrygian_Small_table_fom_tomb_of_Midas_in_2014_04.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d2/Museum_of_Anatolian_Civilizations_Phrygian_Small_table_fom_tomb_of_Midas_in_2014_04.jpg/1920px-Museum_of_Anatolian_Civilizations_Phrygian_Small_table_fom_tomb_of_Midas_in_2014_04.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
   "wd-q118928405-anadolu-yasayan-koy-acik-hava-muzesi": {
     "wikidataQid": "Q118928405",
@@ -4335,9 +4377,9 @@
     "height": 1200,
     "mime": "image/jpeg",
     "license": "CC BY-SA 3.0",
-    "sourcePage": "https://commons.wikimedia.org/wiki/File:Ataturk%27s_Coach_Ankara.JPG",
-    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/3/3e/Ataturk%27s_Coach_Ankara.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
-    "displayUrl": "https://upload.wikimedia.org/wikipedia/commons/3/3e/Ataturk%27s_Coach_Ankara.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled"
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Ataturk%27s_residence_during_the_War_of_Independence.JPG",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/5/51/Ataturk%27s_residence_during_the_War_of_Independence.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://upload.wikimedia.org/wikipedia/commons/5/51/Ataturk%27s_residence_during_the_War_of_Independence.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled"
   },
   "wd-q56440080-beypazari-yasayan-muze": {
     "wikidataQid": "Q56440080",
@@ -6165,13 +6207,13 @@
     "provinceQid": "Q40249",
     "district": "Kaş ilçesi",
     "districtQid": "Q2413977",
-    "width": 2048,
-    "height": 1454,
+    "width": 3072,
+    "height": 2048,
     "mime": "image/jpeg",
     "license": "CC BY 3.0",
-    "sourcePage": "https://commons.wikimedia.org/wiki/File:KAPUTA%C5%9E_BEACH_-_panoramio_-_Haluk_Comertel.jpg",
-    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/c/c9/KAPUTA%C5%9E_BEACH_-_panoramio_-_Haluk_Comertel.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
-    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c9/KAPUTA%C5%9E_BEACH_-_panoramio_-_Haluk_Comertel.jpg/1920px-KAPUTA%C5%9E_BEACH_-_panoramio_-_Haluk_Comertel.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:KAPUTA%C5%9E_PLAJI_-_panoramio_-_HALUK_COMERTEL.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/c/ce/KAPUTA%C5%9E_PLAJI_-_panoramio_-_HALUK_COMERTEL.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/ce/KAPUTA%C5%9E_PLAJI_-_panoramio_-_HALUK_COMERTEL.jpg/1920px-KAPUTA%C5%9E_PLAJI_-_panoramio_-_HALUK_COMERTEL.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
   "wd-q49321623-kleopatra-plaji": {
     "wikidataQid": "Q49321623",
@@ -6179,13 +6221,13 @@
     "provinceQid": "Q40249",
     "district": "Alanya",
     "districtQid": "Q1635214",
-    "width": 1901,
-    "height": 1069,
+    "width": 3262,
+    "height": 1749,
     "mime": "image/jpeg",
-    "license": "CC BY-SA 3.0",
-    "sourcePage": "https://commons.wikimedia.org/wiki/File:Kleopatra_beach.jpg",
-    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/9/98/Kleopatra_beach.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
-    "displayUrl": "https://upload.wikimedia.org/wikipedia/commons/9/98/Kleopatra_beach.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled"
+    "license": "CC BY-SA 4.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Kleopatra_Plaj%C4%B1_%C3%96rne%C4%9Fi.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/e/eb/Kleopatra_Plaj%C4%B1_%C3%96rne%C4%9Fi.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/eb/Kleopatra_Plaj%C4%B1_%C3%96rne%C4%9Fi.jpg/1920px-Kleopatra_Plaj%C4%B1_%C3%96rne%C4%9Fi.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
   "wd-q6978175-patara-plaji": {
     "wikidataQid": "Q6978175",
@@ -6354,6 +6396,118 @@
     "sourcePage": "https://commons.wikimedia.org/wiki/File:%C3%87ukurba%C4%9F_Peninsula.jpg",
     "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/7/7a/%C3%87ukurba%C4%9F_Peninsula.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
     "displayUrl": "https://upload.wikimedia.org/wikipedia/commons/7/7a/%C3%87ukurba%C4%9F_Peninsula.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled"
+  },
+  "wd-q135582520-arykanda-helios-tapinagi": {
+    "wikidataQid": "Q135582520",
+    "province": "Antalya",
+    "provinceQid": "Q40249",
+    "district": "Finike (ilçe)",
+    "districtQid": "Q49103504",
+    "width": 4928,
+    "height": 3280,
+    "mime": "image/jpeg",
+    "license": "CC BY-SA 4.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Arykanda_Helios_Temple_3866.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/b/b7/Arykanda_Helios_Temple_3866.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b7/Arykanda_Helios_Temple_3866.jpg/1920px-Arykanda_Helios_Temple_3866.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  "wd-q135582522-arykanda-traianeum": {
+    "wikidataQid": "Q135582522",
+    "province": "Antalya",
+    "provinceQid": "Q40249",
+    "district": "Finike (ilçe)",
+    "districtQid": "Q49103504",
+    "width": 4928,
+    "height": 3280,
+    "mime": "image/jpeg",
+    "license": "CC BY-SA 4.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Arykanda_Trajaneum_3891.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/6/63/Arykanda_Trajaneum_3891.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/63/Arykanda_Trajaneum_3891.jpg/1920px-Arykanda_Trajaneum_3891.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  "wd-q130331418-athena-tapinagi-side": {
+    "wikidataQid": "Q130331418",
+    "province": "Antalya",
+    "provinceQid": "Q40249",
+    "district": "Manavgat (ilçe)",
+    "districtQid": "Q2218182",
+    "width": 4000,
+    "height": 6000,
+    "mime": "image/jpeg",
+    "license": "CC BY-SA 4.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Side_Apollon_ve_Athena_Tap%C4%B1naklar%C4%B1-2.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/e/ec/Side_Apollon_ve_Athena_Tap%C4%B1naklar%C4%B1-2.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/ec/Side_Apollon_ve_Athena_Tap%C4%B1naklar%C4%B1-2.jpg/1920px-Side_Apollon_ve_Athena_Tap%C4%B1naklar%C4%B1-2.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  "wd-q134615426-kafi-baba-tekkesi": {
+    "wikidataQid": "Q134615426",
+    "province": "Antalya",
+    "provinceQid": "Q40249",
+    "district": "Finike (ilçe)",
+    "districtQid": "Q49103504",
+    "width": 4256,
+    "height": 2832,
+    "mime": "image/jpeg",
+    "license": "CC BY-SA 4.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Limyra_Kafi_Baba_Dervish_Lodge_5190.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/d/d1/Limyra_Kafi_Baba_Dervish_Lodge_5190.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d1/Limyra_Kafi_Baba_Dervish_Lodge_5190.jpg/1920px-Limyra_Kafi_Baba_Dervish_Lodge_5190.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  "wd-q135582524-limyra-ptolemaion-tapinagi": {
+    "wikidataQid": "Q135582524",
+    "province": "Antalya",
+    "provinceQid": "Q40249",
+    "district": "Finike (ilçe)",
+    "districtQid": "Q49103504",
+    "width": 4080,
+    "height": 3060,
+    "mime": "image/jpeg",
+    "license": "CC BY-SA 4.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Limyra_Ptolemaion_Tap%C4%B1na%C4%9F%C4%B1.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/4/49/Limyra_Ptolemaion_Tap%C4%B1na%C4%9F%C4%B1.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/49/Limyra_Ptolemaion_Tap%C4%B1na%C4%9F%C4%B1.jpg/1920px-Limyra_Ptolemaion_Tap%C4%B1na%C4%9F%C4%B1.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  "wd-q135582523-olympos-tapinak": {
+    "wikidataQid": "Q135582523",
+    "province": "Antalya",
+    "provinceQid": "Q40249",
+    "district": "Kumluca (ilçe)",
+    "districtQid": "Q1954421",
+    "width": 4080,
+    "height": 3060,
+    "mime": "image/jpeg",
+    "license": "CC BY-SA 4.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Olympos_Temple_facade_from_between_two_pillars_(close_up).jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/e/ed/Olympos_Temple_facade_from_between_two_pillars_%28close_up%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/ed/Olympos_Temple_facade_from_between_two_pillars_%28close_up%29.jpg/1920px-Olympos_Temple_facade_from_between_two_pillars_%28close_up%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  "wd-q135582540-patara-korinth-tapinagi": {
+    "wikidataQid": "Q135582540",
+    "province": "Antalya",
+    "provinceQid": "Q40249",
+    "district": "Kaş ilçesi",
+    "districtQid": "Q2413977",
+    "width": 4928,
+    "height": 3280,
+    "mime": "image/jpeg",
+    "license": "CC BY-SA 4.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Patara_Prostylos_temple_2013_4692.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/3/3c/Patara_Prostylos_temple_2013_4692.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3c/Patara_Prostylos_temple_2013_4692.jpg/1920px-Patara_Prostylos_temple_2013_4692.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  "wd-q130332365-side-dionisos-tapinagi": {
+    "wikidataQid": "Q130332365",
+    "province": "Antalya",
+    "provinceQid": "Q40249",
+    "district": "Manavgat (ilçe)",
+    "districtQid": "Q2218182",
+    "width": 4256,
+    "height": 2832,
+    "mime": "image/jpeg",
+    "license": "CC BY-SA 4.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Side_Roman_theatre_outside_in_2012_4173.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/1/1d/Side_Roman_theatre_outside_in_2012_4173.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1d/Side_Roman_theatre_outside_in_2012_4173.jpg/1920px-Side_Roman_theatre_outside_in_2012_4173.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
   "wd-q72176536-upper-duden-waterfalls": {
     "wikidataQid": "Q72176536",
@@ -6691,6 +6845,20 @@
     "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/5/5c/Doliskana-southeast.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
     "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5c/Doliskana-southeast.jpg/1920px-Doliskana-southeast.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
+  "wd-q1271496-othta-eklesia": {
+    "wikidataQid": "Q1271496",
+    "province": "Artvin",
+    "provinceQid": "Q43745",
+    "district": "Yusufeli İlçesi",
+    "districtQid": "Q49110308",
+    "width": 2848,
+    "height": 4272,
+    "mime": "image/jpeg",
+    "license": "CC BY-SA 3.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Otkhta.JPG",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/6/60/Otkhta.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/60/Otkhta.JPG/1920px-Otkhta.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
   "wd-q111825-tbeti-manastiri": {
     "wikidataQid": "Q111825",
     "province": "Artvin",
@@ -7019,13 +7187,13 @@
     "provinceQid": "Q79846",
     "district": "Germencik (ilçe)",
     "districtQid": "Q1868386",
-    "width": 1200,
-    "height": 1600,
+    "width": 1920,
+    "height": 1279,
     "mime": "image/jpeg",
-    "license": "CC BY 2.0",
-    "sourcePage": "https://commons.wikimedia.org/wiki/File:Columns_with_entablature_from_the_temple_of_Artemis_Leukophryene_-_Pergamon_Museum.jpg",
-    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/8/85/Columns_with_entablature_from_the_temple_of_Artemis_Leukophryene_-_Pergamon_Museum.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
-    "displayUrl": "https://upload.wikimedia.org/wikipedia/commons/8/85/Columns_with_entablature_from_the_temple_of_Artemis_Leukophryene_-_Pergamon_Museum.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled"
+    "license": "CC BY-SA 3.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:%D0%9C%D0%B0%D0%B3%D0%BD%D0%B5%D1%81%D0%B8%D1%8F_%D0%BD%D0%B0_%D0%9C%D0%B5%D0%B0%D0%BD%D0%B4%D1%80%D0%B5._%D0%A5%D1%80%D0%B0%D0%BC_%D0%90%D1%80%D1%82%D0%B5%D0%BC%D0%B8%D0%B4%D1%8B_%D0%9B%D0%B5%D0%B2%D0%BA%D0%BE%D1%84%D1%80%D0%B8%D0%BD%D1%8B.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/7/7d/%D0%9C%D0%B0%D0%B3%D0%BD%D0%B5%D1%81%D0%B8%D1%8F_%D0%BD%D0%B0_%D0%9C%D0%B5%D0%B0%D0%BD%D0%B4%D1%80%D0%B5._%D0%A5%D1%80%D0%B0%D0%BC_%D0%90%D1%80%D1%82%D0%B5%D0%BC%D0%B8%D0%B4%D1%8B_%D0%9B%D0%B5%D0%B2%D0%BA%D0%BE%D1%84%D1%80%D0%B8%D0%BD%D1%8B.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://upload.wikimedia.org/wikipedia/commons/7/7d/%D0%9C%D0%B0%D0%B3%D0%BD%D0%B5%D1%81%D0%B8%D1%8F_%D0%BD%D0%B0_%D0%9C%D0%B5%D0%B0%D0%BD%D0%B4%D1%80%D0%B5._%D0%A5%D1%80%D0%B0%D0%BC_%D0%90%D1%80%D1%82%D0%B5%D0%BC%D0%B8%D0%B4%D1%8B_%D0%9B%D0%B5%D0%B2%D0%BA%D0%BE%D1%84%D1%80%D0%B8%D0%BD%D1%8B.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled"
   },
   "wd-q15119905-mastaura": {
     "wikidataQid": "Q15119905",
@@ -7895,6 +8063,20 @@
     "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/2/2f/Band%C4%B1rma_Bar%C4%B1%C5%9F_Man%C3%A7o_K%C3%BClt%C3%BCr_Merkezi.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
     "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2f/Band%C4%B1rma_Bar%C4%B1%C5%9F_Man%C3%A7o_K%C3%BClt%C3%BCr_Merkezi.jpg/1920px-Band%C4%B1rma_Bar%C4%B1%C5%9F_Man%C3%A7o_K%C3%BClt%C3%BCr_Merkezi.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
+  "wd-q1891954-manyas-kusgolu": {
+    "wikidataQid": "Q1891954",
+    "province": "Balıkesir",
+    "provinceQid": "Q47117",
+    "district": "Bandırma",
+    "districtQid": "Q1826014",
+    "width": 6016,
+    "height": 4000,
+    "mime": "image/jpeg",
+    "license": "CC BY-SA 4.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Manyas_Ku%C5%9F_Cenneti.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/4/48/Manyas_Ku%C5%9F_Cenneti.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/48/Manyas_Ku%C5%9F_Cenneti.jpg/1920px-Manyas_Ku%C5%9F_Cenneti.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
   "wd-q131523700-agios-yorgis-manastiri": {
     "wikidataQid": "Q131523700",
     "province": "Balıkesir",
@@ -7957,13 +8139,13 @@
     "provinceQid": "Q47117",
     "district": "Manyas",
     "districtQid": "Q2473795",
-    "width": 4000,
-    "height": 2250,
+    "width": 6016,
+    "height": 4000,
     "mime": "image/jpeg",
     "license": "CC BY-SA 4.0",
-    "sourcePage": "https://commons.wikimedia.org/wiki/File:Kirli_Cennet.jpg",
-    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/4/4d/Kirli_Cennet.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
-    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4d/Kirli_Cennet.jpg/1920px-Kirli_Cennet.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Manyas_Ku%C5%9F_Cenneti.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/4/48/Manyas_Ku%C5%9F_Cenneti.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/48/Manyas_Ku%C5%9F_Cenneti.jpg/1920px-Manyas_Ku%C5%9F_Cenneti.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
   "wd-q131739170-pazarbasi-hamami": {
     "wikidataQid": "Q131739170",
@@ -11289,13 +11471,13 @@
     "provinceQid": "Q43690",
     "district": "Osmangazi (ilçe)",
     "districtQid": "Q49107396",
-    "width": 1944,
-    "height": 2592,
+    "width": 3264,
+    "height": 2448,
     "mime": "image/jpeg",
-    "license": "CC BY 3.0",
-    "sourcePage": "https://commons.wikimedia.org/wiki/File:H%C3%9CDAVEND%C4%B0GAR_CAM%C4%B0%C4%B0_-_panoramio.jpg",
-    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/e/eb/H%C3%9CDAVEND%C4%B0GAR_CAM%C4%B0%C4%B0_-_panoramio.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
-    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/eb/H%C3%9CDAVEND%C4%B0GAR_CAM%C4%B0%C4%B0_-_panoramio.jpg/1920px-H%C3%9CDAVEND%C4%B0GAR_CAM%C4%B0%C4%B0_-_panoramio.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+    "license": "CC BY-SA 4.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Tomb_of_Sultan_Murad_I_-_02.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/4/40/Tomb_of_Sultan_Murad_I_-_02.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/40/Tomb_of_Sultan_Murad_I_-_02.jpg/1920px-Tomb_of_Sultan_Murad_I_-_02.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
   "wd-q12747162-muradiye-kulliyesi": {
     "wikidataQid": "Q12747162",
@@ -11394,6 +11576,20 @@
     "sourcePage": "https://commons.wikimedia.org/wiki/File:YILDIRIM_K%C3%9CLL%C4%B0YE_-_panoramio_-_HALUK_COMERTEL.jpg",
     "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/0/09/YILDIRIM_K%C3%9CLL%C4%B0YE_-_panoramio_-_HALUK_COMERTEL.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
     "displayUrl": "https://upload.wikimedia.org/wikipedia/commons/0/09/YILDIRIM_K%C3%9CLL%C4%B0YE_-_panoramio_-_HALUK_COMERTEL.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled"
+  },
+  "wd-q192369-iznik-golu": {
+    "wikidataQid": "Q192369",
+    "province": "Bursa",
+    "provinceQid": "Q43690",
+    "district": "Orhangazi (ilçe)",
+    "districtQid": "Q49107350",
+    "width": 4160,
+    "height": 1970,
+    "mime": "image/jpeg",
+    "license": "CC BY-SA 4.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Sahildeniznik.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/0/0a/Sahildeniznik.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0a/Sahildeniznik.jpg/1920px-Sahildeniznik.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
   "wd-q131523788-hagios-aberkios-manastiri": {
     "wikidataQid": "Q131523788",
@@ -12108,6 +12304,62 @@
     "sourcePage": "https://commons.wikimedia.org/wiki/File:TAHTA_KALE_KAPISI_BURSA_KALES%C4%B0_-_panoramio_(2).jpg",
     "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/b/bf/TAHTA_KALE_KAPISI_BURSA_KALES%C4%B0_-_panoramio_%282%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
     "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/bf/TAHTA_KALE_KAPISI_BURSA_KALES%C4%B0_-_panoramio_%282%29.jpg/1920px-TAHTA_KALE_KAPISI_BURSA_KALES%C4%B0_-_panoramio_%282%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  "wd-q139422905-bursa-kalenderhanesi": {
+    "wikidataQid": "Q139422905",
+    "province": "Bursa",
+    "provinceQid": "Q43690",
+    "district": "Osmangazi (ilçe)",
+    "districtQid": "Q49107396",
+    "width": 1600,
+    "height": 1200,
+    "mime": "image/jpeg",
+    "license": "CC BY-SA 4.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Bursa_Kalenderhanesi_2026-08-02_11.31.05_1785686616.jpeg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/2/2f/Bursa_Kalenderhanesi_2026-08-02_11.31.05_1785686616.jpeg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://upload.wikimedia.org/wikipedia/commons/2/2f/Bursa_Kalenderhanesi_2026-08-02_11.31.05_1785686616.jpeg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled"
+  },
+  "wd-q134615532-bursa-mevlevihanesi": {
+    "wikidataQid": "Q134615532",
+    "province": "Bursa",
+    "provinceQid": "Q43690",
+    "district": "Osmangazi (ilçe)",
+    "districtQid": "Q49107396",
+    "width": 4664,
+    "height": 3167,
+    "mime": "image/jpeg",
+    "license": "CC BY-SA 4.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Bursa_mevlevihanesi.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/d/db/Bursa_mevlevihanesi.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/db/Bursa_mevlevihanesi.jpg/1920px-Bursa_mevlevihanesi.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  "wd-q134615535-haci-sevki-efendi-dergahi": {
+    "wikidataQid": "Q134615535",
+    "province": "Bursa",
+    "provinceQid": "Q43690",
+    "district": "Yıldırım",
+    "districtQid": "Q2598734",
+    "width": 7059,
+    "height": 4627,
+    "mime": "image/jpeg",
+    "license": "CC BY 3.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Hac%C4%B1_%C5%9Fevki_efendi_dergah%C4%B1_bursa_-_panoramio_(1).jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/a/a6/Hac%C4%B1_%C5%9Fevki_efendi_dergah%C4%B1_bursa_-_panoramio_%281%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a6/Hac%C4%B1_%C5%9Fevki_efendi_dergah%C4%B1_bursa_-_panoramio_%281%29.jpg/1920px-Hac%C4%B1_%C5%9Fevki_efendi_dergah%C4%B1_bursa_-_panoramio_%281%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  "wd-q134615506-karabas-i-veli-tekkesi": {
+    "wikidataQid": "Q134615506",
+    "province": "Bursa",
+    "provinceQid": "Q43690",
+    "district": "Osmangazi (ilçe)",
+    "districtQid": "Q49107396",
+    "width": 7342,
+    "height": 4749,
+    "mime": "image/jpeg",
+    "license": "CC BY 3.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:KARABA%C5%9E-I_VEL%C4%B0_DERGAHI(K%C3%9CLT%C3%9CR_EV%C4%B0_)_BURSA_-_panoramio_(3).jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/d/d1/KARABA%C5%9E-I_VEL%C4%B0_DERGAHI%28K%C3%9CLT%C3%9CR_EV%C4%B0_%29_BURSA_-_panoramio_%283%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d1/KARABA%C5%9E-I_VEL%C4%B0_DERGAHI%28K%C3%9CLT%C3%9CR_EV%C4%B0_%29_BURSA_-_panoramio_%283%29.jpg/1920px-KARABA%C5%9E-I_VEL%C4%B0_DERGAHI%28K%C3%9CLT%C3%9CR_EV%C4%B0_%29_BURSA_-_panoramio_%283%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
   "wd-q211817-bozcaada": {
     "wikidataQid": "Q211817",
@@ -13341,6 +13593,20 @@
     "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/d/d0/V_Beach_at_Gallipoli.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
     "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d0/V_Beach_at_Gallipoli.JPG/1920px-V_Beach_at_Gallipoli.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
+  "wd-q135583035-alexandria-troas-dor-tapinagi": {
+    "wikidataQid": "Q135583035",
+    "province": "Çanakkale",
+    "provinceQid": "Q47813",
+    "district": "Ezine",
+    "districtQid": "Q16698797",
+    "width": 3072,
+    "height": 3557,
+    "mime": "image/jpeg",
+    "license": "CC BY-SA 4.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Roma_Yolu.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/7/79/Roma_Yolu.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/79/Roma_Yolu.jpg/1920px-Roma_Yolu.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
   "wd-q6064629-cankiri-buyuk-camii": {
     "wikidataQid": "Q6064629",
     "province": "Çankırı",
@@ -13844,6 +14110,34 @@
     "sourcePage": "https://commons.wikimedia.org/wiki/File:Babadag-T%C3%BCrkei.jpg",
     "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/c/c4/Babadag-T%C3%BCrkei.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
     "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c4/Babadag-T%C3%BCrkei.jpg/1920px-Babadag-T%C3%BCrkei.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  "wd-q126059099-kirmizi-su-karahayit": {
+    "wikidataQid": "Q126059099",
+    "province": "Denizli",
+    "provinceQid": "Q82096",
+    "district": "Pamukkale",
+    "districtQid": "Q420157",
+    "width": 4608,
+    "height": 3456,
+    "mime": "image/jpeg",
+    "license": "CC BY-SA 4.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:K%C4%B1rm%C4%B1z%C4%B1_Su_(Red_Spring),_Karahay%C4%B1t,_Turkey,_March_2024_06.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/8/82/K%C4%B1rm%C4%B1z%C4%B1_Su_%28Red_Spring%29%2C_Karahay%C4%B1t%2C_Turkey%2C_March_2024_06.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/82/K%C4%B1rm%C4%B1z%C4%B1_Su_%28Red_Spring%29%2C_Karahay%C4%B1t%2C_Turkey%2C_March_2024_06.jpg/1920px-K%C4%B1rm%C4%B1z%C4%B1_Su_%28Red_Spring%29%2C_Karahay%C4%B1t%2C_Turkey%2C_March_2024_06.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  "wd-q123014534-travertines-of-pamukkale": {
+    "wikidataQid": "Q123014534",
+    "province": "Denizli",
+    "provinceQid": "Q82096",
+    "district": "Pamukkale",
+    "districtQid": "Q420157",
+    "width": 4881,
+    "height": 2675,
+    "mime": "image/jpeg",
+    "license": "CC BY-SA 3.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Pamukkale_30.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/d/de/Pamukkale_30.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/de/Pamukkale_30.jpg/1920px-Pamukkale_30.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
   "wd-q54935392-cardak-han": {
     "wikidataQid": "Q54935392",
@@ -15209,13 +15503,13 @@
     "provinceQid": "Q83102",
     "district": "Edirne (ilçe)",
     "districtQid": "Q1911990",
-    "width": 4032,
-    "height": 3024,
+    "width": 8256,
+    "height": 5504,
     "mime": "image/jpeg",
     "license": "CC BY-SA 4.0",
-    "sourcePage": "https://commons.wikimedia.org/wiki/File:Ekmek%C3%A7izade_Kervansaray%C4%B1_324.JPG",
-    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/5/51/Ekmek%C3%A7izade_Kervansaray%C4%B1_324.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
-    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/51/Ekmek%C3%A7izade_Kervansaray%C4%B1_324.JPG/1920px-Ekmek%C3%A7izade_Kervansaray%C4%B1_324.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Edirne_Ekmek%C3%A7izade_caravanserai_in_2024_6215.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/f/f5/Edirne_Ekmek%C3%A7izade_caravanserai_in_2024_6215.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f5/Edirne_Ekmek%C3%A7izade_caravanserai_in_2024_6215.jpg/1920px-Edirne_Ekmek%C3%A7izade_caravanserai_in_2024_6215.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
   "wd-q1647825-rustem-pasa-kervansarayi": {
     "wikidataQid": "Q1647825",
@@ -15272,6 +15566,20 @@
     "sourcePage": "https://commons.wikimedia.org/wiki/File:Adalet_Tower_in_Edirne,_Turkey.jpg",
     "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/c/c0/Adalet_Tower_in_Edirne%2C_Turkey.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
     "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c0/Adalet_Tower_in_Edirne%2C_Turkey.jpg/1920px-Adalet_Tower_in_Edirne%2C_Turkey.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  "wd-q6006119-makedon-kulesi": {
+    "wikidataQid": "Q6006119",
+    "province": "Edirne",
+    "provinceQid": "Q83102",
+    "district": "Edirne (ilçe)",
+    "districtQid": "Q1911990",
+    "width": 1536,
+    "height": 2048,
+    "mime": "image/jpeg",
+    "license": "CC BY-SA 4.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Macedonian_Tower_in_Edirne.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/0/0f/Macedonian_Tower_in_Edirne.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://upload.wikimedia.org/wikipedia/commons/0/0f/Macedonian_Tower_in_Edirne.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled"
   },
   "wd-q6021897-edirne-ii-bayezid-koprusu": {
     "wikidataQid": "Q6021897",
@@ -16169,6 +16477,34 @@
     "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/2/2d/AliPa%C5%9Fa%C3%87ar%C5%9F%C4%B1s%C4%B1Edirne_%282%29.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
     "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2d/AliPa%C5%9Fa%C3%87ar%C5%9F%C4%B1s%C4%B1Edirne_%282%29.JPG/1920px-AliPa%C5%9Fa%C3%87ar%C5%9F%C4%B1s%C4%B1Edirne_%282%29.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
+  "wd-q131859929-edirne-kadiri-tekkesi": {
+    "wikidataQid": "Q131859929",
+    "province": "Edirne",
+    "provinceQid": "Q83102",
+    "district": "Edirne (ilçe)",
+    "districtQid": "Q1911990",
+    "width": 3024,
+    "height": 4032,
+    "mime": "image/jpeg",
+    "license": "CC BY-SA 4.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Edirne_Kadiri_Tekkesi_23.JPG",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/d/de/Edirne_Kadiri_Tekkesi_23.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/de/Edirne_Kadiri_Tekkesi_23.JPG/1920px-Edirne_Kadiri_Tekkesi_23.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  "wd-q131390475-veli-dede-tekkesi": {
+    "wikidataQid": "Q131390475",
+    "province": "Edirne",
+    "provinceQid": "Q83102",
+    "district": "Edirne (ilçe)",
+    "districtQid": "Q1911990",
+    "width": 4032,
+    "height": 3024,
+    "mime": "image/jpeg",
+    "license": "CC BY-SA 4.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Veli_Dede_T%C3%BCrbesi,_Edirne_35.JPG",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/0/0c/Veli_Dede_T%C3%BCrbesi%2C_Edirne_35.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0c/Veli_Dede_T%C3%BCrbesi%2C_Edirne_35.JPG/1920px-Veli_Dede_T%C3%BCrbesi%2C_Edirne_35.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
   "wd-q447212-altintepe": {
     "wikidataQid": "Q447212",
     "province": "Erzincan",
@@ -16784,6 +17120,20 @@
     "sourcePage": "https://commons.wikimedia.org/wiki/File:Murat_Pasha_Hammam_and_Murat_Pasha_Mosque,_Erzurum.jpg",
     "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/0/07/Murat_Pasha_Hammam_and_Murat_Pasha_Mosque%2C_Erzurum.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
     "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/07/Murat_Pasha_Hammam_and_Murat_Pasha_Mosque%2C_Erzurum.jpg/1920px-Murat_Pasha_Hammam_and_Murat_Pasha_Mosque%2C_Erzurum.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  "wd-q65284740-unguzek-kalesi": {
+    "wikidataQid": "Q65284740",
+    "province": "Erzurum",
+    "provinceQid": "Q376797",
+    "district": "Uzundere",
+    "districtQid": "Q1843445",
+    "width": 8103,
+    "height": 4500,
+    "mime": "image/jpeg",
+    "license": "CC BY-SA 4.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:I%C5%9F%C4%B1k_ve_eng%C3%BCzek_kalesi.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/2/29/I%C5%9F%C4%B1k_ve_eng%C3%BCzek_kalesi.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/29/I%C5%9F%C4%B1k_ve_eng%C3%BCzek_kalesi.jpg/1920px-I%C5%9F%C4%B1k_ve_eng%C3%BCzek_kalesi.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
   "wd-q131391250-kadincik-ana-turbesi": {
     "wikidataQid": "Q131391250",
@@ -21509,13 +21859,13 @@
     "provinceQid": "Q534799",
     "district": "Fatih",
     "districtQid": "Q732923",
-    "width": 1950,
-    "height": 1331,
+    "width": 3456,
+    "height": 2298,
     "mime": "image/jpeg",
-    "license": "CC BY 3.0",
-    "sourcePage": "https://commons.wikimedia.org/wiki/File:Fatih_Sultan_Mehmet_T%C3%BCrbesi,_Istanbul_-_panoramio_(1).jpg",
-    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/2/2d/Fatih_Sultan_Mehmet_T%C3%BCrbesi%2C_Istanbul_-_panoramio_%281%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
-    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2d/Fatih_Sultan_Mehmet_T%C3%BCrbesi%2C_Istanbul_-_panoramio_%281%29.jpg/1920px-Fatih_Sultan_Mehmet_T%C3%BCrbesi%2C_Istanbul_-_panoramio_%281%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+    "license": "CC BY-SA 2.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:II._Mehmed_tomb.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/d/dd/II._Mehmed_tomb.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/dd/II._Mehmed_tomb.jpg/1920px-II._Mehmed_tomb.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
   "wd-q112221286-fatih-cesmesi-uskudar": {
     "wikidataQid": "Q112221286",
@@ -23287,13 +23637,13 @@
     "provinceQid": "Q534799",
     "district": "Fatih",
     "districtQid": "Q732923",
-    "width": 1600,
-    "height": 1200,
+    "width": 3948,
+    "height": 1648,
     "mime": "image/jpeg",
-    "license": "Public domain",
-    "sourcePage": "https://commons.wikimedia.org/wiki/File:Second_Court_Topkapi_2007_80.JPG",
-    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/b/b3/Second_Court_Topkapi_2007_80.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
-    "displayUrl": "https://upload.wikimedia.org/wikipedia/commons/b/b3/Second_Court_Topkapi_2007_80.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled"
+    "license": "CC BY-SA 4.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:TopkapiSarayi-SecondoCortile-ColonnaLeoneImpostaBis.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/8/82/TopkapiSarayi-SecondoCortile-ColonnaLeoneImpostaBis.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/82/TopkapiSarayi-SecondoCortile-ColonnaLeoneImpostaBis.jpg/1920px-TopkapiSarayi-SecondoCortile-ColonnaLeoneImpostaBis.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
   "wd-q131836097-i-mahmut-cesmesi-babiali": {
     "wikidataQid": "Q131836097",
@@ -23403,9 +23753,9 @@
     "height": 3456,
     "mime": "image/jpeg",
     "license": "CC BY-SA 4.0",
-    "sourcePage": "https://commons.wikimedia.org/wiki/File:II._Mahmud_Han_%C3%87e%C5%9Fmesi_IMG_9825.jpg",
-    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/3/3b/II._Mahmud_Han_%C3%87e%C5%9Fmesi_IMG_9825.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
-    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3b/II._Mahmud_Han_%C3%87e%C5%9Fmesi_IMG_9825.jpg/1920px-II._Mahmud_Han_%C3%87e%C5%9Fmesi_IMG_9825.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:II._Mahmud_Han_%C3%87e%C5%9Fmesi_IMG_0805.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/5/51/II._Mahmud_Han_%C3%87e%C5%9Fmesi_IMG_0805.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/51/II._Mahmud_Han_%C3%87e%C5%9Fmesi_IMG_0805.jpg/1920px-II._Mahmud_Han_%C3%87e%C5%9Fmesi_IMG_0805.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
   "wd-q106152643-ii-mahmud-cesmesi-kadikoy": {
     "wikidataQid": "Q106152643",
@@ -31309,13 +31659,13 @@
     "provinceQid": "Q534799",
     "district": "Beşiktaş",
     "districtQid": "Q459495",
-    "width": 3072,
-    "height": 2304,
+    "width": 2976,
+    "height": 3968,
     "mime": "image/jpeg",
     "license": "CC BY-SA 3.0",
-    "sourcePage": "https://commons.wikimedia.org/wiki/File:%C4%B0stanbul_-_Arnavutk%C3%B6y,_Be%C5%9Fikta%C5%9F_r3_-_Kas%C4%B1m_2013.JPG",
-    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/4/48/%C4%B0stanbul_-_Arnavutk%C3%B6y%2C_Be%C5%9Fikta%C5%9F_r3_-_Kas%C4%B1m_2013.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
-    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/48/%C4%B0stanbul_-_Arnavutk%C3%B6y%2C_Be%C5%9Fikta%C5%9F_r3_-_Kas%C4%B1m_2013.JPG/1920px-%C4%B0stanbul_-_Arnavutk%C3%B6y%2C_Be%C5%9Fikta%C5%9F_r3_-_Kas%C4%B1m_2013.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:20131206_Istanbul_080.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/9/94/20131206_Istanbul_080.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/94/20131206_Istanbul_080.jpg/1920px-20131206_Istanbul_080.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
   "wd-q127418584-tezkireci-osman-efendi-camii": {
     "wikidataQid": "Q127418584",
@@ -31330,6 +31680,20 @@
     "sourcePage": "https://commons.wikimedia.org/wiki/File:Tezkireci_Osman_Efendi_Camii_IMG_0591.jpg",
     "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/5/55/Tezkireci_Osman_Efendi_Camii_IMG_0591.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
     "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/55/Tezkireci_Osman_Efendi_Camii_IMG_0591.jpg/1920px-Tezkireci_Osman_Efendi_Camii_IMG_0591.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  "wd-q2719784-tesvikiye-camii": {
+    "wikidataQid": "Q2719784",
+    "province": "İstanbul",
+    "provinceQid": "Q534799",
+    "district": "Şişli",
+    "districtQid": "Q390637",
+    "width": 1600,
+    "height": 1200,
+    "mime": "image/jpeg",
+    "license": "Public domain",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Tesvikiye_Mosque,_Istanbul_10.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/1/1d/Tesvikiye_Mosque%2C_Istanbul_10.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://upload.wikimedia.org/wikipedia/commons/1/1d/Tesvikiye_Mosque%2C_Istanbul_10.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled"
   },
   "wd-q127418587-tomtom-mescidi": {
     "wikidataQid": "Q127418587",
@@ -32933,13 +33297,13 @@
     "provinceQid": "Q534799",
     "district": "Fatih",
     "districtQid": "Q732923",
-    "width": 2816,
-    "height": 2112,
+    "width": 3764,
+    "height": 2634,
     "mime": "image/jpeg",
-    "license": "CC BY-SA 3.0",
-    "sourcePage": "https://commons.wikimedia.org/wiki/File:Hagia_Eirene,_Topkapi_Palace.JPG",
-    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/1/13/Hagia_Eirene%2C_Topkapi_Palace.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
-    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/13/Hagia_Eirene%2C_Topkapi_Palace.JPG/1920px-Hagia_Eirene%2C_Topkapi_Palace.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+    "license": "CC BY 2.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Hagia_Irene,_Istanbul_(52112279404)_(cropped).jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/4/42/Hagia_Irene%2C_Istanbul_%2852112279404%29_%28cropped%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/42/Hagia_Irene%2C_Istanbul_%2852112279404%29_%28cropped%29.jpg/1920px-Hagia_Irene%2C_Istanbul_%2852112279404%29_%28cropped%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
   "wd-q59238241-ayios-fokas-kilisesi": {
     "wikidataQid": "Q59238241",
@@ -33273,9 +33637,9 @@
     "height": 1836,
     "mime": "image/jpeg",
     "license": "CC BY-SA 4.0",
-    "sourcePage": "https://commons.wikimedia.org/wiki/File:G%C3%BCm%C3%BC%C5%9Fdere_Rum_Kilisesi.jpg",
-    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/8/84/G%C3%BCm%C3%BC%C5%9Fdere_Rum_Kilisesi.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
-    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/84/G%C3%BCm%C3%BC%C5%9Fdere_Rum_Kilisesi.jpg/1920px-G%C3%BCm%C3%BC%C5%9Fdere_Rum_Kilisesi.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:G%C3%BCm%C3%BC%C5%9Fdere_Rum_Kilisesi_(78978).jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/2/2b/G%C3%BCm%C3%BC%C5%9Fdere_Rum_Kilisesi_%2878978%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2b/G%C3%BCm%C3%BC%C5%9Fdere_Rum_Kilisesi_%2878978%29.jpg/1920px-G%C3%BCm%C3%BC%C5%9Fdere_Rum_Kilisesi_%2878978%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
   "wd-q1578614-hagios-polieuktos-kilisesi": {
     "wikidataQid": "Q1578614",
@@ -36615,13 +36979,13 @@
     "provinceQid": "Q534799",
     "district": "Şişli",
     "districtQid": "Q390637",
-    "width": 1600,
-    "height": 1200,
+    "width": 2464,
+    "height": 1632,
     "mime": "image/jpeg",
-    "license": "CC BY-SA 4.0",
-    "sourcePage": "https://commons.wikimedia.org/wiki/File:Askeri_M%C3%BCze_970.jpg",
-    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/f/ff/Askeri_M%C3%BCze_970.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
-    "displayUrl": "https://upload.wikimedia.org/wikipedia/commons/f/ff/Askeri_M%C3%BCze_970.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled"
+    "license": "CC BY-SA 3.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Istanbul_Military_Museum_cannon_02.JPG",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/c/c2/Istanbul_Military_Museum_cannon_02.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c2/Istanbul_Military_Museum_cannon_02.JPG/1920px-Istanbul_Military_Museum_cannon_02.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
   "wd-q4833521-asiyan-muzesi": {
     "wikidataQid": "Q4833521",
@@ -36895,13 +37259,13 @@
     "provinceQid": "Q534799",
     "district": "Beşiktaş",
     "districtQid": "Q459495",
-    "width": 4000,
-    "height": 3000,
+    "width": 4032,
+    "height": 3024,
     "mime": "image/jpeg",
-    "license": "CC BY 2.0",
-    "sourcePage": "https://commons.wikimedia.org/wiki/File:Golden_Horn_-_Bosphorous_River_cruise_-_Istanbul,_Turkey_(10582900944).jpg",
-    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/8/8d/Golden_Horn_-_Bosphorous_River_cruise_-_Istanbul%2C_Turkey_%2810582900944%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
-    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8d/Golden_Horn_-_Bosphorous_River_cruise_-_Istanbul%2C_Turkey_%2810582900944%29.jpg/1920px-Golden_Horn_-_Bosphorous_River_cruise_-_Istanbul%2C_Turkey_%2810582900944%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+    "license": "CC BY-SA 4.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:National_Palaces_Painting_Museum.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/d/d2/National_Palaces_Painting_Museum.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d2/National_Palaces_Painting_Museum.jpg/1920px-National_Palaces_Painting_Museum.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
   "wd-q107475211-muze-gazhane": {
     "wikidataQid": "Q107475211",
@@ -37245,13 +37609,13 @@
     "provinceQid": "Q534799",
     "district": "Fatih",
     "districtQid": "Q732923",
-    "width": 2560,
-    "height": 1440,
+    "width": 2048,
+    "height": 2048,
     "mime": "image/jpeg",
-    "license": "CC BY-SA 3.0",
-    "sourcePage": "https://commons.wikimedia.org/wiki/File:%C4%B0stanbul_%C3%9Cniversitesi_R%C4%B1dvan_%C3%87elikel_Arkeoloji_M%C3%BCzesi.jpg",
-    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/1/13/%C4%B0stanbul_%C3%9Cniversitesi_R%C4%B1dvan_%C3%87elikel_Arkeoloji_M%C3%BCzesi.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
-    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/13/%C4%B0stanbul_%C3%9Cniversitesi_R%C4%B1dvan_%C3%87elikel_Arkeoloji_M%C3%BCzesi.jpg/1920px-%C4%B0stanbul_%C3%9Cniversitesi_R%C4%B1dvan_%C3%87elikel_Arkeoloji_M%C3%BCzesi.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+    "license": "CC BY-SA 4.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:%C4%B0stanbul_%C3%9Cniversitesi_R%C4%B1dvan_%C3%87elikel_Arkeoloji_M%C3%BCzesi,_2022.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/7/7d/%C4%B0stanbul_%C3%9Cniversitesi_R%C4%B1dvan_%C3%87elikel_Arkeoloji_M%C3%BCzesi%2C_2022.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7d/%C4%B0stanbul_%C3%9Cniversitesi_R%C4%B1dvan_%C3%87elikel_Arkeoloji_M%C3%BCzesi%2C_2022.jpg/1920px-%C4%B0stanbul_%C3%9Cniversitesi_R%C4%B1dvan_%C3%87elikel_Arkeoloji_M%C3%BCzesi%2C_2022.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
   "wd-q97320257-ataturk-kent-ormani": {
     "wikidataQid": "Q97320257",
@@ -38407,13 +38771,13 @@
     "provinceQid": "Q534799",
     "district": "Kadıköy",
     "districtQid": "Q932886",
-    "width": 3200,
-    "height": 1440,
+    "width": 4080,
+    "height": 1836,
     "mime": "image/jpeg",
     "license": "CC BY-SA 4.0",
-    "sourcePage": "https://commons.wikimedia.org/wiki/File:Tarihi_Hamam.jpg",
-    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/c/c9/Tarihi_Hamam.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
-    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c9/Tarihi_Hamam.jpg/1920px-Tarihi_Hamam.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Tarihi_Hamam_(13793).jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/4/4a/Tarihi_Hamam_%2813793%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4a/Tarihi_Hamam_%2813793%29.jpg/1920px-Tarihi_Hamam_%2813793%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
   "wd-q85852396-vezneciler-hamami": {
     "wikidataQid": "Q85852396",
@@ -38701,13 +39065,13 @@
     "provinceQid": "Q534799",
     "district": "Fatih",
     "districtQid": "Q732923",
-    "width": 3200,
-    "height": 1440,
+    "width": 4080,
+    "height": 1836,
     "mime": "image/jpeg",
     "license": "CC BY-SA 4.0",
-    "sourcePage": "https://commons.wikimedia.org/wiki/File:Davut_Pa%C5%9Fa_Camii_Haziresi.jpg",
-    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/8/8b/Davut_Pa%C5%9Fa_Camii_Haziresi.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
-    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8b/Davut_Pa%C5%9Fa_Camii_Haziresi.jpg/1920px-Davut_Pa%C5%9Fa_Camii_Haziresi.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Davut_Pa%C5%9Fa_Camii_Haziresi_(82134).jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/3/36/Davut_Pa%C5%9Fa_Camii_Haziresi_%2882134%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/36/Davut_Pa%C5%9Fa_Camii_Haziresi_%2882134%29.jpg/1920px-Davut_Pa%C5%9Fa_Camii_Haziresi_%2882134%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
   "wd-q134735131-durmus-dede-tekkesi-haziresi": {
     "wikidataQid": "Q134735131",
@@ -39247,13 +39611,13 @@
     "provinceQid": "Q534799",
     "district": "Fatih",
     "districtQid": "Q732923",
-    "width": 3200,
-    "height": 1440,
+    "width": 4080,
+    "height": 1836,
     "mime": "image/jpeg",
     "license": "CC BY-SA 4.0",
-    "sourcePage": "https://commons.wikimedia.org/wiki/File:S%C3%BCleymaniye_Camii_Haziresi.jpg",
-    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/7/7c/S%C3%BCleymaniye_Camii_Haziresi.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
-    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7c/S%C3%BCleymaniye_Camii_Haziresi.jpg/1920px-S%C3%BCleymaniye_Camii_Haziresi.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:S%C3%BCleymaniye_Camii_Haziresi_(37561).jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/1/1a/S%C3%BCleymaniye_Camii_Haziresi_%2837561%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1a/S%C3%BCleymaniye_Camii_Haziresi_%2837561%29.jpg/1920px-S%C3%BCleymaniye_Camii_Haziresi_%2837561%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
   "wd-q97232399-sutluce-mezarligi": {
     "wikidataQid": "Q97232399",
@@ -39577,19 +39941,19 @@
     "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/a/ad/Turkey-03416_-_Entrance_to_the_Topkapi_Palace_%2811313731085%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
     "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/ad/Turkey-03416_-_Entrance_to_the_Topkapi_Palace_%2811313731085%29.jpg/1920px-Turkey-03416_-_Entrance_to_the_Topkapi_Palace_%2811313731085%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
-  "wd-q135429343-belgrat-kapisi": {
-    "wikidataQid": "Q135429343",
+  "wd-q3908912-belgrad-kapisi-istanbul": {
+    "wikidataQid": "Q3908912",
     "province": "İstanbul",
     "provinceQid": "Q534799",
     "district": "Fatih",
     "districtQid": "Q732923",
-    "width": 1440,
-    "height": 3200,
+    "width": 8256,
+    "height": 5504,
     "mime": "image/jpeg",
     "license": "CC BY-SA 4.0",
-    "sourcePage": "https://commons.wikimedia.org/wiki/File:Belgrat_Kap%C4%B1s%C4%B1.jpg",
-    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/b/b9/Belgrat_Kap%C4%B1s%C4%B1.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
-    "displayUrl": "https://upload.wikimedia.org/wikipedia/commons/b/b9/Belgrat_Kap%C4%B1s%C4%B1.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled"
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Outside_walls_at_Belgrad_Kap%C4%B1_5510.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/d/d0/Outside_walls_at_Belgrad_Kap%C4%B1_5510.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d0/Outside_walls_at_Belgrad_Kap%C4%B1_5510.jpg/1920px-Outside_walls_at_Belgrad_Kap%C4%B1_5510.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
   "wd-q135479137-edirne-kapisi": {
     "wikidataQid": "Q135479137",
@@ -39884,6 +40248,20 @@
     "sourcePage": "https://commons.wikimedia.org/wiki/File:Kara_Surlar%C4%B1,_Ana_Sur,_T21.jpg",
     "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/2/21/Kara_Surlar%C4%B1%2C_Ana_Sur%2C_T21.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
     "displayUrl": "https://upload.wikimedia.org/wikipedia/commons/2/21/Kara_Surlar%C4%B1%2C_Ana_Sur%2C_T21.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled"
+  },
+  "wd-q135035323-kara-surlari-ana-sur-t23": {
+    "wikidataQid": "Q135035323",
+    "province": "İstanbul",
+    "provinceQid": "Q534799",
+    "district": "Fatih",
+    "districtQid": "Q732923",
+    "width": 1440,
+    "height": 3200,
+    "mime": "image/jpeg",
+    "license": "CC BY-SA 4.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Kara_Surlar%C4%B1,_Ana_Sur,_T23.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/4/40/Kara_Surlar%C4%B1%2C_Ana_Sur%2C_T23.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://upload.wikimedia.org/wikipedia/commons/4/40/Kara_Surlar%C4%B1%2C_Ana_Sur%2C_T23.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled"
   },
   "wd-q135035271-kara-surlari-ana-sur-t24": {
     "wikidataQid": "Q135035271",
@@ -40451,13 +40829,13 @@
     "provinceQid": "Q534799",
     "district": "Sarıyer",
     "districtQid": "Q857107",
-    "width": 3200,
-    "height": 1440,
+    "width": 4080,
+    "height": 1836,
     "mime": "image/jpeg",
     "license": "CC BY-SA 4.0",
-    "sourcePage": "https://commons.wikimedia.org/wiki/File:Tellitabya.jpg",
-    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/4/49/Tellitabya.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
-    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/49/Tellitabya.jpg/1920px-Tellitabya.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Tellitabya_(82190).jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/0/09/Tellitabya_%2882190%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/09/Tellitabya_%2882190%29.jpg/1920px-Tellitabya_%2882190%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
   "wd-q137220455-walls-of-topkapi-palace": {
     "wikidataQid": "Q137220455",
@@ -40683,6 +41061,160 @@
     "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/c/c8/Bosporus_Strait_and_Istanbul%2C_Turkey.jpeg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
     "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c8/Bosporus_Strait_and_Istanbul%2C_Turkey.jpeg/1920px-Bosporus_Strait_and_Istanbul%2C_Turkey.jpeg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
+  "wd-q134615650-afganiler-tekkesi": {
+    "wikidataQid": "Q134615650",
+    "province": "İstanbul",
+    "provinceQid": "Q534799",
+    "district": "Üsküdar (ilçe)",
+    "districtQid": "Q49110521",
+    "width": 4160,
+    "height": 3120,
+    "mime": "image/jpeg",
+    "license": "CC BY-SA 4.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Afganiler_Tekkesi.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/2/2d/Afganiler_Tekkesi.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2d/Afganiler_Tekkesi.jpg/1920px-Afganiler_Tekkesi.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  "wd-q119726876-ayni-ali-baba-tekkesi": {
+    "wikidataQid": "Q119726876",
+    "province": "İstanbul",
+    "provinceQid": "Q534799",
+    "district": "Beyoğlu",
+    "districtQid": "Q217411",
+    "width": 3024,
+    "height": 4032,
+    "mime": "image/jpeg",
+    "license": "CC BY-SA 4.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Ayni_Ali_Baba_Tekkesi_02.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/3/3c/Ayni_Ali_Baba_Tekkesi_02.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3c/Ayni_Ali_Baba_Tekkesi_02.jpg/1920px-Ayni_Ali_Baba_Tekkesi_02.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  "wd-q133817513-bala-suleyman-aga-kulliyesi-tekkesi": {
+    "wikidataQid": "Q133817513",
+    "province": "İstanbul",
+    "provinceQid": "Q534799",
+    "district": "Fatih",
+    "districtQid": "Q732923",
+    "width": 3200,
+    "height": 1440,
+    "mime": "image/jpeg",
+    "license": "CC BY-SA 4.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Bala_S%C3%BCleyman_A%C4%9Fa_K%C3%BClliyesi_Tekkesi.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/a/ae/Bala_S%C3%BCleyman_A%C4%9Fa_K%C3%BClliyesi_Tekkesi.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/ae/Bala_S%C3%BCleyman_A%C4%9Fa_K%C3%BClliyesi_Tekkesi.jpg/1920px-Bala_S%C3%BCleyman_A%C4%9Fa_K%C3%BClliyesi_Tekkesi.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  "wd-q121411158-emir-buhari-tekkesi": {
+    "wikidataQid": "Q121411158",
+    "province": "İstanbul",
+    "provinceQid": "Q534799",
+    "district": "Fatih",
+    "districtQid": "Q732923",
+    "width": 4032,
+    "height": 3024,
+    "mime": "image/jpeg",
+    "license": "CC BY-SA 4.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Emir_Buhari_Tekkesi_02.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/4/4c/Emir_Buhari_Tekkesi_02.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4c/Emir_Buhari_Tekkesi_02.jpg/1920px-Emir_Buhari_Tekkesi_02.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  "wd-q125462733-erikli-baba-tekkesi": {
+    "wikidataQid": "Q125462733",
+    "province": "İstanbul",
+    "provinceQid": "Q534799",
+    "district": "Zeytinburnu",
+    "districtQid": "Q197095",
+    "width": 1932,
+    "height": 2576,
+    "mime": "image/jpeg",
+    "license": "CC BY-SA 4.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:20240410_Erikli_Baba_Dergah%C4%B1_3.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/5/58/20240410_Erikli_Baba_Dergah%C4%B1_3.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/58/20240410_Erikli_Baba_Dergah%C4%B1_3.jpg/1920px-20240410_Erikli_Baba_Dergah%C4%B1_3.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  "wd-q134615605-haci-besir-aga-tekkesi": {
+    "wikidataQid": "Q134615605",
+    "province": "İstanbul",
+    "provinceQid": "Q534799",
+    "district": "Fatih",
+    "districtQid": "Q732923",
+    "width": 3024,
+    "height": 4032,
+    "mime": "image/jpeg",
+    "license": "CC BY-SA 4.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Hac%C4%B1_Be%C5%9Fir_A%C4%9Fa_Tekkesi_06.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/1/15/Hac%C4%B1_Be%C5%9Fir_A%C4%9Fa_Tekkesi_06.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/15/Hac%C4%B1_Be%C5%9Fir_A%C4%9Fa_Tekkesi_06.jpg/1920px-Hac%C4%B1_Be%C5%9Fir_A%C4%9Fa_Tekkesi_06.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  "wd-q134615560-hindiler-tekkesi": {
+    "wikidataQid": "Q134615560",
+    "province": "İstanbul",
+    "provinceQid": "Q534799",
+    "district": "Üsküdar (ilçe)",
+    "districtQid": "Q49110521",
+    "width": 3200,
+    "height": 1440,
+    "mime": "image/jpeg",
+    "license": "CC BY-SA 4.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Hindiler_Tekkesi.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/c/ce/Hindiler_Tekkesi.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/ce/Hindiler_Tekkesi.jpg/1920px-Hindiler_Tekkesi.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  "wd-q134615660-kadem-i-serif-tekkesi": {
+    "wikidataQid": "Q134615660",
+    "province": "İstanbul",
+    "provinceQid": "Q534799",
+    "district": "Fatih",
+    "districtQid": "Q732923",
+    "width": 4160,
+    "height": 3120,
+    "mime": "image/jpeg",
+    "license": "CC BY-SA 4.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Kadem-i_%C5%9Eerif_Tekkesi.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/1/18/Kadem-i_%C5%9Eerif_Tekkesi.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/18/Kadem-i_%C5%9Eerif_Tekkesi.jpg/1920px-Kadem-i_%C5%9Eerif_Tekkesi.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  "wd-q134615665-kaygusuz-tekkesi": {
+    "wikidataQid": "Q134615665",
+    "province": "İstanbul",
+    "provinceQid": "Q534799",
+    "district": "Fatih",
+    "districtQid": "Q732923",
+    "width": 2872,
+    "height": 2872,
+    "mime": "image/jpeg",
+    "license": "CC BY-SA 4.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Kaygusuz_Baba_Tekkesi.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/2/26/Kaygusuz_Baba_Tekkesi.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/26/Kaygusuz_Baba_Tekkesi.jpg/1920px-Kaygusuz_Baba_Tekkesi.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  "wd-q134615655-seyyid-nizam-tekkesi": {
+    "wikidataQid": "Q134615655",
+    "province": "İstanbul",
+    "provinceQid": "Q534799",
+    "district": "Zeytinburnu",
+    "districtQid": "Q197095",
+    "width": 4160,
+    "height": 3120,
+    "mime": "image/jpeg",
+    "license": "CC BY-SA 4.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Seyyid_Nizam_Tekkesi.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/8/81/Seyyid_Nizam_Tekkesi.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/81/Seyyid_Nizam_Tekkesi.jpg/1920px-Seyyid_Nizam_Tekkesi.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  "wd-q134615550-seyh-ethem-sirri-efendi-tekkesi-beykoz": {
+    "wikidataQid": "Q134615550",
+    "province": "İstanbul",
+    "provinceQid": "Q534799",
+    "district": "Beykoz",
+    "districtQid": "Q794351",
+    "width": 4032,
+    "height": 3024,
+    "mime": "image/jpeg",
+    "license": "CC BY-SA 4.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:%C5%9Eeyh_Ethem_S%C4%B1rr%C4%B1_Efendi_Tekkesi,_Beykoz_2026-07-02_16.43.06_1783189275.jpeg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/1/1e/%C5%9Eeyh_Ethem_S%C4%B1rr%C4%B1_Efendi_Tekkesi%2C_Beykoz_2026-07-02_16.43.06_1783189275.jpeg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1e/%C5%9Eeyh_Ethem_S%C4%B1rr%C4%B1_Efendi_Tekkesi%2C_Beykoz_2026-07-02_16.43.06_1783189275.jpeg/1920px-%C5%9Eeyh_Ethem_S%C4%B1rr%C4%B1_Efendi_Tekkesi%2C_Beykoz_2026-07-02_16.43.06_1783189275.jpeg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
   "wd-q4810690-buyukada": {
     "wikidataQid": "Q4810690",
     "province": "İzmir",
@@ -40763,9 +41295,9 @@
     "height": 4608,
     "mime": "image/jpeg",
     "license": "CC BY-SA 4.0",
-    "sourcePage": "https://commons.wikimedia.org/wiki/File:144.98-Sokak_%C3%87e%C5%9Fmesi-1914_01.jpg",
-    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/b/b3/144.98-Sokak_%C3%87e%C5%9Fmesi-1914_01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
-    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b3/144.98-Sokak_%C3%87e%C5%9Fmesi-1914_01.jpg/1920px-144.98-Sokak_%C3%87e%C5%9Fmesi-1914_01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:144.98-Sokak_%C3%87e%C5%9Fmesi-1914_02.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/9/94/144.98-Sokak_%C3%87e%C5%9Fmesi-1914_02.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/94/144.98-Sokak_%C3%87e%C5%9Fmesi-1914_02.jpg/1920px-144.98-Sokak_%C3%87e%C5%9Fmesi-1914_02.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
   "wd-q131390837-alihan-dede-turbesi": {
     "wikidataQid": "Q131390837",
@@ -40801,13 +41333,13 @@
     "provinceQid": "Q344490",
     "district": "Bergama",
     "districtQid": "Q737822",
-    "width": 3456,
-    "height": 4608,
+    "width": 4608,
+    "height": 3456,
     "mime": "image/jpeg",
     "license": "CC BY-SA 4.0",
-    "sourcePage": "https://commons.wikimedia.org/wiki/File:450.59-Alp_%C3%87%C4%B1kmaz%C4%B1_%C3%87e%C5%9Fmesi-19.yy_01.jpg",
-    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/7/7b/450.59-Alp_%C3%87%C4%B1kmaz%C4%B1_%C3%87e%C5%9Fmesi-19.yy_01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
-    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7b/450.59-Alp_%C3%87%C4%B1kmaz%C4%B1_%C3%87e%C5%9Fmesi-19.yy_01.jpg/1920px-450.59-Alp_%C3%87%C4%B1kmaz%C4%B1_%C3%87e%C5%9Fmesi-19.yy_01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:450.59-Alp_%C3%87%C4%B1kmaz%C4%B1_%C3%87e%C5%9Fmesi-19.yy_02.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/a/a4/450.59-Alp_%C3%87%C4%B1kmaz%C4%B1_%C3%87e%C5%9Fmesi-19.yy_02.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a4/450.59-Alp_%C3%87%C4%B1kmaz%C4%B1_%C3%87e%C5%9Fmesi-19.yy_02.jpg/1920px-450.59-Alp_%C3%87%C4%B1kmaz%C4%B1_%C3%87e%C5%9Fmesi-19.yy_02.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
   "wd-q131391386-anonim-turbe-1": {
     "wikidataQid": "Q131391386",
@@ -40917,9 +41449,9 @@
     "height": 4608,
     "mime": "image/jpeg",
     "license": "CC BY-SA 4.0",
-    "sourcePage": "https://commons.wikimedia.org/wiki/File:305.45-Cam-i_Kebir_Caddesi_%C3%87e%C5%9Fmesi-1839_01.jpg",
-    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/a/a8/305.45-Cam-i_Kebir_Caddesi_%C3%87e%C5%9Fmesi-1839_01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
-    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a8/305.45-Cam-i_Kebir_Caddesi_%C3%87e%C5%9Fmesi-1839_01.jpg/1920px-305.45-Cam-i_Kebir_Caddesi_%C3%87e%C5%9Fmesi-1839_01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:305.45-Cam-i_Kebir_Caddesi_%C3%87e%C5%9Fmesi-1839_03.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/b/b0/305.45-Cam-i_Kebir_Caddesi_%C3%87e%C5%9Fmesi-1839_03.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b0/305.45-Cam-i_Kebir_Caddesi_%C3%87e%C5%9Fmesi-1839_03.jpg/1920px-305.45-Cam-i_Kebir_Caddesi_%C3%87e%C5%9Fmesi-1839_03.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
   "wd-q131836481-haci-yamak-kizi-haci-hatun-cesmesi": {
     "wikidataQid": "Q131836481",
@@ -41081,13 +41613,13 @@
     "provinceQid": "Q344490",
     "district": "Bergama",
     "districtQid": "Q737822",
-    "width": 1944,
-    "height": 2592,
+    "width": 2592,
+    "height": 1944,
     "mime": "image/jpeg",
     "license": "CC BY-SA 4.0",
-    "sourcePage": "https://commons.wikimedia.org/wiki/File:204.7-M%C3%BCderris_Cevdet_Sokak_%C3%87e%C5%9Fmesi-1744_01.jpg",
-    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/1/1c/204.7-M%C3%BCderris_Cevdet_Sokak_%C3%87e%C5%9Fmesi-1744_01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
-    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1c/204.7-M%C3%BCderris_Cevdet_Sokak_%C3%87e%C5%9Fmesi-1744_01.jpg/1920px-204.7-M%C3%BCderris_Cevdet_Sokak_%C3%87e%C5%9Fmesi-1744_01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:204.7-M%C3%BCderris_Cevdet_Sokak_%C3%87e%C5%9Fmesi-1744_02.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/8/86/204.7-M%C3%BCderris_Cevdet_Sokak_%C3%87e%C5%9Fmesi-1744_02.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/86/204.7-M%C3%BCderris_Cevdet_Sokak_%C3%87e%C5%9Fmesi-1744_02.jpg/1920px-204.7-M%C3%BCderris_Cevdet_Sokak_%C3%87e%C5%9Fmesi-1744_02.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
   "wd-q124668709-narlidere-sehitligi": {
     "wikidataQid": "Q124668709",
@@ -41253,9 +41785,9 @@
     "height": 4608,
     "mime": "image/jpeg",
     "license": "CC BY-SA 4.0",
-    "sourcePage": "https://commons.wikimedia.org/wiki/File:323.19-%C4%B0ncirli_Mescit_Soka%C4%9F%C4%B1_%C3%87e%C5%9Fmesi-19.yy_01.jpg",
-    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/1/17/323.19-%C4%B0ncirli_Mescit_Soka%C4%9F%C4%B1_%C3%87e%C5%9Fmesi-19.yy_01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
-    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/17/323.19-%C4%B0ncirli_Mescit_Soka%C4%9F%C4%B1_%C3%87e%C5%9Fmesi-19.yy_01.jpg/1920px-323.19-%C4%B0ncirli_Mescit_Soka%C4%9F%C4%B1_%C3%87e%C5%9Fmesi-19.yy_01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:323.19-%C4%B0ncirli_Mescit_Soka%C4%9F%C4%B1_%C3%87e%C5%9Fmesi-19.yy_03.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/3/33/323.19-%C4%B0ncirli_Mescit_Soka%C4%9F%C4%B1_%C3%87e%C5%9Fmesi-19.yy_03.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/33/323.19-%C4%B0ncirli_Mescit_Soka%C4%9F%C4%B1_%C3%87e%C5%9Fmesi-19.yy_03.jpg/1920px-323.19-%C4%B0ncirli_Mescit_Soka%C4%9F%C4%B1_%C3%87e%C5%9Fmesi-19.yy_03.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
   "wd-q67141496-cesme-gazipasa-ay-sokak-bergama": {
     "wikidataQid": "Q67141496",
@@ -41267,9 +41799,9 @@
     "height": 4608,
     "mime": "image/jpeg",
     "license": "CC BY-SA 4.0",
-    "sourcePage": "https://commons.wikimedia.org/wiki/File:293.16-Ay_Sokak_%C3%87e%C5%9Fmesi-19.yy.jpg",
-    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/0/05/293.16-Ay_Sokak_%C3%87e%C5%9Fmesi-19.yy.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
-    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/05/293.16-Ay_Sokak_%C3%87e%C5%9Fmesi-19.yy.jpg/1920px-293.16-Ay_Sokak_%C3%87e%C5%9Fmesi-19.yy.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:293.16-Ay_Sokak_%C3%87e%C5%9Fmesi-21.yy.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/8/8d/293.16-Ay_Sokak_%C3%87e%C5%9Fmesi-21.yy.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8d/293.16-Ay_Sokak_%C3%87e%C5%9Fmesi-21.yy.jpg/1920px-293.16-Ay_Sokak_%C3%87e%C5%9Fmesi-21.yy.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
   "wd-q67141843-cesme-selcuk-1-cukurbag-caddesi": {
     "wikidataQid": "Q67141843",
@@ -41281,9 +41813,9 @@
     "height": 4608,
     "mime": "image/jpeg",
     "license": "CC BY-SA 4.0",
-    "sourcePage": "https://commons.wikimedia.org/wiki/File:416.40-1._%C3%87ukurba%C4%9F_Caddesi_%C3%87e%C5%9Fmesi-19.yy_01.jpg",
-    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/f/ff/416.40-1._%C3%87ukurba%C4%9F_Caddesi_%C3%87e%C5%9Fmesi-19.yy_01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
-    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/ff/416.40-1._%C3%87ukurba%C4%9F_Caddesi_%C3%87e%C5%9Fmesi-19.yy_01.jpg/1920px-416.40-1._%C3%87ukurba%C4%9F_Caddesi_%C3%87e%C5%9Fmesi-19.yy_01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:416.40-1._%C3%87ukurba%C4%9F_Caddesi_%C3%87e%C5%9Fmesi-19.yy_03.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/8/82/416.40-1._%C3%87ukurba%C4%9F_Caddesi_%C3%87e%C5%9Fmesi-19.yy_03.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/82/416.40-1._%C3%87ukurba%C4%9F_Caddesi_%C3%87e%C5%9Fmesi-19.yy_03.jpg/1920px-416.40-1._%C3%87ukurba%C4%9F_Caddesi_%C3%87e%C5%9Fmesi-19.yy_03.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
   "wd-q67141853-cesme-selcuk-2-cukurbag-caddesi-12": {
     "wikidataQid": "Q67141853",
@@ -41295,9 +41827,9 @@
     "height": 4608,
     "mime": "image/jpeg",
     "license": "CC BY-SA 4.0",
-    "sourcePage": "https://commons.wikimedia.org/wiki/File:418.3-Sar%C4%B1_%C3%87e%C5%9Fme-19.yy_01.jpg",
-    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/9/92/418.3-Sar%C4%B1_%C3%87e%C5%9Fme-19.yy_01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
-    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/92/418.3-Sar%C4%B1_%C3%87e%C5%9Fme-19.yy_01.jpg/1920px-418.3-Sar%C4%B1_%C3%87e%C5%9Fme-19.yy_01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:418.3-Sar%C4%B1_%C3%87e%C5%9Fme-19.yy_02.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/7/77/418.3-Sar%C4%B1_%C3%87e%C5%9Fme-19.yy_02.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/77/418.3-Sar%C4%B1_%C3%87e%C5%9Fme-19.yy_02.jpg/1920px-418.3-Sar%C4%B1_%C3%87e%C5%9Fme-19.yy_02.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
   "wd-q122363469-ozgur-kadin-heykeli": {
     "wikidataQid": "Q122363469",
@@ -41421,9 +41953,9 @@
     "height": 1880,
     "mime": "image/jpeg",
     "license": "CC BY-SA 3.0",
-    "sourcePage": "https://commons.wikimedia.org/wiki/File:Ephesus_Basilica.Jpg",
-    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/e/ea/Ephesus_Basilica.Jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
-    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/ea/Ephesus_Basilica.Jpg/1920px-Ephesus_Basilica.Jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Ephesus_basilica2.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/8/83/Ephesus_basilica2.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/83/Ephesus_basilica2.jpg/1920px-Ephesus_basilica2.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
   "wd-q116671676-bergama-agorasi": {
     "wikidataQid": "Q116671676",
@@ -41687,9 +42219,9 @@
     "height": 5328,
     "mime": "image/jpeg",
     "license": "CC BY-SA 4.0",
-    "sourcePage": "https://commons.wikimedia.org/wiki/File:Harbor_Baths_(Ephesus)_19.jpg",
-    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/6/6a/Harbor_Baths_%28Ephesus%29_19.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
-    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6a/Harbor_Baths_%28Ephesus%29_19.jpg/1920px-Harbor_Baths_%28Ephesus%29_19.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Harbor_Baths_(Ephesus)_6.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/d/d2/Harbor_Baths_%28Ephesus%29_6.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d2/Harbor_Baths_%28Ephesus%29_6.jpg/1920px-Harbor_Baths_%28Ephesus%29_6.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
   "wd-q4261739-limantepe": {
     "wikidataQid": "Q4261739",
@@ -41893,13 +42425,13 @@
     "provinceQid": "Q344490",
     "district": "Seferihisar",
     "districtQid": "Q2523774",
-    "width": 2049,
-    "height": 1536,
+    "width": 3072,
+    "height": 2048,
     "mime": "image/jpeg",
-    "license": "CC BY-SA 4.0",
-    "sourcePage": "https://commons.wikimedia.org/wiki/File:Teos,_S%C4%B1%C4%9Fac%C4%B1k.jpg",
-    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/c/c0/Teos%2C_S%C4%B1%C4%9Fac%C4%B1k.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
-    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c0/Teos%2C_S%C4%B1%C4%9Fac%C4%B1k.jpg/1920px-Teos%2C_S%C4%B1%C4%9Fac%C4%B1k.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+    "license": "CC BY-SA 3.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Theater_teos.JPG",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/a/a5/Theater_teos.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a5/Theater_teos.JPG/1920px-Theater_teos.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
   "wd-q135581839-teos-antik-tiyatrosu": {
     "wikidataQid": "Q135581839",
@@ -41977,13 +42509,13 @@
     "provinceQid": "Q344490",
     "district": "Selçuk (ilçe)",
     "districtQid": "Q1966755",
-    "width": 2048,
-    "height": 1360,
+    "width": 2816,
+    "height": 1880,
     "mime": "image/jpeg",
     "license": "CC BY-SA 3.0",
-    "sourcePage": "https://commons.wikimedia.org/wiki/File:13.9_Terrace_Houses_in_Ephesus.JPG",
-    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/5/58/13.9_Terrace_Houses_in_Ephesus.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
-    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/58/13.9_Terrace_Houses_in_Ephesus.JPG/1920px-13.9_Terrace_Houses_in_Ephesus.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Ephesus_terrace_houses3.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/8/8f/Ephesus_terrace_houses3.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8f/Ephesus_terrace_houses3.jpg/1920px-Ephesus_terrace_houses3.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
   "wd-q76639564-yukari-gymnasion-devlet-agorasi-hamamlari": {
     "wikidataQid": "Q76639564",
@@ -43377,13 +43909,13 @@
     "provinceQid": "Q344490",
     "district": "Çeşme (ilçe)",
     "districtQid": "Q1911051",
-    "width": 1600,
-    "height": 1179,
+    "width": 1536,
+    "height": 2049,
     "mime": "image/jpeg",
-    "license": "Public domain",
-    "sourcePage": "https://commons.wikimedia.org/wiki/File:Cesme-streets.JPG",
-    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/0/03/Cesme-streets.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
-    "displayUrl": "https://upload.wikimedia.org/wikipedia/commons/0/03/Cesme-streets.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled"
+    "license": "CC BY-SA 4.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Ala%C3%A7at%C4%B1_2016.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/6/6e/Ala%C3%A7at%C4%B1_2016.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://upload.wikimedia.org/wikipedia/commons/6/6e/Ala%C3%A7at%C4%B1_2016.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled"
   },
   "wd-q6101813-ayasuluk": {
     "wikidataQid": "Q6101813",
@@ -44427,13 +44959,13 @@
     "provinceQid": "Q482834",
     "district": "Dulkadiroğlu ilçesi",
     "districtQid": "Q49103124",
-    "width": 4915,
-    "height": 3284,
+    "width": 5184,
+    "height": 3456,
     "mime": "image/jpeg",
     "license": "CC BY-SA 3.0",
-    "sourcePage": "https://commons.wikimedia.org/wiki/File:Kahramanmaras_Museum_Eingang.jpg",
-    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/7/79/Kahramanmaras_Museum_Eingang.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
-    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/79/Kahramanmaras_Museum_Eingang.jpg/1920px-Kahramanmaras_Museum_Eingang.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Kahramanmaras_Museum_Steinsaal.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/d/d4/Kahramanmaras_Museum_Steinsaal.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d4/Kahramanmaras_Museum_Steinsaal.jpg/1920px-Kahramanmaras_Museum_Steinsaal.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
   "wd-q130722349-akseki-sokak-cesmesi-1": {
     "wikidataQid": "Q130722349",
@@ -45169,13 +45701,13 @@
     "provinceQid": "Q483168",
     "district": "Safranbolu (ilçe)",
     "districtQid": "Q2662858",
-    "width": 2016,
-    "height": 4480,
+    "width": 4000,
+    "height": 2250,
     "mime": "image/jpeg",
     "license": "CC BY-SA 4.0",
-    "sourcePage": "https://commons.wikimedia.org/wiki/File:Gazi_S%C3%BCleyman_Pa%C5%9Fa_Camii,_Safranbolu.jpg",
-    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/8/88/Gazi_S%C3%BCleyman_Pa%C5%9Fa_Camii%2C_Safranbolu.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
-    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/88/Gazi_S%C3%BCleyman_Pa%C5%9Fa_Camii%2C_Safranbolu.jpg/1920px-Gazi_S%C3%BCleyman_Pa%C5%9Fa_Camii%2C_Safranbolu.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Eski_Camii,_Safranbolu.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/d/d8/Eski_Camii%2C_Safranbolu.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d8/Eski_Camii%2C_Safranbolu.jpg/1920px-Eski_Camii%2C_Safranbolu.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
   "wd-q132134530-safranbolu-ulu-cami": {
     "wikidataQid": "Q132134530",
@@ -45215,9 +45747,9 @@
     "height": 3456,
     "mime": "image/jpeg",
     "license": "CC BY-SA 4.0",
-    "sourcePage": "https://commons.wikimedia.org/wiki/File:Tekbir_Mosque,_Safranbolu_01.jpg",
-    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/a/ac/Tekbir_Mosque%2C_Safranbolu_01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
-    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/ac/Tekbir_Mosque%2C_Safranbolu_01.jpg/1920px-Tekbir_Mosque%2C_Safranbolu_01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Tekbir_Mosque,_Safranbolu_03.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/5/5d/Tekbir_Mosque%2C_Safranbolu_03.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5d/Tekbir_Mosque%2C_Safranbolu_03.jpg/1920px-Tekbir_Mosque%2C_Safranbolu_03.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
   "wd-q8080272-izzet-mehmet-pasa-camii": {
     "wikidataQid": "Q8080272",
@@ -46108,12 +46640,12 @@
     "district": "Melikgazi",
     "districtQid": "Q2670975",
     "width": 4160,
-    "height": 2958,
+    "height": 2964,
     "mime": "image/jpeg",
     "license": "CC BY-SA 4.0",
-    "sourcePage": "https://commons.wikimedia.org/wiki/File:Kanis_03.jpg",
-    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/3/35/Kanis_03.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
-    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/35/Kanis_03.jpg/1920px-Kanis_03.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Kanis_05.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/9/9d/Kanis_05.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9d/Kanis_05.jpg/1920px-Kanis_05.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
   "wd-q6056905-burunguz-camii": {
     "wikidataQid": "Q6056905",
@@ -46219,13 +46751,13 @@
     "provinceQid": "Q483472",
     "district": "Melikgazi",
     "districtQid": "Q2670975",
-    "width": 2159,
-    "height": 1440,
+    "width": 4267,
+    "height": 2805,
     "mime": "image/jpeg",
-    "license": "CC BY-SA 4.0",
-    "sourcePage": "https://commons.wikimedia.org/wiki/File:00_0825_Stadtmauern_von_Kayseri.jpg",
-    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/8/86/00_0825_Stadtmauern_von_Kayseri.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
-    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/86/00_0825_Stadtmauern_von_Kayseri.jpg/1920px-00_0825_Stadtmauern_von_Kayseri.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+    "license": "CC BY-SA 3.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Fortress_of_Kayseri_01.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/5/53/Fortress_of_Kayseri_01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/53/Fortress_of_Kayseri_01.jpg/1920px-Fortress_of_Kayseri_01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
   "wd-q6024263-karatay-hani": {
     "wikidataQid": "Q6024263",
@@ -47843,13 +48375,13 @@
     "provinceQid": "Q83965",
     "district": "Kandıra",
     "districtQid": "Q1022149",
-    "width": 5888,
-    "height": 1696,
+    "width": 4128,
+    "height": 2322,
     "mime": "image/jpeg",
     "license": "CC BY-SA 4.0",
-    "sourcePage": "https://commons.wikimedia.org/wiki/File:Dikili_Tuza%C4%9Fz%C4%B12.jpg",
-    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/d/d2/Dikili_Tuza%C4%9Fz%C4%B12.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
-    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d2/Dikili_Tuza%C4%9Fz%C4%B12.jpg/1920px-Dikili_Tuza%C4%9Fz%C4%B12.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Dikili_Tuza%C4%9Fz%C4%B15.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/b/bc/Dikili_Tuza%C4%9Fz%C4%B15.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/bc/Dikili_Tuza%C4%9Fz%C4%B15.jpg/1920px-Dikili_Tuza%C4%9Fz%C4%B15.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
   "wd-q6009286-av-kosku-saray-muzesi": {
     "wikidataQid": "Q6009286",
@@ -48655,13 +49187,13 @@
     "provinceQid": "Q81551",
     "district": "Karapınar (ilçe)",
     "districtQid": "Q2140670",
-    "width": 4250,
-    "height": 2793,
+    "width": 5179,
+    "height": 5254,
     "mime": "image/jpeg",
     "license": "CC BY-SA 4.0",
-    "sourcePage": "https://commons.wikimedia.org/wiki/File:Lake_Meke_-_Meke_G%C3%B6l%C3%BC_05.JPG",
-    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/7/7e/Lake_Meke_-_Meke_G%C3%B6l%C3%BC_05.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
-    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7e/Lake_Meke_-_Meke_G%C3%B6l%C3%BC_05.JPG/1920px-Lake_Meke_-_Meke_G%C3%B6l%C3%BC_05.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Meke_at_Night.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/f/f8/Meke_at_Night.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f8/Meke_at_Night.jpg/1920px-Meke_at_Night.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
   "wd-q2073541-sarayonu": {
     "wikidataQid": "Q2073541",
@@ -49279,6 +49811,20 @@
     "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/b/ba/Pa%C5%9Fa_hamam%C4%B1_%281%29.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
     "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/ba/Pa%C5%9Fa_hamam%C4%B1_%281%29.JPG/1920px-Pa%C5%9Fa_hamam%C4%B1_%281%29.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
+  "wd-q134317705-aizanoi-zeus-tapinagi": {
+    "wikidataQid": "Q134317705",
+    "province": "Kütahya",
+    "provinceQid": "Q126874",
+    "district": "Çavdarhisar",
+    "districtQid": "Q2424690",
+    "width": 4512,
+    "height": 2971,
+    "mime": "image/jpeg",
+    "license": "CC BY 4.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Aizanoi_Temple_of_Zeus_from_NW_(1993).jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/7/75/Aizanoi_Temple_of_Zeus_from_NW_%281993%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/75/Aizanoi_Temple_of_Zeus_from_NW_%281993%29.jpg/1920px-Aizanoi_Temple_of_Zeus_from_NW_%281993%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
   "wd-q1404385-kybele-kaya-kabartmasi": {
     "wikidataQid": "Q1404385",
     "province": "Manisa",
@@ -49489,6 +50035,20 @@
     "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/b/b0/The_scoria_cone_at_the_Kula_Volcano.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
     "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b0/The_scoria_cone_at_the_Kula_Volcano.JPG/1920px-The_scoria_cone_at_the_Kula_Volcano.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
+  "wd-q117037173-niobe-kayasi": {
+    "wikidataQid": "Q117037173",
+    "province": "Manisa",
+    "provinceQid": "Q130553",
+    "district": "Şehzadeler",
+    "districtQid": "Q16961654",
+    "width": 4928,
+    "height": 3264,
+    "mime": "image/jpeg",
+    "license": "CC BY-SA 2.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:The_Weeping_Rock_in_Mount_Sipylus,_Manisa,_Turkey,_known_as_Niobe%27s_Rock,_a_rock_in_the_shape_of_a_weeping_woman,_which_the_ancient_Greeks_believed_to_be_Niobe_(18982976930).jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/d/de/The_Weeping_Rock_in_Mount_Sipylus%2C_Manisa%2C_Turkey%2C_known_as_Niobe%27s_Rock%2C_a_rock_in_the_shape_of_a_weeping_woman%2C_which_the_ancient_Greeks_believed_to_be_Niobe_%2818982976930%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/de/The_Weeping_Rock_in_Mount_Sipylus%2C_Manisa%2C_Turkey%2C_known_as_Niobe%27s_Rock%2C_a_rock_in_the_shape_of_a_weeping_woman%2C_which_the_ancient_Greeks_believed_to_be_Niobe_%2818982976930%29.jpg/1920px-thumbnail.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
   "wd-q131437249-kursunlu-han": {
     "wikidataQid": "Q131437249",
     "province": "Manisa",
@@ -49586,6 +50146,20 @@
     "sourcePage": "https://commons.wikimedia.org/wiki/File:%C3%87atal_Mezarl%C4%B1%C4%9F%C4%B1_giri%C5%9Fi.jpg",
     "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/0/0f/%C3%87atal_Mezarl%C4%B1%C4%9F%C4%B1_giri%C5%9Fi.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
     "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0f/%C3%87atal_Mezarl%C4%B1%C4%9F%C4%B1_giri%C5%9Fi.jpg/1920px-%C3%87atal_Mezarl%C4%B1%C4%9F%C4%B1_giri%C5%9Fi.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  "wd-q134615596-kabak-tekkesi": {
+    "wikidataQid": "Q134615596",
+    "province": "Manisa",
+    "provinceQid": "Q130553",
+    "district": "Şehzadeler",
+    "districtQid": "Q16961654",
+    "width": 2848,
+    "height": 4288,
+    "mime": "image/jpeg",
+    "license": "CC BY-SA 4.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Manisa,_Kabak_Dervish_Lodge,_2007.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/e/e3/Manisa%2C_Kabak_Dervish_Lodge%2C_2007.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e3/Manisa%2C_Kabak_Dervish_Lodge%2C_2007.jpg/1920px-Manisa%2C_Kabak_Dervish_Lodge%2C_2007.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
   "wd-q135004337-zinciriye-cesmesi": {
     "wikidataQid": "Q135004337",
@@ -50013,13 +50587,13 @@
     "provinceQid": "Q132637",
     "district": "Silifke (ilçe)",
     "districtQid": "Q49109008",
-    "width": 4868,
-    "height": 3420,
+    "width": 3456,
+    "height": 4404,
     "mime": "image/jpeg",
     "license": "CC BY-SA 3.0",
-    "sourcePage": "https://commons.wikimedia.org/wiki/File:Gedenkstein_Barbarossa_G%C3%B6ksu01.jpg",
-    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/3/34/Gedenkstein_Barbarossa_G%C3%B6ksu01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
-    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/34/Gedenkstein_Barbarossa_G%C3%B6ksu01.jpg/1920px-Gedenkstein_Barbarossa_G%C3%B6ksu01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Gedenkstein_Barbarossa_G%C3%B6ksu02.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/0/0a/Gedenkstein_Barbarossa_G%C3%B6ksu02.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0a/Gedenkstein_Barbarossa_G%C3%B6ksu02.jpg/1920px-Gedenkstein_Barbarossa_G%C3%B6ksu02.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
   "wd-q17471848-gazi-mustafa-kemal-aniti": {
     "wikidataQid": "Q17471848",
@@ -50055,13 +50629,13 @@
     "provinceQid": "Q132637",
     "district": "Akdeniz",
     "districtQid": "Q15995611",
-    "width": 2381,
-    "height": 2182,
+    "width": 5723,
+    "height": 3220,
     "mime": "image/jpeg",
-    "license": "CC BY-SA 3.0",
-    "sourcePage": "https://commons.wikimedia.org/wiki/File:Refah_monument_from_the_south,_Mersin.JPG",
-    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/7/78/Refah_monument_from_the_south%2C_Mersin.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
-    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/78/Refah_monument_from_the_south%2C_Mersin.JPG/1920px-Refah_monument_from_the_south%2C_Mersin.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+    "license": "CC BY-SA 4.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Refah_%C5%9Eehitleri_An%C4%B1t%C4%B1_2007-12-24.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/2/21/Refah_%C5%9Eehitleri_An%C4%B1t%C4%B1_2007-12-24.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/21/Refah_%C5%9Eehitleri_An%C4%B1t%C4%B1_2007-12-24.jpg/1920px-Refah_%C5%9Eehitleri_An%C4%B1t%C4%B1_2007-12-24.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
   "wd-q15226061-somek-athena-kabartmasi": {
     "wikidataQid": "Q15226061",
@@ -50357,6 +50931,20 @@
     "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/1/1a/Karakabakl%C4%B1.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
     "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1a/Karakabakl%C4%B1.jpg/1920px-Karakabakl%C4%B1.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
+  "wd-q7362324-kilikya-daki-roma-yolu": {
+    "wikidataQid": "Q7362324",
+    "province": "Mersin",
+    "provinceQid": "Q132637",
+    "district": "Tarsus (ilçe)",
+    "districtQid": "Q2800095",
+    "width": 3456,
+    "height": 5184,
+    "mime": "image/jpeg",
+    "license": "CC BY-SA 3.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:R%C3%B6merstra%C3%9Fe_Sa%C4%9Fl%C4%B1kl%C4%B1_06.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/6/67/R%C3%B6merstra%C3%9Fe_Sa%C4%9Fl%C4%B1kl%C4%B1_06.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/67/R%C3%B6merstra%C3%9Fe_Sa%C4%9Fl%C4%B1kl%C4%B1_06.jpg/1920px-R%C3%B6merstra%C3%9Fe_Sa%C4%9Fl%C4%B1kl%C4%B1_06.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
   "wd-q6094464-kilise-tepe-hoyugu": {
     "wikidataQid": "Q6094464",
     "province": "Mersin",
@@ -50468,6 +51056,20 @@
     "sourcePage": "https://commons.wikimedia.org/wiki/File:Softa_Castle_1.jpg",
     "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/4/4c/Softa_Castle_1.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
     "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4c/Softa_Castle_1.jpg/1920px-Softa_Castle_1.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  "wd-q656954-soli": {
+    "wikidataQid": "Q656954",
+    "province": "Mersin",
+    "provinceQid": "Q132637",
+    "district": "Mezitli",
+    "districtQid": "Q1367930",
+    "width": 4032,
+    "height": 3024,
+    "mime": "image/jpeg",
+    "license": "CC BY-SA 4.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Soli_2022-06-27_1760396009.jpeg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/f/fe/Soli_2022-06-27_1760396009.jpeg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fe/Soli_2022-06-27_1760396009.jpeg/1920px-Soli_2022-06-27_1760396009.jpeg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
   "wd-q7684869-tapureli-antik-kent": {
     "wikidataQid": "Q7684869",
@@ -51147,13 +51749,13 @@
     "provinceQid": "Q132637",
     "district": "Erdemli",
     "districtQid": "Q988315",
-    "width": 1772,
-    "height": 943,
+    "width": 5184,
+    "height": 3132,
     "mime": "image/jpeg",
     "license": "CC BY-SA 3.0",
-    "sourcePage": "https://commons.wikimedia.org/wiki/File:Fortressarmenians5.jpg",
-    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/b/bb/Fortressarmenians5.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
-    "displayUrl": "https://upload.wikimedia.org/wikipedia/commons/b/bb/Fortressarmenians5.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled"
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Korykos_Zisterne01.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/e/ea/Korykos_Zisterne01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/ea/Korykos_Zisterne01.jpg/1920px-Korykos_Zisterne01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
   "wd-q7521794-sinap-kalesi": {
     "wikidataQid": "Q7521794",
@@ -51169,19 +51771,19 @@
     "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/a/ae/Sinap_Castle%2C_Mersin_Province.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
     "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/ae/Sinap_Castle%2C_Mersin_Province.JPG/1920px-Sinap_Castle%2C_Mersin_Province.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
-  "wd-q15917362-mersin-deniz-muzesi": {
-    "wikidataQid": "Q15917362",
+  "wd-q4812885-mersin-ataturk-evi": {
+    "wikidataQid": "Q4812885",
     "province": "Mersin",
     "provinceQid": "Q132637",
     "district": "Akdeniz",
     "districtQid": "Q15995611",
-    "width": 1960,
-    "height": 1863,
+    "width": 4032,
+    "height": 3024,
     "mime": "image/jpeg",
-    "license": "CC BY-SA 3.0",
-    "sourcePage": "https://commons.wikimedia.org/wiki/File:Mersin_Naval_Museum,_Turkey.jpg",
-    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/1/19/Mersin_Naval_Museum%2C_Turkey.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
-    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/19/Mersin_Naval_Museum%2C_Turkey.jpg/1920px-Mersin_Naval_Museum%2C_Turkey.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+    "license": "CC BY 4.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Mersin_Atat%C3%BCrk_Evi_24-01-2023.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/a/ad/Mersin_Atat%C3%BCrk_Evi_24-01-2023.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/ad/Mersin_Atat%C3%BCrk_Evi_24-01-2023.jpg/1920px-Mersin_Atat%C3%BCrk_Evi_24-01-2023.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
   "wd-q47014885-mersin-devlet-guzel-sanatlar-galerisi": {
     "wikidataQid": "Q47014885",
@@ -52555,6 +53157,34 @@
     "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/7/7b/Bodrum_Windmill_No._8.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
     "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7b/Bodrum_Windmill_No._8.jpg/1920px-Bodrum_Windmill_No._8.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
+  "wd-q135581882-letoon-apollon-tapinagi": {
+    "wikidataQid": "Q135581882",
+    "province": "Muğla",
+    "provinceQid": "Q123934",
+    "district": "Seydikemer",
+    "districtQid": "Q6620651",
+    "width": 2268,
+    "height": 4032,
+    "mime": "image/jpeg",
+    "license": "CC BY-SA 4.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Temple_of_Apollo_by_schopar39.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/4/40/Temple_of_Apollo_by_schopar39.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/40/Temple_of_Apollo_by_schopar39.jpg/1920px-Temple_of_Apollo_by_schopar39.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  "wd-q135581895-letoon-leto-tapinagi": {
+    "wikidataQid": "Q135581895",
+    "province": "Muğla",
+    "provinceQid": "Q123934",
+    "district": "Seydikemer",
+    "districtQid": "Q6620651",
+    "width": 2268,
+    "height": 4032,
+    "mime": "image/jpeg",
+    "license": "CC BY-SA 4.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Leto_temple_by_schopar39.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/8/89/Leto_temple_by_schopar39.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/89/Leto_temple_by_schopar39.jpg/1920px-Leto_temple_by_schopar39.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
   "wd-q109389889-alaeddin-bey-camii": {
     "wikidataQid": "Q109389889",
     "province": "Muş",
@@ -52652,6 +53282,20 @@
     "sourcePage": "https://commons.wikimedia.org/wiki/File:Mush_St._Karapet_Monastery.jpg",
     "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/8/8a/Mush_St._Karapet_Monastery.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
     "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8a/Mush_St._Karapet_Monastery.jpg/1920px-Mush_St._Karapet_Monastery.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  "wd-q2225271-sarihan-kervansarayi": {
+    "wikidataQid": "Q2225271",
+    "province": "Nevşehir",
+    "provinceQid": "Q430693",
+    "district": "Avanos ilçesi",
+    "districtQid": "Q49100953",
+    "width": 1999,
+    "height": 1315,
+    "mime": "image/jpeg",
+    "license": "CC BY-SA 3.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:SarihanHof.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/7/70/SarihanHof.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/70/SarihanHof.jpg/1920px-SarihanHof.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
   "wd-q25378109-topada-yaziti": {
     "wikidataQid": "Q25378109",
@@ -53233,13 +53877,13 @@
     "provinceQid": "Q430693",
     "district": "Gülşehir ilçesi",
     "districtQid": "Q2557174",
-    "width": 1536,
-    "height": 2048,
+    "width": 2400,
+    "height": 2996,
     "mime": "image/jpeg",
-    "license": "CC BY 3.0",
-    "sourcePage": "https://commons.wikimedia.org/wiki/File:AciksarayFassade.jpg",
-    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/7/7b/AciksarayFassade.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
-    "displayUrl": "https://upload.wikimedia.org/wikipedia/commons/7/7b/AciksarayFassade.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled"
+    "license": "CC BY-SA 3.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:ACIKSARAYKILISE_081_KT04.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/1/1d/ACIKSARAYKILISE_081_KT04.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1d/ACIKSARAYKILISE_081_KT04.jpg/1920px-ACIKSARAYKILISE_081_KT04.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
   "wd-q99962996-avanos-sac-muzesi": {
     "wikidataQid": "Q99962996",
@@ -53541,13 +54185,13 @@
     "provinceQid": "Q281206",
     "district": "Osmaniye ilçesi",
     "districtQid": "Q2519013",
-    "width": 4250,
-    "height": 2411,
+    "width": 5184,
+    "height": 3456,
     "mime": "image/jpeg",
-    "license": "CC BY-SA 4.0",
-    "sourcePage": "https://commons.wikimedia.org/wiki/File:Amouda_Castle,_Osmaniye_08.jpg",
-    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/3/3f/Amouda_Castle%2C_Osmaniye_08.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
-    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3f/Amouda_Castle%2C_Osmaniye_08.jpg/1920px-Amouda_Castle%2C_Osmaniye_08.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+    "license": "CC BY-SA 3.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:HemiteKalesi1.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/4/41/HemiteKalesi1.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/41/HemiteKalesi1.jpg/1920px-HemiteKalesi1.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
   "wd-q2225224-savranda-kalesi": {
     "wikidataQid": "Q2225224",
@@ -53807,13 +54451,13 @@
     "provinceQid": "Q83069",
     "district": "Serdivan",
     "districtQid": "Q3906617",
-    "width": 1407,
-    "height": 2000,
+    "width": 3807,
+    "height": 1830,
     "mime": "image/jpeg",
-    "license": "Public domain",
-    "sourcePage": "https://commons.wikimedia.org/wiki/File:Sangarius_Bridge._Drawing_01.jpg",
-    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/7/72/Sangarius_Bridge._Drawing_01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
-    "displayUrl": "https://upload.wikimedia.org/wikipedia/commons/7/72/Sangarius_Bridge._Drawing_01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled"
+    "license": "CC BY-SA 3.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Sangarius_Bridge,_Justinyen_K%C3%B6pr%C3%BCs%C3%BC-3.JPG",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/7/75/Sangarius_Bridge%2C_Justinyen_K%C3%B6pr%C3%BCs%C3%BC-3.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/75/Sangarius_Bridge%2C_Justinyen_K%C3%B6pr%C3%BCs%C3%BC-3.JPG/1920px-Sangarius_Bridge%2C_Justinyen_K%C3%B6pr%C3%BCs%C3%BC-3.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
   "wd-q20476230-ali-fuat-pasa-kuvayi-milliye-muzesi": {
     "wikidataQid": "Q20476230",
@@ -54248,6 +54892,20 @@
     "sourcePage": "https://commons.wikimedia.org/wiki/File:Birecik_Beyaz_Kalesi_4212.jpg",
     "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/c/ca/Birecik_Beyaz_Kalesi_4212.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
     "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/ca/Birecik_Beyaz_Kalesi_4212.jpg/1920px-Birecik_Beyaz_Kalesi_4212.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  "wd-q135582855-ortagonal-roma-tapinagi": {
+    "wikidataQid": "Q135582855",
+    "province": "Şanlıurfa",
+    "provinceQid": "Q388469",
+    "district": "Viranşehir",
+    "districtQid": "Q2430648",
+    "width": 4032,
+    "height": 3024,
+    "mime": "image/jpeg",
+    "license": "CC BY-SA 4.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:%C3%87emdin_Kale_2.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/9/97/%C3%87emdin_Kale_2.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/97/%C3%87emdin_Kale_2.jpg/1920px-%C3%87emdin_Kale_2.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
   "wd-q127788300-veysel-karani-camii": {
     "wikidataQid": "Q127788300",
@@ -55452,6 +56110,20 @@
     "sourcePage": "https://commons.wikimedia.org/wiki/File:Kloster_Vazelon_Hauptgebaeude_Juli_2014.jpg",
     "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/d/d5/Kloster_Vazelon_Hauptgebaeude_Juli_2014.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
     "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d5/Kloster_Vazelon_Hauptgebaeude_Juli_2014.jpg/1920px-Kloster_Vazelon_Hauptgebaeude_Juli_2014.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  "wd-q1568666-ayasofya-camii-trabzon": {
+    "wikidataQid": "Q1568666",
+    "province": "Trabzon",
+    "provinceQid": "Q388995",
+    "district": "Ortahisar İlçesi",
+    "districtQid": "Q25399089",
+    "width": 6703,
+    "height": 2141,
+    "mime": "image/jpeg",
+    "license": "CC BY-SA 4.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Panoramic_view_of_the_Hagia_Sophia_of_Trabzon.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/d/d7/Panoramic_view_of_the_Hagia_Sophia_of_Trabzon.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d7/Panoramic_view_of_the_Hagia_Sophia_of_Trabzon.jpg/1920px-Panoramic_view_of_the_Hagia_Sophia_of_Trabzon.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
   "wd-q15622502-kucuk-ayvasil-kilisesi": {
     "wikidataQid": "Q15622502",
