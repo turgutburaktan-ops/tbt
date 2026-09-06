@@ -283,7 +283,13 @@ def write_files(items: list[dict]) -> None:
             if district
             else item['city']
         )
-        desc = f"{item['name']}, {admin_text} konumu ve temsil fotoğrafı doğrudan Wikidata ile doğrulanmış Türkiye gezi ve fotoğraf noktasıdır."
+        admin_source = item.get('admin_source', 'Wikidata P131')
+        location_wording = (
+            'Wikidata ve HDX/OCHA ilçe sınırıyla'
+            if item.get('admin_source') == 'HDX COD-AB boundary + Wikidata identity'
+            else 'doğrudan Wikidata ile'
+        )
+        desc = f"{item['name']}, {admin_text} konumu ve temsil fotoğrafı {location_wording} doğrulanmış Türkiye gezi ve fotoğraf noktasıdır."
         p += ['  PhotoSpot(', f"    id: '{ds(sid)}',", f"    name: '{ds(item['name'])}',", f"    city: '{ds(item['city'])}',", f"    latitude: {item['lat']:.6f},", f"    longitude: {item['lng']:.6f},", '    rating: 4.8,', f"    bestTime: '{ds(bt)}',", f"    angle: '{ds(angle)}',", "    imageUrl: '',", f"    category: '{ds(item['category'])}',", f"    description: '{ds(desc)}',", f"    recommendedLens: '{lens}',", f"    difficulty: '{diff}',", '    tags: [' + ', '.join(f"'{ds(t)}'" for t in tags) + '],', '  ),']
         admin_ref = (
             f" / province={item.get('province_qid', '')}:{item['city']}"
@@ -291,7 +297,7 @@ def write_files(items: list[dict]) -> None:
             if district
             else ''
         )
-        e += [f"  '{ds(sid)}': SpotCoordinateVerificationEvidence(", "    sourceName: 'Wikidata P625 + P131',", f"    sourceRef: '{item['qid']} / {item['lat']:.6f},{item['lng']:.6f}{ds(admin_ref)}',", "    verifiedAt: 'generated',", '  ),']
+        e += [f"  '{ds(sid)}': SpotCoordinateVerificationEvidence(", f"    sourceName: 'Wikidata P625 + {ds(admin_source)}',", f"    sourceRef: '{item['qid']} / {item['lat']:.6f},{item['lng']:.6f}{ds(admin_ref)}',", "    verifiedAt: 'generated',", '  ),']
         author = meta.get('artist') or meta.get('credit') or 'Wikimedia Commons contributor'
         im += [f"  '{ds(sid)}': SpotImageInfo(", f"    networkUrl: '{ds(meta['url'])}',", "    sourceName: 'Wikimedia Commons (Wikidata P18)',", f"    author: '{ds(author)}',", f"    license: '{ds(meta['license'])}',", f"    sourcePage: '{ds(meta['source'])}',", '  ),']
         quality[sid] = {'wikidataQid': item['qid'], 'province': item['city'], 'provinceQid': item.get('province_qid', ''), 'district': district, 'districtQid': item.get('district_qid', ''), 'width': meta['width'], 'height': meta['height'], 'mime': meta['mime'], 'license': meta['license'], 'sourcePage': meta['source'], 'originalUrl': meta['original_url'], 'displayUrl': meta['url']}
