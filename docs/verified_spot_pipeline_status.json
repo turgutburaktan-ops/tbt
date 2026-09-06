@@ -106,7 +106,11 @@
     "min_long_edge": 700,
     "min_short_edge": 450,
     "error_counts": {},
-    "passed": true
+    "passed": true,
+    "strict_verified_places": 2210,
+    "legacy_below_strict": 21,
+    "strict_min_long_edge": 1600,
+    "strict_min_short_edge": 900
   },
   "generator_log_tail": "    \"priority_provinces\": [\n      \"elazig\",\n      \"malatya\",\n      \"diyarbakir\",\n      \"tunceli\",\n      \"bingol\"\n    ],\n    \"accepted_by_province\": {\n      \"Adana\": 8,\n      \"Adıyaman\": 2,\n      \"Afyonkarahisar\": 4,\n      \"Aksaray\": 1,\n      \"Amasya\": 4,\n      \"Ankara\": 73,\n      \"Antalya\": 33,\n      \"Artvin\": 4,\n      \"Aydın\": 33,\n      \"Ağrı\": 1,\n      \"Balıkesir\": 17,\n      \"Bartın\": 6,\n      \"Bayburt\": 2,\n      \"Bilecik\": 2,\n      \"Bitlis\": 12,\n      \"Burdur\": 1,\n      \"Bursa\": 61,\n      \"Denizli\": 24,\n      \"Diyarbakır\": 38,\n      \"Düzce\": 2,\n      \"Edirne\": 3,\n      \"Erzurum\": 26,\n      \"Eskişehir\": 10,\n      \"Gaziantep\": 36,\n      \"Giresun\": 2,\n      \"Hakkari\": 1,\n      \"Hatay\": 6,\n      \"Isparta\": 1,\n      \"Kahramanmaraş\": 2,\n      \"Karabük\": 2,\n      \"Kastamonu\": 1,\n      \"Kayseri\": 18,\n      \"Kocaeli\": 8,\n      \"Konya\": 19,\n      \"Kütahya\": 5,\n      \"Kırklareli\": 35,\n      \"Kırşehir\": 3,\n      \"Malatya\": 3,\n      \"Manisa\": 19,\n      \"Mardin\": 10,\n      \"Mersin\": 31,\n      \"Muğla\": 36,\n      \"Nevşehir\": 15,\n      \"Niğde\": 1,\n      \"Ordu\": 1,\n      \"Sakarya\": 8,\n      \"Samsun\": 9,\n      \"Sivas\": 3,\n      \"Tekirdağ\": 4,\n      \"Tokat\": 2,\n      \"Trabzon\": 6,\n      \"Tunceli\": 1,\n      \"Van\": 2,\n      \"Yalova\": 1,\n      \"Zonguldak\": 3,\n      \"Çanakkale\": 61,\n      \"Çorum\": 3,\n      \"İstanbul\": 1246,\n      \"İzmir\": 103,\n      \"Şanlıurfa\": 6\n    },\n    \"accepted_by_priority_district\": {\n      \"Malatya / Hekimhan\": 1,\n      \"Malatya / Battalgazi\": 1,\n      \"Malatya / Darende\": 1,\n      \"Diyarbakır / Sur\": 36,\n      \"Diyarbakır / Ergani İlçesi\": 1,\n      \"Diyarbakır / Eğil\": 1,\n      \"Tunceli / Tunceli\": 1\n    }\n  }\n}"
 }
