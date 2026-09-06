@@ -21,6 +21,22 @@ PRIORITY_PROVINCES = (
     'bingol',
 )
 
+# Conservative second pass: only notable, mappable place/structure classes.
+# Each candidate still has to pass the same direct P625 + P18, Commons licence,
+# source-resolution, province ancestry and 18-metre duplicate gates.
+EXPANSION_ROOT_CLASSES = {
+    'Q4989906': 'Anıt',
+    'Q483453': 'Tarihi Çeşme',
+    'Q16970': 'Kilise',
+    'Q381885': 'Türbe / Mezar Anıtı',
+    'Q12518': 'Kule',
+    'Q16560': 'Saray',
+    'Q34627': 'Sinagog',
+    'Q473972': 'Korunan Alan',
+    'Q46169': 'Milli Park',
+    'Q179049': 'Doğa Koruma Alanı',
+}
+
 
 def province_query_body(class_clause: str, limit: int, offset: int) -> str:
     return f'''SELECT DISTINCT ?item ?itemLabel ?coord ?image ?admin ?adminLabel WHERE {{
@@ -133,6 +149,7 @@ base.query_for_root = province_root_query
 base.heritage_query = province_heritage_query
 base.duplicate = strict_duplicate
 base.select = priority_select
+base.ROOT_CLASSES.update(EXPANSION_ROOT_CLASSES)
 
 if __name__ == '__main__':
     raise SystemExit(base.main())
