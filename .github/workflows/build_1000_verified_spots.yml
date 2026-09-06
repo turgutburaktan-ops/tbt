@@ -16,6 +16,7 @@ on:
       - 'tool/generate_verified_spot_catalog_v2.py'
       - 'tool/audit_verified_spot_catalog.py'
       - 'tool/audit_verified_spot_catalog_v2.py'
+      - 'tool/audit_spot_coordinates.py'
       - 'tool/upgrade_verified_spot_images.py'
       - 'tool/upgrade_verified_spot_images_v2.py'
       - '.github/workflows/build_1000_verified_spots.yml'
