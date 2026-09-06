@@ -4,8 +4,8 @@
   "audit_exit": "0",
   "generation_report": {
     "existing_verified": 151,
-    "generated": 2089,
-    "result_total": 2240,
+    "generated": 2095,
+    "result_total": 2246,
     "target_total": 10000,
     "min_long_edge": 1600,
     "min_short_edge": 900,
@@ -16,7 +16,7 @@
       "low_res": 245,
       "duplicate": 214,
       "ambiguous_admin": 2999,
-      "accepted": 2089,
+      "accepted": 2095,
       "priority_provinces": [
         "elazig",
         "malatya",
@@ -83,7 +83,7 @@
         "Zonguldak": 3,
         "Çanakkale": 61,
         "Çorum": 3,
-        "İstanbul": 1249,
+        "İstanbul": 1255,
         "İzmir": 103,
         "Şanlıurfa": 6
       },
@@ -115,19 +115,19 @@
     }
   },
   "audit_summary": {
-    "verified_places": 2240,
+    "verified_places": 2246,
     "required_places": 1100,
-    "coordinate_evidence": 2243,
-    "image_registry_entries": 2249,
-    "image_quality_checked": 2240,
+    "coordinate_evidence": 2249,
+    "image_registry_entries": 2255,
+    "image_quality_checked": 2246,
     "min_long_edge": 700,
     "min_short_edge": 450,
     "error_counts": {},
     "passed": true,
-    "strict_verified_places": 2219,
+    "strict_verified_places": 2225,
     "legacy_below_strict": 21,
     "strict_min_long_edge": 1600,
     "strict_min_short_edge": 900
   },
-  "generator_log_tail": "      \"Ağrı\": 1,\n      \"Balıkesir\": 17,\n      \"Bartın\": 6,\n      \"Bayburt\": 2,\n      \"Bilecik\": 2,\n      \"Bitlis\": 12,\n      \"Burdur\": 1,\n      \"Bursa\": 61,\n      \"Denizli\": 24,\n      \"Diyarbakır\": 38,\n      \"Düzce\": 2,\n      \"Edirne\": 3,\n      \"Elazığ\": 6,\n      \"Erzurum\": 26,\n      \"Eskişehir\": 10,\n      \"Gaziantep\": 36,\n      \"Giresun\": 2,\n      \"Hakkari\": 1,\n      \"Hatay\": 6,\n      \"Isparta\": 1,\n      \"Kahramanmaraş\": 2,\n      \"Karabük\": 2,\n      \"Kastamonu\": 1,\n      \"Kayseri\": 18,\n      \"Kocaeli\": 8,\n      \"Konya\": 19,\n      \"Kütahya\": 5,\n      \"Kırklareli\": 35,\n      \"Kırşehir\": 3,\n      \"Malatya\": 3,\n      \"Manisa\": 19,\n      \"Mardin\": 10,\n      \"Mersin\": 31,\n      \"Muğla\": 36,\n      \"Nevşehir\": 15,\n      \"Niğde\": 1,\n      \"Ordu\": 1,\n      \"Sakarya\": 8,\n      \"Samsun\": 9,\n      \"Sivas\": 3,\n      \"Tekirdağ\": 4,\n      \"Tokat\": 2,\n      \"Trabzon\": 6,\n      \"Tunceli\": 1,\n      \"Van\": 2,\n      \"Yalova\": 1,\n      \"Zonguldak\": 3,\n      \"Çanakkale\": 61,\n      \"Çorum\": 3,\n      \"İstanbul\": 1249,\n      \"İzmir\": 103,\n      \"Şanlıurfa\": 6\n    },\n    \"elazig_district_coverage\": {\n      \"Merkez\": 4,\n      \"Ağın\": 0,\n      \"Alacakaya\": 0,\n      \"Arıcak\": 0,\n      \"Baskil\": 0,\n      \"Karakoçan\": 0,\n      \"Keban\": 1,\n      \"Kovancılar\": 0,\n      \"Maden\": 0,\n      \"Palu\": 1,\n      \"Sivrice\": 0\n    },\n    \"accepted_by_priority_district\": {\n      \"Elazığ / Merkez\": 4,\n      \"Elazığ / Keban\": 1,\n      \"Elazığ / Palu\": 1,\n      \"Malatya / Hekimhan\": 1,\n      \"Malatya / Battalgazi\": 1,\n      \"Malatya / Darende\": 1,\n      \"Diyarbakır / Sur\": 36,\n      \"Diyarbakır / Ergani İlçesi\": 1,\n      \"Diyarbakır / Eğil\": 1,\n      \"Tunceli / Tunceli\": 1\n    }\n  }\n}"
+  "generator_log_tail": "      \"Ağrı\": 1,\n      \"Balıkesir\": 17,\n      \"Bartın\": 6,\n      \"Bayburt\": 2,\n      \"Bilecik\": 2,\n      \"Bitlis\": 12,\n      \"Burdur\": 1,\n      \"Bursa\": 61,\n      \"Denizli\": 24,\n      \"Diyarbakır\": 38,\n      \"Düzce\": 2,\n      \"Edirne\": 3,\n      \"Elazığ\": 6,\n      \"Erzurum\": 26,\n      \"Eskişehir\": 10,\n      \"Gaziantep\": 36,\n      \"Giresun\": 2,\n      \"Hakkari\": 1,\n      \"Hatay\": 6,\n      \"Isparta\": 1,\n      \"Kahramanmaraş\": 2,\n      \"Karabük\": 2,\n      \"Kastamonu\": 1,\n      \"Kayseri\": 18,\n      \"Kocaeli\": 8,\n      \"Konya\": 19,\n      \"Kütahya\": 5,\n      \"Kırklareli\": 35,\n      \"Kırşehir\": 3,\n      \"Malatya\": 3,\n      \"Manisa\": 19,\n      \"Mardin\": 10,\n      \"Mersin\": 31,\n      \"Muğla\": 36,\n      \"Nevşehir\": 15,\n      \"Niğde\": 1,\n      \"Ordu\": 1,\n      \"Sakarya\": 8,\n      \"Samsun\": 9,\n      \"Sivas\": 3,\n      \"Tekirdağ\": 4,\n      \"Tokat\": 2,\n      \"Trabzon\": 6,\n      \"Tunceli\": 1,\n      \"Van\": 2,\n      \"Yalova\": 1,\n      \"Zonguldak\": 3,\n      \"Çanakkale\": 61,\n      \"Çorum\": 3,\n      \"İstanbul\": 1255,\n      \"İzmir\": 103,\n      \"Şanlıurfa\": 6\n    },\n    \"elazig_district_coverage\": {\n      \"Merkez\": 4,\n      \"Ağın\": 0,\n      \"Alacakaya\": 0,\n      \"Arıcak\": 0,\n      \"Baskil\": 0,\n      \"Karakoçan\": 0,\n      \"Keban\": 1,\n      \"Kovancılar\": 0,\n      \"Maden\": 0,\n      \"Palu\": 1,\n      \"Sivrice\": 0\n    },\n    \"accepted_by_priority_district\": {\n      \"Elazığ / Merkez\": 4,\n      \"Elazığ / Keban\": 1,\n      \"Elazığ / Palu\": 1,\n      \"Malatya / Hekimhan\": 1,\n      \"Malatya / Battalgazi\": 1,\n      \"Malatya / Darende\": 1,\n      \"Diyarbakır / Sur\": 36,\n      \"Diyarbakır / Ergani İlçesi\": 1,\n      \"Diyarbakır / Eğil\": 1,\n      \"Tunceli / Tunceli\": 1\n    }\n  }\n}"
 }
