@@ -56,6 +56,24 @@ ELAZIG_DISTRICT_QIDS = {
     'Sivrice': 'Q115978893',
 }
 
+# Wikidata commonly links a place to the district-seat/town item rather than
+# to the newer dedicated district item. Both are explicit Wikidata
+# administrative entities; the dedicated district QID remains the evidence
+# written to the generated catalog.
+ELAZIG_DISTRICT_ADMIN_QIDS = {
+    'Merkez': ('Q2963425', 'Q174060'),
+    'Ağın': ('Q49101030', 'Q794737'),
+    'Alacakaya': ('Q115978659', 'Q1019868'),
+    'Arıcak': ('Q116006581', 'Q719227'),
+    'Baskil': ('Q810374',),
+    'Karakoçan': ('Q1868543', 'Q990305'),
+    'Keban': ('Q115978913', 'Q1023265'),
+    'Kovancılar': ('Q116044805', 'Q1003954'),
+    'Maden': ('Q1023303',),
+    'Palu': ('Q2341599', 'Q1003910'),
+    'Sivrice': ('Q115978893', 'Q928543'),
+}
+
 # Conservative second pass: only notable, mappable place/structure classes.
 # Each candidate still has to pass the same direct P625 + P18, Commons licence,
 # source-resolution, province ancestry and 18-metre duplicate gates.
@@ -121,11 +139,17 @@ def province_heritage_query(limit: int, offset: int) -> str:
     return candidate_query_body('; wdt:P1435 ?heritage', limit, offset)
 
 
-def elazig_district_query(district_qid: str, limit: int, offset: int) -> str:
+def elazig_district_query(
+    admin_qids: tuple[str, ...],
+    limit: int,
+    offset: int,
+) -> str:
     roots = ' '.join(f'wd:{qid}' for qid in base.ROOT_CLASSES)
+    admins = ' '.join(f'wd:{qid}' for qid in admin_qids)
     return f'''SELECT DISTINCT ?item ?itemLabel ?coord ?image WHERE {{
+  VALUES ?districtAdmin {{ {admins} }}
   ?item wdt:P17 wd:Q43 ; wdt:P625 ?coord ; wdt:P18 ?image ;
-        wdt:P131+ wd:{district_qid} .
+        wdt:P131+ ?districtAdmin .
   {{ ?item wdt:P1435 ?heritage . }}
   UNION
   {{
@@ -195,6 +219,7 @@ def candidate_collect_query(
 def collect_elazig_district_candidates(
     district: str,
     district_qid: str,
+    admin_qids: tuple[str, ...],
     page_size: int,
     max_rows: int,
     out: dict[str, dict],
@@ -208,7 +233,7 @@ def collect_elazig_district_candidates(
         payload = base.get_json(
             base.WDQS,
             {
-                'query': elazig_district_query(district_qid, limit, offset),
+                'query': elazig_district_query(admin_qids, limit, offset),
                 'format': 'json',
             },
         )
@@ -345,6 +370,7 @@ def district_resolved_candidates(page_size: int, per_source_limit: int) -> dict[
         matched, added = collect_elazig_district_candidates(
             district,
             district_qid,
+            ELAZIG_DISTRICT_ADMIN_QIDS[district],
             page_size,
             per_source_limit,
             candidates,
