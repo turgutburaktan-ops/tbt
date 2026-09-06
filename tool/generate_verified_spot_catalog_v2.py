@@ -353,11 +353,48 @@ def fetch_admin_entities(candidates: dict[str, dict], max_depth: int = 8) -> dic
             base.time.sleep(.05)
         next_frontier: set[str] = set()
         for qid in frontier:
-            next_frontier.update(ranked_claim_qids(entities.get(qid, {}), 'P131'))
+            entity = entities.get(qid, {})
+            next_frontier.update(ranked_claim_qids(entity, 'P131'))
+            # Fetch instance/subclass entities too. Turkish districts and
+            # provinces are not always typed with the root class directly.
+            next_frontier.update(ranked_claim_qids(entity, 'P31'))
+            next_frontier.update(ranked_claim_qids(entity, 'P279'))
         frontier = next_frontier
         if not frontier:
             break
     return entities
+
+
+def class_descends_from(
+    qid: str,
+    target: str,
+    entities: dict[str, dict],
+    max_depth: int = 8,
+) -> bool:
+    """Accept explicit class ancestry only; never infer from a label."""
+    queue = [(qid, 0)]
+    seen: set[str] = set()
+    while queue:
+        current, depth = queue.pop(0)
+        if current == target:
+            return True
+        if current in seen or depth >= max_depth:
+            continue
+        seen.add(current)
+        for parent in ranked_claim_qids(entities.get(current, {}), 'P279'):
+            queue.append((parent, depth + 1))
+    return False
+
+
+def entity_is_admin_class(
+    entity: dict,
+    target: str,
+    entities: dict[str, dict],
+) -> bool:
+    return any(
+        class_descends_from(class_qid, target, entities)
+        for class_qid in ranked_claim_qids(entity, 'P31')
+    )
 
 
 def admin_pairs(qid: str, entities: dict[str, dict]) -> set[tuple[str, str]]:
@@ -372,10 +409,9 @@ def admin_pairs(qid: str, entities: dict[str, dict]) -> set[tuple[str, str]]:
             continue
         visited.add(state)
         entity = entities.get(current, {})
-        classes = set(ranked_claim_qids(entity, 'P31'))
-        if DISTRICT_CLASS in classes:
+        if entity_is_admin_class(entity, DISTRICT_CLASS, entities):
             district = current
-        if PROVINCE_CLASS in classes and district:
+        if entity_is_admin_class(entity, PROVINCE_CLASS, entities) and district:
             pairs.add((current, district))
             continue
         for parent in ranked_claim_qids(entity, 'P131'):
