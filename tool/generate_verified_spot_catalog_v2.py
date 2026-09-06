@@ -126,6 +126,10 @@ EXPANSION_ROOT_CLASSES = {
     'Q8072': 'Yanardağ',
     'Q4421': 'Orman',
     'Q954501': 'Doğal Kemer',
+    'Q177380': 'Kaplıca / Sıcak Su Kaynağı',
+    'Q631305': 'Kaya Oluşumu',
+    'Q82117': 'Tarihi Kent Kapısı',
+    'Q24398318': 'İnanç Yapısı',
 }
 
 
@@ -208,6 +212,78 @@ def usable_label(value: str, qid: str) -> bool:
     return bool(value) and base.norm(value) != base.norm(qid)
 
 
+def remember_p18(item: dict, image: str) -> None:
+    """Keep every direct P18 option so a weak first statement cannot hide a valid one."""
+    images = item.setdefault('p18_images', [])
+    primary = item.get('image', '')
+    for value in (primary, image):
+        if value and value not in images:
+            images.append(value)
+
+
+def best_p18_commons_meta(candidates: dict[str, dict]) -> None:
+    """Select the largest freely licensed Commons file among direct P18 values."""
+    title_map: dict[str, list[str]] = {}
+    for qid, item in candidates.items():
+        images = item.get('p18_images') or [item.get('image', '')]
+        for image in images:
+            if image:
+                title = 'File:' + base.filename(image)
+                if qid not in title_map.setdefault(title, []):
+                    title_map[title].append(qid)
+    titles = sorted(title_map)
+    for index in range(0, len(titles), 40):
+        batch = titles[index:index + 40]
+        payload = base.get_json(base.COMMONS, {
+            'action': 'query',
+            'format': 'json',
+            'formatversion': '2',
+            'prop': 'imageinfo',
+            'iiprop': 'url|size|mime|extmetadata',
+            'iiurlwidth': '1920',
+            'titles': '|'.join(batch),
+        })
+        for page in payload.get('query', {}).get('pages', []):
+            infos = page.get('imageinfo') or []
+            if not infos:
+                continue
+            info = infos[0]
+            ext = info.get('extmetadata') or {}
+            meta = {
+                'width': int(info.get('width') or 0),
+                'height': int(info.get('height') or 0),
+                'mime': info.get('mime') or '',
+                'url': info.get('thumburl') or info.get('url') or '',
+                'original_url': info.get('url') or '',
+                'source': info.get('descriptionurl') or '',
+                'license': base.strip_html(
+                    (ext.get('LicenseShortName') or {}).get('value', '')
+                ),
+                'artist': base.strip_html(
+                    (ext.get('Artist') or {}).get('value', '')
+                ),
+                'credit': base.strip_html(
+                    (ext.get('Credit') or {}).get('value', '')
+                ),
+            }
+            for qid in title_map.get(page.get('title', ''), []):
+                candidates[qid].setdefault('commons_options', []).append(meta)
+        base.time.sleep(.15)
+    for item in candidates.values():
+        options = item.pop('commons_options', [])
+        if not options:
+            continue
+        item['commons'] = max(
+            options,
+            key=lambda meta: (
+                base.license_ok(meta.get('license', '')),
+                min(meta.get('width', 0), meta.get('height', 0)),
+                max(meta.get('width', 0), meta.get('height', 0)),
+                meta.get('width', 0) * meta.get('height', 0),
+            ),
+        )
+
+
 def candidate_collect_query(
     query_builder,
     category: str,
@@ -252,6 +328,7 @@ def candidate_collect_query(
                     'image': image,
                     'category': category,
                 }
+            remember_p18(out[qid], image)
         offset += len(rows)
         if len(rows) < limit:
             break
@@ -330,6 +407,7 @@ def collect_elazig_district_candidates(
                         'category': f'Elazığ / {district}',
                     }
                     added += 1
+                remember_p18(out[qid], image)
                 item = out[qid]
                 hint = item.get('elazig_district_hint')
                 hint_qid = item.get('elazig_district_qid_hint')
@@ -928,6 +1006,7 @@ def priority_select(
 base.query_for_root = province_root_query
 base.heritage_query = province_heritage_query
 base.collect_query = candidate_collect_query
+base.commons_meta = best_p18_commons_meta
 base.wikidata_candidates = district_resolved_candidates
 base.duplicate = strict_duplicate
 base.select = priority_select
