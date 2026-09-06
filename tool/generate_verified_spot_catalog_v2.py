@@ -192,6 +192,72 @@ def candidate_collect_query(
         base.time.sleep(.35)
 
 
+def collect_elazig_district_candidates(
+    district: str,
+    district_qid: str,
+    page_size: int,
+    max_rows: int,
+    out: dict[str, dict],
+) -> tuple[int, int]:
+    """Collect candidates and preserve the exact P131+ district evidence."""
+    offset = 0
+    matched = 0
+    added = 0
+    while offset < max_rows:
+        limit = min(page_size, max_rows - offset)
+        payload = base.get_json(
+            base.WDQS,
+            {
+                'query': elazig_district_query(district_qid, limit, offset),
+                'format': 'json',
+            },
+        )
+        rows = payload.get('results', {}).get('bindings', [])
+        if not rows:
+            break
+        for row in rows:
+            uri = row.get('item', {}).get('value', '')
+            qid = uri.rsplit('/', 1)[-1]
+            point = base.point(row.get('coord', {}).get('value', ''))
+            name = row.get('itemLabel', {}).get('value', '').strip()
+            image = row.get('image', {}).get('value', '').strip()
+            if not (
+                qid.startswith('Q')
+                and point
+                and image
+                and usable_label(name, qid)
+            ):
+                continue
+            matched += 1
+            if qid not in out:
+                out[qid] = {
+                    'qid': qid,
+                    'name': name,
+                    'city': '',
+                    'district': '',
+                    'province_qid': '',
+                    'district_qid': '',
+                    'lat': point[0],
+                    'lng': point[1],
+                    'image': image,
+                    'category': f'Elazığ / {district}',
+                }
+                added += 1
+            item = out[qid]
+            hint = item.get('elazig_district_hint')
+            hint_qid = item.get('elazig_district_qid_hint')
+            if hint and (hint != district or hint_qid != district_qid):
+                item['ambiguous_district_hint'] = True
+            else:
+                item['elazig_district_hint'] = district
+                item['elazig_district_qid_hint'] = district_qid
+        offset += len(rows)
+        if len(rows) < limit:
+            break
+        base.time.sleep(.35)
+    return matched, added
+
+
 def ranked_claim_qids(entity: dict, prop: str) -> list[str]:
     claims = [
         claim for claim in entity.get('claims', {}).get(prop, [])
@@ -273,33 +339,46 @@ _base_wikidata_candidates = base.wikidata_candidates
 
 def district_resolved_candidates(page_size: int, per_source_limit: int) -> dict[str, dict]:
     candidates = _base_wikidata_candidates(page_size, per_source_limit)
-    nationwide_count = len(candidates)
+    district_matches = 0
+    district_additions = 0
     for district, district_qid in ELAZIG_DISTRICT_QIDS.items():
-        candidate_collect_query(
-            lambda limit, offset, qid=district_qid: elazig_district_query(
-                qid, limit, offset
-            ),
-            f'Elazığ / {district}',
+        matched, added = collect_elazig_district_candidates(
+            district,
+            district_qid,
             page_size,
             per_source_limit,
             candidates,
         )
+        district_matches += matched
+        district_additions += added
     print(
-        'Elazığ district-priority unique additions: '
-        f'{len(candidates) - nationwide_count}'
+        'Elazığ district-priority matches/additions: '
+        f'{district_matches}/{district_additions}'
     )
     entities = fetch_admin_entities(candidates)
     resolved = 0
     ambiguous = 0
     for qid, item in candidates.items():
         pairs = admin_pairs(qid, entities)
-        if len(pairs) != 1:
+        hint = item.get('elazig_district_hint', '')
+        hint_qid = item.get('elazig_district_qid_hint', '')
+        if hint and not item.get('ambiguous_district_hint'):
+            hinted_pair = ('Q483091', hint_qid)
+            if pairs and hinted_pair not in pairs:
+                item['ambiguous_admin'] = True
+                ambiguous += 1
+                continue
+            province_qid, district_qid = hinted_pair
+            city = 'Elazığ'
+            district = hint
+        elif len(pairs) == 1:
+            province_qid, district_qid = next(iter(pairs))
+            city = entity_label(entities.get(province_qid, {}), province_qid)
+            district = entity_label(entities.get(district_qid, {}), district_qid)
+        else:
             item['ambiguous_admin'] = True
             ambiguous += 1
             continue
-        province_qid, district_qid = next(iter(pairs))
-        city = entity_label(entities.get(province_qid, {}), province_qid)
-        district = entity_label(entities.get(district_qid, {}), district_qid)
         if province_key(city) == 'elazig':
             district = canonical_elazig_district(district)
         if not city or not district:
