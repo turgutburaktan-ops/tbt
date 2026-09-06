@@ -10614,11 +10614,11 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourcePage: 'https://commons.wikimedia.org/wiki/File:A%C5%9Fub_Kad%C4%B1n_%C3%87e%C5%9Fmesi.jpg',
   ),
   'wd-q131391038-baba-cafer-turbesi': SpotImageInfo(
-    networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/d/d4/Baba_Cafer_T%C3%BCrbesi_%2839454%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled',
+    networkUrl: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/5/56/Baba_Cafer_T%C3%BCrbesi_2026-08-30_12.07.37_1788117153.JPG/1920px-Baba_Cafer_T%C3%BCrbesi_2026-08-30_12.07.37_1788117153.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
     sourceName: 'Wikimedia Commons (Wikidata P18)',
-    author: 'Özgür Arda BAYRAM',
+    author: 'Karakalem',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Baba_Cafer_T%C3%BCrbesi_(39454).jpg',
+    sourcePage: 'https://commons.wikimedia.org/wiki/File:Baba_Cafer_T%C3%BCrbesi_2026-08-30_12.07.37_1788117153.JPG',
   ),
   'wd-q112845065-baba-ogul-cesmesi': SpotImageInfo(
     networkUrl: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5b/Baba_O%C4%9Ful_fountain%2C_Ac%C4%B1badem%2C_Kad%C4%B1k%C3%B6y%2C_%C4%B0stanbul_2024.jpg/1920px-Baba_O%C4%9Ful_fountain%2C_Ac%C4%B1badem%2C_Kad%C4%B1k%C3%B6y%2C_%C4%B0stanbul_2024.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -18307,11 +18307,11 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourcePage: 'https://commons.wikimedia.org/wiki/File:Katip_Sinan_Cami1.jpg',
   ),
   'wd-q112112542-katip-semseddin-camii': SpotImageInfo(
-    networkUrl: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/7/77/Katip_%C5%9Eemseddin_Mosque.jpg/1920px-Katip_%C5%9Eemseddin_Mosque.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
+    networkUrl: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/0/08/Katip_%C5%9Eemseddin_Camii_2026-08-30_13.26.07_1788161587.JPG/1920px-Katip_%C5%9Eemseddin_Camii_2026-08-30_13.26.07_1788161587.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
     sourceName: 'Wikimedia Commons (Wikidata P18)',
-    author: 'Sadrettin',
+    author: 'Karakalem',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Katip_%C5%9Eemseddin_Mosque.jpg',
+    sourcePage: 'https://commons.wikimedia.org/wiki/File:Katip_%C5%9Eemseddin_Camii_2026-08-30_13.26.07_1788161587.JPG',
   ),
   'wd-q6028049-kemalpasa-camii': SpotImageInfo(
     networkUrl: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/0/05/Kemalpasha_mosque.jpg/1920px-Kemalpasha_mosque.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -18482,11 +18482,11 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     sourcePage: 'https://commons.wikimedia.org/wiki/File:Seydi_Bey_Camii_-_gece.jpg',
   ),
   'wd-q112112736-softa-hatip-camii': SpotImageInfo(
-    networkUrl: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d2/Softa_Hatip_Mosque.jpg/1920px-Softa_Hatip_Mosque.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
+    networkUrl: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1c/Softa_Hatip_Camii_2026-08-30_13.13.37_1788161192.JPG/1920px-Softa_Hatip_Camii_2026-08-30_13.13.37_1788161192.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
     sourceName: 'Wikimedia Commons (Wikidata P18)',
-    author: 'Sadrettin',
+    author: 'Karakalem',
     license: 'CC BY-SA 4.0',
-    sourcePage: 'https://commons.wikimedia.org/wiki/File:Softa_Hatip_Mosque.jpg',
+    sourcePage: 'https://commons.wikimedia.org/wiki/File:Softa_Hatip_Camii_2026-08-30_13.13.37_1788161192.JPG',
   ),
   'wd-q127418533-softa-sinan-camii': SpotImageInfo(
     networkUrl: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8a/Istanbul_Softa_Sinan_grave_2015_9009.jpg/1920px-Istanbul_Softa_Sinan_grave_2015_9009.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
