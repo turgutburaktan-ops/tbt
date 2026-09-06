@@ -675,7 +675,10 @@ def district_resolved_candidates(page_size: int, per_source_limit: int) -> dict[
             'district_qid': district_qid,
         })
         resolved += 1
-    print(\n        f'district resolved: {resolved}; boundary resolved: {boundary_resolved}; '\n        f'unresolved/ambiguous: {ambiguous}'\n    )
+    print(
+        f'district resolved: {resolved}; boundary resolved: {boundary_resolved}; '
+        f'unresolved/ambiguous: {ambiguous}'
+    )
     return candidates
 
 
