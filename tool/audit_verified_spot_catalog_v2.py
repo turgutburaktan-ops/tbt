@@ -38,11 +38,51 @@ def string_field(body: str, name: str) -> str:
 
 def strict_generated_check() -> list[dict]:
     quality = json.loads(QUALITY.read_text(encoding='utf-8')) if QUALITY.exists() else {}
+    generated_places = {
+        row['id']: row
+        for row in base.places()
+        if row['source'].endswith('verified_travel_places_generated.dart')
+    }
     failures = []
     for sid, meta in quality.items():
         w, h = int(meta.get('width') or 0), int(meta.get('height') or 0)
         if max(w, h) < STRICT_LONG or min(w, h) < STRICT_SHORT:
-            failures.append({'id': sid, 'width': w, 'height': h})
+            failures.append({
+                'id': sid,
+                'reason': 'low_resolution',
+                'width': w,
+                'height': h,
+            })
+        province = str(meta.get('province') or '').strip()
+        district = str(meta.get('district') or '').strip()
+        province_qid = str(meta.get('provinceQid') or '').strip()
+        district_qid = str(meta.get('districtQid') or '').strip()
+        if (
+            not province
+            or not district
+            or not province_qid.startswith('Q')
+            or not district_qid.startswith('Q')
+        ):
+            failures.append({
+                'id': sid,
+                'reason': 'missing_province_or_district_evidence',
+                'province': province,
+                'provinceQid': province_qid,
+                'district': district,
+                'districtQid': district_qid,
+            })
+        place = generated_places.get(sid)
+        if place is None:
+            failures.append({'id': sid, 'reason': 'missing_generated_place'})
+        elif province and base.norm(place['city']) != base.norm(province):
+            failures.append({
+                'id': sid,
+                'reason': 'province_mismatch',
+                'placeCity': place['city'],
+                'evidenceProvince': province,
+            })
+    for sid in sorted(set(generated_places) - set(quality)):
+        failures.append({'id': sid, 'reason': 'missing_generated_quality_record'})
     return failures
 
 
@@ -72,7 +112,7 @@ base.sf = string_field
 if __name__ == '__main__':
     strict_failures = strict_generated_check()
     if strict_failures:
-        print(json.dumps({'generated_image_quality_failures': strict_failures[:50]}, ensure_ascii=False, indent=2))
+        print(json.dumps({'strict_generated_failures': strict_failures[:50]}, ensure_ascii=False, indent=2))
         raise SystemExit(2)
 
     warnings = legacy_warnings()
