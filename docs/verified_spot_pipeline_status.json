@@ -1,7 +1,7 @@
 {
   "target_total": 10000,
   "generator_exit": "0",
-  "audit_exit": "not-run",
+  "audit_exit": "0",
   "generation_report": {
     "existing_verified": 151,
     "generated": 2151,
@@ -108,6 +108,16 @@
       }
     }
   },
-  "audit_summary": {},
+  "audit_summary": {
+    "verified_places": 2302,
+    "required_places": 1100,
+    "coordinate_evidence": 2305,
+    "image_registry_entries": 2311,
+    "image_quality_checked": 2302,
+    "min_long_edge": 700,
+    "min_short_edge": 450,
+    "error_counts": {},
+    "passed": true
+  },
   "generator_log_tail": "      \"Amasya\": 21,\\n      \"Ankara\": 65,\\n      \"Antalya\": 88,\\n      \"Ardahan\": 1,\\n      \"Artvin\": 15,\\n      \"Aydın\": 45,\\n      \"Ağrı\": 5,\\n      \"Balıkesir\": 25,\\n      \"Bartın\": 6,\\n      \"Batman\": 3,\\n      \"Bayburt\": 6,\\n      \"Bilecik\": 2,\\n      \"Bingöl\": 1,\\n      \"Bitlis\": 22,\\n      \"Bolu\": 7,\\n      \"Burdur\": 7,\\n      \"Bursa\": 116,\\n      \"Denizli\": 22,\\n      \"Diyarbakır\": 30,\\n      \"Düzce\": 7,\\n      \"Edirne\": 92,\\n      \"Elazığ\": 5,\\n      \"Erzincan\": 6,\\n      \"Erzurum\": 24,\\n      \"Eskişehir\": 21,\\n      \"Gaziantep\": 33,\\n      \"Giresun\": 5,\\n      \"Gümüşhane\": 3,\\n      \"Hakkari\": 1,\\n      \"Hatay\": 23,\\n      \"Isparta\": 14,\\n      \"Iğdır\": 2,\\n      \"Kahramanmaraş\": 9,\\n      \"Karabük\": 17,\\n      \"Karaman\": 10,\\n      \"Kars\": 10,\\n      \"Kastamonu\": 12,\\n      \"Kayseri\": 17,\\n      \"Kilis\": 2,\\n      \"Kocaeli\": 24,\\n      \"Konya\": 44,\\n      \"Kütahya\": 20,\\n      \"Kırklareli\": 52,\\n      \"Kırıkkale\": 3,\\n      \"Kırşehir\": 6,\\n      \"Malatya\": 4,\\n      \"Manisa\": 32,\\n      \"Mardin\": 18,\\n      \"Mersin\": 80,\\n      \"Muğla\": 59,\\n      \"Muş\": 6,\\n      \"Nevşehir\": 28,\\n      \"Niğde\": 14,\\n      \"Ordu\": 4,\\n      \"Osmaniye\": 5,\\n      \"Rize\": 9,\\n      \"Sakarya\": 11,\\n      \"Samsun\": 10,\\n      \"Siirt\": 2,\\n      \"Sinop\": 3,\\n      \"Sivas\": 10,\\n      \"Tekirdağ\": 9,\\n      \"Tokat\": 9,\\n      \"Trabzon\": 27,\\n      \"Tunceli\": 3,\\n      \"Uşak\": 3,\\n      \"Van\": 9,\\n      \"Yalova\": 1,\\n      \"Yozgat\": 3,\\n      \"Zonguldak\": 3,\\n      \"Çanakkale\": 31,\\n      \"Çankırı\": 2,\\n      \"Çorum\": 11,\\n      \"İstanbul\": 522,\\n      \"İzmir\": 159,\\n      \"Şanlıurfa\": 28,\\n      \"Şırnak\": 5\\n    }\\n  }\\n}"
 }\n
