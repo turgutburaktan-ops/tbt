@@ -38,6 +38,24 @@ ELAZIG_DISTRICTS = (
     'Sivrice',
 )
 
+# Dedicated district entities prevent nationwide WDQS page limits from
+# starving Elazığ candidates. The district itself is never admitted: every
+# candidate must be located in it via one or more P131 steps and still pass a
+# tourism/heritage class, direct P625/P18 and Commons quality gates.
+ELAZIG_DISTRICT_QIDS = {
+    'Merkez': 'Q2963425',
+    'Ağın': 'Q49101030',
+    'Alacakaya': 'Q115978659',
+    'Arıcak': 'Q116006581',
+    'Baskil': 'Q810374',
+    'Karakoçan': 'Q1868543',
+    'Keban': 'Q115978913',
+    'Kovancılar': 'Q116044805',
+    'Maden': 'Q1023303',
+    'Palu': 'Q2341599',
+    'Sivrice': 'Q115978893',
+}
+
 # Conservative second pass: only notable, mappable place/structure classes.
 # Each candidate still has to pass the same direct P625 + P18, Commons licence,
 # source-resolution, province ancestry and 18-metre duplicate gates.
@@ -101,6 +119,22 @@ def province_root_query(root: str, limit: int, offset: int) -> str:
 
 def province_heritage_query(limit: int, offset: int) -> str:
     return candidate_query_body('; wdt:P1435 ?heritage', limit, offset)
+
+
+def elazig_district_query(district_qid: str, limit: int, offset: int) -> str:
+    roots = ' '.join(f'wd:{qid}' for qid in base.ROOT_CLASSES)
+    return f'''SELECT DISTINCT ?item ?itemLabel ?coord ?image WHERE {{
+  ?item wdt:P17 wd:Q43 ; wdt:P625 ?coord ; wdt:P18 ?image ;
+        wdt:P131+ wd:{district_qid} .
+  {{ ?item wdt:P1435 ?heritage . }}
+  UNION
+  {{
+    ?item wdt:P31 ?class .
+    VALUES ?root {{ {roots} }}
+    ?class wdt:P279* ?root .
+  }}
+  SERVICE wikibase:label {{ bd:serviceParam wikibase:language "tr,en". }}
+}} ORDER BY ?item LIMIT {limit} OFFSET {offset}'''
 
 
 def usable_label(value: str, qid: str) -> bool:
@@ -239,6 +273,21 @@ _base_wikidata_candidates = base.wikidata_candidates
 
 def district_resolved_candidates(page_size: int, per_source_limit: int) -> dict[str, dict]:
     candidates = _base_wikidata_candidates(page_size, per_source_limit)
+    nationwide_count = len(candidates)
+    for district, district_qid in ELAZIG_DISTRICT_QIDS.items():
+        candidate_collect_query(
+            lambda limit, offset, qid=district_qid: elazig_district_query(
+                qid, limit, offset
+            ),
+            f'Elazığ / {district}',
+            page_size,
+            per_source_limit,
+            candidates,
+        )
+    print(
+        'Elazığ district-priority unique additions: '
+        f'{len(candidates) - nationwide_count}'
+    )
     entities = fetch_admin_entities(candidates)
     resolved = 0
     ambiguous = 0
