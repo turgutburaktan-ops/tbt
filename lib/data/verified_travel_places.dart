@@ -334,7 +334,9 @@ const verifiedTravelPlaces = <PhotoSpot>[
     tags: [
       'Gezilecek Yer',
       'Doğrulanmış',
+      'KaynakDoğrulanmış',
       'Elazığ',
+      'Merkez',
       'Harput',
       'Kale',
       'Tarih',
