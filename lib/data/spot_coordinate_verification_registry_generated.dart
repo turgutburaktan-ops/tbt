@@ -1,6 +1,11 @@
 import 'spot_coordinate_verification_registry.dart';
 
 const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificationEvidence>{
+  'wd-q22910095-elazig-protestan-kilisesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q22910095 / 38.677222,39.224444/ province=Q483091:Elazığ / district=Q2963425:Merkez',
+    verifiedAt: 'generated',
+  ),
   'wd-q6037253-alacali-cami': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q6037253 / 38.702333,39.250528/ province=Q483091:Elazığ / district=Q2963425:Merkez',
@@ -16,6 +21,16 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q28221529 / 38.674722,39.223611/ province=Q483091:Elazığ / district=Q2963425:Merkez',
     verifiedAt: 'generated',
   ),
+  'wd-q2380189-hazar-golu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q2380189 / 38.484500,39.404700/ province=Q483091:Elazığ / district=Q2963425:Merkez',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6025389-pertek-kalesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6025389 / 38.844444,39.271667/ province=Q483091:Elazığ / district=Q2963425:Merkez',
+    verifiedAt: 'generated',
+  ),
   'wd-q132752850-denizli-kervansarayi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q132752850 / 38.835960,38.681461/ province=Q483091:Elazığ / district=Q115978913:Keban',
@@ -26,6 +41,21 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q118176545 / 38.572639,39.173000/ province=Q483091:Elazığ / district=Q2963425:Merkez',
     verifiedAt: 'generated',
   ),
+  'wd-q6453864-komurhan-koprusu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6453864 / 38.440760,38.817880/ province=Q483091:Elazığ / district=Q810374:Baskil',
+    verifiedAt: 'generated',
+  ),
+  'wd-q8195601-harput': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q8195601 / 38.703889,39.250000/ province=Q483091:Elazığ / district=Q2963425:Merkez',
+    verifiedAt: 'generated',
+  ),
+  'wd-q34894335-keban-baraj-golu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q34894335 / 38.649167,39.488056/ province=Q483091:Elazığ / district=Q2963425:Merkez',
+    verifiedAt: 'generated',
+  ),
   'wd-q131738523-palu-hamami': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q131738523 / 38.699876,39.953406/ province=Q483091:Elazığ / district=Q2341599:Palu',
@@ -34,6 +64,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q66105199-sirzi-kaya-yaziti': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q66105199 / 38.878500,37.913556/ province=Q131384:Malatya / district=Q990206:Hekimhan',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6018307-tashoron-kilisesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6018307 / 38.352500,38.301944/ province=Q131384:Malatya / district=Q2438486:Yeşilyurt',
     verifiedAt: 'generated',
   ),
   'wd-q131402893-sugecti-eski-koprusu': SpotCoordinateVerificationEvidence(
@@ -69,6 +104,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q4801578-artuklu-sarayi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q4801578 / 37.916290,40.241700/ province=Q83081:Diyarbakır / district=Q664716:Sur',
+    verifiedAt: 'generated',
+  ),
+  'wd-q1329616-dicle-tuneli': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q1329616 / 38.529653,40.547447/ province=Q83081:Diyarbakır / district=Q1942525:Lice',
     verifiedAt: 'generated',
   ),
   'wd-q272720-cayonu': SpotCoordinateVerificationEvidence(
@@ -226,6 +266,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q87910977 / 37.905554,40.236838/ province=Q83081:Diyarbakır / district=Q664716:Sur',
     verifiedAt: 'generated',
   ),
+  'wd-q86096623-hassuni-magaralari': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q86096623 / 38.136595,41.091161/ province=Q83081:Diyarbakır / district=Q2273905:Silvan (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q63372680-dagkapi-meydani': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q63372680 / 37.916218,40.234959/ province=Q83081:Diyarbakır / district=Q664716:Sur',
@@ -249,6 +294,21 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q30624138-ziya-gokalp-muzesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q30624138 / 37.911389,40.234167/ province=Q83081:Diyarbakır / district=Q664716:Sur',
+    verifiedAt: 'generated',
+  ),
+  'wd-q31790703-kosuyolu-parki': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q31790703 / 37.923889,40.214167/ province=Q83081:Diyarbakır / district=Q15989052:Bağlar',
+    verifiedAt: 'generated',
+  ),
+  'wd-q31790693-parkorman': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q31790693 / 37.935000,40.192222/ province=Q83081:Diyarbakır / district=Q15989058:Kayapınar (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q31790697-sumer-park': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q31790697 / 37.911667,40.219167/ province=Q83081:Diyarbakır / district=Q15989061:Yenişehir',
     verifiedAt: 'generated',
   ),
   'wd-q139435940-artuklu-su-kemeri-diyarbakir': SpotCoordinateVerificationEvidence(
@@ -276,9 +336,34 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q109530766 / 39.104229,39.547810/ province=Q620742:Tunceli / district=Q202195:Tunceli',
     verifiedAt: 'generated',
   ),
+  'wd-q25473210-33-sehit-aniti': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q25473210 / 38.928971,40.361506/ province=Q79760:Bingöl / district=Q1812528:Bingöl İlçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6043205-sulbus-dagi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6043205 / 39.259440,40.019462/ province=Q79760:Bingöl / district=Q116824410:Yayladere ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q20472614-bingol-solhan-yuzen-adalari': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q20472614 / 38.972360,40.945300/ province=Q79760:Bingöl / district=Q49109081:Solhan İlçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q21648088-anazarbus-zafer-taki': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q21648088 / 37.250500,35.903200/ province=Q40549:Adana / district=Q1911402:Kozan',
+    verifiedAt: 'generated',
+  ),
   'wd-q1404382-hanyeri-kabartmasi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q1404382 / 38.213417,36.014944/ province=Q40549:Adana / district=Q1004480:Tufanbeyli',
+    verifiedAt: 'generated',
+  ),
+  'wd-q24646859-kurukopru-anit-kilisesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q24646859 / 36.989722,35.322778/ province=Q40549:Adana / district=Q49108856:Seyhan (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q121545337-muvatalli-kabartmasi': SpotCoordinateVerificationEvidence(
@@ -306,14 +391,119 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q1561662 / 37.003889,35.745278/ province=Q40549:Adana / district=Q2784562:Ceyhan (ilçe)',
     verifiedAt: 'generated',
   ),
+  'wd-q1438450-taskopru': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q1438450 / 36.986280,35.335120/ province=Q40549:Adana / district=Q49108856:Seyhan (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q25477115-57-alay-sehitleri-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q25477115 / 37.060667,35.365139/ province=Q40549:Adana / district=Q1430729:Sarıçam',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6044663-adana-yeni-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6044663 / 36.988389,35.323778/ province=Q40549:Adana / district=Q49108856:Seyhan (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q127632917-akca-mescit': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127632917 / 36.985527,35.330299/ province=Q40549:Adana / district=Q49108856:Seyhan (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q132134472-alemdar-camii-adana': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q132134472 / 36.980625,35.328846/ province=Q40549:Adana / district=Q49108856:Seyhan (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q127633007-ali-dede-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127633007 / 36.981518,35.326469/ province=Q40549:Adana / district=Q49108856:Seyhan (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q127643369-haci-mahmut-aga-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127643369 / 36.982040,35.330490/ province=Q40549:Adana / district=Q49108856:Seyhan (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q125418048-hasan-kethuda-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q125418048 / 36.982583,35.327639/ province=Q40549:Adana / district=Q49108856:Seyhan (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q127643565-hasir-pazari-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127643565 / 36.983456,35.328560/ province=Q40549:Adana / district=Q49108856:Seyhan (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6037156-kozan-ulu-cami': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6037156 / 37.445639,35.817194/ province=Q40549:Adana / district=Q1911402:Kozan',
+    verifiedAt: 'generated',
+  ),
+  'wd-q127787087-memis-pasa-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127787087 / 36.983242,35.331253/ province=Q40549:Adana / district=Q49108856:Seyhan (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q121608250-ramazanoglu-camii': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q121608250 / 37.047500,35.292222/ province=Q40549:Adana / district=Q272948:Çukurova',
     verifiedAt: 'generated',
   ),
+  'wd-q1381468-sabanci-merkez-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q1381468 / 36.991389,35.334167/ province=Q40549:Adana / district=Q49108856:Seyhan (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q66475469-seyhan-adana-da-cami': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q66475469 / 36.986361,35.325639/ province=Q40549:Adana / district=Q49108856:Seyhan (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q132134243-tahtali-camii-adana': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q132134243 / 36.988506,35.325680/ province=Q40549:Adana / district=Q49108856:Seyhan (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q124621657-yesil-mescit': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q124621657 / 36.987222,35.329528/ province=Q40549:Adana / district=Q49108856:Seyhan (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q127788146-sefika-hatun-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127788146 / 36.987034,35.331001/ province=Q40549:Adana / district=Q49108856:Seyhan (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q127788183-seyh-zulfo-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127788183 / 36.980003,35.329208/ province=Q40549:Adana / district=Q49108856:Seyhan (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q127788185-seyhoglu-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127788185 / 36.989037,35.330185/ province=Q40549:Adana / district=Q49108856:Seyhan (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q105439973-kozan-baraj-golu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q105439973 / 37.517778,35.845556/ province=Q40549:Adana / district=Q1911402:Kozan',
+    verifiedAt: 'generated',
+  ),
+  'wd-q34922820-seyhan-baraj-golu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q34922820 / 37.076389,35.294444/ province=Q40549:Adana / district=Q1430729:Sarıçam',
+    verifiedAt: 'generated',
+  ),
   'wd-q195587-cinekoy-yaziti': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q195587 / 36.798300,35.260300/ province=Q40549:Adana / district=Q765123:Yüreğir',
+    verifiedAt: 'generated',
+  ),
+  'wd-q16825078-anavarza-kalesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q16825078 / 37.250000,35.900000/ province=Q40549:Adana / district=Q1911402:Kozan',
     verifiedAt: 'generated',
   ),
   'wd-q14545035-gokvelioglu-kalesi': SpotCoordinateVerificationEvidence(
@@ -329,6 +519,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q974152-kurtkulagi-kervansarayi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q974152 / 36.923333,35.885278/ province=Q40549:Adana / district=Q2784562:Ceyhan (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131539233-kara-kilise': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131539233 / 37.851146,35.943019/ province=Q40549:Adana / district=Q2525100:Feke',
     verifiedAt: 'generated',
   ),
   'wd-q108228467-belemedik-tabiat-parki': SpotCoordinateVerificationEvidence(
@@ -351,14 +546,64 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q28220794 / 37.471110,34.861940/ province=Q40549:Adana / district=Q1004432:Pozantı',
     verifiedAt: 'generated',
   ),
-  'wd-q4702037-akyatan-golu': SpotCoordinateVerificationEvidence(
+  'wd-q195019-adana-arkeoloji-muzesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
-    sourceRef: 'Q4702037 / 36.636600,35.255100/ province=Q40549:Adana / district=Q376854:Karataş',
+    sourceRef: 'Q195019 / 36.995135,35.313741/ province=Q40549:Adana / district=Q49108856:Seyhan (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q4680607-adana-sinema-muzesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q4680607 / 36.988456,35.329778/ province=Q40549:Adana / district=Q49108856:Seyhan (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q132899013-bulent-ecevit-muzesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q132899013 / 36.988496,35.330835/ province=Q40549:Adana / district=Q49108856:Seyhan (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q4680613-kurukopru-anit-muzesi-ve-geleneksel-adana-evi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q4680613 / 36.989444,35.323056/ province=Q40549:Adana / district=Q49108856:Seyhan (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q6875685-misis-mozaik-muzesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q6875685 / 36.957500,35.619444/ province=Q40549:Adana / district=Q765123:Yüreğir',
+    verifiedAt: 'generated',
+  ),
+  'wd-q125537051-ilter-uzel-tip-ve-dis-hekimligi-muzesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q125537051 / 36.983666,35.331910/ province=Q40549:Adana / district=Q49108856:Seyhan (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6819632-merkez-park': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6819632 / 36.995556,35.335000/ province=Q40549:Adana / district=Q49108856:Seyhan (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131738475-mestan-hamami': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131738475 / 36.985939,35.324814/ province=Q40549:Adana / district=Q49108856:Seyhan (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131738476-yeni-hamam': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131738476 / 36.981100,35.329254/ province=Q40549:Adana / district=Q49108856:Seyhan (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131738474-carsi-hamami': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131738474 / 36.984035,35.330007/ province=Q40549:Adana / district=Q49108856:Seyhan (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q133236681-feke-kalesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q133236681 / 37.860563,35.951628/ province=Q40549:Adana / district=Q2525100:Feke',
+    verifiedAt: 'generated',
+  ),
+  'wd-q28136435-kozan-kalesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q28136435 / 37.441667,35.809722/ province=Q40549:Adana / district=Q1911402:Kozan',
     verifiedAt: 'generated',
   ),
   'wd-q130596636-perre-roma-cesmesi': SpotCoordinateVerificationEvidence(
@@ -369,6 +614,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q1587735-perre': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q1587735 / 37.791667,38.301111/ province=Q43924:Adıyaman / district=Q13428422:Adıyaman İlçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q1026347-samosata': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q1026347 / 37.564519,38.471342/ province=Q43924:Adıyaman / district=Q2797741:Samsat (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q61072484-adiyaman-ulu-camii': SpotCoordinateVerificationEvidence(
@@ -411,6 +661,36 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q636876 / 37.762778,38.278056/ province=Q43924:Adıyaman / district=Q13428422:Adıyaman İlçesi',
     verifiedAt: 'generated',
   ),
+  'wd-q131739220-bekir-bey-hamami': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131739220 / 37.674801,37.865177/ province=Q43924:Adıyaman / district=Q2411923:Besni',
+    verifiedAt: 'generated',
+  ),
+  'wd-q732651-aslantas-ve-yilantas': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q732651 / 39.048333,30.523333/ province=Q45220:Afyonkarahisar / district=Q116634166:İhsaniye ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q130302581-ayazini-medusali-mezar': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q130302581 / 39.012487,30.571597/ province=Q45220:Afyonkarahisar / district=Q116634166:İhsaniye ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q130302859-ayazini-metropolisi-ndeki-mezarlar': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q130302859 / 39.011843,30.568285/ province=Q45220:Afyonkarahisar / district=Q116634166:İhsaniye ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q130692274-bas-cesme': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q130692274 / 38.757976,30.533985/ province=Q45220:Afyonkarahisar / district=Q1911729:Afyonkarahisar (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q174270-amorium': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q174270 / 39.026452,31.266575/ province=Q45220:Afyonkarahisar / district=Q18433361:Emirdağ ilçesi',
+    verifiedAt: 'generated',
+  ),
   'wd-q617518-apameia-kibotos': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q617518 / 38.071000,30.166000/ province=Q45220:Afyonkarahisar / district=Q116609383:Dinar ilçesi',
@@ -421,9 +701,19 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q135581873 / 38.073760,30.172626/ province=Q45220:Afyonkarahisar / district=Q116609383:Dinar ilçesi',
     verifiedAt: 'generated',
   ),
+  'wd-q118900377-aslantas-yilantas': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q118900377 / 39.025450,30.537820/ province=Q45220:Afyonkarahisar / district=Q116634166:İhsaniye ilçesi',
+    verifiedAt: 'generated',
+  ),
   'wd-q6045025-kirkgoz-koprusu': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q6045025 / 38.660611,31.064889/ province=Q45220:Afyonkarahisar / district=Q1915508:Bolvadin',
+    verifiedAt: 'generated',
+  ),
+  'wd-q132182827-sarikavak-hoyugu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q132182827 / 37.874802,29.803440/ province=Q45220:Afyonkarahisar / district=Q116609269:Dazkırı ilçesi',
     verifiedAt: 'generated',
   ),
   'wd-q616079-synnada': SpotCoordinateVerificationEvidence(
@@ -431,14 +721,119 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q616079 / 38.533333,30.550000/ province=Q45220:Afyonkarahisar / district=Q1947545:Şuhut',
     verifiedAt: 'generated',
   ),
+  'wd-q71576419-yumruktepe': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q71576419 / 39.047444,30.473028/ province=Q45220:Afyonkarahisar / district=Q116634166:İhsaniye ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q127632802-adeyze-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127632802 / 38.754948,30.534107/ province=Q45220:Afyonkarahisar / district=Q1911729:Afyonkarahisar (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q54860576-afyonkarahisar-ulu-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q54860576 / 38.755000,30.529444/ province=Q45220:Afyonkarahisar / district=Q1911729:Afyonkarahisar (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q127634815-bas-cesme-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127634815 / 38.758141,30.534021/ province=Q45220:Afyonkarahisar / district=Q1911729:Afyonkarahisar (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q127634865-bel-mescidi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127634865 / 38.750217,30.542898/ province=Q45220:Afyonkarahisar / district=Q1911729:Afyonkarahisar (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q130294394-gedik-ahmet-pasa-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q130294394 / 38.753552,30.540421/ province=Q45220:Afyonkarahisar / district=Q1911729:Afyonkarahisar (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q127786909-karaman-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127786909 / 38.759354,30.538870/ province=Q45220:Afyonkarahisar / district=Q1911729:Afyonkarahisar (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q127787013-kubbeli-mescit': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127787013 / 38.753715,30.528999/ province=Q45220:Afyonkarahisar / district=Q1911729:Afyonkarahisar (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q127787037-kuyulu-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127787037 / 38.753563,30.532288/ province=Q45220:Afyonkarahisar / district=Q1911729:Afyonkarahisar (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q127787942-ot-pazari-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127787942 / 38.754436,30.537025/ province=Q45220:Afyonkarahisar / district=Q1911729:Afyonkarahisar (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q132133833-yeni-cami-afyonkarahisar': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q132133833 / 38.755039,30.535284/ province=Q45220:Afyonkarahisar / district=Q1911729:Afyonkarahisar (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q127788366-yukari-pazar-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127788366 / 38.754253,30.530890/ province=Q45220:Afyonkarahisar / district=Q1911729:Afyonkarahisar (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q63883121-cay-hani': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q63883121 / 38.592703,31.023205/ province=Q45220:Afyonkarahisar / district=Q116548210:Çay ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q56244546-ayazini-metropolisi-ndeki-kiliseler': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q56244546 / 39.010596,30.565079/ province=Q45220:Afyonkarahisar / district=Q116634166:İhsaniye ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q110422209-26-agustos-tabiat-parki': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q110422209 / 38.788304,30.378948/ province=Q45220:Afyonkarahisar / district=Q116634390:Sinanpaşa ilçesi',
+    verifiedAt: 'generated',
+  ),
   'wd-q1278759-eber-golu': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q1278759 / 38.643200,31.169600/ province=Q45220:Afyonkarahisar / district=Q1915508:Bolvadin',
     verifiedAt: 'generated',
   ),
+  'wd-q6094921-karamik-golu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6094921 / 38.416667,30.833333/ province=Q45220:Afyonkarahisar / district=Q116548210:Çay ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6034872-afyonkarahisar-arkeoloji-muzesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6034872 / 38.785890,30.472896/ province=Q45220:Afyonkarahisar / district=Q1911729:Afyonkarahisar (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q20987701-zafer-muzesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q20987701 / 38.758050,30.538200/ province=Q45220:Afyonkarahisar / district=Q1911729:Afyonkarahisar (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q20987669-suhut-ataturk-evi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q20987669 / 38.530190,30.541810/ province=Q45220:Afyonkarahisar / district=Q1947545:Şuhut',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131738694-millet-hamami': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131738694 / 38.753548,30.531532/ province=Q45220:Afyonkarahisar / district=Q1911729:Afyonkarahisar (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q1014726-afyonkarahisar-kalesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q1014726 / 38.756667,30.531667/ province=Q45220:Afyonkarahisar / district=Q1911729:Afyonkarahisar (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q130301998-avdalaz-kalesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q130301998 / 39.027550,30.567674/ province=Q45220:Afyonkarahisar / district=Q116634166:İhsaniye ilçesi',
     verifiedAt: 'generated',
   ),
   'wd-q127787917-eski-bayezid-camii': SpotCoordinateVerificationEvidence(
@@ -449,6 +844,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q137586282-mezarlik-mescidi-dogubayazit': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q137586282 / 39.519251,44.129523/ province=Q80051:Ağrı / district=Q2301990:Doğubayazıt',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6596128-kosedag': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6596128 / 39.895417,42.643559/ province=Q80051:Ağrı / district=Q13576309:Eleşkirt İlçesi',
     verifiedAt: 'generated',
   ),
   'wd-q72303-agri-dagi': SpotCoordinateVerificationEvidence(
@@ -466,9 +866,109 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q112845176 / 39.521611,44.132944/ province=Q80051:Ağrı / district=Q2301990:Doğubayazıt',
     verifiedAt: 'generated',
   ),
+  'wd-q23011908-alaskert-ovasi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q23011908 / 39.800000,42.650000/ province=Q80051:Ağrı / district=Q13576309:Eleşkirt İlçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6007692-alay-han': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6007692 / 38.518611,34.354444/ province=Q83073:Aksaray / district=Q1977993:Aksaray (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q794830-asikli-hoyuk': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q794830 / 38.349000,34.230000/ province=Q83073:Aksaray / district=Q116674327:Gülağaç ilçesi',
+    verifiedAt: 'generated',
+  ),
   'wd-q115777355-ersele-yeralti-sehri': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q115777355 / 38.678056,34.215556/ province=Q83073:Aksaray / district=Q1434794:Ortaköy',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6038539-aksaray-ulu-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6038539 / 38.373306,34.029194/ province=Q83073:Aksaray / district=Q1977993:Aksaray (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q116044582-egri-minare': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q116044582 / 38.376755,34.029331/ province=Q83073:Aksaray / district=Q1977993:Aksaray (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q31524766-ekecik-dagi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q31524766 / 38.642200,34.042480/ province=Q83073:Aksaray / district=Q1977993:Aksaray (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q55524186-burunkaya-yaziti': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q55524186 / 38.385277,34.166416/ province=Q83073:Aksaray / district=Q1977993:Aksaray (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q794728-agzikara-han': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q794728 / 38.445278,34.140556/ province=Q83073:Aksaray / district=Q1977993:Aksaray (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q59260319-oresin-han': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q59260319 / 38.470833,34.203056/ province=Q83073:Aksaray / district=Q1977993:Aksaray (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6006070-canli-kilise': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6006070 / 38.298611,34.135278/ province=Q83073:Aksaray / district=Q1977993:Aksaray (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6015876-aksaray-muzesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6015876 / 38.361111,33.993611/ province=Q83073:Aksaray / district=Q1977993:Aksaray (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q16255962-buyuk-aga-medresesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q16255962 / 40.658580,35.834892/ province=Q80036:Amasya / district=Q21810719:Amasya ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q134728473-ferhat-ile-sirin-heykeli': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q134728473 / 40.651024,35.826420/ province=Q80036:Amasya / district=Q21810719:Amasya ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q118957813-halifet-gazi-turbesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q118957813 / 40.649353,35.823185/ province=Q80036:Amasya / district=Q21810719:Amasya ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q137774229-pir-sucaeddin-ilyas-turbesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q137774229 / 40.653041,35.838424/ province=Q80036:Amasya / district=Q21810719:Amasya ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q118957960-sultan-mesud-turbesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q118957960 / 40.649333,35.824417/ province=Q80036:Amasya / district=Q21810719:Amasya ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q118188334-torumtay-turbesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q118188334 / 40.649778,35.820111/ province=Q80036:Amasya / district=Q21810719:Amasya ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q118957749-cilehane-turbesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q118957749 / 40.653542,35.838168/ province=Q80036:Amasya / district=Q21810719:Amasya ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131391547-sadgeldi-turbesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131391547 / 40.649208,35.822994/ province=Q80036:Amasya / district=Q21810719:Amasya ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6104469-oluz-hoyuk': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6104469 / 40.545700,35.628500/ province=Q80036:Amasya / district=Q21810719:Amasya ilçesi',
     verifiedAt: 'generated',
   ),
   'wd-q116780417-abide-hatun-camii': SpotCoordinateVerificationEvidence(
@@ -476,9 +976,54 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q116780417 / 40.878282,35.496223/ province=Q80036:Amasya / district=Q2123173:Merzifon İlçesi',
     verifiedAt: 'generated',
   ),
+  'wd-q16255881-amasya-ulu-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q16255881 / 40.650100,35.832400/ province=Q80036:Amasya / district=Q21810719:Amasya ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6027957-bayezid-pasa-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6027957 / 40.658028,35.836889/ province=Q80036:Amasya / district=Q21810719:Amasya ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131741225-gokmedrese-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131741225 / 40.649437,35.820087/ province=Q80036:Amasya / district=Q21810719:Amasya ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q127643222-gumuslu-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127643222 / 40.652062,35.834728/ province=Q80036:Amasya / district=Q21810719:Amasya ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6016566-hatuniye-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6016566 / 40.652028,35.829417/ province=Q80036:Amasya / district=Q21810719:Amasya ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q132133873-mehmet-pasa-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q132133873 / 40.654575,35.835735/ province=Q80036:Amasya / district=Q21810719:Amasya ilçesi',
+    verifiedAt: 'generated',
+  ),
   'wd-q14089145-merzifonlu-kara-mustafa-pasa-camii': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q14089145 / 40.872694,35.463889/ province=Q80036:Amasya / district=Q2123173:Merzifon İlçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q127787982-pir-mehmet-celebi-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127787982 / 40.651550,35.834030/ province=Q80036:Amasya / district=Q21810719:Amasya ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q127788100-sofular-abdullah-pasa-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127788100 / 40.651947,35.837067/ province=Q80036:Amasya / district=Q21810719:Amasya ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q132133871-yorguc-pasa-camii-amasya': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q132133871 / 40.650513,35.820328/ province=Q80036:Amasya / district=Q21810719:Amasya ilçesi',
     verifiedAt: 'generated',
   ),
   'wd-q61072933-celebi-mehmet-medresesi-camii': SpotCoordinateVerificationEvidence(
@@ -486,14 +1031,89 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q61072933 / 40.873833,35.461861/ province=Q80036:Amasya / district=Q2123173:Merzifon İlçesi',
     verifiedAt: 'generated',
   ),
+  'wd-q127635206-cilehane-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127635206 / 40.653824,35.838364/ province=Q80036:Amasya / district=Q21810719:Amasya ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q15197697-ikinci-beyazit-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q15197697 / 40.650000,35.827000/ province=Q80036:Amasya / district=Q21810719:Amasya ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q127788193-sirvanli-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127788193 / 40.656509,35.838089/ province=Q80036:Amasya / district=Q21810719:Amasya ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q893292-boraboy-golu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q893292 / 40.803880,36.153740/ province=Q80036:Amasya / district=Q49109452:Taşova ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q116922072-tashan-amasya': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q116922072 / 40.650486,35.832146/ province=Q80036:Amasya / district=Q21810719:Amasya ilçesi',
+    verifiedAt: 'generated',
+  ),
   'wd-q6079726-merzifon-saat-kulesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q6079726 / 40.874088,35.461768/ province=Q80036:Amasya / district=Q2123173:Merzifon İlçesi',
     verifiedAt: 'generated',
   ),
+  'wd-q116201086-alcak-kopru': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q116201086 / 40.651928,35.830547/ province=Q80036:Amasya / district=Q21810719:Amasya ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q30632561-istasyon-koprusu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q30632561 / 40.652025,35.822943/ province=Q80036:Amasya / district=Q21810719:Amasya ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q116884558-amasya-bedesteni': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q116884558 / 40.651111,35.831667/ province=Q80036:Amasya / district=Q21810719:Amasya ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q116169871-aynali-magara': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q116169871 / 40.671738,35.842578/ province=Q80036:Amasya / district=Q21810719:Amasya ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q25472502-amasya-arkeoloji-ve-mumya-muzesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q25472502 / 40.649444,35.824722/ province=Q80036:Amasya / district=Q21810719:Amasya ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131720647-sehzadeler-muzesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131720647 / 40.652356,35.830322/ province=Q80036:Amasya / district=Q21810719:Amasya ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q137774013-kizlar-sarayi-hamami-1': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q137774013 / 40.653407,35.830952/ province=Q80036:Amasya / district=Q21810719:Amasya ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131738864-kizlar-sarayi-hamami-2': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131738864 / 40.652851,35.830837/ province=Q80036:Amasya / district=Q21810719:Amasya ilçesi',
+    verifiedAt: 'generated',
+  ),
   'wd-q116792754-merzifonlu-kara-mustafa-pasa-hamami': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q116792754 / 40.876547,35.464119/ province=Q80036:Amasya / district=Q2123173:Merzifon İlçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131738481-mustafa-bey-hamami': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131738481 / 40.654122,35.835467/ province=Q80036:Amasya / district=Q21810719:Amasya ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131738482-yildiz-hamami': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131738482 / 40.652034,35.829117/ province=Q80036:Amasya / district=Q21810719:Amasya ilçesi',
     verifiedAt: 'generated',
   ),
   'wd-q135582391-ahi-serafettin-turbesi': SpotCoordinateVerificationEvidence(
@@ -636,6 +1256,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q1675450 / 40.127261,31.562376/ province=Q2297724:Ankara / district=Q1947523:Nallıhan',
     verifiedAt: 'generated',
   ),
+  'wd-q25511426-tumulus-mm-gordion': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q25511426 / 39.653889,31.998056/ province=Q2297724:Ankara / district=Q14141584:Polatlı (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q89272155-abdulkadir-isfahani-mescidi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q89272155 / 39.942500,32.860833/ province=Q2297724:Ankara / district=Q682981:Altındağ',
@@ -654,6 +1279,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q25472397-ahmet-hamdi-akseki-camii': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q25472397 / 39.906400,32.763200/ province=Q2297724:Ankara / district=Q2455942:Çankaya (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q127643146-ayas-ulu-cami': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127643146 / 40.015339,32.332600/ province=Q2297724:Ankara / district=Q49100994:Ayaş ilçesi',
     verifiedAt: 'generated',
   ),
   'wd-q104921142-gazze-camii': SpotCoordinateVerificationEvidence(
@@ -684,6 +1314,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q135628818-keresteciler-camii': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q135628818 / 40.035511,32.616178/ province=Q2297724:Ankara / district=Q2318164:Kazan (rayon)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q138018612-kesikbas-mosque': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q138018612 / 40.016405,32.329785/ province=Q2297724:Ankara / district=Q49100994:Ayaş ilçesi',
     verifiedAt: 'generated',
   ),
   'wd-q132133918-kursunlu-camii-beypazari': SpotCoordinateVerificationEvidence(
@@ -736,6 +1371,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q127786807 / 39.936867,32.866699/ province=Q2297724:Ankara / district=Q682981:Altındağ',
     verifiedAt: 'generated',
   ),
+  'wd-q132133890-seyh-muhyiddin-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q132133890 / 40.014599,32.333149/ province=Q2297724:Ankara / district=Q49100994:Ayaş ilçesi',
+    verifiedAt: 'generated',
+  ),
   'wd-q4810695-eymir-golu': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q4810695 / 39.823940,32.824420/ province=Q2297724:Ankara / district=Q2455942:Çankaya (ilçe)',
@@ -754,6 +1394,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q104125180-exchange': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q104125180 / 39.870528,32.734250/ province=Q2297724:Ankara / district=Q2455942:Çankaya (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q83981906-gavurkale-reliefs': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q83981906 / 39.531389,32.558889/ province=Q2297724:Ankara / district=Q49104083:Haymana İlçesi',
     verifiedAt: 'generated',
   ),
   'wd-q123554805-juan-rafael-mora-porras-bustu': SpotCoordinateVerificationEvidence(
@@ -806,6 +1451,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q61076555 / 39.937361,32.863194/ province=Q2297724:Ankara / district=Q682981:Altındağ',
     verifiedAt: 'generated',
   ),
+  'wd-q6084143-camkoru-tabiat-parki': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6084143 / 40.578564,32.527599/ province=Q2297724:Ankara / district=Q49110402:Çamlıdere ilçesi',
+    verifiedAt: 'generated',
+  ),
   'wd-q6028930-ankara-parasut-kulesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q6028930 / 39.938222,32.842528/ province=Q2297724:Ankara / district=Q682981:Altındağ',
@@ -814,6 +1464,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q49105436-ataturk-cumhuriyet-kulesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q49105436 / 39.983444,32.864917/ province=Q2297724:Ankara / district=Q1021220:Keçiören',
+    verifiedAt: 'generated',
+  ),
+  'wd-q61076306-kalecik-koprusu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q61076306 / 40.041444,33.444054/ province=Q2297724:Ankara / district=Q49105166:Kalecik (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q85968210-ataturk-kultur-merkezi': SpotCoordinateVerificationEvidence(
@@ -834,6 +1489,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q769575-haci-bayram-camii': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q769575 / 39.944444,32.857778/ province=Q2297724:Ankara / district=Q682981:Altındağ',
+    verifiedAt: 'generated',
+  ),
+  'wd-q4810216-mogan-golu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q4810216 / 39.767840,32.791930/ province=Q2297724:Ankara / district=Q49103874:Gölbaşı ilçesi',
     verifiedAt: 'generated',
   ),
   'wd-q6015963-anadolu-meydani': SpotCoordinateVerificationEvidence(
@@ -906,6 +1566,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q56435626 / 39.938056,32.863056/ province=Q2297724:Ankara / district=Q682981:Altındağ',
     verifiedAt: 'generated',
   ),
+  'wd-q6096783-gordion-muzesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6096783 / 39.652672,31.996028/ province=Q2297724:Ankara / district=Q14141584:Polatlı (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q28136272-gokyay-vakfi-satranc-muzesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q28136272 / 39.934740,32.862900/ province=Q2297724:Ankara / district=Q682981:Altındağ',
@@ -959,6 +1624,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q8077662-cengelhan-rahmi-m-koc-muzesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q8077662 / 39.937500,32.997222/ province=Q2297724:Ankara / district=Q682981:Altındağ',
+    verifiedAt: 'generated',
+  ),
+  'wd-q56435475-cubuk-sehir-muzesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q56435475 / 40.238713,33.031195/ province=Q2297724:Ankara / district=Q49110497:Çubuk ilçesi',
     verifiedAt: 'generated',
   ),
   'wd-q117307596-ali-dincer-parki': SpotCoordinateVerificationEvidence(
@@ -1101,6 +1771,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q25472424 / 36.952833,30.632639/ province=Q40249:Antalya / district=Q727065:Kepez',
     verifiedAt: 'generated',
   ),
+  'wd-q1377972-gaius-caesar-anit-mezari': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q1377972 / 36.341852,30.167900/ province=Q40249:Antalya / district=Q49103504:Finike (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q3531101-harpy-aniti': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q3531101 / 36.356778,29.317944/ province=Q40249:Antalya / district=Q2413977:Kaş ilçesi',
@@ -1109,6 +1784,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q134728126-merehi-lahdi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q134728126 / 36.359737,29.321663/ province=Q40249:Antalya / district=Q2413977:Kaş ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q55624236-mustafa-kemal-ataturk-aniti-yehud': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q55624236 / 36.295696,30.149501/ province=Q40249:Antalya / district=Q49103504:Finike (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q134728129-olympos-liman-anit-mezarlari': SpotCoordinateVerificationEvidence(
@@ -1131,6 +1811,16 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q6013556 / 36.588194,31.871111/ province=Q40249:Antalya / district=Q1635214:Alanya',
     verifiedAt: 'generated',
   ),
+  'wd-q510000-andriake': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q510000 / 36.229611,29.958500/ province=Q40249:Antalya / district=Q2612378:Demre (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q133236036-antiocheia-ad-cragum-ortacag-kalesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q133236036 / 36.156918,32.414902/ province=Q40249:Antalya / district=Q13640468:Gazipaşa (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q4775098-antiphellos': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q4775098 / 36.200000,29.638333/ province=Q40249:Antalya / district=Q2413977:Kaş ilçesi',
@@ -1144,6 +1834,41 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q15183441-apollonia': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q15183441 / 36.186667,29.763889/ province=Q40249:Antalya / district=Q2413977:Kaş ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q718048-arykanda': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q718048 / 36.513517,30.059917/ province=Q40249:Antalya / district=Q49103504:Finike (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q137769492-arykanda-bouleuterion': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q137769492 / 36.514705,30.057405/ province=Q40249:Antalya / district=Q49103504:Finike (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q137769554-arykanda-buyuk-bazilika': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q137769554 / 36.513114,30.059322/ province=Q40249:Antalya / district=Q49103504:Finike (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q137769806-arykanda-devlet-agorasi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q137769806 / 36.513806,30.059894/ province=Q40249:Antalya / district=Q49103504:Finike (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q137769662-arykanda-nisli-yapi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q137769662 / 36.514763,30.059646/ province=Q40249:Antalya / district=Q49103504:Finike (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q135582521-arykanda-podyumlu-tapinak': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q135582521 / 36.513355,30.059359/ province=Q40249:Antalya / district=Q49103504:Finike (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q137769858-arykanda-sarap-isligi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q137769858 / 36.512605,30.058073/ province=Q40249:Antalya / district=Q49103504:Finike (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q115466378-aspendos-agorasi': SpotCoordinateVerificationEvidence(
@@ -1176,9 +1901,34 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q846250 / 36.914410,31.163010/ province=Q40249:Antalya / district=Q1850419:Serik (ilçe)',
     verifiedAt: 'generated',
   ),
+  'wd-q996090-kirkgoz-kemeri': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q996090 / 36.348850,30.207540/ province=Q40249:Antalya / district=Q49103504:Finike (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q780117-limyra': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q780117 / 36.341965,30.170238/ province=Q40249:Antalya / district=Q49103504:Finike (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q115755204-mettius-modestus-taki': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q115755204 / 36.265578,29.318528/ province=Q40249:Antalya / district=Q2413977:Kaş ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q652024-myra': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q652024 / 36.250801,29.993638/ province=Q40249:Antalya / district=Q2612378:Demre (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q56640493-myra-antik-tiyatrosu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q56640493 / 36.258950,29.985310/ province=Q40249:Antalya / district=Q2612378:Demre (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q134728227-myra-kaya-mezarlari': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q134728227 / 36.258690,29.984238/ province=Q40249:Antalya / district=Q2612378:Demre (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q1432010-nisa': SpotCoordinateVerificationEvidence(
@@ -1226,6 +1976,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q362627 / 36.873725,31.475553/ province=Q40249:Antalya / district=Q2218182:Manavgat (ilçe)',
     verifiedAt: 'generated',
   ),
+  'wd-q1424724-selinus': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q1424724 / 36.261111,32.284722/ province=Q40249:Antalya / district=Q13640468:Gazipaşa (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q116671649-side-agorasi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q116671649 / 36.768500,31.391528/ province=Q40249:Antalya / district=Q2218182:Manavgat (ilçe)',
@@ -1244,6 +1999,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q1431866-syedra': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q1431866 / 36.441202,32.152426/ province=Q40249:Antalya / district=Q1635214:Alanya',
+    verifiedAt: 'generated',
+  ),
+  'wd-q599462-termessos': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q599462 / 36.982469,30.464189/ province=Q40249:Antalya / district=Q2225198:Korkuteli (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q124618113-tyche-tapinagi-side': SpotCoordinateVerificationEvidence(
@@ -1326,6 +2086,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q2470666 / 36.536389,31.998056/ province=Q40249:Antalya / district=Q1635214:Alanya',
     verifiedAt: 'generated',
   ),
+  'wd-q131902367-teimiussa-kalesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131902367 / 36.197220,29.850279/ province=Q40249:Antalya / district=Q2612378:Demre (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q2090725-koprulu-kanyon': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q2090725 / 37.295906,31.140747/ province=Q40249:Antalya / district=Q2218182:Manavgat (ilçe)',
@@ -1354,6 +2119,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q131527417-hagios-contantinos-kilisesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q131527417 / 36.533283,31.997562/ province=Q40249:Antalya / district=Q1635214:Alanya',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131527571-limyra-ptolemaion-kilisesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131527571 / 36.342197,30.169570/ province=Q40249:Antalya / district=Q49103504:Finike (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q139431764-mihail-arhangelos-kilisesi': SpotCoordinateVerificationEvidence(
@@ -1396,14 +2166,29 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q115462642 / 36.944211,31.167769/ province=Q40249:Antalya / district=Q1850419:Serik (ilçe)',
     verifiedAt: 'generated',
   ),
-  'wd-q4063050-dudensuyu-magarasi': SpotCoordinateVerificationEvidence(
+  'wd-q18844210-gulluk-dagi-milli-parki': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
-    sourceRef: 'Q4063050 / 37.037778,31.633333/ province=Q40249:Antalya / district=Q343180:İbradı',
+    sourceRef: 'Q18844210 / 36.988333,30.467778/ province=Q40249:Antalya / district=Q2225198:Korkuteli (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q2666727-kekova': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q2666727 / 36.183333,29.883333/ province=Q40249:Antalya / district=Q2612378:Demre (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q3671440-noel-baba-kilisesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q3671440 / 36.244722,29.985556/ province=Q40249:Antalya / district=Q2612378:Demre (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q6051732-alanya-arkeoloji-muzesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q6051732 / 36.544141,31.988578/ province=Q40249:Antalya / district=Q1635214:Alanya',
+    verifiedAt: 'generated',
+  ),
+  'wd-q112573488-likya-uygarliklari-muzesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q112573488 / 36.228356,29.960564/ province=Q40249:Antalya / district=Q2612378:Demre (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q6032977-side-muzesi': SpotCoordinateVerificationEvidence(
@@ -1436,6 +2221,16 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q115271746 / 36.265827,29.366754/ province=Q40249:Antalya / district=Q2413977:Kaş ilçesi',
     verifiedAt: 'generated',
   ),
+  'wd-q131739044-arykanda-kucuk-hamam': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131739044 / 36.512653,30.059946/ province=Q40249:Antalya / district=Q49103504:Finike (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131739043-arykanda-yukari-hamam': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131739043 / 36.514069,30.058659/ province=Q40249:Antalya / district=Q49103504:Finike (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q131738915-patara-kucuk-hamam': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q131738915 / 36.262333,29.314690/ province=Q40249:Antalya / district=Q2413977:Kaş ilçesi',
@@ -1444,6 +2239,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q131738913-patara-nero-hamami': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q131738913 / 36.261608,29.316599/ province=Q40249:Antalya / district=Q2413977:Kaş ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131739037-caybasi-hamami': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131739037 / 37.076107,30.180508/ province=Q40249:Antalya / district=Q2225198:Korkuteli (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q63755459-side-bizans-hastanesi': SpotCoordinateVerificationEvidence(
@@ -1476,9 +2276,64 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q72176536 / 36.963818,30.726912/ province=Q40249:Antalya / district=Q727065:Kepez',
     verifiedAt: 'generated',
   ),
+  'wd-q31355461-guguba-kilisesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q31355461 / 41.201611,43.019583/ province=Q79840:Ardahan / district=Q116756157:Hanak ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q65285973-mere-kilisesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q65285973 / 41.495788,42.717145/ province=Q79840:Ardahan / district=Q116756252:Posof ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q421825-aktas-golu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q421825 / 41.214722,43.214722/ province=Q79840:Ardahan / district=Q116745151:Çıldır İlçesi',
+    verifiedAt: 'generated',
+  ),
   'wd-q83019225-artvin-ataturk-heykeli': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q83019225 / 41.170833,41.829056/ province=Q43745:Artvin / district=Q13430625:Artvin İlçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q118867727-camili-koyu-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q118867727 / 41.478944,41.898667/ province=Q43745:Artvin / district=Q2589142:Borçka ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q118956572-muratli-koyu-camisi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q118956572 / 41.478380,41.710350/ province=Q43745:Artvin / district=Q2589142:Borçka ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q118958306-iremeti-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q118958306 / 41.483167,41.926639/ province=Q43745:Artvin / district=Q2589142:Borçka ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q24680949-heva': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q24680949 / 41.490800,42.257500/ province=Q43745:Artvin / district=Q49110614:Şavşat İlçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q1641126-kackar-dagi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q1641126 / 40.835470,41.161310/ province=Q43745:Artvin / district=Q49110308:Yusufeli İlçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q61076554-deniz-golu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q61076554 / 40.817778,41.160556/ province=Q43745:Artvin / district=Q49110308:Yusufeli İlçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q31188243-karagol': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q31188243 / 41.308230,42.483860/ province=Q43745:Artvin / district=Q49110614:Şavşat İlçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q16365061-ardanuc-kalesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q16365061 / 41.126700,42.054600/ province=Q43745:Artvin / district=Q2405579:Ardanuç İlçesi',
     verifiedAt: 'generated',
   ),
   'wd-q2052134-parehi-manastiri': SpotCoordinateVerificationEvidence(
@@ -1489,6 +2344,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q1061822-handzta-manastiri': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q1061822 / 41.246389,42.070833/ province=Q43745:Artvin / district=Q13430625:Artvin İlçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q16371936-mamatzminda-kilisesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q16371936 / 41.333269,41.717469/ province=Q43745:Artvin / district=Q2589142:Borçka ilçesi',
     verifiedAt: 'generated',
   ),
   'wd-q60789663-pironiti-kilisesi': SpotCoordinateVerificationEvidence(
@@ -1511,6 +2371,16 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q39048711 / 41.276530,41.375980/ province=Q43745:Artvin / district=Q15960747:Arhavi ilçesi',
     verifiedAt: 'generated',
   ),
+  'wd-q1507787-ahaldaba-kilisesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q1507787 / 41.074444,42.166111/ province=Q43745:Artvin / district=Q2405579:Ardanuç İlçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q4752590-anca-manastiri': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q4752590 / 41.192222,42.109667/ province=Q43745:Artvin / district=Q2405579:Ardanuç İlçesi',
+    verifiedAt: 'generated',
+  ),
   'wd-q4992264-berta-manastiri': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q4992264 / 41.248894,41.983320/ province=Q43745:Artvin / district=Q13430625:Artvin İlçesi',
@@ -1519,6 +2389,16 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q1235618-dolishane-kilisesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q1235618 / 41.165833,41.952222/ province=Q43745:Artvin / district=Q13430625:Artvin İlçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q111825-tbeti-manastiri': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q111825 / 41.304444,42.389167/ province=Q43745:Artvin / district=Q49110614:Şavşat İlçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6367923-karagol-sahara-milli-parki': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6367923 / 41.228400,42.446100/ province=Q43745:Artvin / district=Q49110614:Şavşat İlçesi',
     verifiedAt: 'generated',
   ),
   'wd-q114772594-artvin-kalesi': SpotCoordinateVerificationEvidence(
@@ -1581,6 +2461,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q77073495 / 37.658611,27.294722/ province=Q79846:Aydın / district=Q49109217:Söke İlçesi',
     verifiedAt: 'generated',
   ),
+  'wd-q1848789-alinda': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q1848789 / 37.558056,27.829722/ province=Q79846:Aydın / district=Q49105310:Karpuzlu (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q3983229-athena-tapinagi-priene': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q3983229 / 37.659303,27.296430/ province=Q79846:Aydın / district=Q49109217:Söke İlçesi',
@@ -1611,21 +2496,6 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q85763253 / 37.518576,28.148155/ province=Q79846:Aydın / district=Q49110486:Çine (ilçe)',
     verifiedAt: 'generated',
   ),
-  'wd-q78212304-guney-agora-milet': SpotCoordinateVerificationEvidence(
-    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
-    sourceRef: 'Q78212304 / 37.528333,27.279167/ province=Q79846:Aydın / district=Q958144:Didim',
-    verifiedAt: 'generated',
-  ),
-  'wd-q78229063-kuzey-agora-milet': SpotCoordinateVerificationEvidence(
-    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
-    sourceRef: 'Q78229063 / 37.529722,27.279722/ province=Q79846:Aydın / district=Q958144:Didim',
-    verifiedAt: 'generated',
-  ),
-  'wd-q1799887-lade-adasi': SpotCoordinateVerificationEvidence(
-    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
-    sourceRef: 'Q1799887 / 37.529444,27.225000/ province=Q79846:Aydın / district=Q958144:Didim',
-    verifiedAt: 'generated',
-  ),
   'wd-q1432674-magnesia': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q1432674 / 37.852692,27.527104/ province=Q79846:Aydın / district=Q1868386:Germencik (ilçe)',
@@ -1641,19 +2511,14 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q78786432 / 37.853333,27.527222/ province=Q79846:Aydın / district=Q1868386:Germencik (ilçe)',
     verifiedAt: 'generated',
   ),
+  'wd-q15119905-mastaura': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q15119905 / 37.944529,28.363927/ province=Q79846:Aydın / district=Q2252014:Nazilli',
+    verifiedAt: 'generated',
+  ),
   'wd-q169460-milet': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q169460 / 37.530233,27.278369/ province=Q79846:Aydın / district=Q958144:Didim',
-    verifiedAt: 'generated',
-  ),
-  'wd-q56640740-milet-antik-tiyatrosu': SpotCoordinateVerificationEvidence(
-    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
-    sourceRef: 'Q56640740 / 37.530590,27.275740/ province=Q79846:Aydın / district=Q958144:Didim',
-    verifiedAt: 'generated',
-  ),
-  'wd-q78213626-milet-nymphaionu': SpotCoordinateVerificationEvidence(
-    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
-    sourceRef: 'Q78213626 / 37.528611,27.280278/ province=Q79846:Aydın / district=Q958144:Didim',
     verifiedAt: 'generated',
   ),
   'wd-q1195800-myus': SpotCoordinateVerificationEvidence(
@@ -1706,6 +2571,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q59771443 / 37.707150,28.725181/ province=Q79846:Aydın / district=Q49105255:Karacasu (ilçe)',
     verifiedAt: 'generated',
   ),
+  'wd-q127632888-ahmet-semsi-pasa-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127632888 / 37.867603,28.086849/ province=Q79846:Aydın / district=Q49105720:Köşk (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q132133994-bey-camii-aydin': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q132133994 / 37.847580,27.843422/ province=Q79846:Aydın / district=Q16836589:Efeler',
@@ -1719,11 +2589,6 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q127643539-hasan-celebi-camii': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q127643539 / 37.851185,27.841345/ province=Q79846:Aydın / district=Q16836589:Efeler',
-    verifiedAt: 'generated',
-  ),
-  'wd-q131351734-hisar-camii-didim': SpotCoordinateVerificationEvidence(
-    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
-    sourceRef: 'Q131351734 / 37.385944,27.256000/ province=Q79846:Aydın / district=Q958144:Didim',
     verifiedAt: 'generated',
   ),
   'wd-q132134142-kaleici-camii': SpotCoordinateVerificationEvidence(
@@ -1801,11 +2666,6 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q123555737 / 37.759428,27.289523/ province=Q79846:Aydın / district=Q1911818:Kuşadası',
     verifiedAt: 'generated',
   ),
-  'wd-q96651579-milet-muzesi': SpotCoordinateVerificationEvidence(
-    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
-    sourceRef: 'Q96651579 / 37.525625,27.274652/ province=Q79846:Aydın / district=Q958144:Didim',
-    verifiedAt: 'generated',
-  ),
   'wd-q107354126-yilanci-burnu': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q107354126 / 37.859780,27.241530/ province=Q79846:Aydın / district=Q1911818:Kuşadası',
@@ -1826,9 +2686,24 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q130718610 / 39.332691,26.658016/ province=Q47117:Balıkesir / district=Q793383:Ayvalık',
     verifiedAt: 'generated',
   ),
+  'wd-q119251041-haci-huseyin-aga-cesmesi-balikesir': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q119251041 / 39.646081,27.879111/ province=Q47117:Balıkesir / district=Q16028029:Altıeylül',
+    verifiedAt: 'generated',
+  ),
+  'wd-q134317770-mutasarrif-omer-ali-bey-sadirvani': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q134317770 / 39.645245,27.879903/ province=Q47117:Balıkesir / district=Q16028029:Altıeylül',
+    verifiedAt: 'generated',
+  ),
   'wd-q99457014-son-kursun-aniti': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q99457014 / 40.358333,27.910278/ province=Q47117:Balıkesir / district=Q1826014:Bandırma',
+    verifiedAt: 'generated',
+  ),
+  'wd-q117884683-umurbey-camii-cesmesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q117884683 / 39.646980,27.884550/ province=Q47117:Balıkesir / district=Q49105295:Karesi (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q3605584-adramytteion': SpotCoordinateVerificationEvidence(
@@ -1841,6 +2716,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q571082 / 39.575833,26.790556/ province=Q47117:Balıkesir / district=Q49103171:Edremit (Balıkesir) ilçesi',
     verifiedAt: 'generated',
   ),
+  'wd-q409720-guvercin-koprusu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q409720 / 40.267460,27.602326/ province=Q47117:Balıkesir / district=Q4989036:Gönen (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q615449-kyzikos': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q615449 / 40.387778,27.870556/ province=Q47117:Balıkesir / district=Q177298:Erdek',
@@ -1851,14 +2731,34 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q133888614 / 40.387952,27.870588/ province=Q47117:Balıkesir / district=Q177298:Erdek',
     verifiedAt: 'generated',
   ),
+  'wd-q1886340-sultancayir-koprusu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q1886340 / 39.865278,28.164722/ province=Q47117:Balıkesir / district=Q49109198:Susurluk ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q132134087-alaca-mescit-balikesir': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q132134087 / 39.648098,27.883585/ province=Q47117:Balıkesir / district=Q49105295:Karesi (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q61072508-edincik-ulu-camii': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q61072508 / 40.346889,27.855944/ province=Q47117:Balıkesir / district=Q1826014:Bandırma',
     verifiedAt: 'generated',
   ),
+  'wd-q132134090-haci-alibey-camii-balikesir': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q132134090 / 39.645981,27.879866/ province=Q47117:Balıkesir / district=Q16028029:Altıeylül',
+    verifiedAt: 'generated',
+  ),
   'wd-q107675070-hamidiye-camii': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q107675070 / 39.330577,26.662698/ province=Q47117:Balıkesir / district=Q793383:Ayvalık',
+    verifiedAt: 'generated',
+  ),
+  'wd-q132134088-hamidiye-camii-balikesir': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q132134088 / 39.650597,27.888498/ province=Q47117:Balıkesir / district=Q49105295:Karesi (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q30534825-haydar-cavus-camii': SpotCoordinateVerificationEvidence(
@@ -1869,6 +2769,26 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q6032183-saatli-camii': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q6032183 / 39.318970,26.694120/ province=Q47117:Balıkesir / district=Q793383:Ayvalık',
+    verifiedAt: 'generated',
+  ),
+  'wd-q61073765-yesilli-cami-balikesir': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q61073765 / 39.647306,27.881972/ province=Q47117:Balıkesir / district=Q49105295:Karesi (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q132134081-yildirim-camii-balikesir': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q132134081 / 39.650341,27.883123/ province=Q47117:Balıkesir / district=Q49105295:Karesi (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6043606-zagnos-pasa-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6043606 / 39.648611,27.879722/ province=Q47117:Balıkesir / district=Q49105295:Karesi (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q132134089-ibrahim-bey-camii-balikesir': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q132134089 / 39.648254,27.882200/ province=Q47117:Balıkesir / district=Q49105295:Karesi (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q131526433-agia-triyada-kilisesi': SpotCoordinateVerificationEvidence(
@@ -1886,6 +2806,16 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q31189340 / 39.295000,26.628333/ province=Q47117:Balıkesir / district=Q793383:Ayvalık',
     verifiedAt: 'generated',
   ),
+  'wd-q108228229-degirmenbogazi-tabiat-parki': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q108228229 / 39.699000,27.965000/ province=Q47117:Balıkesir / district=Q49105295:Karesi (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6081037-balikesir-saat-kulesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6081037 / 39.645278,27.879167/ province=Q47117:Balıkesir / district=Q16028029:Altıeylül',
+    verifiedAt: 'generated',
+  ),
   'wd-q33120178-bandirma-baris-manco-kultur-merkezi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q33120178 / 40.353703,27.969649/ province=Q47117:Balıkesir / district=Q1826014:Bandırma',
@@ -1899,6 +2829,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q6027830-kirazli-manastiri': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q6027830 / 40.463203,27.912000/ province=Q47117:Balıkesir / district=Q177298:Erdek',
+    verifiedAt: 'generated',
+  ),
+  'wd-q28221080-balikesir-kuvay-i-milliye-muzesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q28221080 / 39.645833,27.879444/ province=Q47117:Balıkesir / district=Q16028029:Altıeylül',
     verifiedAt: 'generated',
   ),
   'wd-q30329756-bandirma-muzesi': SpotCoordinateVerificationEvidence(
@@ -1941,9 +2876,54 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q56244587 / 41.749340,32.388386/ province=Q83342:Bartın / district=Q15960770:Amasra İlçesi',
     verifiedAt: 'generated',
   ),
+  'wd-q132735489-kemer-kopru-bartin': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q132735489 / 41.628712,32.336857/ province=Q83342:Bartın / district=Q2554791:Bartın İlçesi',
+    verifiedAt: 'generated',
+  ),
   'wd-q28220970-amasra-muzesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q28220970 / 41.746944,32.383056/ province=Q83342:Bartın / district=Q15960770:Amasra İlçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q31188256-inkumu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q31188256 / 41.665543,32.223942/ province=Q83342:Bartın / district=Q2554791:Bartın İlçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q31192398-zeynel-bey-turbesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q31192398 / 37.724972,41.422694/ province=Q80370:Batman / district=Q1902897:Batman İlçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q127642986-er-rizk-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127642986 / 37.713825,41.411346/ province=Q80370:Batman / district=Q1902897:Batman İlçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6989693-mereto-dagi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6989693 / 38.368060,41.534720/ province=Q80370:Batman / district=Q116788602:Kozluk ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q21524202-batman-saat-kulesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q21524202 / 37.887806,41.125806/ province=Q80370:Batman / district=Q1902897:Batman İlçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q18209534-eski-kopru-hasankeyf': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q18209534 / 37.714400,41.411100/ province=Q80370:Batman / district=Q1902897:Batman İlçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q38252188-malabadi-koprusu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q38252188 / 38.153500,41.203740/ province=Q80370:Batman / district=Q116788602:Kozluk ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q55605010-batman-muzesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q55605010 / 37.898600,41.141100/ province=Q80370:Batman / district=Q1902897:Batman İlçesi',
     verifiedAt: 'generated',
   ),
   'wd-q135582723-ahi-emir-ahmet-zencani-turbesi-bayburt': SpotCoordinateVerificationEvidence(
@@ -1986,6 +2966,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q132133904 / 40.259960,40.226772/ province=Q483063:Bayburt / district=Q2474878:Bayburt İlçesi',
     verifiedAt: 'generated',
   ),
+  'wd-q118955949-kenan-yavuz-etnografya-muzesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q118955949 / 40.030804,39.855437/ province=Q483063:Bayburt / district=Q116824765:Demirözü ilçesi',
+    verifiedAt: 'generated',
+  ),
   'wd-q131738716-meydan-carsi-hamami': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q131738716 / 40.261052,40.227327/ province=Q483063:Bayburt / district=Q2474878:Bayburt İlçesi',
@@ -1996,6 +2981,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q131738717 / 40.256521,40.223551/ province=Q483063:Bayburt / district=Q2474878:Bayburt İlçesi',
     verifiedAt: 'generated',
   ),
+  'wd-q6085562-ertugrul-gazi-turbesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6085562 / 40.025500,30.179400/ province=Q46763:Bilecik / district=Q1911884:Söğüt İlçesi',
+    verifiedAt: 'generated',
+  ),
   'wd-q6027628-seyh-edebali-turbesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q6027628 / 40.143611,29.988194/ province=Q46763:Bilecik / district=Q208006:Bilecik',
@@ -2004,6 +2994,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q6029758-orhan-gazi-camii': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q6029758 / 40.143056,29.987833/ province=Q46763:Bilecik / district=Q208006:Bilecik',
+    verifiedAt: 'generated',
+  ),
+  'wd-q28220997-sogut-ertugrul-gazi-muzesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q28220997 / 40.015278,30.181667/ province=Q46763:Bilecik / district=Q1911884:Söğüt İlçesi',
     verifiedAt: 'generated',
   ),
   'wd-q135582806-hasan-padisah-kumbeti': SpotCoordinateVerificationEvidence(
@@ -2091,6 +3086,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q137971215 / 38.406211,42.106222/ province=Q83239:Bitlis / district=Q2550582:Bitlis (ilçe)',
     verifiedAt: 'generated',
   ),
+  'wd-q1433508-suphan-dagi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q1433508 / 38.929830,42.829590/ province=Q83239:Bitlis / district=Q49100380:Adilcevaz ilçesi',
+    verifiedAt: 'generated',
+  ),
   'wd-q4529389-ili-golu': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q4529389 / 38.642778,42.246667/ province=Q83239:Bitlis / district=Q15981193:Ahlat İlçesi',
@@ -2136,6 +3136,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q121126359 / 38.435015,42.153808/ province=Q83239:Bitlis / district=Q2550582:Bitlis (ilçe)',
     verifiedAt: 'generated',
   ),
+  'wd-q30323817-agperig-manastiri': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q30323817 / 38.578456,41.598077/ province=Q83239:Bitlis / district=Q1860747:Mutki İlçesi',
+    verifiedAt: 'generated',
+  ),
   'wd-q112346033-matnavank-manastiri': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q112346033 / 38.755723,42.455748/ province=Q83239:Bitlis / district=Q15981193:Ahlat İlçesi',
@@ -2146,14 +3151,119 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q131681329 / 38.738959,42.454582/ province=Q83239:Bitlis / district=Q15981193:Ahlat İlçesi',
     verifiedAt: 'generated',
   ),
-  'wd-q917259-kremna': SpotCoordinateVerificationEvidence(
+  'wd-q6009091-gazi-suleyman-pasa-camii-goynuk': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
-    sourceRef: 'Q917259 / 37.500139,30.691100/ province=Q80088:Burdur / district=Q581187:Bucak',
+    sourceRef: 'Q6009091 / 40.399278,30.787250/ province=Q82089:Bolu / district=Q2664051:Göynük (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q132134398-yildirim-beyazit-camii-mudurnu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q132134398 / 40.464180,31.211935/ province=Q82089:Bolu / district=Q2734899:Mudurnu ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q305501-abant-golu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q305501 / 40.605450,31.280330/ province=Q82089:Bolu / district=Q2734899:Mudurnu ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q65220312-golcuk-golu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q65220312 / 40.656111,31.630000/ province=Q82089:Bolu / district=Q2680945:Bolu',
+    verifiedAt: 'generated',
+  ),
+  'wd-q19612605-suluk-golu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q19612605 / 40.522070,30.874540/ province=Q82089:Bolu / district=Q2664051:Göynük (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q135392817-koroglu-heykeli-bolu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q135392817 / 40.732735,31.608110/ province=Q82089:Bolu / district=Q2680945:Bolu',
+    verifiedAt: 'generated',
+  ),
+  'wd-q21527099-tashan-bolu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q21527099 / 40.733129,31.609034/ province=Q82089:Bolu / district=Q2680945:Bolu',
+    verifiedAt: 'generated',
+  ),
+  'wd-q132752946-yukari-tas-han-bolu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q132752946 / 40.733367,31.608929/ province=Q82089:Bolu / district=Q2680945:Bolu',
+    verifiedAt: 'generated',
+  ),
+  'wd-q967446-mudurnu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q967446 / 40.466667,31.216667/ province=Q82089:Bolu / district=Q2734899:Mudurnu ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q109366855-aksemseddin-turbesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q109366855 / 40.398449,30.785805/ province=Q82089:Bolu / district=Q2664051:Göynük (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131738466-gazi-suleyman-pasa-hamami': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131738466 / 40.399158,30.786529/ province=Q82089:Bolu / district=Q2664051:Göynük (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131738415-orta-hamam': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131738415 / 40.732303,31.608068/ province=Q82089:Bolu / district=Q2680945:Bolu',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131738414-yildirim-beyazit-hamami': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131738414 / 40.464869,31.211308/ province=Q82089:Bolu / district=Q2734899:Mudurnu ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6080493-antoninler-cesmesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6080493 / 37.677389,30.517778/ province=Q80088:Burdur / district=Q3454393:Ağlasun (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q908860-hacilar-hoyuk': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q908860 / 37.584300,30.084500/ province=Q80088:Burdur / district=Q2198994:Burdur (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q61072532-burdur-ulu-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q61072532 / 37.717417,30.286333/ province=Q80088:Burdur / district=Q2198994:Burdur (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q76408845-incir-han': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q76408845 / 37.478583,30.533444/ province=Q80088:Burdur / district=Q581187:Bucak',
+    verifiedAt: 'generated',
+  ),
+  'wd-q21524555-burdur-saat-kulesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q21524555 / 37.717620,30.286270/ province=Q80088:Burdur / district=Q2198994:Burdur (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q20475022-yarisli-golu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q20475022 / 37.566500,29.966100/ province=Q80088:Burdur / district=Q2198994:Burdur (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q20988323-burdur-muzesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q20988323 / 37.719500,30.286000/ province=Q80088:Burdur / district=Q2198994:Burdur (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6063544-insuyu-magarasi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6063544 / 37.659444,30.374167/ province=Q80088:Burdur / district=Q2198994:Burdur (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q343902-imrali': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q343902 / 40.537500,28.535000/ province=Q43690:Bursa / district=Q49105251:Karacabey ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6099398-aktopraklik-hoyugu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6099398 / 40.173233,28.771050/ province=Q43690:Bursa / district=Q49106944:Nilüfer',
     verifiedAt: 'generated',
   ),
   'wd-q130718495-alaeddin-pasa-camii-sadirvani': SpotCoordinateVerificationEvidence(
@@ -2184,6 +3294,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q131390740-cem-sultan-turbesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q131390740 / 40.190510,29.045622/ province=Q43690:Bursa / district=Q49107396:Osmangazi (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q139421519-cumhuriyet-cesmesi-mudanya': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q139421519 / 40.373387,28.888921/ province=Q43690:Bursa / district=Q2458104:Mudanya (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q131390473-devlet-hatun-turbesi': SpotCoordinateVerificationEvidence(
@@ -2241,6 +3356,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q131390471 / 40.190224,29.045621/ province=Q43690:Bursa / district=Q49107396:Osmangazi (ilçe)',
     verifiedAt: 'generated',
   ),
+  'wd-q139421484-guzelyali-cesmesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q139421484 / 40.353732,28.931006/ province=Q43690:Bursa / district=Q2458104:Mudanya (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q130718502-haci-besir-aga-cesmesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q130718502 / 40.181027,29.081192/ province=Q43690:Bursa / district=Q2598734:Yıldırım',
@@ -2249,6 +3369,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q135583293-hamza-bey-turbesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q135583293 / 40.038483,28.410232/ province=Q43690:Bursa / district=Q719537:Mustafakemalpaşa',
+    verifiedAt: 'generated',
+  ),
+  'wd-q139421857-hasan-fehmi-bey-cesmesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q139421857 / 40.377550,28.882405/ province=Q43690:Bursa / district=Q2458104:Mudanya (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q139432335-helvaci-acele-baci-kabri': SpotCoordinateVerificationEvidence(
@@ -2316,6 +3441,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q130718498 / 40.182247,29.069840/ province=Q43690:Bursa / district=Q49107350:Orhangazi (ilçe)',
     verifiedAt: 'generated',
   ),
+  'wd-q139421497-sinan-bey-cesmesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q139421497 / 40.377925,28.883042/ province=Q43690:Bursa / district=Q2458104:Mudanya (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q131390478-sultan-ii-murat-turbesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q131390478 / 40.190550,29.046020/ province=Q43690:Bursa / district=Q49107396:Osmangazi (ilçe)',
@@ -2356,6 +3486,16 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q131390725 / 40.429000,29.731600/ province=Q43690:Bursa / district=Q1911918:İznik (ilçe)',
     verifiedAt: 'generated',
   ),
+  'wd-q139420674-cesme-kaymakoba-mahallesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q139420674 / 40.339868,28.766822/ province=Q43690:Bursa / district=Q2458104:Mudanya (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q139420669-cesme-kumyaka': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q139420669 / 40.383946,28.826317/ province=Q43690:Bursa / district=Q2458104:Mudanya (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q131390736-uftade-turbesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q131390736 / 40.182988,29.057976/ province=Q43690:Bursa / district=Q49107396:Osmangazi (ilçe)',
@@ -2371,6 +3511,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q130718506 / 40.181869,29.057281/ province=Q43690:Bursa / district=Q49107396:Osmangazi (ilçe)',
     verifiedAt: 'generated',
   ),
+  'wd-q139421514-ikiz-cesme': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q139421514 / 40.379030,28.881434/ province=Q43690:Bursa / district=Q2458104:Mudanya (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q131391233-sehzade-ahmet-turbesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q131391233 / 40.190640,29.046263/ province=Q43690:Bursa / district=Q49107396:Osmangazi (ilçe)',
@@ -2384,6 +3529,16 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q20587092-sehzade-mustafa-turbesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q20587092 / 40.190365,29.045814/ province=Q43690:Bursa / district=Q49107396:Osmangazi (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q619312-apollonia-ad-rhyndacum': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q619312 / 40.169639,28.682528/ province=Q43690:Bursa / district=Q49106944:Nilüfer',
+    verifiedAt: 'generated',
+  ),
+  'wd-q139421473-burgos': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q139421473 / 40.355142,28.929620/ province=Q43690:Bursa / district=Q2458104:Mudanya (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q137170075-hadrianoi': SpotCoordinateVerificationEvidence(
@@ -2476,9 +3631,19 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q127643002 / 40.185692,29.062826/ province=Q43690:Bursa / district=Q49107396:Osmangazi (ilçe)',
     verifiedAt: 'generated',
   ),
+  'wd-q133803234-eski-camii-golyazi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q133803234 / 40.165381,28.677714/ province=Q43690:Bursa / district=Q49106944:Nilüfer',
+    verifiedAt: 'generated',
+  ),
   'wd-q127643033-esrefzade-camii': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q127643033 / 40.429954,29.723336/ province=Q43690:Bursa / district=Q1911918:İznik (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q5437791-fatih-camii-tirilye': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q5437791 / 40.393100,28.796900/ province=Q43690:Bursa / district=Q2458104:Mudanya (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q132134556-feyzullah-pasa-mescidi': SpotCoordinateVerificationEvidence(
@@ -2499,6 +3664,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q127643465-hacilar-camii': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q127643465 / 40.181770,29.066406/ province=Q43690:Bursa / district=Q49107350:Orhangazi (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q139421516-hasanbey-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q139421516 / 40.375104,28.881934/ province=Q43690:Bursa / district=Q2458104:Mudanya (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q127786741-hatice-isfendiyar-camii': SpotCoordinateVerificationEvidence(
@@ -2591,6 +3761,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q127788227 / 40.186432,29.060780/ province=Q43690:Bursa / district=Q49107350:Orhangazi (ilçe)',
     verifiedAt: 'generated',
   ),
+  'wd-q139421745-tekke-i-cedid-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q139421745 / 40.376323,28.884008/ province=Q43690:Bursa / district=Q2458104:Mudanya (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q116952987-umurbey-camii': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q116952987 / 40.177694,29.071417/ province=Q43690:Bursa / district=Q2598734:Yıldırım',
@@ -2641,6 +3816,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q128256 / 40.187500,29.082500/ province=Q43690:Bursa / district=Q2598734:Yıldırım',
     verifiedAt: 'generated',
   ),
+  'wd-q132134054-yildirim-camii-inegol': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q132134054 / 40.079075,29.511730/ province=Q43690:Bursa / district=Q2083281:İnegöl (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q127788386-zeyniler-camii': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q127788386 / 40.180779,29.083702/ province=Q43690:Bursa / district=Q2598734:Yıldırım',
@@ -2654,6 +3834,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q132134212-cukur-camii': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q132134212 / 40.178417,29.060312/ province=Q43690:Bursa / district=Q49107396:Osmangazi (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q136462676-ozluce-kilisesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q136462676 / 40.238082,28.907560/ province=Q43690:Bursa / district=Q49106944:Nilüfer',
     verifiedAt: 'generated',
   ),
   'wd-q127786793-ibn-i-bezzaz-camii': SpotCoordinateVerificationEvidence(
@@ -2706,6 +3891,16 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q127788189 / 40.180378,29.076387/ province=Q43690:Bursa / district=Q2598734:Yıldırım',
     verifiedAt: 'generated',
   ),
+  'wd-q139421495-ataturk-heykeli-mudanya': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q139421495 / 40.373319,28.888307/ province=Q43690:Bursa / district=Q2458104:Mudanya (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q139421858-mutareke-aniti': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q139421858 / 40.379358,28.881399/ province=Q43690:Bursa / district=Q2458104:Mudanya (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q131902183-adranos-kalesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q131902183 / 39.928742,28.969572/ province=Q43690:Bursa / district=Q1948420:Orhaneli',
@@ -2726,6 +3921,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q124261546 / 40.185055,29.064131/ province=Q43690:Bursa / district=Q49107396:Osmangazi (ilçe)',
     verifiedAt: 'generated',
   ),
+  'wd-q132752942-issiz-han': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q132752942 / 40.220322,28.477657/ province=Q43690:Bursa / district=Q49105251:Karacabey ilçesi',
+    verifiedAt: 'generated',
+  ),
   'wd-q132752814-tuz-han-bursa': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q132752814 / 40.184525,29.065725/ province=Q43690:Bursa / district=Q49107396:Osmangazi (ilçe)',
@@ -2741,14 +3941,64 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q47484780 / 40.185194,29.060944/ province=Q43690:Bursa / district=Q49107396:Osmangazi (ilçe)',
     verifiedAt: 'generated',
   ),
+  'wd-q136645532-aziz-panteleimon-kilisesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q136645532 / 40.170296,28.680380/ province=Q43690:Bursa / district=Q49106944:Nilüfer',
+    verifiedAt: 'generated',
+  ),
+  'wd-q23695173-aziz-vasil-kilisesi-tirilye': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q23695173 / 40.391750,28.794278/ province=Q43690:Bursa / district=Q2458104:Mudanya (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q16147317-aziz-yuhanna-kilisesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q16147317 / 40.392444,28.794444/ province=Q43690:Bursa / district=Q2458104:Mudanya (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q5995062-basmelekler-kilisesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q5995062 / 40.385278,28.827083/ province=Q43690:Bursa / district=Q2458104:Mudanya (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q22977314-bursa-protestan-kilisesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q22977314 / 40.180400,29.066000/ province=Q43690:Bursa / district=Q49107396:Osmangazi (ilçe)',
     verifiedAt: 'generated',
   ),
+  'wd-q131527595-derekoy-kilisesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131527595 / 40.316502,28.802349/ province=Q43690:Bursa / district=Q2458104:Mudanya (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q139431653-hagios-tryphonos-kilisesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q139431653 / 40.425560,29.719204/ province=Q43690:Bursa / district=Q1911918:İznik (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q16931903-kemerli-kilise-tirilye': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q16931903 / 40.393250,28.795333/ province=Q43690:Bursa / district=Q2458104:Mudanya (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q139421515-kilise-girit-mahallesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q139421515 / 40.379676,28.880620/ province=Q43690:Bursa / district=Q2458104:Mudanya (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q4692661-medikion-manastiri': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q4692661 / 40.385320,28.790580/ province=Q43690:Bursa / district=Q2458104:Mudanya (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q15622515-pelekete-manastiri-tirilye': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q15622515 / 40.389436,28.753328/ province=Q43690:Bursa / district=Q2458104:Mudanya (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q139421482-ahmet-aga-cami-minaresi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q139421482 / 40.335471,28.787714/ province=Q43690:Bursa / district=Q2458104:Mudanya (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q6068094-tophane-saat-kulesi': SpotCoordinateVerificationEvidence(
@@ -2806,6 +4056,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q127786873 / 40.185799,29.073196/ province=Q43690:Bursa / district=Q49107396:Osmangazi (ilçe)',
     verifiedAt: 'generated',
   ),
+  'wd-q4809067-uluabat-golu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q4809067 / 40.172600,28.590800/ province=Q43690:Bursa / district=Q49105251:Karacabey ilçesi',
+    verifiedAt: 'generated',
+  ),
   'wd-q925688-uludag': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q925688 / 40.070529,29.222010/ province=Q43690:Bursa / district=Q2607431:Kestel',
@@ -2851,6 +4106,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q6047004 / 40.176944,29.071389/ province=Q43690:Bursa / district=Q2598734:Yıldırım',
     verifiedAt: 'generated',
   ),
+  'wd-q131535497-dr-ceyhun-irgil-saglik-muzesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131535497 / 40.214960,28.983074/ province=Q43690:Bursa / district=Q49106944:Nilüfer',
+    verifiedAt: 'generated',
+  ),
   'wd-q65064318-karagoz-muzesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q65064318 / 40.202029,29.027140/ province=Q43690:Bursa / district=Q49107396:Osmangazi (ilçe)',
@@ -2866,9 +4126,24 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q132681852 / 40.190483,29.046402/ province=Q43690:Bursa / district=Q49107396:Osmangazi (ilçe)',
     verifiedAt: 'generated',
   ),
+  'wd-q31190553-mubadele-evi-gorukle': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q31190553 / 40.232372,28.839087/ province=Q43690:Bursa / district=Q49106944:Nilüfer',
+    verifiedAt: 'generated',
+  ),
+  'wd-q108525733-nilufer-belediyesi-dr-huseyin-parkan-sanlikol-mu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q108525733 / 40.210146,28.998540/ province=Q43690:Bursa / district=Q49106944:Nilüfer',
+    verifiedAt: 'generated',
+  ),
   'wd-q85973875-panorama-1326-bursa-fetih-muzesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q85973875 / 40.186222,29.075556/ province=Q43690:Bursa / district=Q49107396:Osmangazi (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q20471575-tahir-pasa-konagi-kent-muzesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q20471575 / 40.376334,28.881815/ province=Q43690:Bursa / district=Q2458104:Mudanya (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q6098147-turk-islam-eserleri-muzesi': SpotCoordinateVerificationEvidence(
@@ -2929,6 +4204,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q130645234-eski-kaplica': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q130645234 / 40.202306,29.023333/ province=Q43690:Bursa / district=Q49107396:Osmangazi (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131738648-hasan-bey-hamami': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131738648 / 40.375534,28.883501/ province=Q43690:Bursa / district=Q2458104:Mudanya (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q131738465-ii-murat-hamami': SpotCoordinateVerificationEvidence(
@@ -3031,6 +4311,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q134734874 / 40.182854,29.057015/ province=Q43690:Bursa / district=Q49107396:Osmangazi (ilçe)',
     verifiedAt: 'generated',
   ),
+  'wd-q133236735-apollonia-ad-rhyndacum-sur-kalintilari': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q133236735 / 40.166184,28.679867/ province=Q43690:Bursa / district=Q49106944:Nilüfer',
+    verifiedAt: 'generated',
+  ),
   'wd-q135035014-fetih-kapi-bursa': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q135035014 / 40.182709,29.053659/ province=Q43690:Bursa / district=Q49107396:Osmangazi (ilçe)',
@@ -3131,6 +4416,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q5602653 / 40.293030,26.279830/ province=Q47813:Çanakkale / district=Q49103159:Eceabat ilçesi',
     verifiedAt: 'generated',
   ),
+  'wd-q130685454-haci-ibrahim-aga-cesmesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q130685454 / 40.148434,26.399630/ province=Q47813:Çanakkale / district=Q1967623:Çanakkale (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q131391518-hallac-i-mansur-turbesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q131391518 / 40.409786,26.678103/ province=Q47813:Çanakkale / district=Q216907:Gelibolu',
@@ -3149,6 +4439,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q4222810-johnston-s-jolly-mezarligi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q4222810 / 40.232690,26.287410/ province=Q47813:Çanakkale / district=Q49103159:Eceabat ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q130685456-kayserili-ahmet-pasa-camii-cesmesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q130685456 / 40.142792,26.404718/ province=Q47813:Çanakkale / district=Q1967623:Çanakkale (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q4222835-lancashire-landing-mezarligi': SpotCoordinateVerificationEvidence(
@@ -3261,6 +4556,16 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q3213827 / 39.488331,26.337823/ province=Q47813:Çanakkale / district=Q793377:Ayvacık',
     verifiedAt: 'generated',
   ),
+  'wd-q112208753-athena-ilias-tapinagi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q112208753 / 39.957789,26.239213/ province=Q47813:Çanakkale / district=Q1967623:Çanakkale (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q112210724-bouleuterion-ilion': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q112210724 / 39.957005,26.239264/ province=Q47813:Çanakkale / district=Q1967623:Çanakkale (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q4822608-hamaxitos': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q4822608 / 39.536111,26.091944/ province=Q47813:Çanakkale / district=Q793377:Ayvacık',
@@ -3271,14 +4576,29 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q1088486 / 39.536389,26.117500/ province=Q47813:Çanakkale / district=Q793377:Ayvacık',
     verifiedAt: 'generated',
   ),
+  'wd-q1229422-lampsakos': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q1229422 / 40.343889,26.683611/ province=Q47813:Çanakkale / district=Q49106069:Lapseki ilçesi',
+    verifiedAt: 'generated',
+  ),
   'wd-q65072495-smintheion': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q65072495 / 39.536211,26.117750/ province=Q47813:Çanakkale / district=Q793377:Ayvacık',
     verifiedAt: 'generated',
   ),
+  'wd-q941943-truva-vii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q941943 / 39.956417,26.239000/ province=Q47813:Çanakkale / district=Q1967623:Çanakkale (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q6103642-zeytinlik-hoyuk': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q6103642 / 40.133510,25.714309/ province=Q47813:Çanakkale / district=Q1559296:Gökçeada',
+    verifiedAt: 'generated',
+  ),
+  'wd-q136697624-18-mart-hatime-ana-ulu-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q136697624 / 40.110525,26.409161/ province=Q47813:Çanakkale / district=Q1967623:Çanakkale (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q127632799-adatepe-koyu-camii': SpotCoordinateVerificationEvidence(
@@ -3291,6 +4611,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q132133942 / 39.834084,26.070705/ province=Q47813:Çanakkale / district=Q10259759:Bozcaada',
     verifiedAt: 'generated',
   ),
+  'wd-q127634902-biga-carsi-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127634902 / 40.227516,27.241287/ province=Q47813:Çanakkale / district=Q15966457:Biga (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q127787133-hudavendigar-camii': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q127787133 / 39.492138,26.336939/ province=Q47813:Çanakkale / district=Q793377:Ayvacık',
@@ -3299,6 +4624,16 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q132134018-merkez-camii-gokceada': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q132134018 / 40.191170,25.906557/ province=Q47813:Çanakkale / district=Q1559296:Gökçeada',
+    verifiedAt: 'generated',
+  ),
+  'wd-q132133907-taskopru-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q132133907 / 39.807880,26.612186/ province=Q47813:Çanakkale / district=Q2456447:Bayramiç (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q132134444-yali-camii-canakkale': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q132134444 / 40.148670,26.400434/ province=Q47813:Çanakkale / district=Q1967623:Çanakkale (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q113509891-yesilyurt-koyu-camii': SpotCoordinateVerificationEvidence(
@@ -3316,9 +4651,24 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q49309759 / 40.295920,26.257920/ province=Q47813:Çanakkale / district=Q49103159:Eceabat ilçesi',
     verifiedAt: 'generated',
   ),
+  'wd-q28946377-truva-heykeli': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q28946377 / 40.152175,26.405514/ province=Q47813:Çanakkale / district=Q1967623:Çanakkale (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q122212259-kimisis-teodoku-rum-ortodoks-kilisesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q122212259 / 39.835250,26.069056/ province=Q47813:Çanakkale / district=Q10259759:Bozcaada',
+    verifiedAt: 'generated',
+  ),
+  'wd-q21527403-canakkale-saat-kulesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q21527403 / 40.149618,26.402047/ province=Q47813:Çanakkale / district=Q1967623:Çanakkale (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q19613310-canakkale-televizyon-kulesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q19613310 / 40.106250,26.434639/ province=Q47813:Çanakkale / district=Q1967623:Çanakkale (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q8077503-1915-canakkale-koprusu': SpotCoordinateVerificationEvidence(
@@ -3351,6 +4701,21 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q6343944 / 40.207600,26.282400/ province=Q47813:Çanakkale / district=Q49103159:Eceabat ilçesi',
     verifiedAt: 'generated',
   ),
+  'wd-q5994097-troya-muzesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q5994097 / 39.955278,26.249167/ province=Q47813:Çanakkale / district=Q1967623:Çanakkale (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q637114-canakkale-arkeoloji-muzesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q637114 / 40.133333,26.410000/ province=Q47813:Çanakkale / district=Q1967623:Çanakkale (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q127386167-canakkale-kent-muzesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127386167 / 40.148547,26.400813/ province=Q47813:Çanakkale / district=Q1967623:Çanakkale (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q131738751-alexandria-troas-herodes-atticus-hamami': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q131738751 / 39.751156,26.166622/ province=Q47813:Çanakkale / district=Q16698797:Ezine',
@@ -3376,14 +4741,49 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q20473200 / 39.479444,26.064167/ province=Q47813:Çanakkale / district=Q793377:Ayvacık',
     verifiedAt: 'generated',
   ),
+  'wd-q6043340-kale-i-sultaniye': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6043340 / 40.146361,26.399139/ province=Q47813:Çanakkale / district=Q1967623:Çanakkale (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q12811583-rumeli-mecidiye-tabyasi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q12811583 / 40.142902,26.376995/ province=Q47813:Çanakkale / district=Q49103159:Eceabat ilçesi',
     verifiedAt: 'generated',
   ),
+  'wd-q6082227-aynali-carsi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6082227 / 40.146194,26.403944/ province=Q47813:Çanakkale / district=Q1967623:Çanakkale (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q115779253-odeon-ilion': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q115779253 / 39.956667,26.238611/ province=Q47813:Çanakkale / district=Q1967623:Çanakkale (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q1728312-helles-burnu': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q1728312 / 40.043056,26.175278/ province=Q47813:Çanakkale / district=Q49103159:Eceabat ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6064629-cankiri-buyuk-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6064629 / 40.602500,33.617333/ province=Q272662:Çankırı / district=Q2739668:Çankırı (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q98690921-cankiri-muzesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q98690921 / 40.600208,33.616662/ province=Q272662:Çankırı / district=Q2739668:Çankırı (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q15256839-ilgaz-dagi-milli-parki': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q15256839 / 41.053056,33.701944/ province=Q272662:Çankırı / district=Q117286390:Ilgaz district',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6031100-istiklal-yolu-tarihi-milli-parki': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6031100 / 40.400000,33.220000/ province=Q272662:Çankırı / district=Q49110602:Şabanözü (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q31840943-nisantas': SpotCoordinateVerificationEvidence(
@@ -3399,6 +4799,16 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q67183183-buyukkale': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q67183183 / 40.015000,34.618611/ province=Q272947:Çorum / district=Q117322686:Boğazkale İlçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6100895-eskiyapar-hoyugu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6100895 / 40.158056,34.773056/ province=Q272947:Çorum / district=Q49100520:Alaca İlçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6366659-kapilikaya-kaya-mezari': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6366659 / 40.756555,34.910427/ province=Q272947:Çorum / district=Q117336400:Laçin İlçesi',
     verifiedAt: 'generated',
   ),
   'wd-q3620-sapinuva': SpotCoordinateVerificationEvidence(
@@ -3421,6 +4831,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q123365035 / 40.019300,34.615360/ province=Q272947:Çorum / district=Q117322686:Boğazkale İlçesi',
     verifiedAt: 'generated',
   ),
+  'wd-q25380720-sfenksli-kapi-alacahoyuk': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q25380720 / 40.233669,34.696186/ province=Q272947:Çorum / district=Q49100520:Alaca İlçesi',
+    verifiedAt: 'generated',
+  ),
   'wd-q21527049-sungurlu-saat-kulesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q21527049 / 40.162528,34.374139/ province=Q272947:Çorum / district=Q14421288:Sungurlu',
@@ -3434,6 +4849,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q529923-yazilikaya': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q529923 / 40.025000,34.632780/ province=Q272947:Çorum / district=Q117322686:Boğazkale İlçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q109518358-alacahoyuk-muzesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q109518358 / 40.233063,34.696003/ province=Q272947:Çorum / district=Q49100520:Alaca İlçesi',
     verifiedAt: 'generated',
   ),
   'wd-q31188759-bogazkoy-muzesi': SpotCoordinateVerificationEvidence(
@@ -3504,6 +4924,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q118958314-bayat-koyu-camii': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q118958314 / 38.168389,29.820861/ province=Q82096:Denizli / district=Q272867:Çivril',
+    verifiedAt: 'generated',
+  ),
+  'wd-q127642920-duvenonu-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127642920 / 37.805698,28.856199/ province=Q82096:Denizli / district=Q49101041:Babadağ ilçesi',
     verifiedAt: 'generated',
   ),
   'wd-q127786867-kaleici-arasta-camii': SpotCoordinateVerificationEvidence(
@@ -3616,6 +5041,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q139714719 / 37.770737,29.086561/ province=Q82096:Denizli / district=Q420157:Pamukkale',
     verifiedAt: 'generated',
   ),
+  'wd-q69048047-kaklik-magarasi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q69048047 / 37.855808,29.385677/ province=Q82096:Denizli / district=Q4879771:Honaz (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q135582652-prusias-ad-hypium-antik-tiyatrosu': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q135582652 / 40.906261,31.148012/ province=Q432391:Düzce / district=Q2313103:Düzce (ilçe)',
@@ -3626,6 +5056,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q102128005 / 40.833333,31.150000/ province=Q432391:Düzce / district=Q2313103:Düzce (ilçe)',
     verifiedAt: 'generated',
   ),
+  'wd-q6057904-akcakoca-merkez-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6057904 / 41.089325,31.124388/ province=Q432391:Düzce / district=Q117354824:Akçakoca (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q127787090-duzce-merkez-buyuk-camii': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q127787090 / 40.838745,31.159159/ province=Q432391:Düzce / district=Q2313103:Düzce (ilçe)',
@@ -3634,6 +5069,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q127787092-merkez-cedidiye-camii': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q127787092 / 40.838261,31.163450/ province=Q432391:Düzce / district=Q2313103:Düzce (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q21523967-akcakoca-kalesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q21523967 / 41.086100,31.092800/ province=Q432391:Düzce / district=Q117354824:Akçakoca (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q6016369-konuralp-muzesi': SpotCoordinateVerificationEvidence(
@@ -3696,6 +5136,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q131391271 / 41.669174,26.557819/ province=Q83102:Edirne / district=Q1911990:Edirne (ilçe)',
     verifiedAt: 'generated',
   ),
+  'wd-q133259819-haskoy-balkan-sehitligi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q133259819 / 41.641144,26.859569/ province=Q83102:Edirne / district=Q117272483:Havsa ilçesi',
+    verifiedAt: 'generated',
+  ),
   'wd-q52786190-hidirlik-tabyasi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q52786190 / 41.686746,26.518962/ province=Q83102:Edirne / district=Q1911990:Edirne (ilçe)',
@@ -3709,6 +5154,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q131391473-koyun-baba-turbesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q131391473 / 41.671677,26.559330/ province=Q83102:Edirne / district=Q1911990:Edirne (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q134701029-kurtbey-mezar-aniti': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q134701029 / 41.549282,26.822197/ province=Q83102:Edirne / district=Q117272483:Havsa ilçesi',
     verifiedAt: 'generated',
   ),
   'wd-q130725539-mehmet-aga-cesmesi': SpotCoordinateVerificationEvidence(
@@ -3729,6 +5179,16 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q130725549-solak-haci-ali-aga-cesmesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q130725549 / 41.665089,26.563023/ province=Q83102:Edirne / district=Q1911990:Edirne (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q130725612-soguk-cesme': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q130725612 / 41.551262,26.822191/ province=Q83102:Edirne / district=Q117272483:Havsa ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q130725614-suluklu-cesme': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q130725614 / 41.553860,26.823170/ province=Q83102:Edirne / district=Q117272483:Havsa ilçesi',
     verifiedAt: 'generated',
   ),
   'wd-q131390785-seyh-celebi-kabri': SpotCoordinateVerificationEvidence(
@@ -3801,6 +5261,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q127643080 / 41.675830,26.540388/ province=Q83102:Edirne / district=Q1911990:Edirne (ilçe)',
     verifiedAt: 'generated',
   ),
+  'wd-q127643432-haci-suleyman-efendi-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127643432 / 41.550446,26.823194/ province=Q83102:Edirne / district=Q117272483:Havsa ilçesi',
+    verifiedAt: 'generated',
+  ),
   'wd-q131582949-hasan-sezai-camii': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q131582949 / 41.669284,26.557984/ province=Q83102:Edirne / district=Q1911990:Edirne (ilçe)',
@@ -3836,6 +5301,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q127787058 / 41.673679,26.554287/ province=Q83102:Edirne / district=Q1911990:Edirne (ilçe)',
     verifiedAt: 'generated',
   ),
+  'wd-q132134035-mahmut-pasa-camii-haskoy': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q132134035 / 41.643013,26.858711/ province=Q83102:Edirne / district=Q117272483:Havsa ilçesi',
+    verifiedAt: 'generated',
+  ),
   'wd-q127787080-medrese-ali-bey-camii': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q127787080 / 41.674351,26.564522/ province=Q83102:Edirne / district=Q1911990:Edirne (ilçe)',
@@ -3856,6 +5326,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q19897831 / 41.682400,26.564800/ province=Q83102:Edirne / district=Q1911990:Edirne (ilçe)',
     verifiedAt: 'generated',
   ),
+  'wd-q132134331-muradiye-camii-uzunkopru': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q132134331 / 41.269150,26.685934/ province=Q83102:Edirne / district=Q14512178:Uzunköprü ilçesi',
+    verifiedAt: 'generated',
+  ),
   'wd-q127788042-sarica-pasa-camii': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q127788042 / 41.674995,26.560896/ province=Q83102:Edirne / district=Q1911990:Edirne (ilçe)',
@@ -3869,6 +5344,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q127788092-sitti-sultan-camii': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q127788092 / 41.673458,26.559383/ province=Q83102:Edirne / district=Q1911990:Edirne (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q132134034-sokullu-mehmet-pasa-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q132134034 / 41.549789,26.823635/ province=Q83102:Edirne / district=Q117272483:Havsa ilçesi',
     verifiedAt: 'generated',
   ),
   'wd-q127788124-sule-celebi-camii': SpotCoordinateVerificationEvidence(
@@ -3936,6 +5416,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q131829770 / 41.674007,26.544663/ province=Q83102:Edirne / district=Q1911990:Edirne (ilçe)',
     verifiedAt: 'generated',
   ),
+  'wd-q6028091-gala-golu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6028091 / 40.767300,26.185000/ province=Q83102:Edirne / district=Q1912026:Enez (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q134728592-akagalar-kapisi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q134728592 / 41.690830,26.554941/ province=Q83102:Edirne / district=Q1911990:Edirne (ilçe)',
@@ -3989,6 +5474,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q16851611-kanuni-koprusu': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q16851611 / 41.686700,26.559000/ province=Q83102:Edirne / district=Q1911990:Edirne (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131403358-kaz-ova-koprusu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131403358 / 41.362100,26.631100/ province=Q83102:Edirne / district=Q14512178:Uzunköprü ilçesi',
     verifiedAt: 'generated',
   ),
   'wd-q6015752-meric-koprusu': SpotCoordinateVerificationEvidence(
@@ -4131,6 +5621,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q130725557 / 41.676937,26.560953/ province=Q83102:Edirne / district=Q1911990:Edirne (ilçe)',
     verifiedAt: 'generated',
   ),
+  'wd-q6053470-uzunkopru': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6053470 / 41.276080,26.676690/ province=Q83102:Edirne / district=Q14512178:Uzunköprü ilçesi',
+    verifiedAt: 'generated',
+  ),
   'wd-q34972453-yahya-bey-cesmesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q34972453 / 41.676815,26.563290/ province=Q83102:Edirne / district=Q1911990:Edirne (ilçe)',
@@ -4186,6 +5681,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q131861582 / 41.651667,26.522694/ province=Q83102:Edirne / district=Q1911990:Edirne (ilçe)',
     verifiedAt: 'generated',
   ),
+  'wd-q6031479-gala-golu-milli-parki': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6031479 / 40.754167,26.231389/ province=Q83102:Edirne / district=Q1912026:Enez (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q5338336-edirne-buyuk-sinagogu': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q5338336 / 41.671611,26.551572/ province=Q83102:Edirne / district=Q1911990:Edirne (ilçe)',
@@ -4231,6 +5731,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q134735044 / 41.675732,26.540089/ province=Q83102:Edirne / district=Q1911990:Edirne (ilçe)',
     verifiedAt: 'generated',
   ),
+  'wd-q133246522-havsa-eski-mezarligi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q133246522 / 41.548920,26.818052/ province=Q83102:Edirne / district=Q117272483:Havsa ilçesi',
+    verifiedAt: 'generated',
+  ),
   'wd-q131859943-osmanli-mezar-taslari-sergileme-alani': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q131859943 / 41.678497,26.560223/ province=Q83102:Edirne / district=Q1911990:Edirne (ilçe)',
@@ -4244,6 +5749,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q134735042-uc-serefeli-cami-haziresi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q134735042 / 41.677719,26.553766/ province=Q83102:Edirne / district=Q1911990:Edirne (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q126097465-enez-kalesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q126097465 / 40.724278,26.080972/ province=Q83102:Edirne / district=Q1912026:Enez (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q135035134-hadrianopolis-surlari-edirne': SpotCoordinateVerificationEvidence(
@@ -4266,6 +5776,46 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q50669047 / 41.675611,26.552756/ province=Q83102:Edirne / district=Q1911990:Edirne (ilçe)',
     verifiedAt: 'generated',
   ),
+  'wd-q447212-altintepe': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q447212 / 39.696542,39.646625/ province=Q483173:Erzincan / district=Q4881497:Erzincan (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q127642908-dortyol-agzi-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127642908 / 39.262230,38.495151/ province=Q483173:Erzincan / district=Q117462025:Kemaliye ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q127788217-tasdibi-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127788217 / 39.262703,38.492725/ province=Q483173:Erzincan / district=Q117462025:Kemaliye ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q132752956-mama-hatun-kervansarayi-tercan': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q132752956 / 39.777400,40.385571/ province=Q483173:Erzincan / district=Q116986444:Tercan İlçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q1000823-kemaliye': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q1000823 / 39.260833,38.496667/ province=Q483173:Erzincan / district=Q117462025:Kemaliye ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q120985825-aprank-manastiri': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q120985825 / 39.661389,40.288889/ province=Q483173:Erzincan / district=Q116986444:Tercan İlçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q1682878-munzur-vadisi-milli-parki': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q1682878 / 39.489167,39.625000/ province=Q483173:Erzincan / district=Q4881497:Erzincan (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q5627140-gurlevik-selalesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q5627140 / 39.585940,39.730870/ province=Q483173:Erzincan / district=Q4881497:Erzincan (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q130724457-akif-aga-cesmesi-erzurum': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q130724457 / 39.906212,41.277351/ province=Q376797:Erzurum / district=Q2577943:Yakutiye',
@@ -4284,6 +5834,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q124066162-karanlik-kumbet': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q124066162 / 39.910657,41.278825/ province=Q376797:Erzurum / district=Q2577943:Yakutiye',
+    verifiedAt: 'generated',
+  ),
+  'wd-q134727960-kop-sehitler-abidesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q134727960 / 40.026800,40.519600/ province=Q376797:Erzurum / district=Q49101039:Aşkale ilçesi',
     verifiedAt: 'generated',
   ),
   'wd-q130724383-mehmet-kethuda-cesmesi': SpotCoordinateVerificationEvidence(
@@ -4391,6 +5946,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q132134338 / 39.904896,41.274410/ province=Q376797:Erzurum / district=Q2577943:Yakutiye',
     verifiedAt: 'generated',
   ),
+  'wd-q31190010-kop-dagi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q31190010 / 40.053850,40.506970/ province=Q376797:Erzurum / district=Q49101039:Aşkale ilçesi',
+    verifiedAt: 'generated',
+  ),
   'wd-q941456-palandoken-dagi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q941456 / 39.848889,41.284167/ province=Q376797:Erzurum / district=Q1004488:Palandöken',
@@ -4401,9 +5961,29 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q135392852 / 39.904427,41.259674/ province=Q376797:Erzurum / district=Q2577943:Yakutiye',
     verifiedAt: 'generated',
   ),
+  'wd-q1033178-bana-manastiri': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q1033178 / 40.668061,42.269961/ province=Q376797:Erzurum / district=Q49110623:Şenkaya İlçesi',
+    verifiedAt: 'generated',
+  ),
   'wd-q21527119-tepsi-minare': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q21527119 / 39.907528,41.276167/ province=Q376797:Erzurum / district=Q2577943:Yakutiye',
+    verifiedAt: 'generated',
+  ),
+  'wd-q132735430-tas-kopru-davali-yaylasi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q132735430 / 40.791729,41.139458/ province=Q376797:Erzurum / district=Q2068148:İspir',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6471500-cobandede-koprusu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6471500 / 39.969850,41.888630/ province=Q376797:Erzurum / district=Q1939571:Köprüköy',
+    verifiedAt: 'generated',
+  ),
+  'wd-q125563404-vacedzori-manastiri': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q125563404 / 40.870597,41.989200/ province=Q376797:Erzurum / district=Q2690744:Olur',
     verifiedAt: 'generated',
   ),
   'wd-q130270663-erzurum-muzesi': SpotCoordinateVerificationEvidence(
@@ -4504,6 +6084,16 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q6026101-gaziantep-kalesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q6026101 / 37.066400,37.383300/ province=Q483154:Gaziantep / district=Q2195037:Şahinbey',
+    verifiedAt: 'generated',
+  ),
+  'wd-q1379828-tilmen-hoyuk': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q1379828 / 37.030060,36.704226/ province=Q483154:Gaziantep / district=Q4923745:İslahiye',
+    verifiedAt: 'generated',
+  ),
+  'wd-q1039186-zincirli-hoyuk': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q1039186 / 37.103611,36.678611/ province=Q483154:Gaziantep / district=Q4923745:İslahiye',
     verifiedAt: 'generated',
   ),
   'wd-q132134282-alaybey-camii': SpotCoordinateVerificationEvidence(
@@ -4641,6 +6231,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q131527083 / 37.062790,37.375683/ province=Q483154:Gaziantep / district=Q2195037:Şahinbey',
     verifiedAt: 'generated',
   ),
+  'wd-q26959195-yesemek-tas-ocagi-ve-heykel-atolyesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q26959195 / 36.904444,36.745833/ province=Q483154:Gaziantep / district=Q4923745:İslahiye',
+    verifiedAt: 'generated',
+  ),
   'wd-q10837496-yesilce': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q10837496 / 37.170481,37.209933/ province=Q483154:Gaziantep / district=Q388703:Şehitkâmil',
@@ -4726,6 +6321,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q130684670 / 40.909770,38.388475/ province=Q482779:Giresun / district=Q2912751:Giresun (ilçe)',
     verifiedAt: 'generated',
   ),
+  'wd-q127643284-haci-abdullah-halife-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127643284 / 40.756923,38.619085/ province=Q482779:Giresun / district=Q117468421:Yağlıdere ilçesi',
+    verifiedAt: 'generated',
+  ),
   'wd-q6091475-sebinkarahisar-kalesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q6091475 / 40.288339,38.423611/ province=Q482779:Giresun / district=Q388662:Şebinkarahisar',
@@ -4736,6 +6336,36 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q127788174 / 40.917038,38.386416/ province=Q482779:Giresun / district=Q2912751:Giresun (ilçe)',
     verifiedAt: 'generated',
   ),
+  'wd-q16327541-prassareos-manastiri': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q16327541 / 40.750806,38.400528/ province=Q482779:Giresun / district=Q49102787:Dereli ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q2211116-satala': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q2211116 / 40.026111,39.590556/ province=Q482788:Gümüşhane / district=Q49105410:Kelkit ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q96023275-limni-golu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q96023275 / 40.610833,39.413056/ province=Q482788:Gümüşhane / district=Q2390434:Torul ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q108228303-limni-golu-tabiat-parki': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q108228303 / 40.610000,39.412222/ province=Q482788:Gümüşhane / district=Q2390434:Torul ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q20751283-dogu-karadeniz-daglari': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q20751283 / 40.500000,40.000000/ province=Q482788:Gümüşhane / district=Q1999114:Gümüşhane',
+    verifiedAt: 'generated',
+  ),
+  'wd-q4810702-karaca-magarasi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q4810702 / 40.544200,39.402800/ province=Q482788:Gümüşhane / district=Q2390434:Torul ilçesi',
+    verifiedAt: 'generated',
+  ),
   'wd-q1091987-cilo-dagi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q1091987 / 37.485730,44.004160/ province=Q93209:Hakkari / district=Q2176882:Yüksekova',
@@ -4744,6 +6374,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q125507355-doski-vadisi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q125507355 / 37.419120,44.138280/ province=Q93209:Hakkari / district=Q2176882:Yüksekova',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131390827-bayezid-i-bestami-turbesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131390827 / 36.531500,36.364600/ province=Q83274:Hatay / district=Q3032005:Kırıkhan ilçesi',
     verifiedAt: 'generated',
   ),
   'wd-q124167706-haron-kabartmasi': SpotCoordinateVerificationEvidence(
@@ -4766,9 +6401,24 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q481670 / 36.341389,36.316111/ province=Q83274:Hatay / district=Q49100745:Antakya İlçesi',
     verifiedAt: 'generated',
   ),
+  'wd-q200441-antakya': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q200441 / 36.200000,36.150000/ province=Q83274:Hatay / district=Q49102747:Defne (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q3677505-antakya-hipodromu': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q3677505 / 36.226691,36.171743/ province=Q83274:Hatay / district=Q49100745:Antakya İlçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q575249-accana-hoyuk': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q575249 / 36.237778,36.384722/ province=Q83274:Hatay / district=Q49108069:Reyhanlı ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q1347187-epiphaneia': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q1347187 / 36.973201,36.120611/ province=Q83274:Hatay / district=Q49103350:Erzin ilçesi',
     verifiedAt: 'generated',
   ),
   'wd-q1605894-seleucia-pieria': SpotCoordinateVerificationEvidence(
@@ -4811,6 +6461,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q127787109 / 36.203896,36.163689/ province=Q83274:Hatay / district=Q49100745:Antakya İlçesi',
     verifiedAt: 'generated',
   ),
+  'wd-q127788039-sari-selim-camii-payas': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127788039 / 36.753738,36.203209/ province=Q83274:Hatay / district=Q49107655:Payas İlçesi',
+    verifiedAt: 'generated',
+  ),
   'wd-q116771744-sarimiye-camii': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q116771744 / 36.199750,36.163722/ province=Q83274:Hatay / district=Q49100745:Antakya İlçesi',
@@ -4846,6 +6501,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q1953975 / 36.258333,35.903611/ province=Q83274:Hatay / district=Q2782103:Samandağ',
     verifiedAt: 'generated',
   ),
+  'wd-q54922796-sokullu-mehmet-pasa-kervansarayi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q54922796 / 36.754400,36.203800/ province=Q83274:Hatay / district=Q49107655:Payas İlçesi',
+    verifiedAt: 'generated',
+  ),
   'wd-q64851155-aziz-pavlus-ortodoks-kilisesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q64851155 / 36.199944,36.160722/ province=Q83274:Hatay / district=Q49100745:Antakya İlçesi',
@@ -4861,14 +6521,79 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q120533489 / 36.587417,36.170583/ province=Q83274:Hatay / district=Q174341:İskenderun',
     verifiedAt: 'generated',
   ),
+  'wd-q454456-nur-daglari': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q454456 / 36.750000,36.333333/ province=Q83274:Hatay / district=Q49107655:Payas İlçesi',
+    verifiedAt: 'generated',
+  ),
   'wd-q636888-hatay-arkeoloji-muzesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q636888 / 36.201944,36.160000/ province=Q83274:Hatay / district=Q49100745:Antakya İlçesi',
     verifiedAt: 'generated',
   ),
+  'wd-q20517059-buyuk-agri-dagi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q20517059 / 39.702761,44.300381/ province=Q125506:Iğdır / district=Q49100785:Aralık',
+    verifiedAt: 'generated',
+  ),
+  'wd-q4278782-kucuk-agri-dagi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q4278782 / 39.648270,44.413730/ province=Q125506:Iğdır / district=Q49100785:Aralık',
+    verifiedAt: 'generated',
+  ),
+  'wd-q21526286-igdir-kervansarayi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q21526286 / 39.836800,43.839200/ province=Q125506:Iğdır / district=Q2490719:Iğdır',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6098641-mada-adasi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6098641 / 37.883333,31.366667/ province=Q268043:Isparta / district=Q1974411:Şarkikaraağaç ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6000577-yesil-ada': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6000577 / 37.882710,30.868060/ province=Q268043:Isparta / district=Q1911174:Eğirdir ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q50250179-ertokus-hani': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q50250179 / 37.992778,30.970833/ province=Q268043:Isparta / district=Q2623010:Gelendost ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q135582483-antiokheia-antik-tiyatrosu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q135582483 / 38.304850,31.188280/ province=Q268043:Isparta / district=Q49110068:Yalvaç ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q137761641-antiokheia-augustus-tapinagi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q137761641 / 38.303928,31.191827/ province=Q268043:Isparta / district=Q49110068:Yalvaç ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q137767044-antiokheia-nymphaeum': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q137767044 / 38.307128,31.191812/ province=Q268043:Isparta / district=Q49110068:Yalvaç ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q137767061-antiokheia-roma-hamami': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q137767061 / 38.308364,31.189472/ province=Q268043:Isparta / district=Q49110068:Yalvaç ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q127634786-bahce-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127634786 / 38.066841,30.464010/ province=Q268043:Isparta / district=Q1952991:Uluborlu (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q127643070-firdevs-bey-camii': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q127643070 / 37.764375,30.554754/ province=Q268043:Isparta / district=Q2204619:Isparta (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q97947293-hizir-bey-camisi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q97947293 / 37.874639,30.850889/ province=Q268043:Isparta / district=Q1911174:Eğirdir ilçesi',
     verifiedAt: 'generated',
   ),
   'wd-q97947300-kutlu-bey-camii': SpotCoordinateVerificationEvidence(
@@ -4886,14 +6611,64 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q14395861 / 37.731000,30.494240/ province=Q268043:Isparta / district=Q2204619:Isparta (ilçe)',
     verifiedAt: 'generated',
   ),
+  'wd-q1785613-kovada-golu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q1785613 / 37.629722,30.883889/ province=Q268043:Isparta / district=Q1911174:Eğirdir ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q66686334-egirdir-kalesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q66686334 / 37.875833,30.853333/ province=Q268043:Isparta / district=Q1911174:Eğirdir ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q47463359-egirdir-hani': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q47463359 / 37.850616,30.855549/ province=Q268043:Isparta / district=Q1911174:Eğirdir ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q137761832-antiokheia-bizans-kilisesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q137761832 / 38.304784,31.189732/ province=Q268043:Isparta / district=Q49110068:Yalvaç ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q137767001-antiokheia-buyuk-bazilika': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q137767001 / 38.306574,31.187324/ province=Q268043:Isparta / district=Q49110068:Yalvaç ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q137767012-antiokheia-kuzey-kilisesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q137767012 / 38.307949,31.190174/ province=Q268043:Isparta / district=Q49110068:Yalvaç ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q126113846-aya-stefanos-kilisesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q126113846 / 37.884038,30.868803/ province=Q268043:Isparta / district=Q1911174:Eğirdir ilçesi',
+    verifiedAt: 'generated',
+  ),
   'wd-q28221091-isparta-muzesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q28221091 / 37.770833,30.558333/ province=Q268043:Isparta / district=Q2204619:Isparta (ilçe)',
     verifiedAt: 'generated',
   ),
+  'wd-q6029085-kovada-golu-milli-parki': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6029085 / 37.619386,30.870761/ province=Q268043:Isparta / district=Q1911174:Eğirdir ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q135582586-pisidia-antiokheia-su-kemeri': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q135582586 / 38.315027,31.193709/ province=Q268043:Isparta / district=Q49110068:Yalvaç ilçesi',
+    verifiedAt: 'generated',
+  ),
   'wd-q131738485-dalboyunoglu-hamami': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q131738485 / 37.763193,30.555989/ province=Q268043:Isparta / district=Q2204619:Isparta (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q137767083-antiokheia-bati-kapisi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q137767083 / 38.304488,31.186166/ province=Q268043:Isparta / district=Q49110068:Yalvaç ilçesi',
     verifiedAt: 'generated',
   ),
   'wd-q1014806-burgaz-adasi': SpotCoordinateVerificationEvidence(
@@ -4931,6 +6706,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q1972163 / 40.864444,28.993333/ province=Q534799:İstanbul / district=Q14814766:Adalar',
     verifiedAt: 'generated',
   ),
+  'wd-q108404641-15-temmuz-sehitler-makami': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q108404641 / 41.036974,29.042263/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q131368829-3-mustafa-han-cesmesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q131368829 / 41.115662,29.095562/ province=Q534799:İstanbul / district=Q794351:Beykoz',
@@ -4941,6 +6721,16 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q123114578 / 41.045028,29.005917/ province=Q534799:İstanbul / district=Q459495:Beşiktaş',
     verifiedAt: 'generated',
   ),
+  'wd-q6063427-abbas-aga-cesmesi-ahmediye': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6063427 / 41.021812,29.018139/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131836059-abbas-aga-cesmesi-zeynep-kamil': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131836059 / 41.015850,29.021706/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q131368491-abbas-okumusoglu-cesmesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q131368491 / 41.169254,29.057687/ province=Q534799:İstanbul / district=Q857107:Sarıyer',
@@ -4949,6 +6739,16 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q131368579-abdulbaki-aga-cesmesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q131368579 / 41.035127,28.971981/ province=Q534799:İstanbul / district=Q217411:Beyoğlu',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131368580-abdulhamid-han-i-cesmesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131368580 / 41.044179,29.046410/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131835999-abdullah-aga-cesmesi-beylerbeyi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131835999 / 41.042027,29.044386/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q131836195-abdullah-aga-cesmesi-molla-husrev': SpotCoordinateVerificationEvidence(
@@ -5029,6 +6829,21 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q131368584-ahi-celebi-camii-cesmesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q131368584 / 41.018833,28.968252/ province=Q534799:İstanbul / district=Q732923:Fatih',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131368531-ahmediye-camii-kose-cesmesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131368531 / 41.020546,29.016590/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q135430088-ahmediye-sebili': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q135430088 / 41.020027,29.016802/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131368529-ahmediye-cesmesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131368529 / 41.020213,29.016759/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q118402646-ahmet-aga-cesmesi-karagumruk': SpotCoordinateVerificationEvidence(
@@ -5126,6 +6941,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q131369044 / 41.014030,28.978565/ province=Q534799:İstanbul / district=Q732923:Fatih',
     verifiedAt: 'generated',
   ),
+  'wd-q135429314-alemdar-ahmet-baba-turbesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q135429314 / 41.023227,29.015900/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q135429205-alemdar-ibrahim-efendi-kabri': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q135429205 / 41.018818,28.956430/ province=Q534799:İstanbul / district=Q732923:Fatih',
@@ -5141,6 +6961,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q131368466 / 41.018746,28.961029/ province=Q534799:İstanbul / district=Q732923:Fatih',
     verifiedAt: 'generated',
   ),
+  'wd-q131836221-ali-pasa-camii-cesmesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131836221 / 41.140934,28.465038/ province=Q534799:İstanbul / district=Q1968049:Çatalca (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q112830145-ali-pasa-cesmesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q112830145 / 40.991014,29.025883/ province=Q534799:İstanbul / district=Q932886:Kadıköy',
@@ -5149,6 +6974,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q131836092-ali-pasa-cesmesi-atikali': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q131836092 / 41.025860,28.940296/ province=Q534799:İstanbul / district=Q732923:Fatih',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131391163-ali-riza-efendi-turbesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131391163 / 41.028621,29.024341/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q131368591-ali-riza-pasa-cesmesi': SpotCoordinateVerificationEvidence(
@@ -5174,6 +7004,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q134728024-anneler-gunu-aniti': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q134728024 / 40.985695,29.048544/ province=Q534799:İstanbul / district=Q932886:Kadıköy',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131369124-araba-meydani-cesmesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131369124 / 41.043545,29.044346/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q117286948-aralik-suyu-cesmesi': SpotCoordinateVerificationEvidence(
@@ -5209,6 +7044,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q131368317-arpaci-mehmet-celebi-cesmesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q131368317 / 40.999481,28.932507/ province=Q534799:İstanbul / district=Q732923:Fatih',
+    verifiedAt: 'generated',
+  ),
+  'wd-q112322884-arslan-aga-cesmesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q112322884 / 41.026804,29.018030/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q134966217-asli-nemutlu-heykeli': SpotCoordinateVerificationEvidence(
@@ -5266,6 +7106,21 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q131391130 / 41.007969,28.979359/ province=Q534799:İstanbul / district=Q732923:Fatih',
     verifiedAt: 'generated',
   ),
+  'wd-q131368499-ayazma-camii-avlusu-icindeki-duvar-cesmesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131368499 / 41.022872,29.008746/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q135393192-ayazma-camii-gunes-saati': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q135393192 / 41.022427,29.008728/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q135428521-ayazma-kalintisi-uskudar': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q135428521 / 41.022709,29.009331/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q108916446-ayazma-sokak-cesmesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q108916446 / 40.989777,28.771225/ province=Q534799:İstanbul / district=Q639240:Küçükçekmece',
@@ -5274,6 +7129,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q131836184-ayazma-cesmesi-sariyer': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q131836184 / 41.170627,29.053972/ province=Q534799:İstanbul / district=Q857107:Sarıyer',
+    verifiedAt: 'generated',
+  ),
+  'wd-q135428560-ayios-panteleimon-rum-ortodoks-kilisesi-ayazmasi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q135428560 / 41.034597,29.030683/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q131369121-aynalikavak-kasri-bahcesi-cesmesi': SpotCoordinateVerificationEvidence(
@@ -5289,6 +7149,16 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q123038582-ayse-sultan-cesmesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q123038582 / 41.013858,28.956079/ province=Q534799:İstanbul / district=Q732923:Fatih',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131390961-aziz-mahmud-hudai-turbesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131390961 / 41.022368,29.014333/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131368656-aziz-mahmud-hudai-cesmeleri': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131368656 / 41.022475,29.014577/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q112065936-asagi-sinan-aga-cesmesi': SpotCoordinateVerificationEvidence(
@@ -5331,6 +7201,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q135004736 / 41.007946,28.923668/ province=Q534799:İstanbul / district=Q732923:Fatih',
     verifiedAt: 'generated',
   ),
+  'wd-q131368767-balaban-tekkesi-duvar-cesmesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131368767 / 41.025171,29.013769/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q112080881-balat-cesmesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q112080881 / 41.034342,28.946921/ province=Q534799:İstanbul / district=Q732923:Fatih',
@@ -5361,6 +7236,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q135430137 / 41.008774,28.942415/ province=Q534799:İstanbul / district=Q732923:Fatih',
     verifiedAt: 'generated',
   ),
+  'wd-q131368263-baskadin-meydani-cesmesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131368263 / 41.021477,29.010399/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q131368255-bascuhadar-seyyid-omer-aga-cesmesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q131368255 / 41.009796,28.978282/ province=Q534799:İstanbul / district=Q732923:Fatih',
@@ -5379,6 +7259,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q131368978-behcet-bey-cesmesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q131368978 / 41.192074,28.559269/ province=Q534799:İstanbul / district=Q691764:Arnavutköy',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131369036-bekir-efendi-cesmesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131369036 / 41.046978,29.054060/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q131390962-bekri-mustafa-ve-seyh-abdurraif-samadani-turbesi': SpotCoordinateVerificationEvidence(
@@ -5464,6 +7349,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q135429178-buhur-baba-turbesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q135429178 / 40.989254,29.078901/ province=Q534799:İstanbul / district=Q932886:Kadıköy',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131368435-bulgurlu-cesmesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131368435 / 41.018336,29.071415/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q131368812-burmali-cesmesi': SpotCoordinateVerificationEvidence(
@@ -5606,6 +7496,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q131368369 / 41.006923,28.937393/ province=Q534799:İstanbul / district=Q732923:Fatih',
     verifiedAt: 'generated',
   ),
+  'wd-q134734980-dede-sultan-sut-baba-kabri': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q134734980 / 41.013256,29.020959/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q131368273-defter-emini-cesmesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q131368273 / 41.028786,28.981846/ province=Q534799:İstanbul / district=Q217411:Beyoğlu',
@@ -5671,9 +7566,19 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q118495812 / 41.028955,28.935503/ province=Q534799:İstanbul / district=Q732923:Fatih',
     verifiedAt: 'generated',
   ),
+  'wd-q131391639-ekmek-yemez-tekkesi-turbesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131391639 / 41.021290,29.009121/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q118495403-ekmekci-baba-kabri': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q118495403 / 41.028650,28.936965/ province=Q534799:İstanbul / district=Q732923:Fatih',
+    verifiedAt: 'generated',
+  ),
+  'wd-q112439390-el-hac-mehmet-aga-cesmesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q112439390 / 41.019929,29.020149/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q135429251-elekli-dede-kabri': SpotCoordinateVerificationEvidence(
@@ -5684,6 +7589,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q131368294-elhac-yakup-efendi-cesmesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q131368294 / 41.003269,28.941462/ province=Q534799:İstanbul / district=Q732923:Fatih',
+    verifiedAt: 'generated',
+  ),
+  'wd-q135004730-emetullah-gulnus-sultan-cesme-ve-sebili': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q135004730 / 41.024776,29.015532/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q131836286-emetullah-hatun-cesmesi-fatih': SpotCoordinateVerificationEvidence(
@@ -5776,6 +7686,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q85817590 / 41.019279,28.950267/ province=Q534799:İstanbul / district=Q732923:Fatih',
     verifiedAt: 'generated',
   ),
+  'wd-q112221286-fatih-cesmesi-uskudar': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q112221286 / 41.020601,29.008185/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q131836233-fatma-hatun-cesmesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q131836233 / 41.173840,29.088566/ province=Q534799:İstanbul / district=Q794351:Beykoz',
@@ -5794,6 +7709,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q131836210-ferhat-aga-cesmesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q131836210 / 41.038137,28.871854/ province=Q534799:İstanbul / district=Q932166:Güngören',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131368638-ferhat-pasa-cesmesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131368638 / 41.140589,28.460008/ province=Q534799:İstanbul / district=Q1968049:Çatalca (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q5444318-ferikoy-protestan-mezarligi': SpotCoordinateVerificationEvidence(
@@ -5829,6 +7749,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q134728504-fikret-mualla-heykeli': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q134728504 / 40.983513,29.033171/ province=Q534799:İstanbul / district=Q932886:Kadıköy',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131368640-fotaki-cesmesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131368640 / 41.144685,28.458202/ province=Q534799:İstanbul / district=Q1968049:Çatalca (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q131391013-fuad-pasa-turbesi': SpotCoordinateVerificationEvidence(
@@ -5871,6 +7796,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q131391056 / 41.018955,28.950576/ province=Q534799:İstanbul / district=Q732923:Fatih',
     verifiedAt: 'generated',
   ),
+  'wd-q112326226-genc-mehmet-pasa-cesmesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q112326226 / 41.020087,29.018807/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q131368821-genc-osman-cesmesi-1': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q131368821 / 41.026594,28.874118/ province=Q534799:İstanbul / district=Q932166:Güngören',
@@ -5906,6 +7836,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q131368851 / 41.007629,28.939482/ province=Q534799:İstanbul / district=Q732923:Fatih',
     verifiedAt: 'generated',
   ),
+  'wd-q123386090-gulnus-emetullah-valide-sultan-cesmesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q123386090 / 41.024581,29.014693/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q131836234-gulnus-emetullah-valide-sultan-cesmesi-beyoglu': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q131836234 / 41.023002,28.972884/ province=Q534799:İstanbul / district=Q217411:Beyoğlu',
@@ -5934,6 +7869,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q119805523-guzelce-ali-pasa-cesmesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q119805523 / 41.036694,28.963778/ province=Q534799:İstanbul / district=Q217411:Beyoğlu',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131391061-haci-ahmed-pasa-turbesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131391061 / 41.019421,29.011848/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q131836268-haci-ahmet-aga-cesmesi': SpotCoordinateVerificationEvidence(
@@ -5984,6 +7924,16 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q124366525-haci-eyupzade-sukru-bey-cesmesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q124366525 / 41.019194,28.954944/ province=Q534799:İstanbul / district=Q732923:Fatih',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131368375-haci-faik-bey-cesmesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131368375 / 41.015587,29.015995/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131836169-haci-hanim-cesmesi-uskudar': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131836169 / 41.047583,29.054092/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q131836190-haci-hasan-efendi-cesmesi-fatih': SpotCoordinateVerificationEvidence(
@@ -6066,6 +8016,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q131368285 / 41.035352,28.985761/ province=Q534799:İstanbul / district=Q217411:Beyoğlu',
     verifiedAt: 'generated',
   ),
+  'wd-q131368840-hafiz-isa-aga-cesmesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131368840 / 41.015636,29.013431/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q134728446-haldun-taner-bustu': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q134728446 / 40.985905,29.021303/ province=Q534799:İstanbul / district=Q932886:Kadıköy',
@@ -6086,6 +8041,16 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q124378162 / 41.031583,28.948500/ province=Q534799:İstanbul / district=Q732923:Fatih',
     verifiedAt: 'generated',
   ),
+  'wd-q131836239-halil-efendi-cesmesi-mimar-sinan': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131836239 / 41.022531,29.020438/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131836310-halil-efendi-cesmesi-selami-ali-efendi-caddesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131836310 / 41.023478,29.022390/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q131368379-halil-cevkan-cesmesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q131368379 / 41.005417,28.961418/ province=Q534799:İstanbul / district=Q732923:Fatih',
@@ -6099,6 +8064,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q134728494-hamal-heykeli': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q134728494 / 41.014469,28.972883/ province=Q534799:İstanbul / district=Q732923:Fatih',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131836171-hamam-sokak-cesmesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131836171 / 41.010771,29.016588/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q122979130-hamidiye-cesmesi': SpotCoordinateVerificationEvidence(
@@ -6191,6 +8161,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q131836110 / 41.039909,28.942541/ province=Q534799:İstanbul / district=Q732923:Fatih',
     verifiedAt: 'generated',
   ),
+  'wd-q131836088-hatice-sultan-cesmesi-salacak': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131836088 / 41.014111,29.012510/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q66537010-hatice-turhan-sultan-turbesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q66537010 / 41.016167,28.971889/ province=Q534799:İstanbul / district=Q732923:Fatih',
@@ -6204,6 +8179,21 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q131368287-hatice-turhan-valide-cesmesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q131368287 / 41.015984,28.971985/ province=Q534799:İstanbul / district=Q732923:Fatih',
+    verifiedAt: 'generated',
+  ),
+  'wd-q134734949-hattat-seyh-hamdullah-efendi-kabri-uskudar': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q134734949 / 41.014267,29.018776/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q62060898-haydarpasa-ingiliz-mezarligi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q62060898 / 40.999810,29.020050/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6048021-hayrettin-cavus-turbesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6048021 / 41.019556,29.018194/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q112032441-hazinedar-usta-cesmesi': SpotCoordinateVerificationEvidence(
@@ -6226,6 +8216,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q131836004 / 41.008572,28.970329/ province=Q534799:İstanbul / district=Q732923:Fatih',
     verifiedAt: 'generated',
   ),
+  'wd-q131368381-hibetullah-valide-sultan-cesmesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131368381 / 41.013229,29.014128/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q135004705-hilmi-dedebaba-cesmesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q135004705 / 40.989178,29.074734/ province=Q534799:İstanbul / district=Q932886:Kadıköy',
@@ -6244,6 +8239,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q105819804-horhor-cesmesi-simitci-sakir-sokagi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q105819804 / 41.011280,28.947746/ province=Q534799:İstanbul / district=Q732923:Fatih',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131836188-horhor-cesmesi-uskudar': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131836188 / 41.025678,29.015771/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q135429236-horos-dede-kabri': SpotCoordinateVerificationEvidence(
@@ -6269,6 +8269,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q55698753-hurrem-sultan-turbesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q55698753 / 41.015643,28.964833/ province=Q534799:İstanbul / district=Q732923:Fatih',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131368291-huseyin-avni-pasa-cesmesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131368291 / 41.031868,29.022453/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q131368525-huseyin-aga-camii-cesmesi': SpotCoordinateVerificationEvidence(
@@ -6396,6 +8401,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q131391103 / 41.007916,28.979734/ province=Q534799:İstanbul / district=Q732923:Fatih',
     verifiedAt: 'generated',
   ),
+  'wd-q16947921-iii-ahmed-cesmesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q16947921 / 41.026787,29.015355/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q131836217-iii-ahmet-cesmesi-kagithane': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q131836217 / 41.071210,28.964827/ province=Q534799:İstanbul / district=Q284489:Kağıthane',
@@ -6424,6 +8434,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q131836289-iii-selim-han-cesmesi-besiktas': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q131836289 / 41.046008,29.004274/ province=Q534799:İstanbul / district=Q459495:Beşiktaş',
+    verifiedAt: 'generated',
+  ),
+  'wd-q112678569-iii-selim-cesmesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q112678569 / 41.013266,29.017291/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q131368382-kadin-efendi-cesmesi': SpotCoordinateVerificationEvidence(
@@ -6476,6 +8491,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q131391018 / 41.002931,28.972351/ province=Q534799:İstanbul / district=Q732923:Fatih',
     verifiedAt: 'generated',
   ),
+  'wd-q131391075-karaca-ahmet-turbesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131391075 / 41.013226,29.020040/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q118402800-karagumruk-gul-baba-turbesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q118402800 / 41.024881,28.936390/ province=Q534799:İstanbul / district=Q732923:Fatih',
@@ -6496,6 +8516,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q134735152 / 41.003750,28.943855/ province=Q534799:İstanbul / district=Q732923:Fatih',
     verifiedAt: 'generated',
   ),
+  'wd-q131368436-kassam-cesmesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131368436 / 41.023273,29.018020/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q135430119-kasim-pasa-sebili': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q135430119 / 41.033154,28.968902/ province=Q534799:İstanbul / district=Q217411:Beyoğlu',
@@ -6509,6 +8534,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q119727309-kasimpasa-un-fabrikasi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q119727309 / 41.030562,28.969271/ province=Q534799:İstanbul / district=Q217411:Beyoğlu',
+    verifiedAt: 'generated',
+  ),
+  'wd-q112623982-katip-mustafa-efendi-cesmesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q112623982 / 41.019817,29.020821/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q131368573-kavak-cayir-sokak-cesmesi': SpotCoordinateVerificationEvidence(
@@ -6671,6 +8701,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q131368388 / 41.036911,28.974068/ province=Q534799:İstanbul / district=Q217411:Beyoğlu',
     verifiedAt: 'generated',
   ),
+  'wd-q20205332-kibris-aniti': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q20205332 / 41.007750,28.636250/ province=Q534799:İstanbul / district=Q49101303:Beylikdüzü (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q285236-kiztasi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q285236 / 41.015500,28.950200/ province=Q534799:İstanbul / district=Q732923:Fatih',
@@ -6741,9 +8776,29 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q131368392 / 41.029133,28.981894/ province=Q534799:İstanbul / district=Q217411:Beyoğlu',
     verifiedAt: 'generated',
   ),
+  'wd-q131368832-mahmut-ii-meydan-cesmesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131368832 / 41.045090,29.045315/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131368439-mahpeyker-kosem-sultan-cesmesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131368439 / 41.020042,29.028650/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q131368857-makbule-atadan-yalisi-cesmesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q131368857 / 41.063190,29.040520/ province=Q534799:İstanbul / district=Q459495:Beşiktaş',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6058464-malatyali-ismail-aga-cesmesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6058464 / 41.018667,29.016861/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131836209-matbah-emini-halil-efendi-cesmesi-mimar-sinan': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131836209 / 41.023748,29.020303/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q131369074-masuklar-yokusu-cesmesi': SpotCoordinateVerificationEvidence(
@@ -6866,6 +8921,21 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q134728481 / 40.969440,29.037626/ province=Q534799:İstanbul / district=Q932886:Kadıköy',
     verifiedAt: 'generated',
   ),
+  'wd-q135393205-mihrimah-sultan-camii-gunes-saati': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q135393205 / 41.026615,29.015957/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q135430362-mihrimah-sultan-camii-turbesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q135430362 / 41.027075,29.016107/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q135430293-mihrimah-sultan-camii-sadirvani': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q135430293 / 41.026939,29.015838/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q131368307-mihrisah-kadin-cesmesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q131368307 / 41.026134,28.976891/ province=Q534799:İstanbul / district=Q217411:Beyoğlu',
@@ -6926,6 +8996,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q135429222 / 41.003098,28.940908/ province=Q534799:İstanbul / district=Q732923:Fatih',
     verifiedAt: 'generated',
   ),
+  'wd-q131368398-morali-hasan-pasa-cesmesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131368398 / 41.018230,29.013334/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q131368979-muhyiddin-bey-cesmesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q131368979 / 41.186283,28.556244/ province=Q534799:İstanbul / district=Q691764:Arnavutköy',
@@ -6956,14 +9031,24 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q124378120 / 41.016000,28.949361/ province=Q534799:İstanbul / district=Q732923:Fatih',
     verifiedAt: 'generated',
   ),
-  'wd-q131836128-mustafa-pasa-cesmesi': SpotCoordinateVerificationEvidence(
-    sourceName: 'Wikidata P625 + Wikidata P131',
-    sourceRef: 'Q131836128 / 41.029900,28.986933/ province=Q534799:İstanbul / district=Q217411:Beyoğlu',
+  'wd-q112573670-mustafa-kasvar-baba-turbesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q112573670 / 41.019570,29.020894/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q112678943-mustafa-pasa-cesmesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q112678943 / 41.022578,29.012355/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q131391092-mustafa-rakim-efendi-turbesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q131391092 / 41.025150,28.941375/ province=Q534799:İstanbul / district=Q732923:Fatih',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131369071-mufide-kadri-hanim-cesmesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131369071 / 41.012951,29.018089/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q134728445-munir-nurettin-selcuk-bustu': SpotCoordinateVerificationEvidence(
@@ -7021,6 +9106,16 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q131369022 / 41.037937,28.880859/ province=Q534799:İstanbul / district=Q378714:Esenler',
     verifiedAt: 'generated',
   ),
+  'wd-q20473668-nevsehirli-damat-ibrahim-pasa-cesmesi-ahmediye-m': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q20473668 / 41.018829,29.017183/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q113171348-nevsehirli-damat-ibrahim-pasa-cesmesi-mimar-sina': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q113171348 / 41.024547,29.012734/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q131368719-nezir-aga-cesmesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q131368719 / 41.037040,28.961518/ province=Q534799:İstanbul / district=Q217411:Beyoğlu',
@@ -7029,6 +9124,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q131368308-nisanca-mustafa-aga-cesmesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q131368308 / 41.024864,28.942780/ province=Q534799:İstanbul / district=Q732923:Fatih',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131391160-nisanci-hamza-pasa-turbesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131391160 / 41.013901,29.019848/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q135430273-nisanci-mehmet-pasa-camii-sadirvani': SpotCoordinateVerificationEvidence(
@@ -7161,6 +9261,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q135430132 / 41.017034,28.960361/ province=Q534799:İstanbul / district=Q732923:Fatih',
     verifiedAt: 'generated',
   ),
+  'wd-q131391280-rum-mehmet-pasa-turbesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131391280 / 41.024445,29.010981/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q131368936-rumeli-feneri-park-cesmesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q131368936 / 41.233986,29.111431/ province=Q534799:İstanbul / district=Q857107:Sarıyer',
@@ -7201,6 +9306,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q131836325 / 40.815895,29.303162/ province=Q534799:İstanbul / district=Q938548:Tuzla',
     verifiedAt: 'generated',
   ),
+  'wd-q135430110-sadrazam-halil-pasa-sebili': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q135430110 / 41.021798,29.015260/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q134728516-sadun-oda-boro-ve-amator-denizciler-aniti': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q134728516 / 40.976582,29.041101/ province=Q534799:İstanbul / district=Q932886:Kadıköy',
@@ -7209,6 +9319,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q131391157-safiye-sultan-turbesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q131391157 / 41.003460,28.928820/ province=Q534799:İstanbul / district=Q732923:Fatih',
+    verifiedAt: 'generated',
+  ),
+  'wd-q112324583-safiye-sultan-cesmesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q112324583 / 41.021964,29.017725/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q131836316-safiye-sultan-cesmesi-incirkoy': SpotCoordinateVerificationEvidence(
@@ -7266,6 +9381,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q134728444 / 40.976833,29.041628/ province=Q534799:İstanbul / district=Q932886:Kadıköy',
     verifiedAt: 'generated',
   ),
+  'wd-q131368402-selami-ali-efendi-cesmesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131368402 / 41.023327,29.023493/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q112865286-selami-cesme': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q112865286 / 40.975558,29.051928/ province=Q534799:İstanbul / district=Q932886:Kadıköy',
@@ -7274,6 +9394,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q131368713-serasker-mustafa-pasa-cesmesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q131368713 / 41.115536,29.095715/ province=Q534799:İstanbul / district=Q794351:Beykoz',
+    verifiedAt: 'generated',
+  ),
+  'wd-q113407492-serkavas-ahmet-aga-lahanacilar-cesmesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q113407492 / 41.050806,29.052627/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q131368429-setustu-sokak-cesmesi': SpotCoordinateVerificationEvidence(
@@ -7311,6 +9436,16 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q131368698 / 41.034779,28.986320/ province=Q534799:İstanbul / district=Q217411:Beyoğlu',
     verifiedAt: 'generated',
   ),
+  'wd-q135004650-silahtar-bahcesi-sokagi-cesmesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q135004650 / 41.022438,29.029159/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131368323-silahtar-mustafa-aga-cesmesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131368323 / 41.020653,29.009157/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q131836144-silahtar-yahya-efendi-cesmesi-haskoy': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q131836144 / 41.038361,28.951229/ province=Q534799:İstanbul / district=Q217411:Beyoğlu',
@@ -7326,9 +9461,19 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q123562023 / 41.033451,28.970858/ province=Q534799:İstanbul / district=Q217411:Beyoğlu',
     verifiedAt: 'generated',
   ),
+  'wd-q131368938-silahsor-sakir-bey-cesmesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131368938 / 41.018543,29.012684/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q134727994-silivrikapi-duvarindaki-gurz': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q134727994 / 41.006054,28.921949/ province=Q534799:İstanbul / district=Q732923:Fatih',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131368736-sinan-pasa-camii-cesmesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131368736 / 41.018269,29.010166/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q131836283-sinan-pasa-cesmesi-harbiye': SpotCoordinateVerificationEvidence(
@@ -7431,9 +9576,19 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q131836272 / 41.216713,29.153623/ province=Q534799:İstanbul / district=Q794351:Beykoz',
     verifiedAt: 'generated',
   ),
+  'wd-q131836133-sultan-ii-mahmut-cesmesi-cengelkoy': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131836133 / 41.049629,29.053640/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q131368330-sultan-ii-mahmut-han-cesmesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q131368330 / 41.138660,29.053881/ province=Q534799:İstanbul / district=Q857107:Sarıyer',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6052827-sultan-iii-mustafa-cesmesi-uskudar': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6052827 / 41.024623,29.009090/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q131368658-sultan-iv-murat-cesmesi': SpotCoordinateVerificationEvidence(
@@ -7449,6 +9604,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q112034268-sultan-suleyman-cesmesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q112034268 / 41.004311,28.969303/ province=Q534799:İstanbul / district=Q732923:Fatih',
+    verifiedAt: 'generated',
+  ),
+  'wd-q112324154-sultantepe-cesmesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q112324154 / 41.027971,29.020859/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q135429096-surdisi-mustakil-kabirler-zeytinburnu-fatih': SpotCoordinateVerificationEvidence(
@@ -7566,6 +9726,16 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q131368542 / 41.011558,28.982893/ province=Q534799:İstanbul / district=Q732923:Fatih',
     verifiedAt: 'generated',
   ),
+  'wd-q5999946-toptasi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q5999946 / 41.019871,29.018408/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131368756-topuklu-cesme': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131368756 / 41.145470,28.456057/ province=Q534799:İstanbul / district=Q1968049:Çatalca (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q135429162-topcu-basi-esed-aga-kabri': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q135429162 / 41.004822,28.913586/ province=Q534799:İstanbul / district=Q197095:Zeytinburnu',
@@ -7589,6 +9759,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q131368748-tutuncu-mehmet-efendi-camii-cesmesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q131368748 / 40.978729,29.066352/ province=Q534799:İstanbul / district=Q932886:Kadıköy',
+    verifiedAt: 'generated',
+  ),
+  'wd-q113638822-tifligul-hanim-cesmesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q113638822 / 41.024319,29.015936/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q131368728-uzun-piyale-pasa-cesmesi': SpotCoordinateVerificationEvidence(
@@ -7619,6 +9794,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q131836112-valide-kethudasi-cesmesi-fatih': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q131836112 / 41.016106,28.966055/ province=Q534799:İstanbul / district=Q732923:Fatih',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131836174-valide-kethudasi-cesmesi-uskudar': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131836174 / 41.026018,29.022955/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q134728517-vecihi-hurkus-aniti': SpotCoordinateVerificationEvidence(
@@ -7701,6 +9881,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q135430296 / 41.017090,28.971832/ province=Q534799:İstanbul / district=Q732923:Fatih',
     verifiedAt: 'generated',
   ),
+  'wd-q135430294-yeni-valide-camii-sadirvani': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q135430294 / 41.024860,29.014893/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q131368447-yesilfistik-sokak-cesmesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q131368447 / 41.046136,29.012607/ province=Q534799:İstanbul / district=Q459495:Beşiktaş',
@@ -7766,6 +9951,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q131836341 / 41.053497,28.826837/ province=Q534799:İstanbul / district=Q49101229:Bağcılar (ilçe)',
     verifiedAt: 'generated',
   ),
+  'wd-q131368568-catalca-ortaokul-cesmesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131368568 / 41.142422,28.461489/ province=Q534799:İstanbul / district=Q1968049:Çatalca (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q134728031-celik-gulersoy-aniti': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q134728031 / 40.966763,29.034311/ province=Q534799:İstanbul / district=Q932886:Kadıköy',
@@ -7811,6 +10001,16 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q131836340 / 41.170357,29.057118/ province=Q534799:İstanbul / district=Q857107:Sarıyer',
     verifiedAt: 'generated',
   ),
+  'wd-q131836639-cesme-izzettin': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131836639 / 41.177181,28.503727/ province=Q534799:İstanbul / district=Q1968049:Çatalca (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q135430311-cinili-camii-sadirvani': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q135430311 / 41.020090,29.029111/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q109173337-coban-cesmesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q109173337 / 40.993813,28.819468/ province=Q534799:İstanbul / district=Q788634:Bahçelievler',
@@ -7849,6 +10049,21 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q742474-orme-dikilitas': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q742474 / 41.005400,28.974800/ province=Q534799:İstanbul / district=Q732923:Fatih',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131369113-ozbekler-tekkesi-cesmesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131369113 / 41.028461,29.024141/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q112661400-ummu-gulsum-hanim-cesmesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q112661400 / 41.020392,29.023131/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131368349-ummu-gulsum-sultan-cesmesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131368349 / 41.024132,29.010839/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q131836616-uskuplu-cesmesi': SpotCoordinateVerificationEvidence(
@@ -7906,6 +10121,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q131368574 / 41.219993,29.022141/ province=Q534799:İstanbul / district=Q857107:Sarıyer',
     verifiedAt: 'generated',
   ),
+  'wd-q131836312-inadiye-mezarlik-cesmesi-ahmediye': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131836312 / 41.016682,29.018224/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q131368855-incirkoy-cesmesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q131368855 / 41.119404,29.097576/ province=Q534799:İstanbul / district=Q794351:Beykoz',
@@ -7914,6 +10134,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q134728478-insan-sirri-arar-heykeli': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q134728478 / 40.981361,29.023085/ province=Q534799:İstanbul / district=Q932886:Kadıköy',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131368841-isa-aga-cesmesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131368841 / 41.015205,29.011639/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q121944526-ishak-aga-cesmesi': SpotCoordinateVerificationEvidence(
@@ -7946,6 +10171,16 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q131368415 / 41.016525,28.948231/ province=Q534799:İstanbul / district=Q732923:Fatih',
     verifiedAt: 'generated',
   ),
+  'wd-q131836123-ismail-aga-cesmesi-uskudar': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131836123 / 41.024368,29.011642/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131368795-ismet-bey-cesmesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131368795 / 41.033879,29.025667/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q134728447-ismet-inonu-bustu-kadikoy': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q134728447 / 40.979805,29.087034/ province=Q534799:İstanbul / district=Q932886:Kadıköy',
@@ -7964,6 +10199,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q121944252-ivaz-efendi-cesmesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q121944252 / 41.037880,28.941160/ province=Q534799:İstanbul / district=Q732923:Fatih',
+    verifiedAt: 'generated',
+  ),
+  'wd-q135429192-izmirli-ali-pasa-turbesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q135429192 / 41.019280,29.012003/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q131368566-icerenkoy-mezarlik-cesmesi': SpotCoordinateVerificationEvidence(
@@ -8021,6 +10261,36 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q131391028 / 41.013347,28.957676/ province=Q534799:İstanbul / district=Q732923:Fatih',
     verifiedAt: 'generated',
   ),
+  'wd-q118312607-sehzade-mustafa-cesmesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q118312607 / 41.023398,29.014374/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q112678983-sehzade-seyfettin-cesmesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q112678983 / 41.023122,29.012639/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q112189111-sehzade-suleyman-cesmesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q112189111 / 41.023889,29.018894/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q135428640-sekerci-haci-bekir-sebili-teknesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q135428640 / 41.025821,29.011422/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131391296-semsi-ahmet-pasa-turbesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131391296 / 41.026024,29.011444/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q112179182-seyh-camii-cesmesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q112179182 / 41.025119,29.018004/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q131390997-seyh-ebul-vefa-turbesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q131390997 / 41.016799,28.959622/ province=Q534799:İstanbul / district=Q732923:Fatih',
@@ -8029,6 +10299,16 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q131391000-seyh-zafir-turbesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q131391000 / 41.045537,29.008439/ province=Q534799:İstanbul / district=Q459495:Beşiktaş',
+    verifiedAt: 'generated',
+  ),
+  'wd-q135430129-seyhulislam-arif-hikmet-bey-sebili': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q135430129 / 41.015720,29.028795/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131368895-seyhulislam-arif-hikmet-bey-cesmesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131368895 / 41.015839,29.028990/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q131391161-seyhulislam-sunullah-efendi-turbesi': SpotCoordinateVerificationEvidence(
@@ -8071,6 +10351,21 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q97387997 / 41.097100,29.052220/ province=Q534799:İstanbul / district=Q857107:Sarıyer',
     verifiedAt: 'generated',
   ),
+  'wd-q117462996-kuzguncuk-bostani': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q117462996 / 41.034615,29.031342/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q127418083-abdullah-aga-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127418083 / 41.042708,29.042896/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6054560-abdurrahman-aga-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6054560 / 41.031570,29.022347/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q132745503-abdulhakim-sancak-camii': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q132745503 / 41.106322,29.030619/ province=Q534799:İstanbul / district=Q857107:Sarıyer',
@@ -8086,6 +10381,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q6957244 / 41.018993,28.968372/ province=Q534799:İstanbul / district=Q732923:Fatih',
     verifiedAt: 'generated',
   ),
+  'wd-q6047829-ahmet-celebi-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6047829 / 41.021717,29.013464/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q118946557-akbaba-mehmed-efendi-camii': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q118946557 / 41.010278,28.937889/ province=Q534799:İstanbul / district=Q732923:Fatih',
@@ -8099,6 +10399,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q135629383-ali-kuscu-camii': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q135629383 / 41.253637,28.745583/ province=Q534799:İstanbul / district=Q691764:Arnavutköy',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6051512-altunizade-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6051512 / 41.020278,29.045556/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q127418105-amine-hatun-camii': SpotCoordinateVerificationEvidence(
@@ -8136,14 +10441,29 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q108134038 / 40.979839,28.721185/ province=Q534799:İstanbul / district=Q340148:Avcılar',
     verifiedAt: 'generated',
   ),
+  'wd-q3324894-ayazma-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q3324894 / 41.022657,29.008882/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q133475725-agalar-camii': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q133475725 / 41.013101,28.984119/ province=Q534799:İstanbul / district=Q732923:Fatih',
     verifiedAt: 'generated',
   ),
+  'wd-q6053967-ascibasi-camii-uskudar': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6053967 / 41.013752,29.020589/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q127418125-baba-nakkas-camii': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q127418125 / 41.188225,28.555376/ province=Q534799:İstanbul / district=Q691764:Arnavutköy',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6056856-balaban-tekkesi-mescidi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6056856 / 41.025278,29.013972/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q118946730-barbaros-hayrettin-pasa-camii': SpotCoordinateVerificationEvidence(
@@ -8176,9 +10496,24 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q125458736 / 41.000476,28.918066/ province=Q534799:İstanbul / district=Q197095:Zeytinburnu',
     verifiedAt: 'generated',
   ),
+  'wd-q6845681-beylerbeyi-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6845681 / 41.045169,29.045733/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q127418156-bulgurlu-mescidi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127418156 / 41.018607,29.071455/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q1590626-burmali-mescit': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q1590626 / 41.014600,28.956300/ province=Q534799:İstanbul / district=Q732923:Fatih',
+    verifiedAt: 'generated',
+  ),
+  'wd-q127418159-bulbuldere-fevziye-hatun-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127418159 / 41.026314,29.022875/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q111979068-buyukada-carsi-camii': SpotCoordinateVerificationEvidence(
@@ -8256,6 +10591,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q5397556 / 41.004820,28.936759/ province=Q534799:İstanbul / district=Q732923:Fatih',
     verifiedAt: 'generated',
   ),
+  'wd-q2483550-eski-valide-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q2483550 / 41.018942,29.023644/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q2410449-eski-imaret-camii': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q2410449 / 41.021667,28.955000/ province=Q534799:İstanbul / district=Q732923:Fatih',
@@ -8286,9 +10626,19 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q122705514 / 41.022310,28.928659/ province=Q534799:İstanbul / district=Q732923:Fatih',
     verifiedAt: 'generated',
   ),
+  'wd-q127418244-fenai-ali-efendi-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127418244 / 41.017611,29.027953/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q106063151-fenerbahce-camii': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q106063151 / 40.972500,29.040306/ province=Q534799:İstanbul / district=Q932886:Kadıköy',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6026552-ferhad-pasa-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6026552 / 41.140694,28.459694/ province=Q534799:İstanbul / district=Q1968049:Çatalca (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q112845236-feridun-pasa-camii': SpotCoordinateVerificationEvidence(
@@ -8299,6 +10649,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q6071493-ferruh-kethuda-camii': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q6071493 / 41.034466,28.945724/ province=Q534799:İstanbul / district=Q732923:Fatih',
+    verifiedAt: 'generated',
+  ),
+  'wd-q127418245-fethi-ahmet-pasa-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127418245 / 41.013031,29.019859/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q127418248-firuz-aga-mescidi': SpotCoordinateVerificationEvidence(
@@ -8326,9 +10681,24 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q1572481 / 41.008720,28.970550/ province=Q534799:İstanbul / district=Q732923:Fatih',
     verifiedAt: 'generated',
   ),
+  'wd-q127418254-geredeli-celebi-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127418254 / 41.024290,29.014585/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q109391500-haci-evhaduddin-camii': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q109391500 / 40.996694,28.923861/ province=Q534799:İstanbul / district=Q732923:Fatih',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6059840-haci-hesna-hatun-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6059840 / 41.027946,29.019184/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q127418277-haci-omer-efendi-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127418277 / 41.049439,29.053630/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q5637873-hadim-ibrahim-pasa-camii': SpotCoordinateVerificationEvidence(
@@ -8339,6 +10709,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q135429690-halic-kapiustu-mescidi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q135429690 / 41.028606,28.968550/ province=Q534799:İstanbul / district=Q217411:Beyoğlu',
+    verifiedAt: 'generated',
+  ),
+  'wd-q127418285-hamdullah-pasa-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127418285 / 41.050120,29.052898/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q127418286-hamid-i-evvel-camii': SpotCoordinateVerificationEvidence(
@@ -8381,6 +10756,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q110658521 / 40.996900,29.023300/ province=Q534799:İstanbul / district=Q932886:Kadıköy',
     verifiedAt: 'generated',
   ),
+  'wd-q135630399-hazreti-ali-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q135630399 / 41.024875,29.047899/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q6095391-hekimoglu-ali-pasa-camii': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q6095391 / 41.006158,28.934972/ province=Q534799:İstanbul / district=Q732923:Fatih',
@@ -8401,9 +10781,24 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q63348746 / 41.092950,29.039450/ province=Q534799:İstanbul / district=Q857107:Sarıyer',
     verifiedAt: 'generated',
   ),
+  'wd-q127418334-kaleici-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127418334 / 41.144569,28.457911/ province=Q534799:İstanbul / district=Q1968049:Çatalca (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q6036660-kamer-hatun-camii': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q6036660 / 41.035135,28.974958/ province=Q534799:İstanbul / district=Q217411:Beyoğlu',
+    verifiedAt: 'generated',
+  ),
+  'wd-q127418338-kandilli-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127418338 / 41.074116,29.058237/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q127418342-kaptan-pasa-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127418342 / 41.022839,29.012457/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q31190969-kaptan-ibrahim-aga-camii': SpotCoordinateVerificationEvidence(
@@ -8414,6 +10809,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q85971804-kaptaniderya-ibrahim-pasa-camii': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q85971804 / 41.012806,28.962306/ province=Q534799:İstanbul / district=Q732923:Fatih',
+    verifiedAt: 'generated',
+  ),
+  'wd-q127418347-kara-davut-pasa-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127418347 / 41.023121,29.016209/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q135429686-karaagalar-mescidi': SpotCoordinateVerificationEvidence(
@@ -8431,9 +10831,19 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q6374536 / 41.029000,28.939000/ province=Q534799:İstanbul / district=Q732923:Fatih',
     verifiedAt: 'generated',
   ),
+  'wd-q127418365-kavak-iskelesi-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127418365 / 41.003659,29.015894/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q127418366-kayalar-mescidi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q127418366 / 41.080361,29.052294/ province=Q534799:İstanbul / district=Q459495:Beşiktaş',
+    verifiedAt: 'generated',
+  ),
+  'wd-q127418368-kaymak-mustafa-pasa-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127418368 / 41.057214,29.053211/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q6024844-kazanci-camii': SpotCoordinateVerificationEvidence(
@@ -8456,9 +10866,24 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q25472937 / 41.022647,28.976711/ province=Q534799:İstanbul / district=Q217411:Beyoğlu',
     verifiedAt: 'generated',
   ),
+  'wd-q127418377-kerime-hatun-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127418377 / 41.050949,29.054658/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q127418379-kethuda-carsi-camii': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q127418379 / 40.990022,29.025224/ province=Q534799:İstanbul / district=Q932886:Kadıköy',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6060925-kurban-nasuh-baba-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6060925 / 41.018754,29.019745/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q127418393-kuzguncuk-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127418393 / 41.036936,29.030549/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q6028102-kurkcubasi-ahmet-semsettin-camii': SpotCoordinateVerificationEvidence(
@@ -8471,9 +10896,24 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q2719794 / 41.045280,29.017017/ province=Q534799:İstanbul / district=Q459495:Beşiktaş',
     verifiedAt: 'generated',
   ),
+  'wd-q127418396-kucuk-selimiye-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127418396 / 41.012902,29.017543/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q127418395-kucuk-ihsaniye-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127418395 / 41.015219,29.011945/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q862848-kilic-ali-pasa-camii': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q862848 / 41.026373,28.980928/ province=Q534799:İstanbul / district=Q217411:Beyoğlu',
+    verifiedAt: 'generated',
+  ),
+  'wd-q127418381-kisikli-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127418381 / 41.022379,29.064009/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q127418403-leblebici-camii': SpotCoordinateVerificationEvidence(
@@ -8494,6 +10934,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q3561109-manastir-mescidi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q3561109 / 41.017371,28.928407/ province=Q534799:İstanbul / district=Q732923:Fatih',
+    verifiedAt: 'generated',
+  ),
+  'wd-q21526567-marmara-universitesi-ilahiyat-fakultesi-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q21526567 / 41.020853,29.037600/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q135630310-mehmet-hasircilar-camii': SpotCoordinateVerificationEvidence(
@@ -8561,6 +11006,21 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q60785191 / 41.010266,28.949001/ province=Q534799:İstanbul / district=Q732923:Fatih',
     verifiedAt: 'generated',
   ),
+  'wd-q6056837-muderris-abdulbaki-efendi-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6056837 / 41.027438,29.020337/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6061020-nalcaci-halil-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6061020 / 41.016472,29.019861/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q127418456-namazgah-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127418456 / 41.023146,29.080552/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q6056382-nisanci-mehmet-pasa-camii': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q6056382 / 41.024139,28.944917/ province=Q534799:İstanbul / district=Q732923:Fatih',
@@ -8606,6 +11066,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q12811493 / 40.996361,29.030056/ province=Q534799:İstanbul / district=Q932886:Kadıköy',
     verifiedAt: 'generated',
   ),
+  'wd-q1572444-rum-mehmet-pasa-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q1572444 / 41.024651,29.010859/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q127418496-rumelifeneri-yeni-cami': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q127418496 / 41.233761,29.111534/ province=Q534799:İstanbul / district=Q857107:Sarıyer',
@@ -8626,6 +11091,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q127418501 / 40.980422,29.077104/ province=Q534799:İstanbul / district=Q932886:Kadıköy',
     verifiedAt: 'generated',
   ),
+  'wd-q20476395-salacak-fatih-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q20476395 / 41.020978,29.007969/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q21526905-sancaklar-camii': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q21526905 / 41.089000,28.601580/ province=Q534799:İstanbul / district=Q840258:Büyükçekmece',
@@ -8636,9 +11106,19 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q514563 / 41.002750,28.934667/ province=Q534799:İstanbul / district=Q732923:Fatih',
     verifiedAt: 'generated',
   ),
+  'wd-q127418517-selami-ali-efendi-tekkesi-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127418517 / 41.024322,29.023588/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q127418519-selime-hatun-camii': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q127418519 / 41.034721,28.988973/ province=Q534799:İstanbul / district=Q217411:Beyoğlu',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6056669-selman-aga-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6056669 / 41.025606,29.015978/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q20476707-serbostani-mustafa-aga-camii': SpotCoordinateVerificationEvidence(
@@ -8666,6 +11146,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q6049801 / 41.022222,28.576111/ province=Q534799:İstanbul / district=Q840258:Büyükçekmece',
     verifiedAt: 'generated',
   ),
+  'wd-q127418537-solak-sinan-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127418537 / 41.023726,29.022201/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q6022177-sultan-mustafa-camii': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q6022177 / 40.990778,29.023833/ province=Q534799:İstanbul / district=Q932886:Kadıköy',
@@ -8679,6 +11164,16 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q127418544-suleyman-subasi-camii': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q127418544 / 41.021622,28.962948/ province=Q534799:İstanbul / district=Q732923:Fatih',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6055439-tabaklar-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6055439 / 41.017613,29.020489/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q127418213-tahir-efendi-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127418213 / 41.009188,29.012872/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q31190329-taksim-camii': SpotCoordinateVerificationEvidence(
@@ -8714,6 +11209,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q6020772-tutuncu-mehmet-efendi-camii': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q6020772 / 40.978889,29.066194/ province=Q534799:İstanbul / district=Q932886:Kadıköy',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6061966-vanikoy-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6061966 / 41.064111,29.055222/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q246275-vefa-kilise-camii': SpotCoordinateVerificationEvidence(
@@ -8771,9 +11271,34 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q6019534 / 40.983990,29.040130/ province=Q534799:İstanbul / district=Q932886:Kadıköy',
     verifiedAt: 'generated',
   ),
+  'wd-q18341384-camlica-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q18341384 / 41.034300,29.070400/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q12812755-cavusbasi-camii': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q12812755 / 41.049028,28.941500/ province=Q534799:İstanbul / district=Q217411:Beyoğlu',
+    verifiedAt: 'generated',
+  ),
+  'wd-q126453770-cingene-firini-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q126453770 / 41.024056,29.018306/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q18515442-cinili-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q18515442 / 41.019900,29.029200/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q113407484-uryanizade-ahmet-esat-efendi-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q113407484 / 41.039529,29.034433/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q16825097-uskudar-selimiye-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q16825097 / 41.009700,29.016600/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q6019417-ucmihrapli-camii': SpotCoordinateVerificationEvidence(
@@ -8826,6 +11351,21 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q127418548 / 41.027290,28.974411/ province=Q534799:İstanbul / district=Q217411:Beyoğlu',
     verifiedAt: 'generated',
   ),
+  'wd-q2705343-sakirin-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q2705343 / 41.013100,29.024400/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q135631507-sehit-onur-ensar-ayanoglu-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q135631507 / 41.027314,29.062385/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q127418551-sehitlik-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127418551 / 41.010735,29.025460/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q127418555-sehsuvar-camii': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q127418555 / 41.026732,28.973012/ province=Q534799:İstanbul / district=Q217411:Beyoğlu',
@@ -8834,6 +11374,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q127418557-senlik-dede-mescidi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q127418557 / 41.044682,28.999049/ province=Q534799:İstanbul / district=Q459495:Beşiktaş',
+    verifiedAt: 'generated',
+  ),
+  'wd-q127418561-seyh-nevruz-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127418561 / 41.046357,29.053626/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q8082507-seyh-suleyman-mescidi': SpotCoordinateVerificationEvidence(
@@ -8984,6 +11529,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q135392797-emine-adalet-pee-heykeli': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q135392797 / 40.921425,29.129858/ province=Q534799:İstanbul / district=Q739547:Maltepe',
+    verifiedAt: 'generated',
+  ),
+  'wd-q134728566-emine-sultan-kosku-anitsal-kapisi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q134728566 / 41.032955,29.036640/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q124343745-hadika-tasi': SpotCoordinateVerificationEvidence(
@@ -9246,9 +11796,19 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q116037185 / 41.027431,28.956755/ province=Q534799:İstanbul / district=Q732923:Fatih',
     verifiedAt: 'generated',
   ),
+  'wd-q97403030-ayios-panteleimon-rum-ortodoks-kilisesi-kuzguncu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q97403030 / 41.034444,29.030278/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q131526464-ayios-yeoryios-kiparissas-kilisesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q131526464 / 41.000885,28.933419/ province=Q534799:İstanbul / district=Q732923:Fatih',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131539155-ayios-yeoryios-rum-ortodoks-kilisesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131539155 / 41.051324,29.052470/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q25475109-ayvansaray-aya-dimitri-kilisesi': SpotCoordinateVerificationEvidence(
@@ -9381,6 +11941,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q55206268 / 41.061083,29.035361/ province=Q534799:İstanbul / district=Q459495:Beşiktaş',
     verifiedAt: 'generated',
   ),
+  'wd-q97353663-kuzguncuk-agios-georgios-rum-ortodoks-kilisesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q97353663 / 41.036178,29.029731/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q5185447-kirim-kilisesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q5185447 / 41.027700,28.977100/ province=Q534799:İstanbul / district=Q217411:Beyoğlu',
@@ -9511,6 +12076,16 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q131526469 / 41.162255,29.046930/ province=Q534799:İstanbul / district=Q857107:Sarıyer',
     verifiedAt: 'generated',
   ),
+  'wd-q20471257-surp-garabet-ermeni-kilisesi-istanbul': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q20471257 / 41.020897,29.031081/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q20471279-surp-hac-ermeni-kilisesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q20471279 / 41.024812,29.030601/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q20471287-surp-hiresdagabed-kilisesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q20471287 / 41.033867,28.945486/ province=Q534799:İstanbul / district=Q732923:Fatih',
@@ -9606,6 +12181,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q20477010 / 40.956917,28.820528/ province=Q534799:İstanbul / district=Q752528:Bakırköy',
     verifiedAt: 'generated',
   ),
+  'wd-q97162737-uskudar-surp-krikor-lusavoric-kilisesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q97162737 / 41.036667,29.030278/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q131526467-ioannis-prodromos-rum-kilisesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q131526467 / 41.171875,29.061270/ province=Q534799:İstanbul / district=Q857107:Sarıyer',
@@ -9671,6 +12251,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q24915681 / 41.140556,29.027500/ province=Q534799:İstanbul / district=Q857107:Sarıyer',
     verifiedAt: 'generated',
   ),
+  'wd-q24896928-cilingoz-tabiat-parki': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q24896928 / 41.444167,28.204167/ province=Q534799:İstanbul / district=Q1968049:Çatalca (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q20470393-adalet-kulesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q20470393 / 41.012379,28.983259/ province=Q534799:İstanbul / district=Q732923:Fatih',
@@ -9721,6 +12306,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q7070378 / 41.026711,28.982875/ province=Q534799:İstanbul / district=Q217411:Beyoğlu',
     verifiedAt: 'generated',
   ),
+  'wd-q134497121-validebag-guvercinlik-kosku': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q134497121 / 41.017075,29.043639/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q135429537-yedikule-hisari-cephanelik-kulesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q135429537 / 40.993137,28.922388/ province=Q534799:İstanbul / district=Q732923:Fatih',
@@ -9744,6 +12334,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q135429536-yedikule-hisari-zindan-kulesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q135429536 / 40.993324,28.924164/ province=Q534799:İstanbul / district=Q732923:Fatih',
+    verifiedAt: 'generated',
+  ),
+  'wd-q1407350-camlica-televizyon-kulesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q1407350 / 41.026078,29.068462/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q135429071-irene-kulesi': SpotCoordinateVerificationEvidence(
@@ -10391,9 +12986,19 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q118581407 / 41.001917,28.933389/ province=Q534799:İstanbul / district=Q732923:Fatih',
     verifiedAt: 'generated',
   ),
+  'wd-q2368617-surp-hac-tibrevank-ermeni-lisesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q2368617 / 41.024300,29.031050/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q6537899-yarimburgaz-magarasi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q6537899 / 41.075400,28.741600/ province=Q534799:İstanbul / district=Q791607:Başakşehir',
+    verifiedAt: 'generated',
+  ),
+  'wd-q38251235-incegiz-magaralari': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q38251235 / 41.181667,28.404167/ province=Q534799:İstanbul / district=Q1968049:Çatalca (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q137560151-at-pazari-meydani': SpotCoordinateVerificationEvidence(
@@ -10434,6 +13039,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q25477354-yenikapi-meydani': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q25477354 / 40.998611,28.945556/ province=Q534799:İstanbul / district=Q732923:Fatih',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6021092-uskudar-meydani': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6021092 / 41.026705,29.014959/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q1059699-500-yil-vakfi-turk-musevileri-muzesi': SpotCoordinateVerificationEvidence(
@@ -10526,6 +13136,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q6090478 / 41.028028,28.975125/ province=Q534799:İstanbul / district=Q217411:Beyoğlu',
     verifiedAt: 'generated',
   ),
+  'wd-q112231038-hafiza-15-temmuz': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q112231038 / 41.037111,29.041444/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q132560365-haldun-taner-muze-evi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q132560365 / 40.976204,29.047121/ province=Q534799:İstanbul / district=Q932886:Kadıköy',
@@ -10581,11 +13196,6 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q15228896 / 41.014850,28.973610/ province=Q534799:İstanbul / district=Q732923:Fatih',
     verifiedAt: 'generated',
   ),
-  'wd-q6090202-panorama-1453-tarih-muzesi': SpotCoordinateVerificationEvidence(
-    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
-    sourceRef: 'Q6090202 / 41.018182,28.920525/ province=Q534799:İstanbul / district=Q197095:Zeytinburnu',
-    verifiedAt: 'generated',
-  ),
   'wd-q1662392-pera-muzesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q1662392 / 41.031806,28.975194/ province=Q534799:İstanbul / district=Q217411:Beyoğlu',
@@ -10639,6 +13249,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q132681871-zeytinburnu-mozaik-muzesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q132681871 / 40.987038,28.908140/ province=Q534799:İstanbul / district=Q197095:Zeytinburnu',
+    verifiedAt: 'generated',
+  ),
+  'wd-q112584921-catalca-mubadele-muzesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q112584921 / 41.143787,28.457228/ province=Q534799:İstanbul / district=Q1968049:Çatalca (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q30623170-ismet-inonu-evi-muzesi': SpotCoordinateVerificationEvidence(
@@ -10726,6 +13341,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q109416717 / 41.041527,29.006526/ province=Q534799:İstanbul / district=Q459495:Beşiktaş',
     verifiedAt: 'generated',
   ),
+  'wd-q133826188-beylerbeyi-parki': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q133826188 / 41.043434,29.042655/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q123594731-cundi-parki': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q123594731 / 41.003874,28.970121/ province=Q534799:İstanbul / district=Q732923:Fatih',
@@ -10744,6 +13364,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q65219354-goztepe-60-yil-parki': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q65219354 / 40.969722,29.057778/ province=Q534799:İstanbul / district=Q932886:Kadıköy',
+    verifiedAt: 'generated',
+  ),
+  'wd-q133822747-havuzbasi-parki': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q133822747 / 41.046978,29.053574/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q123594734-kadirga-parki': SpotCoordinateVerificationEvidence(
@@ -10789,6 +13414,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q124000074-tosun-terzioglu-bahcesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q124000074 / 40.890556,29.377222/ province=Q534799:İstanbul / district=Q938548:Tuzla',
+    verifiedAt: 'generated',
+  ),
+  'wd-q12812584-yasam-vadisi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q12812584 / 41.007778,28.635556/ province=Q534799:İstanbul / district=Q49101303:Beylikdüzü (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q106333372-ozgurluk-parki': SpotCoordinateVerificationEvidence(
@@ -10851,9 +13481,9 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q3404698 / 41.014583,28.977250/ province=Q534799:İstanbul / district=Q732923:Fatih',
     verifiedAt: 'generated',
   ),
-  'wd-q6065399-bet-yaakov-sinagogu': SpotCoordinateVerificationEvidence(
+  'wd-q4897165-bet-yaakov-sinagogu': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
-    sourceRef: 'Q6065399 / 40.878500,29.098556/ province=Q534799:İstanbul / district=Q14814766:Adalar',
+    sourceRef: 'Q4897165 / 41.036378,29.029594/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q3409797-etz-ahayim-sinagogu': SpotCoordinateVerificationEvidence(
@@ -10926,6 +13556,16 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q131738576 / 41.012141,28.958782/ province=Q534799:İstanbul / district=Q732923:Fatih',
     verifiedAt: 'generated',
   ),
+  'wd-q131738579-altunizade-ismail-pasa-hamami': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131738579 / 41.020070,29.045204/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131738577-atik-valide-sultan-hamami-uskudar': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131738577 / 41.023804,29.015949/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q131738574-ayakapi-hamami': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q131738574 / 41.028049,28.955577/ province=Q534799:İstanbul / district=Q732923:Fatih',
@@ -10946,9 +13586,19 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q121509205 / 41.134654,29.092119/ province=Q534799:İstanbul / district=Q794351:Beykoz',
     verifiedAt: 'generated',
   ),
+  'wd-q12808839-beylerbeyi-hamami': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q12808839 / 41.044944,29.045944/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q124413393-besiktas-hamami': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q124413393 / 41.044032,29.003195/ province=Q534799:İstanbul / district=Q459495:Beşiktaş',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131738622-bulgurlu-hamami': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131738622 / 41.018736,29.070892/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q119791881-buyuk-hamami': SpotCoordinateVerificationEvidence(
@@ -11009,6 +13659,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q115630149-koceoglu-hamami': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q115630149 / 40.987417,29.028528/ province=Q534799:İstanbul / district=Q932886:Kadıköy',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131738624-kucuk-hamam': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131738624 / 41.026177,29.015794/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q121464930-kucuk-mustafa-pasa-hamami': SpotCoordinateVerificationEvidence(
@@ -11081,9 +13736,19 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q128412143 / 41.018120,28.956440/ province=Q534799:İstanbul / district=Q732923:Fatih',
     verifiedAt: 'generated',
   ),
+  'wd-q87349567-selimiye-hamami': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q87349567 / 41.010487,29.016842/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q8077658-cemberlitas-hamami': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q8077658 / 41.008526,28.971744/ province=Q534799:İstanbul / district=Q732923:Fatih',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131738607-cinili-hamami': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131738607 / 41.019785,29.028341/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q131738570-ishak-pasa-hamami': SpotCoordinateVerificationEvidence(
@@ -11094,6 +13759,16 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q135000519-mezar-kalintisi-kucukcekmece': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q135000519 / 40.991020,28.770516/ province=Q534799:İstanbul / district=Q639240:Küçükçekmece',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131403389-cavusdere-koprusu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131403389 / 41.019848,29.020557/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q134734881-ayazma-camii-haziresi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q134734881 / 41.022453,29.008978/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q133246766-ayrilik-cesmesi-mezarligi': SpotCoordinateVerificationEvidence(
@@ -11119,6 +13794,16 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q134734673-barbaros-hayrettin-pasa-turbesi-haziresi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q134734673 / 41.041880,29.006761/ province=Q534799:İstanbul / district=Q459495:Beşiktaş',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6028021-bulbuldere-mezarligi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6028021 / 41.026150,29.024819/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q134734947-buyuk-selimiye-camii-haziresi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q134734947 / 41.009483,29.016733/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q115864926-buyukada-rum-ortodoks-mezarligi': SpotCoordinateVerificationEvidence(
@@ -11176,6 +13861,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q19458352 / 41.048333,28.971667/ province=Q534799:İstanbul / district=Q390637:Şişli',
     verifiedAt: 'generated',
   ),
+  'wd-q134734709-hazire-bulgurlu-caddesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q134734709 / 41.016999,29.072885/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q115687468-kadikoy-ermeni-mezarligi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q115687468 / 40.999097,29.047064/ province=Q534799:İstanbul / district=Q932886:Kadıköy',
@@ -11196,6 +13886,16 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q6009594 / 41.097260,29.066020/ province=Q534799:İstanbul / district=Q794351:Beykoz',
     verifiedAt: 'generated',
   ),
+  'wd-q134734783-karakadi-alaaddin-camii-haziresi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q134734783 / 41.024048,29.018549/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q134734936-kartal-baba-tekkesi-haziresi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q134734936 / 41.016075,29.028833/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q134734955-kazabadi-ahmet-efendi-kabristani': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q134734955 / 41.008575,28.946430/ province=Q534799:İstanbul / district=Q732923:Fatih',
@@ -11206,14 +13906,19 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q133246609 / 40.991512,28.913156/ province=Q534799:İstanbul / district=Q197095:Zeytinburnu',
     verifiedAt: 'generated',
   ),
-  'wd-q111134568-kozlu-mezarligi': SpotCoordinateVerificationEvidence(
-    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
-    sourceRef: 'Q111134568 / 41.009797,28.920565/ province=Q534799:İstanbul / district=Q197095:Zeytinburnu',
-    verifiedAt: 'generated',
-  ),
   'wd-q116487024-kurtkoy-mezarligi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q116487024 / 40.909770,29.307040/ province=Q534799:İstanbul / district=Q857056:Pendik',
+    verifiedAt: 'generated',
+  ),
+  'wd-q134735142-kostendilli-ali-aleaddin-efendi-turbesi-ve-hazir': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q134735142 / 41.024483,29.023529/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q134734916-kucuk-selimiye-camii-haziresi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q134734916 / 41.012599,29.017790/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q134735117-mahmut-baba-turbesi-haziresi': SpotCoordinateVerificationEvidence(
@@ -11236,9 +13941,29 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q6819633 / 41.015370,28.920840/ province=Q534799:İstanbul / district=Q197095:Zeytinburnu',
     verifiedAt: 'generated',
   ),
+  'wd-q134734869-mihrimah-sultan-camii-haziresi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q134734869 / 41.026920,29.016272/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q134735016-murat-pasa-camii-haziresi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q134735016 / 41.010063,28.949192/ province=Q534799:İstanbul / district=Q732923:Fatih',
+    verifiedAt: 'generated',
+  ),
+  'wd-q116507961-nakkas-baba-mezarligi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q116507961 / 41.037332,29.035087/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q139719978-nakkastepe-jewish-cemetery': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q139719978 / 41.030212,29.039313/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q134734712-nasuhi-tekkesi-haziresi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q134734712 / 41.018081,29.013507/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q134734944-nuh-efendi-medresesi-haziresi': SpotCoordinateVerificationEvidence(
@@ -11251,6 +13976,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q134734903 / 41.010349,28.952536/ province=Q534799:İstanbul / district=Q732923:Fatih',
     verifiedAt: 'generated',
   ),
+  'wd-q134734956-rum-mehmet-pasa-camii-haziresi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q134734956 / 41.024544,29.010654/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q134734819-safiye-sultanzadeler-haziresi-besiktas': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q134734819 / 41.041740,29.003488/ province=Q534799:İstanbul / district=Q459495:Beşiktaş',
@@ -11259,6 +13989,16 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q6014321-sahrayicedid-mezarligi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q6014321 / 40.984169,29.076669/ province=Q534799:İstanbul / district=Q932886:Kadıköy',
+    verifiedAt: 'generated',
+  ),
+  'wd-q134734961-sacli-halil-efendi-haziresi-uskudar': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q134734961 / 41.020008,29.019295/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q134735191-selami-ali-efendi-turbesi-ve-haziresi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q134735191 / 41.024237,29.064183/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q134735040-seyyid-baba-tekkesi-haziresi': SpotCoordinateVerificationEvidence(
@@ -11296,6 +14036,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q134735126 / 41.016221,28.959916/ province=Q534799:İstanbul / district=Q732923:Fatih',
     verifiedAt: 'generated',
   ),
+  'wd-q134734968-yeni-valide-camii-haziresi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q134734968 / 41.024480,29.015325/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q20476965-yenikapi-mevlevihanesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q20476965 / 41.014528,28.917056/ province=Q534799:İstanbul / district=Q197095:Zeytinburnu',
@@ -11321,6 +14066,26 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q133246677 / 41.136009,29.088390/ province=Q534799:İstanbul / district=Q794351:Beykoz',
     verifiedAt: 'generated',
   ),
+  'wd-q6078142-ozbekler-tekkesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6078142 / 41.028361,29.024461/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q134734958-ozbekler-tekkesi-haziresi-uskudar': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q134734958 / 41.028702,29.024775/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q20476952-uskudar-mevlevihanesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q20476952 / 41.022583,29.010694/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q134735034-imrahor-camii-haziresi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q134735034 / 41.021637,29.010017/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q133246656-incirkoy-mezarligi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q133246656 / 41.119801,29.097452/ province=Q534799:İstanbul / district=Q794351:Beykoz',
@@ -11339,6 +14104,16 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q134735078-seyh-ebul-vefa-camii-haziresi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q134735078 / 41.016792,28.959358/ province=Q534799:İstanbul / district=Q732923:Fatih',
+    verifiedAt: 'generated',
+  ),
+  'wd-q134734787-seyh-fethullah-tekkesi-haziresi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q134734787 / 41.019211,29.016790/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q134734757-seyh-muhammed-cibavi-tekkesi-haziresi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q134734757 / 41.018414,29.016970/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q8082557-sisli-ermeni-mezarligi': SpotCoordinateVerificationEvidence(
@@ -11656,6 +14431,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q135035201 / 40.994782,28.929455/ province=Q534799:İstanbul / district=Q732923:Fatih',
     verifiedAt: 'generated',
   ),
+  'wd-q133504507-pasalimani-karakolu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q133504507 / 41.031718,29.021964/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q23586307-riva-kalesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q23586307 / 41.224000,29.217300/ province=Q534799:İstanbul / district=Q794351:Beykoz',
@@ -11726,6 +14506,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q4809463 / 41.045600,28.896300/ province=Q534799:İstanbul / district=Q791567:Bayrampaşa',
     verifiedAt: 'generated',
   ),
+  'wd-q28657490-camlica-kulesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q28657490 / 41.016444,29.065472/ province=Q534799:İstanbul / district=Q49110521:Üsküdar (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q2859182-istanbul-akvaryum': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q2859182 / 40.964167,28.800000/ province=Q534799:İstanbul / district=Q752528:Bakırköy',
@@ -11756,6 +14541,16 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q49640088 / 38.733333,26.733333/ province=Q344490:İzmir / district=Q1921294:Foça',
     verifiedAt: 'generated',
   ),
+  'wd-q30635900-mardalic-adasi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q30635900 / 38.916667,26.816667/ province=Q344490:İzmir / district=Q49102848:Dikili (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q30632393-yassica-ada': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q30632393 / 38.410220,26.795180/ province=Q344490:İzmir / district=Q2343342:Urla (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q5995441-ali-pasa-sadirvani': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q5995441 / 38.419333,27.132889/ province=Q344490:İzmir / district=Q1871530:Konak (ilçe)',
@@ -11766,6 +14561,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q67141514 / 39.118153,27.179694/ province=Q344490:İzmir / district=Q737822:Bergama',
     verifiedAt: 'generated',
   ),
+  'wd-q131390837-alihan-dede-turbesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131390837 / 38.084895,27.736958/ province=Q344490:İzmir / district=Q2747929:Tire (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q67141714-alp-sokak-cesmesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q67141714 / 39.122911,27.183817/ province=Q344490:İzmir / district=Q737822:Bergama',
@@ -11774,6 +14574,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q67141688-alp-cikmazi-cesmesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q67141688 / 39.123289,27.184153/ province=Q344490:İzmir / district=Q737822:Bergama',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131391386-anonim-turbe-1': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131391386 / 37.948982,27.363113/ province=Q344490:İzmir / district=Q1966755:Selçuk (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q48816032-ataturk-maski': SpotCoordinateVerificationEvidence(
@@ -11789,6 +14594,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q4946148-bornova-ingiliz-mezarligi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q4946148 / 38.459540,27.210650/ province=Q344490:İzmir / district=Q894012:Bornova',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131390552-cagaloglu-ali-pasa-turbesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131390552 / 38.084949,27.733148/ province=Q344490:İzmir / district=Q2747929:Tire (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q28220907-cezayirli-gazi-hasan-pasa-aniti': SpotCoordinateVerificationEvidence(
@@ -11856,6 +14666,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q122356320 / 38.390306,27.067694/ province=Q344490:İzmir / district=Q3123584:Karabağlar',
     verifiedAt: 'generated',
   ),
+  'wd-q122395199-meryem-ana-heykeli': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q122395199 / 37.930861,27.344889/ province=Q344490:İzmir / district=Q1966755:Selçuk (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q67141398-muderris-cevdet-sokak-cesmesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q67141398 / 39.119703,27.181981/ province=Q344490:İzmir / district=Q737822:Bergama',
@@ -11879,6 +14694,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q117289726-turk-denizcileri-aniti': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q117289726 / 38.399806,27.079694/ province=Q344490:İzmir / district=Q1871530:Konak (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q109389893-urla-mermerli-cesme': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q109389893 / 38.322194,26.767908/ province=Q344490:İzmir / district=Q2343342:Urla (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q126888016-ucan-yunuslar-heykeli': SpotCoordinateVerificationEvidence(
@@ -11951,9 +14771,29 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q6086051 / 38.449444,27.110833/ province=Q344490:İzmir / district=Q2670720:Karşıyaka',
     verifiedAt: 'generated',
   ),
+  'wd-q104772347-arcadiane': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q104772347 / 37.941850,27.340440/ province=Q344490:İzmir / district=Q1966755:Selçuk (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q16676981-archaeological-site-of-ephesus': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q16676981 / 37.941700,27.343300/ province=Q344490:İzmir / district=Q1966755:Selçuk (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q104629988-artemision': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q104629988 / 37.949722,27.363889/ province=Q344490:İzmir / district=Q1966755:Selçuk (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q105232353-athena-tapinagi-bergama': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q105232353 / 39.131667,27.183889/ province=Q344490:İzmir / district=Q737822:Bergama',
+    verifiedAt: 'generated',
+  ),
+  'wd-q76533658-bazilika-stoa': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q76533658 / 37.936736,27.344429/ province=Q344490:İzmir / district=Q1966755:Selçuk (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q116671676-bergama-agorasi': SpotCoordinateVerificationEvidence(
@@ -11966,9 +14806,39 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q630373 / 39.118857,27.165475/ province=Q344490:İzmir / district=Q737822:Bergama',
     verifiedAt: 'generated',
   ),
+  'wd-q744406-celsus-kutuphanesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q744406 / 37.939139,27.340750/ province=Q344490:İzmir / district=Q1966755:Selçuk (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q77071662-devlet-agorasi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q77071662 / 37.936553,27.344374/ province=Q344490:İzmir / district=Q1966755:Selçuk (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q97341108-devlet-agorasindaki-tapinak': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q97341108 / 37.936475,27.343909/ province=Q344490:İzmir / district=Q1966755:Selçuk (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q105232430-dionysos-tapinagi-bergama': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q105232430 / 39.132222,27.182500/ province=Q344490:İzmir / district=Q737822:Bergama',
+    verifiedAt: 'generated',
+  ),
+  'wd-q77071353-efes-agorasi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q77071353 / 37.940042,27.341101/ province=Q344490:İzmir / district=Q1966755:Selçuk (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q15723477-efes-tiyatrosu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q15723477 / 37.941010,27.342730/ province=Q344490:İzmir / district=Q1966755:Selçuk (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q14540869-efes-varius-hamami': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q14540869 / 37.938800,27.342130/ province=Q344490:İzmir / district=Q1966755:Selçuk (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q723091-erithrai': SpotCoordinateVerificationEvidence(
@@ -11976,9 +14846,19 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q723091 / 38.381944,26.479047/ province=Q344490:İzmir / district=Q1911051:Çeşme (ilçe)',
     verifiedAt: 'generated',
   ),
-  'wd-q969347-gryneion': SpotCoordinateVerificationEvidence(
+  'wd-q104772346-guney-kapisi-agora': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
-    sourceRef: 'Q969347 / 38.874444,27.069167/ province=Q344490:İzmir / district=Q996748:Aliağa',
+    sourceRef: 'Q104772346 / 37.939281,27.341080/ province=Q344490:İzmir / district=Q1966755:Selçuk (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q104641901-hadrianus-kapisi-yeni-triodos-kapisi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q104641901 / 37.938897,27.341223/ province=Q344490:İzmir / district=Q1966755:Selçuk (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q2581040-hadrianus-tapinagi-embolos': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q2581040 / 37.938500,27.341944/ province=Q344490:İzmir / district=Q1966755:Selçuk (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q1404388-karabel-kaya-kabartmasi': SpotCoordinateVerificationEvidence(
@@ -11991,6 +14871,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q1933754 / 38.005000,27.193056/ province=Q344490:İzmir / district=Q2005403:Menderes (ilçe)',
     verifiedAt: 'generated',
   ),
+  'wd-q104641898-kuretler-caddesi-embolos': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q104641898 / 37.937807,27.342609/ province=Q344490:İzmir / district=Q1966755:Selçuk (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q679305-kyme': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q679305 / 38.759167,26.936389/ province=Q344490:İzmir / district=Q996748:Aliağa',
@@ -11999,6 +14884,36 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q2168194-kizil-avlu': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q2168194 / 39.121944,27.183333/ province=Q344490:İzmir / district=Q737822:Bergama',
+    verifiedAt: 'generated',
+  ),
+  'wd-q97341255-liman-hamamlari': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q97341255 / 37.943599,27.337551/ province=Q344490:İzmir / district=Q1966755:Selçuk (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q4261739-limantepe': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q4261739 / 38.363333,26.775833/ province=Q344490:İzmir / district=Q2343342:Urla (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q65240640-lukas-mezari': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q65240640 / 37.934697,27.346374/ province=Q344490:İzmir / district=Q1966755:Selçuk (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q76640593-memmius-yapisi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q76640593 / 37.937212,27.343426/ province=Q344490:İzmir / district=Q1966755:Selçuk (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q104641903-mermer-cadde': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q104641903 / 37.939700,27.341519/ province=Q344490:İzmir / district=Q1966755:Selçuk (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q2450228-meryem-kilisesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q2450228 / 37.944939,27.339203/ province=Q344490:İzmir / district=Q1966755:Selçuk (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q11938576-neonteikhos': SpotCoordinateVerificationEvidence(
@@ -12036,6 +14951,16 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q135959868 / 38.337055,27.135887/ province=Q344490:İzmir / district=Q1496685:Gaziemir',
     verifiedAt: 'generated',
   ),
+  'wd-q930613-st-jean-bazilikasi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q930613 / 37.952500,27.367778/ province=Q344490:İzmir / district=Q1966755:Selçuk (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q97341090-stadion': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q97341090 / 37.945853,27.346469/ province=Q344490:İzmir / district=Q1966755:Selçuk (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q17586-teos': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q17586 / 38.177222,26.785000/ province=Q344490:İzmir / district=Q2523774:Seferihisar',
@@ -12051,6 +14976,46 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q17631591 / 38.772883,27.065592/ province=Q344490:İzmir / district=Q996748:Aliağa',
     verifiedAt: 'generated',
   ),
+  'wd-q97341288-tiyatro-gymnasionu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q97341288 / 37.942293,27.341786/ province=Q344490:İzmir / district=Q1966755:Selçuk (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q2006145-traianus-cesmesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q2006145 / 37.938080,27.342530/ province=Q344490:İzmir / district=Q1966755:Selçuk (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q1575495-yamac-evler-efes': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q1575495 / 37.938056,27.341389/ province=Q344490:İzmir / district=Q1966755:Selçuk (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q97341291-yamac-evler-2': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q97341291 / 37.938382,27.341347/ province=Q344490:İzmir / district=Q1966755:Selçuk (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q76639564-yukari-gymnasion-devlet-agorasi-hamamlari': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q76639564 / 37.936480,27.345680/ province=Q344490:İzmir / district=Q1966755:Selçuk (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q76737664-cift-anitli-kutsal-alan': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q76737664 / 37.936959,27.344437/ province=Q344490:İzmir / district=Q1966755:Selçuk (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q16934218-imparatorlar-tapinagi-ve-sunagi-ile-domitianus-t': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q16934218 / 37.936523,27.342613/ province=Q344490:İzmir / district=Q1966755:Selçuk (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q1673689-isa-bey-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q1673689 / 37.952222,27.365833/ province=Q344490:İzmir / district=Q1966755:Selçuk (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q125217264-alacati-pazaryeri-camii': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q125217264 / 38.283667,26.375250/ province=Q344490:İzmir / district=Q1911051:Çeşme (ilçe)',
@@ -12061,9 +15026,19 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q132134123 / 38.414146,27.130571/ province=Q344490:İzmir / district=Q1871530:Konak (ilçe)',
     verifiedAt: 'generated',
   ),
+  'wd-q127633031-alpaslan-mescidi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127633031 / 37.951138,27.367918/ province=Q344490:İzmir / district=Q1966755:Selçuk (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q135629791-atiye-ali-cicek-camii': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q135629791 / 38.362333,26.874028/ province=Q344490:İzmir / district=Q1562333:Güzelbahçe',
+    verifiedAt: 'generated',
+  ),
+  'wd-q127634742-ayasuluk-kale-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127634742 / 37.955315,27.368069/ province=Q344490:İzmir / district=Q1966755:Selçuk (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q5995415-aydinoglu-mehmet-bey-camii': SpotCoordinateVerificationEvidence(
@@ -12096,9 +15071,19 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q25477410 / 38.668194,26.752028/ province=Q344490:İzmir / district=Q1921294:Foça',
     verifiedAt: 'generated',
   ),
+  'wd-q127643072-gazazhane-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127643072 / 38.085468,27.735918/ province=Q344490:İzmir / district=Q2747929:Tire (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q127643346-haci-hekim-camii': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q127643346 / 39.121079,27.179264/ province=Q344490:İzmir / district=Q737822:Bergama',
+    verifiedAt: 'generated',
+  ),
+  'wd-q111803160-haci-turhan-kapan-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q111803160 / 38.321556,26.768861/ province=Q344490:İzmir / district=Q2343342:Urla (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q127643468-hakim-efendi-camii': SpotCoordinateVerificationEvidence(
@@ -12131,6 +15116,21 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q68973941 / 38.413611,27.143056/ province=Q344490:İzmir / district=Q1871530:Konak (ilçe)',
     verifiedAt: 'generated',
   ),
+  'wd-q127786881-kara-hasan-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127786881 / 38.084808,27.732851/ province=Q344490:İzmir / district=Q2747929:Tire (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q127786882-kara-hayrettin-pasa-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127786882 / 38.082916,27.730791/ province=Q344490:İzmir / district=Q2747929:Tire (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q125376432-karakadi-necmettin-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q125376432 / 38.088417,27.742500/ province=Q344490:İzmir / district=Q2747929:Tire (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q31188685-kayalar-camii': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q31188685 / 38.669222,26.752278/ province=Q344490:İzmir / district=Q1921294:Foça',
@@ -12151,9 +15151,49 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q132134461 / 39.122231,27.183645/ province=Q344490:İzmir / district=Q737822:Bergama',
     verifiedAt: 'generated',
   ),
+  'wd-q125380576-lutfu-pasa-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q125380576 / 38.088333,27.733333/ province=Q344490:İzmir / district=Q2747929:Tire (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q125360923-molla-celebi-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q125360923 / 38.084000,27.743750/ province=Q344490:İzmir / district=Q2747929:Tire (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q125977477-pandrot-osman-aga-camii': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q125977477 / 38.322472,26.303056/ province=Q344490:İzmir / district=Q1911051:Çeşme (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q127788200-tahtakale-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127788200 / 38.086159,27.735350/ province=Q344490:İzmir / district=Q2747929:Tire (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q97947314-tire-ulu-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q97947314 / 38.083750,27.736361/ province=Q344490:İzmir / district=Q2747929:Tire (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q127788304-yahsibey-koyu-eski-cami': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127788304 / 39.031437,26.840681/ province=Q344490:İzmir / district=Q49102848:Dikili (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q127788313-yalinayak-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127788313 / 38.082962,27.732267/ province=Q344490:İzmir / district=Q2747929:Tire (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q135581992-yayla-fakih-mescidi-tire': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q135581992 / 38.083321,27.732517/ province=Q344490:İzmir / district=Q2747929:Tire (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q125379895-yeni-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q125379895 / 38.085583,27.736389/ province=Q344490:İzmir / district=Q2747929:Tire (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q25476544-corakkapi-camii': SpotCoordinateVerificationEvidence(
@@ -12169,6 +15209,16 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q124668745-sehitlik-camii': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q124668745 / 38.395889,26.999861/ province=Q344490:İzmir / district=Q643505:Narlıdere',
+    verifiedAt: 'generated',
+  ),
+  'wd-q138048812-seyh-ahmet-camii-izmir': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q138048812 / 38.365049,26.707017/ province=Q344490:İzmir / district=Q2343342:Urla (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q132134297-seyh-husamettin-camii-tire': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q132134297 / 38.086937,27.734716/ province=Q344490:İzmir / district=Q2747929:Tire (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q21523662-golcuk-golu': SpotCoordinateVerificationEvidence(
@@ -12281,6 +15331,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q20472767 / 38.669218,26.750818/ province=Q344490:İzmir / district=Q1921294:Foça',
     verifiedAt: 'generated',
   ),
+  'wd-q21523779-candarli-kalesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q21523779 / 38.933806,26.933694/ province=Q344490:İzmir / district=Q49102848:Dikili (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q28221175-cesme-kalesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q28221175 / 38.323611,26.303611/ province=Q344490:İzmir / district=Q1911051:Çeşme (ilçe)',
@@ -12304,6 +15359,16 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q124745043-ayios-haralambos-kilisesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q124745043 / 38.325250,26.304278/ province=Q344490:İzmir / district=Q1911051:Çeşme (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q130283985-aziz-demetrius-kilisesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q130283985 / 37.943539,27.431648/ province=Q344490:İzmir / district=Q1966755:Selçuk (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q124749792-aziz-john-baptist-kilisesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q124749792 / 37.941528,27.432056/ province=Q344490:İzmir / district=Q1966755:Selçuk (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q41806732-aziz-vukolos-kilisesi': SpotCoordinateVerificationEvidence(
@@ -12359,6 +15424,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q48791846-karagol-tabiat-parki': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q48791846 / 38.556853,27.219067/ province=Q344490:İzmir / district=Q49106391:Menemen (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q108228123-meryemana-tabiat-parki': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q108228123 / 37.920833,27.328056/ province=Q344490:İzmir / district=Q1966755:Selçuk (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q135393209-alsancak-gari-saat-kulesi': SpotCoordinateVerificationEvidence(
@@ -12426,9 +15496,19 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q941328 / 38.281389,26.374167/ province=Q344490:İzmir / district=Q1911051:Çeşme (ilçe)',
     verifiedAt: 'generated',
   ),
+  'wd-q6101813-ayasuluk': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6101813 / 37.955500,27.368111/ province=Q344490:İzmir / district=Q1966755:Selçuk (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q2220449-birgi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q2220449 / 38.254594,28.065448/ province=Q344490:İzmir / district=Q293927:Ödemiş',
+    verifiedAt: 'generated',
+  ),
+  'wd-q47611-efes': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q47611 / 37.939722,27.340833/ province=Q344490:İzmir / district=Q1966755:Selçuk (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q1921294-foca': SpotCoordinateVerificationEvidence(
@@ -12441,9 +15521,24 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q6053312 / 38.516667,26.883333/ province=Q344490:İzmir / district=Q1908058:Çiğli',
     verifiedAt: 'generated',
   ),
+  'wd-q135779-meryem-ana-evi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q135779 / 37.911528,27.333972/ province=Q344490:İzmir / district=Q1966755:Selçuk (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q18986-pergamon': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q18986 / 39.116667,27.183333/ province=Q344490:İzmir / district=Q737822:Bergama',
+    verifiedAt: 'generated',
+  ),
+  'wd-q3084314-uzunada': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q3084314 / 38.501667,26.713889/ province=Q344490:İzmir / district=Q2343342:Urla (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q272932-cukurici-hoyugu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q272932 / 37.929200,27.359400/ province=Q344490:İzmir / district=Q1966755:Selçuk (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q98743303-15-temmuz-demokrasi-sehitleri-meydani': SpotCoordinateVerificationEvidence(
@@ -12471,6 +15566,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q20949105 / 38.455278,27.098889/ province=Q344490:İzmir / district=Q2670720:Karşıyaka',
     verifiedAt: 'generated',
   ),
+  'wd-q1346784-efes-muzesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q1346784 / 37.948994,27.367854/ province=Q344490:İzmir / district=Q1966755:Selçuk (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q123885615-ege-universitesi-etnografya-muzesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q123885615 / 38.460861,27.217030/ province=Q344490:İzmir / district=Q894012:Bornova',
@@ -12494,6 +15594,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q118672482-mattheys-kosku': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q118672482 / 38.463139,27.221162/ province=Q344490:İzmir / district=Q894012:Bornova',
+    verifiedAt: 'generated',
+  ),
+  'wd-q130581162-selcuk-efes-kent-bellegi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q130581162 / 37.950874,27.368642/ province=Q344490:İzmir / district=Q1966755:Selçuk (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q106097718-tcdd-3-bolge-muze-ve-sanat-galerisi': SpotCoordinateVerificationEvidence(
@@ -12666,9 +15771,19 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q131738966 / 38.409698,27.121099/ province=Q344490:İzmir / district=Q1871530:Konak (ilçe)',
     verifiedAt: 'generated',
   ),
+  'wd-q131738918-terziler-hamami': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131738918 / 38.084480,27.735832/ province=Q344490:İzmir / district=Q2747929:Tire (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q131738842-tevfik-pasa-hamami': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q131738842 / 38.420502,27.137974/ province=Q344490:İzmir / district=Q1871530:Konak (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131738479-yalinayak-hamami': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131738479 / 38.083225,27.731878/ province=Q344490:İzmir / district=Q2747929:Tire (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q12813019-kiz-kulesi': SpotCoordinateVerificationEvidence(
@@ -12684,6 +15799,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q116875315-pasakopru-mezarligi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q116875315 / 38.365000,27.135833/ province=Q344490:İzmir / district=Q3123584:Karabağlar',
+    verifiedAt: 'generated',
+  ),
+  'wd-q100741432-yildiztepe-sehitligi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q100741432 / 38.354056,26.764389/ province=Q344490:İzmir / district=Q2343342:Urla (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q6045692-sigacik-kalesi': SpotCoordinateVerificationEvidence(
@@ -12721,6 +15841,21 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q134773840 / 38.669529,26.760345/ province=Q344490:İzmir / district=Q1921294:Foça',
     verifiedAt: 'generated',
   ),
+  'wd-q127634925-bogazkesen-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127634925 / 37.586113,36.927139/ province=Q482834:Kahramanmaraş / district=Q49103124:Dulkadiroğlu ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q61077697-ahir-dagi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q61077697 / 37.650000,37.030000/ province=Q482834:Kahramanmaraş / district=Q49103124:Dulkadiroğlu ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6012869-binboga-daglari': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6012869 / 38.321260,36.637750/ province=Q482834:Kahramanmaraş / district=Q939677:Göksun',
+    verifiedAt: 'generated',
+  ),
   'wd-q55524179-hurman-kalesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q55524179 / 38.474711,36.835308/ province=Q482834:Kahramanmaraş / district=Q389650:Afşin',
@@ -12729,6 +15864,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q27058189-ashab-i-kehf-kulliyesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q27058189 / 38.248333,36.855278/ province=Q482834:Kahramanmaraş / district=Q389650:Afşin',
+    verifiedAt: 'generated',
+  ),
+  'wd-q18410357-kahramanmaras-arkeoloji-muzesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q18410357 / 37.573889,36.926111/ province=Q482834:Kahramanmaraş / district=Q49103124:Dulkadiroğlu ilçesi',
     verifiedAt: 'generated',
   ),
   'wd-q130722349-akseki-sokak-cesmesi-1': SpotCoordinateVerificationEvidence(
@@ -12981,6 +16121,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q130722412 / 41.244720,32.691948/ province=Q483168:Karabük / district=Q2662858:Safranbolu (ilçe)',
     verifiedAt: 'generated',
   ),
+  'wd-q1301195-hadrianapolis-paflagonya': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q1301195 / 40.925778,32.491333/ province=Q483168:Karabük / district=Q2317269:Eskipazar (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q137584527-asiye-hatun-camii-safranbolu': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q137584527 / 41.249256,32.685156/ province=Q483168:Karabük / district=Q2662858:Safranbolu (ilçe)',
@@ -13036,9 +16181,249 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q39060309 / 41.282249,32.685056/ province=Q483168:Karabük / district=Q2662858:Safranbolu (ilçe)',
     verifiedAt: 'generated',
   ),
+  'wd-q121074395-alaeddin-bey-turbesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q121074395 / 37.181000,33.208139/ province=Q482975:Karaman / district=Q2625002:Karaman (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q20717624-derbe': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q20717624 / 37.438889,33.163889/ province=Q482975:Karaman / district=Q2625002:Karaman (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q120907725-aktekke-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q120907725 / 37.182806,33.213694/ province=Q482975:Karaman / district=Q2625002:Karaman (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q97947288-ermenek-ulu-cami': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q97947288 / 36.641361,32.890278/ province=Q482975:Karaman / district=Q2432620:Ermenek (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q127643463-hacibeyler-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127643463 / 37.183476,33.213547/ province=Q482975:Karaman / district=Q2625002:Karaman (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q127787976-pir-ahmet-camii-karaman': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127787976 / 37.180866,33.207363/ province=Q482975:Karaman / district=Q2625002:Karaman (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q127788330-yeni-minare-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127788330 / 37.183483,33.216023/ province=Q482975:Karaman / district=Q2625002:Karaman (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q132134423-yunus-emre-camii-ve-turbesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q132134423 / 37.182381,33.220428/ province=Q482975:Karaman / district=Q2625002:Karaman (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q132134073-imaret-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q132134073 / 37.180607,33.212688/ province=Q482975:Karaman / district=Q2625002:Karaman (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q72094855-karadag-yazitlari': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q72094855 / 37.399197,33.147896/ province=Q482975:Karaman / district=Q2625002:Karaman (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q14623443-karaman-kalesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q14623443 / 37.181944,33.206111/ province=Q482975:Karaman / district=Q2625002:Karaman (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q21526348-karaman-saat-kulesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q21526348 / 37.183064,33.212353/ province=Q482975:Karaman / district=Q2625002:Karaman (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q28220988-karaman-muzesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q28220988 / 37.182583,33.211750/ province=Q482975:Karaman / district=Q2625002:Karaman (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131390853-alperenler-turbesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131390853 / 40.612477,43.088725/ province=Q83077:Kars / district=Q2583548:Kars',
+    verifiedAt: 'generated',
+  ),
+  'wd-q125537694-ataturk-aniti': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q125537694 / 40.601361,43.097472/ province=Q83077:Kars / district=Q2583548:Kars',
+    verifiedAt: 'generated',
+  ),
+  'wd-q56244780-fethiye-camii-kars': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q56244780 / 40.600952,43.099396/ province=Q83077:Kars / district=Q2583548:Kars',
+    verifiedAt: 'generated',
+  ),
+  'wd-q4833028-kumbet-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q4833028 / 40.611306,43.091444/ province=Q83077:Kars / district=Q2583548:Kars',
+    verifiedAt: 'generated',
+  ),
+  'wd-q195422-menucihr-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q195422 / 40.505200,43.570100/ province=Q83077:Kars / district=Q2583548:Kars',
+    verifiedAt: 'generated',
+  ),
+  'wd-q3457705-arpacay-baraj-golu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q3457705 / 40.605120,43.692420/ province=Q83077:Kars / district=Q2583548:Kars',
+    verifiedAt: 'generated',
+  ),
+  'wd-q107690042-ani-kalesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q107690042 / 40.501420,43.567170/ province=Q83077:Kars / district=Q2583548:Kars',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131526596-ani-aziz-prkich-kilisesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131526596 / 40.507229,43.576695/ province=Q83077:Kars / district=Q2583548:Kars',
+    verifiedAt: 'generated',
+  ),
+  'wd-q196156-ani-kutsal-havariler-kilisesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q196156 / 40.508700,43.570700/ province=Q83077:Kars / district=Q2583548:Kars',
+    verifiedAt: 'generated',
+  ),
+  'wd-q195419-aziz-gregory-abughamrents-kilisesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q195419 / 40.507400,43.569000/ province=Q83077:Kars / district=Q2583548:Kars',
+    verifiedAt: 'generated',
+  ),
+  'wd-q195430-aziz-gregory-gagkashen-kilisesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q195430 / 40.510000,43.568700/ province=Q83077:Kars / district=Q2583548:Kars',
+    verifiedAt: 'generated',
+  ),
+  'wd-q195948-aziz-gregory-tigran-honents-kilisesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q195948 / 40.505900,43.578700/ province=Q83077:Kars / district=Q2583548:Kars',
+    verifiedAt: 'generated',
+  ),
+  'wd-q2781868-aziz-grigor-manastiri-agkaberd-ani': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q2781868 / 40.496407,43.568474/ province=Q83077:Kars / district=Q2583548:Kars',
+    verifiedAt: 'generated',
+  ),
+  'wd-q77670221-kars-kutsal-ana-meryem-kilisesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q77670221 / 40.612611,43.088278/ province=Q83077:Kars / district=Q2583548:Kars',
+    verifiedAt: 'generated',
+  ),
+  'wd-q4305538-mren-katedrali': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q4305538 / 40.242125,43.662953/ province=Q83077:Kars / district=Q117599946:Digor ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131402668-iii-murat-koprusu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131402668 / 40.611737,43.088787/ province=Q83077:Kars / district=Q2583548:Kars',
+    verifiedAt: 'generated',
+  ),
+  'wd-q20471086-aygir-golu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q20471086 / 40.763056,43.003056/ province=Q83077:Kars / district=Q117600859:Susuz ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q12837416-bagnayr-manastiri': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q12837416 / 40.513406,43.484321/ province=Q83077:Kars / district=Q2583548:Kars',
+    verifiedAt: 'generated',
+  ),
+  'wd-q195425-bakireler-manastiri': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q195425 / 40.504500,43.575800/ province=Q83077:Kars / district=Q2583548:Kars',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6373388-kars-muzesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6373388 / 40.613056,43.110000/ province=Q83077:Kars / district=Q2583548:Kars',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131738419-topcuoglu-hamami': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131738419 / 40.610623,43.088977/ province=Q83077:Kars / district=Q2583548:Kars',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131738417-ilbeyoglu-hamami': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131738417 / 40.611942,43.088414/ province=Q83077:Kars / district=Q2583548:Kars',
+    verifiedAt: 'generated',
+  ),
+  'wd-q135822301-nasrullah-camii-sadirvani': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q135822301 / 41.377535,33.775310/ province=Q483191:Kastamonu / district=Q1958465:Kastamonu (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q97947297-kastamonu-ulu-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q97947297 / 41.375667,33.771194/ province=Q483191:Kastamonu / district=Q1958465:Kastamonu (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q15261077-nasrullah-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q15261077 / 41.377222,33.775278/ province=Q483191:Kastamonu / district=Q1958465:Kastamonu (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q127788247-topcuoglu-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127788247 / 41.378902,33.774120/ province=Q483191:Kastamonu / district=Q1958465:Kastamonu (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q132134402-yilanli-kulliyesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q132134402 / 41.376785,33.774735/ province=Q483191:Kastamonu / district=Q1958465:Kastamonu (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q127786792-ibn-neccar-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127786792 / 41.373337,33.771339/ province=Q483191:Kastamonu / district=Q1958465:Kastamonu (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q102800964-kerempe-feneri': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q102800964 / 42.016536,33.338141/ province=Q483191:Kastamonu / district=Q2626226:Cide (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q21526366-kastamonu-saat-kulesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q21526366 / 41.374721,33.778735/ province=Q483191:Kastamonu / district=Q1958465:Kastamonu (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q28219967-nasrullah-koprusu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q28219967 / 41.377600,33.776430/ province=Q483191:Kastamonu / district=Q1958465:Kastamonu (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6001249-taskopru': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6001249 / 41.513550,34.211360/ province=Q483191:Kastamonu / district=Q49109449:Taşköprü ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6978160-ilgaz-daglari': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6978160 / 41.080661,33.870019/ province=Q483191:Kastamonu / district=Q117272530:Tosya (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q21526534-mahmut-bey-cami': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q21526534 / 41.480531,33.688017/ province=Q483191:Kastamonu / district=Q1958465:Kastamonu (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6047039-cumhuriyet-meydani': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6047039 / 41.376389,33.777500/ province=Q483191:Kastamonu / district=Q1958465:Kastamonu (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6075775-kastamonu-arkeoloji-muzesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6075775 / 41.373700,33.775762/ province=Q483191:Kastamonu / district=Q1958465:Kastamonu (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q131739219-daday-hamami': SpotCoordinateVerificationEvidence(
@@ -13056,6 +16441,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q131390513 / 38.720327,35.495732/ province=Q483472:Kayseri / district=Q2670975:Melikgazi',
     verifiedAt: 'generated',
   ),
+  'wd-q1404376-fraktin-kabartmasi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q1404376 / 38.271667,35.631667/ province=Q483472:Kayseri / district=Q2414650:Develi',
+    verifiedAt: 'generated',
+  ),
   'wd-q130718270-guluk-camii-cesmesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q130718270 / 38.718723,35.481152/ province=Q483472:Kayseri / district=Q2670975:Melikgazi',
@@ -13064,6 +16454,16 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q131390512-suya-kanmis-hatun-turbesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q131390512 / 38.720867,35.495163/ province=Q483472:Kayseri / district=Q2670975:Melikgazi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q1363691-tasci-kabartmalari': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q1363691 / 38.198750,35.781111/ province=Q483472:Kayseri / district=Q2414650:Develi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q1404386-imamkulu-kabartmasi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q1404386 / 38.246111,35.929167/ province=Q483472:Kayseri / district=Q49109541:Tomarza ilçesi',
     verifiedAt: 'generated',
   ),
   'wd-q56388233-kanis': SpotCoordinateVerificationEvidence(
@@ -13096,6 +16496,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q97947254 / 38.719900,35.485700/ province=Q483472:Kayseri / district=Q2670975:Melikgazi',
     verifiedAt: 'generated',
   ),
+  'wd-q132134361-yaman-dede-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q132134361 / 38.687775,35.564718/ province=Q483472:Kayseri / district=Q49109327:Talas ilçesi',
+    verifiedAt: 'generated',
+  ),
   'wd-q127788181-seyh-tennuri-camii': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q127788181 / 38.718315,35.489777/ province=Q483472:Kayseri / district=Q2670975:Melikgazi',
@@ -13104,6 +16509,16 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q6104716-kayseri-kalesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q6104716 / 38.721100,35.488800/ province=Q483472:Kayseri / district=Q2670975:Melikgazi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6024263-karatay-hani': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6024263 / 38.644000,35.935200/ province=Q483472:Kayseri / district=Q49101511:Bünyan İlçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q97001393-sultan-hani': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q97001393 / 38.972917,35.895278/ province=Q483472:Kayseri / district=Q49101511:Bünyan İlçesi',
     verifiedAt: 'generated',
   ),
   'wd-q121010542-kayseri-meryem-ana-kilisesi': SpotCoordinateVerificationEvidence(
@@ -13121,9 +16536,24 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q30680414 / 38.836111,35.178889/ province=Q483472:Kayseri / district=Q2355838:Kocasinan',
     verifiedAt: 'generated',
   ),
+  'wd-q28221674-sahruh-koprusu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q28221674 / 39.183920,35.937460/ province=Q483472:Kayseri / district=Q49108756:Sarıoğlan ilçesi',
+    verifiedAt: 'generated',
+  ),
   'wd-q6061095-aladaglar-milli-parki': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q6061095 / 37.816667,35.166667/ province=Q483472:Kayseri / district=Q2205869:Yahyal İlçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6090377-palas-tuzla-golu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6090377 / 39.021400,35.815000/ province=Q483472:Kayseri / district=Q49108756:Sarıoğlan ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q2364904-sultansazligi-milli-parki': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q2364904 / 38.333611,35.266111/ province=Q483472:Kayseri / district=Q2414650:Develi',
     verifiedAt: 'generated',
   ),
   'wd-q6010193-cumhuriyet-meydani': SpotCoordinateVerificationEvidence(
@@ -13141,9 +16571,34 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q132682071 / 38.702396,35.507799/ province=Q483472:Kayseri / district=Q2355838:Kocasinan',
     verifiedAt: 'generated',
   ),
+  'wd-q135582274-kurukopru-su-kemeri': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q135582274 / 38.681617,35.691611/ province=Q483472:Kayseri / district=Q49109327:Talas ilçesi',
+    verifiedAt: 'generated',
+  ),
   'wd-q131738521-kadi-hamami': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q131738521 / 38.719454,35.485169/ province=Q483472:Kayseri / district=Q2670975:Melikgazi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q1528589-oylum-hoyuk': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q1528589 / 36.699138,37.178462/ province=Q128978:Kilis / district=Q2468544:Kilis (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q114734090-buklukale': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q114734090 / 39.583528,33.428417/ province=Q484392:Kırıkkale / district=Q1916491:Karakeçili (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q20472639-kirikkale-nur-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q20472639 / 39.840826,33.503051/ province=Q484392:Kırıkkale / district=Q2317097:Kırıkkale (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q19613355-cesnigir-koprusu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q19613355 / 39.580860,33.429390/ province=Q484392:Kırıkkale / district=Q1916491:Karakeçili (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q134087324-ahmet-dede-mezari-babaeski': SpotCoordinateVerificationEvidence(
@@ -13476,9 +16931,19 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q133504457 / 41.732945,27.225180/ province=Q131597:Kırklareli / district=Q13746545:Kırklareli ilçesi',
     verifiedAt: 'generated',
   ),
+  'wd-q96372899-asik-pasa-turbesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q96372899 / 39.151290,34.169450/ province=Q134187:Kırşehir / district=Q1945209:Kırşehir ilçesi',
+    verifiedAt: 'generated',
+  ),
   'wd-q1237572-kaman-kalehoyuk': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q1237572 / 39.362854,33.786714/ province=Q134187:Kırşehir / district=Q1837352:Kaman ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q26884742-malkaya': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q26884742 / 39.143528,34.013361/ province=Q134187:Kırşehir / district=Q1945209:Kırşehir ilçesi',
     verifiedAt: 'generated',
   ),
   'wd-q140456401-mikasanomiya-ani-bahcesi': SpotCoordinateVerificationEvidence(
@@ -13486,9 +16951,34 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q140456401 / 39.345342,33.790737/ province=Q134187:Kırşehir / district=Q1837352:Kaman ilçesi',
     verifiedAt: 'generated',
   ),
+  'wd-q24056287-ucayak-kilisesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q24056287 / 39.413247,34.170781/ province=Q134187:Kırşehir / district=Q1945209:Kırşehir ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q35578315-kesikkopru': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q35578315 / 38.960499,34.199174/ province=Q134187:Kırşehir / district=Q1945209:Kırşehir ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6065216-ahi-evran-zaviyesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6065216 / 39.148227,34.159232/ province=Q134187:Kırşehir / district=Q1945209:Kırşehir ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6048583-seyfe-golu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6048583 / 39.215200,34.390000/ province=Q134187:Kırşehir / district=Q2094470:Mucur (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q132681896-kaman-kalehoyuk-arkeoloji-muzesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q132681896 / 39.345890,33.791340/ province=Q134187:Kırşehir / district=Q1837352:Kaman ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q12824780-anadolu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q12824780 / 39.000000,34.000000/ province=Q134187:Kırşehir / district=Q1945209:Kırşehir ilçesi',
     verifiedAt: 'generated',
   ),
   'wd-q106619418-akca-koca-bey-anit-mezari': SpotCoordinateVerificationEvidence(
@@ -13541,6 +17031,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q104519818 / 40.762556,29.925583/ province=Q83965:Kocaeli / district=Q1958650:İzmit (ilçe)',
     verifiedAt: 'generated',
   ),
+  'wd-q108621787-kartepe-kocaeli-de-cami': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q108621787 / 40.700335,30.112747/ province=Q83965:Kocaeli / district=Q16468576:Kartepe İlçesi',
+    verifiedAt: 'generated',
+  ),
   'wd-q106823698-orhan-camii': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q106823698 / 40.768515,29.919631/ province=Q83965:Kocaeli / district=Q1958650:İzmit (ilçe)',
@@ -13566,9 +17061,19 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q123934287 / 40.762633,29.919304/ province=Q83965:Kocaeli / district=Q1958650:İzmit (ilçe)',
     verifiedAt: 'generated',
   ),
+  'wd-q106858944-hereke-kalesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q106858944 / 40.784240,29.612868/ province=Q83965:Kocaeli / district=Q1900670:Körfez (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q6027918-ballikayalar': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q6027918 / 40.839167,29.520021/ province=Q83965:Kocaeli / district=Q49103654:Gebze (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q31189359-kuzuyayla-tabiat-parki': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q31189359 / 40.646388,30.117309/ province=Q83965:Kocaeli / district=Q16468576:Kartepe İlçesi',
     verifiedAt: 'generated',
   ),
   'wd-q8080275-izmit-saat-kulesi': SpotCoordinateVerificationEvidence(
@@ -13611,6 +17116,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q104669707 / 40.765385,29.920684/ province=Q83965:Kocaeli / district=Q1958650:İzmit (ilçe)',
     verifiedAt: 'generated',
   ),
+  'wd-q108802041-servetiye-muzesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q108802041 / 40.627259,29.937638/ province=Q83965:Kocaeli / district=Q16468567:Başiskele İlçesi',
+    verifiedAt: 'generated',
+  ),
   'wd-q106624186-izmit-deprem-anma-ve-farkindalik-muzesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q106624186 / 40.782758,29.953462/ province=Q83965:Kocaeli / district=Q1958650:İzmit (ilçe)',
@@ -13619,6 +17129,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q20988515-bilisim-vadisi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q20988515 / 40.786361,29.505556/ province=Q83965:Kocaeli / district=Q2473716:Dilovası',
+    verifiedAt: 'generated',
+  ),
+  'wd-q105340772-ormanya': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q105340772 / 40.733333,30.162500/ province=Q83965:Kocaeli / district=Q16468576:Kartepe İlçesi',
     verifiedAt: 'generated',
   ),
   'wd-q65220544-seka-park': SpotCoordinateVerificationEvidence(
@@ -13656,6 +17171,16 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q21526451 / 37.867694,32.485250/ province=Q81551:Konya / district=Q3055997:Meram',
     verifiedAt: 'generated',
   ),
+  'wd-q131390886-mevlana-celaleddin-rumi-turbesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131390886 / 37.870656,32.505086/ province=Q81551:Konya / district=Q13741536:Karatay (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q135822290-mevlana-kulliyesi-sadirvani': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q135822290 / 37.870718,32.504675/ province=Q81551:Konya / district=Q13741536:Karatay (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q131391745-seyyid-taceddin-ahmet-turbesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q131391745 / 38.352814,31.410400/ province=Q81551:Konya / district=Q1958767:Akşehir (ilçe)',
@@ -13666,9 +17191,9 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q131391400 / 38.353134,31.414698/ province=Q81551:Konya / district=Q1958767:Akşehir (ilçe)',
     verifiedAt: 'generated',
   ),
-  'wd-q1397859-fasillar-aniti': SpotCoordinateVerificationEvidence(
+  'wd-q6099672-boncuklu-hoyuk': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
-    sourceRef: 'Q1397859 / 37.658333,31.895833/ province=Q81551:Konya / district=Q127389:Beyşehir',
+    sourceRef: 'Q6099672 / 37.751830,32.864780/ province=Q81551:Konya / district=Q13741536:Karatay (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q535982-kilistra': SpotCoordinateVerificationEvidence(
@@ -13676,9 +17201,24 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q535982 / 37.663542,32.211378/ province=Q81551:Konya / district=Q3055997:Meram',
     verifiedAt: 'generated',
   ),
+  'wd-q2599044-yalburt': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q2599044 / 38.454583,31.978889/ province=Q81551:Konya / district=Q2196201:Ilgın (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q42377955-aksehir-ulu-camii': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q42377955 / 38.356278,31.411472/ province=Q81551:Konya / district=Q1958767:Akşehir (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q4832751-aziziye-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q4832751 / 37.869944,32.500778/ province=Q81551:Konya / district=Q13741536:Karatay (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q97924808-doganhisar-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q97924808 / 38.143611,31.674611/ province=Q81551:Konya / district=Q13574171:Doğanhisar (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q127642989-erdemsah-mescidi': SpotCoordinateVerificationEvidence(
@@ -13696,9 +17236,19 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q132134163 / 37.871075,32.498142/ province=Q81551:Konya / district=Q3055997:Meram',
     verifiedAt: 'generated',
   ),
+  'wd-q127643453-haci-veyis-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127643453 / 37.870285,32.510654/ province=Q81551:Konya / district=Q13741536:Karatay (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q132134563-hafiz-hatip-ali-camii': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q132134563 / 38.360264,31.406082/ province=Q81551:Konya / district=Q1958767:Akşehir (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q134052723-harman-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q134052723 / 38.148126,31.674437/ province=Q81551:Konya / district=Q13574171:Doğanhisar (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q124214843-hoca-hasan-mescidi': SpotCoordinateVerificationEvidence(
@@ -13726,6 +17276,16 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q132134358 / 38.352306,31.410931/ province=Q81551:Konya / district=Q1958767:Akşehir (ilçe)',
     verifiedAt: 'generated',
   ),
+  'wd-q1295761-selimiye-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q1295761 / 37.870417,32.504111/ province=Q81551:Konya / district=Q13741536:Karatay (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q134052817-carsi-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q134052817 / 38.144513,31.675833/ province=Q81551:Konya / district=Q13574171:Doğanhisar (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q6025093-imaret-camii': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q6025093 / 38.354750,31.416111/ province=Q81551:Konya / district=Q1958767:Akşehir (ilçe)',
@@ -13736,9 +17296,24 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q127786821 / 38.357815,31.413292/ province=Q81551:Konya / district=Q1958767:Akşehir (ilçe)',
     verifiedAt: 'generated',
   ),
+  'wd-q112865618-serafeddin-cami': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q112865618 / 37.872361,32.498611/ province=Q81551:Konya / district=Q13741536:Karatay (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6111551-sugla-golu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6111551 / 37.330000,32.005000/ province=Q81551:Konya / district=Q2192534:Seydişehir',
+    verifiedAt: 'generated',
+  ),
   'wd-q55524263-hatip-kabartmasi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q55524263 / 37.764583,32.402083/ province=Q81551:Konya / district=Q3055997:Meram',
+    verifiedAt: 'generated',
+  ),
+  'wd-q1404389-ivriz': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q1404389 / 37.409722,34.172500/ province=Q81551:Konya / district=Q3067447:Halkapınar (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q94514129-kucuk-kiziloren-hani': SpotCoordinateVerificationEvidence(
@@ -13749,6 +17324,16 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q94442833-kiziloren-kandemir-hani': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q94442833 / 37.873489,32.076408/ province=Q81551:Konya / district=Q3055997:Meram',
+    verifiedAt: 'generated',
+  ),
+  'wd-q31839449-obruk-han': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q31839449 / 38.175000,33.183056/ province=Q81551:Konya / district=Q13741536:Karatay (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q132752894-sultan-selim-hani-karapinar': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q132752894 / 37.715279,33.547035/ province=Q81551:Konya / district=Q2140670:Karapınar (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q22977153-aziz-pavlus-kilisesi': SpotCoordinateVerificationEvidence(
@@ -13766,9 +17351,9 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q110423684 / 37.880333,32.425259/ province=Q81551:Konya / district=Q3055997:Meram',
     verifiedAt: 'generated',
   ),
-  'wd-q26838732-taskopru-beysehir': SpotCoordinateVerificationEvidence(
+  'wd-q108227820-kugulu-tabiat-parki': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
-    sourceRef: 'Q26838732 / 37.680694,31.722778/ province=Q81551:Konya / district=Q127389:Beyşehir',
+    sourceRef: 'Q108227820 / 37.390000,31.842778/ province=Q81551:Konya / district=Q2192534:Seydişehir',
     verifiedAt: 'generated',
   ),
   'wd-q424815-aksehir-golu': SpotCoordinateVerificationEvidence(
@@ -13781,9 +17366,29 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q844601 / 37.825700,31.674700/ province=Q81551:Konya / district=Q127389:Beyşehir',
     verifiedAt: 'generated',
   ),
+  'wd-q4180162-karapinar-duzlugu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q4180162 / 37.670000,33.650000/ province=Q81551:Konya / district=Q2140670:Karapınar (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q20473015-kizoren-obrugu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q20473015 / 38.174890,33.185980/ province=Q81551:Konya / district=Q13741536:Karatay (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6065286-meke-krater-golu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6065286 / 37.686111,33.640281/ province=Q81551:Konya / district=Q2140670:Karapınar (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q2073541-sarayonu': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q2073541 / 38.266111,32.406389/ province=Q81551:Konya / district=Q2073541:Sarayönü',
+    verifiedAt: 'generated',
+  ),
+  'wd-q31190767-uyuz-golu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q31190767 / 39.240360,32.924850/ province=Q81551:Konya / district=Q1948486:Kulu',
     verifiedAt: 'generated',
   ),
   'wd-q28221047-aksehir-nasreddin-hoca-arkeoloji-ve-etnografya-m': SpotCoordinateVerificationEvidence(
@@ -13811,9 +17416,14 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q41573702 / 37.867500,32.494444/ province=Q81551:Konya / district=Q3055997:Meram',
     verifiedAt: 'generated',
   ),
-  'wd-q12808845-beysehir-golu-milli-parki': SpotCoordinateVerificationEvidence(
+  'wd-q6054013-izzet-koyunoglu-sehir-muzesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
-    sourceRef: 'Q12808845 / 37.695867,31.713978/ province=Q81551:Konya / district=Q127389:Beyşehir',
+    sourceRef: 'Q6054013 / 37.866329,32.510687/ province=Q81551:Konya / district=Q13741536:Karatay (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6450172-kwangjin-parki': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6450172 / 37.500000,34.050000/ province=Q81551:Konya / district=Q2308773:Ereğli',
     verifiedAt: 'generated',
   ),
   'wd-q3384325-kubadabad-sarayi': SpotCoordinateVerificationEvidence(
@@ -13826,6 +17436,36 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q131739019 / 38.353031,31.404984/ province=Q81551:Konya / district=Q1958767:Akşehir (ilçe)',
     verifiedAt: 'generated',
   ),
+  'wd-q6048449-ucler-mezarligi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6048449 / 37.869054,32.508686/ province=Q81551:Konya / district=Q13741536:Karatay (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6071250-dumlupinar-sehitligi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6071250 / 38.843186,29.958585/ province=Q126874:Kütahya / district=Q2421723:Dumlupınar (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131390897-erguvan-celebi-turbesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131390897 / 39.417248,29.976635/ province=Q126874:Kütahya / district=Q1958902:Kütahya (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131390463-hayme-ana-turbesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131390463 / 39.750061,29.500582/ province=Q126874:Kütahya / district=Q1816825:Domaniç (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q130684741-servi-camii-cesmesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q130684741 / 39.419830,29.981411/ province=Q126874:Kütahya / district=Q1958902:Kütahya (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q61074659-sehit-sancaktar-mehmetcik-aniti': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q61074659 / 38.915472,30.048778/ province=Q126874:Kütahya / district=Q2421723:Dumlupınar (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q129917955-aizanoi-macellumu': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q129917955 / 39.198457,29.610911/ province=Q126874:Kütahya / district=Q2424690:Çavdarhisar',
@@ -13834,6 +17474,76 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q942877-penkalas-koprusu': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q942877 / 39.200760,29.612300/ province=Q126874:Kütahya / district=Q2424690:Çavdarhisar',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6100614-seyitomer-hoyugu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6100614 / 39.581000,29.863500/ province=Q126874:Kütahya / district=Q1958902:Kütahya (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q31189944-bulbul-mescidi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q31189944 / 39.413890,29.982009/ province=Q126874:Kütahya / district=Q1958902:Kütahya (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q127786898-karagoz-ahmet-pasa-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127786898 / 39.418285,29.980734/ province=Q126874:Kütahya / district=Q1958902:Kütahya (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q132134146-kursunlu-camii-kutahya': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q132134146 / 39.418102,29.974447/ province=Q126874:Kütahya / district=Q1958902:Kütahya (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q21526492-kutahya-ali-pasa-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q21526492 / 39.418739,29.983761/ province=Q126874:Kütahya / district=Q1958902:Kütahya (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q20476544-kutahya-saray-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q20476544 / 39.416389,29.984444/ province=Q126874:Kütahya / district=Q1958902:Kütahya (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q21526507-lala-huseyin-pasa-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q21526507 / 39.423477,29.970381/ province=Q126874:Kütahya / district=Q1958902:Kütahya (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q98091629-tavsanli-ulu-cami': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q98091629 / 39.545444,29.491917/ province=Q126874:Kütahya / district=Q2512452:Tavşanlı ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6036038-timurtas-pasa-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6036038 / 39.419639,29.976083/ province=Q126874:Kütahya / district=Q1958902:Kütahya (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6032910-ishak-fakih-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6032910 / 39.419778,29.974444/ province=Q126874:Kütahya / district=Q1958902:Kütahya (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q31189898-sengul-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q31189898 / 39.416351,29.974298/ province=Q126874:Kütahya / district=Q1958902:Kütahya (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6022256-kutahya-kalesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6022256 / 39.419472,29.969667/ province=Q126874:Kütahya / district=Q1958902:Kütahya (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q31189957-cakirsaz-kervansarayi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q31189957 / 39.076303,30.196298/ province=Q126874:Kütahya / district=Q49100568:Altıntaş ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q21526496-kutahya-saat-kulesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q21526496 / 39.419361,29.986306/ province=Q126874:Kütahya / district=Q1958902:Kütahya (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q131402861-roma-koprusu-26': SpotCoordinateVerificationEvidence(
@@ -13846,9 +17556,49 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q133817606 / 39.184227,29.592415/ province=Q126874:Kütahya / district=Q2424690:Çavdarhisar',
     verifiedAt: 'generated',
   ),
+  'wd-q20471303-kutahya-arkeoloji-muzesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q20471303 / 39.417222,29.976111/ province=Q126874:Kütahya / district=Q1958902:Kütahya (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q31189949-kutahya-jeoloji-muzesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q31189949 / 39.416149,29.974320/ province=Q126874:Kütahya / district=Q1958902:Kütahya (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q20476793-kutahya-cini-muzesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q20476793 / 39.417155,29.975321/ province=Q126874:Kütahya / district=Q1958902:Kütahya (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q131738853-aizanoi-1-roma-hamami': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q131738853 / 39.203270,29.608971/ province=Q126874:Kütahya / district=Q2424690:Çavdarhisar',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131738435-balikli-hamami': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131738435 / 39.420186,29.978919/ province=Q126874:Kütahya / district=Q1958902:Kütahya (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q125404771-egdemir-hamami': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q125404771 / 39.417000,29.977028/ province=Q126874:Kütahya / district=Q1958902:Kütahya (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131739131-kemer-hamami': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131739131 / 39.420944,29.973949/ province=Q126874:Kütahya / district=Q1958902:Kütahya (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131738433-kucuk-hamam': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131738433 / 39.418012,29.981677/ province=Q126874:Kütahya / district=Q1958902:Kütahya (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131738634-lala-huseyin-pasa-hamami': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131738634 / 39.423843,29.970316/ province=Q126874:Kütahya / district=Q1958902:Kütahya (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q1404385-kybele-kaya-kabartmasi': SpotCoordinateVerificationEvidence(
@@ -13874,6 +17624,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q920866-magnesia-ad-sipylum': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q920866 / 38.613056,27.425833/ province=Q130553:Manisa / district=Q16961654:Şehzadeler',
+    verifiedAt: 'generated',
+  ),
+  'wd-q2085773-philadelphia-lidya': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q2085773 / 38.350000,28.516667/ province=Q130553:Manisa / district=Q15869633:Alaşehir (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q135581996-gulgun-hatun-mescidi': SpotCoordinateVerificationEvidence(
@@ -13916,6 +17671,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q6030722 / 38.611139,27.432944/ province=Q130553:Manisa / district=Q16961654:Şehzadeler',
     verifiedAt: 'generated',
   ),
+  'wd-q4175805-kula-tepeleri': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q4175805 / 38.576210,28.548550/ province=Q130553:Manisa / district=Q4027542:Kula (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q131437249-kursunlu-han': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q131437249 / 38.612564,27.434270/ province=Q130553:Manisa / district=Q16961654:Şehzadeler',
@@ -13951,14 +17711,69 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q96802833 / 38.613611,27.444444/ province=Q130553:Manisa / district=Q16961654:Şehzadeler',
     verifiedAt: 'generated',
   ),
+  'wd-q135004337-zinciriye-cesmesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q135004337 / 37.313987,40.739826/ province=Q131293:Mardin / district=Q2002518:Artuklu',
+    verifiedAt: 'generated',
+  ),
+  'wd-q137793560-sehidiye-medresesi-cesmesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q137793560 / 37.314167,40.743317/ province=Q131293:Mardin / district=Q2002518:Artuklu',
+    verifiedAt: 'generated',
+  ),
+  'wd-q585145-dara': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q585145 / 37.183333,40.933333/ province=Q131293:Mardin / district=Q2002518:Artuklu',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6036823-mardin-kalesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6036823 / 37.315441,40.738393/ province=Q131293:Mardin / district=Q2002518:Artuklu',
+    verifiedAt: 'generated',
+  ),
+  'wd-q134590911-dinari-pamuk-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q134590911 / 37.313221,40.738264/ province=Q131293:Mardin / district=Q2002518:Artuklu',
+    verifiedAt: 'generated',
+  ),
+  'wd-q127787059-latifiye-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127787059 / 37.312668,40.734535/ province=Q131293:Mardin / district=Q2002518:Artuklu',
+    verifiedAt: 'generated',
+  ),
+  'wd-q127787084-melik-mahmut-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127787084 / 37.314392,40.747883/ province=Q131293:Mardin / district=Q2002518:Artuklu',
+    verifiedAt: 'generated',
+  ),
   'wd-q98091600-midyat-ulu-camii': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q98091600 / 37.414278,41.373250/ province=Q131293:Mardin / district=Q2314602:Midyat',
     verifiedAt: 'generated',
   ),
+  'wd-q127788000-reyhaniye-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127788000 / 37.313477,40.741928/ province=Q131293:Mardin / district=Q2002518:Artuklu',
+    verifiedAt: 'generated',
+  ),
+  'wd-q127788149-sehidiye-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127788149 / 37.314007,40.743206/ province=Q131293:Mardin / district=Q2002518:Artuklu',
+    verifiedAt: 'generated',
+  ),
+  'wd-q127788164-seyh-cabuk-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127788164 / 37.312939,40.731823/ province=Q131293:Mardin / district=Q2002518:Artuklu',
+    verifiedAt: 'generated',
+  ),
   'wd-q136717885-bethil-kilisesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q136717885 / 37.417722,41.377722/ province=Q131293:Mardin / district=Q2314602:Midyat',
+    verifiedAt: 'generated',
+  ),
+  'wd-q5857908-kirklar-kilisesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q5857908 / 37.313272,40.732358/ province=Q131293:Mardin / district=Q2002518:Artuklu',
     verifiedAt: 'generated',
   ),
   'wd-q136730925-mor-ahisnoya-kilisesi': SpotCoordinateVerificationEvidence(
@@ -13976,6 +17791,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q131527455 / 37.408989,41.484360/ province=Q131293:Mardin / district=Q2314602:Midyat',
     verifiedAt: 'generated',
   ),
+  'wd-q1966853-mor-yakup-kilisesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q1966853 / 37.067000,41.215200/ province=Q131293:Mardin / district=Q3267420:Nusaybin (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q131527185-mor-izozoel-kilisesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q131527185 / 37.445167,41.527028/ province=Q131293:Mardin / district=Q2314602:Midyat',
@@ -13984,6 +17804,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q139429164-dargecit-koprusu': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q139429164 / 37.545523,41.723375/ province=Q131293:Mardin / district=Q1004605:Dargeçit',
+    verifiedAt: 'generated',
+  ),
+  'wd-q188022-mardin': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q188022 / 37.313056,40.735000/ province=Q131293:Mardin / district=Q2002518:Artuklu',
     verifiedAt: 'generated',
   ),
   'wd-q3585872-meryem-ana-kilisesi': SpotCoordinateVerificationEvidence(
@@ -13996,9 +17821,39 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q113563327 / 37.412556,41.385444/ province=Q131293:Mardin / district=Q2314602:Midyat',
     verifiedAt: 'generated',
   ),
+  'wd-q11009071-mor-evgin-manastiri': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q11009071 / 37.193889,41.430278/ province=Q131293:Mardin / district=Q3267420:Nusaybin (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131523726-mor-yakup-d-karno-manastiri': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131523726 / 37.200729,41.445396/ province=Q131293:Mardin / district=Q3267420:Nusaybin (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q28136311-mardin-muzesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q28136311 / 37.313500,40.734806/ province=Q131293:Mardin / district=Q2002518:Artuklu',
+    verifiedAt: 'generated',
+  ),
+  'wd-q125536834-mardin-sakip-sabanci-kent-muzesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q125536834 / 37.314868,40.746211/ province=Q131293:Mardin / district=Q2002518:Artuklu',
+    verifiedAt: 'generated',
+  ),
   'wd-q125398668-midyat-telkari-muzesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q125398668 / 37.415410,41.375700/ province=Q131293:Mardin / district=Q2314602:Midyat',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131738758-mardin-ulu-camii-hamami': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131738758 / 37.312633,40.739620/ province=Q131293:Mardin / district=Q2002518:Artuklu',
+    verifiedAt: 'generated',
+  ),
+  'wd-q130683628-bezmialem-valide-sultan-cesmesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q130683628 / 36.798374,34.630245/ province=Q132637:Mersin / district=Q15995611:Akdeniz',
     verifiedAt: 'generated',
   ),
   'wd-q131390924-danyal-peygamber-makami': SpotCoordinateVerificationEvidence(
@@ -14021,14 +17876,29 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q16962818 / 36.477222,34.170833/ province=Q132637:Mersin / district=Q988315:Erdemli',
     verifiedAt: 'generated',
   ),
+  'wd-q23073300-refah-sehitleri-aniti': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q23073300 / 36.793835,34.628647/ province=Q132637:Mersin / district=Q15995611:Akdeniz',
+    verifiedAt: 'generated',
+  ),
   'wd-q15226061-somek-athena-kabartmasi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q15226061 / 36.604444,34.080833/ province=Q132637:Mersin / district=Q49109008:Silifke (ilçe)',
     verifiedAt: 'generated',
   ),
+  'wd-q131391771-turbe': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131391771 / 36.892090,34.617752/ province=Q132637:Mersin / district=Q15995611:Akdeniz',
+    verifiedAt: 'generated',
+  ),
   'wd-q8077505-canakci-kaya-mezarlari': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q8077505 / 36.523300,34.174117/ province=Q132637:Mersin / district=Q988315:Erdemli',
+    verifiedAt: 'generated',
+  ),
+  'wd-q134728468-ismet-inonu-heykeli-mersin': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q134728468 / 36.802250,34.634071/ province=Q132637:Mersin / district=Q15995611:Akdeniz',
     verifiedAt: 'generated',
   ),
   'wd-q14906213-akkale-oreni': SpotCoordinateVerificationEvidence(
@@ -14071,6 +17941,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q15851714 / 36.490085,34.135540/ province=Q132637:Mersin / district=Q988315:Erdemli',
     verifiedAt: 'generated',
   ),
+  'wd-q18639253-gozne-kalesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q18639253 / 36.992222,34.574167/ province=Q132637:Mersin / district=Q49109572:Toroslar ilçesi',
+    verifiedAt: 'generated',
+  ),
   'wd-q6671120-hancerkale': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q6671120 / 36.516667,33.983333/ province=Q132637:Mersin / district=Q49109008:Silifke (ilçe)',
@@ -14101,9 +17976,19 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q202974 / 36.525556,34.179444/ province=Q132637:Mersin / district=Q988315:Erdemli',
     verifiedAt: 'generated',
   ),
+  'wd-q12873003-karaduvar-anchiale': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q12873003 / 36.808880,34.603922/ province=Q132637:Mersin / district=Q49109572:Toroslar ilçesi',
+    verifiedAt: 'generated',
+  ),
   'wd-q1266153-karakabakli': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q1266153 / 36.430556,34.016667/ province=Q132637:Mersin / district=Q49109008:Silifke (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6094464-kilise-tepe-hoyugu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6094464 / 36.502440,33.553500/ province=Q132637:Mersin / district=Q2000450:Mut District',
     verifiedAt: 'generated',
   ),
   'wd-q138781023-korykos-necropolis-i': SpotCoordinateVerificationEvidence(
@@ -14144,6 +18029,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q7684869-tapureli-antik-kent': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q7684869 / 36.650000,34.033333/ province=Q132637:Mersin / district=Q988315:Erdemli',
+    verifiedAt: 'generated',
+  ),
+  'wd-q1068171-tarhuntassa': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q1068171 / 36.866667,33.166667/ province=Q132637:Mersin / district=Q2000450:Mut District',
     verifiedAt: 'generated',
   ),
   'wd-q4994366-tekir-ambari': SpotCoordinateVerificationEvidence(
@@ -14191,9 +18081,24 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q55605439 / 36.915278,34.896944/ province=Q132637:Mersin / district=Q2800095:Tarsus (ilçe)',
     verifiedAt: 'generated',
   ),
+  'wd-q127787125-camili-koyu-merkez-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127787125 / 36.892017,34.617554/ province=Q132637:Mersin / district=Q15995611:Akdeniz',
+    verifiedAt: 'generated',
+  ),
   'wd-q22948746-guzeloluk-camii': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q22948746 / 36.794722,34.081667/ province=Q132637:Mersin / district=Q988315:Erdemli',
+    verifiedAt: 'generated',
+  ),
+  'wd-q127643566-hasirci-haci-huseyin-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127643566 / 36.805279,34.630176/ province=Q132637:Mersin / district=Q15995611:Akdeniz',
+    verifiedAt: 'generated',
+  ),
+  'wd-q3906386-laal-pasa-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q3906386 / 36.644444,33.436111/ province=Q132637:Mersin / district=Q2000450:Mut District',
     verifiedAt: 'generated',
   ),
   'wd-q127787073-mamure-camii': SpotCoordinateVerificationEvidence(
@@ -14201,9 +18106,19 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q127787073 / 36.081146,32.894463/ province=Q132637:Mersin / district=Q485575:Anamur',
     verifiedAt: 'generated',
   ),
+  'wd-q127787067-magribi-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127787067 / 36.802448,34.628246/ province=Q132637:Mersin / district=Q15995611:Akdeniz',
+    verifiedAt: 'generated',
+  ),
   'wd-q135582551-mustafa-aga-mescidi-tarsus': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q135582551 / 36.916763,34.897400/ province=Q132637:Mersin / district=Q2800095:Tarsus (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q48853688-muftu-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q48853688 / 36.788333,34.615833/ province=Q132637:Mersin / district=Q15995611:Akdeniz',
     verifiedAt: 'generated',
   ),
   'wd-q43634803-tarsus-eski-cami': SpotCoordinateVerificationEvidence(
@@ -14214,6 +18129,26 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q85623158-anamur-deniz-feneri': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q85623158 / 36.017500,32.802778/ province=Q132637:Mersin / district=Q485575:Anamur',
+    verifiedAt: 'generated',
+  ),
+  'wd-q87432177-arslankoy-goleti': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q87432177 / 37.008056,34.284722/ province=Q132637:Mersin / district=Q49109572:Toroslar ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q17513529-mersin-ataturk-aniti': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q17513529 / 36.793611,34.625333/ province=Q132637:Mersin / district=Q15995611:Akdeniz',
+    verifiedAt: 'generated',
+  ),
+  'wd-q135392832-mersin-kurtulus-savasi-aniti': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q135392832 / 36.801735,34.636169/ province=Q132637:Mersin / district=Q15995611:Akdeniz',
+    verifiedAt: 'generated',
+  ),
+  'wd-q55605154-belenkeslik-kalesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q55605154 / 36.972222,34.553333/ province=Q132637:Mersin / district=Q49109572:Toroslar ilçesi',
     verifiedAt: 'generated',
   ),
   'wd-q16829084-cemilli-kalesi': SpotCoordinateVerificationEvidence(
@@ -14251,6 +18186,26 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q1282166 / 36.256389,33.770556/ province=Q132637:Mersin / district=Q49109008:Silifke (ilçe)',
     verifiedAt: 'generated',
   ),
+  'wd-q18708407-yaka-kalesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q18708407 / 36.861111,34.734444/ province=Q132637:Mersin / district=Q15995611:Akdeniz',
+    verifiedAt: 'generated',
+  ),
+  'wd-q12054159-candir-kalesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q12054159 / 37.019398,34.614916/ province=Q132637:Mersin / district=Q49109572:Toroslar ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q137793497-alahan-manastiri-bati-kilisesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q137793497 / 36.791314,33.351716/ province=Q132637:Mersin / district=Q2000450:Mut District',
+    verifiedAt: 'generated',
+  ),
+  'wd-q137774261-alahan-manastiri-vaftizhanesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q137774261 / 36.791358,33.352391/ province=Q132637:Mersin / district=Q2000450:Mut District',
+    verifiedAt: 'generated',
+  ),
   'wd-q15859620-batisandal-kilisesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q15859620 / 36.567500,34.203889/ province=Q132637:Mersin / district=Q988315:Erdemli',
@@ -14264,6 +18219,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q86519298-hasanaliler-kilisesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q86519298 / 36.463944,34.086028/ province=Q132637:Mersin / district=Q49109008:Silifke (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q24578889-mersin-ortodoks-kilisesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q24578889 / 36.793333,34.625000/ province=Q132637:Mersin / district=Q15995611:Akdeniz',
     verifiedAt: 'generated',
   ),
   'wd-q6079823-haci-pasa-saat-kulesi': SpotCoordinateVerificationEvidence(
@@ -14286,6 +18246,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q131402770 / 36.750546,34.532184/ province=Q132637:Mersin / district=Q1367930:Mezitli',
     verifiedAt: 'generated',
   ),
+  'wd-q132735569-roma-koprusu-kayrakkesli': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q132735569 / 36.949623,34.484055/ province=Q132637:Mersin / district=Q49109572:Toroslar ilçesi',
+    verifiedAt: 'generated',
+  ),
   'wd-q30621470-tasgecit-koprusu': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q30621470 / 36.612500,34.103611/ province=Q132637:Mersin / district=Q988315:Erdemli',
@@ -14304,6 +18269,36 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q2167586-korykos': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q2167586 / 36.465278,34.154167/ province=Q132637:Mersin / district=Q988315:Erdemli',
+    verifiedAt: 'generated',
+  ),
+  'wd-q7521794-sinap-kalesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q7521794 / 37.189417,34.611371/ province=Q132637:Mersin / district=Q14530265:Çamlıyayla',
+    verifiedAt: 'generated',
+  ),
+  'wd-q15917362-mersin-deniz-muzesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q15917362 / 36.806300,34.620100/ province=Q132637:Mersin / district=Q15995611:Akdeniz',
+    verifiedAt: 'generated',
+  ),
+  'wd-q47014885-mersin-devlet-guzel-sanatlar-galerisi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q47014885 / 36.798900,34.629700/ province=Q132637:Mersin / district=Q15995611:Akdeniz',
+    verifiedAt: 'generated',
+  ),
+  'wd-q132682105-mersin-devlet-resim-heykel-muzesi-ve-galerisi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q132682105 / 36.794033,34.624699/ province=Q132637:Mersin / district=Q15995611:Akdeniz',
+    verifiedAt: 'generated',
+  ),
+  'wd-q28221092-mersin-kent-tarihi-muzesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q28221092 / 36.800000,34.628333/ province=Q132637:Mersin / district=Q15995611:Akdeniz',
+    verifiedAt: 'generated',
+  ),
+  'wd-q24884050-mersin-su-muzesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q24884050 / 36.814100,34.604500/ province=Q132637:Mersin / district=Q49109572:Toroslar ilçesi',
     verifiedAt: 'generated',
   ),
   'wd-q25476390-narlikuyu-mozaik-muzesi': SpotCoordinateVerificationEvidence(
@@ -14336,6 +18331,16 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q6025817 / 36.317778,33.884444/ province=Q132637:Mersin / district=Q49109008:Silifke (ilçe)',
     verifiedAt: 'generated',
   ),
+  'wd-q132682135-iz-birakanlar-muzesi-mersin': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q132682135 / 36.802231,34.626526/ province=Q132637:Mersin / district=Q15995611:Akdeniz',
+    verifiedAt: 'generated',
+  ),
+  'wd-q4812891-ataturk-parki': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q4812891 / 36.795556,34.630000/ province=Q132637:Mersin / district=Q15995611:Akdeniz',
+    verifiedAt: 'generated',
+  ),
   'wd-q135582573-anemurium-su-kemeri': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q135582573 / 36.022583,32.799755/ province=Q132637:Mersin / district=Q485575:Anamur',
@@ -14344,6 +18349,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q30621554-olba-su-kemeri': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q30621554 / 36.586111,33.968889/ province=Q132637:Mersin / district=Q49109008:Silifke (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131739065-hadra-hamami': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131739065 / 36.794029,34.622135/ province=Q132637:Mersin / district=Q15995611:Akdeniz',
     verifiedAt: 'generated',
   ),
   'wd-q131738831-mamure-hamami': SpotCoordinateVerificationEvidence(
@@ -14364,6 +18374,26 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q17512725-kibris-sehitligi-silifke': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q17512725 / 36.380000,33.874400/ province=Q132637:Mersin / district=Q49109008:Silifke (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q16895045-mersin-sehir-mezarligi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q16895045 / 36.819000,34.602000/ province=Q132637:Mersin / district=Q49109572:Toroslar ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6943631-mut-kalesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6943631 / 36.644444,33.433889/ province=Q132637:Mersin / district=Q2000450:Mut District',
+    verifiedAt: 'generated',
+  ),
+  'wd-q20949642-mersin-su-parki': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q20949642 / 36.788400,34.627400/ province=Q132637:Mersin / district=Q15995611:Akdeniz',
+    verifiedAt: 'generated',
+  ),
+  'wd-q27929635-yerkopru-caglayani': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q27929635 / 36.532440,33.229290/ province=Q132637:Mersin / district=Q2000450:Mut District',
     verifiedAt: 'generated',
   ),
   'wd-q137799090-fethiye-island': SpotCoordinateVerificationEvidence(
@@ -14701,11 +18731,6 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q133236103 / 37.497101,27.526369/ province=Q123934:Muğla / district=Q924252:Milas',
     verifiedAt: 'generated',
   ),
-  'wd-q5034748-deveboynu-burnu': SpotCoordinateVerificationEvidence(
-    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
-    sourceRef: 'Q5034748 / 36.686944,27.364444/ province=Q123934:Muğla / district=Q947051:Datça',
-    verifiedAt: 'generated',
-  ),
   'wd-q134773833-bodrum-yel-degirmenleri': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q134773833 / 37.025684,27.413614/ province=Q123934:Muğla / district=Q1960660:Bodrum',
@@ -14746,9 +18771,69 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q134773765 / 37.024921,27.412834/ province=Q123934:Muğla / district=Q1960660:Bodrum',
     verifiedAt: 'generated',
   ),
+  'wd-q109389889-alaeddin-bey-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q109389889 / 38.730889,41.490083/ province=Q131387:Muş / district=Q2012030:Muş ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q98091603-mus-ulu-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q98091603 / 38.730111,41.487972/ province=Q131387:Muş / district=Q2012030:Muş ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q122936844-haspet-kalesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q122936844 / 38.713578,41.514938/ province=Q131387:Muş / district=Q2012030:Muş ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q11182263-surp-marine-kilisesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q11182263 / 38.728723,41.487545/ province=Q131387:Muş / district=Q2012030:Muş ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q16632445-tarihi-murat-koprusu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q16632445 / 38.862741,41.512661/ province=Q131387:Muş / district=Q2012030:Muş ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q16393752-mus-ovasi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q16393752 / 38.780000,41.550000/ province=Q131387:Muş / district=Q2012030:Muş ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q3320220-surp-garabet-manastiri-mus': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q3320220 / 38.961068,41.191697/ province=Q131387:Muş / district=Q2012030:Muş ilçesi',
+    verifiedAt: 'generated',
+  ),
   'wd-q25378109-topada-yaziti': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q25378109 / 38.493083,34.480278/ province=Q430693:Nevşehir / district=Q49100329:Acıgöl ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q138009799-seyhulislam-m-hayri-efendi-tomb': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q138009799 / 38.632550,34.909877/ province=Q430693:Nevşehir / district=Q4391092:Ürgüp ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q135959715-avanos-tumulusu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q135959715 / 38.781315,34.854179/ province=Q430693:Nevşehir / district=Q49100953:Avanos ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q1297810-karsi-kilise': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q1297810 / 38.740699,34.634764/ province=Q430693:Nevşehir / district=Q2557174:Gülşehir ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q124519571-sobesos-antik-kenti': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q124519571 / 38.464100,34.966100/ province=Q430693:Nevşehir / district=Q4391092:Ürgüp ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q189263-zelve-oren-yeri': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q189263 / 38.669167,34.864167/ province=Q430693:Nevşehir / district=Q49100953:Avanos ilçesi',
     verifiedAt: 'generated',
   ),
   'wd-q115435735-cardak-yeralti-sehri': SpotCoordinateVerificationEvidence(
@@ -14756,9 +18841,24 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q115435735 / 38.551154,34.767990/ province=Q430693:Nevşehir / district=Q2440301:Nevşehir',
     verifiedAt: 'generated',
   ),
+  'wd-q106449523-ozkonak-yeralti-sehri': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q106449523 / 38.806667,34.840000/ province=Q430693:Nevşehir / district=Q49100953:Avanos ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q135660783-avanos-merkez-yeni-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q135660783 / 38.718310,34.848114/ province=Q430693:Nevşehir / district=Q49100953:Avanos ilçesi',
+    verifiedAt: 'generated',
+  ),
   'wd-q138002421-dutlu-camii': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q138002421 / 38.629871,34.909942/ province=Q430693:Nevşehir / district=Q2440301:Nevşehir',
+    verifiedAt: 'generated',
+  ),
+  'wd-q98091589-karamanoglu-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q98091589 / 38.632639,34.910194/ province=Q430693:Nevşehir / district=Q4391092:Ürgüp ilçesi',
     verifiedAt: 'generated',
   ),
   'wd-q132134183-kaya-camii-nevsehir': SpotCoordinateVerificationEvidence(
@@ -14771,14 +18871,54 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q116759069 / 38.622111,34.714611/ province=Q430693:Nevşehir / district=Q2440301:Nevşehir',
     verifiedAt: 'generated',
   ),
+  'wd-q138009898-musa-efendi-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q138009898 / 38.633135,34.907679/ province=Q430693:Nevşehir / district=Q4391092:Ürgüp ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q127787956-pancarci-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127787956 / 38.631832,34.907761/ province=Q430693:Nevşehir / district=Q4391092:Ürgüp ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q127788011-sagir-mescit-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127788011 / 38.633144,34.911316/ province=Q430693:Nevşehir / district=Q4391092:Ürgüp ilçesi',
+    verifiedAt: 'generated',
+  ),
   'wd-q135683962-zulfikar-kilic-arslan-camii': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q135683962 / 38.620548,34.713179/ province=Q430693:Nevşehir / district=Q2440301:Nevşehir',
     verifiedAt: 'generated',
   ),
+  'wd-q19613323-cavusin-koyu-eski-kaya-cami': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q19613323 / 38.666944,34.844528/ province=Q430693:Nevşehir / district=Q49100953:Avanos ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q138035245-urgup-kurtulus-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q138035245 / 38.628545,34.905461/ province=Q430693:Nevşehir / district=Q4391092:Ürgüp ilçesi',
+    verifiedAt: 'generated',
+  ),
   'wd-q115801729-nevsehir-kalesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q115801729 / 38.619902,34.713051/ province=Q430693:Nevşehir / district=Q2440301:Nevşehir',
+    verifiedAt: 'generated',
+  ),
+  'wd-q95640040-ortahisar-kalesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q95640040 / 38.619935,34.864329/ province=Q430693:Nevşehir / district=Q4391092:Ürgüp ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q115454055-aynali-kilise': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q115454055 / 38.634959,34.853993/ province=Q430693:Nevşehir / district=Q4391092:Ürgüp ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q56245348-aziz-yuhanna-vaftizci-kilisesi-cavusin': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q56245348 / 38.667524,34.843126/ province=Q430693:Nevşehir / district=Q49100953:Avanos ilçesi',
     verifiedAt: 'generated',
   ),
   'wd-q73249333-azize-barbara-kilisesi': SpotCoordinateVerificationEvidence(
@@ -14801,6 +18941,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q115454836 / 38.639193,34.845221/ province=Q430693:Nevşehir / district=Q2440301:Nevşehir',
     verifiedAt: 'generated',
   ),
+  'wd-q137787535-konstantinos-ve-eleni-kilisesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q137787535 / 38.583650,34.897216/ province=Q430693:Nevşehir / district=Q4391092:Ürgüp ilçesi',
+    verifiedAt: 'generated',
+  ),
   'wd-q115445647-malta-hacli-kilise': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q115445647 / 38.638402,34.846109/ province=Q430693:Nevşehir / district=Q2440301:Nevşehir',
@@ -14809,6 +18954,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q131539131-meryem-ana-kilisesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q131539131 / 38.641472,34.845076/ province=Q430693:Nevşehir / district=Q2440301:Nevşehir',
+    verifiedAt: 'generated',
+  ),
+  'wd-q56245415-pancarlik-kilisesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q56245415 / 38.614221,34.892692/ province=Q430693:Nevşehir / district=Q4391092:Ürgüp ilçesi',
     verifiedAt: 'generated',
   ),
   'wd-q115456669-pantokrator-kilisesi': SpotCoordinateVerificationEvidence(
@@ -14826,9 +18976,24 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q115446076 / 38.638921,34.846367/ province=Q430693:Nevşehir / district=Q2440301:Nevşehir',
     verifiedAt: 'generated',
   ),
+  'wd-q21528347-urgup-saat-kulesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q21528347 / 38.630167,34.910361/ province=Q430693:Nevşehir / district=Q4391092:Ürgüp ilçesi',
+    verifiedAt: 'generated',
+  ),
   'wd-q1328958-derinkuyu-yeralti-sehri': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q1328958 / 38.373403,34.735034/ province=Q430693:Nevşehir / district=Q2401967:Derinkuyu ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q620593-goreme-tarihi-milli-parki': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q620593 / 38.652778,34.863056/ province=Q430693:Nevşehir / district=Q4391092:Ürgüp ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q20474091-haci-bektas-i-veli-turbesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q20474091 / 38.942778,34.562222/ province=Q430693:Nevşehir / district=Q2404697:Hacıbektaş',
     verifiedAt: 'generated',
   ),
   'wd-q114383869-karanlik-kilise': SpotCoordinateVerificationEvidence(
@@ -14841,9 +19006,34 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q118948370 / 38.459995,34.752265/ province=Q430693:Nevşehir / district=Q2440301:Nevşehir',
     verifiedAt: 'generated',
   ),
+  'wd-q131523702-aziz-nikolas-manastiri': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131523702 / 38.576889,34.895396/ province=Q430693:Nevşehir / district=Q4391092:Ürgüp ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q289015-aciksaray': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q289015 / 38.737500,34.663056/ province=Q430693:Nevşehir / district=Q2557174:Gülşehir ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q99962996-avanos-sac-muzesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q99962996 / 38.719800,34.848600/ province=Q430693:Nevşehir / district=Q49100953:Avanos ilçesi',
+    verifiedAt: 'generated',
+  ),
   'wd-q28221127-nevsehir-muzesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q28221127 / 38.628056,34.725000/ province=Q430693:Nevşehir / district=Q2440301:Nevşehir',
+    verifiedAt: 'generated',
+  ),
+  'wd-q139428212-alaaddin-hamami': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q139428212 / 38.717342,34.841919/ province=Q430693:Nevşehir / district=Q49100953:Avanos ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131739221-urgup-hamami': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131739221 / 38.629944,34.909668/ province=Q430693:Nevşehir / district=Q4391092:Ürgüp ilçesi',
     verifiedAt: 'generated',
   ),
   'wd-q112865630-uchisar-kalesi': SpotCoordinateVerificationEvidence(
@@ -14856,9 +19046,29 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q116055702 / 38.660694,34.819611/ province=Q430693:Nevşehir / district=Q2440301:Nevşehir',
     verifiedAt: 'generated',
   ),
+  'wd-q35473810-gomeda-vadisi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q35473810 / 38.571600,34.859900/ province=Q430693:Nevşehir / district=Q4391092:Ürgüp ilçesi',
+    verifiedAt: 'generated',
+  ),
   'wd-q104596490-guvercin-vadisi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q104596490 / 38.620460,34.805840/ province=Q430693:Nevşehir / district=Q2440301:Nevşehir',
+    verifiedAt: 'generated',
+  ),
+  'wd-q51614-anadolu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q51614 / 39.000000,35.000000/ province=Q430693:Nevşehir / district=Q49100953:Avanos ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6090320-zeyve-hoyuk': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6090320 / 37.514444,34.579444/ province=Q155219:Niğde / district=Q3150097:Ulukışla',
+    verifiedAt: 'generated',
+  ),
+  'wd-q3022142-demirkazik-dagi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q3022142 / 37.835660,35.150080/ province=Q155219:Niğde / district=Q14530264:Çamardı İlçesi',
     verifiedAt: 'generated',
   ),
   'wd-q1559343-gollu-dag': SpotCoordinateVerificationEvidence(
@@ -14866,9 +19076,104 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q1559343 / 38.254662,34.544600/ province=Q155219:Niğde / district=Q2129137:Çiftlik (ilçe)',
     verifiedAt: 'generated',
   ),
+  'wd-q1302768-hasandagi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q1302768 / 38.126520,34.165110/ province=Q155219:Niğde / district=Q49100599:Altunhisar İlçesi',
+    verifiedAt: 'generated',
+  ),
   'wd-q118869245-saray-camii': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q118869245 / 41.131361,37.285611/ province=Q483180:Ordu / district=Q334985:Ünye',
+    verifiedAt: 'generated',
+  ),
+  'wd-q137057205-sultan-abdul-hamit-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q137057205 / 40.790120,37.016657/ province=Q483180:Ordu / district=Q49100464:Akkuş İlçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q4938906-bolaman-kalesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q4938906 / 41.036700,37.591100/ province=Q483180:Ordu / district=Q2046545:Fatsa',
+    verifiedAt: 'generated',
+  ),
+  'wd-q118869476-yason-kilisesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q118869476 / 41.133806,37.682389/ province=Q483180:Ordu / district=Q49107694:Perşembe ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q1404380-hemite-kaya-aniti': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q1404380 / 37.184417,36.093194/ province=Q281206:Osmaniye / district=Q2519013:Osmaniye ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q948243-kastabala': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q948243 / 37.177430,36.187440/ province=Q281206:Osmaniye / district=Q2519013:Osmaniye ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q55603498-alacami': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q55603498 / 37.373052,36.102804/ province=Q281206:Osmaniye / district=Q2184902:Kadirli İlçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6013357-duldul-dagi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6013357 / 37.348470,36.515600/ province=Q281206:Osmaniye / district=Q15995620:Düziçi (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q474357-hemite-kalesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q474357 / 37.188611,36.094444/ province=Q281206:Osmaniye / district=Q2519013:Osmaniye ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q2225224-savranda-kalesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q2225224 / 37.148889,36.459167/ province=Q281206:Osmaniye / district=Q2218236:Hasanbeyli (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6008234-rize-kalesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6008234 / 41.027560,40.510180/ province=Q483481:Rize / district=Q2282923:Rize (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q60788217-ardesen-kilisesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q60788217 / 41.195833,41.001528/ province=Q483481:Rize / district=Q49100806:Ardeşen İlçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q85968057-apivanak-koprusu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q85968057 / 40.839191,41.098656/ province=Q483481:Rize / district=Q117148242:Çamlıhemşin İlçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q110944940-cat-koprusu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q110944940 / 40.863251,40.950279/ province=Q483481:Rize / district=Q117148242:Çamlıhemşin İlçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q61076454-senyuva-koprusu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q61076454 / 40.997491,40.975024/ province=Q483481:Rize / district=Q117148242:Çamlıhemşin İlçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q28221174-rize-ataturk-evi-muzesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q28221174 / 41.023333,40.534167/ province=Q483481:Rize / district=Q2282923:Rize (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q21541477-kackar-daglari-milli-parki': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q21541477 / 40.861153,41.101122/ province=Q483481:Rize / district=Q117148242:Çamlıhemşin İlçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q61076474-gelintulu-selalesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q61076474 / 40.950100,41.110650/ province=Q483481:Rize / district=Q117148242:Çamlıhemşin İlçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q61076472-palovit-selalesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q61076472 / 40.941440,40.993190/ province=Q483481:Rize / district=Q117148242:Çamlıhemşin İlçesi',
     verifiedAt: 'generated',
   ),
   'wd-q130683854-orta-camii-cesmesi': SpotCoordinateVerificationEvidence(
@@ -14889,6 +19194,16 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q20474791-poyrazlar-golu': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q20474791 / 40.838890,30.466840/ province=Q83069:Sakarya / district=Q175323:Adapazarı',
+    verifiedAt: 'generated',
+  ),
+  'wd-q20474472-harmantepe-kalesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q20474472 / 40.891206,30.436061/ province=Q83069:Sakarya / district=Q2804008:Söğütlü (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q20471785-karasu-kalesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q20471785 / 41.077547,30.641514/ province=Q83069:Sakarya / district=Q2191303:Karasu (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q6050764-seyifler-kalesi': SpotCoordinateVerificationEvidence(
@@ -14921,6 +19236,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q61071745 / 41.323778,36.324944/ province=Q483040:Samsun / district=Q4812671:Atakum',
     verifiedAt: 'generated',
   ),
+  'wd-q131836329-ali-bey-cesmesi-bafra': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131836329 / 41.568169,35.903347/ province=Q483040:Samsun / district=Q49101057:Bafra ilçesi',
+    verifiedAt: 'generated',
+  ),
   'wd-q6074122-onur-aniti': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q6074122 / 41.289056,36.336472/ province=Q483040:Samsun / district=Q3906369:İlkadım',
@@ -14936,9 +19256,19 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q19610508 / 41.318889,36.323056/ province=Q483040:Samsun / district=Q4812671:Atakum',
     verifiedAt: 'generated',
   ),
+  'wd-q6098838-ikiztepe-hoyugu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6098838 / 41.614010,35.870580/ province=Q483040:Samsun / district=Q49101057:Bafra ilçesi',
+    verifiedAt: 'generated',
+  ),
   'wd-q112980277-buyuk-camii': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q112980277 / 41.294392,36.332915/ province=Q483040:Samsun / district=Q3906369:İlkadım',
+    verifiedAt: 'generated',
+  ),
+  'wd-q19611362-gogceli-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q19611362 / 41.198111,36.743194/ province=Q483040:Samsun / district=Q49110417:Çarşamba İlçesi',
     verifiedAt: 'generated',
   ),
   'wd-q115816559-samsun-merkez-camii': SpotCoordinateVerificationEvidence(
@@ -14991,14 +19321,19 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q19612689 / 41.204530,36.461573/ province=Q483040:Samsun / district=Q2530261:Tekkeköy',
     verifiedAt: 'generated',
   ),
-  'wd-q617520-apameia': SpotCoordinateVerificationEvidence(
-    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
-    sourceRef: 'Q617520 / 37.066667,37.883611/ province=Q388469:Şanlıurfa / district=Q849497:Birecik',
-    verifiedAt: 'generated',
-  ),
   'wd-q1496350-hacinebi-hoyugu': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q1496350 / 37.059638,37.975026/ province=Q388469:Şanlıurfa / district=Q849497:Birecik',
+    verifiedAt: 'generated',
+  ),
+  'wd-q1765238-lidar-hoyuk': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q1765238 / 37.562283,38.600333/ province=Q388469:Şanlıurfa / district=Q990319:Hilvan',
+    verifiedAt: 'generated',
+  ),
+  'wd-q118133735-sefertepe': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q118133735 / 37.186432,39.489822/ province=Q388469:Şanlıurfa / district=Q2430648:Viranşehir',
     verifiedAt: 'generated',
   ),
   'wd-q98091568-birecik-ulu-camii': SpotCoordinateVerificationEvidence(
@@ -15009,6 +19344,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q98091586-harran-ulu-camii': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
     sourceRef: 'Q98091586 / 36.864639,39.031167/ province=Q388469:Şanlıurfa / district=Q1967756:Harran',
+    verifiedAt: 'generated',
+  ),
+  'wd-q34876740-ataturk-baraj-golu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q34876740 / 37.573800,38.591000/ province=Q388469:Şanlıurfa / district=Q990319:Hilvan',
     verifiedAt: 'generated',
   ),
   'wd-q132752923-han-el-barur-kervansarayi-harran': SpotCoordinateVerificationEvidence(
@@ -15036,6 +19376,116 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q109393443 / 37.031778,37.979389/ province=Q388469:Şanlıurfa / district=Q849497:Birecik',
     verifiedAt: 'generated',
   ),
+  'wd-q127788300-veysel-karani-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127788300 / 38.131378,41.716236/ province=Q482825:Siirt / district=Q49101216:Baykan ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6031988-balatlar-kilisesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6031988 / 42.026111,35.157222/ province=Q134413:Sinop / district=Q2598233:Sinop',
+    verifiedAt: 'generated',
+  ),
+  'wd-q28154829-inceburun-feneri': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q28154829 / 42.096944,34.945000/ province=Q134413:Sinop / district=Q2598233:Sinop',
+    verifiedAt: 'generated',
+  ),
+  'wd-q26878775-diyojen-heykeli': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q26878775 / 42.025278,35.141389/ province=Q134413:Sinop / district=Q2598233:Sinop',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6009704-sinop-kalesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6009704 / 42.023700,35.150600/ province=Q134413:Sinop / district=Q2598233:Sinop',
+    verifiedAt: 'generated',
+  ),
+  'wd-q110423280-akgol-tabiat-parki': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q110423280 / 41.700268,34.596186/ province=Q134413:Sinop / district=Q2168792:Boyabat ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q28450890-bazalt-kayaliklari': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q28450890 / 41.473889,34.640833/ province=Q134413:Sinop / district=Q2168792:Boyabat ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q28219932-sinop-arkeoloji-muzesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q28219932 / 42.027500,35.151667/ province=Q134413:Sinop / district=Q2598233:Sinop',
+    verifiedAt: 'generated',
+  ),
+  'wd-q20473199-boyabat-kalesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q20473199 / 41.465900,34.761400/ province=Q134413:Sinop / district=Q2168792:Boyabat ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q4200748-inceburun': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q4200748 / 42.097581,34.944494/ province=Q134413:Sinop / district=Q2598233:Sinop',
+    verifiedAt: 'generated',
+  ),
+  'wd-q61072477-cizre-ulu-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q61072477 / 37.321556,42.191250/ province=Q647378:Şırnak / district=Q3961214:Cizre (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6970952-cizre-kalesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6970952 / 37.328910,42.192780/ province=Q647378:Şırnak / district=Q3961214:Cizre (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131902275-kasrik-kalesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131902275 / 37.395367,42.177620/ province=Q647378:Şırnak / district=Q2264974:Şırnak',
+    verifiedAt: 'generated',
+  ),
+  'wd-q49342959-kasrik-bogazi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q49342959 / 37.395000,42.176944/ province=Q647378:Şırnak / district=Q2264974:Şırnak',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131402920-kasrik-koprusu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131402920 / 37.395800,42.176940/ province=Q647378:Şırnak / district=Q2264974:Şırnak',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131640951-sivas-kongresi-ve-ataturk-aniti': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131640951 / 39.750028,37.014083/ province=Q483100:Sivas / district=Q2545979:Sivas',
+    verifiedAt: 'generated',
+  ),
+  'wd-q132655068-havuz-aslantas': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q132655068 / 39.175800,37.113689/ province=Q483100:Sivas / district=Q4319786:Kangal (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q5626500-gokmedrese': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q5626500 / 39.744291,37.016727/ province=Q483100:Sivas / district=Q2545979:Sivas',
+    verifiedAt: 'generated',
+  ),
+  'wd-q31502375-yilanli-dagi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q31502375 / 39.433600,37.483300/ province=Q483100:Sivas / district=Q2192942:Ulaş (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6014179-hafik-golu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6014179 / 39.870900,37.378300/ province=Q483100:Sivas / district=Q1980478:Hafik İlçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q124654403-kizilcan-golu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q124654403 / 39.847539,37.559791/ province=Q483100:Sivas / district=Q49110333:Zara İlçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6051934-todurge-golu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6051934 / 39.882470,37.599780/ province=Q483100:Sivas / district=Q49110333:Zara İlçesi',
+    verifiedAt: 'generated',
+  ),
   'wd-q131403335-asagi-hamam-koprusu': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q131403335 / 39.373043,38.117302/ province=Q483100:Sivas / district=Q2755924:Divriği',
@@ -15046,9 +19496,39 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q132735629 / 39.400970,38.113357/ province=Q483100:Sivas / district=Q2755924:Divriği',
     verifiedAt: 'generated',
   ),
+  'wd-q109518435-asik-veysel-muzesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q109518435 / 39.461030,36.165267/ province=Q483100:Sivas / district=Q2794185:Şarkışla ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q66371383-sivas-arkeoloji-muzesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q66371383 / 39.755389,37.011528/ province=Q483100:Sivas / district=Q2545979:Sivas',
+    verifiedAt: 'generated',
+  ),
   'wd-q130640621-asagi-hamam': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q130640621 / 39.373111,38.117000/ province=Q483100:Sivas / district=Q2755924:Divriği',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131738519-hasan-gedik-hamami': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131738519 / 40.163582,38.091587/ province=Q483100:Sivas / district=Q2319523:Suşehri ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q5626513-sizir-selalesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q5626513 / 39.305814,35.946731/ province=Q483100:Sivas / district=Q49103664:Gemerek ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q132133971-fatih-camii-corlu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q132133971 / 41.163025,27.798092/ province=Q129387:Tekirdağ / district=Q2834288:Çorlu (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q134590853-kabaklipinar-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q134590853 / 41.329877,27.974513/ province=Q129387:Tekirdağ / district=Q49105242:Kapaklı (ilçe)',
     verifiedAt: 'generated',
   ),
   'wd-q126015581-rustem-pasa-camii': SpotCoordinateVerificationEvidence(
@@ -15061,6 +19541,16 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q126861727 / 40.702917,27.306806/ province=Q129387:Tekirdağ / district=Q388544:Şarköy',
     verifiedAt: 'generated',
   ),
+  'wd-q131403141-kara-mustafa-pasa-koprusu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131403141 / 41.243175,27.694323/ province=Q129387:Tekirdağ / district=Q49103334:Ergene İlçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q132134583-karaagac-koyu-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q132134583 / 41.295361,27.945497/ province=Q129387:Tekirdağ / district=Q49105242:Kapaklı (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q7385867-rakoci-muzesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q7385867 / 40.974070,27.509950/ province=Q129387:Tekirdağ / district=Q16897309:Süleymanpaşa',
@@ -15069,6 +19559,16 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q20988528-tekirdag-arkeoloji-ve-etnografya-muzesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q20988528 / 40.975556,27.512500/ province=Q129387:Tekirdağ / district=Q16897309:Süleymanpaşa',
+    verifiedAt: 'generated',
+  ),
+  'wd-q133246703-corlu-yahudi-mezarligi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q133246703 / 41.171864,27.803347/ province=Q129387:Tekirdağ / district=Q2834288:Çorlu (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6045228-ali-pasa-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6045228 / 40.185000,36.331500/ province=Q483195:Tokat / district=Q13430613:Artova ilçesi',
     verifiedAt: 'generated',
   ),
   'wd-q127634846-behzat-camii': SpotCoordinateVerificationEvidence(
@@ -15116,9 +19616,114 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q6032321 / 40.316083,36.546750/ province=Q483195:Tokat / district=Q25399091:Tokat ilçesi',
     verifiedAt: 'generated',
   ),
+  'wd-q31188726-abdullah-pasa-cesmesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q31188726 / 41.004547,39.716991/ province=Q388995:Trabzon / district=Q25399089:Ortahisar İlçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131391310-emir-mehmet-turbesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131391310 / 41.004234,39.710510/ province=Q388995:Trabzon / district=Q25399089:Ortahisar İlçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131390956-gulbahar-hatun-turbesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131390956 / 41.003376,39.716404/ province=Q388995:Trabzon / district=Q25399089:Ortahisar İlçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q130690503-hamza-pasa-camii-cesmesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q130690503 / 41.004627,39.713009/ province=Q388995:Trabzon / district=Q25399089:Ortahisar İlçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131391594-hamza-pasa-turbesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131391594 / 41.004410,39.713104/ province=Q388995:Trabzon / district=Q25399089:Ortahisar İlçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q130690505-kaledibi-kilise-cesmesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q130690505 / 41.007862,39.715198/ province=Q388995:Trabzon / district=Q25399089:Ortahisar İlçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q130690498-kiroglu-cesmesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q130690498 / 41.006458,39.714153/ province=Q388995:Trabzon / district=Q25399089:Ortahisar İlçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q135004582-pazarkapi-cesmesi-ortahisar': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q135004582 / 41.006771,39.717838/ province=Q388995:Trabzon / district=Q25399089:Ortahisar İlçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q130690478-seyyidi-haci-mehmet-cesmesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q130690478 / 41.004559,39.715660/ province=Q388995:Trabzon / district=Q25399089:Ortahisar İlçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q130690500-trabzon-ayasofya-camii-cesmesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q130690500 / 41.002750,39.695908/ province=Q388995:Trabzon / district=Q25399089:Ortahisar İlçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q130690485-yali-cesmesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q130690485 / 41.006348,39.708107/ province=Q388995:Trabzon / district=Q25399089:Ortahisar İlçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q130690480-iskender-pasa-cesmesi-1': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q130690480 / 41.007748,39.717564/ province=Q388995:Trabzon / district=Q25399089:Ortahisar İlçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q130690489-iskender-pasa-cesmesi-2': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q130690489 / 41.008125,39.719860/ province=Q388995:Trabzon / district=Q25399089:Ortahisar İlçesi',
+    verifiedAt: 'generated',
+  ),
   'wd-q135620128-golbasi-camii': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q135620128 / 40.619222,40.290055/ province=Q388995:Trabzon / district=Q17993047:Çaykara (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q127643459-haci-yahya-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127643459 / 41.008053,39.722336/ province=Q388995:Trabzon / district=Q25399089:Ortahisar İlçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q127643510-hamzapasa-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127643510 / 41.004289,39.712827/ province=Q388995:Trabzon / district=Q25399089:Ortahisar İlçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q132134418-hatuncuk-hatun-camii-ortahisar': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q132134418 / 41.004144,39.710128/ province=Q388995:Trabzon / district=Q25399089:Ortahisar İlçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q127786774-hoca-halil-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127786774 / 41.007982,39.717706/ province=Q388995:Trabzon / district=Q25399089:Ortahisar İlçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q127787804-hizirbey-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127787804 / 41.006654,39.713725/ province=Q388995:Trabzon / district=Q25399089:Ortahisar İlçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q127787015-kudreddin-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127787015 / 41.000877,39.734150/ province=Q388995:Trabzon / district=Q25399089:Ortahisar İlçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q127787121-molla-siyah-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127787121 / 41.007070,39.718376/ province=Q388995:Trabzon / district=Q25399089:Ortahisar İlçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q127787139-musapasa-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127787139 / 41.003058,39.720420/ province=Q388995:Trabzon / district=Q25399089:Ortahisar İlçesi',
     verifiedAt: 'generated',
   ),
   'wd-q127788221-tasoren-camii': SpotCoordinateVerificationEvidence(
@@ -15131,9 +19736,54 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q127788256 / 40.793323,39.967934/ province=Q388995:Trabzon / district=Q764830:Araklı',
     verifiedAt: 'generated',
   ),
+  'wd-q8052263-yeni-cuma-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q8052263 / 41.001100,39.722500/ province=Q388995:Trabzon / district=Q25399089:Ortahisar İlçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q132134194-carsi-camii-ortahisar': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q132134194 / 41.007496,39.723568/ province=Q388995:Trabzon / district=Q25399089:Ortahisar İlçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q8080194-iskenderpasa-camii-trabzon': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q8080194 / 41.005001,39.732399/ province=Q388995:Trabzon / district=Q25399089:Ortahisar İlçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q127786799-ickale-camii': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127786799 / 41.001107,39.719307/ province=Q388995:Trabzon / district=Q25399089:Ortahisar İlçesi',
+    verifiedAt: 'generated',
+  ),
   'wd-q125618501-aygir-golu-trabzon': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q125618501 / 40.526500,40.390500/ province=Q388995:Trabzon / district=Q17993047:Çaykara (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6352143-kalepark': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6352143 / 41.007599,39.734451/ province=Q388995:Trabzon / district=Q25399089:Ortahisar İlçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q132752766-alaca-han-ortahisar': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q132752766 / 41.007900,39.724663/ province=Q388995:Trabzon / district=Q25399089:Ortahisar İlçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q108228798-kadiralak-tabiat-parki': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q108228798 / 40.890418,39.313373/ province=Q388995:Trabzon / district=Q14496723:Tonya',
+    verifiedAt: 'generated',
+  ),
+  'wd-q97320455-hapsiyas-koprusu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q97320455 / 40.819190,40.265800/ province=Q388995:Trabzon / district=Q2260832:Of (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131403083-kasikci-koprusu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131403083 / 40.808498,39.891197/ province=Q388995:Trabzon / district=Q2763719:Arsin',
     verifiedAt: 'generated',
   ),
   'wd-q131527384-aya-varvara-kilisesi': SpotCoordinateVerificationEvidence(
@@ -15141,9 +19791,29 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q131527384 / 40.689564,39.659138/ province=Q388995:Trabzon / district=Q2144595:Maçka (ilçe)',
     verifiedAt: 'generated',
   ),
+  'wd-q830472-kaymakli-manastiri': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q830472 / 40.981944,39.744833/ province=Q388995:Trabzon / district=Q25399089:Ortahisar İlçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6454774-kizlar-manastiri': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6454774 / 40.998500,39.729000/ province=Q388995:Trabzon / district=Q25399089:Ortahisar İlçesi',
+    verifiedAt: 'generated',
+  ),
   'wd-q829582-vazelon-manastiri': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q829582 / 40.759835,39.529987/ province=Q388995:Trabzon / district=Q2144595:Maçka (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q15622502-kucuk-ayvasil-kilisesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q15622502 / 41.006100,39.723300/ province=Q388995:Trabzon / district=Q25399089:Ortahisar İlçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6055954-samil-ekinci-muzesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6055954 / 41.006140,39.727820/ province=Q388995:Trabzon / district=Q25399089:Ortahisar İlçesi',
     verifiedAt: 'generated',
   ),
   'wd-q6035990-altindere-milli-parki': SpotCoordinateVerificationEvidence(
@@ -15151,14 +19821,24 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q6035990 / 40.708783,39.648661/ province=Q388995:Trabzon / district=Q2144595:Maçka (ilçe)',
     verifiedAt: 'generated',
   ),
+  'wd-q110657744-olimpiyat-parki': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q110657744 / 41.001360,39.761650/ province=Q388995:Trabzon / district=Q25399089:Ortahisar İlçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131739009-haci-arif-hamami': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q131739009 / 41.007656,39.720673/ province=Q388995:Trabzon / district=Q25399089:Ortahisar İlçesi',
+    verifiedAt: 'generated',
+  ),
   'wd-q134734707-kestanelik-cami-haziresi-arakli': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q134734707 / 40.774650,39.951822/ province=Q388995:Trabzon / district=Q764830:Araklı',
     verifiedAt: 'generated',
   ),
-  'wd-q263669-blaundos': SpotCoordinateVerificationEvidence(
+  'wd-q6011652-trabzon-kalesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
-    sourceRef: 'Q263669 / 38.356771,29.210608/ province=Q483078:Uşak / district=Q1816898:Ulubey',
+    sourceRef: 'Q6011652 / 41.003710,39.719780/ province=Q388995:Trabzon / district=Q25399089:Ortahisar İlçesi',
     verifiedAt: 'generated',
   ),
   'wd-q109386249-halime-hatun-kumbeti': SpotCoordinateVerificationEvidence(
@@ -15181,9 +19861,44 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q4794056 / 40.550000,28.916667/ province=Q483083:Yalova / district=Q2019343:Armutlu (ilçe)',
     verifiedAt: 'generated',
   ),
+  'wd-q20988558-yalova-deprem-aniti': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q20988558 / 40.657778,29.253333/ province=Q483083:Yalova / district=Q1966811:Yalova (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q127643391-haci-muratlar-mescidi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q127643391 / 40.604477,29.463314/ province=Q483083:Yalova / district=Q49100567:Altınova (ilçe)',
+    verifiedAt: 'generated',
+  ),
   'wd-q85969061-bozburun-feneri': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',
     sourceRef: 'Q85969061 / 40.534167,28.781944/ province=Q483083:Yalova / district=Q2019343:Armutlu (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q9148422-alisar-hoyugu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q9148422 / 39.606111,35.261389/ province=Q75445:Yozgat / district=Q2595151:Sorgun ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q1336601-kerkenes': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q1336601 / 39.750000,35.065556/ province=Q75445:Yozgat / district=Q2595151:Sorgun ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q114635661-usakli-hoyuk': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q114635661 / 39.813111,35.052639/ province=Q75445:Yozgat / district=Q2595151:Sorgun ilçesi',
+    verifiedAt: 'generated',
+  ),
+  'wd-q6004947-yozgat-saat-kulesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q6004947 / 39.822139,34.808194/ province=Q75445:Yozgat / district=Q2705482:Yozgat (ilçe)',
+    verifiedAt: 'generated',
+  ),
+  'wd-q54811523-kral-kizi-hamami': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
+    sourceRef: 'Q54811523 / 39.494866,35.376311/ province=Q75445:Yozgat / district=Q2007700:Sarıkaya',
     verifiedAt: 'generated',
   ),
   'wd-q127787930-orhangazi-camii': SpotCoordinateVerificationEvidence(
