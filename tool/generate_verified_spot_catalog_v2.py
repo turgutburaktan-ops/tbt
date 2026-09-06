@@ -130,6 +130,9 @@ EXPANSION_ROOT_CLASSES = {
     'Q631305': 'Kaya Oluşumu',
     'Q82117': 'Tarihi Kent Kapısı',
     'Q24398318': 'İnanç Yapısı',
+    'Q35112127': 'Tarihi Yapı',
+    'Q1081138': 'Tarihi Alan',
+    'Q16748868': 'Tarihi Kent Surları',
 }
 
 
