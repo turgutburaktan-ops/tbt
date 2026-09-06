@@ -38,7 +38,7 @@ concurrency:
 jobs:
   build-catalog:
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 180
     env:
       TARGET_BRANCH: ${{ github.event.pull_request.base.ref || github.ref_name }}
     steps:
@@ -64,7 +64,7 @@ jobs:
         run: |
           mkdir -p build/spot_import
           set +e
-          python3 tool/generate_verified_spot_catalog_v2.py --target-total "$TARGET_TOTAL" --allow-shortfall 2>&1 | tee build/spot_import/generator.log
+          python3 tool/generate_verified_spot_catalog_v2.py --target-total "$TARGET_TOTAL" --per-source-limit 8000 --allow-shortfall 2>&1 | tee build/spot_import/generator.log
           code=${PIPESTATUS[0]}
           echo "exit_code=$code" >> "$GITHUB_OUTPUT"
           exit 0
