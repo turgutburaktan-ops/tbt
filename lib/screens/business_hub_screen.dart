@@ -533,6 +533,14 @@ class _BusinessHubScreenState extends State<BusinessHubScreen> {
           ),
         ),
       const SizedBox(height: 10),
+      _QuickStartCard(
+        onProfile: () {
+          if (!_previewGuard('Profil bilgileri')) _showProfileDialog();
+        },
+        onMenu: () => _openManager('menu'),
+        onCampaign: () => _openManager('campaign'),
+      ),
+      const SizedBox(height: 18),
       const _ManagementSection(
         icon: Icons.insights_rounded,
         title: 'Büyüme ve performans',
@@ -714,6 +722,117 @@ class _BusinessHubScreenState extends State<BusinessHubScreen> {
     'dining' => 'Restoran / Yeme-İçme',
     _ => 'İşletme',
   };
+}
+
+class _QuickStartCard extends StatelessWidget {
+  final VoidCallback onProfile;
+  final VoidCallback onMenu;
+  final VoidCallback onCampaign;
+
+  const _QuickStartCard({
+    required this.onProfile,
+    required this.onMenu,
+    required this.onCampaign,
+  });
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.all(16),
+    decoration: BoxDecoration(
+      gradient: const LinearGradient(
+        colors: [Color(0x2224D5E8), Color(0x221981FF)],
+      ),
+      borderRadius: BorderRadius.circular(18),
+      border: Border.all(color: AppColors.cyan.withValues(alpha: .38)),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Row(
+          children: [
+            Icon(Icons.auto_awesome_rounded, color: AppColors.cyan),
+            SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'İşletmeni müşteriye hazırla',
+                style: TextStyle(fontSize: 17, fontWeight: FontWeight.w900),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 7),
+        const Text(
+          'Bu üç adım işletmeni keşif ve rota önerilerinde daha güçlü gösterir.',
+          style: TextStyle(color: Colors.white60, height: 1.35),
+        ),
+        const SizedBox(height: 12),
+        _QuickStartStep(
+          number: '1',
+          title: 'Profil bilgilerini tamamla',
+          onTap: onProfile,
+        ),
+        _QuickStartStep(
+          number: '2',
+          title: 'Menü veya hizmetlerini ekle',
+          onTap: onMenu,
+        ),
+        _QuickStartStep(
+          number: '3',
+          title: 'İlk kampanyanı oluştur',
+          onTap: onCampaign,
+        ),
+      ],
+    ),
+  );
+}
+
+class _QuickStartStep extends StatelessWidget {
+  final String number;
+  final String title;
+  final VoidCallback onTap;
+
+  const _QuickStartStep({
+    required this.number,
+    required this.title,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) => InkWell(
+    onTap: onTap,
+    borderRadius: BorderRadius.circular(12),
+    child: Padding(
+      padding: const EdgeInsets.symmetric(vertical: 7),
+      child: Row(
+        children: [
+          Container(
+            width: 28,
+            height: 28,
+            alignment: Alignment.center,
+            decoration: const BoxDecoration(
+              color: AppColors.cyan,
+              shape: BoxShape.circle,
+            ),
+            child: Text(
+              number,
+              style: const TextStyle(
+                color: Colors.black,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              title,
+              style: const TextStyle(fontWeight: FontWeight.w800),
+            ),
+          ),
+          const Icon(Icons.chevron_right_rounded, color: Colors.white54),
+        ],
+      ),
+    ),
+  );
 }
 
 class _ManagementSection extends StatelessWidget {
