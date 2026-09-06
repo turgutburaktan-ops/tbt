@@ -15,6 +15,7 @@ import generate_verified_spot_catalog as base
 
 PROVINCE_CLASS = 'Q48336'
 DISTRICT_CLASS = 'Q1147395'
+WIKIDATA_API = 'https://www.wikidata.org/w/api.php'
 PRIORITY_PROVINCES = (
     'elazig',
     'malatya',
@@ -68,20 +69,16 @@ EXPANSION_ROOT_CLASSES = {
 }
 
 
-def province_query_body(class_clause: str, limit: int, offset: int) -> str:
-    return f'''SELECT DISTINCT ?item ?itemLabel ?coord ?image
-      ?admin ?adminLabel ?district ?districtLabel WHERE {{
+def candidate_query_body(class_clause: str, limit: int, offset: int) -> str:
+    """Keep WDQS discovery cheap; resolve P131 ancestry through the API later."""
+    return f'''SELECT DISTINCT ?item ?itemLabel ?coord ?image WHERE {{
   ?item wdt:P17 wd:Q43 ; wdt:P625 ?coord ; wdt:P18 ?image {class_clause} .
-  ?item wdt:P131* ?district .
-  ?district wdt:P31 wd:{DISTRICT_CLASS} ;
-            wdt:P131* ?admin .
-  ?admin wdt:P31 wd:{PROVINCE_CLASS} .
   SERVICE wikibase:label {{ bd:serviceParam wikibase:language "tr,en". }}
-}} ORDER BY ?item ?admin ?district LIMIT {limit} OFFSET {offset}'''
+}} ORDER BY ?item LIMIT {limit} OFFSET {offset}'''
 
 
 def province_root_query(root: str, limit: int, offset: int) -> str:
-    return province_query_body(
+    return candidate_query_body(
         f'; wdt:P31 ?class . ?class wdt:P279* wd:{root}',
         limit,
         offset,
@@ -89,7 +86,7 @@ def province_root_query(root: str, limit: int, offset: int) -> str:
 
 
 def province_heritage_query(limit: int, offset: int) -> str:
-    return province_query_body('; wdt:P1435 ?heritage', limit, offset)
+    return candidate_query_body('; wdt:P1435 ?heritage', limit, offset)
 
 
 def usable_label(value: str, qid: str) -> bool:
@@ -97,14 +94,14 @@ def usable_label(value: str, qid: str) -> bool:
     return bool(value) and base.norm(value) != base.norm(qid)
 
 
-def district_collect_query(
+def candidate_collect_query(
     query_builder,
     category: str,
     page_size: int,
     max_rows: int,
     out: dict[str, dict],
 ) -> None:
-    """Collect only province+district-resolved rows and flag ambiguity."""
+    """Collect direct P625/P18 rows without an expensive recursive join."""
     offset = 0
     while offset < max_rows:
         limit = min(page_size, max_rows - offset)
@@ -118,48 +115,141 @@ def district_collect_query(
         for row in rows:
             uri = row.get('item', {}).get('value', '')
             qid = uri.rsplit('/', 1)[-1]
-            province_qid = row.get('admin', {}).get('value', '').rsplit('/', 1)[-1]
-            district_qid = row.get('district', {}).get('value', '').rsplit('/', 1)[-1]
             point = base.point(row.get('coord', {}).get('value', ''))
             name = row.get('itemLabel', {}).get('value', '').strip()
             image = row.get('image', {}).get('value', '').strip()
-            city = row.get('adminLabel', {}).get('value', '').strip()
-            district = row.get('districtLabel', {}).get('value', '').strip()
             if not (
                 qid.startswith('Q')
-                and province_qid.startswith('Q')
-                and district_qid.startswith('Q')
                 and point
                 and image
                 and usable_label(name, qid)
-                and usable_label(city, province_qid)
-                and usable_label(district, district_qid)
             ):
                 continue
-            resolved = {
-                'qid': qid,
-                'name': name,
-                'city': city,
-                'district': district,
-                'province_qid': province_qid,
-                'district_qid': district_qid,
-                'lat': point[0],
-                'lng': point[1],
-                'image': image,
-                'category': category,
-            }
-            previous = out.get(qid)
-            if previous is None:
-                out[qid] = resolved
-            elif (
-                previous.get('province_qid') != province_qid
-                or previous.get('district_qid') != district_qid
-            ):
-                previous['ambiguous_admin'] = True
+            if qid not in out:
+                out[qid] = {
+                    'qid': qid,
+                    'name': name,
+                    'city': '',
+                    'district': '',
+                    'province_qid': '',
+                    'district_qid': '',
+                    'lat': point[0],
+                    'lng': point[1],
+                    'image': image,
+                    'category': category,
+                }
         offset += len(rows)
         if len(rows) < limit:
             break
         base.time.sleep(.35)
+
+
+def ranked_claim_qids(entity: dict, prop: str) -> list[str]:
+    claims = [
+        claim for claim in entity.get('claims', {}).get(prop, [])
+        if claim.get('rank') != 'deprecated'
+    ]
+    preferred = [claim for claim in claims if claim.get('rank') == 'preferred']
+    if preferred:
+        claims = preferred
+    qids = []
+    for claim in claims:
+        value = claim.get('mainsnak', {}).get('datavalue', {}).get('value', {})
+        qid = value.get('id', '') if isinstance(value, dict) else ''
+        if qid.startswith('Q') and qid not in qids:
+            qids.append(qid)
+    return qids
+
+
+def entity_label(entity: dict, qid: str) -> str:
+    labels = entity.get('labels', {})
+    for language in ('tr', 'en'):
+        value = labels.get(language, {}).get('value', '').strip()
+        if usable_label(value, qid):
+            return value
+    return ''
+
+
+def fetch_admin_entities(candidates: dict[str, dict], max_depth: int = 8) -> dict[str, dict]:
+    """Fetch P131 ancestry in small API batches to avoid WDQS path timeouts."""
+    entities: dict[str, dict] = {}
+    frontier = set(candidates)
+    for _ in range(max_depth + 1):
+        missing = sorted(frontier - entities.keys())
+        for index in range(0, len(missing), 50):
+            batch = missing[index:index + 50]
+            payload = base.get_json(WIKIDATA_API, {
+                'action': 'wbgetentities',
+                'format': 'json',
+                'formatversion': '2',
+                'ids': '|'.join(batch),
+                'props': 'claims|labels',
+                'languages': 'tr|en',
+            })
+            entities.update(payload.get('entities', {}))
+            base.time.sleep(.05)
+        next_frontier: set[str] = set()
+        for qid in frontier:
+            next_frontier.update(ranked_claim_qids(entities.get(qid, {}), 'P131'))
+        frontier = next_frontier
+        if not frontier:
+            break
+    return entities
+
+
+def admin_pairs(qid: str, entities: dict[str, dict]) -> set[tuple[str, str]]:
+    """Return connected (province, district) pairs in the item's P131 graph."""
+    pairs: set[tuple[str, str]] = set()
+    queue: list[tuple[str, str | None, int]] = [(qid, None, 0)]
+    visited: set[tuple[str, str | None]] = set()
+    while queue:
+        current, district, depth = queue.pop(0)
+        state = (current, district)
+        if state in visited or depth > 8:
+            continue
+        visited.add(state)
+        entity = entities.get(current, {})
+        classes = set(ranked_claim_qids(entity, 'P31'))
+        if DISTRICT_CLASS in classes:
+            district = current
+        if PROVINCE_CLASS in classes and district:
+            pairs.add((current, district))
+            continue
+        for parent in ranked_claim_qids(entity, 'P131'):
+            queue.append((parent, district, depth + 1))
+    return pairs
+
+
+_base_wikidata_candidates = base.wikidata_candidates
+
+
+def district_resolved_candidates(page_size: int, per_source_limit: int) -> dict[str, dict]:
+    candidates = _base_wikidata_candidates(page_size, per_source_limit)
+    entities = fetch_admin_entities(candidates)
+    resolved = 0
+    ambiguous = 0
+    for qid, item in candidates.items():
+        pairs = admin_pairs(qid, entities)
+        if len(pairs) != 1:
+            item['ambiguous_admin'] = True
+            ambiguous += 1
+            continue
+        province_qid, district_qid = next(iter(pairs))
+        city = entity_label(entities.get(province_qid, {}), province_qid)
+        district = entity_label(entities.get(district_qid, {}), district_qid)
+        if not city or not district:
+            item['ambiguous_admin'] = True
+            ambiguous += 1
+            continue
+        item.update({
+            'city': city,
+            'district': district,
+            'province_qid': province_qid,
+            'district_qid': district_qid,
+        })
+        resolved += 1
+    print(f'district resolved: {resolved}; unresolved/ambiguous: {ambiguous}')
+    return candidates
 
 
 def province_key(value: str) -> str:
@@ -264,7 +354,8 @@ def priority_select(
 
 base.query_for_root = province_root_query
 base.heritage_query = province_heritage_query
-base.collect_query = district_collect_query
+base.collect_query = candidate_collect_query
+base.wikidata_candidates = district_resolved_candidates
 base.duplicate = strict_duplicate
 base.select = priority_select
 base.ROOT_CLASSES.update(EXPANSION_ROOT_CLASSES)
