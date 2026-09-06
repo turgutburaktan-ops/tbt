@@ -143,20 +143,24 @@ def elazig_district_query(
     admin_qids: tuple[str, ...],
     limit: int,
     offset: int,
+    *,
+    roots: tuple[str, ...] = (),
+    heritage: bool = False,
 ) -> str:
-    roots = ' '.join(f'wd:{qid}' for qid in base.ROOT_CLASSES)
+    """Build one deliberately small district query to avoid WDQS timeouts."""
     admins = ' '.join(f'wd:{qid}' for qid in admin_qids)
+    if heritage:
+        class_clause = '?item wdt:P1435 ?heritage .'
+    else:
+        root_values = ' '.join(f'wd:{qid}' for qid in roots)
+        class_clause = f'''?item wdt:P31 ?class .
+  VALUES ?root {{ {root_values} }}
+  ?class wdt:P279* ?root .'''
     return f'''SELECT DISTINCT ?item ?itemLabel ?coord ?image WHERE {{
   VALUES ?districtAdmin {{ {admins} }}
   ?item wdt:P17 wd:Q43 ; wdt:P625 ?coord ; wdt:P18 ?image ;
         wdt:P131+ ?districtAdmin .
-  {{ ?item wdt:P1435 ?heritage . }}
-  UNION
-  {{
-    ?item wdt:P31 ?class .
-    VALUES ?root {{ {roots} }}
-    ?class wdt:P279* ?root .
-  }}
+  {class_clause}
   SERVICE wikibase:label {{ bd:serviceParam wikibase:language "tr,en". }}
 }} ORDER BY ?item LIMIT {limit} OFFSET {offset}'''
 
@@ -224,63 +228,83 @@ def collect_elazig_district_candidates(
     max_rows: int,
     out: dict[str, dict],
 ) -> tuple[int, int]:
-    """Collect candidates and preserve the exact P131+ district evidence."""
-    offset = 0
-    matched = 0
+    """Collect candidates via small queries and preserve P131+ evidence."""
+    matched_qids: set[str] = set()
     added = 0
-    while offset < max_rows:
-        limit = min(page_size, max_rows - offset)
-        payload = base.get_json(
-            base.WDQS,
-            {
-                'query': elazig_district_query(admin_qids, limit, offset),
-                'format': 'json',
-            },
-        )
-        rows = payload.get('results', {}).get('bindings', [])
-        if not rows:
-            break
-        for row in rows:
-            uri = row.get('item', {}).get('value', '')
-            qid = uri.rsplit('/', 1)[-1]
-            point = base.point(row.get('coord', {}).get('value', ''))
-            name = row.get('itemLabel', {}).get('value', '').strip()
-            image = row.get('image', {}).get('value', '').strip()
-            if not (
-                qid.startswith('Q')
-                and point
-                and image
-                and usable_label(name, qid)
-            ):
-                continue
-            matched += 1
-            if qid not in out:
-                out[qid] = {
-                    'qid': qid,
-                    'name': name,
-                    'city': '',
-                    'district': '',
-                    'province_qid': '',
-                    'district_qid': '',
-                    'lat': point[0],
-                    'lng': point[1],
-                    'image': image,
-                    'category': f'Elazığ / {district}',
-                }
-                added += 1
-            item = out[qid]
-            hint = item.get('elazig_district_hint')
-            hint_qid = item.get('elazig_district_qid_hint')
-            if hint and (hint != district or hint_qid != district_qid):
-                item['ambiguous_district_hint'] = True
-            else:
-                item['elazig_district_hint'] = district
-                item['elazig_district_qid_hint'] = district_qid
-        offset += len(rows)
-        if len(rows) < limit:
-            break
-        base.time.sleep(.35)
-    return matched, added
+    root_qids = tuple(base.ROOT_CLASSES)
+    query_specs = [('heritage', ())]
+    query_specs.extend(
+        ('classes', root_qids[index:index + 5])
+        for index in range(0, len(root_qids), 5)
+    )
+    for query_kind, roots in query_specs:
+        offset = 0
+        while offset < max_rows:
+            limit = min(page_size, max_rows - offset)
+            try:
+                payload = base.get_json(
+                    base.WDQS,
+                    {
+                        'query': elazig_district_query(
+                            admin_qids,
+                            limit,
+                            offset,
+                            roots=roots,
+                            heritage=query_kind == 'heritage',
+                        ),
+                        'format': 'json',
+                    },
+                )
+            except RuntimeError as error:
+                print(
+                    f'warning: Elazığ/{district} {query_kind} query skipped '
+                    f'after retries: {error}'
+                )
+                break
+            rows = payload.get('results', {}).get('bindings', [])
+            if not rows:
+                break
+            for row in rows:
+                uri = row.get('item', {}).get('value', '')
+                qid = uri.rsplit('/', 1)[-1]
+                point = base.point(row.get('coord', {}).get('value', ''))
+                name = row.get('itemLabel', {}).get('value', '').strip()
+                image = row.get('image', {}).get('value', '').strip()
+                if not (
+                    qid.startswith('Q')
+                    and point
+                    and image
+                    and usable_label(name, qid)
+                ):
+                    continue
+                matched_qids.add(qid)
+                if qid not in out:
+                    out[qid] = {
+                        'qid': qid,
+                        'name': name,
+                        'city': '',
+                        'district': '',
+                        'province_qid': '',
+                        'district_qid': '',
+                        'lat': point[0],
+                        'lng': point[1],
+                        'image': image,
+                        'category': f'Elazığ / {district}',
+                    }
+                    added += 1
+                item = out[qid]
+                hint = item.get('elazig_district_hint')
+                hint_qid = item.get('elazig_district_qid_hint')
+                if hint and (hint != district or hint_qid != district_qid):
+                    item['ambiguous_district_hint'] = True
+                else:
+                    item['elazig_district_hint'] = district
+                    item['elazig_district_qid_hint'] = district_qid
+            offset += len(rows)
+            if len(rows) < limit:
+                break
+            base.time.sleep(.35)
+    return len(matched_qids), added
 
 
 def ranked_claim_qids(entity: dict, prop: str) -> list[str]:
