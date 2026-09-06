@@ -114,7 +114,7 @@ jobs:
           log_tail = ''
           if generator_log.exists():
               lines = generator_log.read_text(encoding='utf-8', errors='replace').splitlines()
-              log_tail = '\\n'.join(lines[-80:])
+              log_tail = '\n'.join(lines[-80:])
           status = {
               'target_total': int(os.environ.get('TARGET_TOTAL', '10000')),
               'generator_exit': os.environ.get('GENERATOR_EXIT', 'not-run'),
@@ -124,7 +124,7 @@ jobs:
               'generator_log_tail': log_tail,
           }
           Path('docs/verified_spot_pipeline_status.json').write_text(
-              json.dumps(status, ensure_ascii=False, indent=2) + '\\n', encoding='utf-8'
+              json.dumps(status, ensure_ascii=False, indent=2) + '\n', encoding='utf-8'
           )
           PY
 
