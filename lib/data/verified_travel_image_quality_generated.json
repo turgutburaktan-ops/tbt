@@ -7727,6 +7727,20 @@
     "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/f/f9/Aya_Dede_T%C3%BCrbesi.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
     "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f9/Aya_Dede_T%C3%BCrbesi.jpg/1920px-Aya_Dede_T%C3%BCrbesi.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
+  "wd-q135428559-aya-ekaterini-ayazmasi-moda": {
+    "wikidataQid": "Q135428559",
+    "province": "İstanbul",
+    "provinceQid": "Q534799",
+    "district": "Kadıköy",
+    "districtQid": "Q932886",
+    "width": 1836,
+    "height": 4080,
+    "mime": "image/jpeg",
+    "license": "CC BY-SA 4.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Aya_Ekaterini_Ayazmas%C4%B1,_Moda.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/b/b6/Aya_Ekaterini_Ayazmas%C4%B1%2C_Moda.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://upload.wikimedia.org/wikipedia/commons/b/b6/Aya_Ekaterini_Ayazmas%C4%B1%2C_Moda.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled"
+  },
   "wd-q124366939-ayasofya-ucyuzlu-cesmesi": {
     "wikidataQid": "Q124366939",
     "province": "İstanbul",
@@ -9210,6 +9224,20 @@
     "sourcePage": "https://commons.wikimedia.org/wiki/File:Faz%C4%B1l_H%C3%BCsn%C3%BC_Da%C4%9Flarca_heykeli_Kalam%C4%B1%C5%9F_01.jpg",
     "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/7/7b/Faz%C4%B1l_H%C3%BCsn%C3%BC_Da%C4%9Flarca_heykeli_Kalam%C4%B1%C5%9F_01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
     "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7b/Faz%C4%B1l_H%C3%BCsn%C3%BC_Da%C4%9Flarca_heykeli_Kalam%C4%B1%C5%9F_01.jpg/1920px-Faz%C4%B1l_H%C3%BCsn%C3%BC_Da%C4%9Flarca_heykeli_Kalam%C4%B1%C5%9F_01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  "wd-q131368636-fenerbahce-cesmesi": {
+    "wikidataQid": "Q131368636",
+    "province": "İstanbul",
+    "provinceQid": "Q534799",
+    "district": "Kadıköy",
+    "districtQid": "Q932886",
+    "width": 4080,
+    "height": 1836,
+    "mime": "image/jpeg",
+    "license": "CC BY-SA 4.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Fenerbah%C3%A7e_%C3%87e%C5%9Fmesi.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/6/66/Fenerbah%C3%A7e_%C3%87e%C5%9Fmesi.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/66/Fenerbah%C3%A7e_%C3%87e%C5%9Fmesi.jpg/1920px-Fenerbah%C3%A7e_%C3%87e%C5%9Fmesi.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
   "wd-q131836210-ferhat-aga-cesmesi": {
     "wikidataQid": "Q131836210",
@@ -13271,6 +13299,20 @@
     "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/d/dc/Sa%C4%9Fl%C4%B1k_%C3%87al%C4%B1%C5%9Fanlar%C4%B1na_Sayg%C4%B1_An%C4%B1t%C4%B1.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
     "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/dc/Sa%C4%9Fl%C4%B1k_%C3%87al%C4%B1%C5%9Fanlar%C4%B1na_Sayg%C4%B1_An%C4%B1t%C4%B1.jpg/960px-Sa%C4%9Fl%C4%B1k_%C3%87al%C4%B1%C5%9Fanlar%C4%B1na_Sayg%C4%B1_An%C4%B1t%C4%B1.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
+  "wd-q134728444-selahattin-pinar-bustu": {
+    "wikidataQid": "Q134728444",
+    "province": "İstanbul",
+    "provinceQid": "Q534799",
+    "district": "Kadıköy",
+    "districtQid": "Q932886",
+    "width": 4080,
+    "height": 1836,
+    "mime": "image/jpeg",
+    "license": "CC BY-SA 4.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Selahattin_P%C4%B1nar_B%C3%BCst%C3%BC.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/7/7b/Selahattin_P%C4%B1nar_B%C3%BCst%C3%BC.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7b/Selahattin_P%C4%B1nar_B%C3%BCst%C3%BC.jpg/1920px-Selahattin_P%C4%B1nar_B%C3%BCst%C3%BC.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
   "wd-q112865286-selami-cesme": {
     "wikidataQid": "Q112865286",
     "province": "İstanbul",
@@ -14628,6 +14670,20 @@
     "sourcePage": "https://commons.wikimedia.org/wiki/File:Ziya_G%C3%B6kalp%E2%80%99in_Mezar%C4%B1.jpg",
     "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/4/4e/Ziya_G%C3%B6kalp%E2%80%99in_Mezar%C4%B1.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
     "displayUrl": "https://upload.wikimedia.org/wikipedia/commons/4/4e/Ziya_G%C3%B6kalp%E2%80%99in_Mezar%C4%B1.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled"
+  },
+  "wd-q134728031-celik-gulersoy-aniti": {
+    "wikidataQid": "Q134728031",
+    "province": "İstanbul",
+    "provinceQid": "Q534799",
+    "district": "Kadıköy",
+    "districtQid": "Q932886",
+    "width": 1836,
+    "height": 4080,
+    "mime": "image/jpeg",
+    "license": "CC BY-SA 4.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:%C3%87elik_G%C3%BClersoy_An%C4%B1t%C4%B1.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/f/f3/%C3%87elik_G%C3%BClersoy_An%C4%B1t%C4%B1.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://upload.wikimedia.org/wikipedia/commons/f/f3/%C3%87elik_G%C3%BClersoy_An%C4%B1t%C4%B1.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled"
   },
   "wd-q131836414-cesme-1-sabanci-muzesi": {
     "wikidataQid": "Q131836414",
@@ -17358,6 +17414,20 @@
     "sourcePage": "https://commons.wikimedia.org/wiki/File:Ahmet_Hamdi_Tanp%C4%B1nar_and_Aliye_Berger_Statue.jpg",
     "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/e/e8/Ahmet_Hamdi_Tanp%C4%B1nar_and_Aliye_Berger_Statue.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
     "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e8/Ahmet_Hamdi_Tanp%C4%B1nar_and_Aliye_Berger_Statue.jpg/1920px-Ahmet_Hamdi_Tanp%C4%B1nar_and_Aliye_Berger_Statue.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  "wd-q135428635-ataturk-bustu-moda": {
+    "wikidataQid": "Q135428635",
+    "province": "İstanbul",
+    "provinceQid": "Q534799",
+    "district": "Kadıköy",
+    "districtQid": "Q932886",
+    "width": 1836,
+    "height": 4080,
+    "mime": "image/jpeg",
+    "license": "CC BY-SA 4.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Atat%C3%BCrk_B%C3%BCst%C3%BC,_Moda.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/2/24/Atat%C3%BCrk_B%C3%BCst%C3%BC%2C_Moda.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://upload.wikimedia.org/wikipedia/commons/2/24/Atat%C3%BCrk_B%C3%BCst%C3%BC%2C_Moda.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled"
   },
   "wd-q131690731-atli-inonu-heykeli": {
     "wikidataQid": "Q131690731",
@@ -22524,6 +22594,20 @@
     "sourcePage": "https://commons.wikimedia.org/wiki/File:Tahtakale_hamam_DSCF1601.jpg",
     "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/c/ca/Tahtakale_hamam_DSCF1601.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
     "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/ca/Tahtakale_hamam_DSCF1601.jpg/1920px-Tahtakale_hamam_DSCF1601.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  "wd-q131738885-tarihi-hamam": {
+    "wikidataQid": "Q131738885",
+    "province": "İstanbul",
+    "provinceQid": "Q534799",
+    "district": "Kadıköy",
+    "districtQid": "Q932886",
+    "width": 3200,
+    "height": 1440,
+    "mime": "image/jpeg",
+    "license": "CC BY-SA 4.0",
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Tarihi_Hamam.jpg",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/c/c9/Tarihi_Hamam.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "displayUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c9/Tarihi_Hamam.jpg/1920px-Tarihi_Hamam.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
   },
   "wd-q85852396-vezneciler-hamami": {
     "wikidataQid": "Q85852396",

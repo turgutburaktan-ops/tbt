@@ -3865,6 +3865,13 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     license: 'CC BY-SA 4.0',
     sourcePage: 'https://commons.wikimedia.org/wiki/File:Aya_Dede_T%C3%BCrbesi.jpg',
   ),
+  'wd-q135428559-aya-ekaterini-ayazmasi-moda': SpotImageInfo(
+    networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/b/b6/Aya_Ekaterini_Ayazmas%C4%B1%2C_Moda.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled',
+    sourceName: 'Wikimedia Commons (Wikidata P18)',
+    author: 'Özgür Arda BAYRAM',
+    license: 'CC BY-SA 4.0',
+    sourcePage: 'https://commons.wikimedia.org/wiki/File:Aya_Ekaterini_Ayazmas%C4%B1,_Moda.jpg',
+  ),
   'wd-q124366939-ayasofya-ucyuzlu-cesmesi': SpotImageInfo(
     networkUrl: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e3/Ayasofya_%C3%9C%C3%A7y%C3%BCzl%C3%BC_%C3%87e%C5%9Fmesi%2C_%C4%B0stanbul.jpg/1920px-Ayasofya_%C3%9C%C3%A7y%C3%BCzl%C3%BC_%C3%87e%C5%9Fmesi%2C_%C4%B0stanbul.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
     sourceName: 'Wikimedia Commons (Wikidata P18)',
@@ -4606,6 +4613,13 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     author: 'Çokiyi',
     license: 'CC BY-SA 4.0',
     sourcePage: 'https://commons.wikimedia.org/wiki/File:Faz%C4%B1l_H%C3%BCsn%C3%BC_Da%C4%9Flarca_heykeli_Kalam%C4%B1%C5%9F_01.jpg',
+  ),
+  'wd-q131368636-fenerbahce-cesmesi': SpotImageInfo(
+    networkUrl: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/6/66/Fenerbah%C3%A7e_%C3%87e%C5%9Fmesi.jpg/1920px-Fenerbah%C3%A7e_%C3%87e%C5%9Fmesi.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
+    sourceName: 'Wikimedia Commons (Wikidata P18)',
+    author: 'Özgür Arda BAYRAM',
+    license: 'CC BY-SA 4.0',
+    sourcePage: 'https://commons.wikimedia.org/wiki/File:Fenerbah%C3%A7e_%C3%87e%C5%9Fmesi.jpg',
   ),
   'wd-q131836210-ferhat-aga-cesmesi': SpotImageInfo(
     networkUrl: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/5/53/Ferhat_A%C4%9Fa_%C3%87e%C5%9Fmesi_IMG_4425.jpg/1920px-Ferhat_A%C4%9Fa_%C3%87e%C5%9Fmesi_IMG_4425.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -6637,6 +6651,13 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     license: 'CC BY-SA 4.0',
     sourcePage: 'https://commons.wikimedia.org/wiki/File:Sa%C4%9Fl%C4%B1k_%C3%87al%C4%B1%C5%9Fanlar%C4%B1na_Sayg%C4%B1_An%C4%B1t%C4%B1.jpg',
   ),
+  'wd-q134728444-selahattin-pinar-bustu': SpotImageInfo(
+    networkUrl: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7b/Selahattin_P%C4%B1nar_B%C3%BCst%C3%BC.jpg/1920px-Selahattin_P%C4%B1nar_B%C3%BCst%C3%BC.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
+    sourceName: 'Wikimedia Commons (Wikidata P18)',
+    author: 'Özgür Arda BAYRAM',
+    license: 'CC BY-SA 4.0',
+    sourcePage: 'https://commons.wikimedia.org/wiki/File:Selahattin_P%C4%B1nar_B%C3%BCst%C3%BC.jpg',
+  ),
   'wd-q112865286-selami-cesme': SpotImageInfo(
     networkUrl: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/8/89/Salami_Fountain_in_%C4%B0stanbul_22.03.2025_02.jpg/1920px-Salami_Fountain_in_%C4%B0stanbul_22.03.2025_02.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
     sourceName: 'Wikimedia Commons (Wikidata P18)',
@@ -7315,6 +7336,13 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     author: 'Özgür Arda BAYRAM',
     license: 'CC BY-SA 4.0',
     sourcePage: 'https://commons.wikimedia.org/wiki/File:Ziya_G%C3%B6kalp%E2%80%99in_Mezar%C4%B1.jpg',
+  ),
+  'wd-q134728031-celik-gulersoy-aniti': SpotImageInfo(
+    networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/f/f3/%C3%87elik_G%C3%BClersoy_An%C4%B1t%C4%B1.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled',
+    sourceName: 'Wikimedia Commons (Wikidata P18)',
+    author: 'Özgür Arda BAYRAM',
+    license: 'CC BY-SA 4.0',
+    sourcePage: 'https://commons.wikimedia.org/wiki/File:%C3%87elik_G%C3%BClersoy_An%C4%B1t%C4%B1.jpg',
   ),
   'wd-q131836414-cesme-1-sabanci-muzesi': SpotImageInfo(
     networkUrl: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/6/68/%C3%87e%C5%9Fme_1%2C_Sabanc%C4%B1_M%C3%BCzesi_IMG_7486.jpg/1920px-%C3%87e%C5%9Fme_1%2C_Sabanc%C4%B1_M%C3%BCzesi_IMG_7486.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -8680,6 +8708,13 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     author: 'Kurmanbek',
     license: 'CC BY-SA 4.0',
     sourcePage: 'https://commons.wikimedia.org/wiki/File:Ahmet_Hamdi_Tanp%C4%B1nar_and_Aliye_Berger_Statue.jpg',
+  ),
+  'wd-q135428635-ataturk-bustu-moda': SpotImageInfo(
+    networkUrl: 'https://upload.wikimedia.org/wikipedia/commons/2/24/Atat%C3%BCrk_B%C3%BCst%C3%BC%2C_Moda.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled',
+    sourceName: 'Wikimedia Commons (Wikidata P18)',
+    author: 'Özgür Arda BAYRAM',
+    license: 'CC BY-SA 4.0',
+    sourcePage: 'https://commons.wikimedia.org/wiki/File:Atat%C3%BCrk_B%C3%BCst%C3%BC,_Moda.jpg',
   ),
   'wd-q131690731-atli-inonu-heykeli': SpotImageInfo(
     networkUrl: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fb/Atl%C4%B1_%C4%B0n%C3%B6n%C3%BC_An%C4%B1t%C4%B1.jpg/1920px-Atl%C4%B1_%C4%B0n%C3%B6n%C3%BC_An%C4%B1t%C4%B1.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
@@ -11263,6 +11298,13 @@ const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{
     author: 'R Prazeres',
     license: 'CC BY-SA 4.0',
     sourcePage: 'https://commons.wikimedia.org/wiki/File:Tahtakale_hamam_DSCF1601.jpg',
+  ),
+  'wd-q131738885-tarihi-hamam': SpotImageInfo(
+    networkUrl: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c9/Tarihi_Hamam.jpg/1920px-Tarihi_Hamam.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',
+    sourceName: 'Wikimedia Commons (Wikidata P18)',
+    author: 'Özgür Arda BAYRAM',
+    license: 'CC BY-SA 4.0',
+    sourcePage: 'https://commons.wikimedia.org/wiki/File:Tarihi_Hamam.jpg',
   ),
   'wd-q85852396-vezneciler-hamami': SpotImageInfo(
     networkUrl: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/1/14/Vezneciler_Hamam%C4%B1.jpg/1920px-Vezneciler_Hamam%C4%B1.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail',

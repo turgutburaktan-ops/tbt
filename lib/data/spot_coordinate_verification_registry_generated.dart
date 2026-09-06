@@ -2761,6 +2761,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q121423053 / 41.027660,28.955967/ province=Q534799:İstanbul / district=Q732923:Fatih',
     verifiedAt: 'generated',
   ),
+  'wd-q135428559-aya-ekaterini-ayazmasi-moda': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + P131',
+    sourceRef: 'Q135428559 / 40.979969,29.024756/ province=Q534799:İstanbul / district=Q932886:Kadıköy',
+    verifiedAt: 'generated',
+  ),
   'wd-q124366939-ayasofya-ucyuzlu-cesmesi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + P131',
     sourceRef: 'Q124366939 / 41.009056,28.978583/ province=Q534799:İstanbul / district=Q732923:Fatih',
@@ -3289,6 +3294,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q134728506-fazil-husnu-daglarca-heykeli': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + P131',
     sourceRef: 'Q134728506 / 40.979485,29.039406/ province=Q534799:İstanbul / district=Q932886:Kadıköy',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131368636-fenerbahce-cesmesi': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + P131',
+    sourceRef: 'Q131368636 / 40.969310,29.036466/ province=Q534799:İstanbul / district=Q932886:Kadıköy',
     verifiedAt: 'generated',
   ),
   'wd-q131836210-ferhat-aga-cesmesi': SpotCoordinateVerificationEvidence(
@@ -4741,6 +4751,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     sourceRef: 'Q105959570 / 40.993778,28.866778/ province=Q534799:İstanbul / district=Q752528:Bakırköy',
     verifiedAt: 'generated',
   ),
+  'wd-q134728444-selahattin-pinar-bustu': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + P131',
+    sourceRef: 'Q134728444 / 40.976833,29.041628/ province=Q534799:İstanbul / district=Q932886:Kadıköy',
+    verifiedAt: 'generated',
+  ),
   'wd-q112865286-selami-cesme': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + P131',
     sourceRef: 'Q112865286 / 40.975558,29.051928/ province=Q534799:İstanbul / district=Q932886:Kadıköy',
@@ -5224,6 +5239,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q135429280-ziya-gokalp-in-mezari': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + P131',
     sourceRef: 'Q135429280 / 41.008687,28.972853/ province=Q534799:İstanbul / district=Q732923:Fatih',
+    verifiedAt: 'generated',
+  ),
+  'wd-q134728031-celik-gulersoy-aniti': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + P131',
+    sourceRef: 'Q134728031 / 40.966763,29.034311/ province=Q534799:İstanbul / district=Q932886:Kadıköy',
     verifiedAt: 'generated',
   ),
   'wd-q131836414-cesme-1-sabanci-muzesi': SpotCoordinateVerificationEvidence(
@@ -6199,6 +6219,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q135392773-ahmet-hamdi-tanpinar-ile-aliye-berger-heykeli': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + P131',
     sourceRef: 'Q135392773 / 41.029315,28.974782/ province=Q534799:İstanbul / district=Q217411:Beyoğlu',
+    verifiedAt: 'generated',
+  ),
+  'wd-q135428635-ataturk-bustu-moda': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + P131',
+    sourceRef: 'Q135428635 / 40.980373,29.023926/ province=Q534799:İstanbul / district=Q932886:Kadıköy',
     verifiedAt: 'generated',
   ),
   'wd-q131690731-atli-inonu-heykeli': SpotCoordinateVerificationEvidence(
@@ -8044,6 +8069,11 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
   'wd-q100320010-tahtakale-hamami': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + P131',
     sourceRef: 'Q100320010 / 41.017694,28.968000/ province=Q534799:İstanbul / district=Q732923:Fatih',
+    verifiedAt: 'generated',
+  ),
+  'wd-q131738885-tarihi-hamam': SpotCoordinateVerificationEvidence(
+    sourceName: 'Wikidata P625 + P131',
+    sourceRef: 'Q131738885 / 40.967411,29.034344/ province=Q534799:İstanbul / district=Q932886:Kadıköy',
     verifiedAt: 'generated',
   ),
   'wd-q85852396-vezneciler-hamami': SpotCoordinateVerificationEvidence(
