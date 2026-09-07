@@ -312,6 +312,25 @@ def best_p18_commons_meta(candidates: dict[str, dict]) -> None:
         )
 
 
+def country_root_query(root: str, limit: int, offset: int) -> str:
+    """Fallback discovery restricted by the item's explicit Turkey claim."""
+    return f'''SELECT DISTINCT ?item ?itemLabel ?coord ?image WHERE {{
+  ?item wdt:P17 wd:Q43 ; wdt:P625 ?coord ; wdt:P18 ?image ;
+        wdt:P31 ?class .
+  ?class wdt:P279* wd:{root} .
+  SERVICE wikibase:label {{ bd:serviceParam wikibase:language "tr,en". }}
+}} ORDER BY ?item LIMIT {limit} OFFSET {offset}'''
+
+
+def country_heritage_query(limit: int, offset: int) -> str:
+    """Fallback heritage discovery restricted by an explicit Turkey claim."""
+    return f'''SELECT DISTINCT ?item ?itemLabel ?coord ?image WHERE {{
+  ?item wdt:P17 wd:Q43 ; wdt:P625 ?coord ; wdt:P18 ?image ;
+        wdt:P1435 ?heritage .
+  SERVICE wikibase:label {{ bd:serviceParam wikibase:language "tr,en". }}
+}} ORDER BY ?item LIMIT {limit} OFFSET {offset}'''
+
+
 def candidate_collect_query(
     query_builder,
     category: str,
@@ -319,16 +338,44 @@ def candidate_collect_query(
     max_rows: int,
     out: dict[str, dict],
 ) -> None:
-    """Collect direct P625/P18 rows without an expensive recursive join."""
+    """Collect P625/P18 rows and keep going through a safe Turkey fallback."""
     offset = 0
+    active_query_builder = query_builder
+    using_country_fallback = False
+    root_for_category = next(
+        (
+            qid for qid, label in base.ROOT_CLASSES.items()
+            if label == category
+        ),
+        '',
+    )
+    fallback_query_builder = (
+        country_heritage_query
+        if category == 'Kültür Mirası'
+        else (
+            (lambda limit, offset, root=root_for_category:
+                country_root_query(root, limit, offset))
+            if root_for_category
+            else None
+        )
+    )
     while offset < max_rows:
         limit = min(page_size, max_rows - offset)
         try:
             payload = base.get_json(
                 base.WDQS,
-                {'query': query_builder(limit, offset), 'format': 'json'},
+                {'query': active_query_builder(limit, offset), 'format': 'json'},
             )
         except RuntimeError as error:
+            if not using_country_fallback and fallback_query_builder is not None:
+                print(
+                    f'warning: {category} regional query failed; retrying the '
+                    f'category with explicit Turkey P17: {error}'
+                )
+                active_query_builder = fallback_query_builder
+                using_country_fallback = True
+                offset = 0
+                continue
             print(
                 f'warning: {category} query skipped at offset {offset} '
                 f'after retries: {error}'
@@ -368,7 +415,6 @@ def candidate_collect_query(
         if len(rows) < limit:
             break
         base.time.sleep(.35)
-
 
 def collect_elazig_district_candidates(
     district: str,
