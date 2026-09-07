@@ -97,6 +97,7 @@ jobs:
           info['NSPhotoLibraryUsageDescription'] = 'Story ve paylaşım için galerinden fotoğraf veya video seçebilmek için erişim gerekir.'
           info['NSPhotoLibraryAddUsageDescription'] = 'Düzenlediğin içerikleri fotoğraf arşivine kaydedebilmek için izin gerekir.'
           info['NSUserTrackingUsageDescription'] = 'İzninle, sana daha alakalı reklamlar göstermek ve reklam performansını ölçmek için cihaz tanımlayıcısı kullanılır.'
+          info['ITSAppUsesNonExemptEncryption'] = False
           info['CFBundleDisplayName'] = 'TBT'
           info['CFBundleName'] = 'TBT'
           info['UIBackgroundModes'] = ['fetch', 'remote-notification']
