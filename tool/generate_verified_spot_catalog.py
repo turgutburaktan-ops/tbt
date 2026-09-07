@@ -57,6 +57,15 @@ FREE_LICENSE = ('cc by', 'cc-by', 'cc by-sa', 'cc-by-sa', 'cc0', 'public domain'
 POINT_RE = re.compile(r'Point\(([-\d.]+)\s+([-\d.]+)\)')
 PHOTO_RE = re.compile(r'PhotoSpot\((.*?)\n\s*\),', re.DOTALL)
 TAG_RE = re.compile(r'<[^>]+>')
+DART_STRING_RE = r"'((?:\\.|[^'])*)'"
+IMAGE_INFO_RE = re.compile(
+    rf"{DART_STRING_RE}:\s*SpotImageInfo\((.*?)\n\s*\),",
+    re.DOTALL,
+)
+EVIDENCE_INFO_RE = re.compile(
+    rf"{DART_STRING_RE}:\s*SpotCoordinateVerificationEvidence\((.*?)\n\s*\),",
+    re.DOTALL,
+)
 
 
 def get_json(
@@ -139,6 +148,156 @@ def existing_places() -> list[dict]:
             if s('id') and s('name') and n('latitude') is not None and n('longitude') is not None:
                 out.append({'id': s('id'), 'name': s('name'), 'city': s('city'), 'lat': n('latitude'), 'lng': n('longitude'), 'name_key': norm(s('name')), 'city_key': norm(s('city'))})
     return out
+
+
+def dart_unescape(value: str) -> str:
+    """Decode the small escaped-string subset emitted by :func:`ds`."""
+    return value.replace("\\'", "'").replace('\\\\', '\\')
+
+
+def dart_string(body: str, name: str) -> str:
+    """Read a named Dart string field emitted by :func:`ds`."""
+    match = re.search(rf'{re.escape(name)}:\s*{DART_STRING_RE}', body)
+    if not match:
+        return ''
+    return dart_unescape(match.group(1))
+
+
+def dart_number(body: str, name: str) -> float | None:
+    match = re.search(rf'{re.escape(name)}:\s*(-?\d+(?:\.\d+)?)', body)
+    return float(match.group(1)) if match else None
+
+
+def generated_image_records() -> dict[str, dict[str, str]]:
+    if not IMAGES.exists():
+        return {}
+    records = {}
+    for match in IMAGE_INFO_RE.finditer(IMAGES.read_text(encoding='utf-8')):
+        spot_id_value = dart_unescape(match.group(1))
+        body = match.group(2)
+        records[spot_id_value] = {
+            'url': dart_string(body, 'networkUrl'),
+            'artist': dart_string(body, 'author'),
+            'license': dart_string(body, 'license'),
+            'source': dart_string(body, 'sourcePage'),
+        }
+    return records
+
+
+def generated_admin_sources() -> dict[str, str]:
+    if not EVIDENCE.exists():
+        return {}
+    sources = {}
+    prefix = 'Wikidata P625 + '
+    for match in EVIDENCE_INFO_RE.finditer(EVIDENCE.read_text(encoding='utf-8')):
+        spot_id_value = dart_unescape(match.group(1))
+        source_name = dart_string(match.group(2), 'sourceName')
+        if source_name.startswith(prefix):
+            sources[spot_id_value] = source_name[len(prefix):]
+    return sources
+
+
+def previously_generated_places(
+    existing: list[dict],
+    long_edge: int,
+    short_edge: int,
+) -> tuple[list[dict], int]:
+    """Reload prior generated rows that still satisfy every strict gate.
+
+    A fresh source crawl is an observation, not a reason to erase records that
+    already passed the coordinate, district, P18, Commons licence, resolution
+    and duplicate audits. Revalidate the durable evidence stored beside the
+    generated Dart files, then use those rows as the floor for the next run.
+    """
+    if not PLACES.exists() or not QUALITY.exists():
+        return [], 0
+    try:
+        quality = json.loads(QUALITY.read_text(encoding='utf-8'))
+    except (OSError, json.JSONDecodeError):
+        return [], 0
+
+    image_records = generated_image_records()
+    admin_sources = generated_admin_sources()
+    retained: list[dict] = []
+    rejected = 0
+    seen_qids: set[str] = set()
+    for body in PHOTO_RE.findall(PLACES.read_text(encoding='utf-8')):
+        spot = {
+            'id': dart_string(body, 'id'),
+            'name': dart_string(body, 'name'),
+            'city': dart_string(body, 'city'),
+            'category': dart_string(body, 'category'),
+            'lat': dart_number(body, 'latitude'),
+            'lng': dart_number(body, 'longitude'),
+        }
+        meta = quality.get(spot['id'], {})
+        image_record = image_records.get(spot['id'], {})
+        qid = str(meta.get('wikidataQid') or '')
+        province_qid = str(meta.get('provinceQid') or '')
+        district_qid = str(meta.get('districtQid') or '')
+        district = str(meta.get('district') or '').strip()
+        commons = {
+            'width': int(meta.get('width') or 0),
+            'height': int(meta.get('height') or 0),
+            'mime': str(meta.get('mime') or ''),
+            'license': str(image_record.get('license') or ''),
+            'source': str(image_record.get('source') or ''),
+            'original_url': str(meta.get('originalUrl') or ''),
+            'url': str(image_record.get('url') or ''),
+            'artist': str(image_record.get('artist') or ''),
+            'credit': '',
+        }
+        coordinates_ok = (
+            spot['lat'] is not None
+            and spot['lng'] is not None
+            and MIN_LAT <= spot['lat'] <= MAX_LAT
+            and MIN_LNG <= spot['lng'] <= MAX_LNG
+        )
+        display_host = urllib.parse.urlparse(commons['url']).hostname or ''
+        original_host = urllib.parse.urlparse(commons['original_url']).hostname or ''
+        commons_ok = (
+            commons['source'].startswith('https://commons.wikimedia.org/')
+            and original_host == 'upload.wikimedia.org'
+            and display_host in {'upload.wikimedia.org', 'thumb.wikimedia.org'}
+        )
+        evidence_ok = (
+            spot['id']
+            and spot['name']
+            and spot['city']
+            and spot['category']
+            and district
+            and qid.startswith('Q')
+            and province_qid.startswith('Q')
+            and district_qid.startswith('Q')
+            and qid not in seen_qids
+            and commons['license'] == str(meta.get('license') or '')
+            and commons['source'] == str(meta.get('sourcePage') or '')
+            and commons['url'] == str(meta.get('displayUrl') or '')
+            and coordinates_ok
+            and commons_ok
+            and license_ok(commons['license'])
+            and image_ok(commons, long_edge, short_edge)
+        )
+        if not evidence_ok:
+            rejected += 1
+            continue
+        item = {
+            **spot,
+            'qid': qid,
+            'province_qid': province_qid,
+            'district_qid': district_qid,
+            'district': district,
+            'commons': commons,
+            'admin_source': admin_sources.get(spot['id'], 'Wikidata P131'),
+            'name_key': norm(spot['name']),
+            'city_key': norm(spot['city']),
+        }
+        if duplicate(item, retained, existing):
+            rejected += 1
+            continue
+        seen_qids.add(qid)
+        retained.append(item)
+    return retained, rejected
 
 
 def query_for_root(root: str, limit: int, offset: int) -> str:
@@ -283,7 +442,7 @@ def write_files(items: list[dict]) -> None:
     im = ["import 'spot_image_registry.dart';", '', 'const verifiedTravelImageRegistryGenerated = <String, SpotImageInfo>{']
     quality = {}
     for item in items:
-        sid = spot_id(item); bt, angle, lens, diff = defaults(item['category']); meta = item['commons']
+        sid = item.get('id') or spot_id(item); bt, angle, lens, diff = defaults(item['category']); meta = item['commons']
         district = item.get('district', '').strip()
         tags = ['Gezilecek Yer','Doğrulanmış','KaynakDoğrulanmış',item['city']]
         if district:
@@ -311,7 +470,7 @@ def write_files(items: list[dict]) -> None:
         e += [f"  '{ds(sid)}': SpotCoordinateVerificationEvidence(", f"    sourceName: 'Wikidata P625 + {ds(admin_source)}',", f"    sourceRef: '{item['qid']} / {item['lat']:.6f},{item['lng']:.6f}{ds(admin_ref)}',", "    verifiedAt: 'generated',", '  ),']
         author = meta.get('artist') or meta.get('credit') or 'Wikimedia Commons contributor'
         im += [f"  '{ds(sid)}': SpotImageInfo(", f"    networkUrl: '{ds(meta['url'])}',", "    sourceName: 'Wikimedia Commons (Wikidata P18)',", f"    author: '{ds(author)}',", f"    license: '{ds(meta['license'])}',", f"    sourcePage: '{ds(meta['source'])}',", '  ),']
-        quality[sid] = {'wikidataQid': item['qid'], 'province': item['city'], 'provinceQid': item.get('province_qid', ''), 'district': district, 'districtQid': item.get('district_qid', ''), 'width': meta['width'], 'height': meta['height'], 'mime': meta['mime'], 'license': meta['license'], 'sourcePage': meta['source'], 'originalUrl': meta['original_url'], 'displayUrl': meta['url']}
+        quality[sid] = {'wikidataQid': item['qid'], 'province': item['city'], 'provinceQid': item.get('province_qid', ''), 'district': district, 'districtQid': item.get('district_qid', ''), 'width': meta['width'], 'height': meta['height'], 'mime': meta['mime'], 'license': meta['license'], 'sourcePage': meta['source'], 'originalUrl': meta['original_url'], 'displayUrl': meta['url'], 'artist': meta.get('artist', ''), 'credit': meta.get('credit', '')}
     p.append('];'); e += ['};', '', 'bool isSpotCoordinateIndependentlyVerifiedGenerated(String spotId) =>', '    verifiedSpotCoordinateEvidenceGenerated.containsKey(spotId);']; im.append('};')
     PLACES.write_text('\n'.join(p)+'\n', encoding='utf-8'); EVIDENCE.write_text('\n'.join(e)+'\n', encoding='utf-8'); IMAGES.write_text('\n'.join(im)+'\n', encoding='utf-8'); QUALITY.write_text(json.dumps(quality, ensure_ascii=False, indent=2)+'\n', encoding='utf-8')
 
@@ -320,11 +479,21 @@ def main() -> int:
     ap = argparse.ArgumentParser(); ap.add_argument('--target-total', type=int, default=1100); ap.add_argument('--page-size', type=int, default=250); ap.add_argument('--per-source-limit', type=int, default=4000); ap.add_argument('--min-long-edge', type=int, default=1600); ap.add_argument('--min-short-edge', type=int, default=900); ap.add_argument('--allow-shortfall', action='store_true'); args = ap.parse_args()
     BUILD.mkdir(parents=True, exist_ok=True)
     existing = existing_places(); print(f'existing verified: {len(existing)}')
+    previous, rejected_previous = previously_generated_places(
+        existing,
+        args.min_long_edge,
+        args.min_short_edge,
+    )
+    print(
+        f'previous generated retained/rejected: '
+        f'{len(previous)}/{rejected_previous}'
+    )
     candidates = wikidata_candidates(args.page_size, args.per_source_limit); print(f'unique candidates: {len(candidates)}')
     commons_meta(candidates)
-    accepted, stats = select(candidates, existing, args.target_total, args.min_long_edge, args.min_short_edge)
-    write_files(accepted)
-    report = {'existing_verified': len(existing), 'generated': len(accepted), 'result_total': len(existing)+len(accepted), 'target_total': args.target_total, 'min_long_edge': args.min_long_edge, 'min_short_edge': args.min_short_edge, 'selection': stats}
+    accepted, stats = select(candidates, [*existing, *previous], args.target_total, args.min_long_edge, args.min_short_edge)
+    generated = [*previous, *accepted]
+    write_files(generated)
+    report = {'existing_verified': len(existing), 'carried_forward': len(previous), 'rejected_carried_forward': rejected_previous, 'newly_generated': len(accepted), 'generated': len(generated), 'result_total': len(existing)+len(generated), 'target_total': args.target_total, 'min_long_edge': args.min_long_edge, 'min_short_edge': args.min_short_edge, 'selection': stats}
     REPORT.write_text(json.dumps(report, ensure_ascii=False, indent=2)+'\n', encoding='utf-8'); print(json.dumps(report, ensure_ascii=False, indent=2))
     if report['result_total'] < args.target_total and not args.allow_shortfall:
         print('Target not reached; catalog was not silently padded with weak data.', file=sys.stderr); return 2
