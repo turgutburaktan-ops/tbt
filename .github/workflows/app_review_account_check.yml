@@ -1,0 +1,27 @@
+name: App Review Account Check
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [codex/check-app-review-account-20260907]
+    paths:
+      - '.github/workflows/app_review_account_check.yml'
+      - 'functions/scripts/check_app_review_account.cjs'
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm install --prefix functions --ignore-scripts --no-audit --no-fund
+      - name: Verify App Review account mapping without exposing account data
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: node functions/scripts/check_app_review_account.cjs
