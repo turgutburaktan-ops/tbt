@@ -46,9 +46,12 @@ void main() {
     final first = service.nearby(category: NearbyVenueCategory.cafe,
       latitude: 38.67, longitude: 39.22,
       onUpdate: (items) { if (!displayed.isCompleted) displayed.complete(); });
-    final second = service.nearby(category: NearbyVenueCategory.cafe,
-      latitude: 38.67, longitude: 39.22);
     await displayed.future;
+    final lateDisplay = Completer<void>();
+    final second = service.nearby(category: NearbyVenueCategory.cafe,
+      latitude: 38.67, longitude: 39.22,
+      onUpdate: (_) { if (!lateDisplay.isCompleted) lateDisplay.complete(); });
+    await lateDisplay.future;
     expect(osm.isCompleted, isFalse);
     osm.complete(http.Response('{"elements":[]}', 200));
     final results = await Future.wait([first, second]);

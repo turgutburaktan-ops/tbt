@@ -69,6 +69,7 @@ class NearbyVenueService {
   final Map<String, Future<List<NearbyVenue>>> _inFlight =
       <String, Future<List<NearbyVenue>>>{};
   final Map<String, Set<void Function(List<NearbyVenue>)>> _listeners = {};
+  final Map<String, List<NearbyVenue>> _latestInFlight = {};
   QuerySnapshot<Map<String, dynamic>>? _businessSnapshot;
   DateTime? _businessSnapshotAt;
   Future<QuerySnapshot<Map<String, dynamic>>>? _businessRequest;
@@ -76,6 +77,7 @@ class NearbyVenueService {
 
   void _publish(String key, List<NearbyVenue> venues) {
     if (venues.isEmpty) return;
+    _latestInFlight[key] = List<NearbyVenue>.of(venues);
     for (final listener in List.of(_listeners[key] ?? <void Function(List<NearbyVenue>)>{})) {
       listener(List<NearbyVenue>.of(venues));
     }
@@ -235,6 +237,8 @@ class NearbyVenueService {
     }
     final running = _inFlight[key];
     if (running != null) {
+      final latest = _latestInFlight[key];
+      if (onUpdate != null && latest != null) onUpdate(List<NearbyVenue>.of(latest));
       return running.whenComplete(() { _listeners[key]?.remove(onUpdate); });
     }
 
@@ -250,6 +254,7 @@ class NearbyVenueService {
       if (identical(_inFlight[key], request)) {
         _inFlight.remove(key);
         _listeners.remove(key);
+        _latestInFlight.remove(key);
       }
     });
   }
