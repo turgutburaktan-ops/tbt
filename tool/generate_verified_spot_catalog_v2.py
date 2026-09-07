@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import io
 import json
+import urllib.error
 import urllib.request
 import zipfile
 
@@ -240,17 +241,36 @@ def best_p18_commons_meta(candidates: dict[str, dict]) -> None:
                 if qid not in title_map.setdefault(title, []):
                     title_map[title].append(qid)
     titles = sorted(title_map)
-    for index in range(0, len(titles), 40):
-        batch = titles[index:index + 40]
-        payload = base.get_json(base.COMMONS, {
-            'action': 'query',
-            'format': 'json',
-            'formatversion': '2',
-            'prop': 'imageinfo',
-            'iiprop': 'url|size|mime|extmetadata',
-            'iiurlwidth': '1920',
-            'titles': '|'.join(batch),
-        })
+    # Commons accepts many titles, but long UTF-8 file names can make a GET URL
+    # exceed an intermediary's URI limit. Split only the failing request so the
+    # remaining verified candidates are preserved without weakening any gate.
+    pending_batches = [
+        titles[index:index + 40] for index in range(0, len(titles), 40)
+    ]
+    while pending_batches:
+        batch = pending_batches.pop(0)
+        try:
+            payload = base.get_json(base.COMMONS, {
+                'action': 'query',
+                'format': 'json',
+                'formatversion': '2',
+                'prop': 'imageinfo',
+                'iiprop': 'url|size|mime|extmetadata',
+                'iiurlwidth': '1920',
+                'titles': '|'.join(batch),
+            })
+        except urllib.error.HTTPError as exc:
+            if exc.code != 414:
+                raise
+            if len(batch) > 1:
+                middle = len(batch) // 2
+                pending_batches[0:0] = [batch[:middle], batch[middle:]]
+            else:
+                print(
+                    'warning: Commons metadata title skipped after HTTP 414: '
+                    + batch[0]
+                )
+            continue
         for page in payload.get('query', {}).get('pages', []):
             infos = page.get('imageinfo') or []
             if not infos:
