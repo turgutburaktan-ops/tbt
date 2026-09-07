@@ -54,7 +54,7 @@ jobs:
           PUBLICATION_REPAIR: ${{ contains(github.event.head_commit.message, '[repair-burak-publication]') }}
         run: |
           if [ "$RESERVATION_UPDATE" = "true" ]; then
-            firebase deploy --only firestore:indexes,functions:getBusinessDashboard,functions:getMyBusinessReservations,functions:requestBusinessReservation,functions:respondBusinessReservation --project en-iyi-cekim-noktasi --non-interactive
+            firebase deploy --only functions:getBusinessDashboard,functions:getMyBusinessReservations,functions:requestBusinessReservation,functions:respondBusinessReservation --project en-iyi-cekim-noktasi --non-interactive
           elif [ "$PUBLICATION_REPAIR" = "true" ]; then
             firebase deploy --only functions:adminReviewBusinessClaim,functions:adminReviewBusinessClaimHttp,functions:publishVerifiedBusinessCandidate,functions:createBusinessCandidate --project en-iyi-cekim-noktasi --force --non-interactive
           else

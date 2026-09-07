@@ -61,8 +61,8 @@ exports.requestBusinessReservation = onCall({region:'europe-west1'}, async reque
   return db.runTransaction(async tx=>{
     const existing=await tx.get(ref);if(existing.exists)return {id:ref.id,status:existing.data().status};
     const venue=await tx.get(base);if(!venue.exists||venue.data().verified!==true)throw new HttpsError('failed-precondition','İşletme doğrulanmamış.');
-    const recent=await tx.get(base.collection('reservations').where('userUid','==',uid).where('status','==','pending'));
-    if(recent.size>=3)throw new HttpsError('resource-exhausted','Bu işletmede üç bekleyen rezervasyonun var.');
+    const recent=await tx.get(base.collection('reservations').where('userUid','==',uid));
+    if(recent.docs.filter(d=>d.data().status==='pending').length>=3)throw new HttpsError('resource-exhausted','Bu işletmede üç bekleyen rezervasyonun var.');
     const menuDocs=await Promise.all(selection.map(x=>tx.get(base.collection('menu').doc(x.itemId))));
     const orderItems=pricedOrder(selection,menuDocs),orderTotalMinor=orderItems.reduce((sum,x)=>sum+x.totalMinor,0);
     tx.set(ref,{userUid:uid,customerName,contactPhone,venueName:clean(venue.data().venueName||venue.data().name),partySize,at:Timestamp.fromMillis(atMs),note,orderItems,orderTotalMinor,status:'pending',createdAt:FieldValue.serverTimestamp(),updatedAt:FieldValue.serverTimestamp()});
