@@ -1,0 +1,58 @@
+name: Deploy Admin Web Hotfix
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [codex/fix-admin-screen]
+    paths:
+      - 'functions/admin_console.js'
+      - '.github/workflows/deploy_admin_web_hotfix.yml'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install function dependencies
+        run: npm install --prefix functions
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools
+      - name: Authenticate Firebase CLI
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          raw = os.environ.get('FIREBASE_SERVICE_ACCOUNT', '')
+          if not raw:
+              raise SystemExit('FIREBASE_SERVICE_ACCOUNT secret is missing.')
+          target = Path(os.environ['RUNNER_TEMP']) / 'firebase-service-account.json'
+          target.write_text(json.dumps(json.loads(raw)), encoding='utf-8')
+          target.chmod(0o600)
+          with open(os.environ['GITHUB_ENV'], 'a', encoding='utf-8') as env_file:
+              env_file.write(f'GOOGLE_APPLICATION_CREDENTIALS={target}\n')
+          PY
+      - name: Deploy admin insights function
+        run: >-
+          firebase deploy
+          --only functions:getAdminInsights
+          --project en-iyi-cekim-noktasi
+          --force
+          --non-interactive
+      - name: Restore callable invoker access
+        run: |
+          set -euo pipefail
+          gcloud auth activate-service-account --key-file="$GOOGLE_APPLICATION_CREDENTIALS"
+          gcloud functions add-invoker-policy-binding getAdminInsights \
+            --gen2 \
+            --region=europe-west1 \
+            --project=en-iyi-cekim-noktasi \
+            --member=allUsers \
+            --quiet

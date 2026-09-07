@@ -15,7 +15,7 @@ class AdminPortalScreen extends StatefulWidget {
 }
 
 class _AdminPortalScreenState extends State<AdminPortalScreen> {
-  bool? _allowed;
+  AdminAccessStatus? _status;
 
   @override
   void initState() {
@@ -24,11 +24,9 @@ class _AdminPortalScreenState extends State<AdminPortalScreen> {
   }
 
   Future<void> _check() async {
-    final user = FirebaseAuth.instance.currentUser;
-    final token = await user?.getIdTokenResult(
-      true,
-    );
-    if (mounted) setState(() => _allowed = AdminAccess.tokenMatches(user, token));
+    if (mounted) setState(() => _status = null);
+    final status = await AdminAccess.currentStatus(forceRefresh: true);
+    if (mounted) setState(() => _status = status);
   }
 
   void _open(Widget page) {
@@ -37,16 +35,59 @@ class _AdminPortalScreenState extends State<AdminPortalScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_allowed == null) {
+    if (_status == null) {
       return const Scaffold(
         backgroundColor: AppColors.background,
         body: Center(child: CircularProgressIndicator()),
       );
     }
-    if (_allowed != true) {
-      return const Scaffold(
+    if (_status != AdminAccessStatus.allowed) {
+      final message = switch (_status!) {
+        AdminAccessStatus.signedOut => 'Yönetici işlemleri için giriş yapmalısın.',
+        AdminAccessStatus.wrongAccount =>
+          'Bu panel yalnızca tanımlı TBT yönetici hesabına açıktır.',
+        AdminAccessStatus.emailUnverified =>
+          'Yönetici e-posta adresi henüz doğrulanmamış.',
+        AdminAccessStatus.claimMissing =>
+          'Yönetici yetkisi bu oturumda bulunamadı. Çıkış yapıp yeniden giriş yaptıktan sonra tekrar dene.',
+        AdminAccessStatus.unavailable =>
+          'Yönetici doğrulama servisine ulaşılamadı. Bağlantını kontrol edip yeniden dene.',
+        AdminAccessStatus.allowed => '',
+      };
+      return Scaffold(
         backgroundColor: AppColors.background,
-        body: Center(child: Text('Yönetici yetkisi gerekli.')),
+        appBar: AppBar(title: const Text('TBT Yönetim Merkezi')),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.admin_panel_settings_outlined,
+                  size: 52,
+                  color: Colors.white54,
+                ),
+                const SizedBox(height: 14),
+                Text(message, textAlign: TextAlign.center),
+                const SizedBox(height: 18),
+                FilledButton.icon(
+                  onPressed: _check,
+                  icon: const Icon(Icons.refresh_rounded),
+                  label: const Text('Yeniden dene'),
+                ),
+                if (_status == AdminAccessStatus.claimMissing)
+                  TextButton(
+                    onPressed: () async {
+                      await FirebaseAuth.instance.signOut();
+                      if (mounted) Navigator.of(context).pop();
+                    },
+                    child: const Text('Çıkış yap'),
+                  ),
+              ],
+            ),
+          ),
+        ),
       );
     }
 

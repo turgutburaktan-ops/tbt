@@ -1,0 +1,169 @@
+name: Deploy Web Venue Search Hotfix
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [codex/fix-admin-screen]
+    paths:
+      - '.github/workflows/deploy_web_venue_search_hotfix.yml'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Resolve the Cloudflare Pages project serving trtbt.com
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN || secrets.CF_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID || secrets.CF_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          import os
+          import urllib.request
+          from pathlib import Path
+
+          token = os.environ.get('CLOUDFLARE_API_TOKEN', '')
+          account = os.environ.get('CLOUDFLARE_ACCOUNT_ID', '')
+          if not token or not account:
+              raise SystemExit('Cloudflare API credentials are missing.')
+
+          request = urllib.request.Request(
+              f'https://api.cloudflare.com/client/v4/accounts/{account}/pages/projects',
+              headers={'Authorization': f'Bearer {token}'},
+          )
+          with urllib.request.urlopen(request, timeout=30) as response:
+              payload = json.load(response)
+          if not payload.get('success'):
+              raise SystemExit('Cloudflare Pages projects could not be listed.')
+
+          project = next(
+              (
+                  item for item in payload.get('result', [])
+                  if 'trtbt.com' in item.get('domains', [])
+              ),
+              None,
+          )
+          if not project:
+              raise SystemExit('No Cloudflare Pages project is connected to trtbt.com.')
+          name = project['name']
+          branch = project.get('production_branch') or 'main'
+          print(f'trtbt.com is served by Cloudflare Pages project: {name} ({branch})')
+          with open(os.environ['GITHUB_ENV'], 'a', encoding='utf-8') as env_file:
+              env_file.write(f'CLOUDFLARE_PAGES_PROJECT={name}\n')
+              env_file.write(f'CLOUDFLARE_PAGES_BRANCH={branch}\n')
+          PY
+      - name: Mirror the current web release
+        run: |
+          set -euo pipefail
+          public_dir="$RUNNER_TEMP/tbt-hosting"
+          mkdir -p "$public_dir/assets"
+          files=(
+            index.html
+            styles.css
+            app.js
+            i18n.js
+            welcome.js
+            daily-goals.js
+            daily-goals.css
+            admin-tools.js
+            notifications.js
+            auth-policy.js
+            manifest.webmanifest
+            sw.js
+            assets/tbt-icon.png
+            assets/harput.jpg
+            assets/palu.jpg
+            assets/alacali.webp
+          )
+          for file in "${files[@]}"; do
+            curl --fail --silent --show-error --location \
+              "https://trtbt.com/$file?venue-search-deploy=$GITHUB_RUN_ID" \
+              --output "$public_dir/$file"
+            test -s "$public_dir/$file"
+          done
+      - name: Add Lezzet and Kafeler search
+        run: |
+          set -euo pipefail
+          public_dir="$RUNNER_TEMP/tbt-hosting"
+          node - "$public_dir/app.js" "$public_dir/sw.js" <<'NODE'
+          const fs = require('fs');
+          const appPath = process.argv[2];
+          const swPath = process.argv[3];
+          let source = fs.readFileSync(appPath, 'utf8');
+
+          const formAnchor = '</form><section class="venue-submit-card">';
+          const matches = source.split(formAnchor).length - 1;
+          if (matches !== 1) {
+            throw new Error(`Expected one venue form anchor, found ${matches}.`);
+          }
+          const searchPanel = `</form>\${route==='lezzet'||route==='kafeler'?\`<div class="venue-controls" style="grid-template-columns:1fr"><label><span>\${section.title} ara</span><input id="venueSearch" type="search" placeholder="İsim, ilçe veya adres ara" autocomplete="off"></label></div>\`:''}<section class="venue-submit-card">`;
+          source = source.replace(formAnchor, searchPanel);
+
+          const functionStart = 'function showVenueResult(result,section,area){';
+          const functionEnd = '\nfunction useVenueLocation';
+          const start = source.indexOf(functionStart);
+          const end = source.indexOf(functionEnd, start);
+          if (start < 0 || end < 0) {
+            throw new Error('Venue result renderer could not be located.');
+          }
+          const replacement = `function showVenueResult(result,section,area){
+            const count=document.querySelector('#venueCount'),search=document.querySelector('#venueSearch');
+            const render=()=>{
+              const term=(search?.value||'').trim().toLocaleLowerCase('tr');
+              const items=term?result.items.filter(item=>[item.name,item.city,item.district,item.address,item.description].filter(Boolean).join(' ').toLocaleLowerCase('tr').includes(term)):result.items;
+              drawVenues(items,section);
+              if(count)count.textContent=result.error?area.name+' · Mekânlar alınamadı':area.name+' · '+items.length+(term?' / '+result.items.length:'')+' mekân';
+            };
+            if(search)search.oninput=render;
+            render();
+            if(result.error)toast('Mekânlar şu anda alınamadı. Tekrar deneyebilirsin.');
+          }`;
+          source = source.slice(0, start) + replacement + source.slice(end);
+          fs.writeFileSync(appPath, source);
+
+          let sw = fs.readFileSync(swPath, 'utf8');
+          const updatedSw = sw.replace(/const CACHE='[^']+';/, "const CACHE='tbt-shell-v11-venue-search';");
+          if (updatedSw === sw) {
+            throw new Error('Service worker cache key could not be updated.');
+          }
+          fs.writeFileSync(swPath, updatedSw);
+          NODE
+      - name: Validate patched web assets
+        run: |
+          set -euo pipefail
+          public_dir="$RUNNER_TEMP/tbt-hosting"
+          node --check "$public_dir/app.js"
+          node --check "$public_dir/sw.js"
+          grep -q 'id="venueSearch"' "$public_dir/app.js"
+          grep -q "toLocaleLowerCase('tr')" "$public_dir/app.js"
+      - name: Deploy website hotfix
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN || secrets.CF_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID || secrets.CF_ACCOUNT_ID }}
+        run: >-
+          npx --yes wrangler@latest pages deploy "$RUNNER_TEMP/tbt-hosting"
+          --project-name "$CLOUDFLARE_PAGES_PROJECT"
+          --branch "$CLOUDFLARE_PAGES_BRANCH"
+          --commit-dirty=true
+      - name: Verify trtbt.com search release
+        run: |
+          set -euo pipefail
+          for attempt in {1..12}; do
+            app="$(curl --fail --silent --show-error --location \
+              "https://trtbt.com/app.js?venue-search-verify=$GITHUB_RUN_ID-$attempt")"
+            sw="$(curl --fail --silent --show-error --location \
+              "https://trtbt.com/sw.js?venue-search-verify=$GITHUB_RUN_ID-$attempt")"
+            if grep -q 'id="venueSearch"' <<<"$app" && \
+               grep -q 'tbt-shell-v11-venue-search' <<<"$sw"; then
+              echo 'Lezzet and Kafeler search is live on trtbt.com.'
+              exit 0
+            fi
+            sleep 5
+          done
+          echo 'The Cloudflare deployment completed, but trtbt.com has not updated yet.' >&2
+          exit 1

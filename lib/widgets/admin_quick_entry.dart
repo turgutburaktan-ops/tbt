@@ -28,11 +28,20 @@ class _AdminQuickEntryState extends State<AdminQuickEntry> {
       if (mounted) setState(() => _isAdmin = false);
       return;
     }
+    final ownerAccount = AdminAccess.emailMatches(user);
+    if (ownerAccount && mounted) setState(() => _isAdmin = true);
     try {
-      final token = await user.getIdTokenResult(true);
-      if (mounted) setState(() => _isAdmin = AdminAccess.tokenMatches(user, token));
+      final token = await user
+          .getIdTokenResult(true)
+          .timeout(const Duration(seconds: 12));
+      if (mounted) {
+        setState(
+          () => _isAdmin =
+              ownerAccount || AdminAccess.tokenMatches(user, token),
+        );
+      }
     } catch (_) {
-      if (mounted) setState(() => _isAdmin = false);
+      if (mounted && !ownerAccount) setState(() => _isAdmin = false);
     }
   }
 

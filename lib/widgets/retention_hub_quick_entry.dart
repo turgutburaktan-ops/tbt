@@ -37,14 +37,20 @@ class _RetentionHubQuickEntryState extends State<RetentionHubQuickEntry> {
       if (mounted && _isAdmin) setState(() => _isAdmin = false);
       return;
     }
+    final ownerAccount = AdminAccess.emailMatches(user);
+    if (ownerAccount && mounted && !_isAdmin) {
+      setState(() => _isAdmin = true);
+    }
     try {
       final token = await user
           .getIdTokenResult()
           .timeout(const Duration(seconds: 6));
-      final next = AdminAccess.tokenMatches(user, token);
+      // Keep the recovery entry visible for the named owner. The destination
+      // and every backend operation still enforce the verified admin claim.
+      final next = ownerAccount || AdminAccess.tokenMatches(user, token);
       if (mounted && next != _isAdmin) setState(() => _isAdmin = next);
     } catch (_) {
-      if (mounted && _isAdmin) setState(() => _isAdmin = false);
+      if (mounted && !ownerAccount && _isAdmin) setState(() => _isAdmin = false);
     }
   }
 
