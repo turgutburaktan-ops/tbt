@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class TrustSafetyService {
@@ -82,14 +83,19 @@ class TrustSafetyService {
     }, SetOptions(merge: true));
   }
 
-  Future<void> requestAccountDeletion({String reason = ''}) async {
-    await _db.collection('account_delete_requests').doc(_uid).set({
-      'uid': _uid,
-      'reason': reason.trim(),
-      'status': 'requested',
-      'requestedAt': FieldValue.serverTimestamp(),
-      'updatedAt': FieldValue.serverTimestamp(),
-    });
+  FirebaseFunctions get _functions =>
+      FirebaseFunctions.instanceFor(region: 'europe-west1');
+
+  Future<void> freezeAccount() async {
+    await _functions.httpsCallable('freezeAccount').call();
+  }
+
+  Future<void> unfreezeAccount() async {
+    await _functions.httpsCallable('unfreezeAccount').call();
+  }
+
+  Future<void> deleteAccountNow() async {
+    await _functions.httpsCallable('deleteAccountNow').call();
   }
 }
 

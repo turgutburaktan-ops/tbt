@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -21,6 +22,7 @@ class _SafetyPrivacyCenterScreenState extends State<SafetyPrivacyCenterScreen> {
   bool _marketing = false;
   bool _attendeesOnly = true;
   bool _analyticsConsent = true;
+  bool _accountBusy = false;
   String _locationVisibility = 'approximate';
   bool _loading = true;
 
@@ -88,33 +90,124 @@ class _SafetyPrivacyCenterScreenState extends State<SafetyPrivacyCenterScreen> {
     }
   }
 
-  Future<void> _requestDeletion() async {
+  Future<void> _manageAccount() async {
+    if (_accountBusy) return;
+    final action = await showModalBottomSheet<String>(
+      context: context,
+      useSafeArea: true,
+      builder: (sheetContext) => Padding(
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Text(
+              'Hesap işlemleri',
+              style: TextStyle(fontSize: 21, fontWeight: FontWeight.w900),
+            ),
+            const SizedBox(height: 10),
+            ListTile(
+              leading: const Icon(Icons.ac_unit_rounded),
+              title: const Text('Hesabı dondur'),
+              subtitle: const Text(
+                'Süre sınırı yoktur. Tekrar giriş yaparak hesabını istediğin zaman açabilirsin.',
+              ),
+              onTap: () => Navigator.pop(sheetContext, 'freeze'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.delete_forever_rounded, color: Colors.redAccent),
+              title: const Text('Hesabı kalıcı sil'),
+              subtitle: const Text(
+                'Admin onayı veya bekleme olmadan hesabın ve verilerin silinir.',
+              ),
+              onTap: () => Navigator.pop(sheetContext, 'delete'),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (!mounted || action == null) return;
+    if (action == 'freeze') {
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: const Text('Hesabı dondur'),
+          content: const Text(
+            'Hesabın süre sınırı olmadan dondurulacak. İstediğin zaman yeniden açabilirsin.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('Vazgeç'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: const Text('Dondur'),
+            ),
+          ],
+        ),
+      );
+      if (confirmed == true) {
+        setState(() => _accountBusy = true);
+        try {
+          await TrustSafetyService.instance.freezeAccount();
+          if (mounted) Navigator.of(context).popUntil((route) => route.isFirst);
+        } catch (error) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(_accountError(error))),
+            );
+          }
+        } finally {
+          if (mounted) setState(() => _accountBusy = false);
+        }
+      }
+      return;
+    }
+
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Hesap silme talebi'),
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Hesabı kalıcı sil'),
         content: const Text(
-          'Talebin güvenli şekilde işleme alınır. Kimlik doğrulaması ve gerekli saklama süreleri tamamlandıktan sonra hesap verileri silinir.',
+          'Bu işlem geri alınamaz. Hesabın admin onayı veya bekleme süresi olmadan kalıcı olarak silinecek.',
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () => Navigator.pop(dialogContext, false),
             child: const Text('Vazgeç'),
           ),
           FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Talep Oluştur'),
+            style: FilledButton.styleFrom(backgroundColor: Colors.redAccent),
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Hemen sil'),
           ),
         ],
       ),
     );
-    if (confirmed != true) return;
-    await TrustSafetyService.instance.requestAccountDeletion();
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Hesap silme talebin alındı.')),
-      );
+    if (confirmed == true) {
+      setState(() => _accountBusy = true);
+      try {
+        await TrustSafetyService.instance.deleteAccountNow();
+        await FirebaseAuth.instance.signOut();
+        if (mounted) Navigator.of(context).popUntil((route) => route.isFirst);
+      } catch (error) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(_accountError(error))),
+          );
+        }
+      } finally {
+        if (mounted) setState(() => _accountBusy = false);
+      }
     }
+  }
+
+  String _accountError(Object error) {
+    if (error is FirebaseFunctionsException) {
+      return error.message ?? 'Hesap işlemi tamamlanamadı.';
+    }
+    return 'Hesap işlemi tamamlanamadı. Lütfen tekrar dene.';
   }
 
   @override
@@ -211,9 +304,11 @@ class _SafetyPrivacyCenterScreenState extends State<SafetyPrivacyCenterScreen> {
             ),
           ),
           ListTile(
+            enabled: !_accountBusy,
             leading: const Icon(Icons.delete_forever_outlined),
-            title: const Text('Hesabımı silme talebi oluştur'),
-            onTap: _requestDeletion,
+            title: const Text('Hesabı dondur veya sil'),
+            subtitle: const Text('Süresiz dondurma veya doğrudan kalıcı silme'),
+            onTap: _manageAccount,
           ),
           const SizedBox(height: 16),
           FilledButton(

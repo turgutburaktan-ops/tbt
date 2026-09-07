@@ -90,7 +90,6 @@ exports.getAdminInsights = onCall({region: 'europe-west1'}, async (request) => {
     verifiedBusinesses: db.collection('business_venues').where('verified', '==', true),
     pendingBusinessClaims: db.collection('business_claims').where('status', '==', 'pending_review'),
     openReports: db.collection('moderation_reports').where('status', '==', 'open'),
-    deleteRequests: db.collection('account_delete_requests').where('status', '==', 'requested'),
     analyticsEvents: db.collection('analytics_events'),
     appErrors: db.collection('app_errors'),
     trustReports: db.collectionGroup('trust_reports').where('status', '==', 'open'),

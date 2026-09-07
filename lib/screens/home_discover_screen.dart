@@ -102,6 +102,7 @@ class _HomeDiscoverScreenState extends State<HomeDiscoverScreen> {
             .limit(24)
             .get();
         for (final doc in snap.docs) {
+          if (doc.data()['accountStatus'] == 'frozen') continue;
           byId[doc.id] = doc;
         }
       } catch (_) {
@@ -125,6 +126,7 @@ class _HomeDiscoverScreenState extends State<HomeDiscoverScreen> {
     try {
       final fallback = await users.limit(500).get();
       for (final doc in fallback.docs) {
+        if (doc.data()['accountStatus'] == 'frozen') continue;
         if (_userMatchScore(doc, typed) > 0) byId[doc.id] = doc;
       }
     } catch (_) {}

@@ -43,6 +43,7 @@ class _ReelsScreenState extends State<ReelsScreen> {
     });
     return docs.where((doc) {
       final data = doc.data();
+      if (data['accountFrozen'] == true) return false;
       final hasVideo = (data['videoUrl'] ?? '').toString().trim().isNotEmpty;
       if (!hasVideo) return false;
       if (_section == 0) return true;
