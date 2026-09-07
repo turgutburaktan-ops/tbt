@@ -23,7 +23,7 @@ class CityVenueArea {
 }
 
 class NearbyVenueService {
-  NearbyVenueService._() : _clientFactory = http.Client, _businessLoader = null;
+  NearbyVenueService._() : _clientFactory = (() => http.Client()), _businessLoader = null;
 
   NearbyVenueService.forTesting({
     required http.Client Function() clientFactory,
@@ -392,7 +392,7 @@ class NearbyVenueService {
     _VenueQueryState state,
   ) async {
     try {
-      if (_businessLoader != null) return await _businessLoader!(c, a, o, r);
+      if (_businessLoader != null) return await _businessLoader(c, a, o, r);
       final snap = await _businessCatalog();
       final out = <NearbyVenue>[];
       for (final doc in snap.docs) {
