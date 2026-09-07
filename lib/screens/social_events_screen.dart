@@ -1,3 +1,6 @@
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'event_deep_link_screen.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -27,12 +30,29 @@ class SocialEventsScreen extends StatefulWidget {
 
 class _SocialEventsScreenState extends State<SocialEventsScreen> {
   SocialEventType? _selectedType;
+  bool _mapView = false;
+  String _search = '';
+  Position? _near;
+  bool _locationBusy = false;
   String _dateFilter = 'all';
   String _priceFilter = 'all';
   final Set<String> _locallyCancelledEventIds = <String>{};
 
   Stream<List<SocialEvent>> get _stream =>
       SocialEventService.instance.watchUpcoming(type: _selectedType);
+
+  Future<void> _toggleNear() async {
+    if (_near != null) { setState(() => _near = null); return; }
+    setState(() => _locationBusy = true);
+    try {
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) throw Exception('Konum izni gerekli.');
+      final position = await Geolocator.getCurrentPosition(locationSettings: const LocationSettings(timeLimit: Duration(seconds: 15)));
+      if (mounted) setState(() => _near = position);
+    } catch (_) { _showMessage('Konum alınamadı. Şehir adını arayabilirsin.'); }
+    finally { if (mounted) setState(() => _locationBusy = false); }
+  }
 
   IconData _iconFor(SocialEventType type) => switch (type) {
     SocialEventType.photography => Icons.camera_alt_outlined,
@@ -393,6 +413,7 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
             ],
           ),
         ),
+        Padding(padding: const EdgeInsets.symmetric(horizontal: 16), child: TextField(decoration: const InputDecoration(prefixIcon: Icon(Icons.search), hintText: 'Etkinlik veya şehir ara'), onChanged: (v) => setState(() => _search = v.trim().toLowerCase()))),
         SizedBox(
           height: 54,
           child: ListView(
@@ -426,13 +447,15 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
             children: [
+              _FilterChip(label: _mapView ? 'Liste' : 'Harita', selected: _mapView, onTap: () => setState(() => _mapView = !_mapView)),
+              _FilterChip(label: _locationBusy ? 'Konum alınıyor…' : 'Yakınımda · 50 km', selected: _near != null, onTap: () { if (!_locationBusy) _toggleNear(); }),
               _FilterChip(
                 label: 'Bugün',
                 selected: _dateFilter == 'today',
                 onTap: () => setState(() => _dateFilter = _dateFilter == 'today' ? 'all' : 'today'),
               ),
               _FilterChip(
-                label: 'Bu hafta',
+                label: 'Bu hafta sonu',
                 selected: _dateFilter == 'week',
                 onTap: () => setState(() => _dateFilter = _dateFilter == 'week' ? 'all' : 'week'),
               ),
@@ -467,7 +490,9 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
               }
               final now = DateTime.now();
               final todayEnd = DateTime(now.year, now.month, now.day, 23, 59, 59);
-              final weekEnd = now.add(const Duration(days: 7));
+              final today = DateTime(now.year, now.month, now.day);
+              final weekendStart = today.add(Duration(days: now.weekday == 7 ? -1 : 6 - now.weekday));
+              final weekEnd = weekendStart.add(const Duration(days: 2));
               final events = (snapshot.data ?? const <SocialEvent>[])
                   .where(
                     (event) => !_locallyCancelledEventIds.contains(event.id),
@@ -476,10 +501,17 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
                     if (_priceFilter == 'free' && event.isPaid) return false;
                     if (_priceFilter == 'paid' && !event.isPaid) return false;
                     if (_dateFilter == 'today' && event.startsAt.isAfter(todayEnd)) return false;
-                    if (_dateFilter == 'week' && event.startsAt.isAfter(weekEnd)) return false;
+                    if (_dateFilter == 'week' && (event.startsAt.isBefore(weekendStart) || !event.startsAt.isBefore(weekEnd))) return false;
+                    if (_search.isNotEmpty && !'${event.title} ${event.city} ${event.locationLabel}'.toLowerCase().contains(_search)) return false;
+                    if (_near != null && (event.latitude == null || event.longitude == null || Geolocator.distanceBetween(_near!.latitude, _near!.longitude, event.latitude!, event.longitude!) > 50000)) return false;
                     return true;
                   })
                   .toList(growable: false);
+              if (_mapView && events.isNotEmpty) {
+                final located = events.where((e) => e.latitude != null && e.longitude != null).toList();
+                if (located.isEmpty) return const Center(child: Text('Bu etkinliklerde harita konumu yok. Liste görünümünü kullan.'));
+                return GoogleMap(initialCameraPosition: CameraPosition(target: LatLng(located.first.latitude!, located.first.longitude!), zoom: 10), markers: located.map((e) => Marker(markerId: MarkerId(e.id), position: LatLng(e.latitude!, e.longitude!), infoWindow: InfoWindow(title: e.title, snippet: e.locationLabel, onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => EventDeepLinkScreen(eventId: e.id)))))).toSet());
+              }
               if (events.isEmpty) {
                 return _EmptyEvents(onCreate: _openCreate);
               }
@@ -619,6 +651,7 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
                             ),
                           ],
                           const SizedBox(height: 8),
+                          OutlinedButton.icon(onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => EventDeepLinkScreen(eventId: event.id))), icon: const Icon(Icons.event_note), label: const Text('Detaylar, katılımcılar ve sohbet')),
                           ContentEngagementBar(
                             collection: 'social_events',
                             contentId: event.id,

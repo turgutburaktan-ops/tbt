@@ -53,7 +53,12 @@ jobs:
           java-version: '21'
 
       - name: Check coupon access rules
-        run: firebase emulators:exec --only firestore --project demo-tbt "node tool/test_coupon_rules.cjs" --non-interactive
+        run: firebase emulators:exec --only firestore --project demo-tbt "node tool/test_coupon_rules.cjs && node tool/test_event_hub_rules.cjs" --non-interactive
+
+      - name: Prepare event discovery index
+        run: |
+          npm ci --prefix functions
+          node tool/ensure_event_index.cjs
 
       - name: Deploy Firestore rules
         run: firebase deploy --only firestore:rules --project en-iyi-cekim-noktasi --non-interactive

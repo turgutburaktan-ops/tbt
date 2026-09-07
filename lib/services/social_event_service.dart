@@ -39,26 +39,36 @@ class SocialEventService {
     final threshold = Timestamp.fromDate(
       DateTime.now().subtract(const Duration(minutes: 30)),
     );
-    return _firestore
-        .collection(collection)
-        .where('startsAt', isGreaterThan: threshold)
-        .orderBy('startsAt')
-        .limit(limit)
-        .snapshots()
-        .map((snapshot) {
-          final items = snapshot.docs.map(SocialEvent.fromDocument).where((event) {
-            if (!_canView(event)) return false;
-            if (event.status != 'open') return false;
-            if (city != null &&
-                city.trim().isNotEmpty &&
-                event.city.toLowerCase() != city.trim().toLowerCase()) {
-              return false;
+    final base = _firestore.collection(collection);
+    final uid = _auth.currentUser?.uid;
+    final queries = <Query<Map<String, dynamic>>>[
+      base.where('visibility', isEqualTo: 'public').where('startsAt', isGreaterThan: threshold).orderBy('startsAt').limit(limit),
+      if (uid != null) base.where('hostId', isEqualTo: uid).limit(200),
+      if (uid != null) base.where('allowedUserIds', arrayContains: uid).limit(200),
+      if (uid != null) base.where('participantIds', arrayContains: uid).limit(200),
+    ];
+    return Stream<List<SocialEvent>>.multi((controller) {
+      final groups = <int, List<SocialEvent>>{};
+      final subscriptions = <StreamSubscription<QuerySnapshot<Map<String, dynamic>>>>[];
+      for (var i = 0; i < queries.length; i++) {
+        final key = i;
+        subscriptions.add(queries[i].snapshots().listen((snapshot) {
+          groups[key] = snapshot.docs.map(SocialEvent.fromDocument).toList();
+          final unique = <String, SocialEvent>{};
+          for (final group in groups.values) {
+            for (final event in group) {
+              if (!_canView(event) || event.status != 'open' || event.startsAt.isBefore(threshold.toDate())) continue;
+              if (city != null && city.trim().isNotEmpty && event.city.toLowerCase() != city.trim().toLowerCase()) continue;
+              if (type != null && event.type != type) continue;
+              unique[event.id] = event;
             }
-            if (type != null && event.type != type) return false;
-            return true;
-          }).toList(growable: false);
-          return items;
-        });
+          }
+          final items = unique.values.toList()..sort((a,b) => a.startsAt.compareTo(b.startsAt));
+          controller.add(items.take(limit).toList());
+        }, onError: (Object error, StackTrace stack) { if (key == 0) controller.addError(error, stack); }));
+      }
+      controller.onCancel = () { for (final subscription in subscriptions) { subscription.cancel(); } };
+    });
   }
 
   Stream<List<SocialEvent>> watchForCommunity(

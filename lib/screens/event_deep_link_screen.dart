@@ -1,3 +1,4 @@
+import '../widgets/event_hub_panel.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -218,6 +219,7 @@ class EventDeepLinkScreen extends StatelessWidget {
                               ),
                             ),
                           ],
+                          EventHubPanel(event: event),
                           const SizedBox(height: 22),
                           if (started) ...[
                             StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
