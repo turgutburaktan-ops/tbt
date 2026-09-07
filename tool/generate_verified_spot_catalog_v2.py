@@ -303,10 +303,17 @@ def candidate_collect_query(
     offset = 0
     while offset < max_rows:
         limit = min(page_size, max_rows - offset)
-        payload = base.get_json(
-            base.WDQS,
-            {'query': query_builder(limit, offset), 'format': 'json'},
-        )
+        try:
+            payload = base.get_json(
+                base.WDQS,
+                {'query': query_builder(limit, offset), 'format': 'json'},
+            )
+        except RuntimeError as error:
+            print(
+                f'warning: {category} query skipped at offset {offset} '
+                f'after retries: {error}'
+            )
+            break
         rows = payload.get('results', {}).get('bindings', [])
         if not rows:
             break
