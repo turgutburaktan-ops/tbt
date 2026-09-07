@@ -36,6 +36,48 @@ jobs:
           with open(os.environ['GITHUB_ENV'], 'a', encoding='utf-8') as env_file:
               env_file.write(f'GOOGLE_APPLICATION_CREDENTIALS={target}\n')
           PY
+      - name: Resolve the Hosting site serving trtbt.com
+        run: |
+          set -euo pipefail
+          gcloud auth activate-service-account --key-file="$GOOGLE_APPLICATION_CREDENTIALS"
+          export FIREBASE_ACCESS_TOKEN="$(gcloud auth print-access-token)"
+          python3 - <<'PY'
+          import json
+          import os
+          import urllib.request
+
+          project = 'en-iyi-cekim-noktasi'
+          headers = {'Authorization': f"Bearer {os.environ['FIREBASE_ACCESS_TOKEN']}"}
+
+          def get_json(url):
+              request = urllib.request.Request(url, headers=headers)
+              with urllib.request.urlopen(request, timeout=30) as response:
+                  return json.load(response)
+
+          sites = get_json(
+              f'https://firebasehosting.googleapis.com/v1beta1/projects/{project}/sites'
+          ).get('sites', [])
+          selected = None
+          for site in sites:
+              site_name = site.get('name', '')
+              if not site_name:
+                  continue
+              domains = get_json(
+                  f'https://firebasehosting.googleapis.com/v1beta1/{site_name}/customDomains'
+              ).get('customDomains', [])
+              if any(
+                  domain.get('name', '').endswith('/customDomains/trtbt.com')
+                  for domain in domains
+              ):
+                  selected = site_name.rsplit('/', 1)[-1]
+                  break
+
+          if not selected:
+              raise SystemExit('No Firebase Hosting site is connected to trtbt.com.')
+          print(f'trtbt.com is served by Hosting site: {selected}')
+          with open(os.environ['GITHUB_ENV'], 'a', encoding='utf-8') as env_file:
+              env_file.write(f'FIREBASE_HOSTING_SITE={selected}\n')
+          PY
       - name: Mirror the current web release
         run: |
           set -euo pipefail
@@ -129,6 +171,7 @@ jobs:
 
           config = {
               'hosting': {
+                  'site': os.environ['FIREBASE_HOSTING_SITE'],
                   'public': str(Path(os.environ['RUNNER_TEMP']) / 'tbt-hosting'),
                   'ignore': ['firebase.json', '**/.*', '**/node_modules/**'],
                   'rewrites': [{'source': '**', 'destination': '/index.html'}],
