@@ -53,6 +53,7 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
     if (oldWidget.category != widget.category) {
       _searchController.clear();
       _ratings.clear();
+      _venues = const [];
       _ratingGeneration++;
       _load(forceRefresh: false);
     }
@@ -79,12 +80,15 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
       });
     }
     try {
-      Position? position;
-      try {
-        position = await LocationService.getCurrentPosition(
-          forceRefresh: forceRefresh,
-        );
-      } catch (_) {}
+      Position? position = _userPosition;
+      // A selected city already supplies coordinates; do not block it on GPS.
+      if (!NearbyVenueService.instance.hasSelectedCity) {
+        try {
+          position = await LocationService.getCurrentPosition(
+            forceRefresh: forceRefresh,
+          );
+        } catch (_) {}
+      }
       if (!mounted || generation != _loadGeneration) return;
 
       final hasCity = NearbyVenueService.instance.hasSelectedCity;
@@ -104,6 +108,16 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
         latitude: lat,
         longitude: lon,
         forceRefresh: forceRefresh,
+        onUpdate: (items) {
+          if (!mounted || generation != _loadGeneration || category != widget.category) return;
+          setState(() {
+            _userPosition = position;
+            _venues = items;
+            _loading = false;
+            _refreshing = true;
+            _error = null;
+          });
+        },
       );
       if (!mounted || generation != _loadGeneration || category != widget.category) {
         return;
@@ -294,9 +308,9 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
     if (picked == true && mounted) {
       _cityController.text = NearbyVenueService.instance.selectedCityName ?? '';
       _ratings.clear();
-      _ratingGeneration++;
       _venues = const [];
-      await _load(forceRefresh: true);
+      _ratingGeneration++;
+      await _load();
     }
   }
 

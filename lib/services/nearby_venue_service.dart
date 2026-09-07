@@ -23,7 +23,15 @@ class CityVenueArea {
 }
 
 class NearbyVenueService {
-  NearbyVenueService._();
+  NearbyVenueService._() : _clientFactory = http.Client, _businessLoader = null;
+
+  NearbyVenueService.forTesting({
+    required http.Client Function() clientFactory,
+    required Future<List<NearbyVenue>> Function(NearbyVenueCategory, double, double, int) businessLoader,
+  }) : _clientFactory = clientFactory, _businessLoader = businessLoader;
+
+  final http.Client Function() _clientFactory;
+  final Future<List<NearbyVenue>> Function(NearbyVenueCategory, double, double, int)? _businessLoader;
   static final instance = NearbyVenueService._();
   static const _cacheLifetime = Duration(hours: 18);
   static const int cityScaleRadiusMeters = 80000;
@@ -60,7 +68,35 @@ class NearbyVenueService {
 
   final Map<String, Future<List<NearbyVenue>>> _inFlight =
       <String, Future<List<NearbyVenue>>>{};
+  final Map<String, Set<void Function(List<NearbyVenue>)>> _listeners = {};
+  QuerySnapshot<Map<String, dynamic>>? _businessSnapshot;
+  DateTime? _businessSnapshotAt;
+  Future<QuerySnapshot<Map<String, dynamic>>>? _businessRequest;
   SharedPreferences? _preferences;
+
+  void _publish(String key, List<NearbyVenue> venues) {
+    if (venues.isEmpty) return;
+    for (final listener in List.of(_listeners[key] ?? <void Function(List<NearbyVenue>)>{})) {
+      listener(List<NearbyVenue>.of(venues));
+    }
+  }
+
+  Future<QuerySnapshot<Map<String, dynamic>>> _businessCatalog() {
+    if (_businessSnapshot != null && _businessSnapshotAt != null &&
+        DateTime.now().difference(_businessSnapshotAt!) < const Duration(minutes: 5)) {
+      return Future.value(_businessSnapshot!);
+    }
+    if (_businessRequest != null) return _businessRequest!;
+    final request = FirebaseFirestore.instance.collection('business_venues')
+        .where('source', isEqualTo: 'user_submission').limit(500).get()
+        .timeout(const Duration(seconds: 5));
+    _businessRequest = request;
+    return request.then((snapshot) {
+      _businessSnapshot = snapshot;
+      _businessSnapshotAt = DateTime.now();
+      return snapshot;
+    }).whenComplete(() { _businessRequest = null; });
+  }
 
   double? _cityLatitude, _cityLongitude, _south, _west, _north, _east;
   String? _cityName;
@@ -190,11 +226,17 @@ class NearbyVenueService {
     required double longitude,
     int radiusMeters = cityScaleRadiusMeters,
     bool forceRefresh = false,
+    void Function(List<NearbyVenue>)? onUpdate,
   }) {
     final state = _snapshotState(latitude, longitude);
     final key = _cacheKeyForState(category, state, radiusMeters);
+    if (onUpdate != null) {
+      (_listeners[key] ??= <void Function(List<NearbyVenue>)>{}).add(onUpdate);
+    }
     final running = _inFlight[key];
-    if (running != null) return running;
+    if (running != null) {
+      return running.whenComplete(() { _listeners[key]?.remove(onUpdate); });
+    }
 
     final request = _nearbyInternal(
       category: category,
@@ -205,7 +247,10 @@ class NearbyVenueService {
     );
     _inFlight[key] = request;
     return request.whenComplete(() {
-      if (identical(_inFlight[key], request)) _inFlight.remove(key);
+      if (identical(_inFlight[key], request)) {
+        _inFlight.remove(key);
+        _listeners.remove(key);
+      }
     });
   }
 
@@ -218,76 +263,36 @@ class NearbyVenueService {
   }) async {
     final p = await _prefs();
     final cached = _readCache(p, key);
-    final businessFuture = _tbtBusinesses(
-      category,
-      state.latitude,
-      state.longitude,
-      radiusMeters,
-      state,
-    );
-
-    if (!forceRefresh && cached != null) {
-      final business = await businessFuture;
-      final merged = _merge(cached.venues, business);
-      if (cached.isExpired) {
-        unawaited(
-          _refreshCacheQuietly(
-            category: category,
-            state: state,
-            radiusMeters: radiusMeters,
-            key: key,
-          ),
-        );
-      }
-      return merged;
-    }
-
-    final fresh = await _fetchFreshOsm(
-      category: category,
-      state: state,
-      radiusMeters: radiusMeters,
-    );
-    if (fresh != null) {
+    var osm = cached?.venues ?? <NearbyVenue>[];
+    var business = <NearbyVenue>[];
+    var osmFailed = false;
+    // Paint disk results before either network source completes.
+    _publish(key, osm);
+    final businessFuture = _tbtBusinesses(category, state.latitude,
+        state.longitude, radiusMeters, state).then((items) {
+      business = items;
+      _publish(key, _merge(osm, business));
+    });
+    final osmFuture = () async {
+      if (!forceRefresh && cached != null && !cached.isExpired) return;
+      final fresh = await _fetchFreshOsm(category: category, state: state,
+          radiusMeters: radiusMeters);
+      if (fresh == null) { osmFailed = true; return; }
+      osm = fresh;
+      _publish(key, _merge(osm, business));
       try {
-        await p.setString(
-          key,
-          jsonEncode({
-            'savedAt': DateTime.now().millisecondsSinceEpoch,
-            'venues': fresh.map((v) => v.toJson()).toList(),
-          }),
-        );
-      } catch (_) {}
-      return _merge(fresh, await businessFuture);
-    }
-
-    final t = await businessFuture;
-    if (cached != null) return _merge(cached.venues, t);
-    if (t.isNotEmpty) return t;
-    throw Exception('Mekan verisi alınamadı.');
-  }
-
-  Future<void> _refreshCacheQuietly({
-    required NearbyVenueCategory category,
-    required _VenueQueryState state,
-    required int radiusMeters,
-    required String key,
-  }) async {
-    try {
-      final fresh = await _fetchFreshOsm(
-        category: category,
-        state: state,
-        radiusMeters: radiusMeters,
-      );
-      if (fresh == null) return;
-      final p = await _prefs();
-      await p.setString(
-        key,
-        jsonEncode({
+        await p.setString(key, jsonEncode({
           'savedAt': DateTime.now().millisecondsSinceEpoch,
           'venues': fresh.map((v) => v.toJson()).toList(),
-        }),
-      );
-    } catch (_) {}
+        }));
+      } catch (_) {}
+    }();
+    await Future.wait([businessFuture, osmFuture]);
+    final result = _merge(osm, business);
+    if (result.isEmpty && cached == null && osmFailed) {
+      throw Exception('Mekan verisi alınamadı.');
+    }
+    return result;
   }
 
   Future<List<NearbyVenue>?> _fetchFreshOsm({
@@ -296,8 +301,9 @@ class NearbyVenueService {
     required int radiusMeters,
   }) async {
     for (final endpoint in _endpoints) {
+      final client = _clientFactory();
       try {
-        final r = await http
+        final r = await client
             .post(
               Uri.parse(endpoint),
               headers: _headers,
@@ -311,10 +317,16 @@ class NearbyVenueService {
                 ),
               },
             )
-            .timeout(const Duration(seconds: 7));
+            .timeout(const Duration(seconds: 6));
         if (r.statusCode != 200) continue;
+        final decoded = jsonDecode(r.body);
+        if (decoded is! Map || decoded['elements'] is! List || decoded['remark'] != null) continue;
         return _parse(r.body, category, state);
-      } catch (_) {}
+      } catch (_) {
+        // Try the fallback without discarding already displayed results.
+      } finally {
+        client.close();
+      }
     }
     return null;
   }
@@ -380,12 +392,8 @@ class NearbyVenueService {
     _VenueQueryState state,
   ) async {
     try {
-      final snap = await FirebaseFirestore.instance
-          .collection('business_venues')
-          .where('source', isEqualTo: 'user_submission')
-          .limit(500)
-          .get()
-          .timeout(const Duration(seconds: 5));
+      if (_businessLoader != null) return await _businessLoader!(c, a, o, r);
+      final snap = await _businessCatalog();
       final out = <NearbyVenue>[];
       for (final doc in snap.docs) {
         final d = doc.data();
@@ -529,7 +537,7 @@ class NearbyVenueService {
               : '  nwr(around:$r,$a,$o)$x["name"];',
         )
         .join('\n');
-    return '[out:json][timeout:10];\n(\n$f\n);\nout center tags;';
+    return '[out:json][timeout:5];\n(\n$f\n);\nout center tags;';
   }
 
   String _osmImageUrl(Map<String, dynamic> tags) {

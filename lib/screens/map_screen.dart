@@ -43,6 +43,7 @@ class _MapScreenState extends State<MapScreen> {
   final List<PhotoSpot> _routeSpots = [];
   bool _loadingSpots = true;
   bool _loadingNearbyVenues = false;
+  int _venueLoadGeneration = 0;
   bool _locationPermissionGranted = false;
   bool _gettingLocation = false;
   bool _loadingRoadRoute = false;
@@ -408,11 +409,12 @@ class _MapScreenState extends State<MapScreen> {
 
   Future<void> _loadNearbyVenues(Position position) async {
     if (_loadingNearbyVenues) return;
+    final generation = ++_venueLoadGeneration;
     if (mounted) setState(() => _loadingNearbyVenues = true);
     try {
       final groups = await Future.wait(
         NearbyVenueCategory.values.map(
-          (category) => _loadVenueCategory(category, position),
+          (category) => _loadVenueCategory(category, position, generation),
         ),
       );
       if (!mounted) return;
@@ -429,13 +431,28 @@ class _MapScreenState extends State<MapScreen> {
   Future<List<NearbyVenue>> _loadVenueCategory(
     NearbyVenueCategory category,
     Position position,
+    int generation,
   ) async {
+    void paint(List<NearbyVenue> items) {
+      if (!mounted || generation != _venueLoadGeneration) return;
+      final sorted = List<NearbyVenue>.of(items)..sort((a,b) =>
+        Geolocator.distanceBetween(position.latitude, position.longitude, a.latitude, a.longitude)
+          .compareTo(Geolocator.distanceBetween(position.latitude, position.longitude, b.latitude, b.longitude)));
+      setState(() {
+        _nearbyVenues = [
+          ..._nearbyVenues.where((venue) => venue.category != category),
+          ...sorted.take(20),
+        ];
+      });
+    }
     try {
       final venues = await NearbyVenueService.instance.nearby(
         category: category,
         latitude: position.latitude,
         longitude: position.longitude,
+        onUpdate: paint,
       );
+      paint(venues);
       venues.sort((a, b) {
         final aDistance = Geolocator.distanceBetween(
           position.latitude,
