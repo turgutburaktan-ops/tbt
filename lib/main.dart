@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:ui';
 
+import 'package:app_tracking_transparency/app_tracking_transparency.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
@@ -38,6 +39,8 @@ import 'services/deep_link_service.dart';
 import 'services/favorites_service.dart';
 import 'services/push_notification_service.dart';
 import 'theme/app_theme.dart';
+
+final Completer<void> _trackingAuthorizationGate = Completer<void>();
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -121,6 +124,25 @@ Future<void> main() async {
 }
 
 Future<void> _initializeDeferredBootstrapServices() async {
+  if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
+    try {
+      await WidgetsBinding.instance.endOfFrame;
+      final status =
+          await AppTrackingTransparency.trackingAuthorizationStatus;
+      if (status == TrackingStatus.notDetermined) {
+        await AppTrackingTransparency.requestTrackingAuthorization();
+      }
+    } catch (error, stackTrace) {
+      if (kDebugMode) {
+        debugPrint('Tracking authorization skipped: $error');
+        debugPrintStack(stackTrace: stackTrace);
+      }
+    }
+  }
+  if (!_trackingAuthorizationGate.isCompleted) {
+    _trackingAuthorizationGate.complete();
+  }
+
   if (!kIsWeb &&
       (defaultTargetPlatform == TargetPlatform.android ||
           defaultTargetPlatform == TargetPlatform.iOS)) {
@@ -253,6 +275,9 @@ class _BestPhotoSpotAppState extends State<BestPhotoSpotApp> {
   }
 
   Future<void> _initializePostFrameServices() async {
+    if (!_trackingAuthorizationGate.isCompleted) {
+      await _trackingAuthorizationGate.future;
+    }
     try {
       await PushNotificationService.instance.initialize(_navigatorKey).timeout(
         const Duration(seconds: 8),
@@ -283,7 +308,7 @@ class _BestPhotoSpotAppState extends State<BestPhotoSpotApp> {
     builder: (context, locale, _) => MaterialApp(
     navigatorKey: _navigatorKey,
     debugShowCheckedModeBanner: false,
-    title: 'En İyi Çekim Noktası',
+    title: 'TBT',
     theme: AppTheme.dark,
     locale: locale,
     supportedLocales: const [Locale('tr'), Locale('en'), Locale('de'), Locale('ar')],

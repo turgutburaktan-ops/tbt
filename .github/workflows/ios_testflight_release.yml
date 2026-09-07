@@ -66,6 +66,11 @@ jobs:
           flutter config --no-enable-swift-package-manager
           rm -rf ios
           flutter create --platforms=ios --org com.tbt --project-name best_photo_spot .
+          dart run flutter_launcher_icons
+          ICON_PATH='ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-1024x1024@1x.png'
+          test -s "$ICON_PATH"
+          test "$(sips -g pixelWidth "$ICON_PATH" | awk '/pixelWidth/{print $2}')" = '1024'
+          test "$(sips -g pixelHeight "$ICON_PATH" | awk '/pixelHeight/{print $2}')" = '1024'
 
       - name: Configure iOS application
         shell: bash
@@ -89,6 +94,9 @@ jobs:
           info['NSLocationWhenInUseUsageDescription'] = 'Yakındaki mekanları, etkinlikleri ve rota mesafelerini göstermek için konum kullanılır.'
           info['NSPhotoLibraryUsageDescription'] = 'Story ve paylaşım için galerinden fotoğraf veya video seçebilmek için erişim gerekir.'
           info['NSPhotoLibraryAddUsageDescription'] = 'Düzenlediğin içerikleri fotoğraf arşivine kaydedebilmek için izin gerekir.'
+          info['NSUserTrackingUsageDescription'] = 'İzninle, sana daha alakalı reklamlar göstermek ve reklam performansını ölçmek için cihaz tanımlayıcısı kullanılır.'
+          info['CFBundleDisplayName'] = 'TBT'
+          info['CFBundleName'] = 'TBT'
           info['UIBackgroundModes'] = ['fetch', 'remote-notification']
           info['GADApplicationIdentifier'] = os.environ['ADMOB_IOS_APP_ID']
 
@@ -253,8 +261,8 @@ jobs:
           FIREBASE_IOS_APP_ID=$(/usr/libexec/PlistBuddy -c 'Print :GOOGLE_APP_ID' ios/Runner/GoogleService-Info.plist)
           flutter build ipa \
             --release \
-            --build-name=1.0.11 \
-            --build-number=18 \
+            --build-name=1.0.12 \
+            --build-number=19 \
             --export-options-plist=ios/ExportOptions.plist \
             --dart-define="FIREBASE_IOS_API_KEY=$FIREBASE_IOS_API_KEY" \
             --dart-define="FIREBASE_IOS_APP_ID=$FIREBASE_IOS_APP_ID" \
@@ -264,7 +272,7 @@ jobs:
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
         with:
-          name: tbt-ios-ipa-1.0.11-build18
+          name: tbt-ios-ipa-1.0.12-build19
           path: build/ios/ipa/*.ipa
           if-no-files-found: error
           retention-days: 14
