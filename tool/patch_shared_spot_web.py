@@ -19,6 +19,8 @@ def patch(source):
         raise ValueError('Shared catalog already installed; review instead of patching twice.')
     source = "import { createSpotCatalog } from './spot-catalog.mjs';\n" + source
     source = once(source, 'getFirestore, collection,', 'getDocsFromServer, startAfter, documentId, getFirestore, collection,')
+    if source.count('const spots = [\n') != 1:
+        raise ValueError('Expected one static travel catalog.')
     start = source.index('const spots = [\n')
     end = source.index('\n];', start) + len('\n];')
     source = source[:start] + '''let spots = [];
@@ -53,6 +55,12 @@ async function loadSharedSpots() {
   return {area,stops};
 }
 ''' + source[end:]
+    start = source.index('  if(places.length)sections.push(')
+    end = source.index('\n', start)
+    block = source[start:end].replace('#/mekanlar/${x.id}', '#/mekanlar/${encodeURIComponent(x.id)}')
+    for field in ['name','city','image']:
+        block = block.replace('${x.'+field+'}', '${esc(x.'+field+')}')
+    source = source[:start] + block + source[end:]
     # Previously the strings were literals. Escape all catalog-derived HTML
     # now that names/categories are remote; retain raw strings for logic/toasts.
     for begin, finish in [('async function renderPlaces(){','function venueTabs('),
