@@ -3,7 +3,7 @@ name: Deploy Firebase Functions
 on:
   workflow_dispatch:
   push:
-    branches: [main, feature/video-v1]
+    branches: [main, feature/video-v1, 'codex/release-*']
     paths:
       - 'functions/**'
       - 'firebase.json'
@@ -63,7 +63,9 @@ jobs:
             createBusinessCollaboration
             createBusinessCoupon
             deleteBusinessContentItem
+            deleteAccountNow
             followBusiness
+            freezeAccount
             getBusinessReviews
             getBusinessWebTools
             getAdminBusinessClaims
@@ -95,6 +97,7 @@ jobs:
             updateBusinessProfile
             updateBusinessProfileMedia
             updateBusinessWeeklyHours
+            unfreezeAccount
             validateBusinessCoupon
           )
           for function_name in "${functions[@]}"; do
