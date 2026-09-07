@@ -57,7 +57,7 @@ jobs:
 
       - name: Prepare event discovery index
         run: |
-          npm ci --prefix functions
+          npm install --prefix functions
           node tool/ensure_event_index.cjs
 
       - name: Deploy Firestore rules

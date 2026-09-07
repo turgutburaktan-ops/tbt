@@ -1,3 +1,4 @@
+import '../screens/user_profile_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -43,7 +44,7 @@ class _EventPeople extends StatefulWidget {
 class _EventPeopleState extends State<_EventPeople>{
   int count=20;
   @override Widget build(BuildContext context)=>Column(children:[
-    for(final id in widget.ids.take(count)) FutureBuilder<DocumentSnapshot<Map<String,dynamic>>>(future:FirebaseFirestore.instance.collection('users').doc(id).get(),builder:(c,s){final d=s.data?.data()??{};return ListTile(leading:const Icon(Icons.person_outline),title:Text('${d['displayName']??d['username']??'Katılımcı'}'));}),
+    for(final id in widget.ids.take(count)) FutureBuilder<List<DocumentSnapshot<Map<String,dynamic>>>>(future:Future.wait([FirebaseFirestore.instance.collection('users').doc(id).get(),FirebaseFirestore.instance.collection('users').doc(FirebaseAuth.instance.currentUser!.uid).collection('following').doc(id).get()]),builder:(c,s){final d=s.data?.first.data()??{};return ListTile(onTap:()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>UserProfileScreen(userId:id))),leading:const Icon(Icons.person_outline),title:Text('${d['displayName']??d['username']??'Katılımcı'}'),subtitle:s.data?.last.exists==true?const Text('Takip ediyorsun'):null);}),
     if(count<widget.ids.length) TextButton(onPressed:()=>setState(()=>count+=20),child:const Text('Daha fazla göster')),
   ]);
 }
