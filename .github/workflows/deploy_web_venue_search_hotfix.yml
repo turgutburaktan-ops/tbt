@@ -1,0 +1,148 @@
+name: Deploy Web Venue Search Hotfix
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [codex/fix-admin-screen]
+    paths:
+      - '.github/workflows/deploy_web_venue_search_hotfix.yml'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools
+      - name: Authenticate Firebase CLI
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          raw = os.environ.get('FIREBASE_SERVICE_ACCOUNT', '')
+          if not raw:
+              raise SystemExit('FIREBASE_SERVICE_ACCOUNT secret is missing.')
+          target = Path(os.environ['RUNNER_TEMP']) / 'firebase-service-account.json'
+          target.write_text(json.dumps(json.loads(raw)), encoding='utf-8')
+          target.chmod(0o600)
+          with open(os.environ['GITHUB_ENV'], 'a', encoding='utf-8') as env_file:
+              env_file.write(f'GOOGLE_APPLICATION_CREDENTIALS={target}\n')
+          PY
+      - name: Mirror the current web release
+        run: |
+          set -euo pipefail
+          public_dir="$RUNNER_TEMP/tbt-hosting"
+          mkdir -p "$public_dir/assets"
+          files=(
+            index.html
+            styles.css
+            app.js
+            i18n.js
+            welcome.js
+            daily-goals.js
+            daily-goals.css
+            admin-tools.js
+            notifications.js
+            auth-policy.js
+            manifest.webmanifest
+            sw.js
+            assets/tbt-icon.png
+            assets/harput.jpg
+            assets/palu.jpg
+            assets/alacali.webp
+          )
+          for file in "${files[@]}"; do
+            curl --fail --silent --show-error --location \
+              "https://trtbt.com/$file?venue-search-deploy=$GITHUB_RUN_ID" \
+              --output "$public_dir/$file"
+            test -s "$public_dir/$file"
+          done
+      - name: Add Lezzet and Kafeler search
+        run: |
+          set -euo pipefail
+          public_dir="$RUNNER_TEMP/tbt-hosting"
+          node - "$public_dir/app.js" "$public_dir/sw.js" <<'NODE'
+          const fs = require('fs');
+          const appPath = process.argv[2];
+          const swPath = process.argv[3];
+          let source = fs.readFileSync(appPath, 'utf8');
+
+          const formAnchor = '</form><section class="venue-submit-card">';
+          const matches = source.split(formAnchor).length - 1;
+          if (matches !== 1) {
+            throw new Error(`Expected one venue form anchor, found ${matches}.`);
+          }
+          const searchPanel = `</form>\${route==='lezzet'||route==='kafeler'?\`<div class="venue-controls" style="grid-template-columns:1fr"><label><span>\${section.title} ara</span><input id="venueSearch" type="search" placeholder="İsim, ilçe veya adres ara" autocomplete="off"></label></div>\`:''}<section class="venue-submit-card">`;
+          source = source.replace(formAnchor, searchPanel);
+
+          const functionStart = 'function showVenueResult(result,section,area){';
+          const functionEnd = '\nfunction useVenueLocation';
+          const start = source.indexOf(functionStart);
+          const end = source.indexOf(functionEnd, start);
+          if (start < 0 || end < 0) {
+            throw new Error('Venue result renderer could not be located.');
+          }
+          const replacement = `function showVenueResult(result,section,area){
+            const count=document.querySelector('#venueCount'),search=document.querySelector('#venueSearch');
+            const render=()=>{
+              const term=(search?.value||'').trim().toLocaleLowerCase('tr');
+              const items=term?result.items.filter(item=>[item.name,item.city,item.district,item.address,item.description].filter(Boolean).join(' ').toLocaleLowerCase('tr').includes(term)):result.items;
+              drawVenues(items,section);
+              if(count)count.textContent=result.error?area.name+' · Mekânlar alınamadı':area.name+' · '+items.length+(term?' / '+result.items.length:'')+' mekân';
+            };
+            if(search)search.oninput=render;
+            render();
+            if(result.error)toast('Mekânlar şu anda alınamadı. Tekrar deneyebilirsin.');
+          }`;
+          source = source.slice(0, start) + replacement + source.slice(end);
+          fs.writeFileSync(appPath, source);
+
+          let sw = fs.readFileSync(swPath, 'utf8');
+          const updatedSw = sw.replace(/const CACHE='[^']+';/, "const CACHE='tbt-shell-v11-venue-search';");
+          if (updatedSw === sw) {
+            throw new Error('Service worker cache key could not be updated.');
+          }
+          fs.writeFileSync(swPath, updatedSw);
+          NODE
+      - name: Validate patched web assets
+        run: |
+          set -euo pipefail
+          public_dir="$RUNNER_TEMP/tbt-hosting"
+          node --check "$public_dir/app.js"
+          node --check "$public_dir/sw.js"
+          grep -q 'id="venueSearch"' "$public_dir/app.js"
+          grep -q "toLocaleLowerCase('tr')" "$public_dir/app.js"
+      - name: Create isolated hosting config
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          config = {
+              'hosting': {
+                  'public': str(Path(os.environ['RUNNER_TEMP']) / 'tbt-hosting'),
+                  'ignore': ['firebase.json', '**/.*', '**/node_modules/**'],
+                  'rewrites': [{'source': '**', 'destination': '/index.html'}],
+              }
+          }
+          target = Path(os.environ['RUNNER_TEMP']) / 'firebase.venue-search.json'
+          target.write_text(json.dumps(config), encoding='utf-8')
+          with open(os.environ['GITHUB_ENV'], 'a', encoding='utf-8') as env_file:
+              env_file.write(f'FIREBASE_HOTFIX_CONFIG={target}\n')
+          PY
+      - name: Deploy website hotfix
+        run: >-
+          firebase deploy
+          --only hosting
+          --config "$FIREBASE_HOTFIX_CONFIG"
+          --project en-iyi-cekim-noktasi
+          --non-interactive
