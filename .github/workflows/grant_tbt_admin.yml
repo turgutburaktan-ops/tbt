@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - feature/video-v1
+      - codex/fix-admin-screen
     paths:
       - '.github/workflows/grant_tbt_admin.yml'
   workflow_dispatch:

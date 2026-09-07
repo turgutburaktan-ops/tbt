@@ -1,10 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../theme/app_theme.dart';
 import '../services/admin_access.dart';
+import '../services/admin_console_service.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -193,28 +193,40 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       if (confirmed != true) return;
     }
 
-    final callableUrl = Uri.parse(
-      'https://us-central1-en-iyi-cekim-noktasi.cloudfunctions.net/adminReviewBusinessClaim',
-    );
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
-    final token = await user.getIdToken();
-    final body = Uri(
-      queryParameters: {
-        'claimId': doc.id,
-        'action': approve ? 'approve' : 'reject',
-        if (reason.isNotEmpty) 'reason': reason,
-      },
-    ).query;
-
-    final launched = await launchUrl(
-      callableUrl.replace(query: body),
-      mode: LaunchMode.externalApplication,
-      webOnlyWindowName: token,
-    );
-    if (!launched && mounted) {
+    var category = (data['category'] ?? '').toString().trim();
+    var venueId = (data['venueId'] ?? '').toString().trim();
+    if ((category.isEmpty || venueId.isEmpty) && doc.id.contains(':')) {
+      final separator = doc.id.indexOf(':');
+      category = category.isEmpty ? doc.id.substring(0, separator) : category;
+      venueId = venueId.isEmpty ? doc.id.substring(separator + 1) : venueId;
+    }
+    if (category.isEmpty || venueId.isEmpty) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Doğrulama işlemi başlatılamadı.')),
+        const SnackBar(content: Text('Başvurunun mekan kimliği eksik.')),
+      );
+      return;
+    }
+
+    try {
+      await AdminConsoleService.instance.reviewBusinessClaim(
+        category: category,
+        venueId: venueId,
+        approve: approve,
+        reason: reason,
+      );
+      if (!mounted) return;
+      await _loadStats();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(approve ? 'İşletme onaylandı.' : 'Başvuru reddedildi.'),
+        ),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('İşlem tamamlanamadı: $error')),
       );
     }
   }

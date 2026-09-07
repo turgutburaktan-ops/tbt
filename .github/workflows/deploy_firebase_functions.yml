@@ -57,7 +57,9 @@ jobs:
             addBusinessMenuItem
             addBusinessProgramItem
             adminReviewBusinessClaim
+            adminReviewBusinessClaimHttp
             adminSetBusinessPremium
+            adminDeleteVenue
             createBusinessBoost
             createBusinessCandidate
             createBusinessCollaboration
@@ -90,12 +92,16 @@ jobs:
             addBusinessStaff
             claimBusinessCoupon
             saveBusinessRouteSettings
+            sendAdminBroadcast
             sendBusinessFollowerNotification
             updateBusinessContentItem
             updateBusinessProfile
             updateBusinessProfileMedia
             updateBusinessWeeklyHours
             validateBusinessCoupon
+            freezeAccount
+            unfreezeAccount
+            deleteAccountNow
           )
           for function_name in "${functions[@]}"; do
             gcloud functions add-invoker-policy-binding "$function_name" \
