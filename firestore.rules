@@ -225,6 +225,10 @@ service cloud.firestore {
       allow create: if safeUserCreate(uid);
       allow update: if isAdmin() || safeUserUpdate(uid);
       allow delete: if isAdmin() || isSelf(uid);
+      match /business_coupons/{couponId} {
+        allow read: if isSelf(uid);
+        allow write: if false;
+      }
       match /following/{targetId} { allow read: if signedIn(); allow create, update: if isSelf(uid) && request.resource.data.userId == targetId; allow delete: if isSelf(uid); }
       match /followers/{followerId} { allow read: if signedIn(); allow create, update: if signedIn() && followerId == request.auth.uid && request.resource.data.userId == request.auth.uid; allow delete: if signedIn() && followerId == request.auth.uid; }
       match /blocked/{blockedId} { allow read: if signedIn() && (uid == request.auth.uid || blockedId == request.auth.uid); allow create, update, delete: if isSelf(uid); }
@@ -348,6 +352,7 @@ service cloud.firestore {
       match /menu/{itemId} { allow read: if true; allow write: if false; }
       match /program/{itemId} { allow read: if true; allow write: if false; }
       match /campaigns/{itemId} { allow read: if true; allow write: if false; }
+      match /coupons/{couponId} { allow read: if true; allow write: if false; }
       match /trust_reports/{reportId} { allow read, write: if false; }
       match /{sub}/{docId} { allow read, write: if false; }
     }

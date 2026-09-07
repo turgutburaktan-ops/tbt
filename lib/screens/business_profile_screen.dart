@@ -873,6 +873,15 @@ class _CouponCardState extends State<_CouponCard> {
       final data = Map<String, dynamic>.from(result.data as Map);
       final token = (data['token'] ?? '').toString();
       if (!mounted || token.isEmpty) return;
+      if (data['status'] != 'ready' ||
+          ((data['validUntilMs'] as num?)?.toInt() ?? 0) <=
+              DateTime.now().millisecondsSinceEpoch) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(data['status'] == 'used'
+              ? 'Bu kupon kullanıldı.' : 'Bu kuponun süresi doldu.'),
+        ));
+        return;
+      }
       await showDialog<void>(
         context: context,
         builder: (dialogContext) => AlertDialog(
@@ -884,9 +893,10 @@ class _CouponCardState extends State<_CouponCard> {
               child: QrImageView(data: token, size: 210),
             ),
             const SizedBox(height: 14),
+            SelectableText(token, textAlign: TextAlign.center),
             Text((widget.data['title'] ?? 'TBT Kuponu').toString(), textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.w900)),
             const SizedBox(height: 6),
-            const Text('İşletmede bu QR kodunu göster. Kupon yalnız bir kez kullanılabilir.', textAlign: TextAlign.center, style: TextStyle(color: Colors.white60, height: 1.35)),
+            const Text('İşletmede bu QR kodunu göster. Profilindeki Kuponlarım bölümünden tekrar açabilirsin. Kupon yalnız bir kez kullanılabilir.', textAlign: TextAlign.center, style: TextStyle(color: Colors.white60, height: 1.35)),
           ]),
           actions: [FilledButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Tamam'))],
         ),

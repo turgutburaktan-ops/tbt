@@ -16,6 +16,7 @@ import '../widgets/firebase_media_image.dart';
 import '../widgets/profile_favorite_places_section.dart';
 import '../widgets/public_achievement_badges.dart';
 import '../widgets/profile_reward_surface.dart';
+import '../widgets/profile_business_coupons.dart';
 import 'create_post_screen.dart';
 import 'event_deep_link_screen.dart';
 import 'follow_list_screen.dart';
@@ -220,6 +221,9 @@ class _ProfileBodyState extends State<_ProfileBody> {
                     ),
                   ),
                   SliverToBoxAdapter(child: _typeModule(type)),
+                  SliverToBoxAdapter(
+                    child: ProfileBusinessCoupons(userId: widget.user.uid),
+                  ),
                   SliverToBoxAdapter(
                     child: ProfileFavoritePlacesSection(
                       userId: widget.user.uid,

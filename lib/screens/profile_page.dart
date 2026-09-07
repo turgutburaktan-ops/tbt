@@ -5,6 +5,7 @@ import 'dart:math' as math;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import '../widgets/profile_business_coupons.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../services/auth_service.dart';
@@ -134,6 +135,9 @@ class _ProfileBodyState extends State<_ProfileBody> {
               return CustomScrollView(
                 clipBehavior: Clip.none,
                 slivers: [
+                  SliverToBoxAdapter(
+                    child: ProfileBusinessCoupons(userId: widget.user.uid),
+                  ),
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(16, 10, 16, 14),
