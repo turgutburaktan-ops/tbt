@@ -14,6 +14,7 @@ from __future__ import annotations
 import io
 import json
 import urllib.error
+import urllib.parse
 import urllib.request
 import zipfile
 
@@ -29,6 +30,45 @@ PRIORITY_PROVINCES = (
     'tunceli',
     'bingol',
 )
+
+
+def bounded_get_json(
+    url: str,
+    params: dict[str, str],
+    *,
+    attempts: int = 2,
+    timeout: int = 30,
+) -> dict:
+    """Fetch optional enrichment without allowing one request to stall a run.
+
+    The base helper deliberately retries critical source requests for a long
+    time. District identity enrichment has a province-by-province fallback,
+    so using the same six 90-second attempts here only hides progress and can
+    consume most of the workflow timeout. Keep retries bounded; callers still
+    retry failed batches per province and never weaken publication gates.
+    """
+    target = f"{url}?{urllib.parse.urlencode(params)}"
+    last_error: Exception | None = None
+    for attempt in range(attempts):
+        request = urllib.request.Request(
+            target,
+            headers={
+                'User-Agent': base.UA,
+                'Accept': 'application/json,*/*;q=0.8',
+            },
+        )
+        try:
+            with urllib.request.urlopen(request, timeout=timeout) as response:
+                return json.loads(response.read().decode('utf-8'))
+        except urllib.error.HTTPError as error:
+            last_error = error
+            if error.code not in (429, 500, 502, 503, 504):
+                raise
+        except Exception as error:
+            last_error = error
+        if attempt + 1 < attempts:
+            base.time.sleep(2 ** attempt)
+    raise RuntimeError(f'bounded request failed: {last_error}')
 
 ELAZIG_DISTRICTS = (
     'Merkez',
@@ -862,13 +902,17 @@ def fetch_turkey_admin_identity_index() -> dict[tuple[str, str], set[tuple[str, 
 
     rows: list[dict] = []
     failed_provinces: list[str] = []
-    batch_size = 8
+    # Four provinces keep the class/path query small enough for WDQS while
+    # still avoiding a slow 81-request nationwide serial pass.
+    batch_size = 4
     for start in range(0, len(ordered_qids), batch_size):
         batch = ordered_qids[start:start + batch_size]
         try:
-            payload = base.get_json(
+            payload = bounded_get_json(
                 base.WDQS,
                 {'query': district_query(batch), 'format': 'json'},
+                attempts=2,
+                timeout=30,
             )
             rows.extend(payload.get('results', {}).get('bindings', []))
         except Exception as error:
@@ -881,9 +925,11 @@ def fetch_turkey_admin_identity_index() -> dict[tuple[str, str], set[tuple[str, 
 
     for province_qid in failed_provinces:
         try:
-            payload = base.get_json(
+            payload = bounded_get_json(
                 base.WDQS,
                 {'query': district_query([province_qid]), 'format': 'json'},
+                attempts=2,
+                timeout=20,
             )
             rows.extend(payload.get('results', {}).get('bindings', []))
         except Exception as error:
