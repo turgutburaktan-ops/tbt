@@ -59,13 +59,24 @@ PHOTO_RE = re.compile(r'PhotoSpot\((.*?)\n\s*\),', re.DOTALL)
 TAG_RE = re.compile(r'<[^>]+>')
 
 
-def get_json(url: str, params: dict[str, str], attempts: int = 6) -> dict:
+def get_json(
+    url: str,
+    params: dict[str, str],
+    attempts: int = 3,
+    timeout: int = 30,
+) -> dict:
+    """Fetch source JSON without allowing one endpoint to consume the job.
+
+    Callers already skip an unavailable source or reject records whose evidence
+    cannot be completed. Bounded retries therefore improve reliability without
+    weakening any publication gate.
+    """
     target = f"{url}?{urllib.parse.urlencode(params)}"
     last = None
     for attempt in range(attempts):
         req = urllib.request.Request(target, headers={'User-Agent': UA, 'Accept': 'application/json,*/*;q=0.8'})
         try:
-            with urllib.request.urlopen(req, timeout=90) as r:
+            with urllib.request.urlopen(req, timeout=timeout) as r:
                 return json.loads(r.read().decode('utf-8'))
         except urllib.error.HTTPError as exc:
             last = exc
