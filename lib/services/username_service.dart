@@ -13,6 +13,7 @@ class UsernameService {
     return value
         .trim()
         .replaceFirst(RegExp(r'^@'), '')
+        .replaceAll('İ', 'i')
         .toLowerCase()
         .replaceAll('ı', 'i')
         .replaceAll('ç', 'c')

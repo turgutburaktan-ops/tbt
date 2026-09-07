@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import '../services/admin_console_service.dart';
 
 import '../theme/app_theme.dart';
 
@@ -39,9 +40,9 @@ class _AdminPublishedSpotsScreenState
     final approved = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Mekanı kalıcı sil'),
+        title: const Text('Mekânı sil'),
         content: Text(
-          '$name kalıcı olarak silinecek. Önce arşivlemek daha güvenlidir.',
+          '$name listelerden kaldırılacak. Asıl kayıt yönetici işlem geçmişinde korunacak.',
         ),
         actions: [
           TextButton(
@@ -55,10 +56,12 @@ class _AdminPublishedSpotsScreenState
         ],
       ),
     );
-    if (approved != true) return;
+    if (approved != true || !mounted) return;
     setState(() => _workingId = reference.id);
     try {
-      await reference.delete();
+      await AdminConsoleService.instance.deleteVenue(collection: 'photo_spots', id: reference.id);
+    } catch (_) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Mekân silinemedi. Yetkini ve bağlantını kontrol edip tekrar dene.')));
     } finally {
       if (mounted) setState(() => _workingId = null);
     }

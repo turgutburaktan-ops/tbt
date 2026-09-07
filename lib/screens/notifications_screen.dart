@@ -148,6 +148,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   }
 
   Widget _leading(AppNotificationItem item) {
+    if (item.type == 'tbt_broadcast') {
+      return const CircleAvatar(radius: 25, backgroundColor: Color(0xFF29444D),
+        child: Text('TBT', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900)));
+    }
     final actorId = item.actorId?.trim() ?? '';
     if (actorId.isEmpty) return _iconBubble(item.type);
     return FutureBuilder<Map<String,dynamic>>(

@@ -8,6 +8,7 @@ import '../models/photo_spot.dart';
 import '../models/nearby_venue.dart';
 import '../theme/app_theme.dart';
 import '../widgets/firebase_media_image.dart';
+import '../widgets/sponsored_native_ad.dart';
 import 'post_detail_screen.dart';
 import 'reels_screen.dart';
 import 'user_profile_screen.dart';
@@ -312,6 +313,10 @@ class _HomeDiscoverScreenState extends State<HomeDiscoverScreen> {
             ),
           ),
         ),
+        if (_query.isEmpty)
+          const SponsoredNativeAd(
+            margin: EdgeInsets.fromLTRB(14, 2, 14, 8),
+          ),
         Expanded(
           child: _query.isEmpty ? _buildExploreGrid() : _buildSearchResults(),
         ),

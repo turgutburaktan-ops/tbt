@@ -1,9 +1,10 @@
 const {onCall, HttpsError} = require('firebase-functions/v2/https');
-const {getFirestore, Timestamp} = require('firebase-admin/firestore');
+const {getFirestore, Timestamp, FieldValue} = require('firebase-admin/firestore');
+const {isNamedAdmin} = require('./broadcast_policy');
 
 function requireAdmin(request) {
   if (!request.auth?.uid) throw new HttpsError('unauthenticated', 'Giriş gerekli.');
-  if (String(request.auth.token?.email || '').toLowerCase() !== 'turgutburaktan@gmail.com') {
+  if (!isNamedAdmin(request.auth)) {
     throw new HttpsError('permission-denied', 'Bu panel yalnız tanımlı yönetici hesabına açıktır.');
   }
   return request.auth.uid;
@@ -137,4 +138,52 @@ exports.getAdminInsights = onCall({region: 'europe-west1'}, async (request) => {
     topPosts,
     errors: errorSnap.docs.map((doc) => ({id: doc.id, ...doc.data()})),
   };
+});
+
+exports.sendAdminBroadcast = onCall({region: 'europe-west1'}, async (request) => {
+  const adminUid = requireAdmin(request);
+  const title = String(request.data?.title || '').trim();
+  const body = String(request.data?.body || '').trim();
+  const requestId = String(request.data?.requestId || '');
+  if (!title || title.length > 100 || !body || body.length > 600 ||
+      !/^[a-zA-Z0-9_-]{16,80}$/.test(requestId)) {
+    throw new HttpsError('invalid-argument', 'Başlık, mesaj ve geçerli gönderim kimliği zorunludur.');
+  }
+  const db = getFirestore();
+  const ref = db.collection('admin_broadcasts').doc(requestId);
+  return db.runTransaction(async tx => {
+    const existing = await tx.get(ref);
+    if (existing.exists) {
+      const job = existing.data();
+      if (job.sentBy !== adminUid || job.title !== title || job.body !== body) {
+        throw new HttpsError('already-exists', 'Bu gönderim kimliği başka bir duyuruya ait.');
+      }
+      return {ok: true, broadcastId: ref.id, status: job.status, recipientCount: job.recipientCount};
+    }
+    tx.create(ref, {title, body, sentBy: adminUid, status: 'queued',
+      recipientCount: 0, cursor: null, createdAt: FieldValue.serverTimestamp()});
+    return {ok: true, broadcastId: ref.id, status: 'queued', recipientCount: 0};
+  });
+});
+
+exports.adminDeleteVenue = onCall({region: 'europe-west1'}, async (request) => {
+  const adminUid = requireAdmin(request);
+  const collection = String(request.data?.collection || '').trim();
+  const id = String(request.data?.id || '').trim();
+  if (!['photo_spots', 'business_venues'].includes(collection) || !id || id.includes('/') || id.length > 500) {
+    throw new HttpsError('invalid-argument', 'Geçersiz mekan kaydı.');
+  }
+  const db = getFirestore();
+  const ref = db.collection(collection).doc(id);
+  await db.runTransaction(async tx => {
+    const snapshot = await tx.get(ref);
+    if (!snapshot.exists) throw new HttpsError('not-found', 'Mekan bulunamadı.');
+    // Keep the original record for recovery; child collections are not purged.
+    tx.create(db.collection('admin_audit_logs').doc(), {
+      action: 'venue_delete', collection, documentId: id,
+      original: snapshot.data(), adminUid, createdAt: FieldValue.serverTimestamp(),
+    });
+    tx.delete(ref);
+  });
+  return {ok: true};
 });
