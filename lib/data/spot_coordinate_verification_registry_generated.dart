@@ -27,9 +27,9 @@ const verifiedSpotCoordinateEvidenceGenerated = <String, SpotCoordinateVerificat
     verifiedAt: 'generated',
   ),
   'wd-q6025389-pertek-kalesi': SpotCoordinateVerificationEvidence(
-    sourceName: 'Wikidata P625 + HDX COD-AB boundary + Wikidata identity',
-    sourceRef: 'Q6025389 / 38.844444,39.271667/ province=Q483091:Elazığ / district=Q2963425:Merkez',
-    verifiedAt: 'generated',
+    sourceName: 'Wikidata P625 + Kültür Portalı + Pertek Kaymakamlığı',
+    sourceRef: 'Q6025389 / 38.844444,39.271667/ province=Q620742:Tunceli / district=Q2540906:Pertek / https://www.kulturportali.gov.tr/turkiye/tunceli/gezilecekyer/pertek-kalesi / https://www.pertek.gov.tr/pertek-kalesi',
+    verifiedAt: '2026-09-07',
   ),
   'wd-q132752850-denizli-kervansarayi': SpotCoordinateVerificationEvidence(
     sourceName: 'Wikidata P625 + Wikidata P131',

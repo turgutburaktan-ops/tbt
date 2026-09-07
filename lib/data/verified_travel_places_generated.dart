@@ -85,7 +85,7 @@ const verifiedTravelPlacesGenerated = <PhotoSpot>[
   PhotoSpot(
     id: 'wd-q6025389-pertek-kalesi',
     name: 'Pertek Kalesi',
-    city: 'Elazığ',
+    city: 'Tunceli',
     latitude: 38.844444,
     longitude: 39.271667,
     rating: 4.8,
@@ -93,10 +93,10 @@ const verifiedTravelPlacesGenerated = <PhotoSpot>[
     angle: 'Ana ziyaret yapısını çevresi ve yaklaşım aksıyla birlikte değerlendir',
     imageUrl: '',
     category: 'Kale',
-    description: 'Pertek Kalesi, Merkez ilçesi, Elazığ konumu ve temsil fotoğrafı Wikidata ve HDX/OCHA ilçe sınırıyla doğrulanmış Türkiye gezi ve fotoğraf noktasıdır.',
+    description: 'Pertek Kalesi, Tunceli ilinin Pertek ilçesinde, Keban Baraj Gölü içinde bir ada üzerindedir. İl ve ilçe bilgisi Kültür Portalı ve Pertek Kaymakamlığı ile çapraz kontrol edilmiştir.',
     recommendedLens: '24-70mm',
     difficulty: 'Kolay',
-    tags: ['Gezilecek Yer', 'Doğrulanmış', 'KaynakDoğrulanmış', 'Elazığ', 'Merkez', 'Kale', 'Wikidata'],
+    tags: ['Gezilecek Yer', 'Doğrulanmış', 'KaynakDoğrulanmış', 'Tunceli', 'Pertek', 'Kale', 'Wikidata'],
   ),
   PhotoSpot(
     id: 'wd-q132752850-denizli-kervansarayi',
