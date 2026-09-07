@@ -809,26 +809,97 @@ def admin_identity_index(entities: dict[str, dict]) -> dict[tuple[str, str], set
 
 
 def fetch_turkey_admin_identity_index() -> dict[tuple[str, str], set[tuple[str, str, str, str]]]:
-    """Load every Turkish district/province identity for polygon resolution.
+    """Load Turkish district/province identities without one fragile query.
 
-    This does not infer administration from a label: Wikidata must explicitly
-    type the two entities as a Turkish district and province and connect the
-    district to the province. HDX/OCHA still decides the containing polygon.
+    The former nationwide district query regularly timed out and discarded
+    the whole fallback index. Fetch the 81 provinces first, then resolve their
+    districts in small batches. A failed batch is retried province by province
+    so one overloaded WDQS request cannot make thousands of otherwise valid
+    polygon matches ambiguous. Every accepted identity still has explicit
+    Wikidata class and P131 evidence; labels are never used as proof.
     """
-    query = f'''SELECT DISTINCT ?province ?provinceLabel ?district ?districtLabel WHERE {{
-  ?district wdt:P31/wdt:P279* wd:{DISTRICT_CLASS} ;
-            wdt:P131+ ?province .
+    province_query = f'''SELECT DISTINCT ?province ?provinceLabel WHERE {{
   ?province wdt:P31/wdt:P279* wd:{PROVINCE_CLASS} .
   SERVICE wikibase:label {{ bd:serviceParam wikibase:language "tr,en". }}
+}} ORDER BY ?province'''
+    province_payload = base.get_json(
+        base.WDQS,
+        {'query': province_query, 'format': 'json'},
+    )
+    provinces: dict[str, str] = {}
+    for row in province_payload.get('results', {}).get('bindings', []):
+        province_uri = row.get('province', {}).get('value', '')
+        province_qid = province_uri.rsplit('/', 1)[-1]
+        province_label = row.get('provinceLabel', {}).get('value', '').strip()
+        if (
+            province_qid.startswith('Q')
+            and usable_label(province_label, province_qid)
+        ):
+            provinces[province_qid] = province_label
+    if len(provinces) < 81:
+        raise RuntimeError(
+            f'Wikidata province identity coverage unexpectedly small: {len(provinces)}'
+        )
+
+    priority = set(PRIORITY_PROVINCES)
+    ordered_qids = sorted(
+        provinces,
+        key=lambda qid: (
+            province_key(provinces[qid]) not in priority,
+            province_key(provinces[qid]),
+            qid,
+        ),
+    )
+
+    def district_query(qids: list[str]) -> str:
+        values = ' '.join(f'wd:{qid}' for qid in qids)
+        return f'''SELECT DISTINCT ?province ?district ?districtLabel WHERE {{
+  VALUES ?province {{ {values} }}
+  ?district wdt:P31/wdt:P279* wd:{DISTRICT_CLASS} ;
+            wdt:P131+ ?province .
+  SERVICE wikibase:label {{ bd:serviceParam wikibase:language "tr,en". }}
 }} ORDER BY ?province ?district'''
-    payload = base.get_json(base.WDQS, {'query': query, 'format': 'json'})
+
+    rows: list[dict] = []
+    failed_provinces: list[str] = []
+    batch_size = 8
+    for start in range(0, len(ordered_qids), batch_size):
+        batch = ordered_qids[start:start + batch_size]
+        try:
+            payload = base.get_json(
+                base.WDQS,
+                {'query': district_query(batch), 'format': 'json'},
+            )
+            rows.extend(payload.get('results', {}).get('bindings', []))
+        except Exception as error:
+            print(
+                'warning: Wikidata district batch skipped; retrying provinces: '
+                f'{",".join(batch)} ({error})'
+            )
+            failed_provinces.extend(batch)
+        base.time.sleep(.1)
+
+    for province_qid in failed_provinces:
+        try:
+            payload = base.get_json(
+                base.WDQS,
+                {'query': district_query([province_qid]), 'format': 'json'},
+            )
+            rows.extend(payload.get('results', {}).get('bindings', []))
+        except Exception as error:
+            print(
+                'warning: Wikidata district identity unavailable for '
+                f'{province_qid} ({error})'
+            )
+        base.time.sleep(.1)
+
     index: dict[tuple[str, str], set[tuple[str, str, str, str]]] = {}
-    for row in payload.get('results', {}).get('bindings', []):
+    for row in rows:
         province_uri = row.get('province', {}).get('value', '')
         district_uri = row.get('district', {}).get('value', '')
         province_qid = province_uri.rsplit('/', 1)[-1]
         district_qid = district_uri.rsplit('/', 1)[-1]
-        province_label = row.get('provinceLabel', {}).get('value', '').strip()
+        province_label = provinces.get(province_qid, '')
         district_label = row.get('districtLabel', {}).get('value', '').strip()
         if not (
             province_qid.startswith('Q')
