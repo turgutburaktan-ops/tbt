@@ -13,11 +13,11 @@
       "needed": 949,
       "no_commons": 0,
       "bad_license": 23,
-      "low_res": 180,
+      "low_res": 182,
       "duplicate": 15,
       "accepted": 949
     }
   },
   "audit_summary": {},
-  "generator_log_tail": "existing verified: 151\nheritage unique: 424\nQ570116 Turistik Yer: unique total 453\nQ839954 Arkeolojik Alan: unique total 975\nQ23413 Kale: unique total 1071\nQ33506 Müze: unique total 1431\nQ12280 Köprü: unique total 1543\nQ34038 Şelale: unique total 1566\nQ35509 Mağara: unique total 1579\nQ150784 Kanyon: unique total 1584\nQ23397 Göl: unique total 1636\nQ40080 Sahil: unique total 1647\nQ8502 Dağ: unique total 1692\nQ22698 Park: unique total 1795\nQ174782 Meydan: unique total 1828\nQ32815 Cami: unique total 2834\nQ44613 Manastır: unique total 2906\nunique candidates: 2906\n{\n  \"existing_verified\": 151,\n  \"generated\": 949,\n  \"result_total\": 1100,\n  \"target_total\": 1100,\n  \"min_long_edge\": 1600,\n  \"min_short_edge\": 900,\n  \"selection\": {\n    \"needed\": 949,\n    \"no_commons\": 0,\n    \"bad_license\": 23,\n    \"low_res\": 180,\n    \"duplicate\": 15,\n    \"accepted\": 949\n  }\n}"
+  "generator_log_tail": "existing verified: 151\nheritage unique: 425\nQ570116 Turistik Yer: unique total 454\nQ839954 Arkeolojik Alan: unique total 978\nQ23413 Kale: unique total 1074\nQ33506 Müze: unique total 1435\nQ12280 Köprü: unique total 1547\nQ34038 Şelale: unique total 1570\nQ35509 Mağara: unique total 1583\nQ150784 Kanyon: unique total 1588\nQ23397 Göl: unique total 1640\nQ40080 Sahil: unique total 1651\nQ8502 Dağ: unique total 1696\nQ22698 Park: unique total 1800\nQ174782 Meydan: unique total 1833\nQ32815 Cami: unique total 2839\nQ44613 Manastır: unique total 2911\nunique candidates: 2911\n{\n  \"existing_verified\": 151,\n  \"generated\": 949,\n  \"result_total\": 1100,\n  \"target_total\": 1100,\n  \"min_long_edge\": 1600,\n  \"min_short_edge\": 900,\n  \"selection\": {\n    \"needed\": 949,\n    \"no_commons\": 0,\n    \"bad_license\": 23,\n    \"low_res\": 182,\n    \"duplicate\": 15,\n    \"accepted\": 949\n  }\n}"
 }
