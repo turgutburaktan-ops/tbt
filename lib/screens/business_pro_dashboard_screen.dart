@@ -354,7 +354,8 @@ class _BusinessProDashboardScreenState
                             ? DateTime.fromMillisecondsSinceEpoch(atMs)
                             : null;
                         final people = (d['partySize'] as num?)?.toInt() ?? 0;
-                        final note = (d['note'] ?? '').toString();
+                        final orders=(d['orderItems'] as List? ?? []).map((x)=>'${x['quantity']} × ${x['name']}').join(' · ');
+                        final note = '${d['customerName']??'İsim belirtilmedi'} · ${d['contactPhone']??'Telefon belirtilmedi'}\n${d['note']??''}${orders.isEmpty?'':'\n$orders'}';
                         final id = (d['id'] ?? '').toString();
                         return Card(
                           child: ListTile(

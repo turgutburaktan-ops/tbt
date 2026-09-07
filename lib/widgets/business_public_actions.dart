@@ -1,3 +1,4 @@
+import '../screens/business_reservation_screen.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -76,118 +77,7 @@ class _BusinessPublicActionsState extends State<BusinessPublicActions> {
   }
 
   Future<void> _reservation() async {
-    try {
-      await _functions.httpsCallable('recordBusinessMetric').call({
-        'venueKey': widget.venueKey,
-        'metric': 'reservation_open',
-      });
-    } catch (_) {}
-    if (!mounted) return;
-    var at = DateTime.now().add(const Duration(hours: 2));
-    var people = 2;
-    final note = TextEditingController();
-    await showDialog<void>(
-      context: context,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          title: const Text('Rezervasyon talebi'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                DropdownButtonFormField<int>(
-                  initialValue: people,
-                  decoration: const InputDecoration(labelText: 'Kişi sayısı'),
-                  items: List.generate(12, (i) => i + 1)
-                      .map(
-                        (v) =>
-                            DropdownMenuItem(value: v, child: Text('$v kişi')),
-                      )
-                      .toList(),
-                  onChanged: (v) => setState(() => people = v ?? 2),
-                ),
-                const SizedBox(height: 10),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.schedule_rounded),
-                  title: Text(
-                    '${at.day}.${at.month}.${at.year} • ${at.hour.toString().padLeft(2, '0')}:${at.minute.toString().padLeft(2, '0')}',
-                  ),
-                  onTap: () async {
-                    final date = await showDatePicker(
-                      context: context,
-                      firstDate: DateTime.now(),
-                      lastDate: DateTime.now().add(const Duration(days: 180)),
-                      initialDate: at,
-                    );
-                    if (date == null || !context.mounted) return;
-                    final time = await showTimePicker(
-                      context: context,
-                      initialTime: TimeOfDay.fromDateTime(at),
-                    );
-                    if (time != null)
-                      setState(
-                        () => at = DateTime(
-                          date.year,
-                          date.month,
-                          date.day,
-                          time.hour,
-                          time.minute,
-                        ),
-                      );
-                  },
-                ),
-                TextField(
-                  controller: note,
-                  maxLines: 3,
-                  decoration: const InputDecoration(
-                    labelText: 'Not (isteğe bağlı)',
-                  ),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('Vazgeç'),
-            ),
-            FilledButton(
-              onPressed: () async {
-                try {
-                  await _functions
-                      .httpsCallable('requestBusinessReservation')
-                      .call({
-                        'venueKey': widget.venueKey,
-                        'partySize': people,
-                        'atMs': at.millisecondsSinceEpoch,
-                        'note': note.text.trim(),
-                      });
-                  if (dialogContext.mounted) Navigator.pop(dialogContext);
-                  if (mounted)
-                    ScaffoldMessenger.of(this.context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          'Rezervasyon talebin işletmeye gönderildi.',
-                        ),
-                      ),
-                    );
-                } on FirebaseFunctionsException catch (e) {
-                  if (mounted)
-                    ScaffoldMessenger.of(this.context).showSnackBar(
-                      SnackBar(
-                        content: Text(e.message ?? 'Talep gönderilemedi.'),
-                      ),
-                    );
-                }
-              },
-              child: const Text('Talep Gönder'),
-            ),
-          ],
-        ),
-      ),
-    );
-    note.dispose();
+    await Navigator.push(context,MaterialPageRoute<void>(builder:(_)=>BusinessReservationScreen(venueKey:widget.venueKey)));
   }
 
   @override

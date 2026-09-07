@@ -1,3 +1,4 @@
+import '../widgets/profile_reservations.dart';
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
@@ -135,6 +136,7 @@ class _ProfileBodyState extends State<_ProfileBody> {
               return CustomScrollView(
                 clipBehavior: Clip.none,
                 slivers: [
+                  SliverToBoxAdapter(child: ProfileReservations(key: ValueKey(widget.user.uid), userId: widget.user.uid)),
                   SliverToBoxAdapter(
                     child: ProfileBusinessCoupons(userId: widget.user.uid),
                   ),

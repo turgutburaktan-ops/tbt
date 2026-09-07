@@ -1,3 +1,5 @@
+const {orderSelection,pricedOrder,reservationView}=require('./reservation_details');
+const {createHash}=require('crypto');
 const {onCall, HttpsError} = require('firebase-functions/v2/https');
 const {getFirestore, FieldValue, Timestamp, FieldPath} = require('firebase-admin/firestore');
 
@@ -33,19 +35,57 @@ exports.getBusinessDashboard = onCall({region:'europe-west1'}, async request=>{
     base.collection('metrics').get().catch(error=>{console.error('dashboard metrics',error);return{docs:[]};}),
     base.collection('metric_days').orderBy(FieldPath.documentId(),'desc').limit(7).get().catch(error=>{console.error('dashboard days',error);return{docs:[]};}),
     base.collection('followers').count().get().catch(error=>{console.error('dashboard followers',error);return{data:()=>({count:0})};}),
-    base.collection('reservations').orderBy('createdAt','desc').limit(30).get().catch(error=>{console.error('dashboard reservations',error);return{docs:[]};}),
+    base.collection('reservations').orderBy('createdAt','desc').limit(100).get(),
     boostId?base.collection('boosts').doc(boostId).get().catch(error=>{console.error('dashboard boost',error);return null;}):Promise.resolve(null)
   ]);
   const out={};metrics.docs.forEach(d=>out[d.id]=Number(d.data().count||0));
   const daily=days.docs.map(doc=>({date:doc.id,...doc.data()}));
-  const reservationItems=reservations.docs.map(doc=>{const d=doc.data()||{};return{id:doc.id,userUid:clean(d.userUid,180),partySize:Number(d.partySize||0),atMs:d.at?.toMillis?.()||0,note:clean(d.note,500),status:clean(d.status,20),createdAtMs:d.createdAt?.toMillis?.()||0};});
+  const profiles=new Map();
+  await Promise.all([...new Set(reservations.docs.filter(d=>!d.data().customerName).map(d=>d.data().userUid).filter(Boolean))].map(async uid=>{const profile=await db.collection('users').doc(uid).get();profiles.set(uid,profile.data()||{});}));
+  const reservationItems=reservations.docs.map(doc=>reservationView(doc,venueKey,profiles.get(doc.data().userUid)));
+
   const boostData=boost?.exists?boost.data()||{}:null;
   return{metrics:out,daily,followers:followers.data().count,reservations:reservationItems,boost:boostData?{id:boost.id,targetType:clean(boostData.targetType,30),targetId:clean(boostData.targetId,180),status:clean(boostData.status,20),startsAtMs:boostData.startsAt?.toMillis?.()||0,endsAtMs:boostData.endsAt?.toMillis?.()||0,impressions:Number(boostData.impressions||0),clicks:Number(boostData.clicks||0)}:null};
 });
 
-exports.requestBusinessReservation = onCall({region:'europe-west1'}, async request=>{const uid=auth(request),venueKey=clean(request.data?.venueKey,240),partySize=Number(request.data?.partySize||0),atMs=Number(request.data?.atMs||0),note=clean(request.data?.note,500);if(!venueKey||!Number.isInteger(partySize)||partySize<1||partySize>50||atMs<Date.now())throw new HttpsError('invalid-argument','Rezervasyon bilgileri geçersiz.');const db=getFirestore(),c=await claimFor(db,venueKey);if(c.data.status!=='verified')throw new HttpsError('failed-precondition','Bu işletmede rezervasyon özelliği aktif değil.');const venue=await db.collection('business_venues').doc(venueKey).get();if(!venue.exists||venue.data()?.verified!==true)throw new HttpsError('failed-precondition','İşletme doğrulanmamış.');const recent=await venue.ref.collection('reservations').where('userUid','==',uid).limit(20).get();const pendingCount=recent.docs.filter(doc=>(doc.data()?.status||'')==='pending').length;if(pendingCount>=3)throw new HttpsError('resource-exhausted','Bu işletmede çok fazla bekleyen rezervasyon talebin var.');const ref=await venue.ref.collection('reservations').add({userUid:uid,partySize,at:Timestamp.fromMillis(atMs),note,status:'pending',createdAt:FieldValue.serverTimestamp(),updatedAt:FieldValue.serverTimestamp()});return{id:ref.id,status:'pending'};});
-
-exports.respondBusinessReservation = onCall({region:'europe-west1'}, async request=>{const venueKey=clean(request.data?.venueKey,240),reservationId=clean(request.data?.reservationId,180),decision=clean(request.data?.decision,20),{db}=await owner(request,venueKey);if(!['accepted','rejected'].includes(decision))throw new HttpsError('invalid-argument','Geçersiz karar.');const ref=db.collection('business_venues').doc(venueKey).collection('reservations').doc(reservationId);const snap=await ref.get();if(!snap.exists)throw new HttpsError('not-found','Rezervasyon bulunamadı.');if((snap.data()?.status||'')!=='pending')throw new HttpsError('failed-precondition','Bu rezervasyon zaten sonuçlandırılmış.');await ref.update({status:decision,updatedAt:FieldValue.serverTimestamp()});return{status:decision};});
+exports.requestBusinessReservation = onCall({region:'europe-west1'}, async request=>{
+  const uid=auth(request),venueKey=clean(request.data?.venueKey,240),partySize=Number(request.data?.partySize||0),atMs=Number(request.data?.atMs||0),note=clean(request.data?.note,500);
+  if(!venueKey||venueKey.includes('/')||!Number.isInteger(partySize)||partySize<1||partySize>50||!Number.isFinite(atMs)||atMs<=Date.now())throw new HttpsError('invalid-argument','Rezervasyon bilgileri geçersiz.');
+  const contactPhone=clean(request.data?.contactPhone,40),selection=orderSelection(request.data?.orderItems);
+  if(contactPhone&&!/^\+?[0-9 ()-]{8,30}$/.test(contactPhone))throw new HttpsError('invalid-argument','Geçerli telefon numarası gir.');
+  const requestId=clean(request.data?.requestId,80);
+  if(requestId&&!/^[A-Za-z0-9-]{12,80}$/.test(requestId))throw new HttpsError('invalid-argument','Talep kimliği geçersiz.');
+  const db=getFirestore(),base=db.collection('business_venues').doc(venueKey),profile=await db.collection('users').doc(uid).get();
+  const customerName=clean(request.data?.customerName||profile.data()?.displayName||profile.data()?.name||request.auth.token?.name)||'İsim belirtilmedi';
+  const ref=requestId?base.collection('reservations').doc(createHash('sha256').update(uid+':'+requestId).digest('hex')):base.collection('reservations').doc();
+  return db.runTransaction(async tx=>{
+    const existing=await tx.get(ref);if(existing.exists)return {id:ref.id,status:existing.data().status};
+    const venue=await tx.get(base);if(!venue.exists||venue.data().verified!==true)throw new HttpsError('failed-precondition','İşletme doğrulanmamış.');
+    const recent=await tx.get(base.collection('reservations').where('userUid','==',uid).where('status','==','pending'));
+    if(recent.size>=3)throw new HttpsError('resource-exhausted','Bu işletmede üç bekleyen rezervasyonun var.');
+    const menuDocs=await Promise.all(selection.map(x=>tx.get(base.collection('menu').doc(x.itemId))));
+    const orderItems=pricedOrder(selection,menuDocs),orderTotalMinor=orderItems.reduce((sum,x)=>sum+x.totalMinor,0);
+    tx.set(ref,{userUid:uid,customerName,contactPhone,venueName:clean(venue.data().venueName||venue.data().name),partySize,at:Timestamp.fromMillis(atMs),note,orderItems,orderTotalMinor,status:'pending',createdAt:FieldValue.serverTimestamp(),updatedAt:FieldValue.serverTimestamp()});
+    return {id:ref.id,status:'pending'};
+  });
+});
+exports.getMyBusinessReservations=onCall({region:'europe-west1'},async request=>{
+  const uid=auth(request),db=getFirestore();
+  const snap=await db.collectionGroup('reservations').where('userUid','==',uid).orderBy('at','desc').limit(100).get();
+  const rows=await Promise.all(snap.docs.filter(d=>d.ref.parent.parent?.parent.id==='business_venues').map(async d=>{
+    const base=d.ref.parent.parent,result=reservationView(d,base.id);
+    if(!result.venueName){const venue=await base.get();result.venueName=clean(venue.data()?.venueName||venue.data()?.name)||'İşletme';}
+    return result;
+  }));
+  return {reservations:rows};
+});
+exports.respondBusinessReservation = onCall({region:'europe-west1'}, async request=>{
+  const venueKey=clean(request.data?.venueKey,240),reservationId=clean(request.data?.reservationId,180),decision=clean(request.data?.decision,20),{db}=await owner(request,venueKey);
+  if(!['accepted','rejected'].includes(decision))throw new HttpsError('invalid-argument','Geçersiz karar.');
+  const ref=db.collection('business_venues').doc(venueKey).collection('reservations').doc(reservationId);
+  await db.runTransaction(async tx=>{const snap=await tx.get(ref);if(!snap.exists)throw new HttpsError('not-found','Rezervasyon bulunamadı.');if(snap.data().status!=='pending')throw new HttpsError('failed-precondition','Bu rezervasyon zaten sonuçlandırılmış.');tx.update(ref,{status:decision,updatedAt:FieldValue.serverTimestamp()});});
+  return {status:decision};
+});
 
 exports.createBusinessBoost = onCall({region:'europe-west1'}, async request=>{
   const venueKey=clean(request.data?.venueKey,240),targetType=clean(request.data?.targetType,30),targetId=clean(request.data?.targetId,180),days=Math.min(30,Math.max(1,Number(request.data?.days||3))),{uid,db}=await owner(request,venueKey,{premium:true});

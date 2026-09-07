@@ -1,3 +1,4 @@
+import '../widgets/profile_reservations.dart';
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -221,6 +222,7 @@ class _ProfileBodyState extends State<_ProfileBody> {
                     ),
                   ),
                   SliverToBoxAdapter(child: _typeModule(type)),
+                  SliverToBoxAdapter(child: ProfileReservations(key: ValueKey(widget.user.uid), userId: widget.user.uid)),
                   SliverToBoxAdapter(
                     child: ProfileBusinessCoupons(userId: widget.user.uid),
                   ),
