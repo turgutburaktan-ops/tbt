@@ -95,6 +95,14 @@ class UserProfileScreen extends StatelessWidget {
           }
 
           final data = profileSnapshot.data!.data() ?? {};
+          if (data['accountStatus'] == 'frozen' && !isOwnProfile) {
+            return const Center(
+              child: Text(
+                'Bu hesap dondurulmuş.',
+                style: TextStyle(color: Colors.white70),
+              ),
+            );
+          }
           final displayName = (data['displayName'] ?? 'Fotoğrafçı').toString();
           final username = (data['username'] ?? displayName).toString();
           final photoUrl = (data['photoUrl'] ?? '').toString();
