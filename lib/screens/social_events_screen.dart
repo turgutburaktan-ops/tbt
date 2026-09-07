@@ -508,7 +508,7 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
                   })
                   .toList(growable: false);
               if (_mapView && events.isNotEmpty) {
-                final located = events.where((e) => e.latitude != null && e.longitude != null).toList();
+                final located = events.where((e) => e.latitude != null && e.longitude != null && !e.approximateLocationOnly).toList();
                 if (located.isEmpty) return const Center(child: Text('Bu etkinliklerde harita konumu yok. Liste görünümünü kullan.'));
                 return GoogleMap(initialCameraPosition: CameraPosition(target: LatLng(located.first.latitude!, located.first.longitude!), zoom: 10), markers: located.map((e) => Marker(markerId: MarkerId(e.id), position: LatLng(e.latitude!, e.longitude!), infoWindow: InfoWindow(title: e.title, snippet: e.locationLabel, onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => EventDeepLinkScreen(eventId: e.id)))))).toSet());
               }
