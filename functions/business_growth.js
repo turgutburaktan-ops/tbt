@@ -1,3 +1,5 @@
+const {syncReminder}=require('./reservation_reminders');
+const {customerHistory}=require('./reservation_history');
 const {orderSelection,pricedOrder,reservationView}=require('./reservation_details');
 const {createHash}=require('crypto');
 const {onCall, HttpsError} = require('firebase-functions/v2/https');
@@ -40,10 +42,14 @@ exports.getBusinessDashboard = onCall({region:'europe-west1'}, async request=>{
   ]);
   const out={};metrics.docs.forEach(d=>out[d.id]=Number(d.data().count||0));
   const daily=days.docs.map(doc=>({date:doc.id,...doc.data()}));
+  await Promise.all(reservations.docs.filter(d=>d.data().status==='accepted'&&(d.data().orderItems||[]).length&&!d.data().preparationConfirmedAt&&d.data().at?.toMillis?.()>Date.now()).map(d=>syncReminder(db,d.ref)));
   const profiles=new Map();
   await Promise.all([...new Set(reservations.docs.filter(d=>!d.data().customerName).map(d=>d.data().userUid).filter(Boolean))].map(async uid=>{const profile=await db.collection('users').doc(uid).get();profiles.set(uid,profile.data()||{});}));
   const reservationItems=reservations.docs.map(doc=>reservationView(doc,venueKey,profiles.get(doc.data().userUid)));
 
+  const histories=new Map();
+  await Promise.all([...new Set(reservationItems.filter(r=>r.status==='pending'||r.status==='accepted').map(r=>r.userUid).filter(Boolean))].map(async uid=>histories.set(uid,await customerHistory(db,uid))));
+  reservationItems.forEach(r=>{r.customerHistory=histories.get(r.userUid)||{prepared:0,cancelled:0,noShows:0};});
   const boostData=boost?.exists?boost.data()||{}:null;
   return{metrics:out,daily,followers:followers.data().count,reservations:reservationItems,boost:boostData?{id:boost.id,targetType:clean(boostData.targetType,30),targetId:clean(boostData.targetId,180),status:clean(boostData.status,20),startsAtMs:boostData.startsAt?.toMillis?.()||0,endsAtMs:boostData.endsAt?.toMillis?.()||0,impressions:Number(boostData.impressions||0),clicks:Number(boostData.clicks||0)}:null};
 });
@@ -74,6 +80,7 @@ exports.getMyBusinessReservations=onCall({region:'europe-west1'},async request=>
   const snap=await db.collectionGroup('reservations').where('userUid','==',uid).orderBy('at','desc').limit(100).get();
   const rows=await Promise.all(snap.docs.filter(d=>d.ref.parent.parent?.parent.id==='business_venues').map(async d=>{
     const base=d.ref.parent.parent,result=reservationView(d,base.id);
+    if(result.status==='accepted'&&result.orderItems.length&&!result.preparationConfirmedAtMs&&result.atMs>Date.now())await syncReminder(db,d.ref);
     if(!result.venueName){const venue=await base.get();result.venueName=clean(venue.data()?.venueName||venue.data()?.name)||'İşletme';}
     return result;
   }));

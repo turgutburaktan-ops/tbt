@@ -26,7 +26,7 @@ test('personal reservation query ignores requested identities and requires sign-
  const calls=[];const query={where:(...args)=>{calls.push(args);return query;},orderBy:()=>query,limit:()=>query,get:async()=>({docs:[]})};
  const db={collectionGroup:name=>{assert.equal(name,'reservations');return query;}};
  const growth=new Module(__filename);
- growth.require=id=>id==='firebase-functions/v2/https'?{onCall:(_,handler)=>handler,HttpsError:class extends Error{}}:id==='firebase-admin/firestore'?{getFirestore:()=>db}:id==='./reservation_details'?loaded.exports:require(id);
+ growth.require=id=>id==='firebase-functions/v2/https'?{onCall:(_,handler)=>handler,HttpsError:class extends Error{}}:id==='firebase-admin/firestore'?{getFirestore:()=>db}:id==='./reservation_details'?loaded.exports:id==='./reservation_reminders'?{syncReminder:async()=>{}}:id==='./reservation_history'?{customerHistory:async()=>({prepared:0,cancelled:0,noShows:0})}:require(id);
  growth._compile(fs.readFileSync(path.join(__dirname,'../business_growth.js'),'utf8'),path.join(__dirname,'../business_growth.js'));
  await assert.rejects(()=>growth.exports.getMyBusinessReservations({data:{userUid:'someone-else'}}));assert.equal(calls.length,0);
  await growth.exports.getMyBusinessReservations({auth:{uid:'self'},data:{userUid:'someone-else'}});

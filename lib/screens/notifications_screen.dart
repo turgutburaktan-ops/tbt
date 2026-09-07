@@ -1,3 +1,5 @@
+import 'reservation_inbox_screen.dart';
+import 'business_web_portal_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
@@ -70,6 +72,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   Future<void> _openItem(AppNotificationItem item) async {
     await AppNotificationService.instance.markRead(item.id);
     if (!mounted) return;
+    if(item.type.startsWith('business_preparation')||item.type.startsWith('business_reservation')){
+      final owner=item.type=='business_reservation'||item.type=='business_reservation_owner_action';
+      await Navigator.push(context,MaterialPageRoute<void>(builder:(_)=>owner?const BusinessWebPortalScreen():const ReservationInboxScreen()));return;
+    }
     final sourceId = item.sourceId?.trim() ?? '';
     final actorId = item.actorId?.trim() ?? '';
     if (sourceId.isNotEmpty && _opensEvent(item.type)) {

@@ -24,6 +24,6 @@ function pricedOrder(selection,documents) {
 }
 function reservationView(doc,venueKey,profile={}) {
   const d=doc.data()||{};
-  return {id:doc.id,venueKey,userUid:clean(d.userUid,180),venueName:clean(d.venueName),customerName:clean(d.customerName||profile.displayName||profile.name||profile.username)||'İsim belirtilmedi',contactPhone:clean(d.contactPhone,40),partySize:Number(d.partySize||0),atMs:d.at?.toMillis?.()||0,note:clean(d.note,500),status:clean(d.status,20),createdAtMs:d.createdAt?.toMillis?.()||0,orderItems:Array.isArray(d.orderItems)?d.orderItems:[],orderTotalMinor:Number(d.orderTotalMinor||0)};
+  return {preparationStatus:d.preparationStatus||'awaiting_confirmation',preparationConfirmedAtMs:d.preparationConfirmedAt?.toMillis?.()||0,preparationStartedAtMs:d.preparationStartedAt?.toMillis?.()||0,incidentStatus:d.incidentStatus||'',incidentReviewAfterMs:d.incidentReviewAfter?.toMillis?.()||0,incidentResolution:clean(d.incidentResolution,700),scheduleVersion:Number(d.scheduleVersion||0),id:doc.id,venueKey,userUid:clean(d.userUid,180),venueName:clean(d.venueName),customerName:clean(d.customerName||profile.displayName||profile.name||profile.username)||'İsim belirtilmedi',contactPhone:clean(d.contactPhone,40),partySize:Number(d.partySize||0),atMs:d.at?.toMillis?.()||0,note:clean(d.note,500),status:clean(d.status,20),createdAtMs:d.createdAt?.toMillis?.()||0,orderItems:Array.isArray(d.orderItems)?d.orderItems:[],orderTotalMinor:Number(d.orderTotalMinor||0)};
 }
 module.exports={orderSelection,pricedOrder,reservationView};

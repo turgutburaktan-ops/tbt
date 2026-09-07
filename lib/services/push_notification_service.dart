@@ -1,3 +1,5 @@
+import '../screens/reservation_inbox_screen.dart';
+import '../screens/business_web_portal_screen.dart';
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -246,6 +248,10 @@ class PushNotificationService with WidgetsBindingObserver {
     final eventId = (message.data['eventId'] ?? '').toString().trim();
     final communityId = (message.data['communityId'] ?? '').toString().trim();
 
+    if(type.startsWith('business_preparation')||type.startsWith('business_reservation')){
+      final owner=type=='business_reservation'||type=='business_reservation_owner_action';
+      navigator.push(MaterialPageRoute<void>(builder:(_)=>owner?const BusinessWebPortalScreen():const ReservationInboxScreen()));return;
+    }
     if (eventId.isNotEmpty) {
       navigator.push(
         MaterialPageRoute(

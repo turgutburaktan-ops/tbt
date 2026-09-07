@@ -1,3 +1,4 @@
+import '../widgets/reservation_controls.dart';
 import 'package:flutter/material.dart';
 
 import '../services/business_service.dart';
@@ -363,11 +364,11 @@ class _BusinessProDashboardScreenState
                             title: Text(
                               '$people kişi${at == null ? '' : ' • ${at.day}.${at.month}.${at.year} ${at.hour.toString().padLeft(2, '0')}:${at.minute.toString().padLeft(2, '0')}'}',
                             ),
-                            subtitle: Text(
+                            subtitle: Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(
                               note.isEmpty
                                   ? _statusText(status)
                                   : '${_statusText(status)}\n$note',
-                            ),
+                            ),ReservationControls(data:d,owner:true,refresh:_load)]),
                             trailing: status == 'pending'
                                 ? Wrap(
                                     spacing: 4,
