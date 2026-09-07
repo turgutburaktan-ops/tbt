@@ -2,6 +2,7 @@ const {onCall, onRequest, HttpsError} = require('firebase-functions/v2/https');
 const {getFirestore, FieldValue, Timestamp} = require('firebase-admin/firestore');
 const {getStorage} = require('firebase-admin/storage');
 const {getAuth} = require('firebase-admin/auth');
+const {submissionId, publicationData} = require('./business_publication');
 
 const MAX_ACTIVE_CLAIMS = 2;
 const REJECT_COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000;
@@ -226,15 +227,35 @@ async function reviewBusinessClaimCore({uid, token, data: d}) {
   const id = venueKey(d?.category, d?.venueId);
   const decision = clean(d?.decision, 20);
   if (!['verified', 'rejected'].includes(decision)) throw new HttpsError('invalid-argument', 'Geçersiz karar.');
-  const db = getFirestore(), ref = db.collection('business_claims').doc(id), snap = await ref.get();
-  if (!snap.exists) throw new HttpsError('not-found', 'Başvuru bulunamadı.');
-  const data = snap.data() || {};
-  if (data.status !== 'pending_review') throw new HttpsError('failed-precondition', 'Yalnız incelemedeki başvurular sonuçlandırılabilir.');
-  const update = {status: decision, verificationLevel: decision === 'verified' ? 'manual_strong' : 'none', adminReviewRequired: false, verifiedAt: decision === 'verified' ? FieldValue.serverTimestamp() : null, verifiedBy: decision === 'verified' ? uid : null, rejectionReason: decision === 'rejected' ? clean(d?.reason, 500) : '', updatedAt: FieldValue.serverTimestamp()};
-  await ref.update(update);
-  if (decision === 'verified') {
-    await db.collection('business_venues').doc(id).set({ownerUid: data.applicantUid, venueId: data.venueId, category: data.category, venueName: data.venueName, verified: true, verificationLevel: 'manual_strong', updatedAt: FieldValue.serverTimestamp()}, {merge: true});
-  }
+  const db = getFirestore(), ref = db.collection('business_claims').doc(id);
+  await db.runTransaction(async tx => {
+    const snap = await tx.get(ref);
+    if (!snap.exists) throw new HttpsError('not-found', 'Başvuru bulunamadı.');
+    const data = snap.data() || {};
+    if (data.status !== 'pending_review') throw new HttpsError('failed-precondition', 'Yalnız incelemedeki başvurular sonuçlandırılabilir.');
+    const timestamp = FieldValue.serverTimestamp();
+    const update = {status: decision, verificationLevel: decision === 'verified' ? 'manual_strong' : 'none', adminReviewRequired: false, verifiedAt: decision === 'verified' ? timestamp : null, verifiedBy: decision === 'verified' ? uid : null, rejectionReason: decision === 'rejected' ? clean(d?.reason, 500) : '', updatedAt: timestamp};
+    if (decision === 'verified') {
+      const venueRef = db.collection('business_venues').doc(id);
+      const venue = (await tx.get(venueRef)).data() || {};
+      const subId = submissionId(data);
+      let publication = null, subRef = null;
+      if (subId) {
+        subRef = db.collection('business_venue_submissions').doc(subId);
+        const submission = (await tx.get(subRef)).data();
+        try { publication = publicationData(data, venue, submission, timestamp); }
+        catch (error) { throw new HttpsError('failed-precondition', error.message); }
+      }
+      tx.set(venueRef, publication || {ownerUid: data.applicantUid, venueId: data.venueId,
+        category: data.category, venueName: data.venueName, verified: true,
+        verificationLevel: 'manual_strong', updatedAt: timestamp}, {merge: true});
+      if (subRef) tx.set(subRef, {status: 'published', listingStatus: 'published',
+        verified: true, pendingListing: false, publishedAt: timestamp,
+        updatedAt: timestamp}, {merge: true});
+    }
+    // Approval and public listing commit together, or neither is changed.
+    tx.update(ref, update);
+  });
   return {status: decision};
 }
 

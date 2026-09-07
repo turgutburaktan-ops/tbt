@@ -48,9 +48,9 @@ exports.createBusinessCandidate = onCall({region:'europe-west1'}, async request=
   const subRef=db.collection('business_venue_submissions').doc();
   const venueId=`user_${subRef.id}`; const venueKey=`${category}:${venueId}`;
   const payload={venueKey,venueId,category,venueName,normalizedName:normalized,address,city,latitude,longitude,source:'user_submission',listingStatus:'candidate',verified:false,pendingListing:true,createdBy:uid,createdAt:FieldValue.serverTimestamp(),updatedAt:FieldValue.serverTimestamp()};
-  await Promise.all([
-    subRef.set({...payload,status:'candidate'}),
-    db.collection('business_venues').doc(venueKey).set(payload,{merge:true}),
-  ]);
+  const batch=db.batch();
+  batch.set(subRef,{...payload,status:'candidate'});
+  batch.set(db.collection('business_venues').doc(venueKey),payload,{merge:true});
+  await batch.commit();
   return {venueId,venueKey,venueName,category,latitude,longitude,existing:false};
 });
