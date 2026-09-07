@@ -50,10 +50,13 @@ jobs:
         run: node functions/scripts/repair_business_publication.js dining:user_4xFEQcn0tjLktR5Cq85n
       - name: Deploy Firebase Functions
         env:
+          RESERVATION_INDEX: ${{ contains(github.event.head_commit.message, '[reservation-index]') }}
           RESERVATION_UPDATE: ${{ contains(github.event.head_commit.message, '[reservation-update]') }}
           PUBLICATION_REPAIR: ${{ contains(github.event.head_commit.message, '[repair-burak-publication]') }}
         run: |
-          if [ "$RESERVATION_UPDATE" = "true" ]; then
+          if [ "$RESERVATION_INDEX" = "true" ]; then
+            node functions/scripts/ensure_reservation_index.js
+          elif [ "$RESERVATION_UPDATE" = "true" ]; then
             firebase deploy --only functions:getBusinessDashboard,functions:getMyBusinessReservations,functions:requestBusinessReservation,functions:respondBusinessReservation --project en-iyi-cekim-noktasi --non-interactive
           elif [ "$PUBLICATION_REPAIR" = "true" ]; then
             firebase deploy --only functions:adminReviewBusinessClaim,functions:adminReviewBusinessClaimHttp,functions:publishVerifiedBusinessCandidate,functions:createBusinessCandidate --project en-iyi-cekim-noktasi --force --non-interactive
@@ -61,7 +64,7 @@ jobs:
             firebase deploy --only functions --project en-iyi-cekim-noktasi --force --non-interactive
           fi
       - name: Restore callable invoker access
-        if: "!contains(github.event.head_commit.message, '[repair-burak-publication]') && !contains(github.event.head_commit.message, '[reservation-update]')"
+        if: "!contains(github.event.head_commit.message, '[repair-burak-publication]') && !contains(github.event.head_commit.message, '[reservation-update]') && !contains(github.event.head_commit.message, '[reservation-index]')"
         run: |
           set -euo pipefail
           gcloud auth activate-service-account --key-file="$GOOGLE_APPLICATION_CREDENTIALS"
