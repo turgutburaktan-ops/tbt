@@ -56,7 +56,7 @@ jobs:
           PUBLICATION_REPAIR: ${{ contains(github.event.head_commit.message, '[repair-burak-publication]') }}
         run: |
           if [ "$PREPARATION_UPDATE" = "true" ]; then
-            firebase deploy --only functions:syncBusinessPreparationReminder,functions:sendBusinessPreparationReminders,functions:reservationPreparationAction,functions:getReservationDisputes,functions:resolveReservationDispute,functions:getBusinessDashboard,functions:getMyBusinessReservations --project en-iyi-cekim-noktasi --non-interactive
+            firebase deploy --only functions:syncBusinessPreparationReminder,functions:sendBusinessPreparationReminders,functions:reservationPreparationAction,functions:getReservationDisputes,functions:resolveReservationDispute,functions:getBusinessDashboard,functions:getMyBusinessReservations --project en-iyi-cekim-noktasi --force --non-interactive
           elif [ "$RESERVATION_INDEX" = "true" ]; then
             node functions/scripts/ensure_reservation_index.js
           elif [ "$RESERVATION_UPDATE" = "true" ]; then
