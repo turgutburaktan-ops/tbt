@@ -51,6 +51,8 @@ jobs:
           p.write_text(s)
           info = Path('ios/Runner/Info.plist')
           plist = info.read_text()
+          if 'NSLocationAlwaysAndWhenInUseUsageDescription' not in plist:
+              plist = plist.replace('</dict>', '  <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>\n  <string>Rota ve çevrendeki içerikleri doğru şekilde göstermek için konum erişimi gerekir.</string>\n  <key>NSLocationAlwaysUsageDescription</key>\n  <string>Rota ve çevrendeki içerikleri doğru şekilde göstermek için konum erişimi gerekir.</string>\n</dict>')
           if 'GADApplicationIdentifier' not in plist:
               plist = plist.replace('</dict>', '  <key>GADApplicationIdentifier</key>\n  <string>ca-app-pub-3940256099942544~1458002511</string>\n</dict>')
               info.write_text(plist)

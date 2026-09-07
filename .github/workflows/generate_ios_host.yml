@@ -57,6 +57,8 @@ jobs:
           info['NSCameraUsageDescription'] = 'Fotoğraf ve video çekmek için kameraya erişim gerekir.'
           info['NSMicrophoneUsageDescription'] = 'Video kaydında ses kullanmak için mikrofona erişim gerekir.'
           info['NSLocationWhenInUseUsageDescription'] = 'Yakındaki mekanları, etkinlikleri ve rota mesafelerini göstermek için konum kullanılır.'
+          info['NSLocationAlwaysAndWhenInUseUsageDescription'] = 'Rota ve çevrendeki içerikleri doğru şekilde göstermek için konum erişimi gerekir.'
+          info['NSLocationAlwaysUsageDescription'] = 'Rota ve çevrendeki içerikleri doğru şekilde göstermek için konum erişimi gerekir.'
           info['NSPhotoLibraryUsageDescription'] = 'Story ve paylaşım için galerinden fotoğraf veya video seçebilmek için erişim gerekir.'
           info['NSPhotoLibraryAddUsageDescription'] = 'Düzenlediğin içerikleri fotoğraf arşivine kaydedebilmek için izin gerekir.'
           info['UIBackgroundModes'] = ['fetch', 'remote-notification']
