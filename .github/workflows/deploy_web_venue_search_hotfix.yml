@@ -39,6 +39,11 @@ jobs:
       - name: Resolve the Hosting site serving trtbt.com
         run: |
           set -euo pipefail
+          python3 - <<'PY'
+          import socket
+          print('trtbt.com addresses:', sorted({item[4][0] for item in socket.getaddrinfo('trtbt.com', 443)}))
+          PY
+          curl --silent --show-error --head --max-time 20 https://trtbt.com/
           gcloud auth activate-service-account --key-file="$GOOGLE_APPLICATION_CREDENTIALS"
           export FIREBASE_ACCESS_TOKEN="$(gcloud auth print-access-token)"
           python3 - <<'PY'
