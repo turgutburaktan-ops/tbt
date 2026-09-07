@@ -1,0 +1,31 @@
+name: Shared Spot Source Check
+on:
+  push:
+    branches: [codex/shared-spot-source]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: node --test web_shared/spot-catalog.test.mjs
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter test test/shared_spot_catalog_test.dart
+      - name: Analyze changed mobile code
+        run: >-
+          flutter analyze --no-fatal-infos
+          lib/services/published_spot_catalog.dart
+          lib/services/spot_repository.dart
+          lib/screens/spot_explore_screen_v2.dart
+          lib/widgets/profile_favorite_places_section.dart
+      - run: git diff --check
