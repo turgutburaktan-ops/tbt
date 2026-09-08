@@ -5,6 +5,7 @@ import '../theme/app_theme.dart';
 import '../services/admin_access.dart';
 import 'admin_businesses_v2_screen.dart';
 import 'admin_music_screen.dart';
+import 'admin_broadcast_screen.dart';
 
 class AdminPortalScreen extends StatefulWidget {
   const AdminPortalScreen({super.key});
@@ -138,6 +139,14 @@ class _AdminPortalScreenState extends State<AdminPortalScreen> {
             style: TextStyle(fontSize: 19, fontWeight: FontWeight.w900),
           ),
           const SizedBox(height: 9),
+          _HeroAction(
+            icon: Icons.campaign_rounded,
+            title: 'TBT Duyurusu',
+            subtitle: 'TBT adına tüm kullanıcılara uygulama içi mesaj ve bildirim gönder.',
+            button: 'Duyuru Hazırla',
+            onTap: () => _open(const AdminBroadcastScreen()),
+          ),
+          const SizedBox(height: 10),
           const _RouteTile(
             Icons.add_location_alt_rounded,
             'Yeni Yer Önerileri',

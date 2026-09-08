@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:ui';
 
+import 'package:app_tracking_transparency/app_tracking_transparency.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
@@ -19,6 +20,7 @@ import 'screens/admin_portal_screen.dart';
 import 'screens/admin_spot_submissions_screen.dart';
 import 'screens/admin_published_spots_screen.dart';
 import 'screens/app_entry_gate.dart';
+import 'screens/install_onboarding_gate.dart';
 import 'screens/business_web_portal_screen.dart';
 import 'screens/campus_home_screen.dart';
 import 'screens/campus_profile_screen.dart';
@@ -32,10 +34,13 @@ import 'screens/safety_privacy_center_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/story_archive_screen.dart';
 import 'services/app_observability_service.dart';
+import 'services/app_locale_service.dart';
 import 'services/deep_link_service.dart';
 import 'services/favorites_service.dart';
 import 'services/push_notification_service.dart';
 import 'theme/app_theme.dart';
+
+final Completer<void> _trackingAuthorizationGate = Completer<void>();
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -83,6 +88,7 @@ Future<void> main() async {
           debugPrintStack(stackTrace: stackTrace);
         }
       }
+      await AppLocaleService.instance.initialize();
 
       runApp(
         bootstrapError == null
@@ -118,6 +124,25 @@ Future<void> main() async {
 }
 
 Future<void> _initializeDeferredBootstrapServices() async {
+  if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
+    try {
+      await WidgetsBinding.instance.endOfFrame;
+      final status =
+          await AppTrackingTransparency.trackingAuthorizationStatus;
+      if (status == TrackingStatus.notDetermined) {
+        await AppTrackingTransparency.requestTrackingAuthorization();
+      }
+    } catch (error, stackTrace) {
+      if (kDebugMode) {
+        debugPrint('Tracking authorization skipped: $error');
+        debugPrintStack(stackTrace: stackTrace);
+      }
+    }
+  }
+  if (!_trackingAuthorizationGate.isCompleted) {
+    _trackingAuthorizationGate.complete();
+  }
+
   if (!kIsWeb &&
       (defaultTargetPlatform == TargetPlatform.android ||
           defaultTargetPlatform == TargetPlatform.iOS)) {
@@ -250,6 +275,9 @@ class _BestPhotoSpotAppState extends State<BestPhotoSpotApp> {
   }
 
   Future<void> _initializePostFrameServices() async {
+    if (!_trackingAuthorizationGate.isCompleted) {
+      await _trackingAuthorizationGate.future;
+    }
     try {
       await PushNotificationService.instance.initialize(_navigatorKey).timeout(
         const Duration(seconds: 8),
@@ -275,13 +303,15 @@ class _BestPhotoSpotAppState extends State<BestPhotoSpotApp> {
   }
 
   @override
-  Widget build(BuildContext context) => MaterialApp(
+  Widget build(BuildContext context) => ValueListenableBuilder<Locale>(
+    valueListenable: AppLocaleService.instance.locale,
+    builder: (context, locale, _) => MaterialApp(
     navigatorKey: _navigatorKey,
     debugShowCheckedModeBanner: false,
-    title: 'En İyi Çekim Noktası',
+    title: 'TBT',
     theme: AppTheme.dark,
-    locale: const Locale('tr', 'TR'),
-    supportedLocales: const [Locale('tr', 'TR')],
+    locale: locale,
+    supportedLocales: const [Locale('tr'), Locale('en'), Locale('de'), Locale('ar')],
     localizationsDelegates: GlobalMaterialLocalizations.delegates,
     builder: (context, child) {
       final media = MediaQuery.of(context);
@@ -318,6 +348,7 @@ class _BestPhotoSpotAppState extends State<BestPhotoSpotApp> {
       '/campus-profile': (_) => const CampusProfileScreen(),
       '/communities': (_) => const CommunitiesScreen(),
     },
-    home: const AppEntryGate(),
+    home: const InstallOnboardingGate(child: AppEntryGate()),
+    ),
   );
 }

@@ -37,20 +37,19 @@ class _ModerationCenterScreenState extends State<ModerationCenterScreen> {
         body: Center(child: Text('Yalnız yöneticiler erişebilir.')),
       );
     return DefaultTabController(
-      length: 3,
+      length: 2,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Moderasyon Merkezi'),
           bottom: const TabBar(
             tabs: [
               Tab(text: 'Şikâyetler'),
-              Tab(text: 'Veri Talepleri'),
               Tab(text: 'İşletmeler'),
             ],
           ),
         ),
         body: const TabBarView(
-          children: [_ReportsQueue(), _DeletionQueue(), _BusinessTrustQueue()],
+          children: [_ReportsQueue(), _BusinessTrustQueue()],
         ),
       ),
     );
@@ -128,48 +127,6 @@ class _ReportsQueue extends StatelessWidget {
             ),
           );
         },
-      );
-    },
-  );
-}
-
-class _DeletionQueue extends StatelessWidget {
-  const _DeletionQueue();
-
-  @override
-  Widget build(
-    BuildContext context,
-  ) => StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-    stream: FirebaseFirestore.instance
-        .collection('account_delete_requests')
-        .where('status', isEqualTo: 'requested')
-        .snapshots(),
-    builder: (context, snapshot) {
-      if (!snapshot.hasData)
-        return const Center(child: CircularProgressIndicator());
-      final docs = snapshot.data!.docs;
-      if (docs.isEmpty)
-        return const Center(child: Text('Bekleyen hesap silme talebi yok.'));
-      return ListView(
-        padding: const EdgeInsets.all(12),
-        children: docs.map((doc) {
-          final d = doc.data();
-          return Card(
-            child: ListTile(
-              leading: const Icon(Icons.delete_outline_rounded),
-              title: Text('Kullanıcı: ${d['uid'] ?? doc.id}'),
-              subtitle: Text((d['reason'] ?? 'Neden belirtilmedi').toString()),
-              trailing: FilledButton(
-                onPressed: () => doc.reference.update({
-                  'status': 'reviewing',
-                  'reviewedBy': FirebaseAuth.instance.currentUser?.uid,
-                  'updatedAt': FieldValue.serverTimestamp(),
-                }),
-                child: const Text('İncele'),
-              ),
-            ),
-          );
-        }).toList(),
       );
     },
   );

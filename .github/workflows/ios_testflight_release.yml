@@ -61,8 +61,13 @@ jobs:
           info['NSLocationWhenInUseUsageDescription'] = 'Yakındaki mekanları, etkinlikleri ve rota mesafelerini göstermek için konum kullanılır.'
           info['NSPhotoLibraryUsageDescription'] = 'Story ve paylaşım için galerinden fotoğraf veya video seçebilmek için erişim gerekir.'
           info['NSPhotoLibraryAddUsageDescription'] = 'Düzenlediğin içerikleri fotoğraf arşivine kaydedebilmek için izin gerekir.'
+          info['NSUserTrackingUsageDescription'] = 'İzninle daha alakalı reklamlar göstermek ve reklam performansını ölçmek için cihaz tanımlayıcısı kullanılır.'
+          info['ITSAppUsesNonExemptEncryption'] = False
+          info['CFBundleDisplayName'] = 'TBT'
+          info['NSLocationAlwaysAndWhenInUseUsageDescription'] = 'Rota ve çevrendeki içerikleri göstermek için konum erişimi gerekir.'
+          info['NSLocationAlwaysUsageDescription'] = 'Rota ve çevrendeki içerikleri göstermek için konum erişimi gerekir.'
           info['UIBackgroundModes'] = ['fetch', 'remote-notification']
-          info['GADApplicationIdentifier'] = 'ca-app-pub-3940256099942544~1458002511'
+          info['GADApplicationIdentifier'] = 'ca-app-pub-3462343788063276~3452529921'
 
           schemes = info.get('CFBundleURLTypes', [])
           for name, scheme in (
@@ -227,7 +232,8 @@ jobs:
             --export-options-plist=ios/ExportOptions.plist \
             --dart-define="FIREBASE_IOS_API_KEY=$FIREBASE_IOS_API_KEY" \
             --dart-define="FIREBASE_IOS_APP_ID=$FIREBASE_IOS_APP_ID" \
-            --dart-define=IOS_BUNDLE_ID=com.tbt.social
+            --dart-define=IOS_BUNDLE_ID=com.tbt.social \
+            --dart-define=ADMOB_NATIVE_IOS=ca-app-pub-3462343788063276/9247782088
 
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v4

@@ -1,12 +1,13 @@
 name: best_photo_spot
 description: Smart photography assistant MVP.
 publish_to: "none"
-version: 1.0.7+13
+version: 1.0.11+20
 
 environment:
   sdk: ">=3.7.0 <4.0.0"
 
 dependencies:
+  app_tracking_transparency: ^2.0.7
   firebase_core: 4.13.0
   firebase_messaging: 16.5.0
   firebase_app_check: 0.4.6
@@ -54,7 +55,7 @@ dev_dependencies:
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: assets/spot_thumbnails/tbt_app_icon.jpg
+  image_path: assets/spot_thumbnails/tbt_app_icon.png
   remove_alpha_ios: true
   min_sdk_android: 26
 

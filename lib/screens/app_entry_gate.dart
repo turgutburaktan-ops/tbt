@@ -3,8 +3,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../widgets/retention_hub_quick_entry.dart';
+import '../widgets/daily_goals_prompt.dart';
 import 'account_security_gate_v2.dart';
 import 'app_onboarding_screen.dart';
+import 'frozen_account_screen.dart';
 import 'home_shell_v3.dart';
 import 'student_onboarding_screen.dart';
 
@@ -42,16 +44,23 @@ class AppEntryGate extends StatelessWidget {
 
             final gate = gateSnapshot.data ?? const _EntryGateState();
             Widget next;
-            if (!gate.appOnboardingCompleted) {
+            if (gate.accountStatus == 'frozen') {
+              next = const FrozenAccountScreen();
+            } else if (!gate.appOnboardingCompleted) {
               next = const AppOnboardingScreen();
             } else if (gate.onboardingRequired && !gate.onboardingCompleted) {
               next = const StudentOnboardingScreen();
             } else {
-              next = const RetentionHubQuickEntry(
-                child: HomeScreen(),
+              next = DailyGoalsPrompt(
+                key: ValueKey(user.uid),
+                userId: user.uid,
+                child: const RetentionHubQuickEntry(
+                  child: HomeScreen(),
+                ),
               );
             }
 
+            if (gate.accountStatus == 'frozen') return next;
             return AccountSecurityGateV2(
               profile: gate.securityProfile,
               child: next,
@@ -69,6 +78,7 @@ class _EntryGateState {
   final bool onboardingCompleted;
   final bool phoneVerified;
   final bool phoneVerificationDeferred;
+  final String accountStatus;
 
   const _EntryGateState({
     this.appOnboardingCompleted = false,
@@ -76,6 +86,7 @@ class _EntryGateState {
     this.onboardingCompleted = false,
     this.phoneVerified = false,
     this.phoneVerificationDeferred = false,
+    this.accountStatus = 'active',
   });
 
   factory _EntryGateState.from(Map<String, dynamic>? data) {
@@ -85,6 +96,7 @@ class _EntryGateState {
       onboardingCompleted: data?['onboardingCompleted'] == true,
       phoneVerified: data?['phoneVerified'] == true,
       phoneVerificationDeferred: data?['phoneVerificationDeferred'] == true,
+      accountStatus: (data?['accountStatus'] ?? 'active').toString(),
     );
   }
 
@@ -100,7 +112,8 @@ class _EntryGateState {
         other.onboardingRequired == onboardingRequired &&
         other.onboardingCompleted == onboardingCompleted &&
         other.phoneVerified == phoneVerified &&
-        other.phoneVerificationDeferred == phoneVerificationDeferred;
+        other.phoneVerificationDeferred == phoneVerificationDeferred &&
+        other.accountStatus == accountStatus;
   }
 
   @override
@@ -110,5 +123,6 @@ class _EntryGateState {
     onboardingCompleted,
     phoneVerified,
     phoneVerificationDeferred,
+    accountStatus,
   );
 }

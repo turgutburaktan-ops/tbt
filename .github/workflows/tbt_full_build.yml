@@ -6,6 +6,7 @@ on:
   push:
     branches:
       - main
+      - codex/restore-complete-app
 
 permissions:
   contents: read
@@ -41,6 +42,11 @@ jobs:
             sleep $((attempt * 5))
           done
           exit 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Backend regression tests
+        run: npm --prefix functions install --no-package-lock && node --test functions/test/*.test.js
       - name: Flutter analyze
         run: flutter analyze --no-fatal-warnings --no-fatal-infos
       - name: Flutter tests
@@ -207,6 +213,14 @@ jobs:
           if 'GADApplicationIdentifier' not in plist:
               plist = plist.replace('</dict>', '  <key>GADApplicationIdentifier</key>\n  <string>ca-app-pub-3940256099942544~1458002511</string>\n</dict>')
               info.write_text(plist)
+          PY
+          python3 - <<'PY'
+          import plistlib
+          from pathlib import Path
+          p=Path('ios/Runner/Info.plist')
+          info=plistlib.loads(p.read_bytes())
+          info['NSUserTrackingUsageDescription']='İzninle daha alakalı reklamlar göstermek için cihaz tanımlayıcısı kullanılır.'
+          p.write_bytes(plistlib.dumps(info))
           PY
           rm -rf ios/Pods ios/Podfile.lock
       - name: Build iOS

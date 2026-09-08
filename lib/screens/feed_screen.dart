@@ -38,6 +38,7 @@ class FeedScreen extends StatelessWidget {
           if(postsSnapshot.connectionState==ConnectionState.waiting)return const _FeedLoading();
           if(postsSnapshot.hasError)return Center(child:Padding(padding:const EdgeInsets.all(30),child:Text('Akış yüklenemedi.\n${postsSnapshot.error}',textAlign:TextAlign.center,style:const TextStyle(color:Colors.white70))));
           final docs=postsSnapshot.data?.docs.toList()??[];
+          docs.removeWhere((doc)=>doc.data()['accountFrozen']==true);
           if(mode==FeedMode.following){docs.removeWhere((doc){final owner=(doc.data()['userId']??'').toString();return owner!=currentUser.uid&&!followingIds.contains(owner);});}else{docs.sort((a,b){final ao=(a.data()['userId']??'').toString(),bo=(b.data()['userId']??'').toString();final af=followingIds.contains(ao)?1:0,bf=followingIds.contains(bo)?1:0;if(af!=bf)return bf.compareTo(af);final at=a.data()['createdAt'],bt=b.data()['createdAt'];return at is Timestamp&&bt is Timestamp?bt.compareTo(at):0;});}
           return StreamBuilder<List<SocialEvent>>(stream:SocialEventService.instance.watchUpcoming(limit:50),builder:(context,eventsSnapshot){
             final now=DateTime.now();
