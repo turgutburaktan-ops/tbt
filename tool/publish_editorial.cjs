@@ -27,8 +27,19 @@ async function main() {
     let bytes;
     if (m.src.startsWith('https://')) {
       check(new URL(m.src).hostname === 'upload.wikimedia.org', 'Unexpected media host');
-      const res = await fetch(m.src, {signal: AbortSignal.timeout(60000)});
-      check(res.ok, `Media download failed: ${res.status}`);
+      let res;
+      for (let attempt=0; attempt<5; attempt++) {
+        res = await fetch(m.src, {signal: AbortSignal.timeout(60000)});
+        if (res.status !== 429 && res.status < 500) break;
+        if (attempt === 4) break;
+        const retry = Number(res.headers.get('retry-after'));
+        const delay = Number.isFinite(retry) && retry > 0 ? retry * 1000 : 10000 * (attempt+1);
+        check(delay <= 60000, 'Media provider requests a longer pause; rerun later');
+        await res.body?.cancel();
+        console.log(`Media provider busy; retrying in ${delay/1000}s.`);
+        await new Promise(resolve=>setTimeout(resolve,delay));
+      }
+      check(res.ok, `Media download failed: ${res.status} (${m.src})`);
       bytes = Buffer.from(await res.arrayBuffer());
     } else {
       check(m.src.startsWith('assets/spots/') && !m.src.includes('..'), 'Invalid media path');

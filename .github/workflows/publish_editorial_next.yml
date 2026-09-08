@@ -22,7 +22,6 @@ jobs:
         with:
           node-version: '20'
       - run: npm install --prefix functions --ignore-scripts --no-audit --no-fund
-      - run: node tool/publish_editorial.cjs --next-fifteen --validate
       - name: Publish reviewed editorial posts
         run: node tool/publish_editorial.cjs --next-fifteen --publish
         env:
