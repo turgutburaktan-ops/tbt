@@ -5,7 +5,7 @@ on:
     branches: [codex/frozen-catalog-import]
     paths:
       - 'tool/*frozen_shared_catalog.py'
-      - 'docs/frozen_shared_catalog_manifest.json'
+      - 'docs/frozen_shared_catalog_manifest.json.gz'
       - 'docs/frozen_shared_catalog_release.json'
       - '.github/workflows/import_frozen_shared_catalog.yml'
 
@@ -33,10 +33,10 @@ jobs:
       - name: Check fail-closed publication gates
         run: python -m unittest discover -s tool -p test_frozen_shared_catalog.py
       - name: Install Firestore client
-        if: hashFiles('docs/frozen_shared_catalog_manifest.json') != ''
+        if: hashFiles('docs/frozen_shared_catalog_manifest.json.gz') != ''
         run: pip install google-cloud-firestore==2.21.0
       - name: Authenticate for reviewed catalog only
-        if: hashFiles('docs/frozen_shared_catalog_manifest.json') != ''
+        if: hashFiles('docs/frozen_shared_catalog_manifest.json.gz') != ''
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
         run: |
@@ -56,7 +56,7 @@ jobs:
               env.write(f'GOOGLE_APPLICATION_CREDENTIALS={target}\n')
           PY
       - name: Import or dry run the exact reviewed manifest
-        if: hashFiles('docs/frozen_shared_catalog_manifest.json') != ''
+        if: hashFiles('docs/frozen_shared_catalog_manifest.json.gz') != ''
         run: |
           python - <<'PY'
           import json, subprocess
@@ -66,7 +66,7 @@ jobs:
           if mode not in ('dry-run', 'publish'):
               raise SystemExit('A reviewed release mode is required')
           args = ['python', 'tool/import_frozen_shared_catalog.py',
-              'docs/frozen_shared_catalog_manifest.json', '--sha256', release['sha256'],
+              'docs/frozen_shared_catalog_manifest.json.gz', '--sha256', release['sha256'],
               '--expected-count', str(release['expectedCount'])]
           if mode == 'publish':
               args.append('--apply')

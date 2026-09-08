@@ -26,6 +26,9 @@ class FrozenCatalogTests(unittest.TestCase):
             'LicenseUrl': {'value': 'https://creativecommons.org/licenses/by-sa/4.0/'}})[0])
         self.assertTrue(free_license({'LicenseShortName': {'value': 'Public domain'},
             'Copyrighted': {'value': 'False'}})[0])
+        for name, path in [('CC BY-SA 2.5', 'by-sa/2.5'), ('CC BY 3.0 pl', 'by/3.0/pl/deed.en')]:
+            self.assertTrue(free_license({'LicenseShortName': {'value': name},
+                'LicenseUrl': {'value': 'https://creativecommons.org/licenses/'+path}})[0])
 
     def test_manifest_cannot_silently_drop_held_records(self):
         manifest = self.manifest()

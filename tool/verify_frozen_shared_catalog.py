@@ -53,7 +53,7 @@ def fetch(url, params):
             return data
         except Exception as exc:
             error = exc
-    raise RuntimeError(f'Source request failed: {url}: {type(error).__name__}')
+    raise RuntimeError(f'Source request failed: {url}: {type(error).__name__}: {str(error)[:160]}')
 
 
 def batches(values, size):
@@ -109,10 +109,16 @@ def clean(value):
 
 
 def commons_batch(names):
-    data = fetch('https://commons.wikimedia.org/w/api.php', {'action': 'query',
-        'format': 'json', 'formatversion': '2', 'prop': 'imageinfo',
-        'iiprop': 'url|size|mime|extmetadata', 'iiurlwidth': '500',
-        'titles': '|'.join('File:' + n for n in names)})
+    try:
+        data = fetch('https://commons.wikimedia.org/w/api.php', {'action': 'query',
+            'format': 'json', 'formatversion': '2', 'prop': 'imageinfo',
+            'iiprop': 'url|size|mime|extmetadata', 'iiurlwidth': '500',
+            'titles': '|'.join('File:' + n for n in names)})
+    except RuntimeError:
+        if len(names) <= 12:
+            raise
+        mid = len(names)//2
+        return {**commons_batch(names[:mid]), **commons_batch(names[mid:])}
     return commons_pages(data)
 
 
@@ -134,8 +140,13 @@ def distance(a, b):
 def free_license(ext):
     short = clean(ext.get('LicenseShortName', {}).get('value', ''))
     url = ext.get('LicenseUrl', {}).get('value', '')
-    valid = bool(re.fullmatch(r'CC BY(?:-SA)? [1-4]\.0', short)) and bool(re.match(
-        r'https?://creativecommons\.org/licenses/by(?:-sa)?/[1-4]\.0(?:/|$)', url))
+    match = re.fullmatch(r'CC (BY(?:-SA)?) ([1-4]\.0|2\.5)(?: ([a-z]{2}))?', short)
+    parsed = urllib.parse.urlparse(url)
+    parts = parsed.path.strip('/').split('/')
+    valid = bool(match and parsed.scheme in ('http', 'https') and
+        parsed.hostname == 'creativecommons.org' and not parsed.username and not parsed.password and
+        parts[:3] == ['licenses', match[1].lower(), match[2]] and
+        (not match[3] or parts[3:4] == [match[3]]))
     valid |= short in ('CC0', 'Public domain') and (
         'creativecommons.org/publicdomain/' in url or ext.get('Copyrighted', {}).get('value') == 'False')
     return valid, short, url
@@ -181,6 +192,8 @@ def main():
             rejected.append({'id': sid, 'name': row['name'], 'reasons': ['legacy_missing_structured_district_and_original_image_proof']})
             continue
         entity = entities.get(q['wikidataQid'], {})
+        if re.search(r"(?:'da|'de| ilinde| ilçesinde) (?:cami|kilise|yapı|anıt)$", row['name'].lower()):
+            reasons.append('generic_label_requires_place_identity_review')
         coords = [v for v in claims(entity, 'P625') if isinstance(v, dict) and v.get('globe', '').endswith('/Q2')]
         if not any(distance(row, {'lat': c['latitude'], 'lng': c['longitude']}) <= 2 for c in coords):
             reasons.append('P625_coordinate_mismatch')
@@ -209,7 +222,7 @@ def main():
         ext = info.get('extmetadata', {})
         license_valid, license_name, license_url = free_license(ext)
         if not license_valid:
-            reasons.append('free_license_not_proven')
+            reasons.append('unsupported_or_unproven_free_license')
         width, height = info.get('width', 0), info.get('height', 0)
         if max(width, height) < 1600 or min(width, height) < 900 or info.get('mime') not in ('image/jpeg', 'image/png', 'image/webp'):
             reasons.append('source_resolution_or_format')

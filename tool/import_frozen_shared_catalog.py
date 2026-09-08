@@ -6,6 +6,7 @@ The Firebase credential is supplied by the deployment environment, not this file
 """
 import argparse
 import hashlib
+import gzip
 import json
 import re
 from datetime import datetime, timezone, timedelta
@@ -64,6 +65,8 @@ def main():
     parser.add_argument('--apply', action='store_true')
     args = parser.parse_args()
     raw = args.manifest.read_bytes()
+    if args.manifest.suffix == '.gz':
+        raw = gzip.decompress(raw)
     digest = hashlib.sha256(raw).hexdigest()
     if digest != args.sha256:
         raise SystemExit('Reviewed manifest digest mismatch')
