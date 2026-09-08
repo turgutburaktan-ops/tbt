@@ -64,7 +64,7 @@ jobs:
           PUBLICATION_REPAIR: ${{ contains(github.event.head_commit.message, '[repair-burak-publication]') }}
         run: |
           if [ "$CHAT_UPDATE" = "true" ]; then
-            firebase deploy --only functions:chatAction,functions:chatGroupMessageNotification,functions:pushOnNotificationCreated --project en-iyi-cekim-noktasi --non-interactive
+            firebase deploy --only functions:chatAction,functions:chatGroupMessageNotification,functions:pushOnNotificationCreated --project en-iyi-cekim-noktasi --force --non-interactive
           elif [ "$PREPARATION_UPDATE" = "true" ]; then
             firebase deploy --only functions:syncBusinessPreparationReminder,functions:sendBusinessPreparationReminders,functions:reservationPreparationAction,functions:getReservationDisputes,functions:resolveReservationDispute,functions:getBusinessDashboard,functions:getMyBusinessReservations --project en-iyi-cekim-noktasi --force --non-interactive
           elif [ "$RESERVATION_INDEX" = "true" ]; then

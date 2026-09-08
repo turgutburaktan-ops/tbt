@@ -27,11 +27,11 @@ Future<void> runChatAction(BuildContext context, String action, Map<String, dyna
   catch (e) { if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString()))); }
 }
 
-Future<void> startGroupChat(BuildContext context, {bool join = false}) async {
-  final value = await chatTextPrompt(context, join ? 'Davet kodunu gir' : 'Grup adı', maxLength: join ? 128 : 80);
+Future<void> startGroupChat(BuildContext context, {bool join = false, String initialCode = ''}) async {
+  final value = await chatTextPrompt(context, join ? 'Davet kodunu gir ve katıl' : 'Grup adı', initial: initialCode, maxLength: join ? 128 : 80);
   if (value == null || !context.mounted) return;
   try {
-    final result = await ChatService.instance.action(join ? 'join' : 'create', join ? {'code': value} : {'name': value});
+    final result = await ChatService.instance.action(join ? 'join' : 'create', join ? {'code': value.startsWith('tbt://group/') ? Uri.parse(value).pathSegments.last : value} : {'name': value});
     if (context.mounted) Navigator.push(context, MaterialPageRoute(builder: (_) => ChatScreen(otherUserId: '', groupThreadId: result['threadId'] as String)));
   } catch (e) { if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString()))); }
 }
@@ -79,8 +79,8 @@ class ChatGroupInfo extends StatelessWidget {
               final url = await ref.getDownloadURL(); if (context.mounted) await _act(context, 'photo', {'photoUrl': url});
             } catch (e) { if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString()))); }
           }),
-          ListTile(leading: const Icon(Icons.person_add_alt), title: const Text('Davet kodu oluştur ve kopyala'), subtitle: const Text('7 gün geçerli. Önceki kod iptal edilir.'), onTap: () async {
-            try { final r = await ChatService.instance.action('invite', {'threadId': threadId}); await Clipboard.setData(ClipboardData(text: r['code'] as String)); if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Kod kopyalandı. Arkadaşın Mesajlar → Davetle katıl alanına girebilir.'))); }
+          ListTile(leading: const Icon(Icons.person_add_alt), title: const Text('Davet bağlantısı oluştur ve kopyala'), subtitle: const Text('7 gün geçerli. Önceki kod iptal edilir.'), onTap: () async {
+            try { final r = await ChatService.instance.action('invite', {'threadId': threadId}); await Clipboard.setData(ClipboardData(text: 'tbt://group/${r['code']}')); if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Davet bağlantısı kopyalandı. Arkadaşın Mesajlar → Davetle katıl alanına girebilir.'))); }
             catch (e) { if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString()))); }
           }),
         ],

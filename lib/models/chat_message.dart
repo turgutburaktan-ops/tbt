@@ -16,6 +16,7 @@ class ChatThread {
   final String? sourceType;
   final String? sourceId;
   final Map<String, DateTime?> lastReadAt;
+  final Map<String, DateTime?> lastDeliveredAt;
   final Map<String, DateTime?> typingAt;
   final Map<String, Map<String, String>> messageReactions;
   final Set<String> deletedMessageIds;
@@ -34,6 +35,7 @@ class ChatThread {
     required this.lastMessageAt,
     this.sourceType,
     this.sourceId,
+    this.lastDeliveredAt = const {},
     this.lastReadAt = const <String, DateTime?>{},
     this.typingAt = const <String, DateTime?>{},
     this.messageReactions = const <String, Map<String, String>>{},
@@ -92,6 +94,7 @@ class ChatThread {
       sourceType: data['sourceType']?.toString(),
       sourceId: data['sourceId']?.toString(),
       lastReadAt: _timestampMap(data['lastReadAt']),
+      lastDeliveredAt: _timestampMap(data['lastDeliveredAt']),
       typingAt: _timestampMap(data['typingAt']),
       messageReactions: _reactionMap(data['messageReactions']),
       deletedMessageIds: rawDeleted is List

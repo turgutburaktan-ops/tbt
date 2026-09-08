@@ -85,7 +85,7 @@ async function chatActionHandler(request, db = getFirestore()) {
       if (options.length < 2 || options.length > 6 || new Set(options).size !== options.length) fail('2–6 farklı seçenek yaz.');
       const msg = ref.collection('messages').doc();
       tx.set(msg, {senderId: uid, senderName: text(request.auth.token?.name || 'Üye', 120), type: 'poll', text: text(d.question, 200), options, votes: {}, closed: false, deleted: false, createdAt: FieldValue.serverTimestamp()});
-      tx.update(ref, {lastMessage: `Anket: ${d.question}`, lastSenderId: uid, lastMessageAt: FieldValue.serverTimestamp()});
+      tx.update(ref, {lastMessageId: msg.id, lastMessage: `Anket: ${d.question}`, lastSenderId: uid, lastMessageAt: FieldValue.serverTimestamp()});
     } else {
       const msgRef = ref.collection('messages').doc(id(d.messageId)), m = (await tx.get(msgRef)).data();
       if (!m) fail('Mesaj bulunamadı.');
@@ -105,8 +105,10 @@ async function chatActionHandler(request, db = getFirestore()) {
         if (action === 'edit') {
           if (m.type !== 'text' || m.deleted || Date.now() - m.createdAt.toMillis() > 15 * 60000) fail('Metin mesajları ilk 15 dakika içinde düzenlenebilir.');
           tx.update(msgRef, {text: text(d.text), editedAt: FieldValue.serverTimestamp()});
+          if (t.lastMessageId === msgRef.id) tx.update(ref, {lastMessage: text(d.text)});
         } else {
           tx.update(msgRef, {text: 'Mesaj geri alındı', deleted: true, mediaUrl: null, replyText: null, sharedTitle: null, sharedImageUrl: null, options: [], votes: {}, reactions: {}, deletedAt: FieldValue.serverTimestamp()});
+          if (t.lastMessageId === msgRef.id || (t.lastSenderId === uid && t.lastMessage === m.text)) tx.update(ref, {lastMessage: 'Mesaj geri alındı'});
           if (t.pinnedMessageId === msgRef.id) tx.update(ref, {pinnedMessageId: FieldValue.delete()});
         }
       } else if (action === 'vote' || action === 'closePoll') {

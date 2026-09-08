@@ -10,6 +10,7 @@ import '../screens/post_deep_link_screen.dart';
 import '../screens/spot_deep_link_screen.dart';
 import '../screens/user_profile_screen.dart';
 import 'invite_link_service.dart';
+import '../widgets/chat_collaboration_controls.dart';
 
 class DeepLinkService {
   DeepLinkService._();
@@ -77,6 +78,9 @@ class DeepLinkService {
       if (navigator == null) return;
 
       switch (target.type) {
+        case 'group':
+          startGroupChat(navigator.context, join: true, initialCode: target.id);
+          break;
         case 'community':
           navigator.push(
             MaterialPageRoute(

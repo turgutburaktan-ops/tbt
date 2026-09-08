@@ -20,6 +20,7 @@ class ChatService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseStorage _storage = FirebaseStorage.instance;
 
+  final Map<String, DateTime> _delivered = {};
   final List<DateTime> _recentSends = <DateTime>[];
   final Map<String, bool> _typingState = <String, bool>{};
   final Map<String, Future<void>> _reactionInFlight = <String, Future<void>>{};
@@ -161,6 +162,12 @@ class ChatService {
           .snapshots()
           .map((snapshot) {
             final items = snapshot.docs.map(ChatThread.fromDocument).toList();
+            for (final t in items) {
+              if (t.lastSenderId != user.uid && t.lastMessageAt != null && _delivered[t.id] != t.lastMessageAt) {
+                _delivered[t.id] = t.lastMessageAt!;
+                unawaited(_firestore.collection('chat_threads').doc(t.id).update({'lastDeliveredAt.${user.uid}': FieldValue.serverTimestamp()}).catchError((Object e) { _delivered.remove(t.id); }));
+              }
+            }
             items.sort((a, b) {
               final ad =
                   a.lastMessageAt ?? DateTime.fromMillisecondsSinceEpoch(0);
@@ -211,7 +218,7 @@ class ChatService {
           .collection('messages')
           .orderBy('createdAt', descending: true)
           .limit(150)
-          .snapshots()
+          .snapshots(includeMetadataChanges: true)
           .map(
             (snapshot) => snapshot.docs
                 .map(ChatMessage.fromDocument)
@@ -313,6 +320,7 @@ class ChatService {
     required String otherUserId,
     required String text,
     ChatMessage? replyTo,
+    String? clientMessageId,
   }) async {
     final user = await _requiredUser();
     final clean = text.trim();
@@ -337,6 +345,7 @@ class ChatService {
       text: clean,
       type: 'text',
       replyTo: replyTo,
+      forcedMessageRef: clientMessageId == null ? null : _firestore.collection('chat_threads').doc(threadId).collection('messages').doc(clientMessageId),
     );
   }
 
@@ -524,7 +533,12 @@ class ChatService {
       'deleted': false,
     };
 
-    await messageRef.set(messageData).timeout(const Duration(seconds: 8));
+    final existing = await messageRef.get();
+    if (!existing.exists) {
+      await messageRef.set(messageData).timeout(const Duration(seconds: 8));
+    } else if (existing.data()?['senderId'] != user.uid) {
+      throw Exception('Geçersiz mesaj kimliği.');
+    }
 
     final lastMessage = type == 'image'
         ? '📷 Fotoğraf'
@@ -534,6 +548,7 @@ class ChatService {
     unawaited(_afterMessageSent(
       threadRef: threadRef,
       threadId: threadId,
+      messageId: messageRef.id,
       otherUserId: otherUserId,
       user: user,
       lastMessage: lastMessage,
@@ -547,12 +562,14 @@ class ChatService {
     required String threadId,
     required String otherUserId,
     required User user,
+    required String messageId,
     required String lastMessage,
     required String type,
     required String text,
   }) async {
     try {
       await threadRef.set({
+        'lastMessageId': messageId,
         'lastMessage': lastMessage,
         'lastSenderId': user.uid,
         'lastMessageAt': FieldValue.serverTimestamp(),

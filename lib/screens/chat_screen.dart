@@ -52,6 +52,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   bool _typingSent = false;
   String? _error;
   ChatMessage? _replyTo;
+  String? _retryId;
+  String? _retryText;
   String? _lastMarkedMessageId;
   Timer? _typingTimer;
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _hiddenSubscription;
@@ -145,19 +147,26 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     final id = _threadId;
     final text = _controller.text.trim();
     if (id == null || text.isEmpty || _sending || _sendingMedia) return;
+    if (_retryText != text) {
+      _retryText = text;
+      _retryId = FirebaseFirestore.instance.collection('chat_threads').doc(id).collection('messages').doc().id;
+    }
     setState(() => _sending = true);
     try {
       await ChatService.instance.sendMessage(
         threadId: id,
         otherUserId: widget.otherUserId,
         text: text,
+        clientMessageId: _retryId,
         replyTo: _replyTo,
       );
       _controller.clear();
+      _retryId = null;
+      _retryText = null;
       _stopTyping();
       if (mounted) setState(() => _replyTo = null);
     } catch (e) {
-      _showError(e);
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: const Text('Gönderim doğrulanamadı. Mesajın korunuyor.'), action: SnackBarAction(label: 'Tekrar dene', onPressed: _send)));
     } finally {
       if (mounted) setState(() => _sending = false);
     }
@@ -725,6 +734,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     required ChatMessage message,
     required bool mine,
     required bool seen,
+    required bool delivered,
     required bool removed,
     required Map<String, String> reactions,
   }) {
@@ -855,7 +865,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                           if (mine) ...[
                             const SizedBox(width: 4),
                             Icon(
-                              message.pending ? Icons.schedule : seen ? Icons.done_all_rounded : Icons.done_rounded,
+                              message.pending ? Icons.schedule : (seen || delivered) ? Icons.done_all_rounded : Icons.done_rounded,
                               size: 14,
                               color: seen ? _accent : Colors.white38,
                             ),
@@ -1345,6 +1355,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                                   message: message,
                                   mine: mine,
                                   seen: mine && _isSeen(message, thread),
+                                  delivered: mine && message.createdAt != null && (thread?.memberIds.where((id) => id != myId).any((id) => thread!.lastDeliveredAt[id] != null && !thread.lastDeliveredAt[id]!.isBefore(message.createdAt!)) ?? false),
                                   removed: removed,
                                   reactions: reactions,
                                 ),

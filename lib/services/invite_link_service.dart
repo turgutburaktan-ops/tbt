@@ -72,7 +72,7 @@ class InviteLinkService {
   }
 
   bool _validTarget(String type, String id) {
-    if (type != 'event' &&
+    if (type != 'group' && type != 'event' &&
         type != 'community' &&
         type != 'profile' &&
         type != 'post' &&
