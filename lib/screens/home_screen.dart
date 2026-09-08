@@ -1,3 +1,4 @@
+import '../widgets/playback_indexed_stack.dart';
 import 'package:flutter/material.dart';
 
 import '../models/photo_spot.dart';
@@ -30,7 +31,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFF090A0C),
-      body: IndexedStack(index: _selectedIndex, children: pages),
+      body: PlaybackIndexedStack(index: _selectedIndex, children: pages),
       floatingActionButton: FloatingActionButton(
         backgroundColor: const Color(0xFFB7BCC2),
         foregroundColor: Colors.black,
@@ -135,7 +136,7 @@ class _DiscoverHubPageState extends State<_DiscoverHubPage> {
             ),
           ),
           Expanded(
-            child: IndexedStack(
+            child: PlaybackIndexedStack(
               index: _selectedSection,
               children: const [FeedScreen(), _ExplorePage()],
             ),

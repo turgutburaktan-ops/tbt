@@ -39,6 +39,7 @@ class ContentEngagementService {
     required String ownerId,
     required String title,
     required String sourceType,
+    bool likeOnly = false,
   }) {
     final user = _auth.currentUser;
     if (user == null) {
@@ -50,6 +51,7 @@ class ContentEngagementService {
 
     final request = _toggleLikeInternal(
       user: user,
+      likeOnly: likeOnly,
       collection: collection,
       id: id,
       ownerId: ownerId,
@@ -64,6 +66,7 @@ class ContentEngagementService {
 
   Future<void> _toggleLikeInternal({
     required User user,
+    required bool likeOnly,
     required String collection,
     required String id,
     required String ownerId,
@@ -71,30 +74,35 @@ class ContentEngagementService {
     required String sourceType,
   }) async {
     final likeRef = _ref(collection, id).collection('likes').doc(user.uid);
-    final liked = await _firestore.runTransaction<bool>((tx) async {
-      final existing = await tx.get(likeRef);
-      if (existing.exists) {
-        tx.delete(likeRef);
-        return false;
-      }
-      tx.set(likeRef, {
-        'userId': user.uid,
-        'userName': (user.displayName ?? '').trim().isEmpty
-            ? 'Bir kullanıcı'
-            : user.displayName!.trim(),
-        'createdAt': FieldValue.serverTimestamp(),
-      });
-      return true;
-    }).timeout(const Duration(seconds: 8));
+    final liked = await _firestore
+        .runTransaction<bool>((tx) async {
+          final existing = await tx.get(likeRef);
+          if (existing.exists) {
+            if (likeOnly) return false;
+            tx.delete(likeRef);
+            return false;
+          }
+          tx.set(likeRef, {
+            'userId': user.uid,
+            'userName': (user.displayName ?? '').trim().isEmpty
+                ? 'Bir kullanıcı'
+                : user.displayName!.trim(),
+            'createdAt': FieldValue.serverTimestamp(),
+          });
+          return true;
+        })
+        .timeout(const Duration(seconds: 8));
 
     if (liked && ownerId.isNotEmpty && ownerId != user.uid) {
-      unawaited(_notifyLike(
-        user: user,
-        ownerId: ownerId,
-        sourceType: sourceType,
-        title: title,
-        id: id,
-      ));
+      unawaited(
+        _notifyLike(
+          user: user,
+          ownerId: ownerId,
+          sourceType: sourceType,
+          title: title,
+          id: id,
+        ),
+      );
     }
   }
 
@@ -106,15 +114,17 @@ class ContentEngagementService {
     required String id,
   }) async {
     try {
-      await AppNotificationService.instance.notifyUser(
-        userId: ownerId,
-        type: '${sourceType}_like',
-        title:
-            '${(user.displayName ?? '').trim().isEmpty ? 'Bir kullanıcı' : user.displayName!.trim()} beğendi',
-        body: title,
-        sourceId: id,
-        actorId: user.uid,
-      ).timeout(const Duration(seconds: 6));
+      await AppNotificationService.instance
+          .notifyUser(
+            userId: ownerId,
+            type: '${sourceType}_like',
+            title:
+                '${(user.displayName ?? '').trim().isEmpty ? 'Bir kullanıcı' : user.displayName!.trim()} beğendi',
+            body: title,
+            sourceId: id,
+            actorId: user.uid,
+          )
+          .timeout(const Duration(seconds: 6));
     } catch (_) {}
   }
 
@@ -149,8 +159,7 @@ class ContentEngagementService {
       return Future.error(error);
     }
 
-    final fingerprint =
-        '${user.uid}:$collection:$id:${clean.toLowerCase()}';
+    final fingerprint = '${user.uid}:$collection:$id:${clean.toLowerCase()}';
     final running = _commentInFlight[fingerprint];
     if (running != null) return running;
     final request = _addCommentInternal(
@@ -179,23 +188,28 @@ class ContentEngagementService {
     required String clean,
     required String sourceType,
   }) async {
-    await _ref(collection, id).collection('comments').add({
-      'userId': user.uid,
-      'userName': (user.displayName ?? '').trim().isEmpty
-          ? 'Fotoğrafçı'
-          : user.displayName!.trim(),
-      'text': clean,
-      'createdAt': FieldValue.serverTimestamp(),
-    }).timeout(const Duration(seconds: 8));
+    await _ref(collection, id)
+        .collection('comments')
+        .add({
+          'userId': user.uid,
+          'userName': (user.displayName ?? '').trim().isEmpty
+              ? 'Fotoğrafçı'
+              : user.displayName!.trim(),
+          'text': clean,
+          'createdAt': FieldValue.serverTimestamp(),
+        })
+        .timeout(const Duration(seconds: 8));
 
     if (ownerId.isNotEmpty && ownerId != user.uid) {
-      unawaited(_notifyComment(
-        user: user,
-        ownerId: ownerId,
-        sourceType: sourceType,
-        clean: clean,
-        id: id,
-      ));
+      unawaited(
+        _notifyComment(
+          user: user,
+          ownerId: ownerId,
+          sourceType: sourceType,
+          clean: clean,
+          id: id,
+        ),
+      );
     }
   }
 
@@ -207,15 +221,17 @@ class ContentEngagementService {
     required String id,
   }) async {
     try {
-      await AppNotificationService.instance.notifyUser(
-        userId: ownerId,
-        type: '${sourceType}_comment',
-        title:
-            '${(user.displayName ?? '').trim().isEmpty ? 'Bir kullanıcı' : user.displayName!.trim()} yorum yaptı',
-        body: clean.length > 90 ? '${clean.substring(0, 90)}…' : clean,
-        sourceId: id,
-        actorId: user.uid,
-      ).timeout(const Duration(seconds: 6));
+      await AppNotificationService.instance
+          .notifyUser(
+            userId: ownerId,
+            type: '${sourceType}_comment',
+            title:
+                '${(user.displayName ?? '').trim().isEmpty ? 'Bir kullanıcı' : user.displayName!.trim()} yorum yaptı',
+            body: clean.length > 90 ? '${clean.substring(0, 90)}…' : clean,
+            sourceId: id,
+            actorId: user.uid,
+          )
+          .timeout(const Duration(seconds: 6));
     } catch (_) {}
   }
 
@@ -235,20 +251,26 @@ class ContentEngagementService {
     final me = _auth.currentUser;
     if (me == null) throw Exception('Etiketlemek için giriş yapmalısın.');
     if (userId.isEmpty) return;
-    await _ref(collection, id).collection('tags').doc(userId).set({
-      'userId': userId,
-      'userName': userName,
-      'taggedBy': me.uid,
-      'createdAt': FieldValue.serverTimestamp(),
-    }).timeout(const Duration(seconds: 8));
+    await _ref(collection, id)
+        .collection('tags')
+        .doc(userId)
+        .set({
+          'userId': userId,
+          'userName': userName,
+          'taggedBy': me.uid,
+          'createdAt': FieldValue.serverTimestamp(),
+        })
+        .timeout(const Duration(seconds: 8));
     if (userId != me.uid) {
-      unawaited(_notifyTag(
-        me: me,
-        userId: userId,
-        sourceType: sourceType,
-        title: title,
-        id: id,
-      ));
+      unawaited(
+        _notifyTag(
+          me: me,
+          userId: userId,
+          sourceType: sourceType,
+          title: title,
+          id: id,
+        ),
+      );
     }
   }
 
@@ -260,15 +282,17 @@ class ContentEngagementService {
     required String id,
   }) async {
     try {
-      await AppNotificationService.instance.notifyUser(
-        userId: userId,
-        type: '${sourceType}_tag',
-        title:
-            '${(me.displayName ?? '').trim().isEmpty ? 'Bir kullanıcı' : me.displayName!.trim()} seni etiketledi',
-        body: title,
-        sourceId: id,
-        actorId: me.uid,
-      ).timeout(const Duration(seconds: 6));
+      await AppNotificationService.instance
+          .notifyUser(
+            userId: userId,
+            type: '${sourceType}_tag',
+            title:
+                '${(me.displayName ?? '').trim().isEmpty ? 'Bir kullanıcı' : me.displayName!.trim()} seni etiketledi',
+            body: title,
+            sourceId: id,
+            actorId: me.uid,
+          )
+          .timeout(const Duration(seconds: 6));
     } catch (_) {}
   }
 
@@ -284,11 +308,13 @@ class ContentEngagementService {
       throw Exception('Paylaşılacak içerik bulunamadı.');
     }
 
-    final threadId = await ChatService.instance.ensureDirectThread(
-      targetUserId,
-      sourceType: sourceType,
-      sourceId: sourceId,
-    ).timeout(const Duration(seconds: 8));
+    final threadId = await ChatService.instance
+        .ensureDirectThread(
+          targetUserId,
+          sourceType: sourceType,
+          sourceId: sourceId,
+        )
+        .timeout(const Duration(seconds: 8));
 
     String sharedType;
     String collection;
@@ -327,14 +353,16 @@ class ContentEngagementService {
       // Kart yine de gerçek içerik kimliğiyle gönderilir.
     }
 
-    await ChatService.instance.sendSharedContent(
-      threadId: threadId,
-      otherUserId: targetUserId,
-      sharedType: sharedType,
-      sharedId: sourceId,
-      title: title.trim().isEmpty ? 'Paylaşım' : title.trim(),
-      imageUrl: imageUrl,
-    ).timeout(const Duration(seconds: 10));
+    await ChatService.instance
+        .sendSharedContent(
+          threadId: threadId,
+          otherUserId: targetUserId,
+          sharedType: sharedType,
+          sharedId: sourceId,
+          title: title.trim().isEmpty ? 'Paylaşım' : title.trim(),
+          imageUrl: imageUrl,
+        )
+        .timeout(const Duration(seconds: 10));
   }
 
   Stream<QuerySnapshot<Map<String, dynamic>>> users() =>

@@ -1,3 +1,4 @@
+import '../widgets/playback_indexed_stack.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -109,7 +110,7 @@ class _HomeScreenState extends State<HomeScreen> {
       },
       child: Scaffold(
         backgroundColor: AppColors.background,
-        body: IndexedStack(index: _selectedIndex, children: pages),
+        body: PlaybackIndexedStack(index: _selectedIndex, children: pages),
         bottomNavigationBar: keyboardOpen
             ? null
             : _BottomNav(
@@ -377,7 +378,7 @@ class _HomeFeedHubState extends State<_HomeFeedHub> {
             Expanded(
               child: NotificationListener<ScrollNotification>(
                 onNotification: _handleFeedScroll,
-                child: IndexedStack(
+                child: PlaybackIndexedStack(
                   index: _section,
                   children: [
                     _loadedSections.contains(0)
@@ -385,7 +386,7 @@ class _HomeFeedHubState extends State<_HomeFeedHub> {
                             children: [
                               _scrollLinkedChrome(),
                               Expanded(
-                                child: IndexedStack(
+                                child: PlaybackIndexedStack(
                                   index: _photoMode,
                                   children: [
                                     _loadedPhotoModes.contains(0)
@@ -1042,7 +1043,7 @@ class _NearbyUnifiedHubState extends State<_NearbyUnifiedHub> {
                 ),
               ),
             Expanded(
-              child: IndexedStack(
+              child: PlaybackIndexedStack(
                 index: index,
                 children: [
                   const RadarScreen(embedded: true),

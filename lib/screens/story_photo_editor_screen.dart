@@ -1,3 +1,7 @@
+import 'package:video_compress/video_compress.dart';
+
+import '../widgets/app_video_player.dart';
+
 import 'dart:io';
 import 'dart:math' as math;
 import 'dart:typed_data';
@@ -17,8 +21,14 @@ import 'story_music_picker.dart';
 
 class StoryPhotoEditorScreen extends StatefulWidget {
   final File photo;
+  final bool videoMode;
   final StoryMusicSelection? initialMusic;
-  const StoryPhotoEditorScreen({super.key, required this.photo, this.initialMusic});
+  const StoryPhotoEditorScreen({
+    super.key,
+    required this.photo,
+    this.initialMusic,
+    this.videoMode = false,
+  });
 
   @override
   State<StoryPhotoEditorScreen> createState() => _StoryPhotoEditorScreenState();
@@ -48,10 +58,61 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
   _Stroke? _activeStroke;
 
   double _bgScale = 1;
+  bool _videoMuted = false;
+  double _videoSeconds = 0;
+  RangeValues _trim = const RangeValues(0, 15);
+  Future<void> _loadVideo() async {
+    try {
+      final info = await VideoCompress.getMediaInfo(widget.photo.path);
+      if (!mounted) return;
+      setState(() {
+        _videoSeconds = (info.duration ?? 0) / 1000;
+        _trim = RangeValues(0, math.min(15, _videoSeconds));
+      });
+    } catch (_) {}
+  }
+
+  Future<void> _trimVideo() async {
+    if (_videoSeconds <= 0) return;
+    var selection = _trim;
+    final result = await showModalBottomSheet<RangeValues>(
+      context: context,
+      useSafeArea: true,
+      builder: (c) => StatefulBuilder(
+        builder: (c, update) => Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('Videoyu kırp · En fazla 15 saniye'),
+              Text(
+                '${selection.start.toStringAsFixed(0)} – ${selection.end.toStringAsFixed(0)} saniye',
+              ),
+              RangeSlider(
+                min: 0,
+                max: _videoSeconds,
+                values: selection,
+                onChanged: (v) => update(() {
+                  if (v.end - v.start <= 15 && v.end - v.start >= 1)
+                    selection = v;
+                }),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(c, selection),
+                child: const Text('Uygula'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (mounted && result != null) setState(() => _trim = result);
+  }
 
   @override
   void initState() {
     super.initState();
+    if (widget.videoMode) _loadVideo();
     final music = widget.initialMusic;
     if (music != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -59,12 +120,18 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
         final size = MediaQuery.sizeOf(context);
         setState(() {
           _musicSelection = music;
-          _items.add(_OverlayItem.music(music, Offset(size.width * .5, size.height * .23)));
+          _items.add(
+            _OverlayItem.music(
+              music,
+              Offset(size.width * .5, size.height * .23),
+            ),
+          );
           _selected = _items.length - 1;
         });
       });
     }
   }
+
   double _bgRotation = 0;
   double _bgStartScale = 1;
   double _bgStartRotation = 0;
@@ -117,9 +184,36 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
     Color(0xFF8EFFB5),
   ];
   static const List<String> _emojis = <String>[
-    '😂','❤️','😍','🔥','🥰','😭','👏','✨','😎','🥳',
-    '🤍','💜','💯','🙌','🤩','😋','🌟','🎉','📸','📍',
-    '✈️','☕','🍕','🌊','🌅','🎶','⚡','🫶','🤝','😜',
+    '😂',
+    '❤️',
+    '😍',
+    '🔥',
+    '🥰',
+    '😭',
+    '👏',
+    '✨',
+    '😎',
+    '🥳',
+    '🤍',
+    '💜',
+    '💯',
+    '🙌',
+    '🤩',
+    '😋',
+    '🌟',
+    '🎉',
+    '📸',
+    '📍',
+    '✈️',
+    '☕',
+    '🍕',
+    '🌊',
+    '🌅',
+    '🎶',
+    '⚡',
+    '🫶',
+    '🤝',
+    '😜',
   ];
 
   @override
@@ -207,13 +301,14 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
   Future<void> _openMusicPicker() async {
     if (_sharing) return;
     _finishMode();
-    final StoryMusicSelection? selected = await showModalBottomSheet<StoryMusicSelection>(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => const StoryMusicPicker(),
-    );
+    final StoryMusicSelection? selected =
+        await showModalBottomSheet<StoryMusicSelection>(
+          context: context,
+          isScrollControlled: true,
+          useSafeArea: true,
+          backgroundColor: Colors.transparent,
+          builder: (_) => const StoryMusicPicker(),
+        );
     if (!mounted || selected == null) return;
 
     final Size s = MediaQuery.sizeOf(context);
@@ -221,10 +316,7 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
       _musicSelection = selected;
       _items.removeWhere((item) => item.music != null);
       _items.add(
-        _OverlayItem.music(
-          selected,
-          Offset(s.width * .5, s.height * .23),
-        ),
+        _OverlayItem.music(selected, Offset(s.width * .5, s.height * .23)),
       );
       _selected = _items.length - 1;
     });
@@ -294,10 +386,7 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
     final Size s = MediaQuery.sizeOf(context);
     setState(() {
       _items.add(
-        _OverlayItem.emoji(
-          emoji,
-          Offset(s.width * .5, s.height * .43),
-        ),
+        _OverlayItem.emoji(emoji, Offset(s.width * .5, s.height * .43)),
       );
       _selected = _items.length - 1;
     });
@@ -357,11 +446,9 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
     _finishMode();
     final StoryContextTemplateSelection? selected =
         await Navigator.push<StoryContextTemplateSelection>(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const StoryContextTemplatePicker(),
-      ),
-    );
+          context,
+          MaterialPageRoute(builder: (_) => const StoryContextTemplatePicker()),
+        );
     if (!mounted || selected == null) return;
 
     final Size s = MediaQuery.sizeOf(context);
@@ -397,10 +484,14 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
 
   String _contextIcon(String type) {
     switch (type) {
-      case 'event': return '🎟️';
-      case 'venue': return '📍';
-      case 'spot': return '🗺️';
-      default: return '✨';
+      case 'event':
+        return '🎟️';
+      case 'venue':
+        return '📍';
+      case 'spot':
+        return '🗺️';
+      default:
+        return '✨';
     }
   }
 
@@ -525,9 +616,13 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
     }
     try {
       final ui.Image image = await object.toImage(
-        pixelRatio: math.max(3.0, MediaQuery.devicePixelRatioOf(context)).toDouble(),
+        pixelRatio: math
+            .max(3.0, MediaQuery.devicePixelRatioOf(context))
+            .toDouble(),
       );
-      final ByteData? data = await image.toByteData(format: ui.ImageByteFormat.png);
+      final ByteData? data = await image.toByteData(
+        format: ui.ImageByteFormat.png,
+      );
       image.dispose();
       if (data == null) throw Exception('Story oluşturulamadı.');
       final File file = File(
@@ -552,7 +647,24 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
           .where((id) => id.isNotEmpty)
           .toSet()
           .toList(growable: false);
-      await StoryService.instance.createStory(rendered, mentionedUserIds: mentions, music: _musicSelection);
+      if (widget.videoMode) {
+        if (_videoSeconds <= 0) throw Exception('Video henüz hazırlanmadı.');
+        await StoryService.instance.createVideoStory(
+          widget.photo,
+          overlay: rendered,
+          mentionedUserIds: mentions,
+          music: _musicSelection,
+          startSeconds: _trim.start.floor(),
+          durationSeconds: _trim.end.floor() - _trim.start.floor(),
+          includeAudio: !_videoMuted,
+        );
+      } else {
+        await StoryService.instance.createStory(
+          rendered,
+          mentionedUserIds: mentions,
+          music: _musicSelection,
+        );
+      }
       final StoryContextTemplateSelection? t = _contextTemplate;
       if (t != null) {
         await StoryContextLinkService.instance.attachToLatestOwnStory(
@@ -569,17 +681,32 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
       if (mounted) {
         setState(() => _sharing = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(error.toString().replaceFirst('Exception: ', ''))),
+          SnackBar(
+            content: Text(error.toString().replaceFirst('Exception: ', '')),
+          ),
         );
       }
     } finally {
       try {
-        if (rendered != null && await rendered.exists()) await rendered.delete();
+        if (rendered != null && await rendered.exists())
+          await rendered.delete();
       } catch (_) {}
     }
   }
 
   Widget _background() {
+    if (widget.videoMode) {
+      if (_exporting) return const SizedBox.expand();
+      return AppVideoPlayer.file(
+        file: widget.photo,
+        autoplay: true,
+        muted: _videoMuted,
+        showControls: false,
+        fit: BoxFit.cover,
+        start: Duration(seconds: _trim.start.floor()),
+        end: Duration(seconds: _trim.end.floor()),
+      );
+    }
     if (_layoutCount > 0) return _layout();
     return ColoredBox(
       color: Colors.black,
@@ -610,7 +737,8 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
             child: Row(
               children: List<Widget>.generate(2, (int column) {
                 final int index = row * 2 + column;
-                if (index >= _layoutCount) return const Expanded(child: SizedBox());
+                if (index >= _layoutCount)
+                  return const Expanded(child: SizedBox());
                 final File? file = _layoutSlots[index];
                 return Expanded(
                   child: Padding(
@@ -618,15 +746,26 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
                     child: Material(
                       color: const Color(0xFF111318),
                       child: InkWell(
-                        onTap: _exporting ? null : () => _pickLayoutPhoto(index),
+                        onTap: _exporting
+                            ? null
+                            : () => _pickLayoutPhoto(index),
                         child: file == null
                             ? Center(
                                 child: Column(
                                   mainAxisSize: MainAxisSize.min,
                                   children: <Widget>[
-                                    const Icon(Icons.add_rounded, size: 36, color: Colors.white70),
+                                    const Icon(
+                                      Icons.add_rounded,
+                                      size: 36,
+                                      color: Colors.white70,
+                                    ),
                                     const SizedBox(height: 4),
-                                    Text('${index + 1}. fotoğraf', style: const TextStyle(color: Colors.white54)),
+                                    Text(
+                                      '${index + 1}. fotoğraf',
+                                      style: const TextStyle(
+                                        color: Colors.white54,
+                                      ),
+                                    ),
                                   ],
                                 ),
                               )
@@ -673,7 +812,9 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
                       ),
                     IgnorePointer(
                       ignoring: !_drawing,
-                      child: CustomPaint(painter: _Painter(_strokes, _activeStroke)),
+                      child: CustomPaint(
+                        painter: _Painter(_strokes, _activeStroke),
+                      ),
                     ),
                     ...List<Widget>.generate(_items.length, _buildItem),
                   ],
@@ -692,7 +833,9 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
                   onScaleUpdate: (ScaleUpdateDetails d) {
                     setState(() {
                       _bgOffset += d.focalPointDelta;
-                      _bgScale = (_bgStartScale * d.scale).clamp(.05, 30.0).toDouble();
+                      _bgScale = (_bgStartScale * d.scale)
+                          .clamp(.05, 30.0)
+                          .toDouble();
                       _bgRotation = _bgStartRotation + d.rotation;
                     });
                   },
@@ -704,7 +847,11 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
                   behavior: HitTestBehavior.translucent,
                   onTap: _finishMode,
                   onPanStart: (DragStartDetails d) {
-                    setState(() => _activeStroke = _Stroke(_drawColor, 5.5, <Offset>[d.localPosition]));
+                    setState(
+                      () => _activeStroke = _Stroke(_drawColor, 5.5, <Offset>[
+                        d.localPosition,
+                      ]),
+                    );
                   },
                   onPanUpdate: (DragUpdateDetails d) {
                     setState(() => _activeStroke?.points.add(d.localPosition));
@@ -712,7 +859,8 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
                   onPanEnd: (_) {
                     final _Stroke? stroke = _activeStroke;
                     setState(() {
-                      if (stroke != null && stroke.points.length > 1) _strokes.add(stroke);
+                      if (stroke != null && stroke.points.length > 1)
+                        _strokes.add(stroke);
                       _activeStroke = null;
                     });
                   },
@@ -747,25 +895,65 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
                   child: SingleChildScrollView(
                     child: Column(
                       children: <Widget>[
-                        _Tool(Icons.auto_awesome_mosaic_outlined, 'Şablon', _openContextTemplates),
+                        if (!widget.videoMode)
+                          _Tool(
+                            Icons.auto_awesome_mosaic_outlined,
+                            'Şablon',
+                            _openContextTemplates,
+                          ),
                         const SizedBox(height: 7),
+                        if (widget.videoMode) ...[
+                          _Tool(Icons.content_cut, 'Kırp', _trimVideo),
+                          _Tool(
+                            _videoMuted ? Icons.volume_off : Icons.volume_up,
+                            'Ses',
+                            () => setState(() => _videoMuted = !_videoMuted),
+                          ),
+                        ],
                         _Tool(Icons.text_fields_rounded, 'Yazı', _openText),
                         const SizedBox(height: 7),
                         if (_musicFeatureVisible) ...[
-                          _Tool(Icons.music_note_rounded, 'Müzik', _openMusicPicker),
+                          _Tool(
+                            Icons.music_note_rounded,
+                            'Müzik',
+                            _openMusicPicker,
+                          ),
                           const SizedBox(height: 7),
                         ],
-                        _Tool(Icons.emoji_emotions_outlined, 'Emoji', _openEmojiPicker),
+                        _Tool(
+                          Icons.emoji_emotions_outlined,
+                          'Emoji',
+                          _openEmojiPicker,
+                        ),
                         const SizedBox(height: 7),
-                        _Tool(Icons.alternate_email_rounded, 'Bahset', _openMentionPicker),
+                        _Tool(
+                          Icons.alternate_email_rounded,
+                          'Bahset',
+                          _openMentionPicker,
+                        ),
                         const SizedBox(height: 7),
-                        _Tool(Icons.grid_view_rounded, 'Yerleşim', _chooseLayout),
+                        if (!widget.videoMode)
+                          _Tool(
+                            Icons.grid_view_rounded,
+                            'Yerleşim',
+                            _chooseLayout,
+                          ),
                         const SizedBox(height: 7),
-                        _Tool(Icons.add_photo_alternate_outlined, 'Fotoğraf', _addPhotos),
+                        _Tool(
+                          Icons.add_photo_alternate_outlined,
+                          'Fotoğraf',
+                          _addPhotos,
+                        ),
                         const SizedBox(height: 7),
                         _Tool(Icons.draw_outlined, 'Çiz', _toggleDraw),
                         const SizedBox(height: 7),
-                        _Tool(Icons.crop_free_rounded, 'Kadraj', _toggleBackground, disabled: _layoutCount > 0),
+                        if (!widget.videoMode)
+                          _Tool(
+                            Icons.crop_free_rounded,
+                            'Kadraj',
+                            _toggleBackground,
+                            disabled: _layoutCount > 0,
+                          ),
                       ],
                     ),
                   ),
@@ -776,14 +964,25 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
                   child: Container(
                     width: 150,
                     padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(color: Colors.black87, borderRadius: BorderRadius.circular(18)),
+                    decoration: BoxDecoration(
+                      color: Colors.black87,
+                      borderRadius: BorderRadius.circular(18),
+                    ),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: <Widget>[
                         Row(
                           children: <Widget>[
-                            const Expanded(child: Text('Çizim', style: TextStyle(fontWeight: FontWeight.w900))),
-                            IconButton(onPressed: _finishMode, icon: const Icon(Icons.check)),
+                            const Expanded(
+                              child: Text(
+                                'Çizim',
+                                style: TextStyle(fontWeight: FontWeight.w900),
+                              ),
+                            ),
+                            IconButton(
+                              onPressed: _finishMode,
+                              icon: const Icon(Icons.check),
+                            ),
                           ],
                         ),
                         Wrap(
@@ -791,7 +990,10 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
                           children: _colors.map((Color c) {
                             return GestureDetector(
                               onTap: () => setState(() => _drawColor = c),
-                              child: CircleAvatar(radius: 12, backgroundColor: c),
+                              child: CircleAvatar(
+                                radius: 12,
+                                backgroundColor: c,
+                              ),
                             );
                           }).toList(),
                         ),
@@ -805,27 +1007,48 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
                   child: Container(
                     width: 155,
                     padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(color: Colors.black87, borderRadius: BorderRadius.circular(18)),
+                    decoration: BoxDecoration(
+                      color: Colors.black87,
+                      borderRadius: BorderRadius.circular(18),
+                    ),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: <Widget>[
                         Row(
                           children: <Widget>[
-                            const Expanded(child: Text('Kadraj', style: TextStyle(fontWeight: FontWeight.w900))),
-                            IconButton(onPressed: _finishMode, icon: const Icon(Icons.check)),
+                            const Expanded(
+                              child: Text(
+                                'Kadraj',
+                                style: TextStyle(fontWeight: FontWeight.w900),
+                              ),
+                            ),
+                            IconButton(
+                              onPressed: _finishMode,
+                              icon: const Icon(Icons.check),
+                            ),
                           ],
                         ),
-                        const Text('Sürükle ve iki parmakla ölçekle', textAlign: TextAlign.center, style: TextStyle(fontSize: 11, color: Colors.white70)),
+                        const Text(
+                          'Sürükle ve iki parmakla ölçekle',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: 11, color: Colors.white70),
+                        ),
                       ],
                     ),
                   ),
                 ),
-              if (_selected != null && !_moving && !_drawing && !_editingBackground)
+              if (_selected != null &&
+                  !_moving &&
+                  !_drawing &&
+                  !_editingBackground)
                 Align(
                   alignment: Alignment.bottomCenter,
                   child: Padding(
                     padding: const EdgeInsets.only(bottom: 70),
-                    child: IconButton.filled(onPressed: _removeSelected, icon: const Icon(Icons.delete_outline)),
+                    child: IconButton.filled(
+                      onPressed: _removeSelected,
+                      icon: const Icon(Icons.delete_outline),
+                    ),
                   ),
                 ),
               if (!_drawing && !_editingBackground)
@@ -836,9 +1059,15 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
                     height: 52,
                     child: FilledButton.icon(
                       onPressed: _sharing ? null : _share,
-                      style: FilledButton.styleFrom(backgroundColor: Colors.white, foregroundColor: Colors.black),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: Colors.black,
+                      ),
                       icon: const Icon(Icons.arrow_upward_rounded),
-                      label: Text(_sharing ? 'Paylaşılıyor…' : 'Story’ni paylaş', style: const TextStyle(fontWeight: FontWeight.w900)),
+                      label: Text(
+                        _sharing ? 'Paylaşılıyor…' : 'Story’ni paylaş',
+                        style: const TextStyle(fontWeight: FontWeight.w900),
+                      ),
                     ),
                   ),
                 ),
@@ -863,9 +1092,15 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
                   padding: const EdgeInsets.all(12),
                   child: Row(
                     children: <Widget>[
-                      TextButton(onPressed: _cancelText, child: const Text('Vazgeç')),
+                      TextButton(
+                        onPressed: _cancelText,
+                        child: const Text('Vazgeç'),
+                      ),
                       const Spacer(),
-                      FilledButton(onPressed: _commitText, child: const Text('Bitti')),
+                      FilledButton(
+                        onPressed: _commitText,
+                        child: const Text('Bitti'),
+                      ),
                     ],
                   ),
                 ),
@@ -926,7 +1161,15 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
                   padding: EdgeInsets.symmetric(horizontal: 16),
                   child: Align(
                     alignment: Alignment.centerLeft,
-                    child: Text('STİL VE EFEKT', style: TextStyle(color: Colors.white54, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: .9)),
+                    child: Text(
+                      'STİL VE EFEKT',
+                      style: TextStyle(
+                        color: Colors.white54,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: .9,
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -958,13 +1201,23 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
                       ),
                       IconButton.filledTonal(
                         tooltip: 'Gölge',
-                        onPressed: () => setState(() => _textShadow = !_textShadow),
-                        icon: Icon(_textShadow ? Icons.layers_rounded : Icons.layers_clear_rounded),
+                        onPressed: () =>
+                            setState(() => _textShadow = !_textShadow),
+                        icon: Icon(
+                          _textShadow
+                              ? Icons.layers_rounded
+                              : Icons.layers_clear_rounded,
+                        ),
                       ),
                       IconButton.filledTonal(
                         tooltip: 'Kontur',
-                        onPressed: () => setState(() => _textOutline = !_textOutline),
-                        icon: Icon(_textOutline ? Icons.font_download_rounded : Icons.font_download_outlined),
+                        onPressed: () =>
+                            setState(() => _textOutline = !_textOutline),
+                        icon: Icon(
+                          _textOutline
+                              ? Icons.font_download_rounded
+                              : Icons.font_download_outlined,
+                        ),
                       ),
                       const Spacer(),
                       Text(
@@ -984,7 +1237,8 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
                           value: _textSize,
                           min: 18,
                           max: 64,
-                          onChanged: (value) => setState(() => _textSize = value),
+                          onChanged: (value) =>
+                              setState(() => _textSize = value),
                         ),
                       ),
                       const Icon(Icons.text_increase_rounded, size: 18),
@@ -1003,7 +1257,12 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
                         decoration: BoxDecoration(
                           color: c,
                           shape: BoxShape.circle,
-                          border: Border.all(color: _textColor == c ? Colors.white : Colors.white38, width: 2),
+                          border: Border.all(
+                            color: _textColor == c
+                                ? Colors.white
+                                : Colors.white38,
+                            width: 2,
+                          ),
                         ),
                       ),
                     );
@@ -1042,7 +1301,8 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
               x.position += d.focalPointDelta;
               x.scale = (x.startScale * d.scale).clamp(.08, 12.0).toDouble();
               x.rotation = x.startRotation + d.rotation;
-              _overTrash = d.focalPoint.dy > MediaQuery.sizeOf(context).height - 125;
+              _overTrash =
+                  d.focalPoint.dy > MediaQuery.sizeOf(context).height - 125;
             });
           },
           onScaleEnd: (_) {
@@ -1080,7 +1340,9 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
         height: 216,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
-          border: selected && !_moving ? Border.all(color: Colors.white, width: 2) : null,
+          border: selected && !_moving
+              ? Border.all(color: Colors.white, width: 2)
+              : null,
         ),
         clipBehavior: Clip.antiAlias,
         child: Image.file(x.photo!, fit: BoxFit.cover),
@@ -1092,16 +1354,36 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
     if (x.targetUserId != null) {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 8),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18)),
-        child: Text(x.text ?? '', style: const TextStyle(color: Colors.black, fontSize: 20, fontWeight: FontWeight.w900)),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+        ),
+        child: Text(
+          x.text ?? '',
+          style: const TextStyle(
+            color: Colors.black,
+            fontSize: 20,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
       );
     }
     if (x.context) {
       return Container(
         constraints: const BoxConstraints(maxWidth: 300),
         padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 8),
-        decoration: BoxDecoration(color: Colors.black87, borderRadius: BorderRadius.circular(18)),
-        child: Text(x.text ?? '', textAlign: TextAlign.center, style: TextStyle(fontSize: x.compact ? 14 : 17, fontWeight: FontWeight.w900)),
+        decoration: BoxDecoration(
+          color: Colors.black87,
+          borderRadius: BorderRadius.circular(18),
+        ),
+        child: Text(
+          x.text ?? '',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: x.compact ? 14 : 17,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
       );
     }
     final baseStyle = GoogleFonts.getFont(
@@ -1110,7 +1392,13 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
       fontSize: x.textSize,
       fontWeight: FontWeight.w700,
       shadows: x.textShadow
-          ? const <Shadow>[Shadow(color: Colors.black87, blurRadius: 7, offset: Offset(1, 2))]
+          ? const <Shadow>[
+              Shadow(
+                color: Colors.black87,
+                blurRadius: 7,
+                offset: Offset(1, 2),
+              ),
+            ]
           : const <Shadow>[],
     );
     Widget text = Text(x.text ?? '', textAlign: x.textAlign, style: baseStyle);
@@ -1125,7 +1413,9 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
               foreground: Paint()
                 ..style = PaintingStyle.stroke
                 ..strokeWidth = 3
-                ..color = x.color.computeLuminance() > .5 ? Colors.black : Colors.white,
+                ..color = x.color.computeLuminance() > .5
+                    ? Colors.black
+                    : Colors.white,
               shadows: const [],
             ),
           ),
@@ -1140,10 +1430,12 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
           color: x.backgroundStyle == 1
               ? Colors.black.withValues(alpha: .68)
               : x.backgroundStyle == 2
-                  ? Colors.white.withValues(alpha: .88)
-                  : null,
+              ? Colors.white.withValues(alpha: .88)
+              : null,
           gradient: x.backgroundStyle == 3
-              ? const LinearGradient(colors: [Color(0xCC754CFF), Color(0xCC25C7D9)])
+              ? const LinearGradient(
+                  colors: [Color(0xCC754CFF), Color(0xCC25C7D9)],
+                )
               : null,
           borderRadius: BorderRadius.circular(14),
         ),
@@ -1151,7 +1443,11 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
       );
     }
     return ConstrainedBox(
-      constraints: const BoxConstraints(minWidth: 140, minHeight: 52, maxWidth: 320),
+      constraints: const BoxConstraints(
+        minWidth: 140,
+        minHeight: 52,
+        maxWidth: 320,
+      ),
       child: Center(child: text),
     );
   }
@@ -1166,7 +1462,12 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
           borderRadius: BorderRadius.circular(18),
           border: Border.all(color: Colors.white12),
         ),
-        child: Text(music.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900)),
+        child: Text(
+          music.title,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900),
+        ),
       );
     }
 
@@ -1187,7 +1488,11 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(12),
                 gradient: const LinearGradient(
-                  colors: <Color>[Color(0xFF38E8FF), Color(0xFF4A7DFF), Color(0xFF9B4DFF)],
+                  colors: <Color>[
+                    Color(0xFF38E8FF),
+                    Color(0xFF4A7DFF),
+                    Color(0xFF9B4DFF),
+                  ],
                 ),
               ),
               child: const Icon(Icons.music_note_rounded, color: Colors.white),
@@ -1198,8 +1503,18 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
-                  Text(music.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w900)),
-                  Text(music.artist, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, color: Colors.white60)),
+                  Text(
+                    music.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontWeight: FontWeight.w900),
+                  ),
+                  Text(
+                    music.artist,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 12, color: Colors.white60),
+                  ),
                 ],
               ),
             ),
@@ -1222,11 +1537,20 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
           const ShaderMask(
             blendMode: BlendMode.srcIn,
             shaderCallback: _musicShader,
-            child: Icon(Icons.music_note_rounded, color: Colors.white, size: 20),
+            child: Icon(
+              Icons.music_note_rounded,
+              color: Colors.white,
+              size: 20,
+            ),
           ),
           const SizedBox(width: 8),
           Flexible(
-            child: Text('${music.title} · ${music.artist}', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w800)),
+            child: Text(
+              '${music.title} · ${music.artist}',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontWeight: FontWeight.w800),
+            ),
           ),
         ],
       ),
@@ -1277,25 +1601,39 @@ class _MentionSheetState extends State<_MentionSheet> {
         children: <Widget>[
           const Padding(
             padding: EdgeInsets.all(14),
-            child: Text('Bahset', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900)),
+            child: Text(
+              'Bahset',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
+            ),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 14),
             child: TextField(
               autofocus: true,
-              onChanged: (String value) => setState(() => q = value.toLowerCase()),
-              decoration: const InputDecoration(hintText: 'Kullanıcı ara', prefixIcon: Icon(Icons.search)),
+              onChanged: (String value) =>
+                  setState(() => q = value.toLowerCase()),
+              decoration: const InputDecoration(
+                hintText: 'Kullanıcı ara',
+                prefixIcon: Icon(Icons.search),
+              ),
             ),
           ),
           Expanded(
             child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-              stream: FirebaseFirestore.instance.collection('users').limit(120).snapshots(),
+              stream: FirebaseFirestore.instance
+                  .collection('users')
+                  .limit(120)
+                  .snapshots(),
               builder: (_, snapshot) {
-                if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+                if (!snapshot.hasData)
+                  return const Center(child: CircularProgressIndicator());
                 final docs = snapshot.data!.docs.where((doc) {
                   if (doc.id == me) return false;
                   final data = doc.data();
-                  final String name = (data['displayName'] ?? data['username'] ?? '').toString().toLowerCase();
+                  final String name =
+                      (data['displayName'] ?? data['username'] ?? '')
+                          .toString()
+                          .toLowerCase();
                   return q.isEmpty || name.contains(q);
                 }).toList();
                 return ListView.builder(
@@ -1303,16 +1641,25 @@ class _MentionSheetState extends State<_MentionSheet> {
                   itemBuilder: (_, int i) {
                     final doc = docs[i];
                     final data = doc.data();
-                    final String name = (data['displayName'] ?? data['username'] ?? 'Kullanıcı').toString();
+                    final String name =
+                        (data['displayName'] ?? data['username'] ?? 'Kullanıcı')
+                            .toString();
                     final String user = (data['username'] ?? '').toString();
                     return ListTile(
-                      leading: const CircleAvatar(child: Icon(Icons.person_outline)),
+                      leading: const CircleAvatar(
+                        child: Icon(Icons.person_outline),
+                      ),
                       title: Text(name),
                       subtitle: user.isEmpty ? null : Text('@$user'),
                       onTap: () {
                         Navigator.pop(
                           context,
-                          _Mention(doc.id, user.isEmpty ? name.replaceAll(' ', '') : user.replaceFirst('@', '')),
+                          _Mention(
+                            doc.id,
+                            user.isEmpty
+                                ? name.replaceAll(' ', '')
+                                : user.replaceFirst('@', ''),
+                          ),
                         );
                       },
                     );
@@ -1376,7 +1723,12 @@ class _OverlayItem {
     this.startRotation = 0,
   });
 
-  bool get isPlainText => photo == null && !emoji && targetUserId == null && !context && music == null;
+  bool get isPlainText =>
+      photo == null &&
+      !emoji &&
+      targetUserId == null &&
+      !context &&
+      music == null;
 
   factory _OverlayItem.text(
     String text,
@@ -1414,8 +1766,17 @@ class _OverlayItem {
     return _OverlayItem(text: text, targetUserId: userId, position: position);
   }
 
-  factory _OverlayItem.context(String text, Offset position, {bool compact = false}) {
-    return _OverlayItem(text: text, position: position, context: true, compact: compact);
+  factory _OverlayItem.context(
+    String text,
+    Offset position, {
+    bool compact = false,
+  }) {
+    return _OverlayItem(
+      text: text,
+      position: position,
+      context: true,
+      compact: compact,
+    );
   }
 
   factory _OverlayItem.music(StoryMusicSelection music, Offset position) {
@@ -1437,7 +1798,10 @@ class _Painter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    for (final _Stroke stroke in <_Stroke>[...strokes, if (active != null) active!]) {
+    for (final _Stroke stroke in <_Stroke>[
+      ...strokes,
+      if (active != null) active!,
+    ]) {
       if (stroke.points.length < 2) continue;
       final Paint paint = Paint()
         ..color = stroke.color
@@ -1445,7 +1809,8 @@ class _Painter extends CustomPainter {
         ..strokeCap = StrokeCap.round
         ..strokeJoin = StrokeJoin.round
         ..style = PaintingStyle.stroke;
-      final Path path = Path()..moveTo(stroke.points.first.dx, stroke.points.first.dy);
+      final Path path = Path()
+        ..moveTo(stroke.points.first.dx, stroke.points.first.dy);
       for (final Offset point in stroke.points.skip(1)) {
         path.lineTo(point.dx, point.dy);
       }
@@ -1482,7 +1847,13 @@ class _Tool extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
                 Icon(icon, size: 21),
-                Text(label, style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w800)),
+                Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
               ],
             ),
           ),

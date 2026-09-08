@@ -23,6 +23,9 @@ class VideoMediaService {
   Future<PreparedVideoMedia> prepare(
     File source, {
     required Duration maxDuration,
+    int? startSeconds,
+    int? durationSeconds,
+    bool includeAudio = true,
   }) async {
     if (!await source.exists()) {
       throw Exception('Video dosyası bulunamadı.');
@@ -35,7 +38,12 @@ class VideoMediaService {
 
     final sourceInfo = await VideoCompress.getMediaInfo(source.path);
     final rawDuration = sourceInfo.duration ?? 0;
-    final durationMs = rawDuration.round();
+    final durationMs = durationSeconds != null
+        ? durationSeconds * 1000
+        : rawDuration.round();
+    if ((startSeconds ?? 0) < 0 ||
+        ((startSeconds ?? 0) * 1000 + durationMs) > rawDuration + 250)
+      throw Exception('Geçersiz video aralığı.');
     if (durationMs <= 0) {
       throw Exception('Video süresi okunamadı.');
     }
@@ -51,7 +59,9 @@ class VideoMediaService {
       source.path,
       quality: VideoQuality.HighestQuality,
       deleteOrigin: false,
-      includeAudio: true,
+      includeAudio: includeAudio,
+      startTime: startSeconds ?? 0,
+      duration: durationSeconds,
     );
     final compressedPath = compressed?.path;
     if (compressedPath == null || compressedPath.trim().isEmpty) {
