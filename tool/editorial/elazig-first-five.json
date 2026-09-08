@@ -1,0 +1,114 @@
+{
+  "batch": "elazig-first-five-20260908",
+  "posts": [
+    {
+      "id": "tbt-rehber-elazig-01",
+      "status": "draft",
+      "authorDisplayName": "TBT Rehber",
+      "kind": "Mekan",
+      "title": "Harput’a buradan başla",
+      "place": "Harput Kalesi",
+      "caption": "Elazığ’ı keşfetmek için ilk durağın Harput olsun. Kalenin taş dokusunu ve çevresindeki tarihi yerleşimi aynı gezide keşfet. Hafta sonu planını yaparken bu durağı listene ekle.",
+      "photo": 0,
+      "spotIds": [
+        "harput-kalesi"
+      ],
+      "cta": "Mekanı incele",
+      "source": "https://elazig.ktb.gov.tr/TR-187349/harput.html"
+    },
+    {
+      "id": "tbt-rehber-elazig-02",
+      "status": "draft",
+      "authorDisplayName": "TBT Rehber",
+      "kind": "Mekan",
+      "title": "Bir minare, pek çok ayrıntı",
+      "place": "Harput Ulu Camii",
+      "caption": "Harput Ulu Camii’nde başını biraz yukarı kaldır: tuğla minarenin desenlerine ve yapının mimari ayrıntılarına bak. Harput gezine kısa bir mimari keşif molası ekle. Ziyaretinde ibadet düzenine özen göster.",
+      "photo": 1,
+      "spotIds": [
+        "wd-q6023683-harput-ulu-camii"
+      ],
+      "cta": "Mekanı incele",
+      "source": "https://www.kulturportali.gov.tr/turkiye/elazig/gezilecekyer/harput-ulu-cami"
+    },
+    {
+      "id": "tbt-rehber-elazig-03",
+      "status": "draft",
+      "authorDisplayName": "TBT Rehber",
+      "kind": "Arşivden",
+      "title": "Harput’un siyah beyaz izi",
+      "place": "Alacalı Cami",
+      "caption": "Alacalı Cami’nin adının izini minaresinde bulabilirsin: siyah ve beyaz taşların oluşturduğu desenler yapının karakterini belirliyor. Bu arşiv fotoğrafını incele; sonraki Harput gezinde aynı ayrıntıları sen de keşfet.",
+      "photo": 2,
+      "spotIds": [
+        "wd-q6037253-alacali-cami"
+      ],
+      "cta": "Mekanı incele",
+      "source": "https://www.kulturportali.gov.tr/turkiye/elazig/gezilecekyer/alacali-cami"
+    },
+    {
+      "id": "tbt-rehber-elazig-04",
+      "status": "draft",
+      "authorDisplayName": "TBT Rehber",
+      "kind": "Rota",
+      "title": "Harput’ta üç durak",
+      "place": "Alacalı Cami → Harput Kalesi → Ulu Cami",
+      "caption": "Bir sonraki Harput gezisi için üç duraklık öneri: Alacalı Cami’nin taş işçiliği, Harput Kalesi’nin çevresi ve Ulu Cami’nin mimari ayrıntıları. Mola sürelerini kendine göre belirle; hareket etmeden önce güncel erişim durumunu kontrol et.",
+      "photo": 0,
+      "spotIds": [
+        "wd-q6037253-alacali-cami",
+        "harput-kalesi",
+        "wd-q6023683-harput-ulu-camii"
+      ],
+      "cta": "Durakları gör",
+      "source": "https://elazig.ktb.gov.tr/TR-187349/harput.html"
+    },
+    {
+      "id": "tbt-rehber-elazig-05",
+      "status": "draft",
+      "authorDisplayName": "TBT Rehber",
+      "kind": "Fotoğraf önerisi",
+      "title": "Aynı yer, üç farklı kare",
+      "place": "Harput Kalesi",
+      "caption": "Harput Kalesi’nde küçük bir fotoğraf denemesi yap: önce yapıyı çevresiyle birlikte çek, sonra taş dokusuna yaklaş, son karede ön plandaki bir dalı kullan. Çekimlerini izin verilen alanlardan yap. En sevdiğin kareyi TBT’de paylaş.",
+      "photo": 0,
+      "spotIds": [
+        "harput-kalesi"
+      ],
+      "cta": "Çekim önerisini kaydet",
+      "source": "https://commons.wikimedia.org/wiki/File:Festung_Harput.jpg"
+    }
+  ],
+  "media": [
+    {
+      "src": "assets/spots/harput-kalesi.jpg",
+      "author": "Ingeborg Simon",
+      "license": "CC BY-SA 3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Festung_Harput.jpg",
+      "date": "12 Eylül 2014",
+      "sha256": "be39ba4df98e2a5f45428b46657b4cb23aba582e99cbd501918be22fbc2399e5",
+      "contentType": "image/jpeg"
+    },
+    {
+      "src": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/Minarett_Ulu_Camii_Harput.jpg/1920px-Minarett_Ulu_Camii_Harput.jpg",
+      "author": "Ingeborg Simon",
+      "license": "CC BY-SA 3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Minarett_Ulu_Camii_Harput.jpg",
+      "date": "12 Eylül 2014",
+      "sha256": "a5e0142791b03e9227092a34b36881df5465289fbc89c4a1cc516ef49ca674fe",
+      "contentType": "image/jpeg"
+    },
+    {
+      "src": "assets/spots/elazig-alacali-camii.webp",
+      "author": "Dkask",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Harput_Alacal%C4%B1_Camii.webp",
+      "date": "Arşiv görüntüsü; çekim tarihi doğrulanmadı",
+      "sha256": "42be7782119d608efd45046b9dd0347e5acc39c6c21e6de18c4b94bc94674aa4",
+      "contentType": "image/webp"
+    }
+  ]
+}

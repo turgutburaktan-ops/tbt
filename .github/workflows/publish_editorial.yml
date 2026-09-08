@@ -1,0 +1,29 @@
+name: Publish TBT Rehber First Five
+on:
+  workflow_dispatch:
+  push:
+    branches: [codex/publish-rehber-first-five]
+    paths:
+      - '.github/workflows/publish_editorial.yml'
+      - 'tool/publish_editorial.cjs'
+      - 'tool/editorial/elazig-first-five.json'
+permissions:
+  contents: read
+concurrency:
+  group: tbt-rehber-first-five
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm ci --prefix functions --ignore-scripts
+      - run: node tool/publish_editorial.cjs --validate
+      - name: Publish reviewed editorial posts
+        run: node tool/publish_editorial.cjs --publish
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
