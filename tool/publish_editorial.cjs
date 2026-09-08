@@ -1,5 +1,5 @@
 'use strict';
-// Publishes only the five reviewed TBT Rehber drafts. No client access or rule changes.
+// Publishes allowlisted, reviewed TBT Rehber batches. No client access or rule changes.
 const fs = require('node:fs/promises');
 const path = require('node:path');
 const crypto = require('node:crypto');
@@ -12,11 +12,14 @@ const project = 'en-iyi-cekim-noktasi';
 const bucketName = `${project}.firebasestorage.app`;
 function check(ok, text) { if (!ok) throw new Error(text); }
 async function main() {
-  const data = JSON.parse(await fs.readFile(path.join(__dirname, 'editorial/elazig-first-five.json'), 'utf8'));
-  check(data.posts.length === 5 && new Set(data.posts.map(p=>p.id)).size === 5, 'Expected exactly five unique drafts');
+  const next = process.argv.includes('--next-fifteen');
+  const expected = next ? 15 : 5;
+  const data = JSON.parse(await fs.readFile(path.join(__dirname, next ? 'editorial/elazig-next-fifteen.json' : 'editorial/elazig-first-five.json'), 'utf8'));
+  check(data.batch === (next ? 'elazig-next-fifteen-20260908' : 'elazig-first-five-20260908'), 'Unexpected batch');
+  check(data.posts.length === expected && new Set(data.posts.map(p=>p.id)).size === expected, 'Unexpected draft count');
   for (const p of data.posts) {
-    check(/^tbt-rehber-elazig-0[1-5]$/.test(p.id) && p.status === 'draft', 'Unexpected draft');
-    check(p.caption && p.title && data.media[p.photo] && p.spotIds.length, 'Incomplete draft');
+    check((next ? /^tbt-rehber-elazig-(0[6-9]|1[0-9]|20)$/ : /^tbt-rehber-elazig-0[1-5]$/).test(p.id) && p.status === 'draft', 'Unexpected draft');
+    check(p.caption && p.title && data.media[p.photo] && Array.isArray(p.spotIds), 'Incomplete draft');
   }
   const buffers = [];
   for (const m of data.media) {
@@ -35,7 +38,7 @@ async function main() {
     check(crypto.createHash(m.sha256 ? 'sha256' : 'sha1').update(bytes).digest('hex') === (m.sha256 || m.sha1), `Reviewed image checksum mismatch: ${m.src}`);
     buffers.push(bytes);
   }
-  console.log('Validated five drafts and three reviewed images.');
+  console.log(`Validated ${data.posts.length} drafts and ${data.media.length} reviewed images.`);
   if (process.argv.includes('--validate')) return;
   check(process.argv.includes('--publish'), 'Use --validate or --publish');
   const admin = requireFunctions('firebase-admin');
@@ -47,11 +50,15 @@ async function main() {
   const refs=data.posts.map(p=>db.collection('posts').doc(p.id));
   function guard(snaps) {
     const [u,n,...ps]=snaps;
-    check(!u.exists || u.data().editorialBatch === data.batch, 'Publisher profile collision');
+    check(!next || (u.exists && n.exists), 'Original publisher must exist before the next batch');
+    check(!u.exists || (u.data().editorialBatch === 'elazig-first-five-20260908' && u.data().uid === uid && u.data().isEditorial === true), 'Publisher profile collision');
     check(!n.exists || n.data().uid === uid, 'Username is already owned');
     ps.forEach(p=>check(!p.exists || (p.data().editorialBatch === data.batch && p.data().userId === uid), 'Post ID collision'));
   }
   guard(await db.getAll(userRef,nameRef,...refs));
+  const priorRefs = next ? Array.from({length:5},(_,i)=>db.collection('posts').doc(`tbt-rehber-elazig-0${i+1}`)) : [];
+  const prior = priorRefs.length ? await db.getAll(...priorRefs) : [];
+  check(prior.every(s=>s.exists && s.data().userId===uid), 'Missing previous editorial posts');
   const timestamp=admin.firestore.FieldValue.serverTimestamp();
   async function upload(bytes, key, contentType) {
     const file=bucket.file(`editorial/${data.batch}/${key}`);
@@ -79,8 +86,8 @@ async function main() {
     if(!snaps[1].exists) tx.create(nameRef,{uid,username,createdAt:timestamp});
     data.posts.forEach((p,i)=>{
       if(snaps[i+2].exists) return;
-      const m=data.media[p.photo], img=media[p.photo], [latitude,longitude]=coords[p.photo];
-      const caption=`TBT Rehber · ${p.kind}\n${p.title}\n\n${p.caption}\n\nFotoğraf: ${m.author} — ${m.license}\n${m.sourcePage}\nLisans: ${m.licenseUrl}\n${m.date}. Görsel kadrajı değiştirilmedi; gösterim boyutu küçültüldü.\nBilgi: ${p.source}`;
+      const m=data.media[p.photo], img=media[p.photo], [latitude,longitude]=next ? (p.coordinates || [null,null]) : coords[p.photo];
+      const caption=`TBT Rehber · ${p.kind}\n${p.title}\n\n${p.caption}\n\nFotoğraf: ${m.author} — ${m.license}\n${m.sourcePage}\nLisans: ${m.licenseUrl}\n${m.date}. Arşiv görselidir; güncel durumu göstermeyebilir.\nBilgi: ${p.source}`;
       tx.create(refs[i],{id:p.id,userId:uid,userName:'TBT Rehber',userPhotoUrl:icon.url,userEmail:'',caption,spotName:p.place,city:'Elazığ',latitude,longitude,taggedUserIds:[],taggedUserNames:[],likesCount:0,commentsCount:0,sourceType:'post',businessVenueKey:'',businessVenueName:'',businessOfficial:false,venueKey:'',mediaType:'image',imageUrl:img.url,storagePath:img.storagePath,videoUrl:'',videoStoragePath:'',thumbnailUrl:img.url,thumbnailStoragePath:img.storagePath,durationMs:0,visibility:'public',status:'published',isEditorial:true,editorialBatch:data.batch,editorialKind:p.kind,relatedSpotIds:p.spotIds,imageAuthor:m.author,imageLicense:m.license,imageSourcePage:m.sourcePage,createdAt:timestamp,updatedAt:timestamp});
     });
   });
@@ -90,6 +97,11 @@ async function main() {
   const shown=new Set(explore.docs.map(d=>d.id));
   const visible=data.posts.filter(p=>shown.has(p.id)).length;
   console.log(JSON.stringify({published:saved.length,visibleInCurrentExploreQuery:visible,publisher:uid,postIds:saved.map(d=>d.id)}));
-  check(visible===5,'Published, but some posts fall outside the installed app query; follow-up required');
+  const allIds = [...priorRefs,...refs].map(r=>r.id);
+  const after = priorRefs.length ? await db.getAll(...priorRefs) : [];
+  check(after.every((d,i)=>d.data().createdAt.isEqual(prior[i].data().createdAt) && d.data().caption===prior[i].data().caption && d.data().imageUrl===prior[i].data().imageUrl), 'Previous post changed');
+  console.log(JSON.stringify({totalEditorialPosts:allIds.length,allVisible:allIds.every(id=>shown.has(id)),previousPostsPreserved:after.length}));
+  check(allIds.every(id=>shown.has(id)), 'Some editorial posts are outside Explore query');
+  check(visible===expected,'Published, but some posts fall outside the installed app query; follow-up required');
 }
 main().catch(e=>{console.error(e.message);process.exitCode=1;});

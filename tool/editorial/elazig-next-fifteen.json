@@ -1,0 +1,290 @@
+{
+  "batch": "elazig-next-fifteen-20260908",
+  "posts": [
+    {
+      "id": "tbt-rehber-elazig-06",
+      "status": "draft",
+      "authorDisplayName": "TBT Rehber",
+      "kind": "Mekan",
+      "title": "Hazar Gölü için bir gün ayır",
+      "place": "Hazar Gölü · Sivrice",
+      "caption": "Sivrice tarafında Hazar Gölü’nü keşif listene ekle. Bu arşiv karesindeki su, dağ ve ağaç katmanlarını kendi kadrajında yeniden ara. Planına yalnızca fotoğraf çekmeyi değil, manzarayı izlemek için bir mola da ekle. Gideceğin kıyı noktasını ve ulaşımı önceden seç.",
+      "photo": 1,
+      "spotIds": [],
+      "coordinates": null,
+      "source": "https://www.sivrice.gov.tr/hazar-golu"
+    },
+    {
+      "id": "tbt-rehber-elazig-07",
+      "status": "draft",
+      "authorDisplayName": "TBT Rehber",
+      "kind": "Mekan",
+      "title": "Palu’ya nehir tarafından bak",
+      "place": "Palu · Murat Nehri",
+      "caption": "Palu’yu tanımaya Murat Nehri ve yerleşimin birlikte göründüğü bu arşiv manzarasıyla başla. Kale ve tarihi köprüyü de ayrı duraklar olarak araştırıp gezine ekleyebilirsin. Fotoğraf genel Palu manzarasıdır; köprünün yakın çekimi değildir.",
+      "photo": 5,
+      "spotIds": [],
+      "coordinates": null,
+      "source": "https://elazig.ktb.gov.tr/TR-187351/palu-ilcesi.html"
+    },
+    {
+      "id": "tbt-rehber-elazig-08",
+      "status": "draft",
+      "authorDisplayName": "TBT Rehber",
+      "kind": "Mekan",
+      "title": "Keban’ın mavisini keşfet",
+      "place": "Keban Baraj Gölü",
+      "caption": "Keban Baraj Gölü’nün bu arşiv karesinde kıyı çizgisini takip et: suyun içine uzanan kara parçası manzarayı katmanlara ayırıyor. Kendi gezin için erişime açık bir seyir noktası seç. Fotoğraftaki çekim konumu, ziyaretçilere açık bir durak önerisi anlamına gelmiyor.",
+      "photo": 3,
+      "spotIds": [],
+      "coordinates": null,
+      "source": "https://commons.wikimedia.org/wiki/File:Keban_baraj%C4%B1-Keban-Elaz%C4%B1%C4%9F_-_panoramio.jpg"
+    },
+    {
+      "id": "tbt-rehber-elazig-09",
+      "status": "draft",
+      "authorDisplayName": "TBT Rehber",
+      "kind": "Mimari",
+      "title": "Şehir merkezinde yukarı bak",
+      "place": "İzzet Paşa Camii · Elazığ",
+      "caption": "Gazi Caddesi ve İzzet Paşa Camii’ni gösteren bu arşiv karesi, şehir gezisinde mimariye de yer açmak için bir fikir. Yapının bütünü kadar kubbe ve minarelerin çizgilerine de bak. Günlük hayatı fotoğraflarken insanların mahremiyetine, cami ziyaretinde ibadet düzenine özen göster.",
+      "photo": 2,
+      "spotIds": [
+        "wd-q28221529-izzet-pasa-camii"
+      ],
+      "coordinates": null,
+      "source": "https://commons.wikimedia.org/wiki/File:Elazig_Izzetpascha-Moschee.jpg"
+    },
+    {
+      "id": "tbt-rehber-elazig-10",
+      "status": "draft",
+      "authorDisplayName": "TBT Rehber",
+      "kind": "Mevsimlik öneri",
+      "title": "Hazarbaba’yı kış listene ekle",
+      "place": "Hazarbaba · Sivrice",
+      "caption": "Kış için şimdiden bir keşif listesi hazırlıyorsan Hazarbaba’yı araştır. Bu karlı arşiv fotoğrafı güncel hava ya da pist durumunu göstermiyor. Kayak planı yapacağın tarihte tesisin çalışma durumunu, yol koşullarını ve ekipman ihtiyacını ayrıca kontrol et.",
+      "photo": 4,
+      "spotIds": [],
+      "coordinates": null,
+      "source": "https://elazig.ktb.gov.tr/TR-58578/kis-turizmi.html"
+    },
+    {
+      "id": "tbt-rehber-elazig-11",
+      "status": "draft",
+      "authorDisplayName": "TBT Rehber",
+      "kind": "Arşivden",
+      "title": "Keban’a bir de bu açıdan bak",
+      "place": "Keban Barajı",
+      "caption": "Kasım 2004 tarihli bu karede baraj yapısı, borular ve dağların çizgileri bir araya geliyor. Manzara fotoğrafında mühendislik yapıları da güçlü bir konu olabilir. Bu paylaşım bir arşiv incelemesi; tesis içine ziyaret ya da çekim izni bulunduğu anlamına gelmiyor.",
+      "photo": 0,
+      "spotIds": [],
+      "coordinates": null,
+      "source": "https://commons.wikimedia.org/wiki/File:KebanDam.JPG"
+    },
+    {
+      "id": "tbt-rehber-elazig-12",
+      "status": "draft",
+      "authorDisplayName": "TBT Rehber",
+      "kind": "Fotoğraf önerisi",
+      "title": "Göl fotoğrafında ufku dene",
+      "place": "Hazar Gölü · Sivrice",
+      "caption": "Aynı manzarayı iki kez çek: ilkinde gökyüzüne, ikincisinde suya daha fazla yer ver. Ufuk çizgisini düz tutup sonuçları karşılaştır. Hazar Gölü’nün bu arşiv karesindeki gibi ön planda bir ağaç bulursan üçüncü fotoğrafta onu da kullan. Hangi kadrajı daha çok sevdin?",
+      "photo": 1,
+      "spotIds": [],
+      "coordinates": null,
+      "source": "https://www.sivrice.gov.tr/hazar-golu"
+    },
+    {
+      "id": "tbt-rehber-elazig-13",
+      "status": "draft",
+      "authorDisplayName": "TBT Rehber",
+      "kind": "Fotoğraf önerisi",
+      "title": "Palu’da katmanları gör",
+      "place": "Palu · Murat Nehri",
+      "caption": "Bu arşiv fotoğrafını önden arkaya oku: nehir, yerleşim ve yükselen arazi. Sen de manzara çekerken tek bir nesneye odaklanmak yerine üç katman aramayı dene. Güvenli, erişime açık bir noktada dur; kadraja derinlik katmak için kıyıya yaklaşman gerekmiyor.",
+      "photo": 5,
+      "spotIds": [],
+      "coordinates": null,
+      "source": "https://elazig.ktb.gov.tr/TR-187351/palu-ilcesi.html"
+    },
+    {
+      "id": "tbt-rehber-elazig-14",
+      "status": "draft",
+      "authorDisplayName": "TBT Rehber",
+      "kind": "Gezi planı",
+      "title": "Merkez ve Harput’u iki bölüme ayır",
+      "place": "Elazığ merkez · Harput",
+      "caption": "Elazığ gezini iki bölüm halinde planlayabilirsin: şehir merkezinde mimari keşif, ardından Harput’ta tarihi duraklar. İzzet Paşa Camii ve Harput Kalesi araştırma listene girebilir. Bu öneri ölçülmüş bir yürüyüş rotası değildir; ulaşımını, ziyaret saatlerini ve molalarını kendi programına göre belirle.",
+      "photo": 2,
+      "spotIds": [
+        "wd-q28221529-izzet-pasa-camii"
+      ],
+      "coordinates": null,
+      "source": "https://elazig.ktb.gov.tr/TR-187349/harput.html"
+    },
+    {
+      "id": "tbt-rehber-elazig-15",
+      "status": "draft",
+      "authorDisplayName": "TBT Rehber",
+      "kind": "Fotoğraf önerisi",
+      "title": "Kıyı çizgisi gözünü yönlendirsin",
+      "place": "Keban Baraj Gölü",
+      "caption": "Bu arşiv karesinde kıyının kıvrımı gözü manzaranın içine taşıyor. Kendi fotoğrafında bir kıyı, yol ya da gölge çizgisini kadrajın kenarından başlatmayı dene. Sonra aynı sahneyi çizgi ortadayken çek. İki görüntünün bakışını nasıl değiştirdiğine bak.",
+      "photo": 3,
+      "spotIds": [],
+      "coordinates": null,
+      "source": "https://commons.wikimedia.org/wiki/File:Keban_baraj%C4%B1-Keban-Elaz%C4%B1%C4%9F_-_panoramio.jpg"
+    },
+    {
+      "id": "tbt-rehber-elazig-16",
+      "status": "draft",
+      "authorDisplayName": "TBT Rehber",
+      "kind": "Mimari",
+      "title": "Harput’ta taşın izini takip et",
+      "place": "Harput Kalesi",
+      "caption": "Harput gezisinde yalnızca büyük manzaralara bakma. Taşların farklı tonlarını, yüzeylerini ve duvar çizgilerini de incele. Bir genel görünümün yanına bir ayrıntı karesi ekleyerek küçük bir fotoğraf hikayesi oluştur. Tarihi yüzeylere dokunmadan ve izin verilen alanlarda kalarak çekim yap.",
+      "photo": 6,
+      "spotIds": [
+        "harput-kalesi"
+      ],
+      "coordinates": null,
+      "source": "https://elazig.ktb.gov.tr/TR-187349/harput.html"
+    },
+    {
+      "id": "tbt-rehber-elazig-17",
+      "status": "draft",
+      "authorDisplayName": "TBT Rehber",
+      "kind": "Fotoğraf önerisi",
+      "title": "Karlı karede ayrıntıyı koru",
+      "place": "Hazarbaba · Sivrice",
+      "caption": "Kış çekimleri için küçük bir deneme: telefonunda karın çok parlak görünen bölümüne dokun ve pozlamayı biraz azaltarak ikinci bir kare çek. Kar dokusu ile gölgeleri karşılaştır. Hazarbaba’nın bu arşiv görüntüsü yalnızca örnek; bugünün koşullarını göstermiyor.",
+      "photo": 4,
+      "spotIds": [],
+      "coordinates": null,
+      "source": "https://elazig.ktb.gov.tr/TR-58578/kis-turizmi.html"
+    },
+    {
+      "id": "tbt-rehber-elazig-18",
+      "status": "draft",
+      "authorDisplayName": "TBT Rehber",
+      "kind": "Gezi planı",
+      "title": "Göl molasını aceleye getirme",
+      "place": "Hazar Gölü · Sivrice",
+      "caption": "Hazar Gölü planında durak sayısını artırmak yerine tek bir kıyı noktasına zaman ayırmayı dene. Ulaşım, kısa bir yürüyüş ve manzara molasını ayrı düşün. Yola çıkmadan hava durumuna bak, dönüş saatini belirle ve yanına aldıklarını geri götür. Sen gezide çok durak mı, uzun mola mı seversin?",
+      "photo": 1,
+      "spotIds": [],
+      "coordinates": null,
+      "source": "https://www.sivrice.gov.tr/hazar-golu"
+    },
+    {
+      "id": "tbt-rehber-elazig-19",
+      "status": "draft",
+      "authorDisplayName": "TBT Rehber",
+      "kind": "Fotoğraf önerisi",
+      "title": "Minareyi iki farklı kadrajla anlat",
+      "place": "Harput Ulu Camii",
+      "caption": "Ulu Cami’nin minaresini önce çevresiyle, sonra tuğla desenleri daha belirgin olacak şekilde çekmeyi dene. Telefonu fazla yukarı eğdiğinde çizgilerin nasıl değiştiğine bak. Kadrajını düzenlemek için ibadet edenlerin önüne geçme; çekime izin verilen alanlarda kal.",
+      "photo": 7,
+      "spotIds": [
+        "wd-q6023683-harput-ulu-camii"
+      ],
+      "coordinates": null,
+      "source": "https://www.kulturportali.gov.tr/turkiye/elazig/gezilecekyer/harput-ulu-cami"
+    },
+    {
+      "id": "tbt-rehber-elazig-20",
+      "status": "draft",
+      "authorDisplayName": "TBT Rehber",
+      "kind": "Arşivden",
+      "title": "Bir fotoğrafı çizgileriyle oku",
+      "place": "Keban Barajı",
+      "caption": "Bu Keban arşiv karesinde önce beton duvarın yatay çizgilerini, sonra boruların yönünü ve dağların sınırını bul. Fotoğrafı sadece konusu için değil, şekillerin düzeni için de incelemek kendi çekimlerine fikir verebilir. Aynı denemeyi çevrendeki bir sokak veya bina fotoğrafında yap.",
+      "photo": 0,
+      "spotIds": [],
+      "coordinates": null,
+      "source": "https://commons.wikimedia.org/wiki/File:KebanDam.JPG"
+    }
+  ],
+  "media": [
+    {
+      "src": "https://upload.wikimedia.org/wikipedia/commons/1/18/KebanDam.JPG",
+      "sha256": "be6f5435c95acbd291416dc60bfb724b29b1ed477d48188d1cb71b6d5252082c",
+      "author": "Heinz it up 57",
+      "license": "CC BY-SA 2.5",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.5/",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:KebanDam.JPG",
+      "date": "Arşiv fotoğrafı: Kasım 2004",
+      "contentType": "image/jpeg"
+    },
+    {
+      "src": "https://upload.wikimedia.org/wikipedia/commons/2/21/Hazar_G%C3%B6l%C3%BC.JPG",
+      "sha256": "ab9472651eeab764432458ea1d6f80ed0fc47818ed569d1ae884e9873cc1d5b4",
+      "author": "Berke Keleş",
+      "license": "CC BY-SA 3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Hazar_G%C3%B6l%C3%BC.JPG",
+      "date": "Arşiv fotoğrafı; Commons kaydı: 2012",
+      "contentType": "image/jpeg"
+    },
+    {
+      "src": "https://upload.wikimedia.org/wikipedia/commons/b/b6/Elazig_Izzetpascha-Moschee.jpg",
+      "sha256": "161634081496d0795f77a5bf33e287b49f804648d10ed03015c2d258f579a3ca",
+      "author": "Klaus-Peter Simon",
+      "license": "CC BY-SA 3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Elazig_Izzetpascha-Moschee.jpg",
+      "date": "Arşiv fotoğrafı: 9 Eylül 2014",
+      "contentType": "image/jpeg"
+    },
+    {
+      "src": "https://upload.wikimedia.org/wikipedia/commons/d/dc/Keban_baraj%C4%B1-Keban-Elaz%C4%B1%C4%9F_-_panoramio.jpg",
+      "sha256": "8a9832ed3b4f2d767d3cbea923f0806e11d39e7eafb74463b60996d8d7c6dd90",
+      "author": "HALUK COMERTEL",
+      "license": "CC BY 3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Keban_baraj%C4%B1-Keban-Elaz%C4%B1%C4%9F_-_panoramio.jpg",
+      "date": "Arşiv fotoğrafı: 3 Haziran 2009",
+      "contentType": "image/jpeg"
+    },
+    {
+      "src": "assets/spots/auto-elz-hazarbaba.jpg",
+      "sha256": "2a3008ae12059f1c34a663ac13d73101448c70fdb5ad449cc65f2fa9637411c1",
+      "author": "theoryyo",
+      "license": "CC BY 2.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Hazarbaba.jpg",
+      "date": "Arşiv fotoğrafı; Commons kaydı: 2009",
+      "contentType": "image/jpeg"
+    },
+    {
+      "src": "assets/spots/auto-elazig-palu-tas-koprusu.jpg",
+      "sha256": "d9657a2abb6563037e2ca18e073b9a0a955213f9d2e0773fdf869f97304c5afc",
+      "author": "Fatih alataş",
+      "license": "CC BY-SA 3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Palu_District-Elaz%C4%B1%C4%9F,_Turkey_-_panoramio.jpg",
+      "date": "Arşiv fotoğrafı: 24 Haziran 2011",
+      "contentType": "image/jpeg"
+    },
+    {
+      "src": "assets/spots/harput-kalesi.jpg",
+      "author": "Ingeborg Simon",
+      "license": "CC BY-SA 3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Festung_Harput.jpg",
+      "date": "12 Eylül 2014",
+      "sha256": "be39ba4df98e2a5f45428b46657b4cb23aba582e99cbd501918be22fbc2399e5",
+      "contentType": "image/jpeg"
+    },
+    {
+      "src": "https://upload.wikimedia.org/wikipedia/commons/9/9e/Minarett_Ulu_Camii_Harput.jpg",
+      "author": "Ingeborg Simon",
+      "license": "CC BY-SA 3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Minarett_Ulu_Camii_Harput.jpg",
+      "date": "12 Eylül 2014",
+      "contentType": "image/jpeg",
+      "sha1": "242ac20bce34ce35517d232a12922244b28c6b64"
+    }
+  ]
+}

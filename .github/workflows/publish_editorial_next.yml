@@ -1,0 +1,29 @@
+name: Publish TBT Rehber Next Fifteen
+on:
+  workflow_dispatch:
+  push:
+    branches: [codex/publish-rehber-next-fifteen]
+    paths:
+      - '.github/workflows/publish_editorial_next.yml'
+      - 'tool/publish_editorial.cjs'
+      - 'tool/editorial/elazig-next-fifteen.json'
+permissions:
+  contents: read
+concurrency:
+  group: tbt-rehber-first-five
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm install --prefix functions --ignore-scripts --no-audit --no-fund
+      - run: node tool/publish_editorial.cjs --next-fifteen --validate
+      - name: Publish reviewed editorial posts
+        run: node tool/publish_editorial.cjs --next-fifteen --publish
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
