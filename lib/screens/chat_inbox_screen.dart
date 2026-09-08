@@ -19,6 +19,7 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocus = FocusNode();
   String _query = '';
+  bool _showRequests = false;
   int _threadsRevision = 0;
 
   @override
@@ -213,7 +214,12 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
           );
         }
 
-        final threads = snapshot.data ?? const <ChatThread>[];
+        final threads = (snapshot.data ?? const <ChatThread>[]).where((t) {
+          final incoming = t.requestRecipientId == myId;
+          if (incoming && t.requestStatus == 'rejected') return false;
+          final request = incoming && t.requestStatus == 'pending';
+          return _showRequests ? request && t.lastMessageAt != null : !request;
+        }).toList();
         if (threads.isEmpty) {
           return Center(
             child: Padding(
@@ -227,13 +233,13 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
                     color: Colors.white24,
                   ),
                   const SizedBox(height: 14),
-                  const Text(
-                    'Henüz mesajın yok.',
+                  Text(
+                    _showRequests ? 'Bekleyen mesaj isteğin yok.' : 'Henüz mesajın yok.',
                     style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
                   ),
                   const SizedBox(height: 6),
-                  const Text(
-                    'Yukarıdan bir kullanıcı ara ve doğrudan mesaj gönder.',
+                  Text(
+                    _showRequests ? 'Takip etmediğin kişilerden gelen yeni mesajlar burada görünür.' : 'Yukarıdan bir kullanıcı ara ve doğrudan mesaj gönder.',
                     textAlign: TextAlign.center,
                     style: TextStyle(color: Colors.white54, height: 1.4),
                   ),
@@ -348,6 +354,14 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
                     ),
                   ),
                 ),
+                if (_query.trim().isEmpty) Padding(padding: const EdgeInsets.symmetric(horizontal: 16), child: Row(children: [
+                  ChoiceChip(label: const Text('Sohbetler'), selected: !_showRequests, onSelected: (_) => setState(() => _showRequests = false)),
+                  const SizedBox(width: 8),
+                  StreamBuilder<List<ChatThread>>(stream: ChatService.instance.myThreads(), builder: (context, snap) {
+                    final count = (snap.data ?? <ChatThread>[]).where((t) => t.requestRecipientId == myId && t.requestStatus == 'pending' && t.lastMessageAt != null).length;
+                    return ChoiceChip(label: Text('İstekler${count > 0 ? ' ($count)' : ''}'), selected: _showRequests, onSelected: (_) => setState(() => _showRequests = true));
+                  }),
+                ])),
                 Expanded(
                   child: _query.trim().isEmpty
                       ? _threads(myId)

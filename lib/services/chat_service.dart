@@ -119,19 +119,8 @@ class ChatService {
       return id;
     }
 
-    await ref.set({
-      'type': 'direct',
-      'memberIds': [user.uid, otherUserId],
-      'createdAt': FieldValue.serverTimestamp(),
-      'updatedAt': FieldValue.serverTimestamp(),
-    }).timeout(const Duration(seconds: 8));
-    unawaited(_initializeThreadMetadata(
-      ref: ref,
-      userId: user.uid,
-      sourceType: sourceType,
-      sourceId: sourceId,
-    ));
-    return id;
+    final result = await action('direct', {'otherUserId': otherUserId});
+    return result['threadId'] as String;
   }
 
   Future<void> _initializeThreadMetadata({
@@ -163,7 +152,7 @@ class ChatService {
           .map((snapshot) {
             final items = snapshot.docs.map(ChatThread.fromDocument).toList();
             for (final t in items) {
-              if (t.lastSenderId != user.uid && t.lastMessageAt != null && _delivered[t.id] != t.lastMessageAt) {
+              if (t.requestStatus != 'pending' && t.requestStatus != 'rejected' && t.lastSenderId != user.uid && t.lastMessageAt != null && _delivered[t.id] != t.lastMessageAt) {
                 _delivered[t.id] = t.lastMessageAt!;
                 unawaited(_firestore.collection('chat_threads').doc(t.id).update({'lastDeliveredAt.${user.uid}': FieldValue.serverTimestamp()}).catchError((Object e) { _delivered.remove(t.id); }));
               }
@@ -186,6 +175,7 @@ class ChatService {
       signedOutValue: 0,
       signedIn: (user) => myThreads().map((threads) {
         return threads.where((thread) {
+          if (thread.requestStatus == 'pending' || thread.requestStatus == 'rejected') return false;
           if (thread.lastSenderId == user.uid || thread.lastMessageAt == null) {
             return false;
           }
@@ -235,6 +225,8 @@ class ChatService {
   Future<void> markThreadRead(String threadId) async {
     final user = await _requiredUser();
     try {
+      final thread = await _firestore.collection('chat_threads').doc(threadId).get();
+      if (thread.data()?['requestStatus'] == 'pending' || thread.data()?['requestStatus'] == 'rejected') return;
       final prefs = await _firestore.doc('users/${user.uid}/chat_preferences/$threadId').get();
       if (prefs.data()?['readReceipts'] == false) return;
       await _firestore.collection('chat_threads').doc(threadId).update({
@@ -503,6 +495,8 @@ class ChatService {
             .toList() ??
         const <String>[];
     final isGroup = thread.data()?['type'] == 'group';
+    if (thread.data()?['requestStatus'] == 'rejected') throw Exception('Bu mesaj isteği kabul edilmedi.');
+    if (thread.data()?['requestStatus'] == 'pending' && (thread.data()?['requestRecipientId'] == user.uid || type != 'text')) throw Exception('İstek kabul edilene kadar yalnızca gönderen metin yazabilir.');
     if (!members.contains(user.uid) || (!isGroup && (members.length != 2 || !members.contains(otherUserId)))) {
       throw Exception('Bu sohbete erişimin yok.');
     }

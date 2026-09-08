@@ -33,6 +33,12 @@ exports.pushOnNotificationCreated = onDocumentCreated(
     if (['message','group_message'].includes(data.type) && data.sourceId) {
       const preferences = await db.doc(`users/${userId}/chat_preferences/${data.sourceId}`).get();
       if (preferences.data()?.muted) return;
+      const thread = (await db.doc(`chat_threads/${data.sourceId}`).get()).data();
+      if (thread?.requestStatus === 'rejected') return;
+      if (thread?.requestStatus === 'pending') {
+        // Requests stay in the requests inbox without repeated push interruptions.
+        return;
+      }
     }
     const tokensSnap = await db.collection('users').doc(userId).collection('push_tokens').get();
     const tokens = tokensSnap.docs

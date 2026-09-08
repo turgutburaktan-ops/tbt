@@ -15,6 +15,27 @@ async function chatActionHandler(request, db = getFirestore()) {
   const uid = request.auth?.uid;
   if (!uid) throw new HttpsError('unauthenticated', 'Giriş yapmalısın.');
   const d = request.data || {}, action = d.action;
+  if (action === 'direct') {
+    const other = id(d.otherUserId);
+    if (other === uid) fail('Kendine mesaj gönderemezsin.');
+    const threadId = `dm_${[uid, other].sort().join('_')}`;
+    const ref = db.doc(`chat_threads/${threadId}`);
+    return db.runTransaction(async tx => {
+      const [existing, target, blockedA, blockedB, follows] = await Promise.all([
+        tx.get(ref), tx.get(db.doc(`users/${other}`)), tx.get(db.doc(`users/${uid}/blocked/${other}`)),
+        tx.get(db.doc(`users/${other}/blocked/${uid}`)), tx.get(db.doc(`users/${other}/following/${uid}`)),
+      ]);
+      if (blockedA.exists || blockedB.exists) fail('Bu kullanıcıyla mesajlaşma kullanılamıyor.');
+      if (!target.exists) fail('Kullanıcı bulunamadı.');
+      if (existing.exists) {
+        if (existing.data().type !== 'direct' || !existing.data().memberIds.includes(uid) || !existing.data().memberIds.includes(other)) fail('Geçersiz sohbet.');
+        return {threadId};
+      }
+      tx.set(ref, {type: 'direct', memberIds: [uid, other], requestSenderId: uid, requestRecipientId: other,
+        requestStatus: follows.exists ? 'accepted' : 'pending', createdAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp()});
+      return {threadId};
+    });
+  }
   if (action === 'create') {
     const ref = db.collection('chat_threads').doc();
     await ref.set({type: 'group', name: text(d.name, 80), ownerId: uid, adminIds: [uid], memberIds: [uid], createdAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp(), lastMessage: 'Grup oluşturuldu', lastMessageAt: FieldValue.serverTimestamp()});
@@ -47,7 +68,10 @@ async function chatActionHandler(request, db = getFirestore()) {
       const blocks = await Promise.all([tx.get(db.doc(`users/${uid}/blocked/${other}`)), tx.get(db.doc(`users/${other}/blocked/${uid}`))]);
       if (blocks.some(s => s.exists)) fail('Bu kullanıcıyla mesajlaşma kullanılamıyor.');
     }
-    if (action === 'preferences') {
+    if (action === 'acceptRequest' || action === 'rejectRequest') {
+      if (t.type !== 'direct' || t.requestRecipientId !== uid || t.requestStatus !== 'pending') fail('Bu istek üzerinde işlem yapamazsın.');
+      tx.update(ref, {requestStatus: action === 'acceptRequest' ? 'accepted' : 'rejected', requestRespondedAt: FieldValue.serverTimestamp()});
+    } else if (action === 'preferences') {
       if (typeof d.muted !== 'boolean' || typeof d.readReceipts !== 'boolean') fail('Geçersiz tercih.');
       tx.set(db.doc(`users/${uid}/chat_preferences/${threadId}`), {muted: d.muted, readReceipts: d.readReceipts}, {merge: true});
       if (!d.readReceipts) tx.update(ref, {[`lastReadAt.${uid}`]: FieldValue.delete()});

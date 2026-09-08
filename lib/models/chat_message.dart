@@ -5,6 +5,8 @@ class ChatThread {
   final String name;
   final String type;
   final String ownerId;
+  final String requestStatus;
+  final String requestRecipientId;
   final String? photoUrl;
   final List<String> adminIds;
   final String? pinnedMessageId;
@@ -26,6 +28,8 @@ class ChatThread {
     this.name = 'Grup',
     this.type = 'direct',
     this.ownerId = '',
+    this.requestStatus = 'accepted',
+    this.requestRecipientId = '',
     this.photoUrl,
     this.adminIds = const [],
     this.pinnedMessageId,
@@ -82,6 +86,8 @@ class ChatThread {
       name: (data['name'] ?? 'Grup').toString(),
       type: (data['type'] ?? 'direct').toString(),
       ownerId: (data['ownerId'] ?? '').toString(),
+      requestStatus: (data['requestStatus'] ?? 'accepted').toString(),
+      requestRecipientId: (data['requestRecipientId'] ?? '').toString(),
       photoUrl: data['photoUrl']?.toString(),
       pinnedMessageId: data['pinnedMessageId']?.toString(),
       adminIds: List<String>.from(data['adminIds'] ?? []),

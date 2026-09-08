@@ -234,6 +234,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _showVoiceRecorderSheet() async {
+    if (_currentThread?.requestStatus == 'pending') { _showError(Exception('Ses göndermek için isteğin kabul edilmesini bekle.')); return; }
     if (_sending || _sendingMedia) return;
     await showModalBottomSheet<void>(
       context: context,
@@ -273,6 +274,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _showAttachMenu() async {
+    if (_currentThread?.requestStatus == 'pending') { _showError(Exception('Fotoğraf ve ses göndermek için isteğin kabul edilmesini bekle.')); return; }
     final action = await showModalBottomSheet<String>(
       context: context,
       useSafeArea: true,
@@ -1169,6 +1171,24 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     );
   }
 
+  Widget _requestBanner(ChatThread thread, String myId) {
+    final incoming = thread.requestRecipientId == myId;
+    return Container(padding: const EdgeInsets.all(12), color: _panel, child: Column(mainAxisSize: MainAxisSize.min, children: [
+      Text(incoming ? 'Mesaj isteği · Kabul edene kadar okundu bilgin paylaşılmaz.' : 'Mesaj isteğin gönderildi. Kabul edilene kadar yalnızca metin gönderebilirsin.', style: const TextStyle(fontSize: 12)),
+      if (incoming) Wrap(spacing: 8, children: [
+        FilledButton(onPressed: () async {
+          try { await ChatService.instance.action('acceptRequest', {'threadId': thread.id}); await ChatService.instance.markThreadRead(thread.id); }
+          catch (e) { _showError(e); }
+        }, child: const Text('Kabul et')),
+        TextButton(onPressed: () => runChatAction(context, 'rejectRequest', {'threadId': thread.id}), child: const Text('Reddet')),
+        TextButton(onPressed: () async {
+          try { await ChatService.instance.action('rejectRequest', {'threadId': thread.id}); await ChatService.instance.blockUser(widget.otherUserId); if (mounted) Navigator.pop(context); }
+          catch (e) { _showError(e); }
+        }, child: const Text('Engelle')),
+      ]),
+    ]));
+  }
+
   Future<void> _showSafetyMenu() async {
     if (widget.groupThreadId != null) { await Navigator.push(context, MaterialPageRoute(builder: (_) => ChatGroupInfo(threadId: widget.groupThreadId!))); return; }
     final action = await showModalBottomSheet<String>(
@@ -1380,7 +1400,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                       ),
                     ),
                     _typingIndicator(thread),
-                    _composer(),
+                    if (thread?.requestStatus == 'pending') _requestBanner(thread!, myId),
+                    if (thread?.requestStatus == 'rejected') const Padding(padding: EdgeInsets.all(20), child: Text('Bu mesaj isteği kabul edilmedi.'))
+                    else if (thread?.requestStatus != 'pending' || thread?.requestRecipientId != myId) _composer(),
                   ],
                 );
               },
