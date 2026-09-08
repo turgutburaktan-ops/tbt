@@ -406,16 +406,16 @@ class _HomeFeedHubState extends State<_HomeFeedHub> {
                 top: 150,
                 child: Semantics(
                   button: true,
-                  label: 'Kamerayı aç',
+                  label: 'Paylaşım oluştur',
                   child: GestureDetector(
                     behavior: HitTestBehavior.opaque,
                     onTap: _openCamera,
                     child: Container(
-                      width: 30,
+                      width: 44,
                       height: 72,
                       alignment: Alignment.centerLeft,
                       child: Container(
-                        width: 20,
+                        width: 34,
                         height: 68,
                         decoration: const BoxDecoration(
                           gradient: AppColors.accentGradient,
@@ -424,8 +424,8 @@ class _HomeFeedHubState extends State<_HomeFeedHub> {
                           ),
                         ),
                         child: const Icon(
-                          Icons.chevron_right_rounded,
-                          size: 17,
+                          Icons.ios_share_rounded,
+                          size: 19,
                           color: Colors.white,
                         ),
                       ),
