@@ -655,7 +655,7 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
           mentionedUserIds: mentions,
           music: _musicSelection,
           startSeconds: _trim.start.floor(),
-          durationSeconds: (_trim.end - _trim.start).floor(),
+          durationSeconds: _trim.end.floor() - _trim.start.floor(),
           includeAudio: !_videoMuted,
         );
       } else {

@@ -54,6 +54,55 @@ class _VideoPlatform extends VideoPlayerPlatform {
 
 void main() {
   testWidgets(
+    'scrolling replaces the playing video without retaining old audio',
+    (tester) async {
+      final platform = _VideoPlatform();
+      VideoPlayerPlatform.instance = platform;
+      final scroll = ScrollController();
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: ListView(
+              controller: scroll,
+              cacheExtent: 900,
+              children: const [
+                SizedBox(
+                  height: 600,
+                  child: AppVideoPlayer.network(
+                    url: 'https://example.com/scroll-one.mp4',
+                    autoplay: true,
+                  ),
+                ),
+                SizedBox(
+                  height: 600,
+                  child: AppVideoPlayer.network(
+                    url: 'https://example.com/scroll-two.mp4',
+                    autoplay: true,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+      for (var i = 0; i < 8; i++) {
+        await tester.pump(const Duration(milliseconds: 100));
+      }
+      expect(platform.playing.values.where((p) => p).length, 1);
+      final first = platform.playing.entries.firstWhere((p) => p.value).key;
+      scroll.jumpTo(600);
+      for (var i = 0; i < 8; i++) {
+        await tester.pump(const Duration(milliseconds: 100));
+      }
+      expect(platform.playing[first], false);
+      expect(platform.playing.values.where((p) => p).length, 1);
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump(const Duration(milliseconds: 300));
+      scroll.dispose();
+    },
+  );
+
+  testWidgets(
     'only visible tab plays; covered route and background stop playback',
     (tester) async {
       final platform = _VideoPlatform();

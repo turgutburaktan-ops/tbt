@@ -9,6 +9,26 @@ import 'package:visibility_detector/visibility_detector.dart';
 class _PlaybackOwner {
   static final players = <_AppVideoPlayerState>{};
   static final positions = <String, Duration>{};
+  static Timer? timer;
+  static void register(_AppVideoPlayerState p) {
+    players.add(p);
+    timer ??= Timer.periodic(
+      const Duration(milliseconds: 150),
+      (_) => update(),
+    );
+  }
+
+  static void unregister(_AppVideoPlayerState p) {
+    players.remove(p);
+    if (players.isEmpty) {
+      timer?.cancel();
+      timer = null;
+    }
+    while (positions.length > 100) {
+      positions.remove(positions.keys.first);
+    }
+  }
+
   static void update() {
     _AppVideoPlayerState? winner;
     for (final p in players) {
@@ -16,8 +36,9 @@ class _PlaybackOwner {
         winner = p;
     }
     for (final p in players) {
-      p._applyPlayback(identical(p, winner));
+      if (!identical(p, winner)) p._applyPlayback(false);
     }
+    winner?._applyPlayback(true);
   }
 }
 
@@ -70,7 +91,6 @@ class AppVideoPlayer extends StatefulWidget {
 class _AppVideoPlayerState extends State<AppVideoPlayer>
     with WidgetsBindingObserver {
   VideoPlayerController? _controller;
-  Timer? _timer;
   double _visible = 0;
   bool _ready = false,
       _failed = false,
@@ -98,11 +118,7 @@ class _AppVideoPlayerState extends State<AppVideoPlayer>
     _muted = widget.muted;
     _wantsPlay = widget.autoplay;
     WidgetsBinding.instance.addObserver(this);
-    _PlaybackOwner.players.add(this);
-    _timer = Timer.periodic(
-      const Duration(milliseconds: 150),
-      (_) => _PlaybackOwner.update(),
-    );
+    _PlaybackOwner.register(this);
   }
 
   @override
@@ -215,9 +231,8 @@ class _AppVideoPlayerState extends State<AppVideoPlayer>
   @override
   void dispose() {
     ++_attempt;
-    _timer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
-    _PlaybackOwner.players.remove(this);
+    _PlaybackOwner.unregister(this);
     if (_ready) _PlaybackOwner.positions[_source] = _controller!.value.position;
     _controller?.dispose();
     super.dispose();

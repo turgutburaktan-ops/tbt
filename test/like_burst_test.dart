@@ -30,6 +30,7 @@ void main() {
     await tester.tap(find.byType(LikeBurst));
     await tester.pump(const Duration(milliseconds: 60));
     await tester.tap(find.byType(LikeBurst));
+    await tester.pump(); // Establish the first animation frame.
     await tester.pump(const Duration(milliseconds: 100));
     expect(calls, 1);
     expect(
