@@ -8,6 +8,7 @@ import '../models/photo_spot.dart';
 import '../models/nearby_venue.dart';
 import '../theme/app_theme.dart';
 import '../widgets/firebase_media_image.dart';
+import '../widgets/discover_content_grid.dart';
 import 'post_detail_screen.dart';
 import 'reels_screen.dart';
 import 'user_profile_screen.dart';
@@ -368,14 +369,7 @@ class _HomeDiscoverScreenState extends State<HomeDiscoverScreen> {
               ),
             );
           }
-          return GridView.builder(
-            padding: const EdgeInsets.fromLTRB(2, 0, 2, 20),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 3,
-              mainAxisSpacing: 2,
-              crossAxisSpacing: 2,
-              childAspectRatio: .78,
-            ),
+          return DiscoverContentGrid(
             itemCount: docs.length,
             itemBuilder: (context, index) {
               final doc = docs[index];

@@ -8,8 +8,10 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 /// support app-open, interstitial or rewarded placements.
 class SponsoredNativeAd extends StatefulWidget {
   final EdgeInsetsGeometry margin;
+  final bool compact;
   const SponsoredNativeAd({
     super.key,
+    this.compact = false,
     this.margin = const EdgeInsets.symmetric(vertical: 6),
   });
 
@@ -50,7 +52,7 @@ class _SponsoredNativeAdState extends State<SponsoredNativeAd> {
           },
         ),
         nativeTemplateStyle: NativeTemplateStyle(
-          templateType: TemplateType.medium,
+          templateType: widget.compact ? TemplateType.small : TemplateType.medium,
           mainBackgroundColor: const Color(0xFF12161B),
           cornerRadius: 18,
           callToActionTextStyle: NativeTemplateTextStyle(
@@ -116,7 +118,11 @@ class _SponsoredNativeAdState extends State<SponsoredNativeAd> {
                 ],
               ),
             ),
-            SizedBox(height: 290, child: AdWidget(ad: _ad!)),
+            SizedBox(
+              height: widget.compact ? 120 : 290,
+              width: double.infinity,
+              child: AdWidget(ad: _ad!),
+            ),
           ],
         ),
       ),
