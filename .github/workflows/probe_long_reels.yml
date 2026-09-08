@@ -1,0 +1,37 @@
+name: Probe Long Reels Candidates
+on:
+  push:
+    branches: [codex/publish-sound-videos]
+    paths: [.github/workflows/probe_long_reels.yml]
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update -qq && sudo apt-get install -y ffmpeg
+      - name: Download and inspect candidates
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/tbt-long
+          curl -fL --retry 3 --max-time 180 -sS -o /tmp/tbt-long/cappadocia.webm 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Cappadocia_4K_-_TURKEY.webm'
+          curl -fL --retry 3 --max-time 180 -sS -o /tmp/tbt-long/gallipoli.webm 'https://commons.wikimedia.org/wiki/Special:Redirect/file/%C3%87anakkale_-_Gelibolu_(Gallipoli_-_Turkey).webm'
+          echo SHA256_START
+          sha256sum /tmp/tbt-long/*.webm
+          echo SHA256_END
+          for f in cappadocia gallipoli; do
+            echo "${f^^}_PROBE_START"
+            ffprobe -v error -show_entries format=duration,size:stream=codec_name,codec_type,width,height -of json "/tmp/tbt-long/$f.webm"
+            echo "${f^^}_PROBE_END"
+          done
+          ffmpeg -y -v error -ss 20 -i /tmp/tbt-long/cappadocia.webm -frames:v 1 /tmp/tbt-long/cappadocia-20.jpg
+          ffmpeg -y -v error -ss 35 -i /tmp/tbt-long/cappadocia.webm -frames:v 1 /tmp/tbt-long/cappadocia-35.jpg
+          ffmpeg -y -v error -ss 20 -i /tmp/tbt-long/gallipoli.webm -frames:v 1 /tmp/tbt-long/gallipoli-20.jpg
+          ffmpeg -y -v error -ss 60 -i /tmp/tbt-long/gallipoli.webm -frames:v 1 /tmp/tbt-long/gallipoli-60.jpg
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tbt-long-reels-frames
+          path: /tmp/tbt-long/*.jpg
