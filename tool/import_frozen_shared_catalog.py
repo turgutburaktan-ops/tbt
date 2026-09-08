@@ -51,6 +51,7 @@ def documents(manifest, digest, expected_count):
             'status': 'published', 'coordinateVerified': True, 'imageVerified': True,
             'catalogPublisher': 'tbt-frozen-shared-v1', 'catalogManifestSha256': digest,
             'category': row.get('category', 'Genel'), 'rating': 0,
+            'tags': ['Gezilecek Yer', 'Doğrulanmış', row['city'], row['district']],
         }
     return docs
 

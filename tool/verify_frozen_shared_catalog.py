@@ -30,16 +30,26 @@ def fetch(url, params):
     target = url + '?' + urllib.parse.urlencode(params)
     path = CACHE / (hashlib.sha256(target.encode()).hexdigest() + '.json')
     if path.exists() and time.time() - path.stat().st_mtime < 86400:
-        return json.loads(path.read_text())
+        try:
+            return json.loads(path.read_text())
+        except json.JSONDecodeError:
+            pass
     error = None
     for _ in range(2):
         try:
-            req = urllib.request.Request(target, headers={'User-Agent': UA})
+            if url == 'https://commons.wikimedia.org/w/api.php':
+                # Read-only action=query via POST avoids long encoded file URLs.
+                req = urllib.request.Request(url, data=urllib.parse.urlencode(params).encode(),
+                    headers={'User-Agent': UA, 'Content-Type': 'application/x-www-form-urlencoded'})
+            else:
+                req = urllib.request.Request(target, headers={'User-Agent': UA})
             with urllib.request.urlopen(req, timeout=25) as response:
                 data = json.load(response)
             if 'error' in data:
                 raise ValueError(str(data['error'].get('code', 'source_error')))
-            path.write_text(json.dumps(data, ensure_ascii=False))
+            temporary = path.with_suffix('.tmp')
+            temporary.write_text(json.dumps(data, ensure_ascii=False))
+            temporary.replace(path)
             return data
         except Exception as exc:
             error = exc
@@ -103,6 +113,10 @@ def commons_batch(names):
         'format': 'json', 'formatversion': '2', 'prop': 'imageinfo',
         'iiprop': 'url|size|mime|extmetadata', 'iiurlwidth': '500',
         'titles': '|'.join('File:' + n for n in names)})
+    return commons_pages(data)
+
+
+def commons_pages(data):
     pages = {p['title'].removeprefix('File:'): p for p in data.get('query', {}).get('pages', [])}
     for item in data.get('query', {}).get('normalized', []):
         source, dest = item['from'].removeprefix('File:'), item['to'].removeprefix('File:')
@@ -132,12 +146,21 @@ def main():
     base = audit_v2.base
     rows = base.places()
     quality = json.loads(base.QUALITY.read_text())
-    images = base.images()
+    categories = {}
+    for path in base.DATA.glob('verified_travel_places*.dart'):
+        for body in base.PHOTO_RE.findall(path.read_text()):
+            categories[base.sf(body, 'id')] = base.sf(body, 'category') or 'Genel'
     entities = entity_graph({q[k] for q in quality.values() for k in ('wikidataQid', 'provinceQid', 'districtQid')})
     names = sorted({title(q['sourcePage']) for q in quality.values()})
     pages = {}
+    for cached in CACHE.glob('*.json'):
+        if time.time() - cached.stat().st_mtime < 86400:
+            try:
+                pages.update(commons_pages(json.loads(cached.read_text())))
+            except json.JSONDecodeError:
+                pass
     with concurrent.futures.ThreadPoolExecutor(max_workers=3) as pool:
-        tasks = batches(names, 15)
+        tasks = batches([name for name in names if name not in pages], 50)
         for index, result in enumerate(pool.map(commons_batch, tasks)):
             pages.update(result)
             if index % 10 == 0:
@@ -172,6 +195,10 @@ def main():
             reasons.append('district_boundary_or_Wikidata_conflict')
         if sid in ('wd-q2380189-hazar-golu', 'wd-q34894335-keban-baraj-golu'):
             reasons.append('manual_geography_review_required')
+        if sid == 'wd-q6037253-alacali-cami' and title(q['sourcePage']) == 'Festung Harput.jpg':
+            # Commons explicitly identifies this image as Harput Castle. A P18
+            # statement can itself be wrong; it is not proof of visual identity.
+            reasons.append('P18_photo_depicts_Harput_Castle_not_Alacali_Mosque')
         if base.norm(row['city']) != base.norm(q['province']):
             reasons.append('province_label_mismatch')
         name = title(q['sourcePage'])
@@ -203,6 +230,7 @@ def main():
         seen_names.add(key)
         seen_ids.add(sid)
         accepted.append({**row, 'district': q['district'], 'provinceQid': q['provinceQid'],
+            'category': categories.get(sid, 'Genel'),
             'districtQid': q['districtQid'], 'wikidataQid': q['wikidataQid'],
             'imageUrl': preview, 'imageOriginalUrl': info['url'], 'imageSourcePage': info['descriptionurl'],
             'imageAuthor': artist, 'imageLicense': license_name, 'imageLicenseUrl': license_url,
