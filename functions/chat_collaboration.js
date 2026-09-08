@@ -15,6 +15,16 @@ async function chatActionHandler(request, db = getFirestore()) {
   const uid = request.auth?.uid;
   if (!uid) throw new HttpsError('unauthenticated', 'Giriş yapmalısın.');
   const d = request.data || {}, action = d.action;
+  if (action === 'messagePrivacy') {
+    if (!['showReadReceipts', 'showOnlineStatus'].includes(d.key) || typeof d.enabled !== 'boolean') fail('Geçersiz gizlilik tercihi.');
+    const update = {[d.key]: d.enabled};
+    if (d.key === 'showOnlineStatus' && !d.enabled) {
+      update.isOnline = false;
+      update.lastSeenAt = FieldValue.delete();
+    }
+    await db.doc(`users/${uid}`).set(update, {merge: true});
+    return {ok: true};
+  }
   if (action === 'direct') {
     const other = id(d.otherUserId);
     if (other === uid) fail('Kendine mesaj gönderemezsin.');

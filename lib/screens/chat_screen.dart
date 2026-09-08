@@ -912,8 +912,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       builder: (context, snapshot) {
         final data = snapshot.data?.data() ?? const <String, dynamic>{};
         final photoUrl = (data['photoUrl'] ?? '').toString();
-        final online = data['isOnline'] == true;
-        final raw = data['lastSeenAt'];
+        final online = data['showOnlineStatus'] != false && data['isOnline'] == true;
+        final raw = data['showOnlineStatus'] == false ? null : data['lastSeenAt'];
         final lastSeen = raw is Timestamp ? raw.toDate() : null;
         return Row(
           children: [

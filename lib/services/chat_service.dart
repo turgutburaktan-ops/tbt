@@ -225,6 +225,8 @@ class ChatService {
   Future<void> markThreadRead(String threadId) async {
     final user = await _requiredUser();
     try {
+      final profile = await _firestore.collection('users').doc(user.uid).get();
+      if (profile.data()?['showReadReceipts'] == false) return;
       final thread = await _firestore.collection('chat_threads').doc(threadId).get();
       if (thread.data()?['requestStatus'] == 'pending' || thread.data()?['requestStatus'] == 'rejected') return;
       final prefs = await _firestore.doc('users/${user.uid}/chat_preferences/$threadId').get();
@@ -251,6 +253,12 @@ class ChatService {
     }
   }
 
+  Future<void> refreshPresence() async {
+    _lastPresenceValue = null;
+    _lastPresenceAt = null;
+    await setPresence(true);
+  }
+
   Future<void> setPresence(bool online) async {
     final user = _auth.currentUser;
     if (user == null) {
@@ -265,6 +273,12 @@ class ChatService {
       return;
     }
     try {
+      final profile = await _firestore.collection('users').doc(user.uid).get();
+      if (profile.data()?['showOnlineStatus'] == false) {
+        _lastPresenceValue = null;
+        _lastPresenceAt = null;
+        return;
+      }
       await _firestore.collection('users').doc(user.uid).set({
         'isOnline': online,
         'lastSeenAt': FieldValue.serverTimestamp(),

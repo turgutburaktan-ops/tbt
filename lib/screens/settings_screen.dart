@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../services/auth_service.dart';
 import '../theme/app_theme.dart';
 import 'password_change_screen.dart';
+import 'message_privacy_settings_screen.dart';
 import 'phone_verification_screen.dart';
 import 'safety_privacy_center_screen.dart';
 import 'social_events_screen.dart';
@@ -468,6 +469,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       _verification,
                     ),
                     _section('Gizlilik'),
+                    _tile(Icons.chat_outlined, 'Mesaj ayarları', 'Görüldü ve çevrimiçi görünürlüğü', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MessagePrivacySettingsScreen()))),
                     _switchTile(
                       Icons.lock_person_outlined,
                       'Gizli hesap',

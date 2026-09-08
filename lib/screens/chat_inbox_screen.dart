@@ -6,6 +6,7 @@ import '../models/chat_message.dart';
 import '../services/app_notification_service.dart';
 import '../services/chat_service.dart';
 import 'chat_screen.dart';
+import 'message_privacy_settings_screen.dart';
 import '../widgets/chat_collaboration_controls.dart';
 
 class ChatInboxScreen extends StatefulWidget {
@@ -297,6 +298,7 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
         foregroundColor: Colors.white,
         title: const Text('Mesajlar'),
         actions: [
+          IconButton(tooltip: 'Mesaj ayarları', icon: const Icon(Icons.settings_outlined), onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MessagePrivacySettingsScreen()))),
           PopupMenuButton<String>(tooltip: 'Grup sohbeti', icon: const Icon(Icons.group_add_outlined), onSelected: (v) => startGroupChat(context, join: v == 'join'), itemBuilder: (_) => const [PopupMenuItem(value: 'create', child: Text('Yeni grup')), PopupMenuItem(value: 'join', child: Text('Davetle katıl'))]),
           IconButton(
             tooltip: 'Yeni mesaj',
