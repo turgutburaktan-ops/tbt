@@ -21,7 +21,7 @@ async function main(){
   else execFileSync('curl',['-fL','--retry','3','--max-time','120','-sS','-o',original,p.src]);
   check(hash(await fs.readFile(original))===p.sha256,'Source checksum mismatch');
   const video=path.join(dir,p.key+'.mp4'),thumb=path.join(dir,p.key+'.jpg');
-  execFileSync('ffmpeg',['-v','error','-i',original,'-map','0:v:0','-map','0:a:0','-c:a','aac','-b:a','192k','-c:v','libx264','-preset','slow','-crf','16','-pix_fmt','yuv420p','-movflags','+faststart',video]);
+  execFileSync('ffmpeg',['-v','error','-i',original,'-map','0:v:0','-map','0:a:0','-c:a','aac','-b:a','192k','-c:v','libx264','-preset','slow','-crf','20','-pix_fmt','yuv420p','-movflags','+faststart',video]);
   execFileSync('ffmpeg',['-v','error','-ss','1','-i',video,'-frames:v','1','-vf','scale=640:-2',thumb]);
   const probe=JSON.parse(execFileSync('ffprobe',['-v','error','-show_entries','format=duration:stream=codec_name,codec_type,width,height','-of','json',video],{encoding:'utf8'}));
   check(probe.streams.some(s=>s.codec_type==='audio'&&s.codec_name==='aac'), 'Missing sound');
