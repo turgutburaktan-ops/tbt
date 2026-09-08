@@ -1,33 +1,33 @@
 {
-  "batch": "city-sound-videos-20260908",
+  "batch": "city-sound-videos-20260908-b2",
   "posts": [
     {
-      "id": "tbt-rehber-city-sound-01",
-      "key": "istanbul",
-      "title": "İstanbul’da vapurların peşinde ⛴️",
-      "place": "İstanbul",
-      "city": "İstanbul",
-      "caption": "Vapurlar, deniz ve İstanbul silüeti. Sen bu manzarayı hangi kıyıdan izlemeyi seversin?",
-      "src": "https://upload.wikimedia.org/wikipedia/commons/3/3c/Istanbul_01.ogv",
-      "sha256": "ac5834c93408d9614244bbe6ce16b47e9660aaff15be59966f0d797f70303d62",
-      "author": "Mostafameraji",
+      "id": "tbt-rehber-city-sound-03",
+      "key": "pamukkale",
+      "title": "Burası gerçekten Türkiye'de mi? 🤍",
+      "place": "Pamukkale Travertenleri, Denizli",
+      "city": "Denizli",
+      "caption": "Bembeyaz travertenlerin arasından akan termal su… Pamukkale'yi gün doğumunda mı, gün batımında mı görmek isterdin? 📍 Kaydet ve rotana ekle.",
+      "src": "https://upload.wikimedia.org/wikipedia/commons/1/12/%D0%A2%D1%80%D0%B0%D0%B2%D0%B5%D1%80%D1%82%D0%B8%D0%BD%D0%B8.webm",
+      "sha256": "92f00cfd08a89fd746729e21a0f538474945a5cc457dfe363cba8f1fb7ed67f9",
+      "author": "Сарапулов",
       "license": "CC BY-SA 4.0",
       "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
-      "sourcePage": "https://commons.wikimedia.org/wiki/File:Istanbul_01.ogv"
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:%D0%A2%D1%80%D0%B0%D0%B2%D0%B5%D1%80%D1%82%D0%B8%D0%BD%D0%B8.webm"
     },
     {
-      "id": "tbt-rehber-city-sound-02",
-      "key": "asansor",
-      "title": "İzmir’e bir de yukarıdan bak 💙",
-      "place": "Tarihi Asansör, İzmir",
-      "city": "İzmir",
-      "caption": "Tarihi Asansör’den körfeze kısa bir bakış. İzmir’de en sevdiğin manzara neresi?",
-      "src": "https://upload.wikimedia.org/wikipedia/commons/1/13/%C4%B0zmir_Tarihi_Asans%C3%B6r_Manzaras%C4%B1.webm",
-      "sha256": "9bf1659fb4e92416fef7d57c8a8a57dbb2707fa7730fa2ba5955faaa294d4b70",
-      "author": "Gcinar1",
+      "id": "tbt-rehber-city-sound-04",
+      "key": "kizkulesi",
+      "title": "İstanbul'un ortasında tek başına 🗼",
+      "place": "Kız Kulesi, İstanbul",
+      "city": "İstanbul",
+      "caption": "Boğazın ortasında İstanbul'un en ikonik silüetlerinden biri. Kız Kulesi'ni Avrupa yakasından mı, Anadolu yakasından mı izlemeyi seversin? 📍 Kaydet, İstanbul rotana ekle.",
+      "src": "https://upload.wikimedia.org/wikipedia/commons/9/96/Maiden%27s_tower_K%C4%B1z_Kulesi_Istanbul.webm",
+      "sha256": "7935b34044166a43075a1273bd0eb03bd5fe24f552f75638b78c76239c02d378",
+      "author": "Jwslubbock",
       "license": "CC BY-SA 4.0",
       "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
-      "sourcePage": "https://commons.wikimedia.org/wiki/File:%C4%B0zmir_Tarihi_Asans%C3%B6r_Manzaras%C4%B1.webm"
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Maiden%27s_tower_K%C4%B1z_Kulesi_Istanbul.webm"
     }
   ]
 }
