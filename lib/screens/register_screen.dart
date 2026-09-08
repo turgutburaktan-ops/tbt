@@ -123,7 +123,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
       await AuthService.instance.register(email: email, password: password);
       accountCreated = true;
       await AuthService.instance.updateDisplayName(fullName);
-      await FirebaseAuth.instance.currentUser?.sendEmailVerification();
 
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
@@ -141,6 +140,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
           'updatedAt': FieldValue.serverTimestamp(),
         }, SetOptions(merge: true));
         await UsernameService.instance.reserveForCurrentUser(username);
+      }
+
+      // Account/profile creation is complete. A mail provider failure must not
+      // delete the account or invalidate a verification link already sent.
+      try {
+        await FirebaseAuth.instance.currentUser
+            ?.sendEmailVerification()
+            .timeout(const Duration(seconds: 12));
+      } catch (_) {
+        if (mounted) {
+          _showMessage(
+            'Hesabın oluşturuldu ancak doğrulama e-postası gönderimi '
+            'tamamlanamadı. Doğrulama ekranından yeniden gönderebilirsin.',
+          );
+        }
       }
 
       if (!mounted) return;
