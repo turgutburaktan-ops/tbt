@@ -20,7 +20,7 @@ jobs:
       - name: Install function dependencies
         run: npm install --prefix functions
       - name: Test restored authentication and broadcasts
-        run: node --test functions/test/auth_helpers.test.js functions/test/broadcast_worker.test.js
+        run: node --test functions/test/auth_helpers.test.js functions/test/broadcast_worker.test.js functions/test/account_lifecycle.test.js
       - name: Test business publication
         run: node --test functions/test/business_publication.test.js
       - name: Test music
@@ -61,6 +61,7 @@ jobs:
         run: node functions/scripts/repair_business_publication.js dining:user_4xFEQcn0tjLktR5Cq85n
       - name: Deploy Firebase Functions
         env:
+          ACCOUNT_CLEANUP_UPDATE: ${{ contains(github.event.head_commit.message, '[account-cleanup]') }}
           RESTORE_UPDATE: ${{ contains(github.event.head_commit.message, '[restore-update]') }}
           MUSIC_UPDATE: ${{ contains(github.event.head_commit.message, '[music-update]') }}
           CHAT_UPDATE: ${{ contains(github.event.head_commit.message, '[chat-update]') }}
@@ -69,7 +70,9 @@ jobs:
           RESERVATION_UPDATE: ${{ contains(github.event.head_commit.message, '[reservation-update]') }}
           PUBLICATION_REPAIR: ${{ contains(github.event.head_commit.message, '[repair-burak-publication]') }}
         run: |
-          if [ "$RESTORE_UPDATE" = "true" ]; then
+          if [ "$ACCOUNT_CLEANUP_UPDATE" = "true" ]; then
+            firebase deploy --only functions:deleteAccountNow --project en-iyi-cekim-noktasi --non-interactive
+          elif [ "$RESTORE_UPDATE" = "true" ]; then
             firebase deploy --only functions:signInWithUsername,functions:resolveUsernameForLogin,functions:sendAdminBroadcast,functions:deliverAdminBroadcast,functions:adminDeleteVenue,functions:getAdminInsights,functions:getAdminBusinessClaims,functions:freezeAccount,functions:unfreezeAccount,functions:deleteAccountNow,functions:pushOnNotificationCreated --project en-iyi-cekim-noktasi --non-interactive
           elif [ "$MUSIC_UPDATE" = "true" ]; then
             firebase deploy --only functions:preparePostMusic,functions:registerOriginalPostSound,functions:countPostSoundUse,functions:revokeDeletedOriginalSound,functions:removeDisabledSound,functions:approveMusicSubmission --project en-iyi-cekim-noktasi --force --non-interactive
@@ -87,7 +90,7 @@ jobs:
             firebase deploy --only functions --project en-iyi-cekim-noktasi --force --non-interactive
           fi
       - name: Restore callable invoker access
-        if: "!contains(github.event.head_commit.message, '[restore-update]') && !contains(github.event.head_commit.message, '[music-update]') && !contains(github.event.head_commit.message, '[chat-update]') && !contains(github.event.head_commit.message, '[repair-burak-publication]') && !contains(github.event.head_commit.message, '[reservation-update]') && !contains(github.event.head_commit.message, '[reservation-index]') && !contains(github.event.head_commit.message, '[preparation-update]')"
+        if: "!contains(github.event.head_commit.message, '[account-cleanup]') && !contains(github.event.head_commit.message, '[restore-update]') && !contains(github.event.head_commit.message, '[music-update]') && !contains(github.event.head_commit.message, '[chat-update]') && !contains(github.event.head_commit.message, '[repair-burak-publication]') && !contains(github.event.head_commit.message, '[reservation-update]') && !contains(github.event.head_commit.message, '[reservation-index]') && !contains(github.event.head_commit.message, '[preparation-update]')"
         run: |
           set -euo pipefail
           gcloud auth activate-service-account --key-file="$GOOGLE_APPLICATION_CREDENTIALS"

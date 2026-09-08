@@ -130,6 +130,7 @@ exports.deleteAccountNow = onCall(
       ['business_claims', 'applicantUid'],
       ['analytics_events', 'userId'],
       ['app_errors', 'userId'],
+      ['reservation_disputes', 'userUid'],
     ];
     const groupQueries = [
       ['comments', 'userId'],
@@ -140,6 +141,7 @@ exports.deleteAccountNow = onCall(
       ['ratings', 'userId'],
       ['helpful', 'userId'],
       ['messages', 'senderId'],
+      ['reservations', 'userUid'],
       ['followers', 'userId'],
       ['followers', 'uid'],
       ['following', 'userId'],
