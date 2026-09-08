@@ -1,0 +1,77 @@
+name: Import Frozen Shared Catalog
+
+on:
+  push:
+    branches: [codex/frozen-catalog-import]
+    paths:
+      - 'tool/*frozen_shared_catalog.py'
+      - 'docs/frozen_shared_catalog_manifest.json'
+      - 'docs/frozen_shared_catalog_release.json'
+      - '.github/workflows/import_frozen_shared_catalog.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: frozen-shared-catalog-import
+  cancel-in-progress: false
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            tool
+            docs
+            lib/data
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Check fail-closed publication gates
+        run: python -m unittest discover -s tool -p test_frozen_shared_catalog.py
+      - name: Install Firestore client
+        if: hashFiles('docs/frozen_shared_catalog_manifest.json') != ''
+        run: pip install google-cloud-firestore==2.21.0
+      - name: Authenticate for reviewed catalog only
+        if: hashFiles('docs/frozen_shared_catalog_manifest.json') != ''
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          raw = os.environ.get('FIREBASE_SERVICE_ACCOUNT', '')
+          if not raw:
+              raise SystemExit('FIREBASE_SERVICE_ACCOUNT is missing; no catalog writes performed')
+          key = json.loads(raw)
+          if key.get('project_id') != 'en-iyi-cekim-noktasi':
+              raise SystemExit('Credential project differs from the reviewed destination')
+          target = Path(os.environ['RUNNER_TEMP']) / 'frozen-catalog-credential.json'
+          target.write_text(json.dumps(key))
+          target.chmod(0o600)
+          with open(os.environ['GITHUB_ENV'], 'a') as env:
+              env.write(f'GOOGLE_APPLICATION_CREDENTIALS={target}\n')
+          PY
+      - name: Import or dry run the exact reviewed manifest
+        if: hashFiles('docs/frozen_shared_catalog_manifest.json') != ''
+        run: |
+          python - <<'PY'
+          import json, subprocess
+          from pathlib import Path
+          release = json.loads(Path('docs/frozen_shared_catalog_release.json').read_text())
+          mode = release['mode']
+          if mode not in ('dry-run', 'publish'):
+              raise SystemExit('A reviewed release mode is required')
+          args = ['python', 'tool/import_frozen_shared_catalog.py',
+              'docs/frozen_shared_catalog_manifest.json', '--sha256', release['sha256'],
+              '--expected-count', str(release['expectedCount'])]
+          if mode == 'publish':
+              args.append('--apply')
+          subprocess.run(args, check=True)
+          PY
+      - name: Remove temporary credential
+        if: always()
+        run: rm -f "$RUNNER_TEMP/frozen-catalog-credential.json"
