@@ -54,8 +54,8 @@ jobs:
           with info_path.open('rb') as f:
               info = plistlib.load(f)
 
-          info['NSCameraUsageDescription'] = 'Fotoğraf ve video çekmek için kameraya erişim gerekir.'
-          info['NSMicrophoneUsageDescription'] = 'Video kaydında ses kullanmak için mikrofona erişim gerekir.'
+          info['NSCameraUsageDescription'] = 'TBT, gönderi ve hikayelerinde paylaşacağın fotoğraf ve videoları çekmek için kameranı kullanır. Örneğin gezdiğin bir mekanın videosunu çekip TBT profilinde paylaşabilirsin.'
+          info['NSMicrophoneUsageDescription'] = 'TBT, çektiğin videolara ses eklemek ve sohbetlerde sesli mesaj kaydetmek için mikrofonunu kullanır. Örneğin bir mekan videosunu anlatımlı kaydedebilirsin.'
           info['NSLocationWhenInUseUsageDescription'] = 'Yakındaki mekanları, etkinlikleri ve rota mesafelerini göstermek için konum kullanılır.'
           info['NSPhotoLibraryUsageDescription'] = 'Story ve paylaşım için galerinden fotoğraf veya video seçebilmek için erişim gerekir.'
           info['NSPhotoLibraryAddUsageDescription'] = 'Düzenlediğin içerikleri fotoğraf arşivine kaydedebilmek için izin gerekir.'
