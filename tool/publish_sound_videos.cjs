@@ -9,12 +9,12 @@ const check=(ok,message)=>{if(!ok)throw Error(message);};
 const hash=b=>crypto.createHash('sha256').update(b).digest('hex');
 async function main(){
  const data=JSON.parse(await fs.readFile(path.join(__dirname,'editorial/sound-videos.json'),'utf8'));
- check(data.batch==='city-sound-videos-20260908'&&data.posts.length===2,'Unexpected batch');
+ check(data.batch==='city-sound-videos-20260908-b2'&&data.posts.length===2,'Unexpected batch');
  check(new Set(data.posts.map(p=>p.id)).size===2,'Duplicate IDs');
  const dir=await fs.mkdtemp('/tmp/tbt-videos-');
  const prepared=[];
  for(const p of data.posts){
-  check(/^tbt-rehber-city-sound-0[1-2]$/.test(p.id)&&/^[a-z]+$/.test(p.key),'Unexpected ID');
+  check(/^tbt-rehber-city-sound-0[3-4]$/.test(p.id)&&/^[a-z]+$/.test(p.key),'Unexpected ID');
   check(new URL(p.src).hostname==='upload.wikimedia.org'&&p.author&&p.licenseUrl&&p.caption,'Unreviewed source');
   const original=path.join(dir,p.key+'-original.mp4');
   if(process.env.EDITORIAL_LOCAL_VIDEO_DIR)await fs.copyFile(path.join(process.env.EDITORIAL_LOCAL_VIDEO_DIR,p.key+'.webm'),original);
