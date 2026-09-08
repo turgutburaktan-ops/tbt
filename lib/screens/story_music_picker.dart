@@ -260,7 +260,7 @@ class _StoryMusicPickerState extends State<StoryMusicPicker> {
       isScrollControlled: true,
       backgroundColor: const Color(0xFF0B0D12),
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
-      builder: (_) => _ClipSheet(track: track, maxClipDurationMs: widget.maxClipDurationMs),
+      builder: (_) => SizedBox(height: MediaQuery.sizeOf(context).height * .85, child: SingleChildScrollView(child: _ClipSheet(track: track, maxClipDurationMs: widget.maxClipDurationMs))),
     );
     if (!mounted || selected == null) return;
     Navigator.pop(context, selected);
@@ -427,7 +427,7 @@ class _ClipSheetState extends State<_ClipSheet> {
           value: _originalVolume,
           onChanged: (v) => setState(() => _originalVolume = v),
         ),
-        Row(children: <Widget>[
+        if (widget.maxClipDurationMs <= 15000) Row(children: <Widget>[
           Expanded(child: _FadeChoice(
             label: 'Giriş',
             value: _fadeInMs,
@@ -441,7 +441,7 @@ class _ClipSheetState extends State<_ClipSheet> {
           )),
         ]),
         const SizedBox(height: 14),
-        Wrap(spacing: 8, children: <Widget>[
+        if (widget.maxClipDurationMs <= 15000) Wrap(spacing: 8, children: <Widget>[
           ChoiceChip(label: const Text('Minimal'), selected: _style == 'minimal', onSelected: (_) => setState(() => _style = 'minimal')),
           ChoiceChip(label: const Text('Kapaklı'), selected: _style == 'card', onSelected: (_) => setState(() => _style = 'card')),
           ChoiceChip(label: const Text('Şarkı adı'), selected: _style == 'title', onSelected: (_) => setState(() => _style = 'title')),

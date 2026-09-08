@@ -1,0 +1,28 @@
+const assert=require('node:assert/strict');
+const host=process.env.FIRESTORE_EMULATOR_HOST;
+if(!/^(127\.0\.0\.1|localhost):\d+$/.test(host||''))throw Error('Local emulator required');
+const base=`http://${host}/v1/projects/demo-tbt/databases/(default)/documents`;
+const encode=v=>Buffer.from(JSON.stringify(v)).toString('base64url');
+const now=Math.floor(Date.now()/1000);
+const token=uid=>`${encode({alg:'none',typ:'JWT'})}.${encode({iss:'https://securetoken.google.com/demo-tbt',aud:'demo-tbt',sub:uid,user_id:uid,iat:now,exp:now+3600,firebase:{sign_in_provider:'custom'}})}.`;
+const fields=d=>Object.fromEntries(Object.entries(d).map(([k,v])=>[k,typeof v==='boolean'?{booleanValue:v}:typeof v==='number'?{integerValue:String(v)}:{stringValue:v}]));
+const write=(path,d,auth=token('musician'))=>fetch(`${base}/${path}`,{method:'PATCH',headers:{Authorization:`Bearer ${auth}`,'Content-Type':'application/json'},body:JSON.stringify({fields:fields(d)})});
+(async()=>{
+ const track={active:true,commercialUseAllowed:true,derivativesAllowed:true,catalogDistributionAllowed:true,audioUrl:'https://example.com/audio',durationMs:60000};
+ assert.equal((await write('music_tracks/test-track',track,'owner')).status,200);
+ assert.equal((await write('music_tracks/forged',track)).status,403,'user cannot license their own track');
+ const music={musicTrackId:'test-track',musicPreviewUrl:track.audioUrl,musicStartMs:0,musicDurationMs:15000};
+ const post={userId:'musician',caption:'Test',spotName:'Elazığ',mediaType:'video',durationMs:15000};
+ assert.equal((await write('posts/music-plain',post)).status,200,'ordinary video still works');
+ assert.equal((await write('posts/music-forged',{...post,...music,videoUrl:'https://example.com/forged'})).status,403,'music requires a server render');
+ const id='music-rendered',url='https://example.com/rendered';
+ assert.equal((await write(`music_renders/${id}`,{ownerId:'musician',videoUrl:url,musicTrackId:'test-track'},'owner')).status,200);
+ const rendered={...post,...music,videoUrl:url,originalVideoStoragePath:`users/musician/posts/${id}.mp4`};
+ assert.equal((await write(`posts/${id}`,rendered)).status,200,'approved server render accepted');
+ assert.equal((await write('music_renders/forged',{ownerId:'musician'})).status,403,'render cannot be forged');
+ assert.equal((await write('posts/music-original-forged',{...post,originalSoundTrackId:'other-sound'})).status,403);
+ await write('music_tracks/test-track',{...track,active:false},'owner');
+ await fetch(`${base}/posts/${id}`,{method:'DELETE',headers:{Authorization:'Bearer owner'}});
+ assert.equal((await write(`posts/${id}`,rendered)).status,403,'disabled sound cannot be published');
+ console.log('Music rules: original posts, approved render, forged render, forged track and revoked license passed');
+})().catch(e=>{console.error(e);process.exitCode=1;});

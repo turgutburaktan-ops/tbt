@@ -29,3 +29,4 @@ jobs:
           java-version: '21'
       - run: npm install -g firebase-tools
       - run: firebase emulators:exec --only firestore --project demo-tbt "node tool/test_chat_collaboration.cjs" --non-interactive
+      - run: firebase emulators:exec --only firestore --project demo-tbt "node tool/test_music_rules.cjs" --non-interactive

@@ -18,7 +18,7 @@ function selection(track, d) {
  check(Number.isFinite(volume)&&volume>=0&&volume<=1&&Number.isFinite(original)&&original>=0&&original<=1,'Ses seviyesi geçersiz.');
  return {start,duration,volume,original};
 }
-async function ffmpeg(args) { return exec(require('ffmpeg-static'), ['-nostdin','-y','-v','error',...args], {timeout:240000,maxBuffer:4*1024*1024}); }
+async function ffmpeg(args) { return exec(require('ffmpeg-static'), ['-nostdin','-y','-v','error',...args.flatMap(x=>x==='-i'?['-protocol_whitelist','file,pipe','-format_whitelist','mov,mp3,aac,wav,ogg','-i']:[x])], {timeout:240000,maxBuffer:4*1024*1024}); }
 async function download(storagePath, destination, max=250*1024*1024) {
  const file=getStorage().bucket(BUCKET).file(storagePath);const [meta]=await file.getMetadata();
  check(Number(meta.size)>0&&Number(meta.size)<=max,'Dosya boyutu uygun değil.');await file.download({destination});
@@ -62,14 +62,15 @@ exports.registerOriginalPostSound = onDocumentCreated({...options,document:'post
  const dir=await fs.mkdtemp(path.join(os.tmpdir(),'tbt-original-'));
  try{
   const input=path.join(dir,'video.mp4'),output=path.join(dir,'audio.m4a');await download(p.videoStoragePath,input);
-  try{await ffmpeg(['-i',input,'-vn','-map','0:a:0','-t','60','-c:a','aac','-b:a','192k',output]);}
+  let measuredDuration;
+  try{const r=await ffmpeg(['-i',input,'-vn','-map','0:a:0','-t','60','-c:a','aac','-b:a','192k','-progress','pipe:1',output]); measuredDuration=Math.min(60000,Math.floor(Math.max(0,...[...r.stdout.matchAll(/out_time_us=(\d+)/g)].map(m=>Number(m[1])/1000))));check(measuredDuration>=1000,'Ses bir saniyeden kısa.');}
   catch(e){if(String(e.stderr||'').includes('matches no streams')){await event.data.ref.update({originalSoundStatus:'no_audio'});return;}throw e;}
   const audioStoragePath=`music/original/${uid}/${postId}.m4a`,audioUrl=await upload(output,audioStoragePath,'audio/mp4');
   const user=(await db.doc(`users/${uid}`).get()).data()||{}, artist='@'+(user.username||user.displayName||uid);
   await db.runTransaction(async tx=>{
    const [source,existing]=await Promise.all([tx.get(event.data.ref),tx.get(trackRef)]);
    if(!source.exists||source.data().originalSoundConsent!==true||existing.exists)return;
-   tx.create(trackRef,{provider:'original',ownerId:uid,sourcePostId:postId,title:'Orijinal Ses',artist,artistUserId:uid,audioUrl,audioStoragePath,durationMs:Math.min(60000,Number(p.durationMs)||15000),category:'Orijinal Sesler',mood:'Orijinal Sesler',license:'TBT-ORIGINAL-CONSENT-v1',sourceUrl:'',active:true,commercialUseAllowed:true,derivativesAllowed:true,catalogDistributionAllowed:true,consentVersion:'v1',consentAt:FieldValue.serverTimestamp(),createdAt:FieldValue.serverTimestamp(),usageCount:0});
+   tx.create(trackRef,{provider:'original',ownerId:uid,sourcePostId:postId,title:'Orijinal Ses',artist,artistUserId:uid,audioUrl,audioStoragePath,durationMs:measuredDuration,category:'Orijinal Sesler',mood:'Orijinal Sesler',license:'TBT-ORIGINAL-CONSENT-v1',sourceUrl:'',active:true,commercialUseAllowed:true,derivativesAllowed:true,catalogDistributionAllowed:true,consentVersion:'v1',consentAt:FieldValue.serverTimestamp(),createdAt:FieldValue.serverTimestamp(),usageCount:0});
    tx.update(event.data.ref,{originalSoundTrackId:trackRef.id,originalSoundStatus:'ready'});
   });
  }finally{await fs.rm(dir,{recursive:true,force:true});}

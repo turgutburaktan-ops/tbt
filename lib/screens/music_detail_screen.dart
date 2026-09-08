@@ -177,6 +177,10 @@ class _MusicDetailScreenState extends State<MusicDetailScreen> {
             ]);
           },
         ),
+        if (widget.music.license == 'CC-BY-4.0') TextButton(
+          onPressed: () => launchUrl(Uri.parse('https://creativecommons.org/licenses/by/4.0/'), mode: LaunchMode.externalApplication),
+          child: const Text('Creative Commons BY 4.0 lisansı'),
+        ),
         if (widget.music.sourceUrl.startsWith('https')) ...<Widget>[
           const SizedBox(height: 10),
           OutlinedButton.icon(
