@@ -17,21 +17,21 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p /tmp/tbt-long
-          curl -fL --retry 3 --max-time 180 -sS -o /tmp/tbt-long/olympos.webm 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Olympos_Antique_City_-_Antalya_-_TURKEY.webm'
-          curl -fL --retry 3 --max-time 180 -sS -o /tmp/tbt-long/bozcaada.webm 'https://commons.wikimedia.org/wiki/Special:Redirect/file/BOZCAADA_TURKEY.webm'
+          curl -fL --retry 3 --max-time 240 -sS -o /tmp/tbt-long/salda.webm 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Salda_Lake_Turkey.webm'
+          curl -fL --retry 3 --max-time 240 -sS -o /tmp/tbt-long/kas.webm 'https://commons.wikimedia.org/wiki/Special:Redirect/file/KA%C5%9E_-_ANTALYA_-_TURKEY.webm'
           echo SHA256_START
           sha256sum /tmp/tbt-long/*.webm
           echo SHA256_END
-          for f in olympos bozcaada; do
+          for f in salda kas; do
             echo "${f^^}_PROBE_START"
             ffprobe -v error -show_entries format=duration,size:stream=codec_name,codec_type,width,height -of json "/tmp/tbt-long/$f.webm"
             echo "${f^^}_PROBE_END"
           done
-          ffmpeg -y -v error -ss 20 -i /tmp/tbt-long/olympos.webm -frames:v 1 /tmp/tbt-long/olympos-20.jpg
-          ffmpeg -y -v error -ss 55 -i /tmp/tbt-long/olympos.webm -frames:v 1 /tmp/tbt-long/olympos-55.jpg
-          ffmpeg -y -v error -ss 30 -i /tmp/tbt-long/bozcaada.webm -frames:v 1 /tmp/tbt-long/bozcaada-30.jpg
-          ffmpeg -y -v error -ss 80 -i /tmp/tbt-long/bozcaada.webm -frames:v 1 /tmp/tbt-long/bozcaada-80.jpg
+          ffmpeg -y -v error -ss 25 -i /tmp/tbt-long/salda.webm -frames:v 1 /tmp/tbt-long/salda-25.jpg
+          ffmpeg -y -v error -ss 80 -i /tmp/tbt-long/salda.webm -frames:v 1 /tmp/tbt-long/salda-80.jpg
+          ffmpeg -y -v error -ss 30 -i /tmp/tbt-long/kas.webm -frames:v 1 /tmp/tbt-long/kas-30.jpg
+          ffmpeg -y -v error -ss 95 -i /tmp/tbt-long/kas.webm -frames:v 1 /tmp/tbt-long/kas-95.jpg
       - uses: actions/upload-artifact@v4
         with:
-          name: tbt-long-reels-frames-v2
+          name: tbt-long-reels-frames-v3
           path: /tmp/tbt-long/*.jpg
