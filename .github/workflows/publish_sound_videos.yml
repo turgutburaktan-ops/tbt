@@ -9,16 +9,34 @@ concurrency:
   group: tbt-sound-videos
   cancel-in-progress: false
 jobs:
-  publish:
+  probe:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
       - run: sudo apt-get update -qq && sudo apt-get install -y ffmpeg
-      - run: npm install --prefix functions --ignore-scripts --no-audit --no-fund
-      - run: node tool/publish_sound_videos.cjs --publish
-        env:
-          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+      - name: Probe candidate videos
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/tbt-candidates
+          curl -fL --retry 3 --max-time 120 -sS -o /tmp/tbt-candidates/pamukkale.webm 'https://upload.wikimedia.org/wikipedia/commons/3/33/Pamukkale_Turkey_2015.webm'
+          curl -fL --retry 3 --max-time 120 -sS -o /tmp/tbt-candidates/travertines.webm 'https://upload.wikimedia.org/wikipedia/commons/1/12/%D0%A2%D1%80%D0%B0%D0%B2%D0%B5%D1%80%D1%82%D0%B8%D0%BD%D0%B8.webm'
+          echo 'SHA256_START'
+          sha256sum /tmp/tbt-candidates/*.webm
+          echo 'SHA256_END'
+          echo 'PAMUKKALE_PROBE_START'
+          ffprobe -v error -show_entries format=duration,size:stream=codec_name,codec_type,width,height -of json /tmp/tbt-candidates/pamukkale.webm
+          echo 'PAMUKKALE_PROBE_END'
+          echo 'TRAVERTINES_PROBE_START'
+          ffprobe -v error -show_entries format=duration,size:stream=codec_name,codec_type,width,height -of json /tmp/tbt-candidates/travertines.webm
+          echo 'TRAVERTINES_PROBE_END'
+          ffmpeg -y -v error -ss 5 -i /tmp/tbt-candidates/pamukkale.webm -frames:v 1 /tmp/tbt-candidates/pamukkale.jpg
+          ffmpeg -y -v error -ss 5 -i /tmp/tbt-candidates/travertines.webm -frames:v 1 /tmp/tbt-candidates/travertines.jpg
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tbt-sound-candidate-frames
+          path: |
+            /tmp/tbt-candidates/pamukkale.jpg
+            /tmp/tbt-candidates/travertines.jpg
+          if-no-files-found: error
