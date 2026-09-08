@@ -2,20 +2,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-import '../data/curated_photo_spots.dart';
-import '../data/curated_photo_spots_cities.dart';
-import '../data/curated_photo_spots_extra.dart';
-import '../data/curated_photo_spots_official_bulk.dart';
-import '../data/curated_photo_spots_official_complete.dart';
-import '../data/curated_photo_spots_official_routes.dart';
-import '../data/curated_photo_spots_regions.dart';
-import '../data/curated_photo_spots_verified_expansion.dart';
 import '../models/nearby_venue.dart';
-import '../models/photo_spot.dart';
 import '../screens/retention_hub_screen.dart';
 import '../screens/rewards_hub_screen.dart';
 import '../services/location_service.dart';
-import '../services/nationwide_candidate_spot_resolver.dart';
+import '../services/spot_repository.dart';
 import '../services/nearby_venue_service.dart';
 
 class ProfileFavoritePlacesSection extends StatelessWidget {
@@ -437,25 +428,7 @@ class _FavoritePlacePickerState extends State<_FavoritePlacePicker> {
 
   Future<List<_PlaceChoice>> _load() async {
     if (widget.type.key == 'spot') {
-      final byId = <String, PhotoSpot>{};
-      for (final group in <List<PhotoSpot>>[
-        demoSpots,
-        curatedPhotoSpots,
-        curatedPhotoSpotsExtra,
-        curatedPhotoSpotsCities,
-        curatedPhotoSpotsRegions,
-        curatedPhotoSpotsOfficialRoutes,
-        curatedPhotoSpotsOfficialBulk,
-        curatedPhotoSpotsVerifiedExpansion,
-        curatedPhotoSpotsOfficialComplete,
-      ]) {
-        for (final spot in group) {
-          byId[spot.id] = spot;
-        }
-      }
-      final spots = NationwideCandidateSpotResolver.mergeInto(
-        byId.values.toList(),
-      );
+      final spots = await SpotRepository.instance.loadSpots();
       return spots
           .map(
             (spot) => _PlaceChoice(

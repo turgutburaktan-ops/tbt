@@ -2,8 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import '../models/photo_spot.dart';
-import 'nationwide_candidate_spot_resolver.dart';
-import 'spot_quality_gate.dart';
+import 'published_spot_catalog.dart';
 
 enum SpotSort { rating, name }
 
@@ -42,6 +41,8 @@ class SpotRepository {
   DateTime? _cachedAt;
   Future<List<PhotoSpot>>? _loadInFlight;
 
+  void invalidateCache() => _cachedAt = null;
+
   Future<List<PhotoSpot>> loadSpots({
     String? city,
     String? category,
@@ -70,23 +71,31 @@ class SpotRepository {
   }
 
   Future<List<PhotoSpot>> _loadRemoteSafe(int limit) async {
-    var remote = <PhotoSpot>[];
+    // The legacy limit argument is kept for callers, but must never truncate
+    // the shared catalog (including searches with limit: 8).
+    final remote = <PhotoSpot>[];
     try {
-      final snapshot = await _firestore
+      final docs = await PublishedSpotCatalog.collectPages<
+          QueryDocumentSnapshot<Map<String, dynamic>>>((cursor, pageSize) async {
+        Query<Map<String, dynamic>> page = _firestore
           .collection(spotsCollection)
           .where('status', isEqualTo: 'published')
           .where('coordinateVerified', isEqualTo: true)
-          .limit(limit)
-          .get()
-          .timeout(const Duration(seconds: 7));
-      remote = snapshot.docs.map(_fromDocument).whereType<PhotoSpot>().toList();
+          .orderBy(FieldPath.documentId)
+          .limit(pageSize);
+        if (cursor != null) page = page.startAfterDocument(cursor);
+        final snapshot = await page.get(const GetOptions(source: Source.server))
+            .timeout(const Duration(seconds: 10));
+        return snapshot.docs;
+      });
+      remote.addAll(docs.map(_fromDocument).whereType<PhotoSpot>());
     } catch (_) {
       final stale = _cachedSafeSpots;
-      if (stale != null && stale.isNotEmpty) return stale;
+      if (stale != null) return stale;
+      rethrow;
     }
 
-    final verified = NationwideCandidateSpotResolver.mergeInto(remote);
-    final safe = SpotQualityGate.filterSafe(verified);
+    final safe = PublishedSpotCatalog.filter(remote);
     _cachedSafeSpots = List<PhotoSpot>.unmodifiable(safe);
     _cachedAt = DateTime.now();
     return _cachedSafeSpots!;
@@ -135,15 +144,14 @@ class SpotRepository {
       .collection(spotsCollection)
       .where('status', isEqualTo: 'published')
       .where('coordinateVerified', isEqualTo: true)
-      .limit(limit)
+      .orderBy(FieldPath.documentId)
       .snapshots()
       .map((snapshot) {
         final remote = snapshot.docs
             .map(_fromDocument)
             .whereType<PhotoSpot>()
             .toList();
-        final merged = NationwideCandidateSpotResolver.mergeInto(remote);
-        final safe = SpotQualityGate.filterSafe(merged);
+        final safe = PublishedSpotCatalog.filter(remote);
         _cachedSafeSpots = List<PhotoSpot>.unmodifiable(safe);
         _cachedAt = DateTime.now();
         return safe;
@@ -244,37 +252,7 @@ class SpotRepository {
 
   PhotoSpot? _fromDocument(DocumentSnapshot<Map<String, dynamic>> doc) {
     final data = doc.data();
-    if (data == null ||
-        data['coordinateVerified'] != true ||
-        data['imageVerified'] != true) {
-      return null;
-    }
-
-    final latitude = _asDouble(data['latitude']);
-    final longitude = _asDouble(data['longitude']);
-    if (latitude == null || longitude == null) return null;
-
-    final name = (data['name'] ?? '').toString().trim();
-    final city = (data['city'] ?? '').toString().trim();
-    if (name.isEmpty || city.isEmpty) return null;
-
-    final sourceTags = _stringList(data['tags']);
-    return PhotoSpot(
-      id: (data['id'] ?? doc.id).toString(),
-      name: name,
-      city: city,
-      latitude: latitude,
-      longitude: longitude,
-      rating: _asDouble(data['rating']) ?? 0,
-      bestTime: (data['bestTime'] ?? 'Gün ışığına göre kontrol et').toString(),
-      angle: (data['angle'] ?? 'Noktada farklı açılar dene').toString(),
-      imageUrl: (data['imageUrl'] ?? '').toString(),
-      category: (data['category'] ?? 'Genel').toString(),
-      description: (data['description'] ?? '').toString(),
-      recommendedLens: (data['recommendedLens'] ?? '24-70mm').toString(),
-      difficulty: (data['difficulty'] ?? 'Kolay').toString(),
-      tags: <String>{'FirestoreDoğrulanmış', ...sourceTags}.toList(),
-    );
+    return data == null ? null : PublishedSpotCatalog.decode(doc.id, data);
   }
 
   List<PhotoSpot> _filterLocal(
@@ -314,17 +292,6 @@ class SpotRepository {
     }
     return byKey.values.toList()..sort();
   }
-
-  static double? _asDouble(dynamic value) => value is num
-      ? value.toDouble()
-      : double.tryParse(value?.toString() ?? '');
-
-  static List<String> _stringList(dynamic value) => value is List
-      ? value
-            .map((e) => e.toString())
-            .where((e) => e.trim().isNotEmpty)
-            .toList()
-      : const [];
 
   static String _key(String value) => value
       .trim()

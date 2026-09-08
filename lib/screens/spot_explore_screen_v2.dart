@@ -3,17 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 
-import '../data/curated_photo_spots.dart';
-import '../data/curated_photo_spots_cities.dart';
-import '../data/curated_photo_spots_extra.dart';
-import '../data/curated_photo_spots_official_bulk.dart';
-import '../data/curated_photo_spots_official_complete.dart';
-import '../data/curated_photo_spots_official_routes.dart';
-import '../data/curated_photo_spots_regions.dart';
-import '../data/curated_photo_spots_verified_expansion.dart';
 import '../models/photo_spot.dart';
 import '../models/route_place.dart';
-import '../services/nationwide_candidate_spot_resolver.dart';
 import '../services/route_selection_service.dart';
 import '../services/spot_repository.dart';
 import '../theme/app_theme.dart';
@@ -44,7 +35,6 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
   @override
   void initState() {
     super.initState();
-    _loadLocalImmediately();
     _refreshRemote();
     _prepareLocation();
   }
@@ -55,44 +45,24 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
     super.dispose();
   }
 
-  void _loadLocalImmediately() {
-    final byId = <String, PhotoSpot>{};
-    for (final group in <List<PhotoSpot>>[
-      demoSpots,
-      curatedPhotoSpots,
-      curatedPhotoSpotsExtra,
-      curatedPhotoSpotsCities,
-      curatedPhotoSpotsRegions,
-      curatedPhotoSpotsOfficialRoutes,
-      curatedPhotoSpotsOfficialBulk,
-      curatedPhotoSpotsVerifiedExpansion,
-      curatedPhotoSpotsOfficialComplete,
-    ]) {
-      for (final spot in group) {
-        byId[spot.id] = spot;
-      }
-    }
-    _all = NationwideCandidateSpotResolver.mergeInto(byId.values.toList());
-    _applyFilter();
-    _loading = false;
-  }
-
   Future<void> _refreshRemote() async {
     try {
-      final remote = await SpotRepository.instance.discover().timeout(
-        const Duration(seconds: 4),
-      );
-      if (!mounted || remote.isEmpty) return;
-
-      // Uzak katalog yerel katalogla birleştirilir; aynı id güncellenir.
-      final byId = <String, PhotoSpot>{for (final spot in _all) spot.id: spot};
-      for (final spot in remote) {
-        byId[spot.id] = spot;
-      }
-      _all = NationwideCandidateSpotResolver.mergeInto(byId.values.toList());
+      final remote = await SpotRepository.instance.discover();
+      if (!mounted) return;
+      // Replacement also applies to empty results: unpublished places must
+      // never reappear from the bundled catalog.
+      _all = remote;
       _applyFilter();
       setState(() {});
-    } catch (_) {}
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Gezilecek yerler alınamadı. Yeniden deneyebilirsin.'),
+        ));
+      }
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
   }
 
   Future<void> _prepareLocation() async {
@@ -158,8 +128,7 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
 
   Future<void> _reload() async {
     setState(() => _loading = true);
-    _loadLocalImmediately();
-    setState(() {});
+    SpotRepository.instance.invalidateCache();
     await _refreshRemote();
     if (mounted) setState(() => _loading = false);
   }

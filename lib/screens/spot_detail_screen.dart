@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../models/photo_spot.dart';
 import '../services/favorites_service.dart';
@@ -109,7 +110,7 @@ class SpotDetailScreen extends StatelessWidget {
                     SpotImage(
                       spot: spot,
                       fit: BoxFit.cover,
-                      highResolution: true,
+                      highResolution: !spot.tags.contains('FirestoreDoğrulanmış'),
                     ),
                     const DecoratedBox(
                       decoration: BoxDecoration(
@@ -152,6 +153,11 @@ class SpotDetailScreen extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(16, 18, 16, 40),
             sliver: SliverList.list(
               children: [
+                if (spot.imageSourcePage.isNotEmpty)
+                  TextButton(
+                    onPressed: () => launchUrl(Uri.parse(spot.imageSourcePage), mode: LaunchMode.externalApplication),
+                    child: Text('Fotoğraf: ${spot.imageAuthor} · ${spot.imageLicense} · Wikimedia Commons'),
+                  ),
                 Text(
                   spot.name,
                   style: const TextStyle(

@@ -53,6 +53,17 @@ class SpotImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Published shared records own their photo. Never substitute an older
+    // bundled match or search result after a server correction or an error.
+    if (spot.tags.contains('FirestoreDoğrulanmış')) {
+      final source = highResolution && spot.imageOriginalUrl.isNotEmpty
+          ? spot.imageOriginalUrl : spot.imageUrl;
+      final child = source.isEmpty
+          ? _fallback()
+          : _cachedImage(source, onError: _fallback);
+      return borderRadius == null
+          ? child : ClipRRect(borderRadius: borderRadius!, child: child);
+    }
     if (_suppressedAutomaticMatches.contains(spot.id)) {
       return borderRadius == null
           ? _fallback()

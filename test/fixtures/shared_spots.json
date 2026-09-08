@@ -1,0 +1,275 @@
+[
+  {
+    "id": "valid",
+    "data": {
+      "status": "published",
+      "coordinateVerified": true,
+      "imageVerified": true,
+      "name": "Pertek Kalesi",
+      "city": "Tunceli",
+      "district": "Pertek",
+      "latitude": 38.844444,
+      "longitude": 39.271667,
+      "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Pertek%20Burg1.jpg?width=500",
+      "rating": 4.8
+    },
+    "accepted": true
+  },
+  {
+    "id": "pending",
+    "data": {
+      "status": "pending",
+      "coordinateVerified": true,
+      "imageVerified": true,
+      "name": "Pertek Kalesi",
+      "city": "Tunceli",
+      "district": "Pertek",
+      "latitude": 38.844444,
+      "longitude": 39.271667,
+      "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Pertek%20Burg1.jpg?width=500",
+      "rating": 4.8
+    },
+    "accepted": false
+  },
+  {
+    "id": "hidden",
+    "data": {
+      "status": "hidden",
+      "coordinateVerified": true,
+      "imageVerified": true,
+      "name": "Pertek Kalesi",
+      "city": "Tunceli",
+      "district": "Pertek",
+      "latitude": 38.844444,
+      "longitude": 39.271667,
+      "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Pertek%20Burg1.jpg?width=500",
+      "rating": 4.8
+    },
+    "accepted": false
+  },
+  {
+    "id": "unverified",
+    "data": {
+      "status": "published",
+      "coordinateVerified": false,
+      "imageVerified": true,
+      "name": "Pertek Kalesi",
+      "city": "Tunceli",
+      "district": "Pertek",
+      "latitude": 38.844444,
+      "longitude": 39.271667,
+      "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Pertek%20Burg1.jpg?width=500",
+      "rating": 4.8
+    },
+    "accepted": false
+  },
+  {
+    "id": "no-photo-proof",
+    "data": {
+      "status": "published",
+      "coordinateVerified": true,
+      "imageVerified": false,
+      "name": "Pertek Kalesi",
+      "city": "Tunceli",
+      "district": "Pertek",
+      "latitude": 38.844444,
+      "longitude": 39.271667,
+      "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Pertek%20Burg1.jpg?width=500",
+      "rating": 4.8
+    },
+    "accepted": false
+  },
+  {
+    "id": "no-image",
+    "data": {
+      "status": "published",
+      "coordinateVerified": true,
+      "imageVerified": true,
+      "name": "Pertek Kalesi",
+      "city": "Tunceli",
+      "district": "Pertek",
+      "latitude": 38.844444,
+      "longitude": 39.271667,
+      "imageUrl": "",
+      "rating": 4.8
+    },
+    "accepted": false
+  },
+  {
+    "id": "local-image",
+    "data": {
+      "status": "published",
+      "coordinateVerified": true,
+      "imageVerified": true,
+      "name": "Pertek Kalesi",
+      "city": "Tunceli",
+      "district": "Pertek",
+      "latitude": 38.844444,
+      "longitude": 39.271667,
+      "imageUrl": "assets/a.jpg",
+      "rating": 4.8
+    },
+    "accepted": false
+  },
+  {
+    "id": "script-image",
+    "data": {
+      "status": "published",
+      "coordinateVerified": true,
+      "imageVerified": true,
+      "name": "Pertek Kalesi",
+      "city": "Tunceli",
+      "district": "Pertek",
+      "latitude": 38.844444,
+      "longitude": 39.271667,
+      "imageUrl": "javascript:alert(1)",
+      "rating": 4.8
+    },
+    "accepted": false
+  },
+  {
+    "id": "no-name",
+    "data": {
+      "status": "published",
+      "coordinateVerified": true,
+      "imageVerified": true,
+      "name": "  ",
+      "city": "Tunceli",
+      "district": "Pertek",
+      "latitude": 38.844444,
+      "longitude": 39.271667,
+      "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Pertek%20Burg1.jpg?width=500",
+      "rating": 4.8
+    },
+    "accepted": false
+  },
+  {
+    "id": "no-city",
+    "data": {
+      "status": "published",
+      "coordinateVerified": true,
+      "imageVerified": true,
+      "name": "Pertek Kalesi",
+      "city": "",
+      "district": "Pertek",
+      "latitude": 38.844444,
+      "longitude": 39.271667,
+      "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Pertek%20Burg1.jpg?width=500",
+      "rating": 4.8
+    },
+    "accepted": false
+  },
+  {
+    "id": "bad-lat",
+    "data": {
+      "status": "published",
+      "coordinateVerified": true,
+      "imageVerified": true,
+      "name": "Pertek Kalesi",
+      "city": "Tunceli",
+      "district": "Pertek",
+      "latitude": "NaN",
+      "longitude": 39.271667,
+      "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Pertek%20Burg1.jpg?width=500",
+      "rating": 4.8
+    },
+    "accepted": false
+  },
+  {
+    "id": "null-lat",
+    "data": {
+      "status": "published",
+      "coordinateVerified": true,
+      "imageVerified": true,
+      "name": "Pertek Kalesi",
+      "city": "Tunceli",
+      "district": "Pertek",
+      "latitude": null,
+      "longitude": 39.271667,
+      "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Pertek%20Burg1.jpg?width=500",
+      "rating": 4.8
+    },
+    "accepted": false
+  },
+  {
+    "id": "boolean-lat",
+    "data": {
+      "status": "published",
+      "coordinateVerified": true,
+      "imageVerified": true,
+      "name": "Pertek Kalesi",
+      "city": "Tunceli",
+      "district": "Pertek",
+      "latitude": true,
+      "longitude": 39.271667,
+      "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Pertek%20Burg1.jpg?width=500",
+      "rating": 4.8
+    },
+    "accepted": false
+  },
+  {
+    "id": "outside",
+    "data": {
+      "status": "published",
+      "coordinateVerified": true,
+      "imageVerified": true,
+      "name": "Pertek Kalesi",
+      "city": "Tunceli",
+      "district": "Pertek",
+      "latitude": 38.844444,
+      "longitude": 60,
+      "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Pertek%20Burg1.jpg?width=500",
+      "rating": 4.8
+    },
+    "accepted": false
+  },
+  {
+    "id": "strings",
+    "data": {
+      "status": "published",
+      "coordinateVerified": true,
+      "imageVerified": true,
+      "name": "Pertek Kalesi",
+      "city": "Tunceli",
+      "district": "Pertek",
+      "latitude": "38.844444",
+      "longitude": "39.271667",
+      "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Pertek%20Burg1.jpg?width=500",
+      "rating": 4.8
+    },
+    "accepted": true
+  },
+  {
+    "id": "id-spoof",
+    "data": {
+      "status": "published",
+      "coordinateVerified": true,
+      "imageVerified": true,
+      "name": "Pertek Kalesi",
+      "city": "Tunceli",
+      "district": "Pertek",
+      "latitude": 38.844444,
+      "longitude": 39.271667,
+      "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Pertek%20Burg1.jpg?width=500",
+      "rating": 4.8,
+      "id": "different-document"
+    },
+    "accepted": true
+  },
+  {
+    "id": "no-default-coordinate",
+    "data": {
+      "status": "published",
+      "coordinateVerified": true,
+      "imageVerified": true,
+      "name": "Pertek Kalesi",
+      "city": "Tunceli",
+      "district": "Pertek",
+      "latitude": "",
+      "longitude": 39.271667,
+      "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Pertek%20Burg1.jpg?width=500",
+      "rating": 4.8
+    },
+    "accepted": false
+  }
+]

@@ -8,6 +8,10 @@ class PhotoSpot {
   final String bestTime;
   final String angle;
   final String imageUrl;
+  final String imageOriginalUrl;
+  final String imageSourcePage;
+  final String imageAuthor;
+  final String imageLicense;
   final String category;
   final String description;
   final String recommendedLens;
@@ -24,6 +28,10 @@ class PhotoSpot {
     required this.bestTime,
     required this.angle,
     required this.imageUrl,
+    this.imageOriginalUrl = '',
+    this.imageSourcePage = '',
+    this.imageAuthor = '',
+    this.imageLicense = '',
     this.category = 'Genel',
     this.description = '',
     this.recommendedLens = '24-70mm',
