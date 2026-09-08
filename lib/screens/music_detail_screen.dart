@@ -5,7 +5,9 @@ import 'package:just_audio/just_audio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import 'camera_screen.dart';
+import 'main_camera_screen.dart';
+import 'post_detail_screen.dart';
+import 'user_profile_screen.dart';
 import 'story_music_picker.dart';
 
 class MusicDetailScreen extends StatefulWidget {
@@ -53,7 +55,9 @@ class _MusicDetailScreenState extends State<MusicDetailScreen> {
       return;
     }
     try {
-      await _player.setUrl(widget.music.previewUrl);
+      final track = await FirebaseFirestore.instance.collection('music_tracks').doc(widget.music.trackId).get();
+      if (track.data()?['active'] != true) throw Exception('Ses kullanılamıyor');
+      await _player.setUrl((track.data()?['audioUrl'] ?? '').toString());
       await _player.setVolume(widget.music.musicVolume);
       await _player.setClip(
         start: Duration(milliseconds: widget.music.startMs),
@@ -124,21 +128,54 @@ class _MusicDetailScreenState extends State<MusicDetailScreen> {
           Chip(label: Text(widget.music.license.isEmpty ? 'Lisans kayıtlı' : widget.music.license)),
           Chip(label: Text(widget.music.mood)),
           StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-            stream: FirebaseFirestore.instance.collection('music_usage').doc(widget.music.trackId).snapshots(),
-            builder: (_, snap) => Chip(label: Text('${(snap.data?.data()?['storyCount'] as num?)?.toInt() ?? 0} Story')),
+            stream: FirebaseFirestore.instance.collection('music_tracks').doc(widget.music.trackId).snapshots(),
+            builder: (_, snap) => Chip(label: Text('${(snap.data?.data()?['usageCount'] as num?)?.toInt() ?? 0} video')),
           ),
         ]),
         const SizedBox(height: 20),
         Row(children: <Widget>[
-          Expanded(child: FilledButton.icon(onPressed: _togglePlay, icon: Icon(_playing ? Icons.stop_rounded : Icons.play_arrow_rounded), label: Text(_playing ? 'Durdur' : '15 sn dinle'))),
+          Expanded(child: FilledButton.icon(onPressed: _togglePlay, icon: Icon(_playing ? Icons.stop_rounded : Icons.play_arrow_rounded), label: Text(_playing ? 'Durdur' : 'Dinle'))),
           const SizedBox(width: 10),
           IconButton.filledTonal(onPressed: _toggleSaved, tooltip: 'Kaydet', icon: Icon(_saved ? Icons.bookmark_rounded : Icons.bookmark_border_rounded)),
         ]),
         const SizedBox(height: 12),
         FilledButton.tonalIcon(
-          onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => CameraScreen(storyMode: true, initialMusic: widget.music))),
+          onPressed: () async {
+            final track = await FirebaseFirestore.instance.collection('music_tracks').doc(widget.music.trackId).get();
+            if (!context.mounted) return;
+            if (track.data()?['active'] != true) { ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Bu ses artık kullanılamıyor.'))); return; }
+            Navigator.push(context, MaterialPageRoute(builder: (_) => MainCameraScreen(initialMode: CameraShareMode.reels, initialMusic: widget.music)));
+          },
           icon: const Icon(Icons.add_a_photo_outlined),
-          label: const Text('Bu müzikle Story oluştur'),
+          label: const Text('Bu sesi kullan'),
+        ),
+        FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+          future: FirebaseFirestore.instance.collection('music_tracks').doc(widget.music.trackId).get(),
+          builder: (_, snap) {
+            final t = snap.data?.data() ?? {};
+            final uid = (t['artistUserId'] ?? '').toString();
+            return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              if (uid.isNotEmpty) TextButton(onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => UserProfileScreen(userId: uid))), child: const Text('Sanatçının profili')),
+              if ((t['attributionText'] ?? '').toString().isNotEmpty) Text(t['attributionText'].toString()),
+              const Text('Videolarda seçilen bölüm kesilir ve ses seviyesi değiştirilir.', style: TextStyle(fontSize: 12, color: Colors.white54)),
+            ]);
+          },
+        ),
+        const SizedBox(height: 18),
+        const Text('Bu sesi kullanan videolar', style: TextStyle(fontWeight: FontWeight.bold)),
+        StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+          stream: FirebaseFirestore.instance.collection('posts').where('musicTrackId', isEqualTo: widget.music.trackId).limit(60).snapshots(),
+          builder: (_, snap) {
+            if (snap.hasError) return const Text('Videolar yüklenemedi.');
+            if (!snap.hasData) return const LinearProgressIndicator();
+            if (snap.data!.docs.isEmpty) return const Padding(padding: EdgeInsets.symmetric(vertical: 12), child: Text('İlk videoyu sen oluştur.'));
+            return GridView.count(crossAxisCount: 3, shrinkWrap: true, physics: const NeverScrollableScrollPhysics(), children: [
+              for (final doc in snap.data!.docs) InkWell(
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => PostDetailScreen(post: {...doc.data(), 'id': doc.id}))),
+                child: Image.network((doc.data()['thumbnailUrl'] ?? doc.data()['imageUrl'] ?? '').toString(), fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Icon(Icons.videocam)),
+              ),
+            ]);
+          },
         ),
         if (widget.music.sourceUrl.startsWith('https')) ...<Widget>[
           const SizedBox(height: 10),

@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:file_selector/file_selector.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 class MusicSubmissionScreen extends StatefulWidget {
   const MusicSubmissionScreen({super.key});
@@ -13,11 +15,11 @@ class _MusicSubmissionScreenState extends State<MusicSubmissionScreen> {
   final _formKey = GlobalKey<FormState>();
   final _title = TextEditingController();
   final _artist = TextEditingController();
-  final _audioUrl = TextEditingController();
+  XFile? _audio;
   final _sourceUrl = TextEditingController();
   final _attribution = TextEditingController();
   String _category = 'Türkçe';
-  String _mood = 'Seyahat';
+  String _mood = 'Gezi';
   String _license = 'DIRECT-TBT';
   bool _commercial = false;
   bool _derivatives = false;
@@ -26,7 +28,7 @@ class _MusicSubmissionScreenState extends State<MusicSubmissionScreen> {
 
   @override
   void dispose() {
-    for (final c in <TextEditingController>[_title, _artist, _audioUrl, _sourceUrl, _attribution]) {
+    for (final c in <TextEditingController>[_title, _artist, _sourceUrl, _attribution]) {
       c.dispose();
     }
     super.dispose();
@@ -47,6 +49,7 @@ class _MusicSubmissionScreenState extends State<MusicSubmissionScreen> {
       return;
     }
     if (!_formKey.currentState!.validate()) return;
+    if (_audio == null) { ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Bir ses dosyası seç.'))); return; }
     if (!_commercial || !_derivatives || !_catalog) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Üç kullanım izninin de hak sahibi tarafından verilmesi gerekir.')),
@@ -55,13 +58,23 @@ class _MusicSubmissionScreenState extends State<MusicSubmissionScreen> {
     }
     setState(() => _sending = true);
     try {
-      await FirebaseFirestore.instance.collection('music_submissions').add(<String, dynamic>{
+      final submission = FirebaseFirestore.instance.collection('music_submissions').doc();
+      final bytes = await _audio!.readAsBytes();
+      if (bytes.isEmpty || bytes.length > 20 * 1024 * 1024) throw Exception('Ses dosyası en fazla 20 MB olabilir.');
+      final ext = _audio!.name.split('.').last.toLowerCase();
+      final type = {'mp3':'audio/mpeg', 'm4a':'audio/mp4', 'wav':'audio/wav', 'ogg':'audio/ogg', 'aac':'audio/aac'}[ext];
+      if (type == null) throw Exception('MP3, M4A, WAV, OGG veya AAC seç.');
+      final storage = FirebaseStorage.instance.ref('users/${user.uid}/music_submissions/${submission.id}/audio.$ext');
+      await storage.putData(bytes, SettableMetadata(contentType: type));
+      await submission.set(<String, dynamic>{
         'submittedBy': user.uid,
         'submitterName': user.displayName ?? '',
         'submitterEmail': user.email ?? '',
         'title': _title.text.trim(),
         'artist': _artist.text.trim(),
-        'audioUrl': _audioUrl.text.trim(),
+        'audioUrl': await storage.getDownloadURL(),
+        'audioStoragePath': storage.fullPath,
+        'consentVersion': 'v1',
         'sourceUrl': _sourceUrl.text.trim(),
         'attributionText': _attribution.text.trim(),
         'category': _category,
@@ -92,13 +105,13 @@ class _MusicSubmissionScreenState extends State<MusicSubmissionScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('TBT’ye müzik gönder')),
+    appBar: AppBar(title: const Text('TBT Sanatçı Programı')),
     body: Form(
       key: _formKey,
       child: ListView(
         padding: const EdgeInsets.fromLTRB(18, 14, 18, 32),
         children: <Widget>[
-          const Text('Sanatçı kataloğu', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900)),
+          const Text('Müziğin TBT’de keşfedilsin', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900)),
           const SizedBox(height: 6),
           const Text(
             'Yalnızca sahibi olduğun veya TBT kataloğunda kullanma yetkisi bulunan müziği gönder.',
@@ -109,7 +122,13 @@ class _MusicSubmissionScreenState extends State<MusicSubmissionScreen> {
           const SizedBox(height: 10),
           TextFormField(controller: _artist, validator: _required, decoration: const InputDecoration(labelText: 'Sanatçı adı')),
           const SizedBox(height: 10),
-          TextFormField(controller: _audioUrl, validator: _url, keyboardType: TextInputType.url, decoration: const InputDecoration(labelText: 'Doğrudan HTTPS ses bağlantısı', hintText: 'https://.../parca.mp3')),
+          OutlinedButton.icon(
+            onPressed: _sending ? null : () async {
+              final file = await openFile(acceptedTypeGroups: const [XTypeGroup(label: 'Ses', extensions: ['mp3','m4a','wav','ogg','aac'], uniformTypeIdentifiers: ['public.audio'])]);
+              if (mounted && file != null) setState(() => _audio = file);
+            },
+            icon: const Icon(Icons.audio_file_outlined), label: Text(_audio?.name ?? 'Ses dosyası seç (en fazla 20 MB)'),
+          ),
           const SizedBox(height: 10),
           TextFormField(controller: _sourceUrl, validator: _url, keyboardType: TextInputType.url, decoration: const InputDecoration(labelText: 'Lisans / kaynak sayfası')),
           const SizedBox(height: 10),
@@ -133,13 +152,13 @@ class _MusicSubmissionScreenState extends State<MusicSubmissionScreen> {
             Expanded(child: DropdownButtonFormField<String>(
               initialValue: _mood,
               decoration: const InputDecoration(labelText: 'Tarz'),
-              items: const ['Seyahat', 'Doğa', 'Enerjik', 'Sakin', 'Sinematik'].map((x) => DropdownMenuItem(value: x, child: Text(x))).toList(),
+              items: const ['Gezi', 'Chill', 'Enerjik', 'Romantik', 'Sinematik', 'Elektronik'].map((x) => DropdownMenuItem(value: x, child: Text(x))).toList(),
               onChanged: (v) => setState(() => _mood = v ?? _mood),
             )),
           ]),
           const SizedBox(height: 12),
           CheckboxListTile(value: _commercial, onChanged: (v) => setState(() => _commercial = v == true), title: const Text('Ticari kullanıma izin veriyorum'), contentPadding: EdgeInsets.zero),
-          CheckboxListTile(value: _derivatives, onChanged: (v) => setState(() => _derivatives = v == true), title: const Text('15 saniyelik kesme ve Story ile eşlemeye izin veriyorum'), contentPadding: EdgeInsets.zero),
+          CheckboxListTile(value: _derivatives, onChanged: (v) => setState(() => _derivatives = v == true), title: const Text('15–60 saniyelik kesme, karıştırma ve TBT videoları/Story ile eşlemeye izin veriyorum'), contentPadding: EdgeInsets.zero),
           CheckboxListTile(value: _catalog, onChanged: (v) => setState(() => _catalog = v == true), title: const Text('TBT kullanıcı kataloğunda sunulmasına izin veriyorum'), contentPadding: EdgeInsets.zero),
           const SizedBox(height: 18),
           FilledButton.icon(

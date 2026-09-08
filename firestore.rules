@@ -150,6 +150,29 @@ service cloud.firestore {
         request.resource.data.get('reaction', '') is string && request.resource.data.get('reaction', '').size() <= 8 &&
         request.resource.data.get('message', '') is string && request.resource.data.get('message', '').size() <= 500;
     }
+    function validMusicFields(d, maxMs) {
+      let id = d.get('musicTrackId', '');
+      return id == '' || (id is string &&
+        exists(/databases/$(database)/documents/music_tracks/$(id)) &&
+        get(/databases/$(database)/documents/music_tracks/$(id)).data.active == true &&
+        get(/databases/$(database)/documents/music_tracks/$(id)).data.commercialUseAllowed == true &&
+        get(/databases/$(database)/documents/music_tracks/$(id)).data.derivativesAllowed == true &&
+        get(/databases/$(database)/documents/music_tracks/$(id)).data.catalogDistributionAllowed == true &&
+        d.musicPreviewUrl == get(/databases/$(database)/documents/music_tracks/$(id)).data.audioUrl &&
+        d.musicStartMs is int && d.musicStartMs >= 0 &&
+        d.musicDurationMs is int && d.musicDurationMs > 0 && d.musicDurationMs <= maxMs &&
+        d.musicStartMs + d.musicDurationMs <= get(/databases/$(database)/documents/music_tracks/$(id)).data.durationMs + 100);
+    }
+    function validPostMusic(postId) {
+      let d = request.resource.data;
+      return d.get('originalSoundTrackId', '') == '' && validMusicFields(d, 60000) &&
+        (d.get('musicTrackId', '') == '' || (
+          get(/databases/$(database)/documents/music_renders/$(postId)).data.ownerId == request.auth.uid &&
+          get(/databases/$(database)/documents/music_renders/$(postId)).data.videoUrl == d.videoUrl &&
+          get(/databases/$(database)/documents/music_renders/$(postId)).data.musicTrackId == d.musicTrackId &&
+          d.originalVideoStoragePath == 'users/' + request.auth.uid + '/posts/' + postId + '.mp4'
+        ));
+    }
     function validPostCreate() {
       return signedIn() && request.resource.data.userId == request.auth.uid && validEventMemoryPost() &&
         request.resource.data.get('caption', '') is string && request.resource.data.get('caption', '').size() <= 500 &&
@@ -322,8 +345,8 @@ service cloud.firestore {
     }
     match /stories/{storyId} {
       allow read: if signedIn();
-      allow create: if signedIn() && request.resource.data.userId == request.auth.uid && request.resource.data.expiresAt > request.time;
-      allow update: if signedIn() && resource.data.userId == request.auth.uid && request.resource.data.userId == resource.data.userId;
+      allow create: if signedIn() && request.resource.data.userId == request.auth.uid && request.resource.data.expiresAt > request.time && validMusicFields(request.resource.data, 15000);
+      allow update: if signedIn() && resource.data.userId == request.auth.uid && request.resource.data.userId == resource.data.userId && validMusicFields(request.resource.data, 15000);
       allow delete: if signedIn() && resource.data.userId == request.auth.uid;
       match /interactions/{uid} { allow read: if signedIn() && (uid == request.auth.uid || get(/databases/$(database)/documents/stories/$(storyId)).data.userId == request.auth.uid); allow create, update: if validStoryInteraction(storyId, uid); allow delete: if signedIn() && uid == request.auth.uid; }
     }
@@ -375,7 +398,7 @@ service cloud.firestore {
     }
     match /posts/{postId} {
       allow read: if true;
-      allow create: if validPostCreate() && validBusinessPost();
+      allow create: if validPostCreate() && validBusinessPost() && validPostMusic(postId);
       allow update: if isAdmin() || validPostOwnerUpdate();
       allow delete: if isAdmin() || (signedIn() && resource.data.userId == request.auth.uid);
       match /likes/{uid} { allow read: if true; allow create: if isSelf(uid) && request.resource.data.userId == uid; allow delete: if isSelf(uid); allow update: if false; }

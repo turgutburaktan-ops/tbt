@@ -1,6 +1,8 @@
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
+import '../screens/story_music_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 
@@ -131,6 +133,8 @@ class PostService {
     List<String> taggedUserNames = const <String>[],
     String businessVenueKey = '',
     String businessVenueName = '',
+    StoryMusicSelection? music,
+    bool originalSoundConsent = false,
   }) async {
     final user = _auth.currentUser;
     if (user == null) throw Exception('Video paylaşmak için giriş yapmalısın.');
@@ -167,6 +171,17 @@ class PostService {
 
     final videoUrl = await videoUpload.ref.getDownloadURL();
     final thumbnailUrl = await thumbUpload.ref.getDownloadURL();
+    Map<String, dynamic> mixed = {};
+    if (music != null) {
+      final result = await FirebaseFunctions.instanceFor(region: 'us-central1')
+          .httpsCallable('preparePostMusic', options: HttpsCallableOptions(timeout: const Duration(minutes: 5)))
+          .call(<String, dynamic>{
+            'postId': postRef.id, 'trackId': music.trackId,
+            'startMs': music.startMs, 'clipDurationMs': music.clipDurationMs,
+            'musicVolume': music.musicVolume, 'originalAudioVolume': music.originalAudioVolume,
+          });
+      mixed = Map<String, dynamic>.from(result.data as Map);
+    }
     await postRef.set({
       ..._postBase(
         id: postRef.id,
@@ -188,6 +203,11 @@ class PostService {
       'thumbnailUrl': thumbnailUrl,
       'thumbnailStoragePath': thumbRef.fullPath,
       'durationMs': prepared.durationMs,
+      'originalSoundConsent': music == null && originalSoundConsent,
+      if (music == null && originalSoundConsent) 'originalSoundConsentVersion': 'v1',
+      if (music != null) 'originalVideoUrl': videoUrl,
+      if (music != null) 'originalVideoStoragePath': videoRef.fullPath,
+      ...mixed,
     });
   }
 

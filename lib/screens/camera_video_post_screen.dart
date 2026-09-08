@@ -4,16 +4,19 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 
 import '../services/post_service.dart';
+import 'story_music_picker.dart';
 import '../widgets/app_video_player.dart';
 
 class CameraVideoPostScreen extends StatefulWidget {
   final File video;
   final bool isReel;
+  final StoryMusicSelection? initialMusic;
 
   const CameraVideoPostScreen({
     super.key,
     required this.video,
     this.isReel = false,
+    this.initialMusic,
   });
 
   @override
@@ -24,6 +27,20 @@ class _CameraVideoPostScreenState extends State<CameraVideoPostScreen> {
   final _captionController = TextEditingController();
   final _spotController = TextEditingController();
   bool _sharing = false;
+  bool _originalSoundConsent = false;
+  StoryMusicSelection? _music;
+
+  @override
+  void initState() { super.initState(); _music = widget.initialMusic; }
+
+  Future<void> _pickMusic() async {
+    final selected = await showModalBottomSheet<StoryMusicSelection>(
+      context: context, isScrollControlled: true, useSafeArea: true,
+      builder: (_) => const StoryMusicPicker(maxClipDurationMs: 60000),
+    );
+    if (mounted && selected != null) setState(() => _music = selected);
+  }
+
   bool _gettingLocation = false;
   double? _latitude;
   double? _longitude;
@@ -100,6 +117,8 @@ class _CameraVideoPostScreenState extends State<CameraVideoPostScreen> {
         spotName: spotName,
         latitude: _latitude,
         longitude: _longitude,
+        music: _music,
+        originalSoundConsent: _originalSoundConsent,
       );
       if (!mounted) return;
       _message(widget.isReel
@@ -143,10 +162,26 @@ class _CameraVideoPostScreenState extends State<CameraVideoPostScreen> {
           const SizedBox(height: 8),
           Text(
             widget.isReel
-                ? 'Reels paylaşılırken 720p hazırlanacak. En fazla 60 saniye.'
-                : 'Video paylaşılırken 720p hazırlanacak. En fazla 60 saniye.',
+                ? 'Reels paylaşılırken hazırlanacak. En fazla 60 saniye.'
+                : 'Video paylaşılırken hazırlanacak. En fazla 60 saniye.',
             textAlign: TextAlign.center,
             style: const TextStyle(color: Colors.white38, fontSize: 12),
+          ),
+          const SizedBox(height: 18),
+          ListTile(
+            leading: const Icon(Icons.music_note_rounded),
+            title: Text(_music?.title ?? 'Müzik Ekle'),
+            subtitle: _music == null ? null : Text('${_music!.artist} · ${_music!.clipDurationMs ~/ 1000} sn'),
+            onTap: _sharing ? null : _pickMusic,
+            trailing: _music == null ? const Icon(Icons.add) : IconButton(
+              tooltip: 'Müziği kaldır', onPressed: _sharing ? null : () => setState(() => _music = null), icon: const Icon(Icons.close)),
+          ),
+          if (_music == null) CheckboxListTile(
+            value: _originalSoundConsent,
+            onChanged: _sharing ? null : (v) => setState(() => _originalSoundConsent = v == true),
+            title: const Text('Orijinal sesimi başkaları da kullanabilsin'),
+            subtitle: const Text('Bu sesin hakları bana ait. TBT kullanıcılarının videolarında keserek, karıştırarak ve ticari olarak kullanmasına izin veriyorum.'),
+            contentPadding: EdgeInsets.zero,
           ),
           const SizedBox(height: 18),
           TextField(

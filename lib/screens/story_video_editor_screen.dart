@@ -3,13 +3,15 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 
 import '../services/story_service.dart';
+import 'story_music_picker.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_video_player.dart';
 
 class StoryVideoEditorScreen extends StatefulWidget {
   final File video;
+  final StoryMusicSelection? initialMusic;
 
-  const StoryVideoEditorScreen({super.key, required this.video});
+  const StoryVideoEditorScreen({super.key, required this.video, this.initialMusic});
 
   @override
   State<StoryVideoEditorScreen> createState() =>
@@ -19,6 +21,14 @@ class StoryVideoEditorScreen extends StatefulWidget {
 class _StoryVideoEditorScreenState extends State<StoryVideoEditorScreen> {
   final TextEditingController _textController = TextEditingController();
   bool _sharing = false;
+  StoryMusicSelection? _music;
+  @override
+  void initState() { super.initState(); _music = widget.initialMusic; }
+  Future<void> _pickMusic() async {
+    final selected = await showModalBottomSheet<StoryMusicSelection>(context: context, isScrollControlled: true, useSafeArea: true, builder: (_) => const StoryMusicPicker());
+    if (mounted && selected != null) setState(() => _music = selected);
+  }
+
 
   @override
   void dispose() {
@@ -45,6 +55,7 @@ class _StoryVideoEditorScreenState extends State<StoryVideoEditorScreen> {
       await StoryService.instance.createVideoStory(
         widget.video,
         caption: overlayText,
+        music: _music,
       );
       if (!mounted) return;
       Navigator.pop(context, true);
@@ -65,6 +76,7 @@ class _StoryVideoEditorScreenState extends State<StoryVideoEditorScreen> {
         backgroundColor: Colors.black,
         foregroundColor: Colors.white,
         title: const Text('Story’yi Düzenle'),
+        actions: [IconButton(tooltip: 'Müzik Ekle', onPressed: _sharing ? null : _pickMusic, icon: const Icon(Icons.music_note_rounded))],
         leading: IconButton(
           tooltip: 'Tekrar çek',
           onPressed: _sharing ? null : () => Navigator.pop(context, false),
@@ -75,6 +87,7 @@ class _StoryVideoEditorScreenState extends State<StoryVideoEditorScreen> {
         top: false,
         child: Column(
           children: [
+            if (_music != null) ListTile(title: Text(_music!.title), subtitle: Text(_music!.artist), trailing: IconButton(onPressed: _sharing ? null : () => setState(() => _music = null), icon: const Icon(Icons.close))),
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(12, 4, 12, 10),

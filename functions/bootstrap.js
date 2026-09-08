@@ -26,3 +26,7 @@ Object.assign(exports, require('./reservation_preparation'));
 
 const {chatAction, chatGroupMessageNotification} = require('./chat_collaboration');
 Object.assign(exports, {chatAction, chatGroupMessageNotification});
+
+const {preparePostMusic, registerOriginalPostSound, countPostSoundUse, revokeDeletedOriginalSound, removeDisabledSound} = require('./music_v1');
+Object.assign(exports, {preparePostMusic, registerOriginalPostSound, countPostSoundUse, revokeDeletedOriginalSound, removeDisabledSound});
+exports.approveMusicSubmission = require('./music_v1').approveMusicSubmission;

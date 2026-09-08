@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../widgets/expandable_caption.dart';
+import '../widgets/post_sound_chip.dart';
 import 'package:video_player/video_player.dart';
 
 import '../services/content_engagement_service.dart';
@@ -421,6 +422,7 @@ class _ReelPage extends StatelessWidget {
                   ),
                 ),
               ),
+              PostSoundChip(postId: postId),
               if (_caption.trim().isNotEmpty) ...[
                 const SizedBox(height: 8),
                 ExpandableCaption(

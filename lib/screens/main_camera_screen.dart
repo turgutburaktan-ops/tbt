@@ -8,6 +8,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../theme/app_theme.dart';
 import 'camera_video_post_screen.dart';
+import 'story_music_picker.dart';
 import 'create_post_screen.dart';
 import 'story_photo_editor_screen.dart';
 import 'story_video_editor_screen.dart';
@@ -16,10 +17,12 @@ enum CameraShareMode { story, reels, photo, video }
 
 class MainCameraScreen extends StatefulWidget {
   final CameraShareMode initialMode;
+  final StoryMusicSelection? initialMusic;
 
   const MainCameraScreen({
     super.key,
     this.initialMode = CameraShareMode.photo,
+    this.initialMusic,
   });
 
   @override
@@ -284,7 +287,7 @@ class _MainCameraScreenState extends State<MainCameraScreen> {
           context,
           MaterialPageRoute(
             fullscreenDialog: true,
-            builder: (_) => StoryVideoEditorScreen(video: file),
+            builder: (_) => StoryVideoEditorScreen(video: file, initialMusic: widget.initialMusic),
           ),
         );
         if (mounted && shared == true) Navigator.pop(context, true);
@@ -294,7 +297,7 @@ class _MainCameraScreenState extends State<MainCameraScreen> {
         context,
         MaterialPageRoute(
           fullscreenDialog: true,
-          builder: (_) => StoryPhotoEditorScreen(photo: file),
+          builder: (_) => StoryPhotoEditorScreen(photo: file, initialMusic: widget.initialMusic),
         ),
       );
       if (mounted && shared == true) Navigator.pop(context, true);
@@ -307,6 +310,7 @@ class _MainCameraScreenState extends State<MainCameraScreen> {
           builder: (_) => CameraVideoPostScreen(
             video: file,
             isReel: mode == CameraShareMode.reels,
+            initialMusic: widget.initialMusic,
           ),
         ),
       );

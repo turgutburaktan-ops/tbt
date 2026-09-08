@@ -6,6 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 
 import '../models/app_story.dart';
+import '../screens/story_music_picker.dart';
 import 'app_notification_service.dart';
 import 'chat_service.dart';
 import 'content_moderation_service.dart';
@@ -134,6 +135,7 @@ class StoryService {
   Future<void> createStory(
     File image, {
     List<String> mentionedUserIds = const <String>[],
+    StoryMusicSelection? music,
   }) async {
     final user = _auth.currentUser;
     if (user == null) throw Exception('Story paylaşmak için giriş yapmalısın.');
@@ -173,6 +175,7 @@ class StoryService {
           .timeout(const Duration(seconds: 8));
       final storyData = <String, dynamic>{
         ..._baseStoryData(user, storyRef.id),
+        if (music != null) ...music.storyFields(),
         'mediaType': 'image',
         'imageUrl': imageUrl,
         'storagePath': storageRef.fullPath,
@@ -215,6 +218,7 @@ class StoryService {
   Future<void> createVideoStory(
     File sourceVideo, {
     String caption = '',
+    StoryMusicSelection? music,
   }) async {
     final user = _auth.currentUser;
     if (user == null) throw Exception('Story paylaşmak için giriş yapmalısın.');
@@ -261,6 +265,7 @@ class StoryService {
       final thumbnailUrl = urls[1];
       final storyData = <String, dynamic>{
         ..._baseStoryData(user, storyRef.id),
+        if (music != null) ...music.storyFields(),
         'mediaType': 'video',
         'imageUrl': thumbnailUrl,
         'storagePath': thumbRef.fullPath,

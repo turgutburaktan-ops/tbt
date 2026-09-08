@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:collection';
 
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 
@@ -349,7 +350,7 @@ class StoryViewerScreen extends StatefulWidget {
 
 class _StoryViewerScreenState extends State<StoryViewerScreen>
     with SingleTickerProviderStateMixin {
-  static const bool _musicFeatureVisible = false;
+  static const bool _musicFeatureVisible = true;
   late final PageController _controller;
   late final List<AppStory> _stories;
   late final AnimationController _progress;
@@ -429,7 +430,10 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
     final story = _current;
     if (!story.hasMusic) return;
     try {
-      await _musicPlayer.setUrl(story.musicPreviewUrl);
+      final track = await FirebaseFirestore.instance.collection('music_tracks').doc(story.musicTrackId).get();
+      if (track.data()?['active'] != true) return;
+      if (generation != _musicGeneration || !mounted) return;
+      await _musicPlayer.setUrl((track.data()?['audioUrl'] ?? '').toString());
       final targetVolume = story.musicVolume.clamp(0, 1).toDouble();
       await _musicPlayer.setVolume(story.musicFadeInMs > 0 ? 0 : targetVolume);
       if (generation != _musicGeneration || !mounted) return;

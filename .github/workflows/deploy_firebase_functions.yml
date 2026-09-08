@@ -21,6 +21,8 @@ jobs:
         run: npm install --prefix functions
       - name: Test business publication
         run: node --test functions/test/business_publication.test.js
+      - name: Test music
+        run: node --test functions/test/music*.test.js
       - name: Test reservations
         run: node --test functions/test/reservation*.test.js
       - name: Install Firebase CLI
@@ -57,13 +59,16 @@ jobs:
         run: node functions/scripts/repair_business_publication.js dining:user_4xFEQcn0tjLktR5Cq85n
       - name: Deploy Firebase Functions
         env:
+          MUSIC_UPDATE: ${{ contains(github.event.head_commit.message, '[music-update]') }}
           CHAT_UPDATE: ${{ contains(github.event.head_commit.message, '[chat-update]') }}
           PREPARATION_UPDATE: ${{ contains(github.event.head_commit.message, '[preparation-update]') }}
           RESERVATION_INDEX: ${{ contains(github.event.head_commit.message, '[reservation-index]') }}
           RESERVATION_UPDATE: ${{ contains(github.event.head_commit.message, '[reservation-update]') }}
           PUBLICATION_REPAIR: ${{ contains(github.event.head_commit.message, '[repair-burak-publication]') }}
         run: |
-          if [ "$CHAT_UPDATE" = "true" ]; then
+          if [ "$MUSIC_UPDATE" = "true" ]; then
+            firebase deploy --only functions:preparePostMusic,functions:registerOriginalPostSound,functions:countPostSoundUse,functions:revokeDeletedOriginalSound,functions:removeDisabledSound,functions:approveMusicSubmission --project en-iyi-cekim-noktasi --force --non-interactive
+          elif [ "$CHAT_UPDATE" = "true" ]; then
             firebase deploy --only functions:chatAction,functions:chatGroupMessageNotification,functions:pushOnNotificationCreated --project en-iyi-cekim-noktasi --force --non-interactive
           elif [ "$PREPARATION_UPDATE" = "true" ]; then
             firebase deploy --only functions:syncBusinessPreparationReminder,functions:sendBusinessPreparationReminders,functions:reservationPreparationAction,functions:getReservationDisputes,functions:resolveReservationDispute,functions:getBusinessDashboard,functions:getMyBusinessReservations --project en-iyi-cekim-noktasi --force --non-interactive
@@ -77,7 +82,7 @@ jobs:
             firebase deploy --only functions --project en-iyi-cekim-noktasi --force --non-interactive
           fi
       - name: Restore callable invoker access
-        if: "!contains(github.event.head_commit.message, '[chat-update]') && !contains(github.event.head_commit.message, '[repair-burak-publication]') && !contains(github.event.head_commit.message, '[reservation-update]') && !contains(github.event.head_commit.message, '[reservation-index]') && !contains(github.event.head_commit.message, '[preparation-update]')"
+        if: "!contains(github.event.head_commit.message, '[music-update]') && !contains(github.event.head_commit.message, '[chat-update]') && !contains(github.event.head_commit.message, '[repair-burak-publication]') && !contains(github.event.head_commit.message, '[reservation-update]') && !contains(github.event.head_commit.message, '[reservation-index]') && !contains(github.event.head_commit.message, '[preparation-update]')"
         run: |
           set -euo pipefail
           gcloud auth activate-service-account --key-file="$GOOGLE_APPLICATION_CREDENTIALS"

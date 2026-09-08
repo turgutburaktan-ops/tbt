@@ -1,0 +1,31 @@
+name: Check TBT Music
+on:
+  push:
+    branches: [codex/music-v1]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter analyze --no-fatal-infos --no-fatal-warnings lib/screens/story_music_picker.dart lib/screens/music_detail_screen.dart lib/screens/music_submission_screen.dart lib/screens/admin_music_screen.dart lib/screens/camera_video_post_screen.dart lib/screens/main_camera_screen.dart lib/screens/story_photo_editor_screen.dart lib/screens/story_video_editor_screen.dart lib/widgets/post_sound_chip.dart lib/widgets/story_strip.dart lib/services/post_service.dart lib/services/story_service.dart lib/screens/feed_screen.dart lib/screens/post_detail_screen.dart lib/screens/reels_screen.dart
+      - run: flutter test test/discover_post_feed_test.dart test/expandable_caption_test.dart
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm install --prefix functions
+      - run: node --test functions/test/music*.test.js
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - run: npm install -g firebase-tools
+      - run: firebase emulators:exec --only firestore --project demo-tbt "node tool/test_chat_collaboration.cjs" --non-interactive

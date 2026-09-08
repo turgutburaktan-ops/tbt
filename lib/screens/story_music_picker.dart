@@ -1,9 +1,7 @@
-import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
-import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'music_submission_screen.dart';
@@ -44,34 +42,41 @@ class StoryMusicSelection {
     this.fadeOutMs = 500,
     this.mood = 'Seyahat',
   });
+  Map<String, dynamic> storyFields() => {
+    'musicTrackId': trackId, 'musicTitle': title, 'musicArtist': artist,
+    'musicArtworkUrl': artworkUrl, 'musicPreviewUrl': previewUrl, 'musicAudioUrl': previewUrl,
+    'musicStartMs': startMs, 'musicDurationMs': clipDurationMs.clamp(1000, 15000),
+    'musicStickerStyle': stickerStyle, 'musicLicense': license, 'musicSourceUrl': sourceUrl,
+    'musicVolume': musicVolume, 'originalAudioVolume': originalAudioVolume,
+    'musicFadeInMs': fadeInMs, 'musicFadeOutMs': fadeOutMs, 'musicMood': mood, 'musicVersion': 4,
+  };
 }
 
 class StoryMusicPicker extends StatefulWidget {
-  const StoryMusicPicker({super.key});
+  final int maxClipDurationMs;
+  const StoryMusicPicker({super.key, this.maxClipDurationMs = 15000});
 
   @override
   State<StoryMusicPicker> createState() => _StoryMusicPickerState();
 }
 
 class _StoryMusicPickerState extends State<StoryMusicPicker> {
-  late final Future<List<_Track>> _commonsTracks;
   final AudioPlayer _previewPlayer = AudioPlayer();
   final Set<String> _savedIds = <String>{};
   final List<String> _recentIds = <String>[];
   String _previewingId = '';
   String _query = '';
-  String _category = 'Senin için';
+  String _category = 'TBT Trend';
 
   static const _categories = <String>[
-    'Senin için', 'Trend', 'Yeni', 'Türkçe', 'Yabancı',
-    'Seyahat', 'Doğa', 'Enerjik', 'Sakin', 'Sinematik',
+    'TBT Trend', 'Gezi', 'Chill', 'Türkçe', 'Enerjik', 'Romantik',
+    'Sinematik', 'Elektronik', 'TBT’de Yükselenler', 'Orijinal Sesler',
     'Kaydedilenler', 'Son kullanılanlar',
   ];
 
   @override
   void initState() {
     super.initState();
-    _commonsTracks = _fetchCommonsTracks();
     _loadLibraryState();
   }
 
@@ -130,19 +135,21 @@ class _StoryMusicPickerState extends State<StoryMusicPicker> {
     }
   }
 
-  List<_Track> _filtered(List<_Track> tracks) => tracks.where((t) {
-    if (!t.active) return false;
-    if (_query.isNotEmpty && !'${t.title} ${t.artist}'.toLowerCase().contains(_query)) return false;
-    if (_category == 'Senin için') return true;
-    if (_category == 'Trend') return t.trending;
-    if (_category == 'Kaydedilenler') return _savedIds.contains(t.id);
-    if (_category == 'Son kullanılanlar') return _recentIds.contains(t.id);
-    if (_category == 'Yeni') return !t.trending;
-    if (const <String>{'Seyahat', 'Doğa', 'Enerjik', 'Sakin', 'Sinematik'}.contains(_category)) {
-      return t.mood == _category;
-    }
-    return t.category.toLowerCase() == _category.toLowerCase();
-  }).toList();
+  List<_Track> _filtered(List<_Track> tracks) {
+    final result = tracks.where((t) {
+      if (!t.active) return false;
+      if (_query.isNotEmpty && !'${t.title} ${t.artist}'.toLowerCase().contains(_query)) return false;
+      if (_category == 'TBT Trend') return true;
+      if (_category == 'TBT’de Yükselenler') return t.usageCount > 0;
+      if (_category == 'Kaydedilenler') return _savedIds.contains(t.id);
+      if (_category == 'Son kullanılanlar') return _recentIds.contains(t.id);
+      return t.category == _category || t.mood == _category ||
+          (_category == 'Gezi' && t.mood == 'Seyahat') ||
+          (_category == 'Chill' && t.mood == 'Sakin');
+    }).toList();
+    result.sort((a, b) => b.usageCount.compareTo(a.usageCount));
+    return result;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -206,19 +213,12 @@ class _StoryMusicPickerState extends State<StoryMusicPicker> {
             ),
             const SizedBox(height: 8),
             Expanded(
-              child: FutureBuilder<List<_Track>>(
-                future: _commonsTracks,
-                builder: (_, commonsSnapshot) => StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-                  stream: FirebaseFirestore.instance.collection('music_tracks').limit(160).snapshots(),
+              child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                  stream: FirebaseFirestore.instance.collection('music_tracks').where('active', isEqualTo: true).limit(300).snapshots(),
                   builder: (_, snapshot) {
-                    final remote = snapshot.hasData ? snapshot.data!.docs.map(_Track.fromDoc).toList() : <_Track>[];
-                    final commons = commonsSnapshot.data ?? const <_Track>[];
-                    final merged = <String, _Track>{
-                      for (final t in _cc0Tracks) t.id: t,
-                      for (final t in commons) t.id: t,
-                      for (final t in remote) t.id: t,
-                    }.values.toList();
-                    final tracks = _filtered(merged);
+                    if (snapshot.hasError) return const _MusicEmpty(title: 'Müzikler yüklenemedi', subtitle: 'Bağlantını kontrol edip tekrar aç.');
+                    if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+                    final tracks = _filtered(snapshot.data!.docs.map(_Track.fromDoc).toList());
                     if (tracks.isEmpty) {
                       return const _MusicEmpty(
                         title: 'Bu kategoride henüz müzik yok',
@@ -242,7 +242,6 @@ class _StoryMusicPickerState extends State<StoryMusicPicker> {
                       },
                     );
                   },
-                ),
               ),
             ),
           ]),
@@ -261,7 +260,7 @@ class _StoryMusicPickerState extends State<StoryMusicPicker> {
       isScrollControlled: true,
       backgroundColor: const Color(0xFF0B0D12),
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
-      builder: (_) => _ClipSheet(track: track),
+      builder: (_) => _ClipSheet(track: track, maxClipDurationMs: widget.maxClipDurationMs),
     );
     if (!mounted || selected == null) return;
     Navigator.pop(context, selected);
@@ -313,7 +312,8 @@ class _TrackTile extends StatelessWidget {
 
 class _ClipSheet extends StatefulWidget {
   final _Track track;
-  const _ClipSheet({required this.track});
+  final int maxClipDurationMs;
+  const _ClipSheet({required this.track, required this.maxClipDurationMs});
   @override
   State<_ClipSheet> createState() => _ClipSheetState();
 }
@@ -321,6 +321,13 @@ class _ClipSheet extends StatefulWidget {
 class _ClipSheetState extends State<_ClipSheet> {
   final AudioPlayer _player = AudioPlayer();
   double _startMs = 0;
+  int _clipMs = 15000;
+
+  @override
+  void initState() {
+    super.initState();
+    _clipMs = widget.track.durationMs.clamp(1000, widget.maxClipDurationMs.clamp(1000, 15000)).toInt();
+  }
   String _style = 'minimal';
   bool _loading = false;
   bool _playing = false;
@@ -344,12 +351,11 @@ class _ClipSheetState extends State<_ClipSheet> {
     setState(() => _loading = true);
     try {
       await _player.setUrl(widget.track.previewUrl);
-      await _player.seek(Duration(milliseconds: _startMs.round()));
+      await _player.setClip(start: Duration(milliseconds: _startMs.round()), end: Duration(milliseconds: _startMs.round() + _clipMs));
       await _player.setVolume(_musicVolume);
       if (!mounted) return;
       setState(() { _loading = false; _playing = true; });
       await _player.play();
-      await Future<void>.delayed(const Duration(seconds: 15));
       await _player.stop();
       if (mounted) setState(() => _playing = false);
     } catch (_) {
@@ -361,7 +367,7 @@ class _ClipSheetState extends State<_ClipSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final maxStart = (widget.track.durationMs - 15000).clamp(0, 86400000).toInt();
+    final maxStart = (widget.track.durationMs - _clipMs).clamp(0, 86400000).toInt();
     return Padding(
       padding: const EdgeInsets.fromLTRB(18, 12, 18, 24),
       child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: <Widget>[
@@ -382,7 +388,15 @@ class _ClipSheetState extends State<_ClipSheet> {
           IconButton.filledTonal(onPressed: _loading ? null : _preview, icon: _loading ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)) : Icon(_playing ? Icons.stop_rounded : Icons.play_arrow_rounded)),
         ]),
         const SizedBox(height: 18),
-        const Text('15 saniyelik bölümü seç', style: TextStyle(fontWeight: FontWeight.w800)),
+        Text('${(_clipMs / 1000).toStringAsFixed(0)} saniyelik bölümü seç', style: const TextStyle(fontWeight: FontWeight.w800)),
+        if (widget.maxClipDurationMs > 15000) Wrap(spacing: 8, children: [
+          for (final ms in <int>{widget.track.durationMs.clamp(1000, 15000).toInt(), 30000, 60000})
+            if (ms <= widget.track.durationMs && ms <= widget.maxClipDurationMs)
+              ChoiceChip(label: Text('${ms ~/ 1000} sn'), selected: _clipMs == ms, onSelected: (_) {
+                _player.stop();
+                setState(() { _clipMs = ms; _startMs = 0; _playing = false; });
+              }),
+        ]),
         const SizedBox(height: 8),
         Container(
           height: 54,
@@ -396,7 +410,7 @@ class _ClipSheetState extends State<_ClipSheet> {
           max: maxStart == 0 ? 1 : maxStart.toDouble(),
           onChanged: maxStart == 0 ? null : (v) async { if (_playing) { await _player.stop(); _playing = false; } setState(() => _startMs = v); },
         ),
-        Text('${(_startMs / 1000).toStringAsFixed(1)} sn → ${((_startMs + 15000) / 1000).toStringAsFixed(1)} sn', textAlign: TextAlign.center, style: const TextStyle(color: Colors.white60)),
+        Text('${(_startMs / 1000).toStringAsFixed(1)} sn → ${((_startMs + _clipMs) / 1000).toStringAsFixed(1)} sn', textAlign: TextAlign.center, style: const TextStyle(color: Colors.white60)),
         const SizedBox(height: 12),
         _MixSlider(
           icon: Icons.music_note_rounded,
@@ -447,6 +461,7 @@ class _ClipSheetState extends State<_ClipSheet> {
                 previewUrl: widget.track.previewUrl,
                 durationMs: widget.track.durationMs,
                 startMs: _startMs.round(),
+                clipDurationMs: _clipMs,
                 stickerStyle: _style,
                 license: widget.track.license,
                 sourceUrl: widget.track.sourceUrl,
@@ -496,8 +511,9 @@ class _FadeChoice extends StatelessWidget {
 class _Track {
   final String id, title, artist, artworkUrl, previewUrl, category, license, sourceUrl, mood;
   final int durationMs;
-  final bool active, saved, trending;
-  const _Track({required this.id, required this.title, required this.artist, required this.artworkUrl, required this.previewUrl, required this.category, required this.durationMs, required this.license, required this.sourceUrl, this.mood = 'Seyahat', this.active = true, this.saved = false, this.trending = false});
+  final bool active;
+  final int usageCount;
+  const _Track({required this.id, required this.title, required this.artist, required this.artworkUrl, required this.previewUrl, required this.category, required this.durationMs, required this.license, required this.sourceUrl, this.mood = 'Seyahat', this.active = true, this.usageCount = 0});
 
   factory _Track.fromDoc(QueryDocumentSnapshot<Map<String, dynamic>> doc) {
     final d = doc.data();
@@ -515,145 +531,12 @@ class _Track {
       durationMs: (d['durationMs'] as num?)?.toInt() ?? 15000,
       license: (d['license'] ?? '').toString(),
       sourceUrl: (d['sourceUrl'] ?? '').toString(),
-      mood: (d['mood'] ?? _inferMood((d['title'] ?? '').toString())).toString(),
-      active: d['active'] != false && audioUrl.isNotEmpty && rightsVerified,
-      saved: d['saved'] == true,
-      trending: d['trending'] == true,
+      mood: (d['mood'] ?? 'Gezi').toString(),
+      active: d['active'] == true && audioUrl.isNotEmpty && rightsVerified && (d['audioStoragePath'] ?? '').toString().startsWith('music/'),
+      usageCount: (d['usageCount'] as num?)?.toInt() ?? 0,
     );
   }
 }
-
-Future<List<_Track>> _fetchCommonsTracks() async {
-  final groups = await Future.wait(<Future<List<_Track>>>[
-    _fetchCommonsCategory(
-      search: 'filetype:audio deepcat:"Audio files of music" incategory:"CC-Zero"',
-      category: 'Yabancı',
-      limit: 100,
-    ),
-    _fetchCommonsCategory(
-      search: 'filetype:audio deepcat:"Turkish-language music" incategory:"CC-Zero"',
-      category: 'Türkçe',
-      limit: 50,
-    ),
-  ]);
-  return <String, _Track>{
-    for (final track in groups.expand((items) => items)) track.id: track,
-  }.values.toList();
-}
-
-Future<List<_Track>> _fetchCommonsCategory({
-  required String search,
-  required String category,
-  required int limit,
-}) async {
-  try {
-    final uri = Uri.https('commons.wikimedia.org', '/w/api.php', <String, String>{
-      'action': 'query',
-      'format': 'json',
-      'formatversion': '2',
-      'origin': '*',
-      'generator': 'search',
-      'gsrsearch': search,
-      'gsrnamespace': '6',
-      'gsrlimit': limit.toString(),
-      'prop': 'videoinfo',
-      'viprop': 'url|duration|mime|derivatives|extmetadata',
-    });
-    final response = await http.get(
-      uri,
-      headers: const <String, String>{'User-Agent': 'TBT-Mobile/1.0 (story music catalog)'},
-    ).timeout(const Duration(seconds: 12));
-    if (response.statusCode != 200) return const <_Track>[];
-    final root = jsonDecode(response.body) as Map<String, dynamic>;
-    final pages = ((root['query'] as Map?)?['pages'] as List?) ?? const <dynamic>[];
-    final tracks = <_Track>[];
-    for (final rawPage in pages) {
-      if (rawPage is! Map) continue;
-      final page = Map<String, dynamic>.from(rawPage);
-      final infoList = page['videoinfo'] as List?;
-      if (infoList == null || infoList.isEmpty || infoList.first is! Map) continue;
-      final info = Map<String, dynamic>.from(infoList.first as Map);
-      final ext = info['extmetadata'] is Map
-          ? Map<String, dynamic>.from(info['extmetadata'] as Map)
-          : const <String, dynamic>{};
-      final license = _metaValue(ext['LicenseShortName']);
-      if (!license.toUpperCase().replaceAll(' ', '').contains('CC0')) continue;
-      final derivatives = (info['derivatives'] as List?) ?? const <dynamic>[];
-      String audioUrl = '';
-      for (final rawDerivative in derivatives) {
-        if (rawDerivative is! Map) continue;
-        final derivative = Map<String, dynamic>.from(rawDerivative);
-        final type = (derivative['type'] ?? '').toString().toLowerCase();
-        final key = (derivative['transcodekey'] ?? '').toString().toLowerCase();
-        if (type == 'audio/mpeg' || key.contains('mp3')) {
-          audioUrl = (derivative['src'] ?? '').toString();
-          if (audioUrl.isNotEmpty) break;
-        }
-      }
-      if (audioUrl.isEmpty && (info['mime'] ?? '').toString() == 'audio/mpeg') {
-        audioUrl = (info['url'] ?? '').toString();
-      }
-      if (audioUrl.isEmpty) continue;
-      final rawTitle = (page['title'] ?? 'İsimsiz parça').toString();
-      final title = rawTitle
-          .replaceFirst(RegExp(r'^File:'), '')
-          .replaceFirst(
-            RegExp(r'\.(ogg|oga|mp3|wav|flac|webm)$', caseSensitive: false),
-            '',
-          )
-          .replaceAll('_', ' ');
-      final artist = _plainText(_metaValue(ext['Artist']));
-      final pageUrl =
-          'https://commons.wikimedia.org/wiki/${Uri.encodeComponent(rawTitle.replaceAll(' ', '_'))}';
-      tracks.add(_Track(
-        id: 'commons_${page['pageid']}',
-        title: title,
-        artist: artist.isEmpty ? 'Wikimedia Commons' : artist,
-        artworkUrl: '',
-        previewUrl: audioUrl,
-        category: category,
-        durationMs: (((info['duration'] as num?)?.toDouble() ?? 15) * 1000).round(),
-        license: 'CC0 1.0',
-        sourceUrl: pageUrl,
-        mood: _inferMood(title),
-      ));
-    }
-    return tracks;
-  } catch (_) {
-    return const <_Track>[];
-  }
-}
-
-String _inferMood(String title) {
-  final value = title.toLowerCase();
-  if (RegExp(r'nature|forest|river|rain|wind|garden|sea|ocean|doğa|orman|nehir|yağmur').hasMatch(value)) return 'Doğa';
-  if (RegExp(r'action|dance|battle|run|beat|party|enerji|dans').hasMatch(value)) return 'Enerjik';
-  if (RegExp(r'sad|calm|sleep|piano|quiet|ambient|sakin|hüzün').hasMatch(value)) return 'Sakin';
-  if (RegExp(r'cinema|film|epic|theme|dram|score|sinem').hasMatch(value)) return 'Sinematik';
-  return 'Seyahat';
-}
-
-String _metaValue(dynamic value) {
-  if (value is Map) return (value['value'] ?? '').toString();
-  return value?.toString() ?? '';
-}
-
-String _plainText(String value) => value
-    .replaceAll(RegExp(r'<[^>]*>'), '')
-    .replaceAll('&nbsp;', ' ')
-    .replaceAll('&amp;', '&')
-    .trim();
-
-const List<_Track> _cc0Tracks = <_Track>[
-  _Track(id: 'cc0_komiku_wind', title: 'The Wind', artist: 'Komiku', artworkUrl: '', previewUrl: 'https://files.freemusicarchive.org/storage-freemusicarchive-org/music/Music_for_Video/Komiku/Tale_on_the_Late/Komiku_-_13_-_The_Wind.mp3', category: 'Yabancı', durationMs: 114000, license: 'CC0 1.0', sourceUrl: 'https://freemusicarchive.org/music/Komiku/Tale_on_the_Late/Komiku_-_Tale_on_the_Late_-_13_The_Wind/', trending: true),
-  _Track(id: 'cc0_komiku_remember', title: 'Remember the time we use to play', artist: 'Komiku', artworkUrl: '', previewUrl: 'https://files.freemusicarchive.org/storage-freemusicarchive-org/music/Music_for_Video/Komiku/Tale_on_the_Late/Komiku_-_02_-_Remember_the_time_we_use_to_play.mp3', category: 'Yabancı', durationMs: 96000, license: 'CC0 1.0', sourceUrl: 'https://commons.wikimedia.org/wiki/File:Komiku_-_02_-_Remember_the_time_we_use_to_play.ogg', trending: true),
-  _Track(id: 'cc0_monplaisir_free3', title: 'Free To Use 3', artist: 'Monplaisir', artworkUrl: '', previewUrl: 'https://files.freemusicarchive.org/storage-freemusicarchive-org/music/Music_for_Video/Monplaisir/Free_To_Use/Monplaisir_-_03_-_Free_To_Use_3.mp3', category: 'Yabancı', durationMs: 187000, license: 'CC0 1.0', sourceUrl: 'https://commons.wikimedia.org/wiki/File:Monplaisir_-_03_-_Free_To_Use_3.ogg'),
-  _Track(id: 'cc0_monplaisir_free12', title: 'Free To Use 12', artist: 'Monplaisir', artworkUrl: '', previewUrl: 'https://files.freemusicarchive.org/storage-freemusicarchive-org/music/Music_for_Video/Monplaisir/Free_To_Use/Monplaisir_-_12_-_Free_To_Use_12.mp3', category: 'Yabancı', durationMs: 114000, license: 'CC0 1.0', sourceUrl: 'https://commons.wikimedia.org/wiki/File:Monplaisir_-_12_-_Free_To_Use_12.ogg'),
-  _Track(id: 'cc0_monplaisir_close', title: 'Close to you', artist: 'Monplaisir', artworkUrl: '', previewUrl: 'https://files.freemusicarchive.org/storage-freemusicarchive-org/music/Music_for_Video/Monplaisir/Fifty_seconds_of_rain/Monplaisir_-_02_-_Close_to_you.mp3', category: 'Yabancı', durationMs: 137000, license: 'CC0 1.0', sourceUrl: 'https://commons.wikimedia.org/wiki/File:Monplaisir_-_02_-_Close_to_you.ogg'),
-  _Track(id: 'cc0_monplaisir_noneed', title: 'No need to', artist: 'Monplaisir', artworkUrl: '', previewUrl: 'https://files.freemusicarchive.org/storage-freemusicarchive-org/music/Music_for_Video/Monplaisir/Fifty_seconds_of_rain/Monplaisir_-_01_-_No_need_to.mp3', category: 'Yabancı', durationMs: 122000, license: 'CC0 1.0', sourceUrl: 'https://commons.wikimedia.org/wiki/File:Monplaisir_-_01_-_No_need_to.ogg'),
-  _Track(id: 'cc0_monplaisir_action', title: 'Action', artist: 'Monplaisir', artworkUrl: '', previewUrl: 'https://files.freemusicarchive.org/storage-freemusicarchive-org/music/WFMU/Monplaisir/American_Dreams_Soundtrack/Monplaisir_-_18_-_Action.mp3', category: 'Yabancı', durationMs: 190000, license: 'CC0 1.0', sourceUrl: 'https://commons.wikimedia.org/wiki/File:Monplaisir_-_18_-_Action.ogg', trending: true),
-  _Track(id: 'cc0_bartmann_bouncy', title: 'Bouncy Gypsy Beats', artist: 'John Bartmann', artworkUrl: '', previewUrl: 'https://files.freemusicarchive.org/storage-freemusicarchive-org/music/ccCommunity/John_Bartmann/Public_Domain_Soundtrack_Music_Album_One/John_Bartmann_-_03_-_Bouncy_Gypsy_Beats.mp3', category: 'Yabancı', durationMs: 260000, license: 'CC0 1.0', sourceUrl: 'https://commons.wikimedia.org/wiki/File:John_Bartmann_-_03_-_Bouncy_Gypsy_Beats.ogg'),
-];
 
 class _MusicEmpty extends StatelessWidget {
   final String title, subtitle;

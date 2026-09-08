@@ -25,7 +25,7 @@ class StoryPhotoEditorScreen extends StatefulWidget {
 }
 
 class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
-  static const bool _musicFeatureVisible = false;
+  static const bool _musicFeatureVisible = true;
   final GlobalKey _canvasKey = GlobalKey();
   final TextEditingController _textController = TextEditingController();
   final FocusNode _textFocus = FocusNode();
@@ -552,7 +552,7 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
           .where((id) => id.isNotEmpty)
           .toSet()
           .toList(growable: false);
-      await StoryService.instance.createStory(rendered, mentionedUserIds: mentions);
+      await StoryService.instance.createStory(rendered, mentionedUserIds: mentions, music: _musicSelection);
       final StoryContextTemplateSelection? t = _contextTemplate;
       if (t != null) {
         await StoryContextLinkService.instance.attachToLatestOwnStory(
@@ -562,26 +562,6 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
           templateId: t.templateId,
           templateTitle: t.templateTitle,
           slotCount: t.slotCount,
-        );
-      }
-      final StoryMusicSelection? music = _musicSelection;
-      if (music != null) {
-        await StoryContextLinkService.instance.attachMusicToLatestOwnStory(
-          trackId: music.trackId,
-          title: music.title,
-          artist: music.artist,
-          artworkUrl: music.artworkUrl,
-          previewUrl: music.previewUrl,
-          startMs: music.startMs,
-          durationMs: music.clipDurationMs,
-          stickerStyle: music.stickerStyle,
-          license: music.license,
-          sourceUrl: music.sourceUrl,
-          musicVolume: music.musicVolume,
-          originalAudioVolume: music.originalAudioVolume,
-          fadeInMs: music.fadeInMs,
-          fadeOutMs: music.fadeOutMs,
-          mood: music.mood,
         );
       }
       if (mounted) Navigator.pop(context, true);

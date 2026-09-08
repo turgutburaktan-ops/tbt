@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -16,38 +17,13 @@ class _AdminMusicScreenState extends State<AdminMusicScreen> {
   Future<void> _review(DocumentSnapshot<Map<String, dynamic>> doc, bool approve) async {
     if (_busy.contains(doc.id)) return;
     setState(() => _busy.add(doc.id));
-    final data = doc.data() ?? const <String, dynamic>{};
     try {
       final batch = _db.batch();
       if (approve) {
-        final rights = data['commercialUseAllowed'] == true &&
-            data['derivativesAllowed'] == true &&
-            data['catalogDistributionAllowed'] == true;
-        final audioUrl = (data['audioUrl'] ?? '').toString();
-        if (!rights || !audioUrl.startsWith('https://')) {
-          throw Exception('Lisans izinleri veya HTTPS ses bağlantısı eksik.');
-        }
-        batch.set(_db.collection('music_tracks').doc(doc.id), <String, dynamic>{
-          'title': data['title'],
-          'artist': data['artist'],
-          'audioUrl': audioUrl,
-          'artworkUrl': data['artworkUrl'] ?? '',
-          'sourceUrl': data['sourceUrl'] ?? '',
-          'category': data['category'] ?? 'Türkçe',
-          'mood': data['mood'] ?? 'Seyahat',
-          'durationMs': (data['durationMs'] as num?)?.toInt() ?? 180000,
-          'license': data['licenseType'] ?? 'DIRECT-TBT',
-          'licenseType': data['licenseType'] ?? 'DIRECT-TBT',
-          'attributionText': data['attributionText'] ?? '',
-          'commercialUseAllowed': true,
-          'derivativesAllowed': true,
-          'catalogDistributionAllowed': true,
-          'active': true,
-          'trending': false,
-          'verifiedBy': FirebaseAuth.instance.currentUser?.uid,
-          'verifiedAt': FieldValue.serverTimestamp(),
-          'createdAt': FieldValue.serverTimestamp(),
-        });
+        await FirebaseFunctions.instanceFor(region: 'us-central1').httpsCallable(
+          'approveMusicSubmission', options: HttpsCallableOptions(timeout: const Duration(minutes: 5)),
+        ).call({'submissionId': doc.id});
+        return;
       }
       batch.update(doc.reference, <String, dynamic>{
         'status': approve ? 'approved' : 'rejected',
@@ -105,7 +81,7 @@ class _AdminMusicScreenState extends State<AdminMusicScreen> {
             return _ReviewCard(
               title: (d['title'] ?? 'Müzik').toString(),
               subtitle: '${d['artist'] ?? ''} • ${d['licenseType'] ?? ''}',
-              detail: '${d['category'] ?? ''} / ${d['mood'] ?? ''}\n${d['audioUrl'] ?? ''}',
+              detail: '${d['category'] ?? ''} / ${d['mood'] ?? ''}\nLisans / izin belgesi: ${d['sourceUrl'] ?? ''}\nAtıf: ${d['attributionText'] ?? ''}\nSes: ${d['audioUrl'] ?? ''}',
               busy: _busy.contains(doc.id),
               approveLabel: 'Onayla',
               onReject: () => _review(doc, false),
