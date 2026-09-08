@@ -5,7 +5,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
-import '../services/story_service.dart';
 import '../theme/app_theme.dart';
 import 'camera_video_post_screen.dart';
 import 'create_post_screen.dart';
@@ -228,8 +227,10 @@ class _CameraScreenState extends State<CameraScreen>
 
   Future<void> _handleVideo(File video) async {
     if (widget.storyMode) {
+      if (!mounted) return;
+      // Match the photo path: cancelling the editor must return to an idle camera.
+      _finishOpening();
       try {
-        setState(() => _returningFromCamera = true);
         final shared = await Navigator.push<bool>(
           context,
           MaterialPageRoute(
