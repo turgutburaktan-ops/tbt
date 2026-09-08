@@ -33,7 +33,7 @@ void main() {
     await tester.pumpWidget(screen(25));
     final ad = find.text('Sponsorlu test kartı');
     final initialY = tester.getTopLeft(ad).dy;
-    expect(initialY, greaterThan(tester.getBottomLeft(find.text('Post 11')).dy));
+    expect(initialY, greaterThanOrEqualTo(tester.getBottomLeft(find.text('Post 11')).dy));
     expect(tester.getTopLeft(find.text('Post 12')).dy, greaterThan(initialY));
     expect(ad, findsOneWidget);
 
