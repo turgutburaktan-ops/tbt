@@ -9,32 +9,16 @@ concurrency:
   group: tbt-sound-videos
   cancel-in-progress: false
 jobs:
-  probe:
+  publish:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
-      - run: sudo apt-get update -qq && sudo apt-get install -y ffmpeg
-      - name: Probe candidate videos
-        shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p /tmp/tbt-candidates
-          curl -fL --retry 3 --max-time 120 -sS -o /tmp/tbt-candidates/travertines.webm 'https://upload.wikimedia.org/wikipedia/commons/1/12/%D0%A2%D1%80%D0%B0%D0%B2%D0%B5%D1%80%D1%82%D0%B8%D0%BD%D0%B8.webm'
-          curl -fL --retry 3 --max-time 120 -sS -o /tmp/tbt-candidates/kizkulesi.webm 'https://upload.wikimedia.org/wikipedia/commons/9/96/Maiden%27s_tower_K%C4%B1z_Kulesi_Istanbul.webm'
-          echo 'SHA256_START'
-          sha256sum /tmp/tbt-candidates/*.webm
-          echo 'SHA256_END'
-          for f in travertines kizkulesi; do
-            echo "${f^^}_PROBE_START"
-            ffprobe -v error -show_entries format=duration,size:stream=codec_name,codec_type,width,height -of json "/tmp/tbt-candidates/$f.webm"
-            echo "${f^^}_PROBE_END"
-            ffmpeg -y -v error -ss 5 -i "/tmp/tbt-candidates/$f.webm" -frames:v 1 "/tmp/tbt-candidates/$f.jpg"
-          done
-      - uses: actions/upload-artifact@v4
+      - uses: actions/setup-node@v4
         with:
-          name: tbt-sound-candidate-frames-v2
-          path: |
-            /tmp/tbt-candidates/travertines.jpg
-            /tmp/tbt-candidates/kizkulesi.jpg
-          if-no-files-found: error
+          node-version: '20'
+      - run: sudo apt-get update -qq && sudo apt-get install -y ffmpeg
+      - run: npm install --prefix functions --ignore-scripts --no-audit --no-fund
+      - run: node tool/publish_sound_videos.cjs --publish
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
