@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../services/chat_service.dart';
+import '../models/chat_message.dart';
 import '../theme/app_theme.dart';
 
 Future<void> shareCardToChat(
@@ -48,6 +49,11 @@ Future<void> shareCardToChat(
             ),
           ),
           const Divider(color: Colors.white10, height: 1),
+          StreamBuilder<List<ChatThread>>(stream: ChatService.instance.myThreads(), builder: (context, snapshot) {
+            final groups = (snapshot.data ?? <ChatThread>[]).where((t) => t.isGroup).toList();
+            if (groups.isEmpty) return const SizedBox.shrink();
+            return SizedBox(height: 110, child: ListView(scrollDirection: Axis.horizontal, children: groups.map((t) => SizedBox(width: 140, child: ListTile(leading: const Icon(Icons.groups), title: Text(t.name, maxLines: 2), onTap: () => Navigator.pop(sheetContext, {'threadId': t.id, 'id': '', 'name': t.name})))).toList()));
+          }),
           Expanded(
             child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
               stream: FirebaseFirestore.instance
@@ -131,7 +137,7 @@ Future<void> shareCardToChat(
         // Kapak olmasa da gerçek etkinlik kimliğiyle mesaj gönderilir.
       }
     }
-    final threadId = await ChatService.instance.ensureDirectThread(
+    final threadId = target['threadId'] ?? await ChatService.instance.ensureDirectThread(
       targetId,
       sourceType: sharedType,
       sourceId: sharedId,

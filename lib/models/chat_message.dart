@@ -2,6 +2,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ChatThread {
   final String id;
+  final String name;
+  final String type;
+  final String ownerId;
+  final String? photoUrl;
+  final List<String> adminIds;
+  final String? pinnedMessageId;
+  bool get isGroup => type == 'group';
   final List<String> memberIds;
   final String lastMessage;
   final String lastSenderId;
@@ -15,6 +22,12 @@ class ChatThread {
 
   const ChatThread({
     required this.id,
+    this.name = 'Grup',
+    this.type = 'direct',
+    this.ownerId = '',
+    this.photoUrl,
+    this.adminIds = const [],
+    this.pinnedMessageId,
     required this.memberIds,
     required this.lastMessage,
     required this.lastSenderId,
@@ -64,6 +77,12 @@ class ChatThread {
     final rawDeleted = data['deletedMessageIds'];
     return ChatThread(
       id: doc.id,
+      name: (data['name'] ?? 'Grup').toString(),
+      type: (data['type'] ?? 'direct').toString(),
+      ownerId: (data['ownerId'] ?? '').toString(),
+      photoUrl: data['photoUrl']?.toString(),
+      pinnedMessageId: data['pinnedMessageId']?.toString(),
+      adminIds: List<String>.from(data['adminIds'] ?? []),
       memberIds: rawMembers is List
           ? rawMembers.map((e) => e.toString()).toList(growable: false)
           : const <String>[],
@@ -85,6 +104,12 @@ class ChatThread {
 class ChatMessage {
   final String id;
   final String senderId;
+  final String senderName;
+  final bool pending;
+  final bool edited;
+  final List<String> options;
+  final Map<String, dynamic> votes;
+  final bool closed;
   final String text;
   final String type;
   final String? mediaUrl;
@@ -104,6 +129,12 @@ class ChatMessage {
   const ChatMessage({
     required this.id,
     required this.senderId,
+    this.senderName = 'Üye',
+    this.pending = false,
+    this.edited = false,
+    this.options = const [],
+    this.votes = const {},
+    this.closed = false,
     required this.text,
     this.type = 'text',
     this.mediaUrl,
@@ -147,6 +178,12 @@ class ChatMessage {
     return ChatMessage(
       id: doc.id,
       senderId: (data['senderId'] ?? '').toString(),
+      senderName: (data['senderName'] ?? 'Üye').toString(),
+      pending: doc.metadata.hasPendingWrites,
+      edited: data['editedAt'] != null,
+      options: List<String>.from(data['options'] ?? []),
+      votes: Map<String, dynamic>.from(data['votes'] ?? {}),
+      closed: data['closed'] == true,
       text: (data['text'] ?? '').toString(),
       type: (data['type'] ?? 'text').toString(),
       mediaUrl: data['mediaUrl']?.toString(),

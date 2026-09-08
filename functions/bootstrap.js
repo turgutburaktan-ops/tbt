@@ -23,3 +23,6 @@ Object.assign(exports, require('./retention'));
 Object.assign(exports, require('./spot_submission'));
 
 Object.assign(exports, require('./reservation_preparation'));
+
+const {chatAction, chatGroupMessageNotification} = require('./chat_collaboration');
+Object.assign(exports, {chatAction, chatGroupMessageNotification});

@@ -6,6 +6,7 @@ import '../models/chat_message.dart';
 import '../services/app_notification_service.dart';
 import '../services/chat_service.dart';
 import 'chat_screen.dart';
+import '../widgets/chat_collaboration_controls.dart';
 
 class ChatInboxScreen extends StatefulWidget {
   const ChatInboxScreen({super.key});
@@ -258,6 +259,11 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
             final otherIds = thread.memberIds
                 .where((id) => id != myId)
                 .toList(growable: false);
+            if (thread.isGroup) return ListTile(
+              leading: const CircleAvatar(child: Icon(Icons.groups_outlined)),
+              title: Text(thread.name), subtitle: Text(thread.lastMessage, maxLines: 1, overflow: TextOverflow.ellipsis),
+              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ChatScreen(otherUserId: '', groupThreadId: thread.id))),
+            );
             if (otherIds.isEmpty) return const SizedBox.shrink();
             final lastRead = thread.lastReadAt[myId];
             final unread = thread.lastSenderId != myId &&
@@ -285,6 +291,7 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
         foregroundColor: Colors.white,
         title: const Text('Mesajlar'),
         actions: [
+          PopupMenuButton<String>(tooltip: 'Grup sohbeti', icon: const Icon(Icons.group_add_outlined), onSelected: (v) => startGroupChat(context, join: v == 'join'), itemBuilder: (_) => const [PopupMenuItem(value: 'create', child: Text('Yeni grup')), PopupMenuItem(value: 'join', child: Text('Davetle katıl'))]),
           IconButton(
             tooltip: 'Yeni mesaj',
             onPressed: () => _searchFocus.requestFocus(),

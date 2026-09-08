@@ -30,6 +30,10 @@ exports.pushOnNotificationCreated = onDocumentCreated(
 
     const userId = event.params.userId;
     const db = getFirestore();
+    if (['message','group_message'].includes(data.type) && data.sourceId) {
+      const preferences = await db.doc(`users/${userId}/chat_preferences/${data.sourceId}`).get();
+      if (preferences.data()?.muted) return;
+    }
     const tokensSnap = await db.collection('users').doc(userId).collection('push_tokens').get();
     const tokens = tokensSnap.docs
       .map((doc) => (doc.data().token || '').trim())

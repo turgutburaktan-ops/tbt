@@ -132,8 +132,8 @@ service cloud.firestore {
     }
     function threadUnblocked(id) {
       let members = get(/databases/$(database)/documents/chat_threads/$(id)).data.memberIds;
-      let other = members[0] == request.auth.uid ? members[1] : members[0];
-      return members.size() == 2 && !blockedBetween(other);
+      let other = members.size() > 1 ? (members[0] == request.auth.uid ? members[1] : members[0]) : request.auth.uid;
+      return get(/databases/$(database)/documents/chat_threads/$(id)).data.type == 'group' || (members.size() == 2 && !blockedBetween(other));
     }
     function validStoryInteraction(storyId, uid) {
       let story = get(/databases/$(database)/documents/stories/$(storyId)).data;
@@ -225,6 +225,11 @@ service cloud.firestore {
       allow create: if safeUserCreate(uid);
       allow update: if isAdmin() || safeUserUpdate(uid);
       allow delete: if isAdmin() || isSelf(uid);
+      match /chat_preferences/{threadId} {
+        allow read: if isSelf(uid);
+        allow write: if false;
+        match /hidden/{messageId} { allow read: if isSelf(uid); allow write: if false; }
+      }
       match /business_coupons/{couponId} {
         allow read: if isSelf(uid);
         allow write: if false;
@@ -269,9 +274,9 @@ service cloud.firestore {
       );
       allow list: if signedIn() && resource.data.memberIds.hasAny([request.auth.uid]);
       allow create: if validDirectThreadCreate();
-      allow update: if signedIn() && resource.data.memberIds.hasAny([request.auth.uid]) && request.resource.data.memberIds == resource.data.memberIds && request.resource.data.type == resource.data.type && threadUnblocked(threadId);
+      allow update: if signedIn() && resource.data.memberIds.hasAny([request.auth.uid]) && request.resource.data.memberIds == resource.data.memberIds && request.resource.data.type == resource.data.type && threadUnblocked(threadId) && (resource.data.type == 'direct' || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lastMessage','lastSenderId','lastMessageAt','updatedAt','lastReadAt','typingAt']) && request.resource.data.get('lastReadAt', {}).diff(resource.data.get('lastReadAt', {})).affectedKeys().hasOnly([request.auth.uid]) && request.resource.data.get('typingAt', {}).diff(resource.data.get('typingAt', {})).affectedKeys().hasOnly([request.auth.uid]) && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['lastSenderId']) || request.resource.data.lastSenderId == request.auth.uid)));
       allow delete: if false;
-      match /messages/{messageId} { allow read: if threadMember(threadId); allow create: if threadMember(threadId) && threadUnblocked(threadId) && request.resource.data.senderId == request.auth.uid && request.resource.data.text is string && request.resource.data.text.size() > 0 && request.resource.data.text.size() <= 1500 && request.resource.data.deleted == false; allow update, delete: if false; }
+      match /messages/{messageId} { allow read: if threadMember(threadId); allow create: if threadMember(threadId) && threadUnblocked(threadId) && request.resource.data.senderId == request.auth.uid && request.resource.data.text is string && request.resource.data.text.size() > 0 && request.resource.data.text.size() <= 1500 && request.resource.data.deleted == false && request.resource.data.get('type','text') in ['text','image','audio','share'] && request.resource.data.get('reactions',{}) == {} && request.resource.data.get('votes',{}) == {}; allow update, delete: if false; }
     }
     match /music_tracks/{trackId} {
       allow read: if true;

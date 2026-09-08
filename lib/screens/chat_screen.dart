@@ -11,18 +11,21 @@ import 'package:url_launcher/url_launcher.dart';
 import '../models/chat_message.dart';
 import '../services/chat_service.dart';
 import '../widgets/chat_voice_message.dart';
+import '../widgets/chat_collaboration_controls.dart';
 import '../widgets/firebase_media_image.dart';
 import 'post_detail_screen.dart';
 import 'event_deep_link_screen.dart';
 
 class ChatScreen extends StatefulWidget {
   final String otherUserId;
+  final String? groupThreadId;
   final String otherDisplayName;
   final String? sourceType;
   final String? sourceId;
 
   const ChatScreen({
     super.key,
+    this.groupThreadId,
     required this.otherUserId,
     this.otherDisplayName = 'Kullanıcı',
     this.sourceType,
@@ -51,6 +54,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   ChatMessage? _replyTo;
   String? _lastMarkedMessageId;
   Timer? _typingTimer;
+  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _hiddenSubscription;
+  Set<String> _hiddenIds = {};
+  ChatThread? _currentThread;
 
   static const _bg = Color(0xFF090B0E);
   static const _panel = Color(0xFF11161C);
@@ -76,11 +82,13 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   Future<void> _prepare() async {
     try {
-      final id = await ChatService.instance.ensureDirectThread(
+      final id = widget.groupThreadId ?? await ChatService.instance.ensureDirectThread(
         widget.otherUserId,
         sourceType: widget.sourceType,
         sourceId: widget.sourceId,
       );
+      final uid = FirebaseAuth.instance.currentUser!.uid;
+      _hiddenSubscription = FirebaseFirestore.instance.collection('users/$uid/chat_preferences/$id/hidden').snapshots().listen((snapshot) { if (mounted) setState(() => _hiddenIds = snapshot.docs.map((d) => d.id).toSet()); });
       try {
         await ChatService.instance.markThreadRead(id);
       } catch (_) {}
@@ -387,6 +395,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                 title: const Text('Kopyala'),
                 onTap: () => Navigator.pop(sheetContext, 'copy'),
               ),
+            if (mine && message.type == 'text') ListTile(leading: const Icon(Icons.edit_outlined), title: const Text('Düzenle'), onTap: () => Navigator.pop(sheetContext, 'edit')),
+            ListTile(leading: const Icon(Icons.hide_source), title: const Text('Benden sil'), onTap: () => Navigator.pop(sheetContext, 'hide')),
+            if (_currentThread?.isGroup != true || (_currentThread?.adminIds.contains(FirebaseAuth.instance.currentUser?.uid) ?? false)) ListTile(leading: const Icon(Icons.push_pin_outlined), title: const Text('Sabitle / kaldır'), onTap: () => Navigator.pop(sheetContext, 'pin')),
             if (mine)
               ListTile(
                 leading: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent),
@@ -413,6 +424,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           const SnackBar(content: Text('Mesaj kopyalandı.')),
         );
       }
+    } else if (action == 'edit') {
+      final text = await chatTextPrompt(context, 'Mesajı düzenle', initial: message.text);
+      if (text != null && mounted) await runChatAction(context, 'edit', {'threadId': _threadId, 'messageId': message.id, 'text': text});
+    } else if (action == 'hide' || action == 'pin') {
+      await runChatAction(context, action, {'threadId': _threadId, 'messageId': message.id});
     } else if (action == 'delete') {
       try {
         await ChatService.instance.deleteForEveryone(
@@ -453,6 +469,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   }
 
   bool _isSeen(ChatMessage message, ChatThread? thread) {
+    if (thread?.isGroup == true) {
+      final others = thread!.memberIds.where((id) => id != FirebaseAuth.instance.currentUser?.uid);
+      return others.isNotEmpty && message.createdAt != null && others.every((id) => thread.lastReadAt[id] != null && !thread.lastReadAt[id]!.isBefore(message.createdAt!));
+    }
     final readAt = thread?.lastReadAt[widget.otherUserId];
     final sentAt = message.createdAt;
     if (readAt == null || sentAt == null) return false;
@@ -460,6 +480,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   }
 
   bool _otherTyping(ChatThread? thread) {
+    if (thread?.isGroup == true) return thread!.typingAt.entries.any((e) => e.key != FirebaseAuth.instance.currentUser?.uid && e.value != null && DateTime.now().difference(e.value!).inSeconds < 5);
     final at = thread?.typingAt[widget.otherUserId];
     if (at == null) return false;
     return DateTime.now().difference(at.toLocal()) < const Duration(seconds: 6);
@@ -800,6 +821,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                         durationMs: message.durationMs,
                         mine: mine,
                       )
+                    else if (message.type == 'poll')
+                      ChatPollCard(threadId: _threadId!, message: message)
                     else if (message.isShare)
                       _shareCard(message)
                     else
@@ -822,7 +845,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            time,
+                            '${message.edited ? 'Düzenlendi · ' : ''}$time',
                             style: const TextStyle(
                               color: Colors.white38,
                               fontSize: 10.3,
@@ -832,7 +855,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                           if (mine) ...[
                             const SizedBox(width: 4),
                             Icon(
-                              seen ? Icons.done_all_rounded : Icons.done_rounded,
+                              message.pending ? Icons.schedule : seen ? Icons.done_all_rounded : Icons.done_rounded,
                               size: 14,
                               color: seen ? _accent : Colors.white38,
                             ),
@@ -856,6 +879,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   }
 
   Widget _conversationHeader() {
+    if (widget.groupThreadId != null) return StreamBuilder<ChatThread?>(stream: _threadStream, builder: (context, snapshot) => ListTile(contentPadding: EdgeInsets.zero, title: Text(snapshot.data?.name ?? 'Grup', maxLines: 1, overflow: TextOverflow.ellipsis), subtitle: Text('${snapshot.data?.memberIds.length ?? 0} üye'), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ChatGroupInfo(threadId: widget.groupThreadId!)))));
     return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
       stream: FirebaseFirestore.instance
           .collection('users')
@@ -1124,6 +1148,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _showSafetyMenu() async {
+    if (widget.groupThreadId != null) { await Navigator.push(context, MaterialPageRoute(builder: (_) => ChatGroupInfo(threadId: widget.groupThreadId!))); return; }
     final action = await showModalBottomSheet<String>(
       context: context,
       backgroundColor: const Color(0xFF12171D),
@@ -1166,6 +1191,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _typingTimer?.cancel();
+    _hiddenSubscription?.cancel();
     _controller.removeListener(_handleTypingChanged);
     _stopTyping();
     _controller.dispose();
@@ -1187,6 +1213,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         titleSpacing: 0,
         title: _conversationHeader(),
         actions: [
+          if (_threadId != null) ChatPreferencesButton(threadId: _threadId!),
+          if (widget.groupThreadId != null && _threadId != null) PopupMenuButton<String>(tooltip: 'Birlikte planla', icon: const Icon(Icons.add_circle_outline), onSelected: (v) => v == 'poll' ? createChatPoll(context, _threadId!) : createGroupPlan(context, _threadId!), itemBuilder: (_) => const [PopupMenuItem(value: 'poll', child: Text('Anket oluştur')), PopupMenuItem(value: 'plan', child: Text('Etkinlik planla'))]),
           IconButton(
             tooltip: 'Sohbette ara',
             onPressed: () => setState(() => _searching = !_searching),
@@ -1215,9 +1243,12 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               stream: _threadStream,
               builder: (context, threadSnapshot) {
                 final thread = threadSnapshot.data;
+                _currentThread = thread;
+                if (threadSnapshot.hasError) return const Center(child: Text('Bu sohbete erişimin yok.'));
                 return Column(
                   children: [
                     _searchBar(),
+                    if (thread?.pinnedMessageId != null) StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(stream: FirebaseFirestore.instance.doc('chat_threads/$_threadId/messages/${thread!.pinnedMessageId}').snapshots(), builder: (context, snap) => ListTile(dense: true, leading: const Icon(Icons.push_pin_outlined), title: Text((snap.data?.data()?['text'] ?? 'Sabitlenmiş mesaj').toString(), maxLines: 2, overflow: TextOverflow.ellipsis))),
                     Expanded(
                       child: StreamBuilder<List<ChatMessage>>(
                         stream: _messagesStream,
@@ -1240,7 +1271,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                               ),
                             );
                           }
-                          final allMessages = snapshot.data ?? const <ChatMessage>[];
+                          final allMessages = (snapshot.data ?? const <ChatMessage>[]).where((m) => !_hiddenIds.contains(m.id)).toList();
                           _markReadFromMessages(allMessages, myId);
                           final query = _searchController.text.trim().toLowerCase();
                           final messages = query.isEmpty
@@ -1308,13 +1339,16 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                                   message.reactions;
                               return KeyedSubtree(
                                 key: ValueKey('chat-message-${message.id}'),
-                                child: _messageBubble(
+                                child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                                  if (thread?.isGroup == true && !mine) Padding(padding: const EdgeInsets.only(left: 8, top: 6), child: Text(message.senderName, style: const TextStyle(color: _accent, fontSize: 11))),
+                                  _messageBubble(
                                   message: message,
                                   mine: mine,
                                   seen: mine && _isSeen(message, thread),
                                   removed: removed,
                                   reactions: reactions,
                                 ),
+                                ]),
                               );
                             },
                           );

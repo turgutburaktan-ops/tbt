@@ -16,6 +16,8 @@ import '../widgets/searchable_selection_field.dart';
 import 'event_location_picker_screen.dart';
 
 class EventCreateScreenV2 extends StatefulWidget {
+  final List<String> initialGroupMembers;
+  final bool returnEventId;
   final String initialTitle;
   final String initialCity;
   final String initialLocationLabel;
@@ -28,6 +30,8 @@ class EventCreateScreenV2 extends StatefulWidget {
 
   const EventCreateScreenV2({
     super.key,
+    this.initialGroupMembers = const [],
+    this.returnEventId = false,
     this.initialTitle = '',
     this.initialCity = '',
     this.initialLocationLabel = '',
@@ -85,6 +89,10 @@ class _EventCreateScreenV2State extends State<EventCreateScreenV2> {
   @override
   void initState() {
     super.initState();
+    if (widget.initialGroupMembers.isNotEmpty) {
+      _visibility = EventVisibility.selectedPeople;
+      _selectedPeople = {for (final id in widget.initialGroupMembers) if (id != FirebaseAuth.instance.currentUser?.uid) id: 'Grup üyesi'};
+    }
     _title = TextEditingController(text: widget.initialTitle);
     _city = TextEditingController(text: widget.initialCity);
     _location = TextEditingController(text: widget.initialLocationLabel);
@@ -385,7 +393,7 @@ class _EventCreateScreenV2State extends State<EventCreateScreenV2> {
           .httpsCallable('setSocialEventCover')
           .call({'eventId': eventId, 'coverImageUrl': url, 'coverStoragePath': ref.fullPath})
           .timeout(const Duration(seconds: 12));
-      if (mounted) Navigator.pop(context, true);
+      if (mounted) Navigator.pop(context, widget.returnEventId ? eventId : true);
     } catch (e) {
       if (mounted) setState(() => _error = e.toString().replaceFirst('Exception: ', ''));
     } finally {

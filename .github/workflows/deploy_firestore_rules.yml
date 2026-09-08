@@ -52,8 +52,11 @@ jobs:
           distribution: temurin
           java-version: '21'
 
+      - name: Install chat test dependencies
+        run: npm install --prefix functions
+
       - name: Check coupon access rules
-        run: firebase emulators:exec --only firestore --project demo-tbt "node tool/test_coupon_rules.cjs && node tool/test_event_hub_rules.cjs" --non-interactive
+        run: firebase emulators:exec --only firestore --project demo-tbt "node tool/test_coupon_rules.cjs && node tool/test_event_hub_rules.cjs && node tool/test_chat_collaboration.cjs" --non-interactive
 
       - name: Prepare event discovery index
         run: |

@@ -268,6 +268,10 @@ class PushNotificationService with WidgetsBindingObserver {
       );
       return;
     }
+    if (type == 'group_message' && sourceId.isNotEmpty) {
+      navigator.push(MaterialPageRoute(builder: (_) => ChatScreen(otherUserId: '', groupThreadId: sourceId)));
+      return;
+    }
     if (type == 'message' && actorId.isNotEmpty) {
       final data = await _profile(actorId);
       final displayName =

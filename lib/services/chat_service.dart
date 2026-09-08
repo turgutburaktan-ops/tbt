@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 
 import '../models/chat_message.dart';
@@ -96,7 +97,7 @@ class ChatService {
     if (otherUserId == user.uid) {
       throw Exception('Kendine mesaj gönderemezsin.');
     }
-    if (await isBlockedBetween(otherUserId)) {
+    if (otherUserId.isNotEmpty && await isBlockedBetween(otherUserId)) {
       throw Exception('Bu kullanıcıyla mesajlaşma kullanılamıyor.');
     }
 
@@ -219,9 +220,16 @@ class ChatService {
     );
   }
 
+  Future<Map<String, dynamic>> action(String action, Map<String, dynamic> data) async {
+    final result = await FirebaseFunctions.instance.httpsCallable('chatAction').call({'action': action, ...data});
+    return Map<String, dynamic>.from(result.data as Map);
+  }
+
   Future<void> markThreadRead(String threadId) async {
     final user = await _requiredUser();
     try {
+      final prefs = await _firestore.doc('users/${user.uid}/chat_preferences/$threadId').get();
+      if (prefs.data()?['readReceipts'] == false) return;
       await _firestore.collection('chat_threads').doc(threadId).update({
         'lastReadAt.${user.uid}': FieldValue.serverTimestamp(),
       }).timeout(const Duration(seconds: 5));
@@ -293,55 +301,11 @@ class ChatService {
     required String messageId,
     required String emoji,
   }) async {
-    final user = await _requiredUser();
-    final threadRef = _firestore.collection('chat_threads').doc(threadId);
-    await _firestore.runTransaction((transaction) async {
-      final thread = await transaction.get(threadRef);
-      final data = thread.data() ?? const <String, dynamic>{};
-      final members = (data['memberIds'] as List? ?? const <dynamic>[])
-          .map((e) => e.toString())
-          .toList(growable: false);
-      if (!members.contains(user.uid)) {
-        throw Exception('Bu sohbete erişimin yok.');
-      }
-      final deletedIds =
-          (data['deletedMessageIds'] as List? ?? const <dynamic>[])
-              .map((e) => e.toString())
-              .toSet();
-      if (deletedIds.contains(messageId)) return;
-      final raw = data['messageReactions'];
-      String? current;
-      if (raw is Map && raw[messageId] is Map) {
-        current = (raw[messageId] as Map)[user.uid]?.toString();
-      }
-      transaction.update(threadRef, {
-        'messageReactions.$messageId.${user.uid}': current == emoji
-            ? FieldValue.delete()
-            : emoji,
-      });
-    }).timeout(const Duration(seconds: 7));
+    await action('reaction', {'threadId': threadId, 'messageId': messageId, 'emoji': emoji});
   }
 
-  Future<void> deleteForEveryone({
-    required String threadId,
-    required String messageId,
-  }) async {
-    final user = await _requiredUser();
-    final message = await _firestore
-        .collection('chat_threads')
-        .doc(threadId)
-        .collection('messages')
-        .doc(messageId)
-        .get()
-        .timeout(const Duration(seconds: 6));
-    if (!message.exists) return;
-    if ((message.data()?['senderId'] ?? '').toString() != user.uid) {
-      throw Exception('Sadece kendi mesajını geri alabilirsin.');
-    }
-    await _firestore.collection('chat_threads').doc(threadId).update({
-      'deletedMessageIds': FieldValue.arrayUnion([messageId]),
-      'messageReactions.$messageId': FieldValue.delete(),
-    }).timeout(const Duration(seconds: 6));
+  Future<void> deleteForEveryone({required String threadId, required String messageId}) async {
+    await action('delete', {'threadId': threadId, 'messageId': messageId});
   }
 
   Future<void> sendMessage({
@@ -359,11 +323,11 @@ class ChatService {
     if (otherUserId == user.uid) {
       throw Exception('Kendine mesaj gönderemezsin.');
     }
-    if (threadId != directThreadId(user.uid, otherUserId)) {
+    if (otherUserId.isNotEmpty && threadId != directThreadId(user.uid, otherUserId)) {
       throw Exception('Geçersiz sohbet kimliği.');
     }
     ContentModerationService.instance.enforce(clean);
-    if (await isBlockedBetween(otherUserId)) {
+    if (otherUserId.isNotEmpty && await isBlockedBetween(otherUserId)) {
       throw Exception('Bu kullanıcıyla mesajlaşma kullanılamıyor.');
     }
     _enforceClientRateLimit(clean);
@@ -388,7 +352,7 @@ class ChatService {
     if (bytes.lengthInBytes > 15 * 1024 * 1024) {
       throw Exception('Fotoğraf en fazla 15 MB olabilir.');
     }
-    if (await isBlockedBetween(otherUserId)) {
+    if (otherUserId.isNotEmpty && await isBlockedBetween(otherUserId)) {
       throw Exception('Bu kullanıcıyla mesajlaşma kullanılamıyor.');
     }
     final messageRef = _firestore
@@ -438,7 +402,7 @@ class ChatService {
     if (bytes.lengthInBytes > 20 * 1024 * 1024) {
       throw Exception('Sesli mesaj en fazla 20 MB olabilir.');
     }
-    if (await isBlockedBetween(otherUserId)) {
+    if (otherUserId.isNotEmpty && await isBlockedBetween(otherUserId)) {
       throw Exception('Bu kullanıcıyla mesajlaşma kullanılamıyor.');
     }
     final messageRef = _firestore
@@ -529,9 +493,8 @@ class ChatService {
             ?.map((e) => e.toString())
             .toList() ??
         const <String>[];
-    if (members.length != 2 ||
-        !members.contains(user.uid) ||
-        !members.contains(otherUserId)) {
+    final isGroup = thread.data()?['type'] == 'group';
+    if (!members.contains(user.uid) || (!isGroup && (members.length != 2 || !members.contains(otherUserId)))) {
       throw Exception('Bu sohbete erişimin yok.');
     }
 
@@ -539,6 +502,7 @@ class ChatService {
         forcedMessageRef ?? threadRef.collection('messages').doc();
     final messageData = <String, dynamic>{
       'senderId': user.uid,
+      'senderName': user.displayName ?? 'Üye',
       'text': text,
       'type': type,
       'mediaUrl': mediaUrl,
@@ -599,6 +563,7 @@ class ChatService {
     unawaited(markThreadRead(threadId));
     unawaited(setTyping(threadId, false));
 
+    if (otherUserId.isEmpty) return;
     final senderName = (user.displayName ?? '').trim().isNotEmpty
         ? user.displayName!.trim()
         : 'Bir kullanıcı';
