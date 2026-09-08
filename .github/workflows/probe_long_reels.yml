@@ -17,21 +17,21 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p /tmp/tbt-long
-          curl -fL --retry 3 --max-time 180 -sS -o /tmp/tbt-long/cappadocia.webm 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Cappadocia_4K_-_TURKEY.webm'
-          curl -fL --retry 3 --max-time 180 -sS -o /tmp/tbt-long/gallipoli.webm 'https://commons.wikimedia.org/wiki/Special:Redirect/file/%C3%87anakkale_-_Gelibolu_(Gallipoli_-_Turkey).webm'
+          curl -fL --retry 3 --max-time 180 -sS -o /tmp/tbt-long/olympos.webm 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Olympos_Antique_City_-_Antalya_-_TURKEY.webm'
+          curl -fL --retry 3 --max-time 180 -sS -o /tmp/tbt-long/bozcaada.webm 'https://commons.wikimedia.org/wiki/Special:Redirect/file/BOZCAADA_TURKEY.webm'
           echo SHA256_START
           sha256sum /tmp/tbt-long/*.webm
           echo SHA256_END
-          for f in cappadocia gallipoli; do
+          for f in olympos bozcaada; do
             echo "${f^^}_PROBE_START"
             ffprobe -v error -show_entries format=duration,size:stream=codec_name,codec_type,width,height -of json "/tmp/tbt-long/$f.webm"
             echo "${f^^}_PROBE_END"
           done
-          ffmpeg -y -v error -ss 20 -i /tmp/tbt-long/cappadocia.webm -frames:v 1 /tmp/tbt-long/cappadocia-20.jpg
-          ffmpeg -y -v error -ss 35 -i /tmp/tbt-long/cappadocia.webm -frames:v 1 /tmp/tbt-long/cappadocia-35.jpg
-          ffmpeg -y -v error -ss 20 -i /tmp/tbt-long/gallipoli.webm -frames:v 1 /tmp/tbt-long/gallipoli-20.jpg
-          ffmpeg -y -v error -ss 60 -i /tmp/tbt-long/gallipoli.webm -frames:v 1 /tmp/tbt-long/gallipoli-60.jpg
+          ffmpeg -y -v error -ss 20 -i /tmp/tbt-long/olympos.webm -frames:v 1 /tmp/tbt-long/olympos-20.jpg
+          ffmpeg -y -v error -ss 55 -i /tmp/tbt-long/olympos.webm -frames:v 1 /tmp/tbt-long/olympos-55.jpg
+          ffmpeg -y -v error -ss 30 -i /tmp/tbt-long/bozcaada.webm -frames:v 1 /tmp/tbt-long/bozcaada-30.jpg
+          ffmpeg -y -v error -ss 80 -i /tmp/tbt-long/bozcaada.webm -frames:v 1 /tmp/tbt-long/bozcaada-80.jpg
       - uses: actions/upload-artifact@v4
         with:
-          name: tbt-long-reels-frames
+          name: tbt-long-reels-frames-v2
           path: /tmp/tbt-long/*.jpg
