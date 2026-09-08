@@ -37,13 +37,14 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
+  final _homeFeedKey = GlobalKey<_HomeFeedHubState>();
   DateTime? _lastBackPressedAt;
   final Set<int> _loadedTabs = <int>{0};
 
   Widget _tabPage(int index) {
     if (!_loadedTabs.contains(index)) return const SizedBox.shrink();
     return switch (index) {
-      0 => const _HomeFeedHub(),
+      0 => _HomeFeedHub(key: _homeFeedKey),
       1 => const _PlacesHub(),
       2 => _PlanningHub(onOpenNearby: () => _selectDestination(3)),
       3 => const _NearbyUnifiedHub(),
@@ -70,6 +71,11 @@ class _HomeScreenState extends State<HomeScreen> {
         _loadedTabs.add(0);
         _selectedIndex = 0;
       });
+      return;
+    }
+    if (_homeFeedKey.currentState?.returnToHomeFeed() == true) {
+      _lastBackPressedAt = null;
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
       return;
     }
     final now = DateTime.now();
@@ -202,7 +208,7 @@ class _BottomNav extends StatelessWidget {
 }
 
 class _HomeFeedHub extends StatefulWidget {
-  const _HomeFeedHub();
+  const _HomeFeedHub({super.key});
   @override
   State<_HomeFeedHub> createState() => _HomeFeedHubState();
 }
@@ -231,6 +237,12 @@ class _HomeFeedHubState extends State<_HomeFeedHub> {
       _loadedSections.add(value);
       _section = value;
     });
+  }
+
+  bool returnToHomeFeed() {
+    if (_section == 0) return false;
+    _setSection(0);
+    return true;
   }
 
   void _setPhotoMode(int value) {
