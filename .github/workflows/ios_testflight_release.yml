@@ -8,7 +8,7 @@ permissions:
 
 concurrency:
   group: ios-testflight-release-${{ github.ref }}
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   preflight:
@@ -16,14 +16,16 @@ jobs:
     with:
       platform: ios
     secrets: inherit
+
   auth-check:
     needs: preflight
     uses: ./.github/workflows/store_auth_smoke.yml
     secrets: inherit
+
   build-and-upload:
     needs: [preflight, auth-check]
     name: Build and upload to TestFlight
-    runs-on: macos-15
+    runs-on: macos-26
     timeout-minutes: 60
     env:
       BUNDLE_ID: com.tbt.social
@@ -31,6 +33,17 @@ jobs:
       PROFILE_NAME: TBT App Store 2026
 
     steps:
+      - name: Verify Xcode 26 toolchain
+        shell: bash
+        run: |
+          set -euo pipefail
+          xcodebuild -version
+          SDK_VERSION=$(xcrun --sdk iphoneos --show-sdk-version)
+          case "$SDK_VERSION" in
+            26.*) ;;
+            *) echo "Expected iOS 26 SDK, found $SDK_VERSION"; exit 1 ;;
+          esac
+
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -50,15 +63,22 @@ jobs:
           flutter config --no-enable-swift-package-manager
           rm -rf ios
           flutter create --platforms=ios --org com.tbt --project-name best_photo_spot .
+          dart run flutter_launcher_icons
+          ICON_PATH='ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-1024x1024@1x.png'
+          test -s "$ICON_PATH"
+          test "$(sips -g pixelWidth "$ICON_PATH" | awk '/pixelWidth/{print $2}')" = '1024'
+          test "$(sips -g pixelHeight "$ICON_PATH" | awk '/pixelHeight/{print $2}')" = '1024'
 
       - name: Configure iOS application
         shell: bash
         env:
           FIREBASE_IOS_GOOGLE_SERVICE_INFO_PLIST_BASE64: ${{ secrets.FIREBASE_IOS_GOOGLE_SERVICE_INFO_PLIST_BASE64 }}
+          ADMOB_IOS_APP_ID: ca-app-pub-3462343788063276~3452529921
         run: |
           set -euo pipefail
           test -n "$FIREBASE_IOS_GOOGLE_SERVICE_INFO_PLIST_BASE64"
           python3 - <<'PY'
+          import os
           import plistlib
           from pathlib import Path
 
@@ -69,15 +89,16 @@ jobs:
           info['NSCameraUsageDescription'] = 'Fotoğraf ve video çekmek için kameraya erişim gerekir.'
           info['NSMicrophoneUsageDescription'] = 'Video kaydında ses kullanmak için mikrofona erişim gerekir.'
           info['NSLocationWhenInUseUsageDescription'] = 'Yakındaki mekanları, etkinlikleri ve rota mesafelerini göstermek için konum kullanılır.'
+          info['NSLocationAlwaysAndWhenInUseUsageDescription'] = 'Rota ve çevrendeki içerikleri doğru şekilde göstermek için konum erişimi gerekir.'
+          info['NSLocationAlwaysUsageDescription'] = 'Rota ve çevrendeki içerikleri doğru şekilde göstermek için konum erişimi gerekir.'
           info['NSPhotoLibraryUsageDescription'] = 'Story ve paylaşım için galerinden fotoğraf veya video seçebilmek için erişim gerekir.'
           info['NSPhotoLibraryAddUsageDescription'] = 'Düzenlediğin içerikleri fotoğraf arşivine kaydedebilmek için izin gerekir.'
-          info['NSUserTrackingUsageDescription'] = 'İzninle daha alakalı reklamlar göstermek ve reklam performansını ölçmek için cihaz tanımlayıcısı kullanılır.'
+          info['NSUserTrackingUsageDescription'] = 'İzninle, sana daha alakalı reklamlar göstermek ve reklam performansını ölçmek için cihaz tanımlayıcısı kullanılır.'
           info['ITSAppUsesNonExemptEncryption'] = False
           info['CFBundleDisplayName'] = 'TBT'
-          info['NSLocationAlwaysAndWhenInUseUsageDescription'] = 'Rota ve çevrendeki içerikleri göstermek için konum erişimi gerekir.'
-          info['NSLocationAlwaysUsageDescription'] = 'Rota ve çevrendeki içerikleri göstermek için konum erişimi gerekir.'
+          info['CFBundleName'] = 'TBT'
           info['UIBackgroundModes'] = ['fetch', 'remote-notification']
-          info['GADApplicationIdentifier'] = 'ca-app-pub-3462343788063276~3452529921'
+          info['GADApplicationIdentifier'] = os.environ['ADMOB_IOS_APP_ID']
 
           schemes = info.get('CFBundleURLTypes', [])
           for name, scheme in (
@@ -232,23 +253,26 @@ jobs:
 
       - name: Build signed IPA
         shell: bash
+        env:
+          ADMOB_NATIVE_IOS: ca-app-pub-3462343788063276/9247782088
         run: |
           set -euo pipefail
           FIREBASE_IOS_API_KEY=$(/usr/libexec/PlistBuddy -c 'Print :API_KEY' ios/Runner/GoogleService-Info.plist)
           FIREBASE_IOS_APP_ID=$(/usr/libexec/PlistBuddy -c 'Print :GOOGLE_APP_ID' ios/Runner/GoogleService-Info.plist)
           flutter build ipa \
             --release \
-            --build-number="${GITHUB_RUN_NUMBER}" \
+            --build-name=1.0.13 \
+            --build-number=21 \
             --export-options-plist=ios/ExportOptions.plist \
             --dart-define="FIREBASE_IOS_API_KEY=$FIREBASE_IOS_API_KEY" \
             --dart-define="FIREBASE_IOS_APP_ID=$FIREBASE_IOS_APP_ID" \
             --dart-define=IOS_BUNDLE_ID=com.tbt.social \
-            --dart-define=ADMOB_NATIVE_IOS=ca-app-pub-3462343788063276/9247782088
+            --dart-define="ADMOB_NATIVE_IOS=$ADMOB_NATIVE_IOS"
 
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
         with:
-          name: tbt-ios-ipa
+          name: tbt-ios-ipa-1.0.13-build21
           path: build/ios/ipa/*.ipa
           if-no-files-found: error
           retention-days: 14
