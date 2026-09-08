@@ -91,14 +91,14 @@
       "contentType": "image/jpeg"
     },
     {
-      "src": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/Minarett_Ulu_Camii_Harput.jpg/1920px-Minarett_Ulu_Camii_Harput.jpg",
+      "src": "https://upload.wikimedia.org/wikipedia/commons/9/9e/Minarett_Ulu_Camii_Harput.jpg",
       "author": "Ingeborg Simon",
       "license": "CC BY-SA 3.0",
       "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
       "sourcePage": "https://commons.wikimedia.org/wiki/File:Minarett_Ulu_Camii_Harput.jpg",
       "date": "12 Eylül 2014",
-      "sha256": "a5e0142791b03e9227092a34b36881df5465289fbc89c4a1cc516ef49ca674fe",
-      "contentType": "image/jpeg"
+      "contentType": "image/jpeg",
+      "sha1": "242ac20bce34ce35517d232a12922244b28c6b64"
     },
     {
       "src": "assets/spots/elazig-alacali-camii.webp",

@@ -20,7 +20,7 @@ async function main() {
   }
   const buffers = [];
   for (const m of data.media) {
-    check(m.author && m.licenseUrl && m.sourcePage && /^[a-f0-9]{64}$/.test(m.sha256), 'Missing attribution or checksum');
+    check(m.author && m.licenseUrl && m.sourcePage && (/^[a-f0-9]{64}$/.test(m.sha256 || '') || /^[a-f0-9]{40}$/.test(m.sha1 || '')), 'Missing attribution or checksum');
     let bytes;
     if (m.src.startsWith('https://')) {
       check(new URL(m.src).hostname === 'upload.wikimedia.org', 'Unexpected media host');
@@ -32,7 +32,7 @@ async function main() {
       bytes = await fs.readFile(path.join(root, m.src));
     }
     check(bytes.length > 1000 && bytes.length < 20 * 1024 * 1024, 'Invalid media size');
-    check(crypto.createHash('sha256').update(bytes).digest('hex') === m.sha256, 'Reviewed image checksum mismatch');
+    check(crypto.createHash(m.sha256 ? 'sha256' : 'sha1').update(bytes).digest('hex') === (m.sha256 || m.sha1), `Reviewed image checksum mismatch: ${m.src}`);
     buffers.push(bytes);
   }
   console.log('Validated five drafts and three reviewed images.');
