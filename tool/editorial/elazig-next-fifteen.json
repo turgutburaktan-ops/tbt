@@ -207,7 +207,7 @@
   ],
   "media": [
     {
-      "src": "https://upload.wikimedia.org/wikipedia/commons/1/18/KebanDam.JPG",
+      "src": "assets/spots/editorial-elazig-keban.jpg",
       "sha256": "be6f5435c95acbd291416dc60bfb724b29b1ed477d48188d1cb71b6d5252082c",
       "author": "Heinz it up 57",
       "license": "CC BY-SA 2.5",
@@ -217,7 +217,7 @@
       "contentType": "image/jpeg"
     },
     {
-      "src": "https://upload.wikimedia.org/wikipedia/commons/2/21/Hazar_G%C3%B6l%C3%BC.JPG",
+      "src": "assets/spots/editorial-elazig-hazar.jpg",
       "sha256": "ab9472651eeab764432458ea1d6f80ed0fc47818ed569d1ae884e9873cc1d5b4",
       "author": "Berke Keleş",
       "license": "CC BY-SA 3.0",
@@ -237,7 +237,7 @@
       "contentType": "image/jpeg"
     },
     {
-      "src": "https://upload.wikimedia.org/wikipedia/commons/d/dc/Keban_baraj%C4%B1-Keban-Elaz%C4%B1%C4%9F_-_panoramio.jpg",
+      "src": "assets/spots/editorial-elazig-keban-golu.jpg",
       "sha256": "8a9832ed3b4f2d767d3cbea923f0806e11d39e7eafb74463b60996d8d7c6dd90",
       "author": "HALUK COMERTEL",
       "license": "CC BY 3.0",
@@ -277,14 +277,14 @@
       "contentType": "image/jpeg"
     },
     {
-      "src": "https://upload.wikimedia.org/wikipedia/commons/9/9e/Minarett_Ulu_Camii_Harput.jpg",
+      "src": "assets/spots/editorial-elazig-ulu.jpg",
       "author": "Ingeborg Simon",
       "license": "CC BY-SA 3.0",
       "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
       "sourcePage": "https://commons.wikimedia.org/wiki/File:Minarett_Ulu_Camii_Harput.jpg",
       "date": "12 Eylül 2014",
       "contentType": "image/jpeg",
-      "sha1": "242ac20bce34ce35517d232a12922244b28c6b64"
+      "sha256": "a5e0142791b03e9227092a34b36881df5465289fbc89c4a1cc516ef49ca674fe"
     }
   ]
 }
