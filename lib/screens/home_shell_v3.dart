@@ -424,7 +424,7 @@ class _HomeFeedHubState extends State<_HomeFeedHub> {
                           ),
                         ),
                         child: const Icon(
-                          Icons.ios_share_rounded,
+                          Icons.camera_alt_outlined,
                           size: 19,
                           color: Colors.white,
                         ),

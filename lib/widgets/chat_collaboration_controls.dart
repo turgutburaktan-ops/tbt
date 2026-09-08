@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import '../models/chat_message.dart';
 import '../services/chat_service.dart';
 import '../screens/chat_screen.dart';
+import '../screens/create_group_screen.dart';
 import '../screens/event_create_screen_v2.dart';
 
 Future<String?> chatTextPrompt(BuildContext context, String title, {String initial = '', int maxLength = 1500}) async {
@@ -28,6 +29,11 @@ Future<void> runChatAction(BuildContext context, String action, Map<String, dyna
 }
 
 Future<void> startGroupChat(BuildContext context, {bool join = false, String initialCode = ''}) async {
+  if (!join) {
+    final threadId = await Navigator.push<String>(context, MaterialPageRoute(builder: (_) => const CreateGroupScreen()));
+    if (threadId != null && context.mounted) Navigator.push(context, MaterialPageRoute(builder: (_) => ChatScreen(otherUserId: '', groupThreadId: threadId)));
+    return;
+  }
   final value = await chatTextPrompt(context, join ? 'Davet kodunu gir ve katıl' : 'Grup adı', initial: initialCode, maxLength: join ? 128 : 80);
   if (value == null || !context.mounted) return;
   try {

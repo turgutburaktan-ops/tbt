@@ -8,6 +8,15 @@ const db = getFirestore();
 const {_chatActionHandler: action} = require('../functions/chat_collaboration');
 const call = (uid, actionName, data = {}) => action({auth: {uid, token: {name: uid}}, data: {action: actionName, ...data}}, db);
 (async () => {
+  await db.doc('users/selected').set({displayName: 'Selected'});
+  const picked = await call('picker', 'create', {name: 'Selected group', memberIds: ['selected', 'selected', 'picker']});
+  assert.deepEqual((await db.doc(`chat_threads/${picked.threadId}`).get()).data().memberIds, ['picker', 'selected']);
+  await assert.rejects(call('picker', 'create', {name: 'Missing user', memberIds: ['nonexistent']}));
+  await assert.rejects(call('picker', 'create', {name: 'Invalid list', memberIds: 'selected'}));
+  await assert.rejects(call('picker', 'create', {name: 'Too many', memberIds: Array(50).fill('selected')}));
+  await db.doc('users/selected/blocked/picker').set({});
+  await assert.rejects(call('picker', 'create', {name: 'Blocked', memberIds: ['selected']}));
+
   const {threadId} = await call('owner', 'create', {name: 'Test gezisi'});
   const args = {threadId}, ref = db.doc(`chat_threads/${threadId}`);
   await assert.rejects(call('outsider', 'rename', {...args, name: 'Hijack'}));

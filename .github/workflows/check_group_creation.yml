@@ -1,0 +1,19 @@
+name: Check Group Creation
+on:
+  workflow_dispatch:
+  push:
+    branches: [codex/group-member-picker]
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter analyze --no-fatal-infos --no-fatal-warnings lib/screens/create_group_screen.dart lib/widgets/chat_collaboration_controls.dart lib/screens/home_shell_v3.dart

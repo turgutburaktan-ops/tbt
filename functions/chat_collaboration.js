@@ -48,7 +48,20 @@ async function chatActionHandler(request, db = getFirestore()) {
   }
   if (action === 'create') {
     const ref = db.collection('chat_threads').doc();
-    await ref.set({type: 'group', name: text(d.name, 80), ownerId: uid, adminIds: [uid], memberIds: [uid], createdAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp(), lastMessage: 'Grup oluşturuldu', lastMessageAt: FieldValue.serverTimestamp()});
+    const name = text(d.name, 80);
+    if (d.memberIds !== undefined && (!Array.isArray(d.memberIds) || d.memberIds.length > 49)) fail('En fazla 49 kişi seçebilirsin.');
+    const members = [...new Set((d.memberIds || []).map(id))].filter(member => member !== uid);
+    await db.runTransaction(async tx => {
+      const targets = await Promise.all(members.map(async member => {
+        const [user, blockedA, blockedB] = await Promise.all([
+          tx.get(db.doc(`users/${member}`)), tx.get(db.doc(`users/${uid}/blocked/${member}`)), tx.get(db.doc(`users/${member}/blocked/${uid}`)),
+        ]);
+        if (!user.exists || user.data().isEditorial === true) fail('Seçilen kullanıcı gruba eklenemiyor.');
+        if (blockedA.exists || blockedB.exists) fail('Engellenen kullanıcılar aynı gruba eklenemez.');
+        return member;
+      }));
+      tx.create(ref, {type: 'group', name, ownerId: uid, adminIds: [uid], memberIds: [uid, ...targets], createdAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp(), lastMessage: 'Grup oluşturuldu', lastMessageAt: FieldValue.serverTimestamp()});
+    });
     return {threadId: ref.id};
   }
   if (action === 'join') {
