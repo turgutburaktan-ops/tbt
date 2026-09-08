@@ -15,6 +15,8 @@ import '../widgets/chat_collaboration_controls.dart';
 import '../widgets/firebase_media_image.dart';
 import 'post_detail_screen.dart';
 import 'event_deep_link_screen.dart';
+import 'travel_plan_detail_screen.dart';
+import '../models/travel_plan.dart';
 
 class ChatScreen extends StatefulWidget {
   final String otherUserId;
@@ -58,6 +60,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   Timer? _typingTimer;
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _hiddenSubscription;
   Set<String> _hiddenIds = {};
+  Set<String> _blockedIds = {};
+  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _blockedSubscription;
   ChatThread? _currentThread;
 
   static const _bg = Color(0xFF090B0E);
@@ -90,6 +94,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         sourceId: widget.sourceId,
       );
       final uid = FirebaseAuth.instance.currentUser!.uid;
+      _blockedSubscription = FirebaseFirestore.instance.collection('users/$uid/blocked').snapshots().listen((snapshot) { if (mounted) setState(() => _blockedIds = snapshot.docs.map((d) => d.id).toSet()); });
       _hiddenSubscription = FirebaseFirestore.instance.collection('users/$uid/chat_preferences/$id/hidden').snapshots().listen((snapshot) { if (mounted) setState(() => _hiddenIds = snapshot.docs.map((d) => d.id).toSet()); });
       try {
         await ChatService.instance.markThreadRead(id);
@@ -524,6 +529,13 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     final id = message.sharedId?.trim() ?? '';
     if (id.isEmpty) {
       _showError(Exception('Paylaşılan içeriğin kimliği bulunamadı.'));
+      return;
+    }
+    if (message.sharedType == 'route') {
+      try { final doc = await FirebaseFirestore.instance.doc('travel_plans/$id').get();
+        if (!doc.exists) throw Exception('Rota artık mevcut değil.');
+        if (mounted) await Navigator.push(context, MaterialPageRoute(builder: (_) => TravelPlanDetailScreen(plan: TravelPlan.fromDoc(doc))));
+      } catch (e) { _showError(e); }
       return;
     }
     if (message.sharedType == 'event') {
@@ -1202,6 +1214,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     WidgetsBinding.instance.removeObserver(this);
     _typingTimer?.cancel();
     _hiddenSubscription?.cancel();
+    _blockedSubscription?.cancel();
     _controller.removeListener(_handleTypingChanged);
     _stopTyping();
     _controller.dispose();
@@ -1281,7 +1294,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                               ),
                             );
                           }
-                          final allMessages = (snapshot.data ?? const <ChatMessage>[]).where((m) => !_hiddenIds.contains(m.id)).toList();
+                          final allMessages = (snapshot.data ?? const <ChatMessage>[]).where((m) => !_hiddenIds.contains(m.id) && !_blockedIds.contains(m.senderId)).toList();
                           _markReadFromMessages(allMessages, myId);
                           final query = _searchController.text.trim().toLowerCase();
                           final messages = query.isEmpty

@@ -12,6 +12,7 @@ import '../services/travel_plan_service.dart';
 import '../services/spot_repository.dart';
 import '../theme/app_theme.dart';
 import '../widgets/firebase_media_image.dart';
+import '../widgets/chat_share_sheet.dart';
 import 'post_detail_screen.dart';
 import 'event_location_picker_screen.dart';
 import 'route_planner_screen.dart';
@@ -285,6 +286,7 @@ class _TravelPlanDetailScreenState extends State<TravelPlanDetailScreen> {
                       style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
                     ),
                   ),
+                  if (_public) IconButton(tooltip: 'Sohbete gönder', icon: const Icon(Icons.send_outlined), onPressed: () => shareCardToChat(context, sharedType: 'route', sharedId: plan.id, title: _title)),
                   if (_owned)
                     IconButton(
                       tooltip: 'Rota adını değiştir',

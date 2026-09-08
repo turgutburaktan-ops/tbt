@@ -8,6 +8,7 @@ import '../widgets/firebase_media_image.dart';
 import 'event_deep_link_screen.dart';
 import 'post_detail_screen.dart';
 import 'user_profile_screen.dart';
+import 'chat_screen.dart';
 
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
@@ -78,6 +79,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     }
     final sourceId = item.sourceId?.trim() ?? '';
     final actorId = item.actorId?.trim() ?? '';
+    if (item.type == 'group_message' && sourceId.isNotEmpty) {
+      await Navigator.push(context, MaterialPageRoute(builder: (_) => ChatScreen(otherUserId: '', groupThreadId: sourceId))); return;
+    }
     if (sourceId.isNotEmpty && _opensEvent(item.type)) {
       await Navigator.push(context, MaterialPageRoute(builder: (_) => EventDeepLinkScreen(eventId: sourceId)));
       return;

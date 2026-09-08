@@ -459,7 +459,7 @@ class ChatService {
     required String title,
     String? imageUrl,
   }) async {
-    final label = sharedType == 'event'
+    final label = sharedType == 'route' ? '🗺️ Rota' : sharedType == 'event'
         ? '📅 Etkinlik'
         : sharedType == 'venue'
         ? '📍 Mekan'

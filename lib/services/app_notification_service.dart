@@ -26,7 +26,7 @@ class AppNotificationItem {
     this.createdAt,
   });
 
-  bool get isMessage => type.toLowerCase() == 'message';
+  bool get isMessage => ['message', 'group_message'].contains(type.toLowerCase());
 
   factory AppNotificationItem.fromDocument(
     DocumentSnapshot<Map<String, dynamic>> doc,
