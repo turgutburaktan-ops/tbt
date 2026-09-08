@@ -21,7 +21,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - run: npm ci --prefix functions --ignore-scripts
+      - run: npm install --prefix functions --ignore-scripts --no-audit --no-fund
       - run: node tool/publish_editorial.cjs --validate
       - name: Publish reviewed editorial posts
         run: node tool/publish_editorial.cjs --publish
