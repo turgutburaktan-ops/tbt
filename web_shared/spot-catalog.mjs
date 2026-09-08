@@ -31,7 +31,7 @@ export function previewUrl(value) {
     url.searchParams.set('width', '500');
     return url.href;
   }
-  if (url.hostname === 'upload.wikimedia.org') {
+  if (url.hostname === 'upload.wikimedia.org' || url.hostname === 'thumb.wikimedia.org') {
     const match = url.pathname.match(/^\/wikipedia\/commons\/(?:thumb\/)?([a-f0-9]\/[^/]+\/([^/]+))(?:\/[^/]+)?$/);
     if (match && /\.(jpe?g|png|webp)$/i.test(match[2])) {
       url.pathname = `/wikipedia/commons/thumb/${match[1]}/500px-${match[2]}`;

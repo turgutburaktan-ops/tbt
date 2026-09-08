@@ -7,6 +7,11 @@ const cases=JSON.parse(await readFile(new URL('../test/fixtures/shared_spots.jso
 const base=cases[0].data;
 const doc=i=>({id:String(i).padStart(5,'0'),data:{...base,name:`Yer ${i}`,latitude:35.5+(i%100)*0.01,longitude:26+Math.floor(i/100)*0.01}});
 
+test('generated thumb.wikimedia.org photos keep a 500px remote preview',()=>{
+  assert.equal(previewUrl('https://thumb.wikimedia.org/wikipedia/commons/thumb/a/ab/Harput.jpg/1920px-Harput.jpg'),
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/a/ab/Harput.jpg/500px-Harput.jpg');
+});
+
 test('same publication fixtures as mobile; document ID wins',()=>{
   for(const fixture of cases){
     const spot=decodeSpot(fixture.id,fixture.data);
