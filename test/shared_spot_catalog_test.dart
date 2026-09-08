@@ -2,11 +2,40 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../lib/services/published_spot_catalog.dart';
+import '../lib/widgets/spot_image.dart';
 
 void main() {
   final cases = jsonDecode(File('test/fixtures/shared_spots.json').readAsStringSync()) as List;
   final base = Map<String, dynamic>.from(cases.first['data'] as Map);
+
+  testWidgets('server photo wins over a bundled registry match; full size is explicit', (tester) async {
+    final spot = PublishedSpotCatalog.decode('wd-q6025389-pertek-kalesi', {...base,
+      'imageUrl': 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Reviewed.jpg/500px-Reviewed.jpg',
+      'imageOriginalUrl': 'https://upload.wikimedia.org/wikipedia/commons/a/ab/Reviewed.jpg'})!;
+    late Widget preview;
+    late Widget full;
+    await tester.pumpWidget(MaterialApp(home: Builder(builder: (context) {
+      preview = SpotImage(spot: spot).build(context);
+      full = SpotImage(spot: spot, highResolution: true).build(context);
+      return const SizedBox();
+    })));
+    expect(preview, isA<CachedNetworkImage>());
+    expect((preview as CachedNetworkImage).imageUrl, spot.imageUrl);
+    expect((full as CachedNetworkImage).imageUrl, spot.imageOriginalUrl);
+  });
+
+  test('shared photo source and attribution survive decoding; unsafe source links do not', () {
+    final spot = PublishedSpotCatalog.decode('photo', {...base,
+      'imageOriginalUrl': 'https://upload.wikimedia.org/wikipedia/commons/a/ab/Place.jpg',
+      'imageSourcePage': 'javascript:alert(1)', 'imageAuthor': 'Author', 'imageLicense': 'CC BY-SA 4.0'})!;
+    expect(spot.imageOriginalUrl, contains('Place.jpg'));
+    expect(spot.imageSourcePage, isEmpty);
+    expect(spot.imageAuthor, 'Author');
+    expect(spot.imageLicense, 'CC BY-SA 4.0');
+  });
 
   test('web and mobile accept the same shared publication fixtures', () {
     for (final fixture in cases) {

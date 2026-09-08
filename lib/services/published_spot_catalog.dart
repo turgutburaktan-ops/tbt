@@ -38,6 +38,10 @@ class PublishedSpotCatalog {
     return PhotoSpot(
       id: id, name: name, city: city, latitude: lat, longitude: lng,
       imageUrl: image, rating: (number(data['rating']) ?? 0).clamp(0, 5).toDouble(),
+      imageOriginalUrl: commonsUrl(data['imageOriginalUrl']),
+      imageSourcePage: commonsUrl(data['imageSourcePage']),
+      imageAuthor: text(data['imageAuthor']),
+      imageLicense: text(data['imageLicense']),
       bestTime: text(data['bestTime']), angle: text(data['angle']),
       category: text(data['category']).isEmpty ? 'Genel' : text(data['category']),
       description: text(data['description']),
@@ -53,6 +57,14 @@ class PublishedSpotCatalog {
   }
 
   static String text(dynamic value) => value is String ? value.trim() : '';
+
+  static String commonsUrl(dynamic value) {
+    final source = text(value);
+    final uri = Uri.tryParse(source);
+    return uri != null && uri.scheme == 'https' && uri.userInfo.isEmpty &&
+        const {'upload.wikimedia.org', 'thumb.wikimedia.org', 'commons.wikimedia.org'}.contains(uri.host)
+        ? source : '';
+  }
   static double? number(dynamic value) {
     final n = value is num ? value.toDouble() :
         value is String ? double.tryParse(value.trim()) : null;

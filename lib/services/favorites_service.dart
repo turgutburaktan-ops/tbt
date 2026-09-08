@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/photo_spot.dart';
+import 'spot_repository.dart';
 
 class FavoritesService {
   FavoritesService._();
@@ -19,9 +20,19 @@ class FavoritesService {
   static Future<void> initialize() async {
     final prefs = _prefs ??= await SharedPreferences.getInstance();
     final savedIds = prefs.getStringList(_storageKey) ?? const <String>[];
-    savedSpots.value = demoSpots
-        .where((spot) => savedIds.contains(spot.id))
-        .toList(growable: false);
+    if (savedIds.isEmpty) {
+      savedSpots.value = const [];
+      return;
+    }
+    try {
+      final published = await SpotRepository.instance.loadSpots();
+      savedSpots.value = published
+          .where((spot) => savedIds.contains(spot.id))
+          .toList(growable: false);
+    } catch (_) {
+      // Preserve stored IDs for a later retry; never restore demo records.
+      savedSpots.value = const [];
+    }
   }
 
   static bool isSaved(PhotoSpot spot) {

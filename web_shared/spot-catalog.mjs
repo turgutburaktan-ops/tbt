@@ -19,6 +19,7 @@ export function decodeSpot(id, data) {
     id, name, city, lat, lng, imageUrl, image: previewUrl(imageUrl),
     category: text(data.category) || 'Genel', best: text(data.bestTime),
     district: text(data.district), description: text(data.description),
+    imageSourcePage: text(data.imageSourcePage), imageAuthor: text(data.imageAuthor), imageLicense: text(data.imageLicense),
     rating: Math.min(5, Math.max(0, number(data.rating) ?? 0)),
     tags: [...new Set(['FirestoreDoğrulanmış', text(data.district),
       ...(Array.isArray(data.tags) ? data.tags.filter(x => typeof x === 'string' && x.trim()) : [])].filter(Boolean))],

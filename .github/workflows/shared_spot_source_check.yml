@@ -32,4 +32,8 @@ jobs:
           lib/services/spot_repository.dart
           lib/screens/spot_explore_screen_v2.dart
           lib/widgets/profile_favorite_places_section.dart
+          lib/widgets/spot_image.dart
+          lib/screens/spot_detail_screen.dart
+          lib/models/photo_spot.dart
+          lib/services/favorites_service.dart
       - run: git diff --check

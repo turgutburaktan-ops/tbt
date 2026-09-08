@@ -77,6 +77,14 @@ async function loadSharedSpots() {
         source = source[:start] + block + source[end:]
     source = once(source, "const grid=document.querySelector('#spotGrid');grid.innerHTML=list.map(", "const grid=document.querySelector('#spotGrid');grid.innerHTML=list.length?list.map(")
     source = once(source, "</div></div></article>`).join('');\n  grid.querySelectorAll('[data-stop]')", "</div></div></article>`).join(''):'<div class=\"empty\">Henüz yayınlanmış gezilecek yer bulunmuyor.</div>';\n  grid.querySelectorAll('[data-stop]')")
+    source = once(source, 'function drawSpots(list){', '''function spotPhotoCredit(s){
+  let url;try{url=new URL(s.imageSourcePage);}catch{return '';}
+  if(url.protocol!=='https:'||url.hostname!=='commons.wikimedia.org'||url.username||url.password)return '';
+  return `<p class="muted"><a href="${esc(url.href)}" target="_blank" rel="noopener noreferrer">Fotoğraf: ${esc(s.imageAuthor||'')} · ${esc(s.imageLicense||'')} · Wikimedia Commons</a></p>`;
+}
+function drawSpots(list){''')
+    source = once(source, 'TBT doğrulama kurallarını geçen bu keşif noktası rota planına eklenebilir.</p>',
+                  'TBT doğrulama kurallarını geçen bu keşif noktası rota planına eklenebilir.</p>${spotPhotoCredit(s)}')
     return source
 
 def main():

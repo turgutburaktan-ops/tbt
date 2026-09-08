@@ -14,17 +14,21 @@ def function(start, end):
 snippets = '\n'.join([
     next(line for line in source.splitlines() if line.startswith('function esc(')),
     next(line for line in source.splitlines() if line.startswith('function pageHead(')),
-    function('function drawSpots(list){','function sortNearby('),
+    function('function spotPhotoCredit(s){','function sortNearby('),
 ])
 test = '''
 const vm=require('node:vm'), assert=require('node:assert/strict');
 const spot={id:'id#1',name:'<img src=x onerror=alert(1)>',city:'<script>bad</script>',category:'<b>category</b>',best:'<i>best</i>',image:'https://example.org/image.jpg?x="bad',rating:4,lat:38,lng:39};
 const grid={innerHTML:'',querySelectorAll:()=>[]};
-const context={spots:[spot],selectedStops:[],searchText:'',app:{innerHTML:''},
+const context={URL,spots:[spot],selectedStops:[],searchText:'',app:{innerHTML:''},
   document:{querySelector:()=>grid},toast:()=>{},location:{hash:''},shareLink:()=>{}};
 vm.createContext(context);
 vm.runInContext(SNIPPETS,context);
 vm.runInContext('drawSpots(spots)',context);
+assert.equal(vm.runInContext("spotPhotoCredit({imageSourcePage:'javascript:alert(1)'})",context),'');
+const credit=vm.runInContext("spotPhotoCredit({imageSourcePage:'https://commons.wikimedia.org/wiki/File:Test.jpg',imageAuthor:'<script>bad</script>',imageLicense:'CC BY-SA 4.0'})",context);
+assert.ok(credit.includes('&lt;script&gt;'));
+assert.ok(!credit.includes('<script>'));
 assert.ok(grid.innerHTML.includes('&lt;img'));
 assert.ok(!grid.innerHTML.includes('<script>bad'));
 assert.ok(grid.innerHTML.includes('id%231'));
