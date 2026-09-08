@@ -1,9 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+
 import '../widgets/expandable_caption.dart';
 import '../widgets/post_sound_chip.dart';
-import 'package:video_player/video_player.dart';
+import '../widgets/app_video_player.dart';
+import '../widgets/like_burst.dart';
 
 import '../services/content_engagement_service.dart';
 import '../services/social_service.dart';
@@ -13,8 +15,9 @@ import 'user_profile_screen.dart';
 
 class ReelsScreen extends StatefulWidget {
   final bool embedded;
+  final Map<String, dynamic>? initialPost;
 
-  const ReelsScreen({super.key, this.embedded = false});
+  const ReelsScreen({super.key, this.embedded = false, this.initialPost});
 
   @override
   State<ReelsScreen> createState() => _ReelsScreenState();
@@ -31,7 +34,7 @@ class _ReelsScreenState extends State<ReelsScreen> {
       .limit(100)
       .snapshots();
 
-  List<QueryDocumentSnapshot<Map<String, dynamic>>> _sorted(
+  List<Map<String, dynamic>> _sorted(
     QuerySnapshot<Map<String, dynamic>> snapshot,
     List<String> followingIds,
   ) {
@@ -43,16 +46,28 @@ class _ReelsScreenState extends State<ReelsScreen> {
       final bt = bv is Timestamp ? bv.millisecondsSinceEpoch : 0;
       return bt.compareTo(at);
     });
-    return docs.where((doc) {
-      final data = doc.data();
-      if (data['accountFrozen'] == true) return false;
-      final hasVideo = (data['videoUrl'] ?? '').toString().trim().isNotEmpty;
-      if (!hasVideo) return false;
-      if (_section == 0) return true;
-      final ownerId = (data['userId'] ?? '').toString();
-      final me = FirebaseAuth.instance.currentUser?.uid;
-      return ownerId == me || followingIds.contains(ownerId);
-    }).toList();
+    final result = docs
+        .where((doc) {
+          final data = doc.data();
+          if (data['accountFrozen'] == true) return false;
+          final hasVideo = (data['videoUrl'] ?? '')
+              .toString()
+              .trim()
+              .isNotEmpty;
+          if (!hasVideo) return false;
+          if (_section == 0) return true;
+          final ownerId = (data['userId'] ?? '').toString();
+          final me = FirebaseAuth.instance.currentUser?.uid;
+          return ownerId == me || followingIds.contains(ownerId);
+        })
+        .map((d) => {...d.data(), 'id': d.id})
+        .toList();
+    final initial = widget.initialPost;
+    if (initial != null && _section == 0) {
+      result.removeWhere((p) => p['id'] == initial['id']);
+      result.insert(0, initial);
+    }
+    return result;
   }
 
   @override
@@ -108,7 +123,9 @@ class _ReelsScreenState extends State<ReelsScreen> {
                 ),
               );
             }
-            final adCount = docs.length <= 6 ? 0 : 1 + ((docs.length - 7) ~/ 10);
+            final adCount = docs.length <= 6
+                ? 0
+                : 1 + ((docs.length - 7) ~/ 10);
             final displayCount = docs.length + adCount;
             final safeIndex = _activeIndex.clamp(0, displayCount - 1).toInt();
             if (safeIndex != _activeIndex) {
@@ -120,6 +137,7 @@ class _ReelsScreenState extends State<ReelsScreen> {
               fit: StackFit.expand,
               children: [
                 PageView.builder(
+                  key: ValueKey(_section),
                   scrollDirection: Axis.vertical,
                   itemCount: displayCount,
                   onPageChanged: (index) =>
@@ -142,9 +160,9 @@ class _ReelsScreenState extends State<ReelsScreen> {
                     final adsBefore = index < 6 ? 0 : 1 + ((index - 6) ~/ 11);
                     final doc = docs[index - adsBefore];
                     return _ReelPage(
-                      key: ValueKey(doc.id),
-                      postId: doc.id,
-                      data: doc.data(),
+                      key: ValueKey(doc['id']),
+                      postId: doc['id'].toString(),
+                      data: doc,
                       active: index == _activeIndex,
                     );
                   },
@@ -365,7 +383,30 @@ class _ReelPage extends StatelessWidget {
     return Stack(
       fit: StackFit.expand,
       children: [
-        _ReelVideo(url: _videoUrl, active: active),
+        LikeBurst(
+          onLike: () async {
+            if (FirebaseAuth.instance.currentUser == null) return;
+            final liked = await ContentEngagementService.instance
+                .isLiked('posts', postId)
+                .first;
+            if (!liked)
+              await ContentEngagementService.instance.toggleLike(
+                collection: 'posts',
+                likeOnly: true,
+                id: postId,
+                ownerId: (data['userId'] ?? '').toString(),
+                title: _caption,
+                sourceType: 'post',
+              );
+          },
+          child: AppVideoPlayer.network(
+            url: _videoUrl,
+            autoplay: true,
+            active: active,
+            muted: false,
+            fit: BoxFit.contain,
+          ),
+        ),
         const IgnorePointer(
           child: DecoratedBox(
             decoration: BoxDecoration(
@@ -578,144 +619,4 @@ class _Action extends StatelessWidget {
       ),
     ],
   );
-}
-
-class _ReelVideo extends StatefulWidget {
-  final String url;
-  final bool active;
-
-  const _ReelVideo({required this.url, required this.active});
-
-  @override
-  State<_ReelVideo> createState() => _ReelVideoState();
-}
-
-class _ReelVideoState extends State<_ReelVideo> {
-  VideoPlayerController? _controller;
-  bool _ready = false;
-  bool _failed = false;
-  bool _muted = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _init();
-  }
-
-  @override
-  void didUpdateWidget(covariant _ReelVideo oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.active != widget.active && _ready) {
-      if (widget.active) {
-        _controller?.play();
-      } else {
-        _controller?.pause();
-      }
-      if (mounted) setState(() {});
-    }
-  }
-
-  Future<void> _init() async {
-    try {
-      final controller = VideoPlayerController.networkUrl(
-        Uri.parse(widget.url),
-      );
-      _controller = controller;
-      await controller.initialize();
-      await controller.setLooping(true);
-      await controller.setVolume(1);
-      if (widget.active) await controller.play();
-      if (!mounted) return;
-      setState(() => _ready = true);
-    } catch (_) {
-      if (mounted) setState(() => _failed = true);
-    }
-  }
-
-  @override
-  void dispose() {
-    _controller?.dispose();
-    super.dispose();
-  }
-
-  Future<void> _togglePlay() async {
-    final c = _controller;
-    if (c == null || !_ready) return;
-    if (c.value.isPlaying) {
-      await c.pause();
-    } else {
-      await c.play();
-    }
-    if (mounted) setState(() {});
-  }
-
-  Future<void> _toggleMute() async {
-    final c = _controller;
-    if (c == null || !_ready) return;
-    _muted = !_muted;
-    await c.setVolume(_muted ? 0 : 1);
-    if (mounted) setState(() {});
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (_failed)
-      return const ColoredBox(
-        color: Colors.black,
-        child: Center(
-          child: Icon(
-            Icons.broken_image_outlined,
-            color: Colors.white54,
-            size: 48,
-          ),
-        ),
-      );
-    if (!_ready || _controller == null)
-      return const ColoredBox(
-        color: Colors.black,
-        child: Center(child: CircularProgressIndicator()),
-      );
-    final size = _controller!.value.size;
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: _togglePlay,
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          FittedBox(
-            fit: BoxFit.cover,
-            clipBehavior: Clip.hardEdge,
-            child: SizedBox(
-              width: size.width,
-              height: size.height,
-              child: VideoPlayer(_controller!),
-            ),
-          ),
-          if (!_controller!.value.isPlaying)
-            const Center(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  color: Colors.black54,
-                  shape: BoxShape.circle,
-                ),
-                child: Padding(
-                  padding: EdgeInsets.all(12),
-                  child: Icon(Icons.play_arrow_rounded, size: 42),
-                ),
-              ),
-            ),
-          Positioned(
-            top: 12,
-            right: 12,
-            child: IconButton.filledTonal(
-              onPressed: _toggleMute,
-              icon: Icon(
-                _muted ? Icons.volume_off_rounded : Icons.volume_up_rounded,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }

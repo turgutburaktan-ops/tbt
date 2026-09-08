@@ -1,3 +1,5 @@
+import 'story_video_editor_screen.dart';
+
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -203,7 +205,10 @@ class _CameraScreenState extends State<CameraScreen>
         context,
         MaterialPageRoute(
           fullscreenDialog: true,
-          builder: (_) => StoryPhotoEditorScreen(photo: photo, initialMusic: widget.initialMusic),
+          builder: (_) => StoryPhotoEditorScreen(
+            photo: photo,
+            initialMusic: widget.initialMusic,
+          ),
         ),
       );
       if (!mounted) return;
@@ -225,7 +230,16 @@ class _CameraScreenState extends State<CameraScreen>
     if (widget.storyMode) {
       try {
         setState(() => _returningFromCamera = true);
-        await StoryService.instance.createVideoStory(video, music: widget.initialMusic);
+        final shared = await Navigator.push<bool>(
+          context,
+          MaterialPageRoute(
+            builder: (_) => StoryVideoEditorScreen(
+              video: video,
+              initialMusic: widget.initialMusic,
+            ),
+          ),
+        );
+        if (shared != true) return;
         if (!mounted) return;
         Navigator.pop(context, true);
       } catch (error) {
@@ -236,7 +250,12 @@ class _CameraScreenState extends State<CameraScreen>
 
     if (!mounted) return;
     await Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => CameraVideoPostScreen(video: video, initialMusic: widget.initialMusic)),
+      MaterialPageRoute(
+        builder: (_) => CameraVideoPostScreen(
+          video: video,
+          initialMusic: widget.initialMusic,
+        ),
+      ),
     );
   }
 

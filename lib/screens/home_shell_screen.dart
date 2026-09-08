@@ -1,3 +1,4 @@
+import '../widgets/playback_indexed_stack.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -88,7 +89,7 @@ class _HomeScreenState extends State<HomeScreen> {
       },
       child: Scaffold(
         backgroundColor: AppColors.background,
-        body: IndexedStack(index: _selectedIndex, children: pages),
+        body: PlaybackIndexedStack(index: _selectedIndex, children: pages),
         floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
         floatingActionButton: keyboardOpen
             ? null
@@ -324,7 +325,7 @@ class _NearbyHubState extends State<_NearbyHub> {
               ),
             ),
             Expanded(
-              child: IndexedStack(index: effectiveSection, children: pages),
+              child: PlaybackIndexedStack(index: effectiveSection, children: pages),
             ),
           ],
         ),
@@ -433,7 +434,7 @@ class _FeedHubState extends State<_FeedHub> {
               ),
             ),
             Expanded(
-              child: IndexedStack(
+              child: PlaybackIndexedStack(
                 index: _section,
                 children: const [
                   _AuthAwareFeed(mode: FeedMode.forYou),

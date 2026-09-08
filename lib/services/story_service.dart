@@ -170,9 +170,9 @@ class StoryService {
       if (upload.bytesTransferred <= 0) {
         throw Exception('Story fotoğrafı yüklenemedi.');
       }
-      final imageUrl = await storageRef
-          .getDownloadURL()
-          .timeout(const Duration(seconds: 8));
+      final imageUrl = await storageRef.getDownloadURL().timeout(
+        const Duration(seconds: 8),
+      );
       final storyData = <String, dynamic>{
         ..._baseStoryData(user, storyRef.id),
         if (music != null) ...music.storyFields(),
@@ -218,6 +218,11 @@ class StoryService {
   Future<void> createVideoStory(
     File sourceVideo, {
     String caption = '',
+    File? overlay,
+    List<String> mentionedUserIds = const [],
+    int? startSeconds,
+    int? durationSeconds,
+    bool includeAudio = true,
     StoryMusicSelection? music,
   }) async {
     final user = _auth.currentUser;
@@ -229,7 +234,13 @@ class StoryService {
     }
 
     final prepared = await VideoMediaService.instance
-        .prepare(sourceVideo, maxDuration: const Duration(seconds: 15))
+        .prepare(
+          sourceVideo,
+          maxDuration: const Duration(seconds: 15),
+          startSeconds: startSeconds,
+          durationSeconds: durationSeconds,
+          includeAudio: includeAudio,
+        )
         .timeout(const Duration(seconds: 45));
     final storyRef = _firestore.collection('stories').doc();
     final videoRef = _storage.ref().child(
@@ -239,7 +250,18 @@ class StoryService {
       'users/${user.uid}/stories/${storyRef.id}_thumb.jpg',
     );
 
+    final overlayRef = _storage.ref().child(
+      'users/${user.uid}/stories/${storyRef.id}_overlay.png',
+    );
     try {
+      String overlayUrl = '';
+      if (overlay != null) {
+        await overlayRef.putFile(
+          overlay,
+          SettableMetadata(contentType: 'image/png'),
+        );
+        overlayUrl = await overlayRef.getDownloadURL();
+      }
       final videoUpload = await videoRef
           .putFile(prepared.video, SettableMetadata(contentType: 'video/mp4'))
           .timeout(const Duration(seconds: 45));
@@ -275,7 +297,9 @@ class StoryService {
         'thumbnailStoragePath': thumbRef.fullPath,
         'durationMs': prepared.durationMs,
         'caption': cleanCaption,
-        'mentionedUserIds': const <String>[],
+        'overlayUrl': overlayUrl,
+        'overlayStoragePath': overlay != null ? overlayRef.fullPath : '',
+        'mentionedUserIds': mentionedUserIds,
       };
       final batch = _firestore.batch();
       batch.set(storyRef, storyData);
@@ -289,6 +313,7 @@ class StoryService {
       );
       await batch.commit().timeout(const Duration(seconds: 8));
     } catch (_) {
+      unawaited(_deleteStorageQuietly(overlayRef));
       unawaited(_deleteStorageQuietly(videoRef));
       unawaited(_deleteStorageQuietly(thumbRef));
       rethrow;
@@ -313,12 +338,12 @@ class StoryService {
   }
 
   Map<String, dynamic> _actorData(User user) => {
-        'userId': user.uid,
-        'userName': user.displayName?.trim().isNotEmpty == true
-            ? user.displayName!.trim()
-            : 'TBT kullanıcısı',
-        'userPhotoUrl': user.photoURL ?? '',
-      };
+    'userId': user.uid,
+    'userName': user.displayName?.trim().isNotEmpty == true
+        ? user.displayName!.trim()
+        : 'TBT kullanıcısı',
+    'userPhotoUrl': user.photoURL ?? '',
+  };
 
   String _actorName(User user) => (user.displayName ?? '').trim().isNotEmpty
       ? user.displayName!.trim()
@@ -328,24 +353,26 @@ class StoryService {
     final user = _auth.currentUser;
     final ids = storyIds.where((id) => id.trim().isNotEmpty).toSet().toList();
     if (user == null || ids.isEmpty) return Stream.value(<String>{});
-    final Map<String, StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>>
-        controllers = {};
+    final Map<
+      String,
+      StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>
+    >
+    controllers = {};
     final viewed = <String>{};
     late final StreamController<Set<String>> controller;
     controller = StreamController<Set<String>>.broadcast(
       onListen: () {
         for (final id in ids) {
-          controllers[id] = _interactionRef(id, user.uid).snapshots().listen(
-            (doc) {
-              if (doc.exists && doc.data()?['viewedAt'] != null) {
-                viewed.add(id);
-              } else {
-                viewed.remove(id);
-              }
-              if (!controller.isClosed) controller.add(Set<String>.from(viewed));
-            },
-            onError: (_) {},
-          );
+          controllers[id] = _interactionRef(id, user.uid).snapshots().listen((
+            doc,
+          ) {
+            if (doc.exists && doc.data()?['viewedAt'] != null) {
+              viewed.add(id);
+            } else {
+              viewed.remove(id);
+            }
+            if (!controller.isClosed) controller.add(Set<String>.from(viewed));
+          }, onError: (_) {});
         }
         controller.add(Set<String>.from(viewed));
       },
@@ -371,11 +398,13 @@ class StoryService {
     }
     _recentViews[key] = now;
     try {
-      await _interactionRef(story.id, user.uid).set({
-        ..._actorData(user),
-        'viewedAt': FieldValue.serverTimestamp(),
-        'updatedAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true)).timeout(const Duration(seconds: 6));
+      await _interactionRef(story.id, user.uid)
+          .set({
+            ..._actorData(user),
+            'viewedAt': FieldValue.serverTimestamp(),
+            'updatedAt': FieldValue.serverTimestamp(),
+          }, SetOptions(merge: true))
+          .timeout(const Duration(seconds: 6));
     } catch (_) {
       _recentViews.remove(key);
     }
@@ -422,12 +451,14 @@ class StoryService {
     if (user.uid == story.userId) return;
     _ensureActiveStory(story);
     _enforceInteractionCooldown(story.id, 'like');
-    await _interactionRef(story.id, user.uid).set({
-      ..._actorData(user),
-      'liked': liked,
-      'viewedAt': FieldValue.serverTimestamp(),
-      'updatedAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true)).timeout(const Duration(seconds: 7));
+    await _interactionRef(story.id, user.uid)
+        .set({
+          ..._actorData(user),
+          'liked': liked,
+          'viewedAt': FieldValue.serverTimestamp(),
+          'updatedAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true))
+        .timeout(const Duration(seconds: 7));
     if (liked) {
       unawaited(
         _notifyQuietly(
@@ -450,12 +481,14 @@ class StoryService {
     _enforceInteractionCooldown(story.id, 'reaction');
     final clean = emoji.trim();
     if (clean.isEmpty || clean.length > 8) return;
-    await _interactionRef(story.id, user.uid).set({
-      ..._actorData(user),
-      'reaction': clean,
-      'viewedAt': FieldValue.serverTimestamp(),
-      'updatedAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true)).timeout(const Duration(seconds: 7));
+    await _interactionRef(story.id, user.uid)
+        .set({
+          ..._actorData(user),
+          'reaction': clean,
+          'viewedAt': FieldValue.serverTimestamp(),
+          'updatedAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true))
+        .timeout(const Duration(seconds: 7));
     unawaited(
       _notifyQuietly(
         userId: story.userId,
@@ -515,13 +548,15 @@ class StoryService {
     );
 
     try {
-      await _interactionRef(story.id, user.uid).set({
-        ..._actorData(user),
-        'message': clean,
-        'messageAt': FieldValue.serverTimestamp(),
-        'viewedAt': FieldValue.serverTimestamp(),
-        'updatedAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true)).timeout(const Duration(seconds: 6));
+      await _interactionRef(story.id, user.uid)
+          .set({
+            ..._actorData(user),
+            'message': clean,
+            'messageAt': FieldValue.serverTimestamp(),
+            'viewedAt': FieldValue.serverTimestamp(),
+            'updatedAt': FieldValue.serverTimestamp(),
+          }, SetOptions(merge: true))
+          .timeout(const Duration(seconds: 6));
     } catch (_) {}
   }
 
@@ -541,30 +576,26 @@ class StoryService {
     final batch = _firestore.batch();
     final data = active.data();
     if (data != null) {
-      batch.set(
-        archiveRef,
-        {
-          ...data,
-          'id': story.id,
-          'userId': user.uid,
-          'archivedAt': FieldValue.serverTimestamp(),
-          'manuallyArchivedAt': FieldValue.serverTimestamp(),
-          'expiresAt': Timestamp.fromDate(now.subtract(const Duration(seconds: 1))),
-        },
-        SetOptions(merge: true),
-      );
+      batch.set(archiveRef, {
+        ...data,
+        'id': story.id,
+        'userId': user.uid,
+        'archivedAt': FieldValue.serverTimestamp(),
+        'manuallyArchivedAt': FieldValue.serverTimestamp(),
+        'expiresAt': Timestamp.fromDate(
+          now.subtract(const Duration(seconds: 1)),
+        ),
+      }, SetOptions(merge: true));
     } else {
-      batch.set(
-        archiveRef,
-        {
-          'id': story.id,
-          'userId': user.uid,
-          'archivedAt': FieldValue.serverTimestamp(),
-          'manuallyArchivedAt': FieldValue.serverTimestamp(),
-          'expiresAt': Timestamp.fromDate(now.subtract(const Duration(seconds: 1))),
-        },
-        SetOptions(merge: true),
-      );
+      batch.set(archiveRef, {
+        'id': story.id,
+        'userId': user.uid,
+        'archivedAt': FieldValue.serverTimestamp(),
+        'manuallyArchivedAt': FieldValue.serverTimestamp(),
+        'expiresAt': Timestamp.fromDate(
+          now.subtract(const Duration(seconds: 1)),
+        ),
+      }, SetOptions(merge: true));
     }
     batch.delete(activeRef);
     await batch.commit().timeout(const Duration(seconds: 8));
@@ -585,6 +616,7 @@ class StoryService {
     await batch.commit().timeout(const Duration(seconds: 7));
     final paths = <String>{
       story.storagePath,
+      story.overlayStoragePath,
       story.videoStoragePath,
       story.thumbnailStoragePath,
     }..removeWhere((path) => path.trim().isEmpty);
@@ -600,35 +632,39 @@ class StoryService {
     }
     _enforceStoryCreateCooldown();
     final storyRef = _firestore.collection('stories').doc();
-    await storyRef.set({
-      ..._baseStoryData(user, storyRef.id),
-      'mediaType': story.mediaType,
-      'imageUrl': story.imageUrl,
-      'storagePath': story.storagePath,
-      'videoUrl': story.videoUrl,
-      'videoStoragePath': story.videoStoragePath,
-      'thumbnailUrl': story.thumbnailUrl,
-      'thumbnailStoragePath': story.thumbnailStoragePath,
-      'durationMs': story.durationMs,
-      'caption': story.caption,
-      'musicTrackId': story.musicTrackId,
-      'musicTitle': story.musicTitle,
-      'musicArtist': story.musicArtist,
-      'musicArtworkUrl': story.musicArtworkUrl,
-      'musicPreviewUrl': story.musicPreviewUrl,
-      'musicAudioUrl': story.musicPreviewUrl,
-      'musicStartMs': story.musicStartMs,
-      'musicDurationMs': story.musicDurationMs,
-      'musicStickerStyle': story.musicStickerStyle,
-      'musicLicense': story.musicLicense,
-      'musicSourceUrl': story.musicSourceUrl,
-      'musicVolume': story.musicVolume,
-      'originalAudioVolume': story.originalAudioVolume,
-      'musicFadeInMs': story.musicFadeInMs,
-      'musicFadeOutMs': story.musicFadeOutMs,
-      'musicMood': story.musicMood,
-      'repostedFromStoryId': story.id,
-    }).timeout(const Duration(seconds: 8));
+    await storyRef
+        .set({
+          ..._baseStoryData(user, storyRef.id),
+          'mediaType': story.mediaType,
+          'imageUrl': story.imageUrl,
+          'storagePath': story.storagePath,
+          'videoUrl': story.videoUrl,
+          'videoStoragePath': story.videoStoragePath,
+          'overlayUrl': story.overlayUrl,
+          'overlayStoragePath': story.overlayStoragePath,
+          'thumbnailUrl': story.thumbnailUrl,
+          'thumbnailStoragePath': story.thumbnailStoragePath,
+          'durationMs': story.durationMs,
+          'caption': story.caption,
+          'musicTrackId': story.musicTrackId,
+          'musicTitle': story.musicTitle,
+          'musicArtist': story.musicArtist,
+          'musicArtworkUrl': story.musicArtworkUrl,
+          'musicPreviewUrl': story.musicPreviewUrl,
+          'musicAudioUrl': story.musicPreviewUrl,
+          'musicStartMs': story.musicStartMs,
+          'musicDurationMs': story.musicDurationMs,
+          'musicStickerStyle': story.musicStickerStyle,
+          'musicLicense': story.musicLicense,
+          'musicSourceUrl': story.musicSourceUrl,
+          'musicVolume': story.musicVolume,
+          'originalAudioVolume': story.originalAudioVolume,
+          'musicFadeInMs': story.musicFadeInMs,
+          'musicFadeOutMs': story.musicFadeOutMs,
+          'musicMood': story.musicMood,
+          'repostedFromStoryId': story.id,
+        })
+        .timeout(const Duration(seconds: 8));
     await _firestore
         .collection('users')
         .doc(user.uid)

@@ -14,6 +14,8 @@ class AppStory {
   final String thumbnailStoragePath;
   final int durationMs;
   final String caption;
+  final String overlayUrl;
+  final String overlayStoragePath;
   final String musicTrackId;
   final String musicTitle;
   final String musicArtist;
@@ -46,6 +48,8 @@ class AppStory {
     required this.thumbnailStoragePath,
     required this.durationMs,
     this.caption = '',
+    this.overlayUrl = '',
+    this.overlayStoragePath = '',
     this.musicTrackId = '',
     this.musicTitle = '',
     this.musicArtist = '',
@@ -94,11 +98,14 @@ class AppStory {
       thumbnailStoragePath: (data['thumbnailStoragePath'] ?? '').toString(),
       durationMs: _int(data['durationMs']),
       caption: (data['caption'] ?? '').toString(),
+      overlayUrl: (data['overlayUrl'] ?? '').toString(),
+      overlayStoragePath: (data['overlayStoragePath'] ?? '').toString(),
       musicTrackId: (data['musicTrackId'] ?? '').toString(),
       musicTitle: (data['musicTitle'] ?? '').toString(),
       musicArtist: (data['musicArtist'] ?? '').toString(),
       musicArtworkUrl: (data['musicArtworkUrl'] ?? '').toString(),
-      musicPreviewUrl: (data['musicAudioUrl'] ?? data['musicPreviewUrl'] ?? '').toString(),
+      musicPreviewUrl: (data['musicAudioUrl'] ?? data['musicPreviewUrl'] ?? '')
+          .toString(),
       musicStartMs: _int(data['musicStartMs']),
       musicDurationMs: _int(data['musicDurationMs']),
       musicStickerStyle: (data['musicStickerStyle'] ?? 'minimal').toString(),

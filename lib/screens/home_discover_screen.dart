@@ -1,3 +1,5 @@
+import 'reels_screen.dart';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -329,6 +331,16 @@ class _HomeDiscoverScreenState extends State<HomeDiscoverScreen> {
     // Freeze the grid order while this route is open; live grid updates must
     // not replace the post currently being read.
     final posts = docs.map((doc) => {...doc.data(), 'id': doc.id}).toList();
+    final selected = posts[selectedIndex];
+    if ((selected['videoUrl'] ?? '').toString().isNotEmpty) {
+      Navigator.push(
+        context,
+        MaterialPageRoute<void>(
+          builder: (_) => ReelsScreen(initialPost: selected),
+        ),
+      );
+      return;
+    }
     Navigator.push(
       context,
       MaterialPageRoute<void>(
@@ -377,7 +389,11 @@ class _HomeDiscoverScreenState extends State<HomeDiscoverScreen> {
           }
           final docs =
               snapshot.data!.docs
-                  .where((doc) => doc.data()['accountFrozen'] != true && _hasMediaCandidate(doc.data()))
+                  .where(
+                    (doc) =>
+                        doc.data()['accountFrozen'] != true &&
+                        _hasMediaCandidate(doc.data()),
+                  )
                   .toList()
                 ..sort((a, b) {
                   final av = a.data()['createdAt'];
@@ -617,8 +633,9 @@ class _HomeDiscoverScreenState extends State<HomeDiscoverScreen> {
     List<String> keys,
     IconData icon,
   ) {
-    Query<Map<String, dynamic>> source =
-        FirebaseFirestore.instance.collection(collection);
+    Query<Map<String, dynamic>> source = FirebaseFirestore.instance.collection(
+      collection,
+    );
     if (collection == 'social_events') {
       source = source
           .where('status', isEqualTo: 'open')
@@ -627,73 +644,75 @@ class _HomeDiscoverScreenState extends State<HomeDiscoverScreen> {
     return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
       stream: source.limit(80).snapshots(),
       builder: (context, snapshot) {
-      if (!snapshot.hasData) return const SizedBox.shrink();
-      final docs = snapshot.data!.docs
-          .where((d) => _matches(d.data(), keys))
-          .take(12)
-          .toList();
-      if (docs.isEmpty) return const SizedBox.shrink();
-      return _ResultSection(
-        title: title,
-        children: docs.map((doc) {
-          final data = doc.data();
-          String primary = '';
-          for (final key in keys) {
-            final value = (data[key] ?? '').toString().trim();
-            if (value.isNotEmpty) {
-              primary = value;
-              break;
+        if (!snapshot.hasData) return const SizedBox.shrink();
+        final docs = snapshot.data!.docs
+            .where((d) => _matches(d.data(), keys))
+            .take(12)
+            .toList();
+        if (docs.isEmpty) return const SizedBox.shrink();
+        return _ResultSection(
+          title: title,
+          children: docs.map((doc) {
+            final data = doc.data();
+            String primary = '';
+            for (final key in keys) {
+              final value = (data[key] ?? '').toString().trim();
+              if (value.isNotEmpty) {
+                primary = value;
+                break;
+              }
             }
-          }
-          final city =
-              (data['city'] ?? data['locationName'] ?? data['address'] ?? '')
-                  .toString();
-          return ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: Icon(icon),
-            title: Text(
-              primary.isEmpty ? title : primary,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontWeight: FontWeight.w800),
-            ),
-            subtitle: city.trim().isEmpty
-                ? null
-                : Text(city, maxLines: 1, overflow: TextOverflow.ellipsis),
-            trailing: const Icon(Icons.chevron_right_rounded),
-            onTap: collection == 'social_events'
-                ? () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => EventDeepLinkScreen(eventId: doc.id),
-                    ),
-                  )
-                : () {
-                    final category = (data['category'] ?? 'dining').toString();
-                    final venueId = (data['venueId'] ?? doc.id).toString();
-                    final venue = NearbyVenue.fromJson({
-                      'id': venueId,
-                      'category': category,
-                      'name': data['venueName'] ?? data['name'] ?? 'Mekan',
-                      'latitude': data['latitude'] ?? 0,
-                      'longitude': data['longitude'] ?? 0,
-                      'address': data['address'] ?? '',
-                      'openingHours': data['openingHours'] ?? '',
-                      'phone': data['phone'] ?? '',
-                      'website': data['website'] ?? '',
-                      'imageUrl': data['coverImageUrl'] ?? data['imageUrl'] ?? '',
-                      'description': data['description'] ?? '',
-                    });
-                    Navigator.push(
+            final city =
+                (data['city'] ?? data['locationName'] ?? data['address'] ?? '')
+                    .toString();
+            return ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: Icon(icon),
+              title: Text(
+                primary.isEmpty ? title : primary,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontWeight: FontWeight.w800),
+              ),
+              subtitle: city.trim().isEmpty
+                  ? null
+                  : Text(city, maxLines: 1, overflow: TextOverflow.ellipsis),
+              trailing: const Icon(Icons.chevron_right_rounded),
+              onTap: collection == 'social_events'
+                  ? () => Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => BusinessProfileScreen(venue: venue),
+                        builder: (_) => EventDeepLinkScreen(eventId: doc.id),
                       ),
-                    );
-                  },
-          );
-        }).toList(),
-      );
+                    )
+                  : () {
+                      final category = (data['category'] ?? 'dining')
+                          .toString();
+                      final venueId = (data['venueId'] ?? doc.id).toString();
+                      final venue = NearbyVenue.fromJson({
+                        'id': venueId,
+                        'category': category,
+                        'name': data['venueName'] ?? data['name'] ?? 'Mekan',
+                        'latitude': data['latitude'] ?? 0,
+                        'longitude': data['longitude'] ?? 0,
+                        'address': data['address'] ?? '',
+                        'openingHours': data['openingHours'] ?? '',
+                        'phone': data['phone'] ?? '',
+                        'website': data['website'] ?? '',
+                        'imageUrl':
+                            data['coverImageUrl'] ?? data['imageUrl'] ?? '',
+                        'description': data['description'] ?? '',
+                      });
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => BusinessProfileScreen(venue: venue),
+                        ),
+                      );
+                    },
+            );
+          }).toList(),
+        );
       },
     );
   }
