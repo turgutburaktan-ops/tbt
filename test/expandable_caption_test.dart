@@ -7,12 +7,12 @@ void main() {
   final long = List.generate(12, (i) => 'Açıklama satırı $i').join('\n');
   testWidgets('Long descriptions expand and collapse without losing text', (tester) async {
     await tester.pumpWidget(screen(long));
-    expect(tester.widget<MentionText>(find.byType(MentionText)).maxLines, 3);
+    expect(tester.widget<MentionText>(find.byType(MentionText)).maxLines, 1);
     await tester.tap(find.text('Devamını gör')); await tester.pump();
     expect(tester.widget<MentionText>(find.byType(MentionText)).maxLines, isNull);
     expect(tester.widget<MentionText>(find.byType(MentionText)).text, long);
     await tester.tap(find.text('Daha az göster')); await tester.pump();
-    expect(tester.widget<MentionText>(find.byType(MentionText)).maxLines, 3);
+    expect(tester.widget<MentionText>(find.byType(MentionText)).maxLines, 1);
     await tester.pumpWidget(screen('Kısa açıklama'));
     expect(find.text('Devamını gör'), findsNothing);
   });

@@ -36,14 +36,14 @@ class _ExpandableCaptionState extends State<ExpandableCaption> {
   Widget build(BuildContext context) => LayoutBuilder(builder: (context, constraints) {
     final style = DefaultTextStyle.of(context).style.merge(widget.style);
     final painter = TextPainter(
-      text: TextSpan(text: widget.text, style: style), maxLines: 3,
+      text: TextSpan(text: widget.text, style: style), maxLines: 1,
       textDirection: Directionality.of(context), textScaler: MediaQuery.textScalerOf(context),
     )..layout(maxWidth: constraints.maxWidth);
     final hasMore = painter.didExceedMaxLines;
     painter.dispose();
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       MentionText(text: widget.text, style: widget.style, mentionStyle: widget.mentionStyle,
-        maxLines: _expanded ? null : 3, overflow: _expanded ? TextOverflow.clip : TextOverflow.ellipsis),
+        maxLines: _expanded ? null : 1, overflow: _expanded ? TextOverflow.clip : TextOverflow.ellipsis),
       if (hasMore) TextButton(
         style: TextButton.styleFrom(foregroundColor: Colors.white60, padding: EdgeInsets.zero, alignment: Alignment.centerLeft),
         onPressed: _toggle, child: Text(_expanded ? 'Daha az göster' : 'Devamını gör'),
