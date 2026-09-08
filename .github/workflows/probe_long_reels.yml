@@ -17,21 +17,21 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p /tmp/tbt-long
-          curl -fL --retry 3 --max-time 240 -sS -o /tmp/tbt-long/salda.webm 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Salda_Lake_Turkey.webm'
-          curl -fL --retry 3 --max-time 240 -sS -o /tmp/tbt-long/kas.webm 'https://commons.wikimedia.org/wiki/Special:Redirect/file/KA%C5%9E_-_ANTALYA_-_TURKEY.webm'
+          curl -fL --retry 3 --max-time 240 -sS -o /tmp/tbt-long/yedigoller.webm 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Yedig%C3%B6ller_-_Bolu_-_TURKEY.webm'
+          curl -fL --retry 3 --max-time 240 -sS -o /tmp/tbt-long/mardin.webm 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Deyrulzafaran_Monastery_-_Mardin_-_Turkey.webm'
           echo SHA256_START
           sha256sum /tmp/tbt-long/*.webm
           echo SHA256_END
-          for f in salda kas; do
+          for f in yedigoller mardin; do
             echo "${f^^}_PROBE_START"
             ffprobe -v error -show_entries format=duration,size:stream=codec_name,codec_type,width,height -of json "/tmp/tbt-long/$f.webm"
             echo "${f^^}_PROBE_END"
           done
-          ffmpeg -y -v error -ss 25 -i /tmp/tbt-long/salda.webm -frames:v 1 /tmp/tbt-long/salda-25.jpg
-          ffmpeg -y -v error -ss 80 -i /tmp/tbt-long/salda.webm -frames:v 1 /tmp/tbt-long/salda-80.jpg
-          ffmpeg -y -v error -ss 30 -i /tmp/tbt-long/kas.webm -frames:v 1 /tmp/tbt-long/kas-30.jpg
-          ffmpeg -y -v error -ss 95 -i /tmp/tbt-long/kas.webm -frames:v 1 /tmp/tbt-long/kas-95.jpg
+          ffmpeg -y -v error -ss 35 -i /tmp/tbt-long/yedigoller.webm -frames:v 1 /tmp/tbt-long/yedigoller-35.jpg
+          ffmpeg -y -v error -ss 90 -i /tmp/tbt-long/yedigoller.webm -frames:v 1 /tmp/tbt-long/yedigoller-90.jpg
+          ffmpeg -y -v error -ss 20 -i /tmp/tbt-long/mardin.webm -frames:v 1 /tmp/tbt-long/mardin-20.jpg
+          ffmpeg -y -v error -ss 70 -i /tmp/tbt-long/mardin.webm -frames:v 1 /tmp/tbt-long/mardin-70.jpg
       - uses: actions/upload-artifact@v4
         with:
-          name: tbt-long-reels-frames-v3
+          name: tbt-long-reels-frames-v4
           path: /tmp/tbt-long/*.jpg
