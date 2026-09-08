@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import '../widgets/expandable_caption.dart';
 import 'package:video_player/video_player.dart';
 
 import '../services/content_engagement_service.dart';
@@ -422,10 +423,9 @@ class _ReelPage extends StatelessWidget {
               ),
               if (_caption.trim().isNotEmpty) ...[
                 const SizedBox(height: 8),
-                Text(
-                  _caption,
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
+                ExpandableCaption(
+                  text: _caption,
+                  detailsInSheet: true,
                   style: const TextStyle(height: 1.35),
                 ),
               ],

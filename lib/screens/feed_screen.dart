@@ -9,6 +9,7 @@ import '../services/post_service.dart';
 import '../services/social_event_service.dart';
 import '../services/social_service.dart';
 import '../widgets/app_video_player.dart';
+import '../widgets/expandable_caption.dart';
 import '../widgets/content_engagement_bar.dart';
 import '../widgets/firebase_media_image.dart';
 import '../widgets/post_media_carousel.dart';
@@ -182,7 +183,7 @@ class _FeedPostCardState extends State<_FeedPostCard>{
    Padding(padding:const EdgeInsets.fromLTRB(12,7,4,7),child:Row(children:[InkWell(onTap:_profile,borderRadius:BorderRadius.circular(22),child:SizedBox(width:36,height:36,child:ClipOval(child:FirebaseMediaImage(imageUrl:widget.userPhotoUrl,fallbackStoragePaths:FirebaseMediaImage.avatarPaths(widget.userId),errorWidget:const ColoredBox(color:Color(0xFF22262A),child:Icon(Icons.person_outline)))))),const SizedBox(width:9),Expanded(child:InkWell(onTap:_profile,child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(widget.userName,maxLines:1,overflow:TextOverflow.ellipsis,style:const TextStyle(fontWeight:FontWeight.w900,fontSize:14)),if(widget.spotName.isNotEmpty||_timeLabel().isNotEmpty)Text([if(widget.spotName.isNotEmpty)widget.spotName,if(_timeLabel().isNotEmpty)_timeLabel()].join(' • '),maxLines:1,overflow:TextOverflow.ellipsis,style:const TextStyle(fontSize:10.5,color:Colors.white54))]))),mine?PopupMenuButton<String>(onSelected:(v){if(v=='delete')_delete();},itemBuilder:(_)=>const[PopupMenuItem(value:'delete',child:Text('Gönderiyi sil'))],icon:const Icon(Icons.more_horiz_rounded)):IconButton(tooltip:'Gönderi seçenekleri',onPressed:_otherMenu,icon:const Icon(Icons.more_horiz_rounded,size:21))])),
    AspectRatio(aspectRatio:4/5,child:_media()),
    Padding(padding:const EdgeInsets.fromLTRB(8,2,8,0),child:ContentEngagementBar(collection:'posts',contentId:widget.postId,ownerId:widget.userId,title:widget.caption.trim().isEmpty?(_isVideo?'Video paylaşımı':'Fotoğraf paylaşımı'):widget.caption,sourceType:'post')),
-   if(widget.caption.trim().isNotEmpty)Padding(padding:const EdgeInsets.fromLTRB(12,0,12,8),child:Text.rich(TextSpan(children:[TextSpan(text:'${widget.userName} ',style:const TextStyle(fontWeight:FontWeight.w900)),TextSpan(text:widget.caption,style:const TextStyle(color:Colors.white70,height:1.3))]))),
+   if(widget.caption.trim().isNotEmpty)Padding(padding:const EdgeInsets.fromLTRB(12,0,12,8),child:ExpandableCaption(text:widget.caption,style:const TextStyle(color:Colors.white70,height:1.3))),
    const Divider(height:1,color:Color(0x1FFFFFFF)),const SizedBox(height:6),
  ]);}
 }

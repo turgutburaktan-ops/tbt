@@ -16,4 +16,5 @@ jobs:
           channel: stable
           cache: true
       - run: flutter pub get
-      - run: flutter analyze --no-fatal-infos --no-fatal-warnings lib/screens/create_group_screen.dart lib/widgets/chat_collaboration_controls.dart lib/screens/home_shell_v3.dart
+      - run: flutter analyze --no-fatal-infos --no-fatal-warnings lib/screens/create_group_screen.dart lib/widgets/chat_collaboration_controls.dart lib/screens/home_shell_v3.dart lib/widgets/expandable_caption.dart lib/screens/feed_screen.dart lib/screens/post_detail_screen.dart lib/screens/reels_screen.dart test/expandable_caption_test.dart
+      - run: flutter test test/expandable_caption_test.dart
