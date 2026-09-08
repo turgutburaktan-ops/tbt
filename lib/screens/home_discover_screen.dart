@@ -10,7 +10,7 @@ import '../theme/app_theme.dart';
 import '../widgets/firebase_media_image.dart';
 import '../widgets/discover_content_grid.dart';
 import 'post_detail_screen.dart';
-import 'reels_screen.dart';
+import '../widgets/discover_post_feed.dart';
 import 'user_profile_screen.dart';
 import 'event_deep_link_screen.dart';
 import 'spot_detail_screen.dart';
@@ -320,6 +320,29 @@ class _HomeDiscoverScreenState extends State<HomeDiscoverScreen> {
     ),
   );
 
+  void _openPostFeed(
+    List<QueryDocumentSnapshot<Map<String, dynamic>>> docs,
+    int selectedIndex,
+  ) {
+    // Freeze the grid order while this route is open; live grid updates must
+    // not replace the post currently being read.
+    final posts = docs.map((doc) => {...doc.data(), 'id': doc.id}).toList();
+    Navigator.push(
+      context,
+      MaterialPageRoute<void>(
+        builder: (_) => DiscoverPostFeed(
+          itemCount: posts.length,
+          initialIndex: selectedIndex,
+          itemBuilder: (_, index) => PostDetailScreen(
+            key: ValueKey(posts[index]['id']),
+            post: posts[index],
+            embedded: true,
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildExploreGrid() =>
       StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
         stream: FirebaseFirestore.instance
@@ -381,18 +404,7 @@ class _HomeDiscoverScreenState extends State<HomeDiscoverScreen> {
               return GestureDetector(
                 behavior: HitTestBehavior.opaque,
                 onDoubleTap: () => _likeOnDoubleTap(context, doc),
-                onTap: () => isVideo
-                    ? Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const ReelsScreen()),
-                      )
-                    : Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) =>
-                              PostDetailScreen(post: {...data, 'id': doc.id}),
-                        ),
-                      ),
+                onTap: () => _openPostFeed(docs, index),
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
@@ -590,18 +602,7 @@ class _HomeDiscoverScreenState extends State<HomeDiscoverScreen> {
             ),
             subtitle: Text(user, maxLines: 1, overflow: TextOverflow.ellipsis),
             trailing: const Icon(Icons.chevron_right_rounded),
-            onTap: () => isVideo
-                ? Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const ReelsScreen()),
-                  )
-                : Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) =>
-                          PostDetailScreen(post: {...data, 'id': doc.id}),
-                    ),
-                  ),
+            onTap: () => _openPostFeed(docs, docs.indexOf(doc)),
           );
         }).toList(),
       );
