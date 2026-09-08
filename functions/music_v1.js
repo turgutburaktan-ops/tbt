@@ -6,6 +6,7 @@ const fs = require('node:fs/promises'), path = require('node:path'), os = requir
 const {promisify} = require('node:util');
 const exec = promisify(require('node:child_process').execFile);
 const {randomUUID} = require('node:crypto');
+const {mixArgs}=require('./music_processing');
 const BUCKET = 'en-iyi-cekim-noktasi.firebasestorage.app';
 const options = {region:'us-central1',memory:'1GiB',timeoutSeconds:300,maxInstances:3,concurrency:1};
 function check(ok, message) { if (!ok) throw new HttpsError('failed-precondition', message); }
@@ -40,16 +41,14 @@ exports.preparePostMusic = onCall(options, async request => {
  try {
   const video=path.join(dir,'video.mp4'), audio=path.join(dir,'audio.m4a'), output=path.join(dir,'mixed.mp4');
   await Promise.all([download(`users/${uid}/posts/${postId}.mp4`,video),download(track.audioStoragePath,audio,40*1024*1024)]);
-  const base=['-i',video,'-ss',String(mix.start/1000),'-t',String(mix.duration/1000),'-i',audio];
-  // Copy the video stream: attaching music does not resize/re-encode the image.
-  const filter=`[1:a]volume=${mix.volume},apad[m];[0:a]volume=${mix.original}[o];[o][m]amix=inputs=2:duration=first:normalize=0[a]`;
-  try {await ffmpeg([...base,'-filter_complex',filter,'-map','0:v:0','-map','[a]','-c:v','copy','-c:a','aac','-b:a','192k','-t','60','-movflags','+faststart',output]);}
-  catch(e) {if(!String(e.stderr||'').includes('matches no streams'))throw e;await ffmpeg([...base,'-filter_complex',`[1:a]volume=${mix.volume},apad[a]`,'-map','0:v:0','-map','[a]','-c:v','copy','-c:a','aac','-b:a','192k','-shortest','-t','60','-movflags','+faststart',output]);}
+  // Copy every encoded video frame; only the audio is encoded.
+  try {await ffmpeg(mixArgs(video,audio,output,mix,true));}
+  catch(e) {if(!String(e.stderr||'').includes('matches no streams'))throw e;await ffmpeg(mixArgs(video,audio,output,mix,false));}
   selection((await ref.get()).data(),d);
   if(track.sourcePostId) check((await db.doc(`posts/${track.sourcePostId}`).get()).data()?.originalSoundConsent===true,'Orijinal ses kaldırıldı.');
   const storagePath=`users/${uid}/posts/${postId}_music.mp4`;
   const url=await upload(output,storagePath,'video/mp4');
-  const result={videoUrl:url,videoStoragePath:storagePath,musicTrackId:trackId,musicTitle:track.title,musicArtist:track.artist,musicPreviewUrl:track.audioUrl,musicStartMs:mix.start,musicDurationMs:mix.duration,musicLicense:track.license,musicSourceUrl:track.sourceUrl||'',musicVolume:mix.volume,originalAudioVolume:mix.original};
+  const result={videoUrl:url,videoStoragePath:storagePath,musicTrackId:trackId,soundTrackId:trackId,musicTitle:track.title,musicArtist:track.artist,musicPreviewUrl:track.audioUrl,musicStartMs:mix.start,musicDurationMs:mix.duration,musicLicense:track.license,musicSourceUrl:track.sourceUrl||'',musicVolume:mix.volume,originalAudioVolume:mix.original};
   await db.doc(`music_renders/${postId}`).set({...result,ownerId:uid,createdAt:FieldValue.serverTimestamp()});
   return result;
  } finally {await fs.rm(dir,{recursive:true,force:true});}
@@ -70,8 +69,8 @@ exports.registerOriginalPostSound = onDocumentCreated({...options,document:'post
   await db.runTransaction(async tx=>{
    const [source,existing]=await Promise.all([tx.get(event.data.ref),tx.get(trackRef)]);
    if(!source.exists||source.data().originalSoundConsent!==true||existing.exists)return;
-   tx.create(trackRef,{provider:'original',ownerId:uid,sourcePostId:postId,title:'Orijinal Ses',artist,artistUserId:uid,audioUrl,audioStoragePath,durationMs:measuredDuration,category:'Orijinal Sesler',mood:'Orijinal Sesler',license:'TBT-ORIGINAL-CONSENT-v1',sourceUrl:'',active:true,commercialUseAllowed:true,derivativesAllowed:true,catalogDistributionAllowed:true,consentVersion:'v1',consentAt:FieldValue.serverTimestamp(),createdAt:FieldValue.serverTimestamp(),usageCount:0});
-   tx.update(event.data.ref,{originalSoundTrackId:trackRef.id,originalSoundStatus:'ready'});
+   tx.create(trackRef,{provider:'original',ownerId:uid,sourcePostId:postId,title:'Orijinal Ses',artist,artistUserId:uid,audioUrl,audioStoragePath,durationMs:measuredDuration,category:'Orijinal Sesler',mood:'Orijinal Sesler',license:'TBT-ORIGINAL-CONSENT-v1',sourceUrl:'',active:true,commercialUseAllowed:true,derivativesAllowed:true,catalogDistributionAllowed:true,consentVersion:'v1',consentAt:FieldValue.serverTimestamp(),createdAt:FieldValue.serverTimestamp(),usageCount:1});
+   tx.update(event.data.ref,{soundTrackId:trackRef.id,originalSoundTrackId:trackRef.id,originalSoundStatus:'ready'});
   });
  }finally{await fs.rm(dir,{recursive:true,force:true});}
 });

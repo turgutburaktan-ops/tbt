@@ -129,7 +129,7 @@ class _MusicDetailScreenState extends State<MusicDetailScreen> {
           Chip(label: Text(widget.music.mood)),
           StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
             stream: FirebaseFirestore.instance.collection('music_tracks').doc(widget.music.trackId).snapshots(),
-            builder: (_, snap) => Chip(label: Text('${(snap.data?.data()?['usageCount'] as num?)?.toInt() ?? 0} video')),
+            builder: (_, snap) => Chip(label: Text('${(snap.data?.data()?['usageCount'] as num?)?.toInt() ?? 0} kez kullanıldı')),
           ),
         ]),
         const SizedBox(height: 20),
@@ -164,7 +164,7 @@ class _MusicDetailScreenState extends State<MusicDetailScreen> {
         const SizedBox(height: 18),
         const Text('Bu sesi kullanan videolar', style: TextStyle(fontWeight: FontWeight.bold)),
         StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-          stream: FirebaseFirestore.instance.collection('posts').where('musicTrackId', isEqualTo: widget.music.trackId).limit(60).snapshots(),
+          stream: FirebaseFirestore.instance.collection('posts').where('soundTrackId', isEqualTo: widget.music.trackId).limit(60).snapshots(),
           builder: (_, snap) {
             if (snap.hasError) return const Text('Videolar yüklenemedi.');
             if (!snap.hasData) return const LinearProgressIndicator();

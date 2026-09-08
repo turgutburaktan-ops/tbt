@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
-import '../services/story_context_link_service.dart';
 import '../services/story_service.dart';
 import '../theme/app_theme.dart';
 import 'camera_video_post_screen.dart';
@@ -226,27 +225,7 @@ class _CameraScreenState extends State<CameraScreen>
     if (widget.storyMode) {
       try {
         setState(() => _returningFromCamera = true);
-        await StoryService.instance.createVideoStory(video);
-        final music = widget.initialMusic;
-        if (music != null) {
-          await StoryContextLinkService.instance.attachMusicToLatestOwnStory(
-            trackId: music.trackId,
-            title: music.title,
-            artist: music.artist,
-            artworkUrl: music.artworkUrl,
-            previewUrl: music.previewUrl,
-            startMs: music.startMs,
-            durationMs: music.clipDurationMs,
-            stickerStyle: music.stickerStyle,
-            license: music.license,
-            sourceUrl: music.sourceUrl,
-            musicVolume: music.musicVolume,
-            originalAudioVolume: music.originalAudioVolume,
-            fadeInMs: music.fadeInMs,
-            fadeOutMs: music.fadeOutMs,
-            mood: music.mood,
-          );
-        }
+        await StoryService.instance.createVideoStory(video, music: widget.initialMusic);
         if (!mounted) return;
         Navigator.pop(context, true);
       } catch (error) {
@@ -257,7 +236,7 @@ class _CameraScreenState extends State<CameraScreen>
 
     if (!mounted) return;
     await Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => CameraVideoPostScreen(video: video)),
+      MaterialPageRoute(builder: (_) => CameraVideoPostScreen(video: video, initialMusic: widget.initialMusic)),
     );
   }
 
