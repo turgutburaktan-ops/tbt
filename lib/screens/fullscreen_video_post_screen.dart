@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../widgets/app_video_player.dart';
+import '../widgets/expandable_caption.dart';
+import '../widgets/post_sound_chip.dart';
 import '../widgets/content_engagement_bar.dart';
 import '../widgets/firebase_media_image.dart';
 
@@ -50,13 +52,21 @@ class FullscreenVideoPostScreen extends StatelessWidget {
                 ),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 8),
-                  child: ContentEngagementBar(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (caption.isNotEmpty) ExpandableCaption(text: caption, detailsInSheet: true),
+                      if ((post['id'] ?? '').toString().isNotEmpty) PostSoundChip(postId: post['id'].toString()),
+                      ContentEngagementBar(
                     collection: 'posts',
                     contentId: (post['id'] ?? '').toString(),
                     ownerId: (post['userId'] ?? '').toString(),
                     title: caption.isEmpty ? 'Video paylaşımı' : caption,
                     sourceType: 'post',
                     showTagAction: false,
+                      ),
+                    ],
                   ),
                 ),
               ),

@@ -315,10 +315,6 @@ class _HomeDiscoverScreenState extends State<HomeDiscoverScreen> {
             ),
           ),
         ),
-        if (_query.isEmpty)
-          const SponsoredNativeAd(
-            margin: EdgeInsets.fromLTRB(14, 2, 14, 8),
-          ),
         Expanded(
           child: _query.isEmpty ? _buildExploreGrid() : _buildSearchResults(),
         ),
@@ -381,7 +377,7 @@ class _HomeDiscoverScreenState extends State<HomeDiscoverScreen> {
           }
           final docs =
               snapshot.data!.docs
-                  .where((doc) => _hasMediaCandidate(doc.data()))
+                  .where((doc) => doc.data()['accountFrozen'] != true && _hasMediaCandidate(doc.data()))
                   .toList()
                 ..sort((a, b) {
                   final av = a.data()['createdAt'];

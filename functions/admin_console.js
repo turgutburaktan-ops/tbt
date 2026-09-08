@@ -10,6 +10,23 @@ function requireAdmin(request) {
   return request.auth.uid;
 }
 
+function timestampMillis(value) {
+  if (value == null) return null;
+  if (typeof value === 'number') return Number.isFinite(value) ? value : null;
+  if (value instanceof Date) {
+    const millis = value.getTime();
+    return Number.isFinite(millis) ? millis : null;
+  }
+  if (typeof value.toMillis === 'function') {
+    const millis = Number(value.toMillis());
+    return Number.isFinite(millis) ? millis : null;
+  }
+  const seconds = Number(value.seconds ?? value._seconds);
+  const nanoseconds = Number(value.nanoseconds ?? value._nanoseconds ?? 0);
+  if (!Number.isFinite(seconds) || !Number.isFinite(nanoseconds)) return null;
+  return (seconds * 1000) + Math.floor(nanoseconds / 1000000);
+}
+
 exports.getAdminBusinessClaims = onCall({region: 'europe-west1'}, async (request) => {
   requireAdmin(request);
   const db = getFirestore();
@@ -112,8 +129,11 @@ exports.getAdminInsights = onCall({region: 'europe-west1'}, async (request) => {
       username: String(d.username || ''),
       email: String(d.email || ''),
       photoURL: String(d.photoURL || d.photoUrl || ''),
-      createdAt: d.createdAt || null,
-      lastActiveAt: d.lastActiveAt || null,
+      // Callable responses serialize Firestore Timestamp objects differently
+      // between SDK versions. The web admin renders these values with Date,
+      // so return stable epoch milliseconds instead of transport objects.
+      createdAt: timestampMillis(d.createdAt),
+      lastActiveAt: timestampMillis(d.lastActiveAt),
     };
   });
   const topPosts = topPostsSnap.docs.map((doc) => {
@@ -126,7 +146,7 @@ exports.getAdminInsights = onCall({region: 'europe-west1'}, async (request) => {
       imageUrl: String(d.imageUrl || d.thumbnailUrl || ''),
       likesCount: Number(d.likesCount || 0),
       commentsCount: Number(d.commentsCount || 0),
-      createdAt: d.createdAt || null,
+      createdAt: timestampMillis(d.createdAt),
     };
   });
 
