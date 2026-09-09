@@ -114,7 +114,7 @@ async function chatActionHandler(request, db = getFirestore()) {
       // Read all permissions before writing; a concurrent addition retries the transaction.
       await Promise.all(additions.map(async member => {
         const user = await tx.get(db.doc(`users/${member}`));
-        if (!user.exists || user.data().isEditorial === true || user.data().isFrozen === true) fail('Seçilen kullanıcı gruba eklenemiyor.');
+        if (!user.exists || user.data().isEditorial === true || user.data().isFrozen === true || user.data().accountFrozen === true || user.data().accountStatus === 'frozen') fail('Seçilen kullanıcı gruba eklenemiyor.');
         const peers = [...t.memberIds, ...additions].filter(peer => peer !== member);
         const blocks = await Promise.all(peers.flatMap(peer => [
           tx.get(db.doc(`users/${peer}/blocked/${member}`)),

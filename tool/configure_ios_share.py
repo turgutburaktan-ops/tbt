@@ -19,9 +19,14 @@ def runner(info):
     scheme = 'ShareMedia-com.tbt.social'
     if not any(scheme in entry.get('CFBundleURLSchemes', []) for entry in urls):
         urls.append({'CFBundleURLSchemes': [scheme], 'CFBundleTypeRole': 'Editor'})
-    for configs in info.get('UIApplicationSceneManifest', {}).get('UISceneConfigurations', {}).values():
-        for config in configs:
-            config['UISceneDelegateClassName'] = '$(PRODUCT_MODULE_NAME).ShareSceneDelegate'
+    def scene_values(value):
+        if isinstance(value, dict):
+            if 'UISceneDelegateClassName' in value:
+                value['UISceneDelegateClassName'] = '$(PRODUCT_MODULE_NAME).ShareSceneDelegate'
+            for child in value.values(): scene_values(child)
+        elif isinstance(value, list):
+            for child in value: scene_values(child)
+    scene_values(info.get('UIApplicationSceneManifest', {}))
 patch_plist(root / 'Runner/Info.plist', runner)
 for entitlements in [root / 'Runner/Runner.entitlements', ext / 'TBTShare.entitlements']:
     def ent(data):

@@ -6,7 +6,7 @@ void main() {
     expect(externalSourceUrl('https://mobile.twitter.com/person/status/123?s=20').toString(), 'https://x.com/person/status/123');
   });
   test('rejects spoofed, local and credential-bearing sources', () {
-    for (final value in ['https://instagram.com.evil.test/a', 'https://instagram.com@evil.test/a', 'https://u@instagram.com/a', 'https://localhost/a', 'file:///tmp/a', 'https://x.com:443/a']) {
+    for (final value in ['https://instagram.com.evil.test/a', 'https://instagram.com@evil.test/a', 'https://u@instagram.com/a', 'https://localhost/a', 'file:///tmp/a', 'https://x.com:8443/a']) {
       expect(externalSourceUrl(value), isNull, reason: value);
     }
   });

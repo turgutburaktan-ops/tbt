@@ -103,6 +103,7 @@ class _ShareRecipientPickerState extends State<ShareRecipientPicker> {
     final byId = {for (final doc in [..._friends, ..._results]) doc.id: doc};
     final users = byId.values.where((doc) {
       final d = doc.data();
+      if (widget.excludedIds.contains(doc.id) || (widget.excludedIds.isNotEmpty && d['isEditorial'] == true)) return false;
       if (doc.id == me || d['accountStatus'] == 'frozen' || d['accountFrozen'] == true) return false;
       return query.isEmpty || ['displayName', 'name', 'username', 'userName'].any((f) => recipientSearchKey((d[f] ?? '').toString()).contains(query));
     }).toList()..sort((a, b) {
@@ -121,7 +122,6 @@ class _ShareRecipientPickerState extends State<ShareRecipientPicker> {
         : users.isEmpty ? Center(child: Text(query.isEmpty ? 'Takip ettiğin kişiler burada görünür.\nBirini bulmak için isim ara.' : 'Kullanıcı bulunamadı.', textAlign: TextAlign.center))
         : ListView.builder(itemCount: users.length, itemBuilder: (context, index) {
           final doc = users[index], data = doc.data();
-          if (widget.excludedIds.contains(doc.id) || data['isEditorial'] == true) return const SizedBox.shrink();
           final name = _name(data), photo = (data['photoUrl'] ?? '').toString();
           final username = (data['username'] ?? data['userName'] ?? '').toString();
           return ListTile(
