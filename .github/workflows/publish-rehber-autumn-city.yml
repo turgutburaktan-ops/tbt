@@ -1,0 +1,27 @@
+name: Publish TBT Rehber Autumn City Photos
+on:
+  push:
+    branches: [codex/rehber-autumn-city-20260909]
+    paths:
+      - .github/workflows/publish-rehber-autumn-city.yml
+      - tool/publish_autumn_city_20260909.cjs
+      - tool/editorial/autumn-city-20260909.json
+permissions:
+  contents: read
+concurrency:
+  group: tbt-rehber-autumn-city-20260909
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm install --prefix functions --ignore-scripts --no-audit --no-fund
+      - name: Publish three verified autumn city posts
+        run: node tool/publish_autumn_city_20260909.cjs --publish
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
