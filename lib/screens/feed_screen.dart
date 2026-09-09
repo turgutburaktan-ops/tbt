@@ -13,6 +13,7 @@ import '../services/social_event_service.dart';
 import '../services/social_service.dart';
 import '../widgets/app_video_player.dart';
 import '../widgets/expandable_caption.dart';
+import '../widgets/external_source_button.dart';
 import '../widgets/post_sound_chip.dart';
 import '../widgets/content_engagement_bar.dart';
 import '../widgets/firebase_media_image.dart';
@@ -203,6 +204,7 @@ class _FeedScreenState extends State<FeedScreen> {
                                           data['storagePath'] ??
                                           '')
                                       .toString(),
+                              externalSourceUrl: (data['externalSourceUrl'] ?? '').toString(),
                               caption: (data['caption'] ?? '').toString(),
                               spotName: (data['spotName'] ?? '').toString(),
                               createdAt: data['createdAt'],
@@ -591,6 +593,7 @@ class _FeedPostCard extends StatefulWidget {
       thumbnailStoragePath,
       caption,
       spotName;
+  final String externalSourceUrl;
   final List<String> mediaUrls, mediaStoragePaths;
   final dynamic createdAt;
   const _FeedPostCard({
@@ -608,6 +611,7 @@ class _FeedPostCard extends StatefulWidget {
     required this.videoStoragePath,
     required this.thumbnailUrl,
     required this.thumbnailStoragePath,
+    this.externalSourceUrl = '',
     required this.caption,
     required this.spotName,
     required this.createdAt,
@@ -970,6 +974,7 @@ class _FeedPostCardState extends State<_FeedPostCard> {
           ),
         ),
         if (widget.mediaType == 'video') PostSoundChip(postId: widget.postId),
+        ExternalSourceButton(url: widget.externalSourceUrl),
         if (widget.caption.trim().isNotEmpty)
           Padding(
             padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
@@ -996,4 +1001,5 @@ class _FeedLoading extends StatelessWidget {
     ),
   );
 }
+
 

@@ -10,8 +10,10 @@ String recipientSearchKey(String value) => value.trim().replaceFirst(RegExp(r'^@
     .replaceAll('ş', 's').replaceAll('ü', 'u');
 
 class ShareRecipientPicker extends StatefulWidget {
-  const ShareRecipientPicker({super.key, required this.onSelected});
+  const ShareRecipientPicker({super.key, required this.onSelected, this.excludedIds = const {}, this.selectedIds = const {}});
   final ValueChanged<Map<String, String>> onSelected;
+  final Set<String> excludedIds;
+  final Set<String> selectedIds;
   @override
   State<ShareRecipientPicker> createState() => _ShareRecipientPickerState();
 }
@@ -101,6 +103,7 @@ class _ShareRecipientPickerState extends State<ShareRecipientPicker> {
     final byId = {for (final doc in [..._friends, ..._results]) doc.id: doc};
     final users = byId.values.where((doc) {
       final d = doc.data();
+      if (widget.excludedIds.contains(doc.id) || (widget.excludedIds.isNotEmpty && d['isEditorial'] == true)) return false;
       if (doc.id == me || d['accountStatus'] == 'frozen' || d['accountFrozen'] == true) return false;
       return query.isEmpty || ['displayName', 'name', 'username', 'userName'].any((f) => recipientSearchKey((d[f] ?? '').toString()).contains(query));
     }).toList()..sort((a, b) {
@@ -125,9 +128,11 @@ class _ShareRecipientPickerState extends State<ShareRecipientPicker> {
             leading: CircleAvatar(backgroundImage: photo.isEmpty ? null : NetworkImage(photo), child: photo.isEmpty ? const Icon(Icons.person_outline) : null),
             title: Text(name, maxLines: 1, overflow: TextOverflow.ellipsis),
             subtitle: Text([if (username.isNotEmpty) '@${username.replaceFirst('@', '')}', if (_following.contains(doc.id)) 'Takip ediyorsun'].join(' · ')),
+            trailing: widget.selectedIds.contains(doc.id) ? const Icon(Icons.check_circle, color: Color(0xFF55D6D0)) : null,
             onTap: () => widget.onSelected({'id': doc.id, 'name': name}),
           );
         })),
     ]);
   }
 }
+

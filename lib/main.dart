@@ -36,6 +36,8 @@ import 'screens/story_archive_screen.dart';
 import 'services/app_observability_service.dart';
 import 'services/app_locale_service.dart';
 import 'services/deep_link_service.dart';
+import 'services/external_share_service.dart';
+import 'screens/import_share_screen.dart';
 import 'services/favorites_service.dart';
 import 'services/push_notification_service.dart';
 import 'theme/app_theme.dart';
@@ -271,6 +273,7 @@ class _BestPhotoSpotAppState extends State<BestPhotoSpotApp> {
     }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       unawaited(_initializePostFrameServices());
+      unawaited(ExternalShareService.instance.start(_navigatorKey).catchError((Object error) { if (kDebugMode) debugPrint('Share startup: $error'); }));
     });
   }
 
@@ -297,6 +300,7 @@ class _BestPhotoSpotAppState extends State<BestPhotoSpotApp> {
 
   @override
   void dispose() {
+    ExternalShareService.instance.dispose();
     DeepLinkService.instance.dispose();
     PushNotificationService.instance.dispose();
     super.dispose();
@@ -323,6 +327,7 @@ class _BestPhotoSpotAppState extends State<BestPhotoSpotApp> {
       );
     },
     routes: {
+      '/import': (_) => const ImportShareScreen(),
       '/messages': (_) => const ChatInboxScreen(),
       '/notifications': (_) => const NotificationsScreen(),
       '/rewards': (_) => const RewardsHubScreen(),
@@ -352,3 +357,4 @@ class _BestPhotoSpotAppState extends State<BestPhotoSpotApp> {
     ),
   );
 }
+

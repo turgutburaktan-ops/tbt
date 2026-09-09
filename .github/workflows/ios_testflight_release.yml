@@ -180,12 +180,16 @@ jobs:
           project.save
           RUBY
 
+      - name: Configure iOS share extension
+        run: python3 tool/configure_ios_share.py
+
       - name: Install signing certificate and profile
         shell: bash
         env:
           IOS_DISTRIBUTION_P12_BASE64: ${{ secrets.IOS_DISTRIBUTION_P12_BASE64 }}
           IOS_DISTRIBUTION_P12_PASSWORD: ${{ secrets.IOS_DISTRIBUTION_P12_PASSWORD }}
           IOS_PROVISIONING_PROFILE_BASE64: ${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}
+          IOS_SHARE_PROVISIONING_PROFILE_BASE64: ${{ secrets.IOS_SHARE_PROVISIONING_PROFILE_BASE64 }}
           KEYCHAIN_PASSWORD: ${{ github.run_id }}-${{ github.run_attempt }}
         run: |
           set -euo pipefail
@@ -217,6 +221,33 @@ jobs:
           PROFILE_DISPLAY_NAME=$(/usr/libexec/PlistBuddy -c 'Print :Name' "$RUNNER_TEMP/profile.plist")
           test "$PROFILE_DISPLAY_NAME" = "$PROFILE_NAME"
           cp "$PROFILE_PATH" "$HOME/Library/MobileDevice/Provisioning Profiles/$PROFILE_UUID.mobileprovision"
+          test -n "$IOS_SHARE_PROVISIONING_PROFILE_BASE64" || { echo 'Missing IOS_SHARE_PROVISIONING_PROFILE_BASE64 for TBT share extension'; exit 1; }
+          printf '%s' "$IOS_SHARE_PROVISIONING_PROFILE_BASE64" | base64 --decode > "$RUNNER_TEMP/tbt-share.mobileprovision"
+          security cms -D -i "$RUNNER_TEMP/tbt-share.mobileprovision" > "$RUNNER_TEMP/share-profile.plist"
+          python3 - <<'PYPROFILE'
+          import os, plistlib
+          from pathlib import Path
+          group = 'group.com.tbt.social.share'
+          for filename, suffix in [('profile.plist', 'com.tbt.social'), ('share-profile.plist', 'com.tbt.social.TBTShare')]:
+              data = plistlib.loads((Path(os.environ['RUNNER_TEMP']) / filename).read_bytes())
+              rights = data.get('Entitlements', {})
+              assert rights.get('application-identifier', '').endswith('.' + suffix), 'Profile bundle identifier mismatch'
+              assert group in rights.get('com.apple.security.application-groups', []), 'App Group missing from signing profile'
+          PYPROFILE
+          SHARE_UUID=$(/usr/libexec/PlistBuddy -c 'Print :UUID' "$RUNNER_TEMP/share-profile.plist")
+          SHARE_PROFILE_NAME=$(/usr/libexec/PlistBuddy -c 'Print :Name' "$RUNNER_TEMP/share-profile.plist")
+          cp "$RUNNER_TEMP/tbt-share.mobileprovision" "$HOME/Library/MobileDevice/Provisioning Profiles/$SHARE_UUID.mobileprovision"
+          echo "SHARE_PROFILE_NAME=$SHARE_PROFILE_NAME" >> "$GITHUB_ENV"
+          export SHARE_PROFILE_NAME
+          ruby <<'RUBYSHARE'
+          require 'xcodeproj'
+          project = Xcodeproj::Project.open('ios/Runner.xcodeproj')
+          share = project.targets.find { |item| item.name == 'TBTShare' }
+          share.build_configurations.each do |config|
+            config.build_settings.merge!({'CODE_SIGN_STYLE' => 'Manual', 'DEVELOPMENT_TEAM' => ENV.fetch('DEVELOPMENT_TEAM'), 'CODE_SIGN_IDENTITY' => 'Apple Distribution', 'PROVISIONING_PROFILE_SPECIFIER' => ENV.fetch('SHARE_PROFILE_NAME')})
+          end
+          project.save
+          RUBYSHARE
 
       - name: Create export configuration
         shell: bash
@@ -236,6 +267,8 @@ jobs:
             <dict>
               <key>${BUNDLE_ID}</key>
               <string>${PROFILE_NAME}</string>
+              <key>com.tbt.social.TBTShare</key>
+              <string>${SHARE_PROFILE_NAME}</string>
             </dict>
             <key>signingCertificate</key>
             <string>Apple Distribution</string>
@@ -297,3 +330,4 @@ jobs:
             --file "$IPA_PATH" \
             --apiKey "$APP_STORE_CONNECT_API_KEY_ID" \
             --apiIssuer "$APP_STORE_CONNECT_API_ISSUER_ID"
+

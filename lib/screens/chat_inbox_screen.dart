@@ -1,3 +1,4 @@
+import '../widgets/chat_surface.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -117,7 +118,7 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
           padding: const EdgeInsets.fromLTRB(8, 6, 8, 24),
           itemCount: docs.length,
           separatorBuilder: (_, __) =>
-              const Divider(height: 1, indent: 72, color: Colors.white10),
+              const SizedBox(height: 6),
           itemBuilder: (context, index) {
             final doc = docs[index];
             final data = doc.data();
@@ -136,7 +137,7 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
             return ListTile(
               leading: CircleAvatar(
                 radius: 24,
-                backgroundColor: const Color(0xFF1A1D20),
+                backgroundColor: const Color(0xFF50383E),
                 backgroundImage: photoUrl.isEmpty
                     ? null
                     : NetworkImage(photoUrl),
@@ -257,16 +258,18 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
         }
 
         return ListView.separated(
-          padding: const EdgeInsets.symmetric(vertical: 8),
+          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
           itemCount: threads.length,
           separatorBuilder: (_, __) =>
-              const Divider(height: 1, indent: 74, color: Colors.white10),
+              const SizedBox(height: 6),
           itemBuilder: (context, index) {
             final thread = threads[index];
             final otherIds = thread.memberIds
                 .where((id) => id != myId)
                 .toList(growable: false);
             if (thread.isGroup) return ListTile(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+              tileColor: const Color(0xA6241E23),
               leading: const CircleAvatar(child: Icon(Icons.groups_outlined)),
               title: Text(thread.name), subtitle: Text(thread.lastMessage, maxLines: 1, overflow: TextOverflow.ellipsis),
               onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ChatScreen(otherUserId: '', groupThreadId: thread.id))),
@@ -291,16 +294,19 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
   Widget build(BuildContext context) {
     final myId = FirebaseAuth.instance.currentUser?.uid;
 
-    return Scaffold(
-      backgroundColor: const Color(0xFF090A0C),
+    return ChatSurface(child: Builder(builder: (context) => Scaffold(
+      backgroundColor: const Color(0xFF191519),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF090A0C),
+        backgroundColor: const Color(0xFF191519),
         foregroundColor: Colors.white,
         title: const Text('Mesajlar'),
+        titleSpacing: 0,
         actions: [
-          IconButton(tooltip: 'Mesaj ayarları', icon: const Icon(Icons.settings_outlined), onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MessagePrivacySettingsScreen()))),
-          PopupMenuButton<String>(tooltip: 'Grup sohbeti', icon: const Icon(Icons.group_add_outlined), onSelected: (v) => startGroupChat(context, join: v == 'join'), itemBuilder: (_) => const [PopupMenuItem(value: 'create', child: Text('Yeni grup')), PopupMenuItem(value: 'join', child: Text('Davetle katıl'))]),
+          IconButton(constraints: const BoxConstraints.tightFor(width: 40), padding: EdgeInsets.zero, tooltip: 'Mesaj ayarları', icon: const Icon(Icons.settings_outlined), onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MessagePrivacySettingsScreen()))),
+          PopupMenuButton<String>(padding: EdgeInsets.zero, constraints: const BoxConstraints(minWidth: 160), tooltip: 'Grup sohbeti', icon: const Icon(Icons.group_add_outlined), onSelected: (v) => startGroupChat(context, join: v == 'join'), itemBuilder: (_) => const [PopupMenuItem(value: 'create', child: Text('Yeni grup')), PopupMenuItem(value: 'join', child: Text('Davetle katıl'))]),
           IconButton(
+            constraints: const BoxConstraints.tightFor(width: 40),
+            padding: EdgeInsets.zero,
             tooltip: 'Yeni mesaj',
             onPressed: () => _searchFocus.requestFocus(),
             icon: const Icon(Icons.edit_square),
@@ -310,6 +316,8 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
             builder: (context, snapshot) {
               final count = snapshot.data ?? 0;
               return IconButton(
+                constraints: const BoxConstraints.tightFor(width: 40),
+                padding: EdgeInsets.zero,
                 tooltip: 'Bildirimler',
                 onPressed: () => Navigator.pushNamed(context, '/notifications'),
                 icon: Badge(
@@ -323,7 +331,7 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
           const SizedBox(width: 6),
         ],
       ),
-      body: myId == null
+      body: ChatBackdrop(child: myId == null
           ? const Center(
               child: Text(
                 'Mesajlarını görmek için giriş yapmalısın.',
@@ -370,8 +378,8 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
                       : _searchResults(myId),
                 ),
               ],
-            ),
-    );
+            )),
+    )));
   }
 }
 
@@ -413,13 +421,15 @@ class _ThreadTile extends StatelessWidget {
         final photoUrl = preview.photoUrl;
 
         return ListTile(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+          tileColor: unread ? const Color(0xFF3B2B31) : const Color(0xA6241E23),
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 16,
             vertical: 5,
           ),
           leading: CircleAvatar(
             radius: 25,
-            backgroundColor: const Color(0xFF1A1D20),
+            backgroundColor: const Color(0xFF50383E),
             backgroundImage: photoUrl.isNotEmpty
                 ? NetworkImage(photoUrl)
                 : null,
@@ -445,7 +455,7 @@ class _ThreadTile extends StatelessWidget {
                 Text(
                   _threadTime(thread.lastMessageAt),
                   style: TextStyle(
-                    color: unread ? const Color(0xFF62E6D2) : Colors.white38,
+                    color: unread ? const Color(0xFFF3B29B) : Colors.white38,
                     fontSize: 11,
                     fontWeight: unread ? FontWeight.w800 : FontWeight.w500,
                   ),
@@ -466,7 +476,7 @@ class _ThreadTile extends StatelessWidget {
           ),
           trailing: unread
               ? const Badge(
-                  backgroundColor: Color(0xFF62E6D2),
+                  backgroundColor: Color(0xFFF3B29B),
                   smallSize: 9,
                   child: Icon(Icons.chevron_right, color: Colors.white54),
                 )
@@ -567,3 +577,4 @@ class _CachedThreadUser {
   bool get isExpired =>
       DateTime.now().difference(savedAt) > _ThreadUserCache._lifetime;
 }
+

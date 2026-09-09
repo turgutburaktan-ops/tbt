@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'external_source_url.dart';
 
 class MultiPhotoPostService {
   MultiPhotoPostService._();
@@ -68,6 +69,7 @@ class MultiPhotoPostService {
         'userPhotoUrl': user.photoURL ?? '',
         'userEmail': user.email ?? '',
         'caption': caption.trim(),
+        if (externalSourceUrl(caption) != null) 'externalSourceUrl': externalSourceUrl(caption).toString(),
         'spotName': spotName.trim(),
         'latitude': latitude,
         'longitude': longitude,
@@ -106,3 +108,4 @@ class MultiPhotoPostService {
     }
   }
 }
+

@@ -10,6 +10,7 @@ import '../theme/app_theme.dart';
 import 'camera_video_post_screen.dart';
 import 'story_music_picker.dart';
 import 'create_post_screen.dart';
+import 'import_share_screen.dart';
 import 'story_photo_editor_screen.dart';
 import 'story_video_editor_screen.dart';
 
@@ -384,6 +385,7 @@ class _MainCameraScreenState extends State<MainCameraScreen> {
             showGrid: _showGrid,
             busy: _handlingCapture || _openingGallery,
             onClose: () => Navigator.pop(context),
+            onImport: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ImportShareScreen())),
             onGallery: _openGallery,
             onCapture: () => _capture(cameraState),
             onStoryMediaSelected: (video) =>
@@ -406,6 +408,7 @@ class _CameraOverlay extends StatelessWidget {
   final bool showGrid;
   final int recordedSeconds;
   final VoidCallback onClose;
+  final VoidCallback onImport;
   final VoidCallback onGallery;
   final VoidCallback onCapture;
   final ValueChanged<bool> onStoryMediaSelected;
@@ -421,6 +424,7 @@ class _CameraOverlay extends StatelessWidget {
     required this.showGrid,
     required this.recordedSeconds,
     required this.onClose,
+    required this.onImport,
     required this.onGallery,
     required this.onCapture,
     required this.onStoryMediaSelected,
@@ -485,6 +489,7 @@ class _CameraOverlay extends StatelessWidget {
                 Row(
                   children: [
                     _GlassButton(icon: Icons.close_rounded, onTap: onClose),
+                    if (!recording && !busy) IconButton(tooltip: 'Diğer uygulamalardan aktar', icon: const Icon(Icons.move_to_inbox_outlined), onPressed: onImport),
                     const Spacer(),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 8),
@@ -897,3 +902,4 @@ class _CameraGridPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
+

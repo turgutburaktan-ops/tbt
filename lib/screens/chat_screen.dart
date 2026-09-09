@@ -9,6 +9,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../models/chat_message.dart';
+import '../widgets/chat_surface.dart';
+import '../widgets/swipe_to_reply.dart';
 import '../services/chat_service.dart';
 import '../widgets/chat_voice_message.dart';
 import '../widgets/chat_collaboration_controls.dart';
@@ -64,11 +66,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _blockedSubscription;
   ChatThread? _currentThread;
 
-  static const _bg = Color(0xFF090B0E);
-  static const _panel = Color(0xFF11161C);
-  static const _mine = Color(0xFF20303A);
-  static const _other = Color(0xFF171C22);
-  static const _accent = Color(0xFF8CD9FF);
+  static const _bg = Color(0xFF191519);
+  static const _panel = Color(0xFF241E23);
+  static const _mine = Color(0xFF67434A);
+  static const _other = Color(0xFF30292C);
+  static const _accent = Color(0xFFF3B29B);
 
   @override
   void initState() {
@@ -239,7 +241,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     await showModalBottomSheet<void>(
       context: context,
       useSafeArea: true,
-      backgroundColor: const Color(0xFF12171D),
+      backgroundColor: const Color(0xFF241E23),
       showDragHandle: true,
       builder: (sheetContext) => Padding(
         padding: const EdgeInsets.fromLTRB(22, 4, 22, 26),
@@ -278,7 +280,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     final action = await showModalBottomSheet<String>(
       context: context,
       useSafeArea: true,
-      backgroundColor: const Color(0xFF12171D),
+      backgroundColor: const Color(0xFF241E23),
       showDragHandle: true,
       builder: (sheetContext) => Padding(
         padding: const EdgeInsets.fromLTRB(16, 2, 16, 24),
@@ -344,7 +346,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     child: Container(
       padding: const EdgeInsets.symmetric(vertical: 17, horizontal: 4),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A2027),
+        color: const Color(0xFF382C30),
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: Colors.white10),
       ),
@@ -376,7 +378,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   Future<void> _showMessageActions(ChatMessage message, bool mine) async {
     final action = await showModalBottomSheet<String>(
       context: context,
-      backgroundColor: const Color(0xFF12171D),
+      backgroundColor: const Color(0xFF241E23),
       showDragHandle: true,
       builder: (sheetContext) => SafeArea(
         child: Column(
@@ -431,8 +433,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     if (action.startsWith('react:')) {
       await _react(message, action.substring(6));
     } else if (action == 'reply') {
-      setState(() => _replyTo = message);
-      _focusNode.requestFocus();
+      _beginReply(message);
     } else if (action == 'copy') {
       await Clipboard.setData(ClipboardData(text: message.text));
       if (mounted) {
@@ -652,7 +653,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       child: Container(
         width: 248,
         decoration: BoxDecoration(
-          color: const Color(0xFF11171D),
+          color: const Color(0xFF241E23),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: Colors.white12),
         ),
@@ -667,7 +668,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                 child: FirebaseMediaImage(
                   imageUrl: imageUrl,
                   fit: BoxFit.cover,
-                  errorWidget: const ColoredBox(color: Color(0xFF1A2027)),
+                  errorWidget: const ColoredBox(color: Color(0xFF382C30)),
                 ),
               )
             else
@@ -675,7 +676,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                 height: 82,
                 width: double.infinity,
                 alignment: Alignment.center,
-                color: const Color(0xFF18212A),
+                color: const Color(0xFF382C30),
                 child: Icon(icon, size: 34, color: _accent),
               ),
             Padding(
@@ -730,7 +731,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
             (entry) => Container(
               padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
               decoration: BoxDecoration(
-                color: const Color(0xFF20262D),
+                color: const Color(0xFF382C30),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: Colors.white10),
               ),
@@ -742,6 +743,19 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           )
           .toList(growable: false),
     );
+  }
+
+  bool get _canReply {
+    final thread = _currentThread;
+    return thread != null && thread.requestStatus != 'rejected' &&
+        !(thread.requestStatus == 'pending' &&
+          thread.requestRecipientId == FirebaseAuth.instance.currentUser?.uid);
+  }
+
+  void _beginReply(ChatMessage message) {
+    if (!mounted || !_canReply || message.deleted) return;
+    setState(() => _replyTo = message);
+    _focusNode.requestFocus();
   }
 
   Widget _messageBubble({
@@ -773,7 +787,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     }
 
     final mediaLike = message.isImage || message.isShare;
-    return Align(
+    return SwipeToReply(
+      enabled: _canReply,
+      onReply: () => _beginReply(message),
+      child: Align(
       alignment: mine ? Alignment.centerRight : Alignment.centerLeft,
       child: GestureDetector(
         onDoubleTap: () => _react(message, '❤️'),
@@ -899,6 +916,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           ),
         ),
       ),
+      ),
     );
   }
 
@@ -1005,7 +1023,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
             icon: const Icon(Icons.close_rounded),
           ),
           filled: true,
-          fillColor: const Color(0xFF171C22),
+          fillColor: const Color(0xFF30292C),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(20),
             borderSide: BorderSide.none,
@@ -1050,7 +1068,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                 margin: const EdgeInsets.fromLTRB(4, 0, 4, 7),
                 padding: const EdgeInsets.fromLTRB(11, 8, 4, 8),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1A2027),
+                  color: const Color(0xFF382C30),
                   borderRadius: BorderRadius.circular(13),
                   border: Border.all(color: Colors.white10),
                 ),
@@ -1096,7 +1114,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                   tooltip: 'Fotoğraf veya ses gönder',
                   style: IconButton.styleFrom(
                     foregroundColor: _accent,
-                    backgroundColor: const Color(0xFF1A2027),
+                    backgroundColor: const Color(0xFF382C30),
                   ),
                   onPressed: _sendingMedia ? null : _showAttachMenu,
                   icon: _sendingMedia
@@ -1122,7 +1140,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                       hintText: 'Mesaj yaz…',
                       hintStyle: const TextStyle(color: Colors.white38),
                       filled: true,
-                      fillColor: const Color(0xFF171C22),
+                      fillColor: const Color(0xFF30292C),
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: 16,
                         vertical: 11,
@@ -1193,7 +1211,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     if (widget.groupThreadId != null) { await Navigator.push(context, MaterialPageRoute(builder: (_) => ChatGroupInfo(threadId: widget.groupThreadId!))); return; }
     final action = await showModalBottomSheet<String>(
       context: context,
-      backgroundColor: const Color(0xFF12171D),
+      backgroundColor: const Color(0xFF241E23),
       builder: (sheetContext) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -1246,7 +1264,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     final myId = FirebaseAuth.instance.currentUser?.uid ?? '';
-    return Scaffold(
+    return ChatSurface(child: Builder(builder: (context) => Scaffold(
       backgroundColor: _bg,
       appBar: AppBar(
         toolbarHeight: 62,
@@ -1269,7 +1287,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           ),
         ],
       ),
-      body: _loading
+      body: ChatBackdrop(child: _loading
           ? const Center(child: CircularProgressIndicator(color: _accent))
           : _error != null
           ? Center(
@@ -1406,7 +1424,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                   ],
                 );
               },
-            ),
-    );
+            )),
+    )));
   }
 }
+
