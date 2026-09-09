@@ -59,6 +59,7 @@
                 <data android:scheme="tbt" android:host="profile" />
                 <data android:scheme="tbt" android:host="post" />
                 <data android:scheme="tbt" android:host="spot" />
+                <data android:scheme="tbt" android:host="creator" />
             </intent-filter>
 
             <!-- Verified HTTPS links are preferred for production sharing. -->
@@ -68,6 +69,8 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="https" android:host="www.trtbt.com" />
                 <data android:scheme="https" android:host="trtbt.com" />
+                <data android:scheme="https" android:host="www.tbttr.com" />
+                <data android:scheme="https" android:host="tbttr.com" />
                 <!-- Previously shared links remain supported during migration. -->
                 <data android:scheme="https" android:host="en-iyi-cekim-noktasi.web.app" />
                 <data android:scheme="https" android:host="en-iyi-cekim-noktasi.firebaseapp.com" />
