@@ -1,0 +1,31 @@
+name: Check Creator Invites
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [codex/publish-sound-videos]
+    paths:
+      - lib/screens/creator_invite_screen.dart
+      - lib/screens/admin_creator_invites_screen.dart
+      - lib/screens/admin_portal_screen.dart
+      - lib/services/deep_link_service.dart
+      - lib/services/invite_link_service.dart
+      - lib/widgets/public_achievement_badges.dart
+      - .github/workflows/check_creator_invites.yml
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Analyze Creator invite integration
+        run: flutter analyze --no-fatal-infos lib/screens/creator_invite_screen.dart lib/screens/admin_creator_invites_screen.dart lib/screens/admin_portal_screen.dart lib/services/deep_link_service.dart lib/services/invite_link_service.dart lib/widgets/public_achievement_badges.dart
