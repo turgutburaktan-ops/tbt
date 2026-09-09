@@ -1,0 +1,36 @@
+name: Probe women video candidates
+on:
+  push:
+    branches: [codex/publish-sound-videos]
+    paths: [.github/workflows/probe_women_video_candidates.yml]
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Query Commons women video candidates
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, urllib.parse, urllib.request
+          cats=['Women of Turkey','Female sportspeople from Turkey','Female musicians from Turkey','Female actors from Turkey','Women artists from Turkey']
+          for cat in cats:
+              print('\nCATEGORY',cat)
+              cmcontinue=None; seen=0
+              for _ in range(5):
+                  q={'action':'query','generator':'categorymembers','gcmtitle':'Category:'+cat,'gcmtype':'file','gcmlimit':'500','prop':'imageinfo','iiprop':'url|mime|size|extmetadata','format':'json'}
+                  if cmcontinue:q['gcmcontinue']=cmcontinue
+                  u='https://commons.wikimedia.org/w/api.php?'+urllib.parse.urlencode(q)
+                  data=json.load(urllib.request.urlopen(u))
+                  for p in data.get('query',{}).get('pages',{}).values():
+                      ii=(p.get('imageinfo') or [{}])[0]
+                      if str(ii.get('mime','')).startswith('video/'):
+                          md=ii.get('extmetadata',{})
+                          def v(k): return md.get(k,{}).get('value','')
+                          print(json.dumps({'title':p['title'],'url':ii.get('url'),'mime':ii.get('mime'),'width':ii.get('width'),'height':ii.get('height'),'license':v('LicenseShortName'),'artist':v('Artist'),'desc':v('ImageDescription')},ensure_ascii=False))
+                          seen+=1
+                  cmcontinue=data.get('continue',{}).get('gcmcontinue')
+                  if not cmcontinue: break
+              print('count',seen)
+          PY
