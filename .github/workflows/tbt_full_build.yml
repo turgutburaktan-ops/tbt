@@ -223,6 +223,8 @@ jobs:
           p.write_bytes(plistlib.dumps(info))
           PY
           rm -rf ios/Pods ios/Podfile.lock
+      - name: Configure iOS share extension
+        run: gem install xcodeproj --no-document && python3 tool/configure_ios_share.py
       - name: Build iOS
         run: >-
           flutter build ios --debug --no-codesign --no-pub
@@ -263,8 +265,10 @@ jobs:
           grep -q 'match /{allPaths=\*\*}' storage.rules
           grep -A2 'match /{allPaths=\*\*}' storage.rules | grep -q 'allow read, write: if false'
           grep -q 'function isAdmin()' firestore.rules
+      - name: Install chat test dependencies
+        run: npm --prefix functions install --ignore-scripts --no-package-lock
       - name: Firebase rules emulator
-        run: npm install -g firebase-tools && firebase emulators:exec --only firestore --project demo-tbt "echo Firestore-rules-ok" --non-interactive
+        run: npm install -g firebase-tools && firebase emulators:exec --only firestore --project demo-tbt "node tool/test_chat_collaboration.cjs" --non-interactive
       - name: Cloud Functions audit
         working-directory: functions
         run: npm install --package-lock-only --ignore-scripts && npm audit --omit=dev --audit-level=high
@@ -283,3 +287,4 @@ jobs:
           test "${{ needs.android.result }}" = success
           test "${{ needs.ios.result }}" = success
           test "${{ needs.security.result }}" = success
+
