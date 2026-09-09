@@ -12,7 +12,7 @@ concurrency:
   group: tbt-rehber-landscapes-20260909
   cancel-in-progress: false
 jobs:
-  prepare:
+  publish:
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
@@ -20,4 +20,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - run: node tool/publish_landscapes_20260909.cjs --prepare
+      - run: npm install --prefix functions --ignore-scripts --no-audit --no-fund
+      - name: Publish four verified landscape posts
+        run: node tool/publish_landscapes_20260909.cjs --publish
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
