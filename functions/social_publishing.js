@@ -17,12 +17,12 @@ function publicContent(data) {
     data.isPublic !== false && (!data.visibility || data.visibility === 'public');
 }
 function publicAccount(data) {
-  return !!data && data.accountStatus !== 'frozen' && data.disabled !== true && data.banned !== true &&
+  return !!data && !['frozen','deleting','deleted'].includes(data.accountStatus) && data.disabled !== true && data.banned !== true &&
     data.isPrivate !== true && data.privateAccount !== true && (!data.visibility || data.visibility === 'public');
 }
 async function user(db, uid, tx = {get: ref => ref.get()}) {
   const snap = await tx.get(db.doc(`users/${uid}`));
-  if (!snap.exists || snap.data().accountStatus === 'frozen' || snap.data().disabled === true || snap.data().banned === true) fail('permission-denied', 'Hesap kullanılamıyor.');
+  if (!snap.exists || ['frozen','deleting','deleted'].includes(snap.data().accountStatus) || snap.data().disabled === true || snap.data().banned === true) fail('permission-denied', 'Hesap kullanılamıyor.');
   return snap.data();
 }
 async function unblocked(db, a, b, tx = {get: ref => ref.get()}) {
