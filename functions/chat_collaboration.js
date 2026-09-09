@@ -106,6 +106,28 @@ async function chatActionHandler(request, db = getFirestore()) {
       requireAdmin(); const url = text(d.photoUrl, 2000);
       if (!url.startsWith('https://firebasestorage.googleapis.com/')) fail('Geçersiz fotoğraf.');
       tx.update(ref, {photoUrl: url});
+    } else if (action === 'addMembers') {
+      requireAdmin();
+      if (!Array.isArray(d.memberIds) || !d.memberIds.length || d.memberIds.length > 49) fail('1–49 kişi seçmelisin.');
+      const additions = [...new Set(d.memberIds.map(id))].filter(member => !t.memberIds.includes(member));
+      if (t.memberIds.length + additions.length > 50) fail('Grup en fazla 50 kişi olabilir.');
+      // Read all permissions before writing; a concurrent addition retries the transaction.
+      await Promise.all(additions.map(async member => {
+        const user = await tx.get(db.doc(`users/${member}`));
+        if (!user.exists || user.data().isEditorial === true || user.data().isFrozen === true) fail('Seçilen kullanıcı gruba eklenemiyor.');
+        const peers = [...t.memberIds, ...additions].filter(peer => peer !== member);
+        const blocks = await Promise.all(peers.flatMap(peer => [
+          tx.get(db.doc(`users/${peer}/blocked/${member}`)),
+          tx.get(db.doc(`users/${member}/blocked/${peer}`)),
+        ]));
+        if (blocks.some(block => block.exists)) fail('Engellenen kullanıcılar aynı gruba eklenemez.');
+      }));
+      if (additions.length) tx.update(ref, {
+        memberIds: [...t.memberIds, ...additions],
+        removedIds: (t.removedIds || []).filter(member => !additions.includes(member)),
+        updatedAt: FieldValue.serverTimestamp(),
+      });
+      return {ok: true, added: additions.length};
     } else if (action === 'invite') {
       requireAdmin();
       const code = randomBytes(24).toString('hex');
@@ -185,3 +207,4 @@ exports.chatGroupMessageNotification = onDocumentCreated('chat_threads/{threadId
   }));
 });
 exports._chatActionHandler = chatActionHandler;
+

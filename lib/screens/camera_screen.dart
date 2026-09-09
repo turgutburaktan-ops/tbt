@@ -753,3 +753,4 @@ class _CaptureButton extends StatelessWidget {
     ),
   );
 }
+

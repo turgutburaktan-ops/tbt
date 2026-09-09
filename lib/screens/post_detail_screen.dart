@@ -12,6 +12,7 @@ import '../widgets/app_video_player.dart';
 import '../widgets/content_engagement_bar.dart';
 import '../widgets/firebase_media_image.dart';
 import '../widgets/expandable_caption.dart';
+import '../widgets/external_source_button.dart';
 import '../widgets/post_sound_chip.dart';
 import '../widgets/post_media_carousel.dart';
 import 'spot_detail_screen.dart';
@@ -477,6 +478,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
         ),
       ),
       if (_isVideo) PostSoundChip(postId: (_post['id'] ?? '').toString()),
+      ExternalSourceButton(url: (_post['externalSourceUrl'] ?? '').toString()),
       if (caption.isNotEmpty || date.isNotEmpty)
         Padding(
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
@@ -539,3 +541,4 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     );
   }
 }
+

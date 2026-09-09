@@ -10,8 +10,10 @@ String recipientSearchKey(String value) => value.trim().replaceFirst(RegExp(r'^@
     .replaceAll('ş', 's').replaceAll('ü', 'u');
 
 class ShareRecipientPicker extends StatefulWidget {
-  const ShareRecipientPicker({super.key, required this.onSelected});
+  const ShareRecipientPicker({super.key, required this.onSelected, this.excludedIds = const {}, this.selectedIds = const {}});
   final ValueChanged<Map<String, String>> onSelected;
+  final Set<String> excludedIds;
+  final Set<String> selectedIds;
   @override
   State<ShareRecipientPicker> createState() => _ShareRecipientPickerState();
 }
@@ -119,15 +121,18 @@ class _ShareRecipientPickerState extends State<ShareRecipientPicker> {
         : users.isEmpty ? Center(child: Text(query.isEmpty ? 'Takip ettiğin kişiler burada görünür.\nBirini bulmak için isim ara.' : 'Kullanıcı bulunamadı.', textAlign: TextAlign.center))
         : ListView.builder(itemCount: users.length, itemBuilder: (context, index) {
           final doc = users[index], data = doc.data();
+          if (widget.excludedIds.contains(doc.id) || data['isEditorial'] == true) return const SizedBox.shrink();
           final name = _name(data), photo = (data['photoUrl'] ?? '').toString();
           final username = (data['username'] ?? data['userName'] ?? '').toString();
           return ListTile(
             leading: CircleAvatar(backgroundImage: photo.isEmpty ? null : NetworkImage(photo), child: photo.isEmpty ? const Icon(Icons.person_outline) : null),
             title: Text(name, maxLines: 1, overflow: TextOverflow.ellipsis),
             subtitle: Text([if (username.isNotEmpty) '@${username.replaceFirst('@', '')}', if (_following.contains(doc.id)) 'Takip ediyorsun'].join(' · ')),
+            trailing: widget.selectedIds.contains(doc.id) ? const Icon(Icons.check_circle, color: Color(0xFF55D6D0)) : null,
             onTap: () => widget.onSelected({'id': doc.id, 'name': name}),
           );
         })),
     ]);
   }
 }
+

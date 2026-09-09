@@ -9,16 +9,23 @@ import 'package:image_picker/image_picker.dart';
 import '../services/content_engagement_service.dart';
 import '../services/multi_photo_post_service.dart';
 import '../services/post_service.dart';
+import 'import_share_screen.dart';
 import '../widgets/app_video_player.dart';
 
 class CreatePostScreen extends StatefulWidget {
   final String? initialImagePath;
+  final List<String> initialImagePaths;
+  final String? initialVideoPath;
+  final String initialCaption;
   final String businessVenueKey;
   final String businessVenueName;
 
   const CreatePostScreen({
     super.key,
     this.initialImagePath,
+    this.initialImagePaths = const [],
+    this.initialVideoPath,
+    this.initialCaption = '',
     this.businessVenueKey = '',
     this.businessVenueName = '',
   });
@@ -49,6 +56,9 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   void initState() {
     super.initState();
     if (widget.initialImagePath != null) _images.add(File(widget.initialImagePath!));
+    _images.addAll(widget.initialImagePaths.take(10 - _images.length).map(File.new));
+    if (widget.initialVideoPath != null) { _video = File(widget.initialVideoPath!); _images.clear(); }
+    _captionController.text = widget.initialCaption;
     _captionController.addListener(_refreshCaptionCounter);
     if (widget.businessVenueName.isNotEmpty) _spotController.text = widget.businessVenueName;
   }
@@ -81,6 +91,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
             const SizedBox(height: 10),
             ListTile(leading: const Icon(Icons.camera_alt_outlined), title: const Text('Fotoğraf çek'), onTap: () => Navigator.pop(sheetContext, 'photo_camera')),
             ListTile(leading: const Icon(Icons.photo_library_outlined), title: const Text('Galeriden fotoğraf seç'), subtitle: const Text('Tek gönderide en fazla 10 fotoğraf'), onTap: () => Navigator.pop(sheetContext, 'photo_gallery')),
+            ListTile(leading: const Icon(Icons.move_to_inbox_outlined), title: const Text('Diğer uygulamalardan aktar'), onTap: () => Navigator.pop(sheetContext, 'import')),
             const Divider(),
             ListTile(leading: const Icon(Icons.videocam_outlined), title: const Text('30 sn video çek'), onTap: () => Navigator.pop(sheetContext, 'video_camera')),
             ListTile(leading: const Icon(Icons.video_library_outlined), title: const Text('Galeriden video seç'), onTap: () => Navigator.pop(sheetContext, 'video_gallery')),
@@ -89,6 +100,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       ),
     );
     if (choice == null || !mounted) return;
+    if (choice == 'import') { await Navigator.push(context, MaterialPageRoute(builder: (_) => const ImportShareScreen())); return; }
     if (choice.startsWith('video')) {
       await _pickVideo(choice == 'video_camera' ? ImageSource.camera : ImageSource.gallery);
     } else if (choice == 'photo_gallery') {
@@ -232,7 +244,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
 
   Future<void> _share() async {
     if (!_hasMedia) return _message('Önce bir fotoğraf veya video seç.');
-    if (_spotController.text.trim().isEmpty) return _message('Çekim noktası adını yaz.');
+    if (_captionController.text.length > 500) return _message('Açıklama en fazla 500 karakter olabilir.');
     if (PostService.instance.currentUser == null) return _message('Paylaşım yapmak için giriş yapmalısın.');
     setState(() => _loading = true);
     try {
@@ -282,8 +294,8 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
         const SizedBox(height: 12),
         OutlinedButton.icon(onPressed: _gettingLocation ? null : _getLocation, icon: _gettingLocation ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.my_location), label: Text(_latitude == null ? 'Konum ekle' : 'Konum eklendi')),
         const SizedBox(height: 16),
-        TextField(controller: _captionController, minLines: 3, maxLines: 7, maxLength: 1000, style: const TextStyle(color: Colors.white), decoration: InputDecoration(labelText: 'Açıklama', alignLabelWithHint: true, border: OutlineInputBorder(borderRadius: BorderRadius.circular(18)))),
-        Row(children: [TextButton.icon(onPressed: _addTag, icon: const Icon(Icons.alternate_email), label: const Text('Kişi etiketle')), const Spacer(), Text('${_captionController.text.length}/1000', style: const TextStyle(color: Colors.white38, fontSize: 12))]),
+        TextField(controller: _captionController, minLines: 3, maxLines: 7, maxLength: 500, style: const TextStyle(color: Colors.white), decoration: InputDecoration(labelText: 'Açıklama', alignLabelWithHint: true, border: OutlineInputBorder(borderRadius: BorderRadius.circular(18)))),
+        Row(children: [TextButton.icon(onPressed: _addTag, icon: const Icon(Icons.alternate_email), label: const Text('Kişi etiketle')), const Spacer(), Text('${_captionController.text.length}/500', style: const TextStyle(color: Colors.white38, fontSize: 12))]),
         if (_taggedUsers.isNotEmpty) Wrap(spacing: 8, runSpacing: 8, children: _taggedUsers.map((u) => InputChip(label: Text(u['name'] ?? 'Kullanıcı'), onDeleted: () => _removeTag(u))).toList()),
         const SizedBox(height: 22),
         SizedBox(height: 54, child: FilledButton(style: FilledButton.styleFrom(backgroundColor: accent, foregroundColor: Colors.black, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18))), onPressed: _loading ? null : _share, child: _loading ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2)) : Text(_images.length > 1 ? '${_images.length} fotoğrafı paylaş' : 'Paylaş', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16)))),
@@ -291,3 +303,4 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     );
   }
 }
+

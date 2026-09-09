@@ -2,12 +2,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import '../models/chat_message.dart';
 import '../services/chat_service.dart';
 import '../screens/chat_screen.dart';
 import '../screens/create_group_screen.dart';
+import '../screens/add_group_members_screen.dart';
 import '../screens/event_create_screen_v2.dart';
 
 Future<String?> chatTextPrompt(BuildContext context, String title, {String initial = '', int maxLength = 1500}) async {
@@ -85,10 +85,10 @@ class ChatGroupInfo extends StatelessWidget {
               final url = await ref.getDownloadURL(); if (context.mounted) await _act(context, 'photo', {'photoUrl': url});
             } catch (e) { if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString()))); }
           }),
-          ListTile(leading: const Icon(Icons.person_add_alt), title: const Text('Davet bağlantısı oluştur ve kopyala'), subtitle: const Text('7 gün geçerli. Önceki kod iptal edilir.'), onTap: () async {
-            try { final r = await ChatService.instance.action('invite', {'threadId': threadId}); await Clipboard.setData(ClipboardData(text: 'tbt://group/${r['code']}')); if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Davet bağlantısı kopyalandı. Arkadaşın Mesajlar → Davetle katıl alanına girebilir.'))); }
-            catch (e) { if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString()))); }
-          }),
+          ListTile(leading: const Icon(Icons.person_add_alt), title: const Text('Gruba kişi ekle'),
+            subtitle: const Text('İsim veya kullanıcı adıyla bul ve seç'),
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => AddGroupMembersScreen(threadId: threadId))),
+          ),
         ],
         const Divider(),
         for (final member in t.memberIds) FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(future: FirebaseFirestore.instance.doc('users/$member').get(), builder: (context, user) {
@@ -151,3 +151,4 @@ Future<void> createGroupPlan(BuildContext context, String threadId, {ChatMessage
   try { await ChatService.instance.sendSharedContent(threadId: threadId, otherUserId: '', sharedType: 'event', sharedId: eventId, title: poll?.text ?? '${thread.name} buluşması'); }
   catch (e) { if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Etkinlik oluşturuldu. Sohbete paylaşım başarısız; etkinlikten yeniden paylaşabilirsin.'))); }
 }
+
