@@ -48,7 +48,7 @@ async function main(){
      execFileSync('curl',['-fL','--retry','4','--retry-all-errors','--max-time','180','-sS','-o',input,m.url]);
      check((await fs.stat(input)).size>1000000,'Ela source download incomplete');
    }
-   let args=['-v','error','-user_agent','TBTEditorial/1.0','-ss',String(start),'-i',input,'-t',String(dur)];
+   let args=['-v','error','-ss',String(start),'-i',input,'-t',String(dur)];
    if(hasKnownSilent){args.push('-f','lavfi','-i','anullsrc=channel_layout=stereo:sample_rate=48000','-map','0:v:0','-map','1:a:0','-shortest');}
    else args.push('-map','0:v:0','-map','0:a:0?');
    args.push('-vf',vf,'-c:v','libx264','-preset','medium','-crf','20','-pix_fmt','yuv420p','-c:a','aac','-b:a','160k','-movflags','+faststart',out);
