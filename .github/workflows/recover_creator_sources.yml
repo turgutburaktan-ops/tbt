@@ -35,6 +35,7 @@ jobs:
                   if not page or any('creator' in json.dumps(b).lower() for b in batch):break
               print('Build records inspected',region,len(builds))
           print('Creator build matches',sum('creator' in json.dumps(b).lower() for b in builds))
+          print(json.dumps([{'id':b.get('id'),'status':b.get('status'),'source':b.get('source'),'sourceProvenance':b.get('sourceProvenance'),'target':b.get('substitutions',{}).get('_FUNCTION_TARGET'),'keys':list(b.keys())} for b in builds[:5]],indent=2))
           found=[]
           seen=set()
           for build in builds:
