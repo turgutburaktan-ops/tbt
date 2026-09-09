@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../screens/community_profile_screen.dart';
+import '../screens/creator_invite_screen.dart';
 import '../screens/event_deep_link_screen.dart';
 import '../screens/post_deep_link_screen.dart';
 import '../screens/spot_deep_link_screen.dart';
@@ -85,6 +86,13 @@ class DeepLinkService {
           navigator.push(
             MaterialPageRoute(
               builder: (_) => CommunityProfileScreen(communityId: target.id),
+            ),
+          );
+          break;
+        case 'creator':
+          navigator.push(
+            MaterialPageRoute(
+              builder: (_) => CreatorInviteScreen(initialCode: target.id),
             ),
           );
           break;
