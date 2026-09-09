@@ -17,21 +17,21 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p /tmp/tbt-ent
-          curl -fL --retry 3 --max-time 240 -sS -o /tmp/tbt-ent/skate.webm 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Skateboarding-Street-World-Championship-Tokyo-Japan-2023-12-17_04183-04229_video.webm'
-          curl -fL --retry 3 --max-time 240 -sS -o /tmp/tbt-ent/pottery.webm 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Pottery_making_in_Northern_Ghana.webm'
-          curl -fL --retry 3 --max-time 240 -sS -o /tmp/tbt-ent/swing.webm 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Swing_dancing_at_CCX_2022.webm'
+          curl -fL --retry 3 --max-time 240 -sS -o /tmp/tbt-ent/baglama.webm 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Turkish_street_Music_with_baglama.webm'
+          curl -fL --retry 3 --max-time 240 -sS -o /tmp/tbt-ent/kaligrafi.webm 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Kaligrafi_sanat%C4%B1.webm'
+          curl -fL --retry 3 --max-time 240 -sS -o /tmp/tbt-ent/sefakalya.webm 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Sefa_Kalya_(Sefa_Reis)_bestesi.webm'
           echo SHA256_START
           sha256sum /tmp/tbt-ent/*.webm
           echo SHA256_END
-          for f in skate pottery swing; do
+          for f in baglama kaligrafi sefakalya; do
             echo "${f^^}_PROBE_START"
             ffprobe -v error -show_entries format=duration,size:stream=codec_name,codec_type,width,height -of json "/tmp/tbt-ent/$f.webm"
             echo "${f^^}_PROBE_END"
           done
-          ffmpeg -y -v error -ss 20 -i /tmp/tbt-ent/skate.webm -frames:v 1 /tmp/tbt-ent/skate-20.jpg
-          ffmpeg -y -v error -ss 6 -i /tmp/tbt-ent/pottery.webm -frames:v 1 /tmp/tbt-ent/pottery-6.jpg
-          ffmpeg -y -v error -ss 10 -i /tmp/tbt-ent/swing.webm -frames:v 1 /tmp/tbt-ent/swing-10.jpg
+          ffmpeg -y -v error -ss 4 -i /tmp/tbt-ent/baglama.webm -frames:v 1 /tmp/tbt-ent/baglama-4.jpg
+          ffmpeg -y -v error -ss 20 -i /tmp/tbt-ent/kaligrafi.webm -frames:v 1 /tmp/tbt-ent/kaligrafi-20.jpg
+          ffmpeg -y -v error -ss 5 -i /tmp/tbt-ent/sefakalya.webm -frames:v 1 /tmp/tbt-ent/sefakalya-5.jpg
       - uses: actions/upload-artifact@v4
         with:
-          name: tbt-entertainment-frames-v2
+          name: tbt-entertainment-frames-tr-v1
           path: /tmp/tbt-ent/*.jpg
