@@ -1,0 +1,28 @@
+name: Publish Istanbul and Ankara Reels
+on:
+  push:
+    branches: [codex/rehber-istanbul-ankara-videos-20260909]
+    paths:
+      - .github/workflows/publish-istanbul-ankara-videos.yml
+      - tool/publish_istanbul_ankara_videos_20260909.cjs
+      - tool/editorial/istanbul-ankara-videos-20260909.json
+permissions:
+  contents: read
+concurrency:
+  group: tbt-rehber-istanbul-ankara-videos-20260909
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: sudo apt-get update -qq && sudo apt-get install -y ffmpeg
+      - run: npm install --prefix functions --ignore-scripts --no-audit --no-fund
+      - name: Publish verified Istanbul and Ankara videos
+        run: node tool/publish_istanbul_ankara_videos_20260909.cjs --publish
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
