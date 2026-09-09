@@ -1,0 +1,18 @@
+name: Probe Turkan Soray Video
+on:
+  push:
+    branches: [codex/publish-sound-videos]
+    paths: [.github/workflows/probe_turkan_soray.yml]
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          set -euo pipefail
+          f=/tmp/turkan.webm
+          curl -fL --retry 3 --max-time 240 -sS -o "$f" "https://commons.wikimedia.org/wiki/Special:Redirect/file/T%C3%BCrkan_%C5%9Eoray_%26_Ediz_Hun%2C_2014.webm"
+          sha256sum "$f"
+          ffprobe -v error -show_entries format=duration,size:stream=codec_name,codec_type,width,height -of json "$f"
+          curl -sS --get 'https://commons.wikimedia.org/w/api.php' --data-urlencode 'action=query' --data-urlencode 'prop=imageinfo' --data-urlencode 'iiprop=extmetadata' --data-urlencode 'titles=File:Türkan Şoray & Ediz Hun, 2014.webm' --data-urlencode 'format=json'
