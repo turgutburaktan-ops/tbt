@@ -22,15 +22,39 @@ class PublicAchievementBadges extends StatelessWidget {
   List<_BadgeDefinition> _earned() {
     final xp = (profile['xp'] as num?)?.toInt() ?? 0;
     final verified = profile['identityVerified'] == true || profile['verified'] == true;
+    final isCreator = profile['isCreator'] == true;
+    final creatorTier = (profile['creatorTier'] ?? '').toString();
     final selected = (profile['selectedBadgeIds'] as List<dynamic>? ?? const [])
         .map((item) => item.toString())
         .toSet();
-    final result = _catalog.where((badge) {
+    final result = <_BadgeDefinition>[];
+    if (isCreator) {
+      result.add(
+        creatorTier == 'founding'
+            ? const _BadgeDefinition(
+                'founding_creator',
+                'Kurucu Creator',
+                Icons.workspace_premium_rounded,
+                Color(0xFFD7DBDF),
+                0,
+              )
+            : const _BadgeDefinition(
+                'creator',
+                'TBT Creator',
+                Icons.auto_awesome_rounded,
+                Color(0xFFB7BCC2),
+                0,
+              ),
+      );
+    }
+    result.addAll(_catalog.where((badge) {
       if (badge.id == 'verified') return verified;
       return xp >= badge.requiredXp;
-    }).toList();
+    }));
     if (selected.isNotEmpty) {
       result.sort((a, b) {
+        if (a.id == 'founding_creator' || a.id == 'creator') return -1;
+        if (b.id == 'founding_creator' || b.id == 'creator') return 1;
         final ai = selected.contains(a.id) ? 0 : 1;
         final bi = selected.contains(b.id) ? 0 : 1;
         return ai.compareTo(bi);
