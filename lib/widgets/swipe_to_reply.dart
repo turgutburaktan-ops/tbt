@@ -16,6 +16,7 @@ class SwipeToReply extends StatefulWidget {
 class _SwipeToReplyState extends State<SwipeToReply> {
   double _distance = 0;
   bool _dragging = false;
+  bool _cancelled = false;
   static const _threshold = 56.0;
 
   void _reset() => setState(() { _distance = 0; _dragging = false; });
@@ -31,13 +32,16 @@ class _SwipeToReplyState extends State<SwipeToReply> {
     customSemanticsActions: widget.enabled ? {
       const CustomSemanticsAction(label: 'Mesajı yanıtla'): widget.onReply,
     } : null,
-    child: GestureDetector(
+    child: Listener(
+      onPointerDown: (_) => _cancelled = false,
+      onPointerCancel: (_) { _cancelled = true; _reset(); },
+      child: GestureDetector(
       onHorizontalDragStart: widget.enabled ? (_) => setState(() => _dragging = true) : null,
       onHorizontalDragUpdate: widget.enabled ? (details) {
         setState(() => _distance = (_distance + details.delta.dx).clamp(0.0, 80.0).toDouble());
       } : null,
       onHorizontalDragEnd: widget.enabled ? (_) {
-        final reply = _distance >= _threshold;
+        final reply = !_cancelled && _distance >= _threshold;
         _reset();
         if (reply) { HapticFeedback.selectionClick(); widget.onReply(); }
       } : null,
@@ -56,6 +60,7 @@ class _SwipeToReplyState extends State<SwipeToReply> {
             child: widget.child,
           ),
         ],
+      ),
       ),
     ),
   );
