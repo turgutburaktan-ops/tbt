@@ -35,11 +35,5 @@ for entitlements in [root / 'Runner/Runner.entitlements', ext / 'TBTShare.entitl
     patch_plist(entitlements, ent)
 info = {'CFBundleDisplayName': 'TBT', 'CFBundleName': 'TBTShare', 'CFBundleIdentifier': '$(PRODUCT_BUNDLE_IDENTIFIER)', 'CFBundleExecutable': '$(EXECUTABLE_NAME)', 'CFBundlePackageType': 'XPC!', 'CFBundleShortVersionString': '$(FLUTTER_BUILD_NAME)', 'CFBundleVersion': '$(FLUTTER_BUILD_NUMBER)', 'AppGroupId': group, 'NSExtension': {'NSExtensionPointIdentifier': 'com.apple.share-services', 'NSExtensionPrincipalClass': '$(PRODUCT_MODULE_NAME).ShareViewController', 'NSExtensionAttributes': {'NSExtensionActivationRule': {'NSExtensionActivationSupportsText': True, 'NSExtensionActivationSupportsWebURLWithMaxCount': 1, 'NSExtensionActivationSupportsImageWithMaxCount': 20, 'NSExtensionActivationSupportsMovieWithMaxCount': 20}}}}
 (ext / 'Info.plist').write_bytes(plistlib.dumps(info))
-podfile = root / 'Podfile'
-pods = podfile.read_text()
-marker = '  flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))'
-if "target 'TBTShare'" not in pods:
-    if marker not in pods: raise RuntimeError('Flutter Podfile marker missing')
-    pods = pods.replace(marker, marker + "\n  target 'TBTShare' do\n    inherit! :search_paths\n  end")
-    podfile.write_text(pods)
+(ext / 'Share.xcconfig').write_text('#include "../Flutter/Generated.xcconfig"\n')
 subprocess.run(['ruby', 'tool/configure_ios_share.rb'], check=True)
