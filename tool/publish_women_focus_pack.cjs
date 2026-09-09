@@ -40,8 +40,14 @@ async function main(){
    const s=sources[p.srcKey],m=meta[p.srcKey],start=p.start??s.start??0,dur=p.dur??s.dur??15;
    const out=path.join(dir,p.key+'.mp4'),thumb=path.join(dir,p.key+'.jpg');
    const hasKnownSilent=p.srcKey==='hula';
-   const vf=(m.width<1080||m.height<1080)?'scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2':'scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2';
-   let args=['-v','error','-ss',String(start),'-i',m.url,'-t',String(dur)];
+   const vf='scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2';
+   let input=m.url;
+   if(p.srcKey==='ela'){
+     input=path.join(dir,'ela-source.webm');
+     execFileSync('curl',['-fL','--retry','4','--retry-all-errors','--max-time','180','-sS','-o',input,m.url]);
+     check((await fs.stat(input)).size>1000000,'Ela source download incomplete');
+   }
+   let args=['-v','error','-ss',String(start),'-i',input,'-t',String(dur)];
    if(hasKnownSilent){args.push('-f','lavfi','-i','anullsrc=channel_layout=stereo:sample_rate=48000','-map','0:v:0','-map','1:a:0','-shortest');}
    else args.push('-map','0:v:0','-map','0:a:0?');
    args.push('-vf',vf,'-c:v','libx264','-preset','medium','-crf','20','-pix_fmt','yuv420p','-c:a','aac','-b:a','160k','-movflags','+faststart',out);
