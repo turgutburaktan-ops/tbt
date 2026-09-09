@@ -12,26 +12,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: sudo apt-get update -qq && sudo apt-get install -y ffmpeg
-      - name: Download and inspect candidates
+      - name: Download and inspect candidate
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p /tmp/tbt-ent
-          curl -fL --retry 3 --max-time 240 -sS -o /tmp/tbt-ent/baglama.webm 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Turkish_street_Music_with_baglama.webm'
-          curl -fL --retry 3 --max-time 240 -sS -o /tmp/tbt-ent/kaligrafi.webm 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Kaligrafi_sanat%C4%B1.webm'
-          curl -fL --retry 3 --max-time 240 -sS -o /tmp/tbt-ent/sefakalya.webm 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Sefa_Kalya_(Sefa_Reis)_bestesi.webm'
+          curl -fL --retry 3 --max-time 240 -sS -o /tmp/tbt-ent/samsunpenalti.webm 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Samsunspor-G%C3%B6ztepe_ma%C3%A7%C4%B1_(17.8.26)_ikinci_penalt%C4%B1.webm'
           echo SHA256_START
-          sha256sum /tmp/tbt-ent/*.webm
+          sha256sum /tmp/tbt-ent/samsunpenalti.webm
           echo SHA256_END
-          for f in baglama kaligrafi sefakalya; do
-            echo "${f^^}_PROBE_START"
-            ffprobe -v error -show_entries format=duration,size:stream=codec_name,codec_type,width,height -of json "/tmp/tbt-ent/$f.webm"
-            echo "${f^^}_PROBE_END"
-          done
-          ffmpeg -y -v error -ss 4 -i /tmp/tbt-ent/baglama.webm -frames:v 1 /tmp/tbt-ent/baglama-4.jpg
-          ffmpeg -y -v error -ss 20 -i /tmp/tbt-ent/kaligrafi.webm -frames:v 1 /tmp/tbt-ent/kaligrafi-20.jpg
-          ffmpeg -y -v error -ss 5 -i /tmp/tbt-ent/sefakalya.webm -frames:v 1 /tmp/tbt-ent/sefakalya-5.jpg
+          ffprobe -v error -show_entries format=duration,size:stream=codec_name,codec_type,width,height -of json /tmp/tbt-ent/samsunpenalti.webm
+          ffmpeg -y -v error -ss 7 -i /tmp/tbt-ent/samsunpenalti.webm -frames:v 1 /tmp/tbt-ent/samsunpenalti-7.jpg
       - uses: actions/upload-artifact@v4
         with:
-          name: tbt-entertainment-frames-tr-v1
+          name: tbt-entertainment-samsun-penalty
           path: /tmp/tbt-ent/*.jpg
