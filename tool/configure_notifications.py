@@ -17,6 +17,10 @@ if sys.argv[1] == 'android':
     icon = Path('android/app/src/main/res/drawable/ic_stat_tbt.xml')
     icon.parent.mkdir(parents=True, exist_ok=True)
     icon.write_text('<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24"><path android:fillColor="#FFFFFFFF" android:pathData="M4,3h16a2,2 0,0 1,2 2v12a2,2 0,0 1,-2 2H8l-6,4V5a2,2 0,0 1,2 -2zM6,7v2h12V7zM6,12v2h9v-2z"/></vector>')
+    # The icon is selected by name through a platform channel, so release resource shrinking cannot see the reference.
+    keep = Path('android/app/src/main/res/raw/tbt_notification_keep.xml')
+    keep.parent.mkdir(parents=True, exist_ok=True)
+    keep.write_text('<resources xmlns:tools="http://schemas.android.com/tools" tools:keep="@drawable/ic_stat_tbt"/>')
 elif sys.argv[1] == 'ios':
     path = Path('ios/Runner/AppDelegate.swift')
     source = path.read_text()
