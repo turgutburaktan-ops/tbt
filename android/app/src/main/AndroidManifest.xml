@@ -58,6 +58,8 @@
                 <data android:scheme="tbt" android:host="group" />
                 <data android:scheme="tbt" android:host="profile" />
                 <data android:scheme="tbt" android:host="post" />
+                <data android:scheme="tbt" android:host="creator" />
+                <data android:scheme="tbt" android:host="creator-profile" />
                 <data android:scheme="tbt" android:host="spot" />
             </intent-filter>
 

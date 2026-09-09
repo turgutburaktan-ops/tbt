@@ -1,3 +1,6 @@
+import 'shared_post_card.dart';
+import '../screens/post_deep_link_screen.dart';
+
 import 'dart:async';
 import 'dart:collection';
 
@@ -833,7 +836,52 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
     if (mounted) _resume();
   }
 
+  Future<void> _openSharedPost() async {
+    if (_current.sharedPostId.isEmpty) return;
+    _pause();
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => PostDeepLinkScreen(
+          postId: _current.sharedPostId,
+          storyId: _current.id,
+        ),
+      ),
+    );
+    if (mounted) _resume();
+  }
+
   Widget _media(AppStory s, double width, double height) {
+    if (s.sharedPostId.isNotEmpty) {
+      return ColoredBox(
+        color: const Color(0xFF0B1426),
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(22, 140, 22, 140),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SharedPostCard(
+                  postId: s.sharedPostId,
+                  storyId: s.id,
+                  compact: true,
+                  onOpen: _openSharedPost,
+                ),
+                if (s.caption.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 18),
+                    child: Text(
+                      s.caption,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: Colors.white, fontSize: 17),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
     if (s.isVideo && s.videoUrl.isNotEmpty) {
       return SizedBox(
         width: width,
@@ -929,6 +977,15 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
                             onTap: _previous,
                           ),
                         ),
+                        if (current.sharedPostId.isNotEmpty)
+                          Expanded(
+                            flex: 4,
+                            child: GestureDetector(
+                              behavior: HitTestBehavior.translucent,
+                              onTap: _openSharedPost,
+                              child: const SizedBox.expand(),
+                            ),
+                          ),
                         Expanded(
                           child: GestureDetector(
                             behavior: HitTestBehavior.translucent,

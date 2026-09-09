@@ -34,3 +34,6 @@ const {preparePostMusic, registerOriginalPostSound, countPostSoundUse, revokeDel
 Object.assign(exports, {preparePostMusic, registerOriginalPostSound, countPostSoundUse, revokeDeletedOriginalSound, removeDisabledSound});
 exports.approveMusicSubmission = require('./music_v1').approveMusicSubmission;
 Object.assign(exports, require('./account_lifecycle'));
+
+const {socialPublishing, creatorStudio} = require('./social_publishing');
+Object.assign(exports, {socialPublishing, creatorStudio});

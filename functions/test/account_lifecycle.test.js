@@ -54,7 +54,18 @@ function fixture() {
 
 test('account deletion removes own reservation and dispute data while preserving other customers', async () => {
   const f = fixture();
+  for (const [path, data] of [
+    ['post_reposts/own', {userId:'customer',postId:'original'}],
+    ['post_bookmarks/own', {userId:'customer',postId:'original'}],
+    ['creator_profiles/customer', {pinnedPostIds:['original']}],
+    ['creator_stats/customer/content/original', {views:3}],
+    ['creator_referrals/reader', {userId:'reader',creatorId:'customer'}],
+    ['post_reposts/other', {userId:'other',postId:'original'}],
+  ]) f.records.set(path,data);
   const result = await f.remove({auth: {uid: 'customer'}, data: {uid: 'other'}});
+  for (const path of ['post_reposts/own','post_bookmarks/own','creator_profiles/customer','creator_stats/customer/content/original','creator_referrals/reader']) assert.equal(f.records.has(path),false);
+  assert.equal(f.records.has('post_reposts/other'),true);
+
   assert.equal(result.status, 'deleted');
   assert.equal(f.records.has('business_venues/venue/reservations/own'), false);
   assert.equal(f.records.has('reservation_disputes/own'), false);

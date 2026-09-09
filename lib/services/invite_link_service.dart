@@ -16,6 +16,8 @@ class InviteLinkService {
   static const Set<String> _acceptedWebHosts = {
     'www.trtbt.com',
     'trtbt.com',
+    'tbttr.com',
+    'www.tbttr.com',
     // Keep previously shared links working after the public-domain migration.
     'en-iyi-cekim-noktasi.web.app',
     'en-iyi-cekim-noktasi.firebaseapp.com',
@@ -28,6 +30,8 @@ class InviteLinkService {
       Uri.https(webHost, '/event/${_safeOutgoingId(eventId)}');
   Uri profileUri(String userId) =>
       Uri.https(webHost, '/profile/${_safeOutgoingId(userId)}');
+  Uri creatorProfileUri(String userId) =>
+      Uri.https(webHost, '/creator-profile/${_safeOutgoingId(userId)}');
   Uri postUri(String postId) =>
       Uri.https(webHost, '/post/${_safeOutgoingId(postId)}');
   Uri spotUri(String spotId) =>
@@ -62,8 +66,7 @@ class InviteLinkService {
       return InviteLinkTarget(type: type, id: id);
     }
     final isWebInvite =
-        incomingScheme == 'https' &&
-        _acceptedWebHosts.contains(incomingHost);
+        incomingScheme == 'https' && _acceptedWebHosts.contains(incomingHost);
     if (!isWebInvite || uri.pathSegments.length != 2) return null;
     final type = uri.pathSegments[0].trim().toLowerCase();
     final id = uri.pathSegments[1].trim();
@@ -72,10 +75,13 @@ class InviteLinkService {
   }
 
   bool _validTarget(String type, String id) {
-    if (type != 'group' && type != 'event' &&
+    if (type != 'group' &&
+        type != 'event' &&
         type != 'community' &&
         type != 'profile' &&
         type != 'post' &&
+        type != 'creator' &&
+        type != 'creator-profile' &&
         type != 'spot')
       return false;
     return _safeId.hasMatch(id);

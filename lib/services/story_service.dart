@@ -1,3 +1,5 @@
+import 'creator_service.dart';
+
 import 'dart:async';
 import 'dart:io';
 
@@ -103,6 +105,7 @@ class StoryService {
     if (stories.docs.isEmpty) return;
     final batch = _firestore.batch();
     for (final story in stories.docs) {
+      if ((story.data()['sharedPostId'] ?? '').toString().isNotEmpty) continue;
       final archiveRef = _firestore
           .collection('users')
           .doc(user.uid)
@@ -631,6 +634,14 @@ class StoryService {
       throw Exception('Bu Story’yi yeniden paylaşma yetkin yok.');
     }
     _enforceStoryCreateCooldown();
+    if (story.sharedPostId.isNotEmpty) {
+      final requestId = _firestore.collection('stories').doc().id;
+      await CreatorService.instance.publishing('story', story.sharedPostId, {
+        'requestId': requestId,
+        'note': story.caption,
+      });
+      return;
+    }
     final storyRef = _firestore.collection('stories').doc();
     await storyRef
         .set({

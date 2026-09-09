@@ -1,3 +1,4 @@
+import '../widgets/creator_view_tracker.dart';
 import 'reels_screen.dart';
 import '../widgets/like_burst.dart';
 
@@ -534,11 +535,13 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
             ),
         ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.only(bottom: 36),
-        children: content,
+      body: CreatorViewTracker(
+        postId: _post['id'].toString(),
+        child: ListView(
+          padding: const EdgeInsets.only(bottom: 36),
+          children: content,
+        ),
       ),
     );
   }
 }
-
