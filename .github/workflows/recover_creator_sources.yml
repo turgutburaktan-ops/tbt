@@ -1,51 +1,30 @@
-name: Recover Creator deployment sources
+name: Verify restored Creator functions
 on:
   push:
     branches: [codex/recover-creator-sources]
 permissions:
   contents: read
 jobs:
-  recover:
+  verify:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Recover deleted Creator source archive
-        env:
-          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+      - name: Verify public callable routes without changing data
         run: |
           python3 - <<'PY'
-          import os,json,subprocess,urllib.request,urllib.parse,urllib.error,shutil
-          from pathlib import Path
-          key=Path(os.environ['RUNNER_TEMP'])/'recovery-account.json'
-          key.write_text(os.environ['FIREBASE_SERVICE_ACCOUNT']);key.chmod(0o600)
-          subprocess.run(['gcloud','auth','activate-service-account','--key-file='+str(key),'--quiet'],check=True,stdout=subprocess.DEVNULL)
-          token=subprocess.check_output(['gcloud','auth','print-access-token'],text=True).strip()
-          def request(url,method='GET'):
-              return urllib.request.urlopen(urllib.request.Request(url,method=method,headers={'Authorization':'Bearer '+token}),timeout=60)
-          out=Path('creator-recovery');out.mkdir()
-          bucket='gcf-v2-sources-330568532415-europe-west1'
-          base='https://storage.googleapis.com/storage/v1/b/'+bucket+'/o'
-          found=[]
+          import json,urllib.request,urllib.error
+          base='https://europe-west1-en-iyi-cekim-noktasi.cloudfunctions.net/'
           for name in ['createCreatorInvite','getCreatorInvitePreview','redeemCreatorInvite']:
-              obj=name+'/function-source.zip'
-              encoded=urllib.parse.quote(obj,safe='')
-              for mode in ['versions','softDeleted']:
-                  data=json.load(request(base+'?'+urllib.parse.urlencode({'prefix':obj,mode:'true'})))
-                  items=[i for i in data.get('items',[]) if i['name']==obj]
-                  print(name,mode,[(i['generation'],i.get('softDeleteTime')) for i in items])
-                  if not items:continue
-                  item=max(items,key=lambda i:int(i['generation']))
-                  if mode=='softDeleted':
-                      item=json.load(request(base+'/'+encoded+'/restore?generation='+item['generation']+'&ifGenerationMatch=0','POST'))
-                      print('Restored source archive',name,item['generation'])
-                  with request(base+'/'+encoded+'?alt=media&generation='+item['generation']) as src,open(out/(name+'.zip'),'wb') as dest:shutil.copyfileobj(src,dest)
-                  found.append({'function':name,'generation':item['generation']})
-                  break
-          (out/'manifest.json').write_text(json.dumps(found,indent=2))
-          if not found:raise SystemExit('No retained Creator source versions')
+              req=urllib.request.Request(base+name,data=json.dumps({'data':{'code':'INVALID'}}).encode(),headers={'Content-Type':'application/json'})
+              try:
+                  response=urllib.request.urlopen(req,timeout=60)
+                  status=response.status
+                  body=json.load(response)
+              except urllib.error.HTTPError as e:
+                  status=e.code
+                  body=json.loads(e.read())
+              if name=='getCreatorInvitePreview':
+                  assert status==200 and body.get('result',{}).get('reason')=='invalid',(name,status,body)
+              else:
+                  assert status==401 and body.get('error',{}).get('status')=='UNAUTHENTICATED',(name,status,body)
+              print(name,'PASS',status)
           PY
-      - uses: actions/upload-artifact@v4
-        with:
-          name: creator-previous-sources
-          path: creator-recovery
-          retention-days: 7
