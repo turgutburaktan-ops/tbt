@@ -20,15 +20,15 @@ class _ExpandableCaptionState extends State<ExpandableCaption> {
 
   void _toggle() {
     if (!widget.detailsInSheet) { setState(() => _expanded = !_expanded); return; }
-    showModalBottomSheet<void>(
-      context: context, isScrollControlled: true, useSafeArea: true,
+    showBottomSheet(
+      context: context,
       backgroundColor: const Color(0xFF101316), showDragHandle: true,
-      builder: (context) => SizedBox(
+      builder: (context) => SafeArea(top: false, child: SizedBox(
         height: MediaQuery.sizeOf(context).height * .65,
         child: SingleChildScrollView(padding: const EdgeInsets.fromLTRB(20, 4, 20, 32), child: MentionText(
           text: widget.text, style: widget.style, mentionStyle: widget.mentionStyle,
         )),
-      ),
+      )),
     );
   }
 
@@ -51,3 +51,4 @@ class _ExpandableCaptionState extends State<ExpandableCaption> {
     ]);
   });
 }
+

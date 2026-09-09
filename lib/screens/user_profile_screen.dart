@@ -454,7 +454,7 @@ class _PublicProfileEvents extends StatelessWidget {
         .limit(10)
         .snapshots(),
     builder: (context, snapshot) {
-      final docs = [...?snapshot.data?.docs]
+      final docs = [...?snapshot.data?.docs].where((doc) => doc.data()['status'] != 'cancelled').toList()
         ..sort((a, b) {
           final av = a.data()['startsAt'];
           final bv = b.data()['startsAt'];
@@ -520,3 +520,4 @@ class _Stat extends StatelessWidget {
     );
   }
 }
+
