@@ -1,0 +1,32 @@
+name: Probe Women Entertainment B5
+on:
+  push:
+    branches: [codex/publish-sound-videos]
+    paths: [.github/workflows/probe_women_entertainment_b5.yml]
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update -qq && sudo apt-get install -y ffmpeg
+      - name: Probe sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/probe
+          urls=(
+            "https://commons.wikimedia.org/wiki/Special:Redirect/file/Woman_is_making_turkish_gozleme_02.jpg"
+            "https://commons.wikimedia.org/wiki/Special:Redirect/file/Gaye_Su_Akyol_(54543934554).jpg"
+            "https://commons.wikimedia.org/wiki/Special:Redirect/file/Kaligrafi_sanat%C4%B1.webm"
+          )
+          names=(gozleme gaye kaligrafi)
+          for i in 0 1 2; do
+            f="/tmp/probe/${names[$i]}"
+            curl -fL --retry 3 --max-time 360 -sS -o "$f" "${urls[$i]}"
+            echo "NAME=${names[$i]}"
+            sha256sum "$f"
+            ffprobe -v error -show_entries format=duration,size:stream=codec_name,codec_type,width,height -of json "$f" || identify "$f" || true
+          done
