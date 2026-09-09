@@ -107,7 +107,7 @@ class _DailyGoalsDialog extends StatelessWidget {
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 400),
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(20, 22, 20, 12),
+          padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -149,7 +149,7 @@ class _DailyGoalsDialog extends StatelessWidget {
               const SizedBox(height: 20),
               for (var i = 2; i <= 4; i++) ...[
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 13),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
                   decoration: BoxDecoration(
                     color: surface,
                     borderRadius: BorderRadius.circular(14),
@@ -195,30 +195,40 @@ class _DailyGoalsDialog extends StatelessWidget {
                     ],
                   ),
                 ),
-                if (i < 4) const SizedBox(height: 8),
+                if (i < 4) const SizedBox(height: 6),
               ],
               const SizedBox(height: 20),
-              FilledButton(
-                style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFFA8CBFF),
-                  foregroundColor: background,
-                  minimumSize: const Size.fromHeight(48),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                  textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                ),
-                onPressed: () => Navigator.pop(context, true),
-                child: Text(labels[6], textAlign: TextAlign.center),
-              ),
-              const SizedBox(height: 2),
-              TextButton(
-                style: TextButton.styleFrom(
-                  foregroundColor: const Color(0xFFACBBD0),
-                  minimumSize: const Size.fromHeight(44),
-                  textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
-                ),
-                onPressed: () => Navigator.pop(context, false),
-                child: Text(labels[5], textAlign: TextAlign.center),
+              Row(
+                children: [
+                  Expanded(
+                    flex: 2,
+                    child: TextButton(
+                      style: TextButton.styleFrom(
+                        foregroundColor: const Color(0xFFACBBD0),
+                        minimumSize: const Size.fromHeight(48),
+                        textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+                      ),
+                      onPressed: () => Navigator.pop(context, false),
+                      child: Text(labels[5], textAlign: TextAlign.center),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    flex: 3,
+                    child: FilledButton(
+                      style: FilledButton.styleFrom(
+                        backgroundColor: accent,
+                        foregroundColor: background,
+                        minimumSize: const Size.fromHeight(48),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                        textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      ),
+                      onPressed: () => Navigator.pop(context, true),
+                      child: Text(labels[6], textAlign: TextAlign.center),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
