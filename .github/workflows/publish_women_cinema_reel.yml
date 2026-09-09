@@ -1,0 +1,24 @@
+name: Publish TBT Women Cinema Reel
+on:
+  push:
+    branches: [codex/publish-sound-videos]
+    paths:
+      - tool/publish_women_cinema_reel.cjs
+      - .github/workflows/publish_women_cinema_reel.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: sudo apt-get update -qq && sudo apt-get install -y ffmpeg
+      - run: npm install --prefix functions --ignore-scripts --no-audit --no-fund
+      - run: node tool/publish_women_cinema_reel.cjs
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
