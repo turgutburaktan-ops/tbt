@@ -1,0 +1,21 @@
+name: Probe Kaligrafi Metadata
+on:
+  push:
+    branches: [codex/publish-sound-videos]
+    paths: [.github/workflows/probe_kaligrafi_metadata.yml]
+permissions:
+  contents: read
+jobs:
+  meta:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch Commons metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -sS --get 'https://commons.wikimedia.org/w/api.php' \
+            --data-urlencode 'action=query' \
+            --data-urlencode 'prop=imageinfo' \
+            --data-urlencode 'iiprop=extmetadata' \
+            --data-urlencode 'titles=File:Kaligrafi sanatı.webm' \
+            --data-urlencode 'format=json'
