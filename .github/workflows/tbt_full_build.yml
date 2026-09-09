@@ -142,6 +142,8 @@ jobs:
           PY
           ! grep -q '\${MAPS_API_KEY}' android/app/src/main/AndroidManifest.xml
           ! grep -q 'CI_DUMMY_MAPS_KEY' android/app/src/main/AndroidManifest.xml
+      - name: Align share plugin JVM targets
+        run: python3 tool/patch_receive_sharing_intent.py
       - name: Build Android APK
         run: flutter build apk --debug --no-pub
       - name: Verify APK signing identity
@@ -227,7 +229,7 @@ jobs:
         run: gem install xcodeproj --no-document && python3 tool/configure_ios_share.py
       - name: Build iOS
         run: >-
-          flutter build ios --debug --no-codesign --no-pub
+          flutter build ios --debug --no-codesign --no-pub --verbose
           --dart-define=FIREBASE_IOS_API_KEY=ci-placeholder
           --dart-define=FIREBASE_IOS_APP_ID=1:330568532415:ios:ci-placeholder
           --dart-define=IOS_BUNDLE_ID=com.tbt.social
