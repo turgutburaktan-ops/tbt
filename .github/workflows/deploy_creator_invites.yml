@@ -1,0 +1,57 @@
+name: Deploy Creator Invites
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [codex/publish-sound-videos]
+    paths:
+      - functions/creator_invites.js
+      - functions/bootstrap.js
+      - .github/workflows/deploy_creator_invites.yml
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install dependencies
+        run: npm install --prefix functions --ignore-scripts --no-audit --no-fund
+      - name: Syntax check
+        run: node --check functions/creator_invites.js
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools
+      - name: Authenticate Firebase CLI
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          raw = os.environ.get('FIREBASE_SERVICE_ACCOUNT', '')
+          if not raw:
+              raise SystemExit('FIREBASE_SERVICE_ACCOUNT secret is missing.')
+          target = Path(os.environ['RUNNER_TEMP']) / 'firebase-service-account.json'
+          target.write_text(json.dumps(json.loads(raw)), encoding='utf-8')
+          target.chmod(0o600)
+          with open(os.environ['GITHUB_ENV'], 'a', encoding='utf-8') as f:
+              f.write(f'GOOGLE_APPLICATION_CREDENTIALS={target}\n')
+          PY
+      - name: Deploy creator callables
+        run: firebase deploy --only functions:createCreatorInvite,functions:getCreatorInvitePreview,functions:redeemCreatorInvite --project en-iyi-cekim-noktasi --non-interactive
+      - name: Ensure callable invoker access
+        run: |
+          set -euo pipefail
+          gcloud auth activate-service-account --key-file="$GOOGLE_APPLICATION_CREDENTIALS"
+          for fn in createCreatorInvite getCreatorInvitePreview redeemCreatorInvite; do
+            gcloud functions add-invoker-policy-binding "$fn" \
+              --gen2 --region=europe-west1 --project=en-iyi-cekim-noktasi \
+              --member=allUsers --quiet
+          done
