@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
+import 'creator_register_screen.dart';
 import 'login_screen.dart';
 import 'main_camera_screen.dart';
 
@@ -75,13 +76,33 @@ class _CreatorInviteScreenState extends State<CreatorInviteScreen> {
     }
   }
 
+  Future<void> _loginAndRedeem() async {
+    if (_code.isEmpty) return;
+    await Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
+    );
+    if (!mounted || FirebaseAuth.instance.currentUser == null) return;
+    await _redeem();
+  }
+
+  Future<void> _registerAndRedeem() async {
+    if (_code.isEmpty) return;
+    if (_valid != true) await _preview();
+    if (!mounted || _valid != true) return;
+    final tier = await Navigator.of(context).push<String>(
+      MaterialPageRoute(
+        builder: (_) => CreatorRegisterScreen(inviteCode: _code),
+      ),
+    );
+    if (!mounted || tier == null) return;
+    setState(() => _joinedTier = tier);
+  }
+
   Future<void> _redeem() async {
     if (_code.isEmpty) return;
     if (FirebaseAuth.instance.currentUser == null) {
-      await Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => const LoginScreen()),
-      );
-      if (!mounted || FirebaseAuth.instance.currentUser == null) return;
+      await _loginAndRedeem();
+      return;
     }
     setState(() => _loading = true);
     try {
@@ -120,6 +141,7 @@ class _CreatorInviteScreenState extends State<CreatorInviteScreen> {
   Widget build(BuildContext context) {
     final joined = _joinedTier != null;
     final founding = _joinedTier == 'founding';
+    final signedIn = FirebaseAuth.instance.currentUser != null;
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -168,7 +190,7 @@ class _CreatorInviteScreenState extends State<CreatorInviteScreen> {
                   const SizedBox(height: 9),
                   Text(
                     joined
-                        ? 'Creator statün profilinde kullanılmak üzere hesabına tanımlandı.'
+                        ? 'Creator statün hesabına tanımlandı ve profil rozetlerinde görünür.'
                         : 'TBT’nin ilk içerik üreticileri arasına katıl ve Creator topluluğunun kurucu döneminde yerini al.',
                     textAlign: TextAlign.center,
                     style: const TextStyle(color: Colors.white60, height: 1.4),
@@ -231,14 +253,20 @@ class _CreatorInviteScreenState extends State<CreatorInviteScreen> {
                     color: Colors.white.withValues(alpha: .04),
                     borderRadius: BorderRadius.circular(14),
                     border: Border.all(
-                      color: _valid == true ? Colors.white24 : Colors.redAccent.withValues(alpha: .5),
+                      color: _valid == true
+                          ? Colors.white24
+                          : Colors.redAccent.withValues(alpha: .5),
                     ),
                   ),
                   child: Row(
                     children: [
                       Icon(
-                        _valid == true ? Icons.check_circle_rounded : Icons.error_outline_rounded,
-                        color: _valid == true ? const Color(0xFFD7DBDF) : Colors.redAccent,
+                        _valid == true
+                            ? Icons.check_circle_rounded
+                            : Icons.error_outline_rounded,
+                        color: _valid == true
+                            ? const Color(0xFFD7DBDF)
+                            : Colors.redAccent,
                       ),
                       const SizedBox(width: 10),
                       Expanded(
@@ -254,31 +282,44 @@ class _CreatorInviteScreenState extends State<CreatorInviteScreen> {
                 ),
               ],
               const SizedBox(height: 16),
-              SizedBox(
-                height: 54,
-                child: FilledButton.icon(
-                  onPressed: _loading ? null : _redeem,
-                  icon: _loading
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.auto_awesome_rounded),
-                  label: Text(
-                    FirebaseAuth.instance.currentUser == null
-                        ? 'Giriş yap ve daveti kabul et'
-                        : 'Daveti kabul et',
-                    style: const TextStyle(fontWeight: FontWeight.w900),
+              if (signedIn)
+                SizedBox(
+                  height: 54,
+                  child: FilledButton.icon(
+                    onPressed: _loading ? null : _redeem,
+                    icon: _loading
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.auto_awesome_rounded),
+                    label: const Text(
+                      'Daveti kabul et',
+                      style: TextStyle(fontWeight: FontWeight.w900),
+                    ),
+                  ),
+                )
+              else ...[
+                SizedBox(
+                  height: 54,
+                  child: FilledButton.icon(
+                    onPressed: _loading ? null : _registerAndRedeem,
+                    icon: const Icon(Icons.person_add_alt_1_rounded),
+                    label: const Text(
+                      'Yeni Creator hesabı oluştur',
+                      style: TextStyle(fontWeight: FontWeight.w900),
+                    ),
                   ),
                 ),
-              ),
-              if (FirebaseAuth.instance.currentUser == null) ...[
-                const SizedBox(height: 10),
-                const Text(
-                  'Hesabın yoksa giriş ekranından “Kayıt Ol” ile hesabını oluştur. Ardından bu davet bağlantısını tekrar açarak kodu kullanabilirsin.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.white54, fontSize: 12, height: 1.4),
+                const SizedBox(height: 9),
+                SizedBox(
+                  height: 50,
+                  child: OutlinedButton.icon(
+                    onPressed: _loading ? null : _loginAndRedeem,
+                    icon: const Icon(Icons.login_rounded),
+                    label: const Text('Zaten hesabım var'),
+                  ),
                 ),
               ],
             ] else ...[
@@ -337,7 +378,10 @@ class _Benefit extends StatelessWidget {
                 children: [
                   Text(title, style: const TextStyle(fontWeight: FontWeight.w900)),
                   const SizedBox(height: 3),
-                  Text(body, style: const TextStyle(color: Colors.white60, height: 1.35)),
+                  Text(
+                    body,
+                    style: const TextStyle(color: Colors.white60, height: 1.35),
+                  ),
                 ],
               ),
             ),
