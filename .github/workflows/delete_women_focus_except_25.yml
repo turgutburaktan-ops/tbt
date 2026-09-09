@@ -1,0 +1,26 @@
+name: Delete Women Focus Except 25
+on:
+  push:
+    branches: [codex/publish-sound-videos]
+    paths:
+      - tool/delete_women_focus_except_25.cjs
+      - .github/workflows/delete_women_focus_except_25.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: tbt-delete-women-focus-except-25
+  cancel-in-progress: false
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm install --prefix functions --ignore-scripts --no-audit --no-fund
+      - run: node tool/delete_women_focus_except_25.cjs
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
