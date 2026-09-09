@@ -6,6 +6,7 @@ import '../widgets/expandable_caption.dart';
 import '../widgets/post_sound_chip.dart';
 import '../widgets/app_video_player.dart';
 import '../widgets/like_burst.dart';
+import '../widgets/share_recipient_picker.dart';
 
 import '../services/content_engagement_service.dart';
 import '../services/social_service.dart';
@@ -286,12 +287,15 @@ class _ReelPage extends StatelessWidget {
     final selected = await showModalBottomSheet<Map<String, String>>(
       context: context,
       useSafeArea: true,
+      isScrollControlled: true,
       backgroundColor: const Color(0xFF111315),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (sheetContext) => SizedBox(
-        height: MediaQuery.of(sheetContext).size.height * .55,
+      builder: (sheetContext) => Padding(
+        padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(sheetContext).bottom),
+        child: SizedBox(
+        height: (MediaQuery.sizeOf(sheetContext).height - MediaQuery.viewInsetsOf(sheetContext).bottom) * .68,
         child: Column(
           children: [
             const Padding(
@@ -308,49 +312,12 @@ class _ReelPage extends StatelessWidget {
               ),
             ),
             const Divider(height: 1, color: Colors.white12),
-            Expanded(
-              child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-                stream: ContentEngagementService.instance.users(),
-                builder: (_, snapshot) {
-                  if (!snapshot.hasData) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-                  final me = FirebaseAuth.instance.currentUser?.uid;
-                  final users = snapshot.data!.docs
-                      .where((doc) => doc.id != me)
-                      .toList();
-                  return ListView.builder(
-                    itemCount: users.length,
-                    itemBuilder: (_, index) {
-                      final doc = users[index];
-                      final u = doc.data();
-                      final name =
-                          (u['displayName'] ?? u['username'] ?? 'Kullanıcı')
-                              .toString();
-                      final photo = (u['photoUrl'] ?? '').toString();
-                      return ListTile(
-                        leading: CircleAvatar(
-                          backgroundImage: photo.isEmpty
-                              ? null
-                              : NetworkImage(photo),
-                          child: photo.isEmpty
-                              ? const Icon(Icons.person_outline)
-                              : null,
-                        ),
-                        title: Text(name),
-                        onTap: () => Navigator.pop(sheetContext, {
-                          'id': doc.id,
-                          'name': name,
-                        }),
-                      );
-                    },
-                  );
-                },
-              ),
-            ),
+            Expanded(child: ShareRecipientPicker(
+              onSelected: (user) => Navigator.pop(sheetContext, user),
+            )),
           ],
         ),
-      ),
+      )),
     );
     if (selected == null || !context.mounted) return;
     try {
@@ -401,6 +368,7 @@ class _ReelPage extends StatelessWidget {
           },
           child: AppVideoPlayer.network(
             url: _videoUrl,
+            holdToSpeed: true,
             autoplay: true,
             active: active,
             muted: false,
@@ -620,3 +588,4 @@ class _Action extends StatelessWidget {
     ],
   );
 }
+

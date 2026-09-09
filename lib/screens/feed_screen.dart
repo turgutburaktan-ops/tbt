@@ -24,7 +24,7 @@ import 'user_profile_screen.dart';
 
 enum FeedMode { forYou, following }
 
-class FeedScreen extends StatelessWidget {
+class FeedScreen extends StatefulWidget {
   final FeedMode mode;
   final bool embedded;
   final bool includeEvents;
@@ -34,6 +34,32 @@ class FeedScreen extends StatelessWidget {
     this.embedded = false,
     this.includeEvents = true,
   });
+  @override
+  State<FeedScreen> createState() => _FeedScreenState();
+}
+
+class _FeedScreenState extends State<FeedScreen> {
+  late final _query = FirebaseFirestore.instance.collection('posts').orderBy('createdAt', descending: true).limit(120);
+  late Stream<QuerySnapshot<Map<String, dynamic>>> _postsStream = _query.snapshots();
+  late final _followingStream = SocialService.instance.followingIds();
+  late final _eventsStream = SocialEventService.instance.watchUpcoming(limit: 50);
+  QuerySnapshot<Map<String, dynamic>>? _refreshSnapshot;
+  int _refreshVersion = 0;
+
+  Future<void> _refresh() async {
+    try {
+      final snapshot = await _query.get(const GetOptions(source: Source.server)).timeout(const Duration(seconds: 12));
+      if (!mounted) return;
+      setState(() {
+        _refreshSnapshot = snapshot;
+        _refreshVersion++;
+        _postsStream = _query.snapshots();
+      });
+    } catch (_) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Akış yenilenemedi. Bağlantını kontrol edip tekrar dene.')));
+    }
+  }
+
   List<String> _strings(dynamic value) => value is Iterable
       ? value.map((e) => e.toString()).where((e) => e.isNotEmpty).toList()
       : const <String>[];
@@ -44,19 +70,17 @@ class FeedScreen extends StatelessWidget {
     final body = currentUser == null
         ? const _SignedOutFeed()
         : StreamBuilder<List<String>>(
-            stream: SocialService.instance.followingIds(),
+            stream: _followingStream,
             builder: (context, followingSnapshot) {
               if (followingSnapshot.connectionState == ConnectionState.waiting)
                 return const _FeedLoading();
               final followingIds = followingSnapshot.data ?? <String>[];
               return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-                stream: FirebaseFirestore.instance
-                    .collection('posts')
-                    .orderBy('createdAt', descending: true)
-                    .limit(120)
-                    .snapshots(),
+                key: ValueKey(_refreshVersion),
+                stream: _postsStream,
+                initialData: _refreshSnapshot,
                 builder: (context, postsSnapshot) {
-                  if (postsSnapshot.connectionState == ConnectionState.waiting)
+                  if (postsSnapshot.connectionState == ConnectionState.waiting && !postsSnapshot.hasData)
                     return const _FeedLoading();
                   if (postsSnapshot.hasError)
                     return Center(
@@ -73,34 +97,21 @@ class FeedScreen extends StatelessWidget {
                   docs.removeWhere(
                     (doc) => doc.data()['accountFrozen'] == true,
                   );
-                  if (mode == FeedMode.following) {
+                  if (widget.mode == FeedMode.following) {
                     docs.removeWhere((doc) {
                       final owner = (doc.data()['userId'] ?? '').toString();
                       return owner != currentUser.uid &&
                           !followingIds.contains(owner);
                     });
-                  } else {
-                    docs.sort((a, b) {
-                      final ao = (a.data()['userId'] ?? '').toString(),
-                          bo = (b.data()['userId'] ?? '').toString();
-                      final af = followingIds.contains(ao) ? 1 : 0,
-                          bf = followingIds.contains(bo) ? 1 : 0;
-                      if (af != bf) return bf.compareTo(af);
-                      final at = a.data()['createdAt'],
-                          bt = b.data()['createdAt'];
-                      return at is Timestamp && bt is Timestamp
-                          ? bt.compareTo(at)
-                          : 0;
-                    });
                   }
+                  // The server query is newest-first. Following has its own tab;
+                  // older followed posts must not bury newly published posts.
                   return StreamBuilder<List<SocialEvent>>(
-                    stream: SocialEventService.instance.watchUpcoming(
-                      limit: 50,
-                    ),
+                    stream: _eventsStream,
                     builder: (context, eventsSnapshot) {
                       final now = DateTime.now();
                       final events =
-                          (includeEvents
+                          (widget.includeEvents
                                   ? eventsSnapshot.data ?? const <SocialEvent>[]
                                   : const <SocialEvent>[])
                               .where((event) {
@@ -115,7 +126,7 @@ class FeedScreen extends StatelessWidget {
                                       currentUser.uid,
                                     );
                                 if (!visible) return false;
-                                if (mode == FeedMode.following &&
+                                if (widget.mode == FeedMode.following &&
                                     !(followingIds.contains(event.hostId) ||
                                         event.participantIds.any(
                                           followingIds.contains,
@@ -135,7 +146,7 @@ class FeedScreen extends StatelessWidget {
                           .take(6)
                           .toList();
                       final items = <Widget>[];
-                      if (mode == FeedMode.forYou && tonight.isNotEmpty)
+                      if (widget.mode == FeedMode.forYou && tonight.isNotEmpty)
                         items.add(
                           _TonightStrip(
                             events: tonight,
@@ -161,6 +172,7 @@ class FeedScreen extends StatelessWidget {
                             mediaPaths = [legacyPath];
                           items.add(
                             _FeedPostCard(
+                              key: ValueKey(doc.id),
                               postId: doc.id,
                               userId: (data['userId'] ?? '').toString(),
                               userName: (data['userName'] ?? 'Topluluk üyesi')
@@ -220,11 +232,9 @@ class FeedScreen extends StatelessWidget {
                           ),
                         );
                       if (docs.isEmpty && events.isEmpty)
-                        items.add(_EmptyFeed(mode: mode));
+                        items.add(_EmptyFeed(mode: widget.mode));
                       return RefreshIndicator(
-                        onRefresh: () => Future<void>.delayed(
-                          const Duration(milliseconds: 450),
-                        ),
+                        onRefresh: _refresh,
                         child: ListView.builder(
                           physics: const AlwaysScrollableScrollPhysics(),
                           padding: const EdgeInsets.only(bottom: 24),
@@ -238,12 +248,12 @@ class FeedScreen extends StatelessWidget {
               );
             },
           );
-    if (embedded) return body;
+    if (widget.embedded) return body;
     return Scaffold(
       backgroundColor: const Color(0xFF090A0C),
       appBar: AppBar(
         backgroundColor: const Color(0xFF090A0C),
-        title: Text(mode == FeedMode.following ? 'Takip' : 'Sana Özel'),
+        title: Text(widget.mode == FeedMode.following ? 'Takip' : 'Sana Özel'),
       ),
       body: body,
     );
@@ -584,6 +594,7 @@ class _FeedPostCard extends StatefulWidget {
   final List<String> mediaUrls, mediaStoragePaths;
   final dynamic createdAt;
   const _FeedPostCard({
+    super.key,
     required this.postId,
     required this.userId,
     required this.userName,
@@ -658,7 +669,7 @@ class _FeedPostCardState extends State<_FeedPostCard> {
           ),
         ),
         autoplay: true,
-        muted: true,
+        muted: false,
         loop: true,
         showControls: true,
         fit: BoxFit.cover,
@@ -985,3 +996,4 @@ class _FeedLoading extends StatelessWidget {
     ),
   );
 }
+

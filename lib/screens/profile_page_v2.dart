@@ -1,3 +1,4 @@
+import '../services/social_event_service.dart';
 import '../widgets/profile_reservations.dart';
 import 'dart:io';
 
@@ -820,6 +821,25 @@ class _ProfileEventsSection extends StatelessWidget {
 
   const _ProfileEventsSection({required this.userId, this.publicOnly = false});
 
+  Future<void> _remove(BuildContext context, String eventId, String title) async {
+    final confirmed = await showDialog<bool>(context: context, builder: (context) => AlertDialog(
+      title: const Text('Etkinliği sil?'),
+      content: Text('“$title” iptal edilecek ve profilinden kaldırılacak. Katılımcılara iptal bilgisi gönderilecek.'),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Vazgeç')),
+        FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Etkinliği sil')),
+      ],
+    ));
+    if (confirmed != true || !context.mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await SocialEventService.instance.leave(eventId);
+      messenger.showSnackBar(const SnackBar(content: Text('Etkinlik iptal edildi ve profilinden kaldırıldı.')));
+    } catch (_) {
+      messenger.showSnackBar(const SnackBar(content: Text('Etkinlik silinemedi. Lütfen tekrar dene.')));
+    }
+  }
+
   DateTime _date(Object? value) => value is Timestamp
       ? value.toDate()
       : DateTime.tryParse(value?.toString() ?? '') ?? DateTime.now();
@@ -844,7 +864,7 @@ class _ProfileEventsSection extends StatelessWidget {
             child: Center(child: CircularProgressIndicator()),
           );
         }
-        final events = [...?snapshot.data?.docs]
+        final events = [...?snapshot.data?.docs].where((doc) => doc.data()['status'] != 'cancelled').toList()
           ..sort((a, b) => _date(b.data()['startsAt'])
               .compareTo(_date(a.data()['startsAt'])));
         if (events.isEmpty) {
@@ -905,7 +925,10 @@ class _ProfileEventsSection extends StatelessWidget {
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      trailing: const Icon(Icons.chevron_right_rounded),
+                      trailing: FirebaseAuth.instance.currentUser?.uid == userId
+                          ? IconButton(tooltip: 'Etkinliği sil', icon: const Icon(Icons.delete_outline),
+                              onPressed: () => _remove(context, doc.id, title))
+                          : const Icon(Icons.chevron_right_rounded),
                       onTap: () => Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -1161,3 +1184,4 @@ class _Stat extends StatelessWidget {
           );
   }
 }
+

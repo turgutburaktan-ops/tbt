@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../services/chat_service.dart';
 import '../models/chat_message.dart';
 import '../theme/app_theme.dart';
+import 'share_recipient_picker.dart';
 
 Future<void> shareCardToChat(
   BuildContext context, {
@@ -27,8 +28,10 @@ Future<void> shareCardToChat(
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
     ),
-    builder: (sheetContext) => SizedBox(
-      height: MediaQuery.sizeOf(sheetContext).height * .68,
+    builder: (sheetContext) => Padding(
+      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(sheetContext).bottom),
+      child: SizedBox(
+      height: (MediaQuery.sizeOf(sheetContext).height - MediaQuery.viewInsetsOf(sheetContext).bottom) * .68,
       child: Column(
         children: [
           Padding(
@@ -54,71 +57,12 @@ Future<void> shareCardToChat(
             if (groups.isEmpty) return const SizedBox.shrink();
             return SizedBox(height: 110, child: ListView(scrollDirection: Axis.horizontal, children: groups.map((t) => SizedBox(width: 140, child: ListTile(leading: const Icon(Icons.groups), title: Text(t.name, maxLines: 2), onTap: () => Navigator.pop(sheetContext, {'threadId': t.id, 'id': '', 'name': t.name})))).toList()));
           }),
-          Expanded(
-            child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-              stream: FirebaseFirestore.instance
-                  .collection('users')
-                  .limit(100)
-                  .snapshots(),
-              builder: (_, snapshot) {
-                if (snapshot.hasError) {
-                  return const Center(
-                    child: Text(
-                      'Kullanıcılar yüklenemedi.',
-                      style: TextStyle(color: Colors.white60),
-                    ),
-                  );
-                }
-                if (!snapshot.hasData) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                final users = snapshot.data!.docs
-                    .where((doc) => doc.id != me.uid)
-                    .toList(growable: false);
-                if (users.isEmpty) {
-                  return const Center(
-                    child: Text(
-                      'Gönderebileceğin bir kullanıcı bulunamadı.',
-                      style: TextStyle(color: Colors.white60),
-                    ),
-                  );
-                }
-                return ListView.separated(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  itemCount: users.length,
-                  separatorBuilder: (_, __) =>
-                      const Divider(color: Colors.white10, height: 1),
-                  itemBuilder: (_, index) {
-                    final doc = users[index];
-                    final data = doc.data();
-                    final name =
-                        (data['displayName'] ?? data['email'] ?? 'Kullanıcı')
-                            .toString();
-                    return ListTile(
-                      leading: const CircleAvatar(
-                        backgroundColor: AppColors.surfaceStrong,
-                        child: Icon(Icons.person_outline_rounded),
-                      ),
-                      title: Text(
-                        name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontWeight: FontWeight.w800),
-                      ),
-                      trailing: const Icon(Icons.send_rounded, size: 19),
-                      onTap: () => Navigator.pop(sheetContext, {
-                        'id': doc.id,
-                        'name': name,
-                      }),
-                    );
-                  },
-                );
-              },
-            ),
-          ),
+          Expanded(child: ShareRecipientPicker(
+            onSelected: (user) => Navigator.pop(sheetContext, user),
+          )),
         ],
       ),
-    ),
+    )),
   );
 
   if (target == null || !context.mounted) return;
@@ -165,3 +109,4 @@ void _notice(BuildContext context, String message) {
     ..hideCurrentSnackBar()
     ..showSnackBar(SnackBar(content: Text(message)));
 }
+

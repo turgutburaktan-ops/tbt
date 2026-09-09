@@ -47,6 +47,7 @@ class AppVideoPlayer extends StatefulWidget {
   final File? file;
   final bool autoplay, muted, loop, showControls, active;
   final double volume;
+  final bool holdToSpeed;
   final BoxFit fit;
   final Widget? loading, errorWidget;
   final VoidCallback? onTap;
@@ -58,6 +59,7 @@ class AppVideoPlayer extends StatefulWidget {
     this.autoplay = false,
     this.muted = true,
     this.volume = 1,
+    this.holdToSpeed = false,
     this.loop = true,
     this.showControls = true,
     this.active = true,
@@ -74,6 +76,7 @@ class AppVideoPlayer extends StatefulWidget {
     this.autoplay = false,
     this.muted = true,
     this.volume = 1,
+    this.holdToSpeed = false,
     this.loop = true,
     this.showControls = true,
     this.active = true,
@@ -98,6 +101,13 @@ class _AppVideoPlayerState extends State<AppVideoPlayer>
       _foreground = true;
   bool _muted = true, _wantsPlay = false, _playing = false;
   int _attempt = 0;
+  bool _speeding = false;
+  void _speed(bool value) {
+    if (_speeding == value) return;
+    _speeding = value;
+    _controller?.setPlaybackSpeed(value ? 2 : 1);
+    if (mounted) setState(() {});
+  }
   final _visibilityKey = UniqueKey();
   String get _source => widget.url ?? widget.file!.path;
   bool get _eligible =>
@@ -126,6 +136,7 @@ class _AppVideoPlayerState extends State<AppVideoPlayer>
     super.didUpdateWidget(old);
     if (old.url != widget.url || old.file?.path != widget.file?.path) {
       ++_attempt;
+      _speed(false);
       _controller?.dispose();
       _controller = null;
       _ready = false;
@@ -135,6 +146,7 @@ class _AppVideoPlayerState extends State<AppVideoPlayer>
       _wantsPlay = widget.autoplay;
       if (_visible > 0) _init();
     }
+    if (!widget.active || !widget.holdToSpeed) _speed(false);
     if (old.autoplay != widget.autoplay) _wantsPlay = widget.autoplay;
     if (old.muted != widget.muted || old.volume != widget.volume) {
       _muted = widget.muted;
@@ -150,6 +162,7 @@ class _AppVideoPlayerState extends State<AppVideoPlayer>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     _foreground = state == AppLifecycleState.resumed;
+    if (!_foreground) _speed(false);
     _PlaybackOwner.update();
   }
 
@@ -201,6 +214,7 @@ class _AppVideoPlayerState extends State<AppVideoPlayer>
   }
 
   void _applyPlayback(bool play) {
+    if (!play) _speed(false);
     if (!_ready || play == _playing) return;
     _playing = play;
     if (play) {
@@ -277,11 +291,25 @@ class _AppVideoPlayerState extends State<AppVideoPlayer>
     return Stack(
       fit: StackFit.expand,
       children: [
-        GestureDetector(
+        LayoutBuilder(builder: (context, constraints) => Listener(
+          onPointerUp: (_) => _speed(false),
+          onPointerCancel: (_) => _speed(false),
+          child: GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTap: _tap,
+          onLongPressStart: widget.holdToSpeed ? (details) {
+            if (_playing && details.localPosition.dx >= constraints.maxWidth / 2) {
+              _speed(true);
+            }
+          } : null,
+          onLongPressEnd: widget.holdToSpeed ? (_) => _speed(false) : null,
+          onLongPressCancel: widget.holdToSpeed ? () => _speed(false) : null,
           child: video,
-        ),
+        ))),
+        if (_speeding)
+          const Positioned(top: 88, left: 0, right: 0, child: IgnorePointer(
+            child: Center(child: Chip(label: Text('2x ▶▶'))),
+          )),
         if (!_playing)
           const IgnorePointer(
             child: Center(
@@ -310,3 +338,4 @@ class _AppVideoPlayerState extends State<AppVideoPlayer>
     );
   }
 }
+
