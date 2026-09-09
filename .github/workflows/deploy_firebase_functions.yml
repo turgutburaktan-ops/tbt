@@ -64,13 +64,16 @@ jobs:
           ACCOUNT_CLEANUP_UPDATE: ${{ contains(github.event.head_commit.message, '[account-cleanup]') }}
           RESTORE_UPDATE: ${{ contains(github.event.head_commit.message, '[restore-update]') }}
           MUSIC_UPDATE: ${{ contains(github.event.head_commit.message, '[music-update]') }}
+          CREATOR_RESTORE: ${{ contains(github.event.head_commit.message, '[creator-restore]') }}
           CHAT_UPDATE: ${{ contains(github.event.head_commit.message, '[chat-update]') }}
           PREPARATION_UPDATE: ${{ contains(github.event.head_commit.message, '[preparation-update]') }}
           RESERVATION_INDEX: ${{ contains(github.event.head_commit.message, '[reservation-index]') }}
           RESERVATION_UPDATE: ${{ contains(github.event.head_commit.message, '[reservation-update]') }}
           PUBLICATION_REPAIR: ${{ contains(github.event.head_commit.message, '[repair-burak-publication]') }}
         run: |
-          if [ "$ACCOUNT_CLEANUP_UPDATE" = "true" ]; then
+          if [ "$CREATOR_RESTORE" = "true" ]; then
+            firebase deploy --only functions:createCreatorInvite,functions:getCreatorInvitePreview,functions:redeemCreatorInvite --project en-iyi-cekim-noktasi --non-interactive
+          elif [ "$ACCOUNT_CLEANUP_UPDATE" = "true" ]; then
             firebase deploy --only functions:deleteAccountNow --project en-iyi-cekim-noktasi --non-interactive
           elif [ "$RESTORE_UPDATE" = "true" ]; then
             firebase deploy --only functions:signInWithUsername,functions:resolveUsernameForLogin,functions:sendAdminBroadcast,functions:deliverAdminBroadcast,functions:adminDeleteVenue,functions:getAdminInsights,functions:getAdminBusinessClaims,functions:freezeAccount,functions:unfreezeAccount,functions:deleteAccountNow,functions:pushOnNotificationCreated --project en-iyi-cekim-noktasi --non-interactive
@@ -91,7 +94,7 @@ jobs:
             exit 1
           fi
       - name: Restore callable invoker access
-        if: "!contains(github.event.head_commit.message, '[account-cleanup]') && !contains(github.event.head_commit.message, '[restore-update]') && !contains(github.event.head_commit.message, '[music-update]') && !contains(github.event.head_commit.message, '[chat-update]') && !contains(github.event.head_commit.message, '[repair-burak-publication]') && !contains(github.event.head_commit.message, '[reservation-update]') && !contains(github.event.head_commit.message, '[reservation-index]') && !contains(github.event.head_commit.message, '[preparation-update]')"
+        if: "!contains(github.event.head_commit.message, '[creator-restore]') && !contains(github.event.head_commit.message, '[account-cleanup]') && !contains(github.event.head_commit.message, '[restore-update]') && !contains(github.event.head_commit.message, '[music-update]') && !contains(github.event.head_commit.message, '[chat-update]') && !contains(github.event.head_commit.message, '[repair-burak-publication]') && !contains(github.event.head_commit.message, '[reservation-update]') && !contains(github.event.head_commit.message, '[reservation-index]') && !contains(github.event.head_commit.message, '[preparation-update]')"
         run: |
           set -euo pipefail
           gcloud auth activate-service-account --key-file="$GOOGLE_APPLICATION_CREDENTIALS"
