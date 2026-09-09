@@ -22,7 +22,8 @@ jobs:
                   q={'action':'query','generator':'categorymembers','gcmtitle':'Category:'+cat,'gcmtype':'file','gcmlimit':'500','prop':'imageinfo','iiprop':'url|mime|size|extmetadata','format':'json'}
                   if cmcontinue:q['gcmcontinue']=cmcontinue
                   u='https://commons.wikimedia.org/w/api.php?'+urllib.parse.urlencode(q)
-                  data=json.load(urllib.request.urlopen(u))
+                  req=urllib.request.Request(u,headers={'User-Agent':'TBTEditorial/1.0 contact:turgutburaktan@gmail.com'})
+                  data=json.load(urllib.request.urlopen(req,timeout=30))
                   for p in data.get('query',{}).get('pages',{}).values():
                       ii=(p.get('imageinfo') or [{}])[0]
                       if str(ii.get('mime','')).startswith('video/'):
