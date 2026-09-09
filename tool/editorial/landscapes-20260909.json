@@ -1,0 +1,97 @@
+{
+  "batch": "landscapes-20260909",
+  "posts": [
+    {
+      "id": "tbt-rehber-landscape-20260909-01",
+      "status": "draft",
+      "kind": "Manzara",
+      "title": "Kapadokya’da başka bir dünya",
+      "place": "Aşk Vadisi · Kapadokya",
+      "city": "Nevşehir",
+      "caption": "Işığın taşlara, gölgelerin vadiye çizdiği yollar… Kapadokya’ya bir de yukarıdan bak. ✨\nBu manzarayı birlikte görmek istediğin kişiye gönder.",
+      "photo": 0,
+      "spotIds": []
+    },
+    {
+      "id": "tbt-rehber-landscape-20260909-02",
+      "status": "draft",
+      "kind": "Manzara",
+      "title": "Bulutların altında Uzungöl",
+      "place": "Uzungöl · Çaykara",
+      "city": "Trabzon",
+      "caption": "Dağların arasına yerleşen bulutlar, yeşilin içinde sakin bir göl. Bazen bir manzara bütün planı değiştirir. 🌿\nSenin tercihin sisli dağlar mı, güneşli kıyılar mı?",
+      "photo": 1,
+      "spotIds": []
+    },
+    {
+      "id": "tbt-rehber-landscape-20260909-03",
+      "status": "draft",
+      "kind": "Manzara",
+      "title": "Ölüdeniz’in mavisine bir mola",
+      "place": "Ölüdeniz · Fethiye",
+      "city": "Muğla",
+      "caption": "Kıyının kıvrıldığı yerde mavi, turkuaza dönüşüyor. Ölüdeniz’i yukarıdan izlemek başlı başına bir manzara. 💙\nBir sonraki deniz rotan için kaydet.",
+      "photo": 2,
+      "spotIds": []
+    },
+    {
+      "id": "tbt-rehber-landscape-20260909-04",
+      "status": "draft",
+      "kind": "Manzara",
+      "title": "Ihlara’da sonbaharın renkleri",
+      "place": "Ihlara Vadisi",
+      "city": "Aksaray",
+      "caption": "Yüksek kaya duvarları arasında sarıya dönen ağaçlar… Ihlara’nın bu sonbahar karesi, yavaşlayıp etrafına bakmak için güzel bir sebep. 🍂\nDoğada en sevdiğin mevsim hangisi?",
+      "photo": 3,
+      "spotIds": []
+    }
+  ],
+  "media": [
+    {
+      "src": "https://upload.wikimedia.org/wikipedia/commons/8/89/Love_Valley_from_hot_air_balloon.jpg",
+      "author": "Wanderonomy",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Love_Valley_from_hot_air_balloon.jpg",
+      "date": "27 Mayıs 2019",
+      "sha256": "080864274358ea0d8562b2bc8a0ee053d290db251da014508a89a1a7b6b69587",
+      "width": 3888,
+      "height": 2592,
+      "contentType": "image/jpeg"
+    },
+    {
+      "src": "https://upload.wikimedia.org/wikipedia/commons/7/7e/Uzung%C3%B6l_lake_and_town.jpg",
+      "author": "İhsan Deniz Kılıçoğlu",
+      "license": "CC BY-SA 3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Uzung%C3%B6l_lake_and_town.jpg",
+      "date": "8 Temmuz 2011",
+      "sha256": "05e9d8d20b4a7ddaaa66271caa24a4a96575af12fc1f943a6ad4d1921f5d7d2f",
+      "width": 3456,
+      "height": 2304,
+      "contentType": "image/jpeg"
+    },
+    {
+      "src": "https://upload.wikimedia.org/wikipedia/commons/e/ee/Paragliding_view_oludeniz_-_panoramio_%282%29.jpg",
+      "author": "Andrzej Szkopiński; renk düzenlemesi: Electragod77",
+      "license": "CC BY 3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Paragliding_view_oludeniz_-_panoramio_(2).jpg",
+      "date": "18 Haziran 2011; kaynak sürüm: 29 Ekim 2022",
+      "width": 1423,
+      "height": 1067,
+      "contentType": "image/jpeg"
+    },
+    {
+      "src": "https://upload.wikimedia.org/wikipedia/commons/8/8d/Ihlara_Valley_-_panoramio_%2831%29.jpg",
+      "author": "Tevfik Teker",
+      "license": "CC BY 3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Ihlara_Valley_-_panoramio_(31).jpg",
+      "date": "15 Kasım 2015",
+      "width": 5184,
+      "height": 3456,
+      "contentType": "image/jpeg"
+    }
+  ]
+}
