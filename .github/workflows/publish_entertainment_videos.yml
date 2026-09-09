@@ -5,6 +5,7 @@ on:
     paths:
       - tool/publish_entertainment_videos.cjs
       - tool/publish_entertainment_turkish_videos.cjs
+      - tool/cleanup_entertainment_sensitive.cjs
       - tool/editorial/entertainment-videos.json
       - .github/workflows/publish_entertainment_videos.yml
   workflow_dispatch:
@@ -25,5 +26,8 @@ jobs:
       - run: sudo apt-get update -qq && sudo apt-get install -y ffmpeg
       - run: npm install --prefix functions --ignore-scripts --no-audit --no-fund
       - run: node tool/publish_entertainment_turkish_videos.cjs --publish
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+      - run: node tool/cleanup_entertainment_sensitive.cjs
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
