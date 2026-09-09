@@ -1,3 +1,4 @@
+import '../services/creator_service.dart';
 import '../widgets/creator_view_tracker.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -277,6 +278,7 @@ class _ReelPage extends StatelessWidget {
   String get _spotName => (data['spotName'] ?? '').toString();
 
   Future<void> _openProfile(BuildContext context) async {
+    CreatorService.instance.recordProfileVisit(postId);
     if (_ownerId.isEmpty) return;
     await Navigator.push(
       context,

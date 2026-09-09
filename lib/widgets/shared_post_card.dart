@@ -129,6 +129,10 @@ class _SharedPostCardState extends State<SharedPostCard> {
         _watch('users/${actor['userId']}/blocked/${post['userId']}');
       if (post['mediaType'] == 'route')
         _watch('travel_plans/${post['travelPlanId']}');
+      if ((post['eventId'] ?? '').toString().isNotEmpty)
+        _watch('social_events/${post['eventId']}');
+      if (widget.storyId != null && me == actor?['userId'])
+        _watch('users/$me/story_archive/${widget.storyId}');
       if (widget.repostId != null) _watch('post_reposts/${widget.repostId}');
       if (widget.storyId != null) _watch('stories/${widget.storyId}');
       setState(() {

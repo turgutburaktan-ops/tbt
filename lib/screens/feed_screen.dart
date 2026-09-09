@@ -1,3 +1,4 @@
+import '../services/creator_service.dart';
 import '../widgets/shared_post_card.dart';
 import '../widgets/creator_view_tracker.dart';
 import 'reels_screen.dart';
@@ -717,6 +718,7 @@ class _FeedPostCardState extends State<_FeedPostCard> {
   }
 
   void _profile() {
+    CreatorService.instance.recordProfileVisit(widget.postId);
     if (widget.userId.isNotEmpty)
       Navigator.push(
         context,

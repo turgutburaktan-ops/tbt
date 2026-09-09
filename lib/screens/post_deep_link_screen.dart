@@ -68,27 +68,27 @@ class PostDeepLinkScreen extends StatelessWidget {
       return _content(context);
     },
   );
-  Widget _content(BuildContext context) =>
-      StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-        stream: FirebaseFirestore.instance.doc('posts/$postId').snapshots(),
-        builder: (context, source) => FutureBuilder<Widget>(
-          future: source.hasData && source.data!.exists ? _page() : null,
-          builder: (context, snapshot) {
-            if (source.connectionState == ConnectionState.waiting ||
-                (source.data?.exists == true &&
-                    snapshot.connectionState == ConnectionState.waiting)) {
-              return const Scaffold(
-                body: Center(child: CircularProgressIndicator()),
-              );
-            }
-            if (snapshot.hasData) return snapshot.data!;
-            return Scaffold(
-              appBar: AppBar(title: const Text('Paylaşım')),
-              body: const Center(
-                child: Text('Bu paylaşım artık kullanılamıyor.'),
-              ),
-            );
-          },
-        ),
-      );
+  Widget _content(
+    BuildContext context,
+  ) => StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+    stream: FirebaseFirestore.instance.doc('posts/$postId').snapshots(),
+    builder: (context, source) => FutureBuilder<Widget>(
+      future: source.hasData && source.data!.exists ? _page() : null,
+      builder: (context, snapshot) {
+        if (source.connectionState == ConnectionState.waiting ||
+            (source.data?.exists == true &&
+                snapshot.connectionState == ConnectionState.waiting)) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+        if (source.data?.exists == true && !source.hasError && snapshot.hasData)
+          return snapshot.data!;
+        return Scaffold(
+          appBar: AppBar(title: const Text('Paylaşım')),
+          body: const Center(child: Text('Bu paylaşım artık kullanılamıyor.')),
+        );
+      },
+    ),
+  );
 }

@@ -1,3 +1,4 @@
+import '../services/creator_service.dart';
 import '../widgets/creator_view_tracker.dart';
 import 'reels_screen.dart';
 import '../widgets/like_burst.dart';
@@ -61,6 +62,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   }
 
   void _openProfile() {
+    CreatorService.instance.recordProfileVisit(_post['id'].toString());
     final uid = (_post['userId'] ?? '').toString().trim();
     if (uid.isNotEmpty)
       Navigator.push(

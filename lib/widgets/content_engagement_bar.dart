@@ -331,7 +331,9 @@ class ContentEngagementBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const accent = Color(0xFFB7BCC2);
-    return Row(
+    return Wrap(
+      alignment: WrapAlignment.spaceBetween,
+      crossAxisAlignment: WrapCrossAlignment.center,
       children: [
         StreamBuilder<bool>(
           stream: ContentEngagementService.instance.isLiked(
@@ -485,7 +487,6 @@ class ContentEngagementBar extends StatelessWidget {
             ),
           ),
         if (collection == 'posts') PostSharingActions(postId: contentId),
-        const Spacer(),
         IconButton(
           tooltip: 'WhatsApp veya başka uygulamada paylaş',
           visualDensity: VisualDensity.compact,

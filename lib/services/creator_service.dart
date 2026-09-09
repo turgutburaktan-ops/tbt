@@ -5,6 +5,10 @@ class CreatorService {
   static final instance = CreatorService._();
   final _functions = FirebaseFunctions.instanceFor(region: 'europe-west1');
 
+  void recordProfileVisit(String postId) {
+    publishing('profileVisit', postId).catchError((_) => <String, dynamic>{});
+  }
+
   Future<Map<String, dynamic>> studio(
     String action, [
     Map<String, dynamic> data = const {},

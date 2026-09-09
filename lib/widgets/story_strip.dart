@@ -1134,7 +1134,8 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
                     ),
                   ),
                 ),
-                if (current.caption.trim().isNotEmpty)
+                if (current.sharedPostId.isEmpty &&
+                    current.caption.trim().isNotEmpty)
                   Positioned.fill(
                     child: IgnorePointer(
                       child: Center(

@@ -20,17 +20,17 @@ function publicAccount(data) {
   return !!data && data.accountStatus !== 'frozen' && data.disabled !== true && data.banned !== true &&
     data.isPrivate !== true && data.privateAccount !== true && (!data.visibility || data.visibility === 'public');
 }
-async function user(db, uid, tx = db) {
+async function user(db, uid, tx = {get: ref => ref.get()}) {
   const snap = await tx.get(db.doc(`users/${uid}`));
   if (!snap.exists || snap.data().accountStatus === 'frozen' || snap.data().disabled === true || snap.data().banned === true) fail('permission-denied', 'Hesap kullanılamıyor.');
   return snap.data();
 }
-async function unblocked(db, a, b, tx = db) {
+async function unblocked(db, a, b, tx = {get: ref => ref.get()}) {
   if (a === b) return;
   const docs = await Promise.all([tx.get(db.doc(`users/${a}/blocked/${b}`)), tx.get(db.doc(`users/${b}/blocked/${a}`))]);
   if (docs.some(d => d.exists)) fail('permission-denied', 'Bu içerik kullanılamıyor.');
 }
-async function source(db, postId, uid, tx = db) {
+async function source(db, postId, uid, tx = {get: ref => ref.get()}) {
   const snap = await tx.get(db.doc(`posts/${id(postId)}`));
   const post = snap.data();
   if (!publicContent(post) || post.allowReshare === false) fail('not-found', 'Gönderi kaldırılmış veya paylaşıma kapalı.');
@@ -55,9 +55,9 @@ function preview(postId, data) {
     userPhotoUrl: text(owner.photoUrl, 2000), caption: text(post.caption, 500), mediaType: post.mediaType || 'image',
     imageUrl: text(post.thumbnailUrl || post.imageUrl || post.coverUrl || (post.mediaUrls || [])[0], 2000),
     title: text(post.routeTitle || post.caption || 'TBT paylaşımı', 120), travelPlanId: post.travelPlanId || '',
-    guideNote:text(post.guideNote,1500), spotName: text(post.spotName, 120)};
+    eventId:post.eventId||'', guideNote:text(post.guideNote,1500), spotName: text(post.spotName, 120)};
 }
-async function creator(db, uid, tx = db) {
+async function creator(db, uid, tx = {get: ref => ref.get()}) {
   const profile = await user(db, uid, tx);
   const membership = await tx.get(db.doc(`creator_invite_redemptions/${uid}`));
   if (profile.isCreator !== true || !membership.exists) fail('permission-denied', 'Onaylı Creator hesabı gerekli.');
