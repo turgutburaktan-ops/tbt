@@ -1,0 +1,23 @@
+name: Publish TBT Rehber Landscapes
+on:
+  push:
+    branches: [codex/rehber-landscapes-20260909]
+    paths:
+      - '.github/workflows/publish_landscapes_20260909.yml'
+      - 'tool/publish_landscapes_20260909.cjs'
+      - 'tool/editorial/landscapes-20260909.json'
+permissions:
+  contents: read
+concurrency:
+  group: tbt-rehber-landscapes-20260909
+  cancel-in-progress: false
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: node tool/publish_landscapes_20260909.cjs --prepare
