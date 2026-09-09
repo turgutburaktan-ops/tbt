@@ -4,6 +4,7 @@
     {
       "id": "tbt-eglence-reel-01",
       "key": "kettlebell",
+      "category": "skill",
       "title": "Bunu elinden düşürmeden nasıl yapıyor? 😳",
       "caption": "Kettlebell ile bunu denemek cesaret ister. Son harekete dikkat 👀",
       "src": "https://commons.wikimedia.org/wiki/Special:Redirect/file/Kettlebell_Juggling_and_Other_Kettlebell_Exercises.webm",
@@ -20,6 +21,7 @@
     {
       "id": "tbt-eglence-reel-02",
       "key": "unicycle",
+      "category": "surprising",
       "title": "İki teker fazla gelmiş olabilir 😂",
       "caption": "Tek teker üstünde yarışmak yetmiyormuş gibi bir de hız yapıyorlar. Sen kaç metre gidebilirdin?",
       "src": "https://commons.wikimedia.org/wiki/Special:Redirect/file/Unicycle_Race_2013.webm",
@@ -36,6 +38,7 @@
     {
       "id": "tbt-eglence-reel-03",
       "key": "glass",
+      "category": "satisfying",
       "title": "Sadece izlemek bile rahatlatıyor 🔥",
       "caption": "Ateşten çıkan camın saniyeler içinde şekil değiştirmesi… Son halini tahmin edebilir misin?",
       "src": "https://commons.wikimedia.org/wiki/Special:Redirect/file/Glass_blowing_a_large_terrarium.webm",
