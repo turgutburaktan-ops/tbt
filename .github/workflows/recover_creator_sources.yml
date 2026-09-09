@@ -23,12 +23,23 @@ jobs:
           def get(url):
               return urllib.request.urlopen(urllib.request.Request(url,headers={'Authorization':'Bearer '+token}))
           out=Path('creator-recovery');out.mkdir()
-          builds=json.load(get('https://cloudbuild.googleapis.com/v1/projects/en-iyi-cekim-noktasi/locations/europe-west1/builds?pageSize=100')).get('builds',[])
+          builds=[]
+          for region in ['europe-west1','global']:
+              page=''
+              for _ in range(15):
+                  url='https://cloudbuild.googleapis.com/v1/projects/en-iyi-cekim-noktasi/locations/'+region+'/builds?'+urllib.parse.urlencode({'pageSize':100,'pageToken':page})
+                  data=json.load(get(url))
+                  batch=data.get('builds',[])
+                  builds.extend(batch)
+                  page=data.get('nextPageToken')
+                  if not page or any('creator' in json.dumps(b).lower() for b in batch):break
+              print('Build records inspected',region,len(builds))
+          print('Creator build matches',sum('creator' in json.dumps(b).lower() for b in builds))
           found=[]
           seen=set()
           for build in builds:
               if 'creator' not in json.dumps(build).lower() or build.get('status')!='SUCCESS':continue
-              source=build.get('source',{}).get('storageSource',{})
+              source=build.get('source',{}).get('storageSource',{}) or build.get('sourceProvenance',{}).get('resolvedStorageSource',{})
               if not source:continue
               identity=(source['bucket'],source['object'])
               if identity in seen:continue
