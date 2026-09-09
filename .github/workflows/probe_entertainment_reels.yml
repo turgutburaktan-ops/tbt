@@ -1,0 +1,37 @@
+name: Probe TBT Entertainment Reels
+on:
+  push:
+    branches: [codex/publish-sound-videos]
+    paths: [.github/workflows/probe_entertainment_reels.yml]
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update -qq && sudo apt-get install -y ffmpeg
+      - name: Download and inspect candidates
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/tbt-ent
+          curl -fL --retry 3 --max-time 240 -sS -o /tmp/tbt-ent/kettlebell.webm 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Kettlebell_Juggling_and_Other_Kettlebell_Exercises.webm'
+          curl -fL --retry 3 --max-time 240 -sS -o /tmp/tbt-ent/unicycle.webm 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Unicycle_Race_2013.webm'
+          curl -fL --retry 3 --max-time 240 -sS -o /tmp/tbt-ent/glass.webm 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Glass_blowing_a_large_terrarium.webm'
+          echo SHA256_START
+          sha256sum /tmp/tbt-ent/*.webm
+          echo SHA256_END
+          for f in kettlebell unicycle glass; do
+            echo "${f^^}_PROBE_START"
+            ffprobe -v error -show_entries format=duration,size:stream=codec_name,codec_type,width,height -of json "/tmp/tbt-ent/$f.webm"
+            echo "${f^^}_PROBE_END"
+          done
+          ffmpeg -y -v error -ss 45 -i /tmp/tbt-ent/kettlebell.webm -frames:v 1 /tmp/tbt-ent/kettlebell-45.jpg
+          ffmpeg -y -v error -ss 120 -i /tmp/tbt-ent/unicycle.webm -frames:v 1 /tmp/tbt-ent/unicycle-120.jpg
+          ffmpeg -y -v error -ss 80 -i /tmp/tbt-ent/glass.webm -frames:v 1 /tmp/tbt-ent/glass-80.jpg
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tbt-entertainment-frames-v1
+          path: /tmp/tbt-ent/*.jpg
