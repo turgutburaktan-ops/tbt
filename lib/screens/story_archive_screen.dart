@@ -114,7 +114,7 @@ class _StoryArchiveScreenState extends State<StoryArchiveScreen> {
         );
 
   void _openStory(AppStory story) {
-    showTbtDialog<void>(
+    showDialog<void>(
       context: context,
       barrierColor: Colors.black,
       builder: (dialogContext) {

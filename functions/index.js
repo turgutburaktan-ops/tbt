@@ -8,18 +8,6 @@ const {marketingPushAllowed} = require('./broadcast_policy');
 
 initializeApp();
 
-const EVENT_TYPES = new Set([
-  'event_join',
-  'social_event_join',
-  'event_cancelled',
-  'social_event_cancelled',
-  'event_updated',
-  'event_time_changed',
-  'community_event',
-  'event_memory',
-  'campus_digest',
-]);
-
 function notificationRef(db, userId, id) {
   return db.collection('users').doc(userId).collection('notifications').doc(id);
 }

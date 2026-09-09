@@ -6,7 +6,7 @@ function notificationPayload(data,{userId,notificationId,modernAndroid=false}){
   const imageUrl=data.type==='tbt_broadcast'?String(data.imageUrl||''):'';
   return {
     ...(!(modernAndroid&&isChat)?{notification:{title,body,...(imageUrl?{imageUrl}:{})}}:{}),
-    data:{type,sourceId,actorId,title,body,recipientId:userId,notificationId,imageUrl,eventId:String(data.eventId||(EVENT_TYPES.has(type)?sourceId:'')),communityId:String(data.communityId||'')},
+    data:{type,sourceId,actorId,title,body,recipientId:userId,notificationId,imageUrl,eventId:String(data.eventId||(EVENT_TYPES.has(type)?sourceId:'')),communityId:String(data.communityId||(type==='community'?sourceId:''))},
     android:{priority:'high',...(modernAndroid&&isChat?{}:{notification:{sound:'default'}})},
     apns:{payload:{aps:{sound:'default',badge:1,...(isChat?{category:'TBT_CHAT',threadId:sourceId}:{})}}},
   };

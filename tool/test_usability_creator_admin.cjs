@@ -19,6 +19,8 @@ const reject=(p,code)=>assert.rejects(p,e=>e.code===code);
   await thread.update({requestStatus:'pending'});await reject(call('ux-a'),'permission-denied');await thread.update({requestStatus:'accepted'});
   for(const path of ['users/ux-a/blocked/ux-b','users/ux-b/blocked/ux-a']){await db.doc(path).set({});await reject(call('ux-a'),'permission-denied');await db.doc(path).delete();}
   await db.doc('users/ux-b').update({accountStatus:'frozen'});await reject(call('ux-a'),'permission-denied');await db.doc('users/ux-b').update({accountStatus:'active'});
+  await db.doc('users/ux-a/notifications/forged').set({type:'message',sourceId:'ux-direct',actorId:'ux-c'});
+  await reject(call('ux-a',{notificationId:'forged'}),'permission-denied');
   const sent=await Promise.all(Array.from({length:4},()=>call('ux-a',{recipientId:'ux-c'})));
   assert.equal(new Set(sent.map(r=>r.id)).size,1);assert.equal((await thread.collection('messages').get()).size,1);
   assert.equal((await db.collection('users/ux-b/notifications').get()).size,1);assert.equal((await db.collection('users/ux-c/notifications').get()).size,0);

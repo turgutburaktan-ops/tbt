@@ -16,6 +16,7 @@ async function reply(request,db=getFirestore()){
     if(!t||!Array.isArray(t.memberIds)||!t.memberIds.includes(uid)||!n||n.sourceId!==d.threadId||!['message','group_message'].includes(n.type))deny('Bu bildirime yanıt veremezsin.');
     if(t.requestStatus==='rejected'||t.requestStatus==='pending')deny('Önce mesaj isteğini uygulamadan kabul et.');
     if(t.type!=='group'&&(t.type!=='direct'||t.memberIds.length!==2))deny('Geçersiz sohbet.');
+    if(!t.memberIds.includes(n.actorId)||n.actorId===uid)deny('Bildirim göndereni bu sohbete ait değil.');
     const peers=t.memberIds.filter(v=>v!==uid);
     const states=await Promise.all(peers.map(async peer=>{
       const [person,a,b]=await Promise.all([tx.get(db.doc(`users/${peer}`)),tx.get(db.doc(`users/${uid}/blocked/${peer}`)),tx.get(db.doc(`users/${peer}/blocked/${uid}`))]);

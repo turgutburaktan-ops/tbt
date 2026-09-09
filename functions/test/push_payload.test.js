@@ -10,7 +10,7 @@ test('chat reply capability preserves old clients while enabling Android actions
 });
 test('event routing and announcement photo remain in standard pushes',()=>{
  assert.equal(payload({type:'event_join',sourceId:'event'},target).data.eventId,'event');
- assert.equal(payload({type:'community',communityId:'club'},target).data.communityId,'club');
+ assert.equal(payload({type:'community',sourceId:'club'},target).data.communityId,'club');
  const result=payload({type:'tbt_broadcast',imageUrl:'https://example.com/image.jpg'},{...target,modernAndroid:true});
  assert.equal(result.notification.imageUrl,'https://example.com/image.jpg');assert.equal(result.apns.payload.aps.category,undefined);
 });

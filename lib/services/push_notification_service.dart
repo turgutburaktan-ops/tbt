@@ -25,7 +25,7 @@ import '../screens/user_profile_screen.dart';
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   if (Firebase.apps.isEmpty)
     await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
+      options: AppFirebaseOptions.currentPlatform,
     );
   if (defaultTargetPlatform == TargetPlatform.android &&
       message.notification == null &&

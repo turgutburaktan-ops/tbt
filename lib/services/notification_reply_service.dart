@@ -106,6 +106,15 @@ class NotificationReplyService {
     bool sent = false,
   }) async {
     if (!supported || !isChat(data)) return;
+    if (Firebase.apps.isEmpty)
+      await Firebase.initializeApp(
+        options: AppFirebaseOptions.currentPlatform,
+      );
+    final auth = FirebaseAuth.instance;
+    final user =
+        auth.currentUser ??
+        await auth.authStateChanges().first.timeout(const Duration(seconds: 5));
+    if (user == null || user.uid != data['recipientId']) return;
     await initialize();
     await _plugin.show(
       notificationNumber('${data['notificationId']}'),
@@ -141,7 +150,7 @@ class NotificationReplyService {
     try {
       if (Firebase.apps.isEmpty)
         await Firebase.initializeApp(
-          options: DefaultFirebaseOptions.currentPlatform,
+          options: AppFirebaseOptions.currentPlatform,
         );
       final auth = FirebaseAuth.instance;
       final user =

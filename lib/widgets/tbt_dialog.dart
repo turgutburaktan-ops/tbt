@@ -6,6 +6,10 @@ const tbtDialogAccent = Color(0xFF8ACDFF);
 ThemeData tbtDialogTheme(ThemeData base) => base.copyWith(
   colorScheme: base.colorScheme.copyWith(
     primary: tbtDialogAccent,
+    secondary: tbtDialogAccent,
+    primaryContainer: const Color(0xFF203C62),
+    onPrimaryContainer: Colors.white,
+    onSurface: const Color(0xFFF0F5FF),
     onPrimary: const Color(0xFF071322),
     surface: tbtDialogBackground,
     surfaceContainerHigh: tbtDialogBackground,

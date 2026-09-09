@@ -28,14 +28,14 @@ class _AdminBroadcastScreenState extends State<AdminBroadcastScreen> {
   int _imageVersion = 0;
   String? _uploadedPath;
   Future<void> _pickPhoto() async {
-    final file = await ImagePicker().pickImage(
-      source: ImageSource.gallery,
-      maxWidth: 1920,
-      maxHeight: 1920,
-      imageQuality: 85,
-    );
-    if (file == null) return;
     try {
+      final file = await ImagePicker().pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1920,
+        maxHeight: 1920,
+        imageQuality: 85,
+      );
+      if (file == null) return;
       final decoded = img.decodeImage(await file.readAsBytes());
       if (decoded == null) throw Exception();
       final bytes = Uint8List.fromList(img.encodeJpg(decoded, quality: 85));
