@@ -1,0 +1,23 @@
+name: Probe Turkish Dance B6
+on:
+  push:
+    branches: [codex/publish-sound-videos]
+    paths: [.github/workflows/probe_turkish_dance_b6.yml]
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update -qq && sudo apt-get install -y ffmpeg
+      - name: Probe dance source
+        shell: bash
+        run: |
+          set -euo pipefail
+          f=/tmp/dance.webm
+          curl -fL --retry 3 --max-time 600 -sS -o "$f" "https://commons.wikimedia.org/wiki/Special:Redirect/file/Traditional_Turkish_Dance_Competition.webm"
+          sha256sum "$f"
+          ffprobe -v error -show_entries format=duration,size:stream=codec_name,codec_type,width,height -of json "$f"
+          for t in 45 105 165 225; do ffmpeg -v error -ss "$t" -i "$f" -frames:v 1 -vf scale=640:-2 "/tmp/frame-$t.jpg"; done
