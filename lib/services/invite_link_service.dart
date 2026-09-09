@@ -16,6 +16,8 @@ class InviteLinkService {
   static const Set<String> _acceptedWebHosts = {
     'www.trtbt.com',
     'trtbt.com',
+    'www.tbttr.com',
+    'tbttr.com',
     // Keep previously shared links working after the public-domain migration.
     'en-iyi-cekim-noktasi.web.app',
     'en-iyi-cekim-noktasi.firebaseapp.com',
@@ -32,6 +34,8 @@ class InviteLinkService {
       Uri.https(webHost, '/post/${_safeOutgoingId(postId)}');
   Uri spotUri(String spotId) =>
       Uri.https(webHost, '/spot/${_safeOutgoingId(spotId)}');
+  Uri creatorUri(String code) =>
+      Uri.https('tbttr.com', '/creator/${_safeOutgoingId(code)}');
 
   Uri communityAppUri(String communityId) => Uri(
     scheme: scheme,
@@ -43,11 +47,17 @@ class InviteLinkService {
     host: 'event',
     pathSegments: [_safeOutgoingId(eventId)],
   );
+  Uri creatorAppUri(String code) => Uri(
+    scheme: scheme,
+    host: 'creator',
+    pathSegments: [_safeOutgoingId(code)],
+  );
 
   String _safeOutgoingId(String value) {
     final id = value.trim();
-    if (!_safeId.hasMatch(id))
+    if (!_safeId.hasMatch(id)) {
       throw ArgumentError.value(value, 'id', 'Geçersiz paylaşım kimliği');
+    }
     return id;
   }
 
@@ -72,12 +82,15 @@ class InviteLinkService {
   }
 
   bool _validTarget(String type, String id) {
-    if (type != 'group' && type != 'event' &&
+    if (type != 'group' &&
+        type != 'event' &&
         type != 'community' &&
         type != 'profile' &&
         type != 'post' &&
-        type != 'spot')
+        type != 'spot' &&
+        type != 'creator') {
       return false;
+    }
     return _safeId.hasMatch(id);
   }
 
