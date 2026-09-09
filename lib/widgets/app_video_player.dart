@@ -291,7 +291,10 @@ class _AppVideoPlayerState extends State<AppVideoPlayer>
     return Stack(
       fit: StackFit.expand,
       children: [
-        LayoutBuilder(builder: (context, constraints) => GestureDetector(
+        LayoutBuilder(builder: (context, constraints) => Listener(
+          onPointerUp: (_) => _speed(false),
+          onPointerCancel: (_) => _speed(false),
+          child: GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTap: _tap,
           onLongPressStart: widget.holdToSpeed ? (details) {
@@ -302,7 +305,7 @@ class _AppVideoPlayerState extends State<AppVideoPlayer>
           onLongPressEnd: widget.holdToSpeed ? (_) => _speed(false) : null,
           onLongPressCancel: widget.holdToSpeed ? () => _speed(false) : null,
           child: video,
-        )),
+        ))),
         if (_speeding)
           const Positioned(top: 88, left: 0, right: 0, child: IgnorePointer(
             child: Center(child: Chip(label: Text('2x ▶▶'))),
