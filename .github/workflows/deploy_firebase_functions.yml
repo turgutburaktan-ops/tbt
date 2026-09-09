@@ -75,19 +75,20 @@ jobs:
           elif [ "$RESTORE_UPDATE" = "true" ]; then
             firebase deploy --only functions:signInWithUsername,functions:resolveUsernameForLogin,functions:sendAdminBroadcast,functions:deliverAdminBroadcast,functions:adminDeleteVenue,functions:getAdminInsights,functions:getAdminBusinessClaims,functions:freezeAccount,functions:unfreezeAccount,functions:deleteAccountNow,functions:pushOnNotificationCreated --project en-iyi-cekim-noktasi --non-interactive
           elif [ "$MUSIC_UPDATE" = "true" ]; then
-            firebase deploy --only functions:preparePostMusic,functions:registerOriginalPostSound,functions:countPostSoundUse,functions:revokeDeletedOriginalSound,functions:removeDisabledSound,functions:approveMusicSubmission --project en-iyi-cekim-noktasi --force --non-interactive
+            firebase deploy --only functions:preparePostMusic,functions:registerOriginalPostSound,functions:countPostSoundUse,functions:revokeDeletedOriginalSound,functions:removeDisabledSound,functions:approveMusicSubmission --project en-iyi-cekim-noktasi --non-interactive
           elif [ "$CHAT_UPDATE" = "true" ]; then
-            firebase deploy --only functions:chatAction,functions:chatGroupMessageNotification,functions:pushOnNotificationCreated --project en-iyi-cekim-noktasi --force --non-interactive
+            firebase deploy --only functions:chatAction,functions:chatGroupMessageNotification,functions:pushOnNotificationCreated --project en-iyi-cekim-noktasi --non-interactive
           elif [ "$PREPARATION_UPDATE" = "true" ]; then
-            firebase deploy --only functions:syncBusinessPreparationReminder,functions:sendBusinessPreparationReminders,functions:reservationPreparationAction,functions:getReservationDisputes,functions:resolveReservationDispute,functions:getBusinessDashboard,functions:getMyBusinessReservations --project en-iyi-cekim-noktasi --force --non-interactive
+            firebase deploy --only functions:syncBusinessPreparationReminder,functions:sendBusinessPreparationReminders,functions:reservationPreparationAction,functions:getReservationDisputes,functions:resolveReservationDispute,functions:getBusinessDashboard,functions:getMyBusinessReservations --project en-iyi-cekim-noktasi --non-interactive
           elif [ "$RESERVATION_INDEX" = "true" ]; then
             node functions/scripts/ensure_reservation_index.js
           elif [ "$RESERVATION_UPDATE" = "true" ]; then
             firebase deploy --only functions:getBusinessDashboard,functions:getMyBusinessReservations,functions:requestBusinessReservation,functions:respondBusinessReservation --project en-iyi-cekim-noktasi --non-interactive
           elif [ "$PUBLICATION_REPAIR" = "true" ]; then
-            firebase deploy --only functions:adminReviewBusinessClaim,functions:adminReviewBusinessClaimHttp,functions:publishVerifiedBusinessCandidate,functions:createBusinessCandidate --project en-iyi-cekim-noktasi --force --non-interactive
+            firebase deploy --only functions:adminReviewBusinessClaim,functions:adminReviewBusinessClaimHttp,functions:publishVerifiedBusinessCandidate,functions:createBusinessCandidate --project en-iyi-cekim-noktasi --non-interactive
           else
-            firebase deploy --only functions --project en-iyi-cekim-noktasi --force --non-interactive
+            echo "::error::Refusing unscoped deployment. Select an explicit function update marker; remote-only functions must be preserved."
+            exit 1
           fi
       - name: Restore callable invoker access
         if: "!contains(github.event.head_commit.message, '[account-cleanup]') && !contains(github.event.head_commit.message, '[restore-update]') && !contains(github.event.head_commit.message, '[music-update]') && !contains(github.event.head_commit.message, '[chat-update]') && !contains(github.event.head_commit.message, '[repair-burak-publication]') && !contains(github.event.head_commit.message, '[reservation-update]') && !contains(github.event.head_commit.message, '[reservation-index]') && !contains(github.event.head_commit.message, '[preparation-update]')"
