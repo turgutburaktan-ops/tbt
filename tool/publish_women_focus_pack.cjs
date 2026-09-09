@@ -17,8 +17,8 @@ const posts=[
  {id:'tbt-eglence-reel-23',key:'hulagirl',srcKey:'hula'},
  {id:'tbt-eglence-reel-24',key:'elaturkce',srcKey:'ela'},
  {id:'tbt-eglence-reel-25',key:'kadinbasket1',srcKey:'basket',start:300,dur:15,titleText:'Kadın basketbolunda tempo yükseliyor 🏀🔥',caption:'Kadınlar Basketbol Süper Ligi’nden tempolu bir oyun kesiti.'},
- {id:'tbt-eglence-reel-26',key:'kadinbasket2',srcKey:'basket',start:1500,dur:15,titleText:'Sahada hız, pas ve mücadele 🏀✨',caption:'Fenerbahçe–Samsun Canik Belediyespor maçından farklı bir oyun bölümü.'},
- {id:'tbt-eglence-reel-27',key:'kadinbasket3',srcKey:'basket',start:3000,dur:15,titleText:'Kadın basketbolundan bir an daha 💪🏀',caption:'Kadınlar Basketbol Süper Ligi karşılaşmasından kısa bir saha kesiti.'}
+ {id:'tbt-eglence-reel-26',key:'elagazeteci',srcKey:'ela',start:30,dur:18,titleText:'Kadın gazetecinin ekran yolculuğu 🎙️✨',caption:'Ela’nın gazetecilik ve televizyon kariyerini anlattığı gerçek video kaydından kısa bir bölüm.'},
+ {id:'tbt-eglence-reel-27',key:'elaturkce2',srcKey:'ela',start:55,dur:18,titleText:'Türkçenin görünürlüğü üzerine güzel bir an 💬✨',caption:'Ela’nın Türkçenin farklı diller arasında görünür olmasını anlattığı gerçek video kaydından kısa bir bölüm.'}
 ];
 const check=(x,m)=>{if(!x)throw Error(m)};
 const strip=s=>String(s||'').replace(/<[^>]+>/g,'').replace(/&amp;/g,'&').trim();
@@ -45,7 +45,9 @@ async function main(){
    if(p.srcKey==='basket') input=String(m.url).split('?')[0];
    if(p.srcKey==='ela'){
      input=path.join(dir,'ela-source.webm');
-     execFileSync('curl',['-fL','--retry','4','--retry-all-errors','--max-time','180','-sS','-o',input,m.url]);
+     try{await fs.access(input);}catch{
+       execFileSync('curl',['-fL','--retry','4','--retry-all-errors','--max-time','180','-sS','-o',input,m.url]);
+     }
      check((await fs.stat(input)).size>1000000,'Ela source download incomplete');
    }
    let args=['-v','error','-ss',String(start),'-i',input,'-t',String(dur)];
