@@ -1,0 +1,76 @@
+{
+  "batch": "autumn-city-20260909",
+  "media": [
+    {
+      "author": "Caroline Léna Becker; ışık düzenlemesi: Paris 16",
+      "contentType": "image/jpeg",
+      "date": "18 Kasım 2018; kaynak sürüm: 23 Ekim 2020",
+      "height": 3446,
+      "width": 5169,
+      "license": "CC BY 3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "sha1": "22070da89d19b713f398ec1e4ab9702d153a9807",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Boulevard_Saint-Marcel_Paris.jpg",
+      "src": "https://upload.wikimedia.org/wikipedia/commons/7/7b/Boulevard_Saint-Marcel_Paris.jpg"
+    },
+    {
+      "author": "g.sighele",
+      "contentType": "image/jpeg",
+      "date": "23 Ekim 2013",
+      "height": 3456,
+      "width": 4608,
+      "license": "CC BY 2.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
+      "sha1": "f47d34e2f528a12038ccbb8d29456f11c4b92fb9",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Foire_internationale_d%27art_contemporain,_23_October_2013_(12).jpg",
+      "src": "https://upload.wikimedia.org/wikipedia/commons/0/00/Foire_internationale_d%27art_contemporain%2C_23_October_2013_%2812%29.jpg"
+    },
+    {
+      "author": "Martin Falbisoner",
+      "contentType": "image/jpeg",
+      "date": "1 Eylül 2011",
+      "height": 2985,
+      "width": 4477,
+      "license": "CC BY-SA 3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
+      "sha1": "b073f0eab66e55e87a38ad23366f1d8cd2945f26",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Tuileriengarten_Herbst_2011.JPG",
+      "src": "https://upload.wikimedia.org/wikipedia/commons/e/ed/Tuileriengarten_Herbst_2011.JPG"
+    }
+  ],
+  "posts": [
+    {
+      "title": "Paris’te sonbahar, bulvarın tam ortasında 🍂",
+      "caption": "Sarıya dönen ağaçlar, birbirini izleyen cepheler ve günün akışına karışan trafik… Saint-Marcel Bulvarı’nda sonbahar, şehrin günlük hayatına eşlik ediyor.\nSen en çok hangi şehrin sonbaharını fotoğraflamak isterdin?",
+      "place": "Saint-Marcel Bulvarı · Paris",
+      "city": "Paris",
+      "id": "tbt-rehber-autumn-city-20260909-01",
+      "kind": "Şehir · Sonbahar",
+      "photo": 0,
+      "spotIds": [],
+      "status": "draft"
+    },
+    {
+      "title": "Louvre önünde bir sonbahar öğleden sonrası 🍁",
+      "caption": "Altın renkli yapraklar, yürüyüşe çıkan insanlar ve arkada Louvre’un taş cepheleri… Tuileries’deki bu ekim karesi, şehir kalabalığını sonbahar ışığıyla buluşturuyor.",
+      "place": "Tuileries Bahçesi · Louvre çevresi",
+      "city": "Paris",
+      "id": "tbt-rehber-autumn-city-20260909-02",
+      "kind": "Şehir · Sonbahar",
+      "photo": 1,
+      "spotIds": [],
+      "status": "draft"
+    },
+    {
+      "title": "Tuileries’de eylül kalabalığı",
+      "caption": "Havuz çevresindeki yeşil sandalyeler doluyor, yürüyüş yollarında şehir hayatı sürüyor. Sonbaharın başında Paris: ağaçlarda ilk renk değişimleri, arkada Carrousel Zafer Takı ve Louvre. 🍂",
+      "place": "Tuileries Bahçesi · Grand Bassin Rond",
+      "city": "Paris",
+      "id": "tbt-rehber-autumn-city-20260909-03",
+      "kind": "Şehir · Sonbahar",
+      "photo": 2,
+      "spotIds": [],
+      "status": "draft"
+    }
+  ]
+}
