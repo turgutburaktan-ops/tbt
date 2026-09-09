@@ -42,7 +42,7 @@ jobs:
               if not re.search(r'(createcreatorinvite|redeemcreatorinvite|getcreatorinvitepreview)',json.dumps(build).lower()) or build.get('status')!='SUCCESS':continue
               source=build.get('source',{}).get('storageSource',{}) or build.get('sourceProvenance',{}).get('resolvedStorageSource',{})
               if not source:
-                  refs=re.findall(r'gs://[^\\s"\\\\]+',json.dumps(build))
+                  refs=re.findall(r'gs://[^\s"\\]+',json.dumps(build))
                   print('Source references',build['id'],refs)
                   refs=[x for x in refs if '.zip' in x]
                   if not refs:continue
