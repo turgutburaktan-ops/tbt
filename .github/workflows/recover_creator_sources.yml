@@ -14,7 +14,7 @@ jobs:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
         run: |
           python3 - <<'PY'
-          import os,json,subprocess,urllib.request,urllib.parse
+          import os,json,re,subprocess,urllib.request,urllib.parse
           from pathlib import Path
           key=Path(os.environ['RUNNER_TEMP'])/'recovery-account.json'
           key.write_text(os.environ['FIREBASE_SERVICE_ACCOUNT']);key.chmod(0o600)
@@ -32,16 +32,23 @@ jobs:
                   batch=data.get('builds',[])
                   builds.extend(batch)
                   page=data.get('nextPageToken')
-                  if not page or any('creator' in json.dumps(b).lower() for b in batch):break
+                  if not page or any(re.search(r'(createcreatorinvite|redeemcreatorinvite|getcreatorinvitepreview)',json.dumps(b).lower()) for b in batch):break
               print('Build records inspected',region,len(builds))
-          print('Creator build matches',sum('creator' in json.dumps(b).lower() for b in builds))
+          print('Creator build matches',sum(bool(re.search(r'(createcreatorinvite|redeemcreatorinvite|getcreatorinvitepreview)',json.dumps(b).lower())) for b in builds))
           print(json.dumps([{'id':b.get('id'),'status':b.get('status'),'source':b.get('source'),'sourceProvenance':b.get('sourceProvenance'),'target':b.get('substitutions',{}).get('_FUNCTION_TARGET'),'keys':list(b.keys())} for b in builds[:5]],indent=2))
           found=[]
           seen=set()
           for build in builds:
-              if 'creator' not in json.dumps(build).lower() or build.get('status')!='SUCCESS':continue
+              if not re.search(r'(createcreatorinvite|redeemcreatorinvite|getcreatorinvitepreview)',json.dumps(build).lower()) or build.get('status')!='SUCCESS':continue
               source=build.get('source',{}).get('storageSource',{}) or build.get('sourceProvenance',{}).get('resolvedStorageSource',{})
-              if not source:continue
+              if not source:
+                  refs=re.findall(r'gs://[^\\s"\\\\]+',json.dumps(build))
+                  print('Source references',build['id'],refs)
+                  refs=[x for x in refs if '.zip' in x]
+                  if not refs:continue
+                  parsed=urllib.parse.urlparse(refs[0])
+                  source={'bucket':parsed.netloc,'object':parsed.path.lstrip('/')}
+
               identity=(source['bucket'],source['object'])
               if identity in seen:continue
               seen.add(identity)
