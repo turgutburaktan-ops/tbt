@@ -1,3 +1,5 @@
+import '../widgets/tbt_dialog.dart';
+
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -69,9 +71,9 @@ class _StoryArchiveScreenState extends State<StoryArchiveScreen> {
   }
 
   Future<void> _delete(AppStory story) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showTbtDialog<bool>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
+      builder: (dialogContext) => TbtDialog(
         title: const Text('Story silinsin mi?'),
         content: const Text('Bu Story arşivden kalıcı olarak silinecek.'),
         actions: [
@@ -112,7 +114,7 @@ class _StoryArchiveScreenState extends State<StoryArchiveScreen> {
         );
 
   void _openStory(AppStory story) {
-    showDialog<void>(
+    showTbtDialog<void>(
       context: context,
       barrierColor: Colors.black,
       builder: (dialogContext) {

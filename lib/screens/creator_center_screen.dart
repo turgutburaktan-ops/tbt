@@ -1,3 +1,5 @@
+import '../widgets/tbt_dialog.dart';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
@@ -95,9 +97,9 @@ class _CreatorCenterScreenState extends State<CreatorCenterScreen> {
     final controller = TextEditingController(
       text: (post['guideNote'] ?? '').toString(),
     );
-    final note = await showDialog<String>(
+    final note = await showTbtDialog<String>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => TbtDialog(
         title: const Text('İmzalı rehber notun'),
         content: SingleChildScrollView(
           child: TextField(

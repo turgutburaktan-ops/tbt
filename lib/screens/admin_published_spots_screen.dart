@@ -1,5 +1,8 @@
+import '../widgets/tbt_dialog.dart';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+
 import '../services/admin_console_service.dart';
 
 import '../theme/app_theme.dart';
@@ -12,8 +15,7 @@ class AdminPublishedSpotsScreen extends StatefulWidget {
       _AdminPublishedSpotsScreenState();
 }
 
-class _AdminPublishedSpotsScreenState
-    extends State<AdminPublishedSpotsScreen> {
+class _AdminPublishedSpotsScreenState extends State<AdminPublishedSpotsScreen> {
   String _query = '';
   String _status = 'published';
   String? _workingId;
@@ -37,9 +39,9 @@ class _AdminPublishedSpotsScreenState
     DocumentReference<Map<String, dynamic>> reference,
     String name,
   ) async {
-    final approved = await showDialog<bool>(
+    final approved = await showTbtDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => TbtDialog(
         title: const Text('Mekânı sil'),
         content: Text(
           '$name listelerden kaldırılacak. Asıl kayıt yönetici işlem geçmişinde korunacak.',
@@ -59,9 +61,19 @@ class _AdminPublishedSpotsScreenState
     if (approved != true || !mounted) return;
     setState(() => _workingId = reference.id);
     try {
-      await AdminConsoleService.instance.deleteVenue(collection: 'photo_spots', id: reference.id);
+      await AdminConsoleService.instance.deleteVenue(
+        collection: 'photo_spots',
+        id: reference.id,
+      );
     } catch (_) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Mekân silinemedi. Yetkini ve bağlantını kontrol edip tekrar dene.')));
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Mekân silinemedi. Yetkini ve bağlantını kontrol edip tekrar dene.',
+            ),
+          ),
+        );
     } finally {
       if (mounted) setState(() => _workingId = null);
     }
@@ -111,13 +123,16 @@ class _AdminPublishedSpotsScreenState
               final docs = snapshot.data!.docs.where((doc) {
                 if (_query.isEmpty) return true;
                 final data = doc.data();
-                final text = [
-                  data['name'],
-                  data['city'],
-                  data['district'],
-                  data['region'],
-                  data['category'],
-                ].map((item) => (item ?? '').toString().toLowerCase()).join(' ');
+                final text =
+                    [
+                          data['name'],
+                          data['city'],
+                          data['district'],
+                          data['region'],
+                          data['category'],
+                        ]
+                        .map((item) => (item ?? '').toString().toLowerCase())
+                        .join(' ');
                 return text.contains(_query);
               }).toList();
               if (docs.isEmpty) {
@@ -140,10 +155,10 @@ class _AdminPublishedSpotsScreenState
                       ),
                       subtitle: Text(
                         [
-                          data['city'],
-                          data['district'] ?? data['region'],
-                          data['category'],
-                        ]
+                              data['city'],
+                              data['district'] ?? data['region'],
+                              data['category'],
+                            ]
                             .map((item) => (item ?? '').toString())
                             .where((item) => item.isNotEmpty)
                             .join(' • '),

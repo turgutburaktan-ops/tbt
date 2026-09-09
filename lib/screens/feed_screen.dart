@@ -1,3 +1,5 @@
+import '../services/video_audio_session.dart';
+import '../widgets/tbt_dialog.dart';
 import '../services/creator_service.dart';
 import '../widgets/shared_post_card.dart';
 import '../widgets/creator_view_tracker.dart';
@@ -42,7 +44,30 @@ class FeedScreen extends StatefulWidget {
   State<FeedScreen> createState() => _FeedScreenState();
 }
 
-class _FeedScreenState extends State<FeedScreen> {
+class _FeedScreenState extends State<FeedScreen> with RouteAware {
+  PageRoute<dynamic>? _observedRoute;
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final route = ModalRoute.of(context);
+    if (route is PageRoute && route != _observedRoute) {
+      videoRouteObserver.unsubscribe(this);
+      _observedRoute = route;
+      videoRouteObserver.subscribe(this, route);
+    }
+  }
+
+  @override
+  void didPopNext() {
+    VideoAudioSession.feed.reset();
+  }
+
+  @override
+  void dispose() {
+    videoRouteObserver.unsubscribe(this);
+    super.dispose();
+  }
+
   late final _query = FirebaseFirestore.instance
       .collection('posts')
       .orderBy('createdAt', descending: true)
@@ -276,13 +301,14 @@ class _FeedScreenState extends State<FeedScreen> {
                                 ),
                               );
                             }
-                            if (!isRepost) items[cardIndex] = CreatorViewTracker(
-                              key: ValueKey('view-${doc.reference.path}'),
-                              postId: isRepost
-                                  ? data['postId'].toString()
-                                  : doc.id,
-                              child: items[cardIndex],
-                            );
+                            if (!isRepost)
+                              items[cardIndex] = CreatorViewTracker(
+                                key: ValueKey('view-${doc.reference.path}'),
+                                postId: isRepost
+                                    ? data['postId'].toString()
+                                    : doc.id,
+                                child: items[cardIndex],
+                              );
                             if (i == 5 || (i > 5 && (i - 5) % 10 == 0))
                               items.add(
                                 const Padding(
@@ -757,6 +783,7 @@ class _FeedPostCardState extends State<_FeedPostCard> {
         ),
         autoplay: true,
         muted: false,
+        audioSession: VideoAudioSession.feed,
         loop: true,
         showControls: true,
         fit: BoxFit.cover,
@@ -808,9 +835,9 @@ class _FeedPostCardState extends State<_FeedPostCard> {
   }
 
   Future<void> _delete() async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showTbtDialog<bool>(
       context: context,
-      builder: (c) => AlertDialog(
+      builder: (c) => TbtDialog(
         title: const Text('Gönderiyi sil'),
         content: const Text('Bu gönderi kalıcı olarak silinecek.'),
         actions: [

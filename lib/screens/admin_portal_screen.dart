@@ -1,3 +1,5 @@
+import 'creator_admin_screen.dart';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -43,15 +45,14 @@ class _AdminPortalScreenState extends State<AdminPortalScreen> {
     }
     if (_status != AdminAccessStatus.allowed) {
       final message = switch (_status!) {
-        AdminAccessStatus.signedOut => 'Yönetici işlemleri için giriş yapmalısın.',
+        AdminAccessStatus.signedOut =>
+          'Yönetici işlemleri için giriş yapmalısın.',
         AdminAccessStatus.wrongAccount =>
           'Bu panel yalnızca tanımlı TBT yönetici hesabına açıktır.',
         AdminAccessStatus.emailUnverified =>
           'Yönetici e-posta adresi henüz doğrulanmamış.',
-        AdminAccessStatus.claimMissing =>
-          'Yönetici yetkisi bu oturumda bulunamadı. Çıkış yapıp yeniden giriş yaptıktan sonra tekrar dene.',
-        AdminAccessStatus.unavailable =>
-          'Yönetici doğrulama servisine ulaşılamadı. Bağlantını kontrol edip yeniden dene.',
+        AdminAccessStatus.claimMissing => 'Yönetici yetkisi bu oturumda bulunamadı. Çıkış yapıp yeniden giriş yaptıktan sonra tekrar dene.',
+        AdminAccessStatus.unavailable => 'Yönetici doğrulama servisine ulaşılamadı. Bağlantını kontrol edip yeniden dene.',
         AdminAccessStatus.allowed => '',
       };
       return Scaffold(
@@ -180,6 +181,14 @@ class _AdminPortalScreenState extends State<AdminPortalScreen> {
             style: TextStyle(fontSize: 19, fontWeight: FontWeight.w900),
           ),
           const SizedBox(height: 9),
+          _HeroAction(
+            icon: Icons.workspace_premium_outlined,
+            title: 'Creator yönetimi',
+            subtitle: 'Creator hesapları, davetler ve içerik istatistikleri.',
+            button: 'Creator panelini aç',
+            onTap: () => _open(const CreatorAdminScreen()),
+          ),
+          const SizedBox(height: 10),
           _HeroAction(
             icon: Icons.campaign_rounded,
             title: 'TBT Duyurusu',

@@ -179,7 +179,7 @@ exports.deleteAccountNow = onCall(
 
     await getStorage().bucket().deleteFiles({prefix: `users/${uid}/`, force: true})
       .catch((error) => console.error('Account storage cleanup failed', uid, error));
-    await Promise.all(['creator_profiles', 'creator_stats'].map(collection => db.recursiveDelete(db.collection(collection).doc(uid))));
+    await Promise.all(['creator_profiles', 'creator_stats', 'notification_reply_limits'].map(collection => db.recursiveDelete(db.collection(collection).doc(uid))));
     await db.recursiveDelete(userRef);
     await db.collection('account_delete_requests').doc(uid).delete().catch(() => {});
     await getAuth().deleteUser(uid).catch((error) => {

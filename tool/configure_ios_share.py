@@ -37,3 +37,5 @@ info = {'CFBundleDisplayName': 'TBT', 'CFBundleName': 'TBTShare', 'CFBundleIdent
 (ext / 'Info.plist').write_bytes(plistlib.dumps(info))
 (ext / 'Share.xcconfig').write_text('#include "../Flutter/Generated.xcconfig"\n')
 subprocess.run(['ruby', 'tool/configure_ios_share.rb'], check=True)
+
+subprocess.run(['python3', 'tool/configure_notifications.py', 'ios'], check=True)

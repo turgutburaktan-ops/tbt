@@ -1,0 +1,48 @@
+const assert=require('node:assert/strict');
+if(!/^(127\.0\.0\.1|localhost):\d+$/.test(process.env.FIRESTORE_EMULATOR_HOST||''))throw Error('Local emulator required');
+const req=require('node:module').createRequire(require('node:path').resolve(__dirname,'../functions/package.json'));
+req('firebase-admin/app').initializeApp({projectId:'demo-tbt'});
+const {getFirestore,Timestamp}=req('firebase-admin/firestore'),db=getFirestore();
+const {_reply:reply}=require('../functions/notification_reply');
+const {_creatorAdmin:admin}=require('../functions/creator_admin');
+const {_publishing:publish}=require('../functions/social_publishing');
+const named={uid:'ux-admin',token:{admin:true,email_verified:true,email:'turgutburaktan@gmail.com'}};
+const call=(uid,data={})=>reply({auth:uid?{uid}:null,data:{threadId:'ux-direct',notificationId:'origin',text:'Yanıt',...data}},db);
+const panel=(action,data={},auth=named)=>admin({auth,data:{action,...data}},db);
+const reject=(p,code)=>assert.rejects(p,e=>e.code===code);
+(async()=>{
+  for(const uid of ['ux-a','ux-b','ux-c'])await db.doc(`users/${uid}`).set({displayName:uid,accountStatus:'active'});
+  const thread=db.doc('chat_threads/ux-direct');await thread.set({type:'direct',memberIds:['ux-a','ux-b'],requestStatus:'accepted'});
+  await db.doc('users/ux-a/notifications/origin').set({type:'message',sourceId:'ux-direct',actorId:'ux-b',read:false});
+  await reject(call(null),'unauthenticated');await reject(call('ux-c'),'permission-denied');
+  await reject(call('ux-a',{notificationId:'missing'}),'permission-denied');await reject(call('ux-a',{threadId:'../x'}),'invalid-argument');
+  await thread.update({requestStatus:'pending'});await reject(call('ux-a'),'permission-denied');await thread.update({requestStatus:'accepted'});
+  for(const path of ['users/ux-a/blocked/ux-b','users/ux-b/blocked/ux-a']){await db.doc(path).set({});await reject(call('ux-a'),'permission-denied');await db.doc(path).delete();}
+  await db.doc('users/ux-b').update({accountStatus:'frozen'});await reject(call('ux-a'),'permission-denied');await db.doc('users/ux-b').update({accountStatus:'active'});
+  const sent=await Promise.all(Array.from({length:4},()=>call('ux-a',{recipientId:'ux-c'})));
+  assert.equal(new Set(sent.map(r=>r.id)).size,1);assert.equal((await thread.collection('messages').get()).size,1);
+  assert.equal((await db.collection('users/ux-b/notifications').get()).size,1);assert.equal((await db.collection('users/ux-c/notifications').get()).size,0);
+  assert.equal((await thread.get()).data().lastSenderId,'ux-a');assert.equal((await db.doc('users/ux-a/notifications/origin').get()).data().read,true);
+  await reject(call('ux-a',{text:'Farklı yanıt'}),'already-exists');
+  const group=db.doc('chat_threads/ux-group');await group.set({type:'group',memberIds:['ux-a','ux-b']});
+  await db.doc('users/ux-a/notifications/group').set({type:'group_message',sourceId:'ux-group',actorId:'ux-b'});
+  await call('ux-a',{threadId:'ux-group',notificationId:'group'});await group.update({memberIds:['ux-b']});
+  await reject(call('ux-a',{threadId:'ux-group',notificationId:'group'}),'permission-denied');
+  await reject(panel('creators',{},null),'unauthenticated');await reject(panel('creators',{}, {uid:'ux-a',token:{admin:true}}),'permission-denied');
+  await db.doc('users/ux-a').update({isCreator:true,creatorTier:'founding'});
+  await db.doc('creator_invite_redemptions/ux-a').set({code:'TBT-00000001',createdAt:Timestamp.now()});
+  await db.doc('creator_invites/TBT-00000001').set({label:'Test',active:true,maxUses:2,usesCount:1,expiresAt:Timestamp.fromMillis(Date.now()+100000)});
+  await db.doc('creator_referrals/ux-c').set({creatorId:'ux-a',createdAt:Timestamp.now()});
+  assert.ok((await panel('creators')).items.some(p=>p.uid==='ux-a'&&p.tier==='founding'));
+  assert.equal((await panel('redemptions',{code:'TBT-00000001'})).items[0].uid,'ux-a');
+  assert.equal((await panel('referrals',{creatorId:'ux-a'})).items[0].uid,'ux-c');
+  await panel('disableInvite',{code:'TBT-00000001'});assert.equal((await db.doc('creator_invites/TBT-00000001').get()).data().active,false);
+  await reject(panel('disableInvite',{code:'TBT-00000001'},{uid:'ux-a'}),'permission-denied');
+  await db.doc('posts/ux-post').set({userId:'ux-a',caption:'Creator paylaşımı',mediaType:'image',createdAt:Timestamp.now()});
+  for(const action of ['view','profileVisit'])for(let i=0;i<2;i++)await publish({auth:{uid:'ux-b'},data:{action,postId:'ux-post'}},db);
+  for(const days of [0,7,30,90]){
+    const d=await panel('detail',{creatorId:'ux-a',days});assert.equal(d.totals.views,1);assert.equal(d.totals.profileVisits,1);assert.equal(d.posts[0].views,1);assert.equal(d.top[0].id,'ux-post');assert.ok(d.dailyTrackingSinceMs>0);
+  }
+  await reject(panel('detail',{creatorId:'ux-a',days:400}),'invalid-argument');
+  console.log('Notification replies and Creator admin: ownership, blocks, account state, concurrent retries, roles, invitations and date metrics passed');
+})().catch(e=>{console.error(e);process.exitCode=1;}).finally(()=>db.terminate());

@@ -77,14 +77,22 @@ exports.requestBusinessReservation = onCall({region:'europe-west1'}, async reque
 });
 exports.getMyBusinessReservations=onCall({region:'europe-west1'},async request=>{
   const uid=auth(request),db=getFirestore();
-  const snap=await db.collectionGroup('reservations').where('userUid','==',uid).orderBy('at','desc').limit(100).get();
+  let query=db.collectionGroup('reservations').where('userUid','==',uid).orderBy('at','desc').limit(100);
+  if(request.data?.cursor){
+    const cursor=String(request.data.cursor);
+    if(!/^business_venues\/[^/]{1,240}\/reservations\/[^/]{1,180}$/.test(cursor))throw new HttpsError('invalid-argument','Geçersiz sayfa.');
+    const previous=await db.doc(cursor).get();
+    if(!previous.exists||previous.data().userUid!==uid)throw new HttpsError('permission-denied','Bu kayda erişimin yok.');
+    query=query.startAfter(previous);
+  }
+  const snap=await query.get();
   const rows=await Promise.all(snap.docs.filter(d=>d.ref.parent.parent?.parent.id==='business_venues').map(async d=>{
     const base=d.ref.parent.parent,result=reservationView(d,base.id);
     if(result.status==='accepted'&&result.orderItems.length&&!result.preparationConfirmedAtMs&&result.atMs>Date.now())await syncReminder(db,d.ref);
     if(!result.venueName){const venue=await base.get();result.venueName=clean(venue.data()?.venueName||venue.data()?.name)||'İşletme';}
     return result;
   }));
-  return {reservations:rows};
+  return {reservations:rows,nextCursor:snap.docs.length===100?snap.docs.at(-1).ref.path:null};
 });
 exports.respondBusinessReservation = onCall({region:'europe-west1'}, async request=>{
   const venueKey=clean(request.data?.venueKey,240),reservationId=clean(request.data?.reservationId,180),decision=clean(request.data?.decision,20),{db}=await owner(request,venueKey);

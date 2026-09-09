@@ -1,3 +1,5 @@
+import '../widgets/tbt_dialog.dart';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
@@ -77,7 +79,12 @@ class _BusinessHoursScreenState extends State<BusinessHoursScreen> {
 
   Future<void> _pick(String day, bool opening) async {
     final current = opening ? _open[day]! : _close[day]!;
-    final value = await showTimePicker(context: context, initialTime: current);
+    final value = await showTimePicker(
+      context: context,
+      builder: (context, child) =>
+          Theme(data: tbtDialogTheme(Theme.of(context)), child: child!),
+      initialTime: current,
+    );
     if (value != null)
       setState(() => opening ? _open[day] = value : _close[day] = value);
   }
@@ -148,11 +155,20 @@ class _BusinessHoursScreenState extends State<BusinessHoursScreen> {
                                 ),
                               ),
                             ),
-                            Text(_closed[e.key] == true ? 'Kapalı' : 'Açık', style: TextStyle(color: _closed[e.key] == true ? Colors.white54 : AppColors.cyan, fontWeight: FontWeight.w800)),
+                            Text(
+                              _closed[e.key] == true ? 'Kapalı' : 'Açık',
+                              style: TextStyle(
+                                color: _closed[e.key] == true
+                                    ? Colors.white54
+                                    : AppColors.cyan,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
                             const SizedBox(width: 6),
                             Switch(
                               value: _closed[e.key] != true,
-                              onChanged: (v) => setState(() => _closed[e.key] = !v),
+                              onChanged: (v) =>
+                                  setState(() => _closed[e.key] = !v),
                             ),
                           ],
                         ),
@@ -162,7 +178,10 @@ class _BusinessHoursScreenState extends State<BusinessHoursScreen> {
                               Expanded(
                                 child: OutlinedButton(
                                   onPressed: () => _pick(e.key, true),
-                                  child: Text('Açılış\n${_fmt(_open[e.key]!)}', textAlign: TextAlign.center),
+                                  child: Text(
+                                    'Açılış\n${_fmt(_open[e.key]!)}',
+                                    textAlign: TextAlign.center,
+                                  ),
                                 ),
                               ),
                               const SizedBox(width: 8),

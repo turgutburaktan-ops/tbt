@@ -1,3 +1,5 @@
+import '../widgets/tbt_dialog.dart';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
@@ -57,9 +59,9 @@ class TravelPlansScreen extends StatelessWidget {
   }
 
   Future<void> _delete(BuildContext context, TravelPlan plan) async {
-    final approved = await showDialog<bool>(
+    final approved = await showTbtDialog<bool>(
       context: context,
-      builder: (_) => AlertDialog(
+      builder: (_) => TbtDialog(
         title: const Text('Plan silinsin mi?'),
         content: Text('${plan.title} kalıcı olarak silinecek.'),
         actions: [
@@ -79,9 +81,8 @@ class TravelPlansScreen extends StatelessWidget {
       await TravelPlanService.instance.delete(plan.id);
     } catch (_) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Plan silinemedi.')),
-        );
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text('Plan silinemedi.')));
       }
     }
   }
@@ -239,35 +240,39 @@ class TravelPlansScreen extends StatelessWidget {
                         spacing: 5,
                         crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
-                        if (owned)
-                          TextButton.icon(
+                          if (owned)
+                            TextButton.icon(
+                              onPressed: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => TravelPlanInviteScreen(
+                                    planId: plan.id,
+                                    planTitle: plan.title,
+                                  ),
+                                ),
+                              ),
+                              icon: const Icon(
+                                Icons.group_add_rounded,
+                                size: 18,
+                              ),
+                              label: const Text('Davet'),
+                            ),
+                          const SizedBox(width: 5),
+                          IconButton(
+                            tooltip: 'Haritada aç',
+                            onPressed: () => _openRoute(context, plan),
+                            icon: const Icon(Icons.map_outlined),
+                          ),
+                          FilledButton(
                             onPressed: () => Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (_) => TravelPlanInviteScreen(
-                                  planId: plan.id,
-                                  planTitle: plan.title,
-                                ),
+                                builder: (_) =>
+                                    TravelPlanDetailScreen(plan: plan),
                               ),
                             ),
-                            icon: const Icon(Icons.group_add_rounded, size: 18),
-                            label: const Text('Davet'),
+                            child: const Text('Planı Aç'),
                           ),
-                        const SizedBox(width: 5),
-                        IconButton(
-                          tooltip: 'Haritada aç',
-                          onPressed: () => _openRoute(context, plan),
-                          icon: const Icon(Icons.map_outlined),
-                        ),
-                        FilledButton(
-                          onPressed: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => TravelPlanDetailScreen(plan: plan),
-                            ),
-                          ),
-                          child: const Text('Planı Aç'),
-                        ),
                         ],
                       ),
                     ),

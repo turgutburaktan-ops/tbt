@@ -1,3 +1,4 @@
+import '../widgets/tbt_dialog.dart';
 import '../services/creator_service.dart';
 import '../widgets/creator_view_tracker.dart';
 import 'reels_screen.dart';
@@ -211,9 +212,9 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   }
 
   Future<void> _delete() async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showTbtDialog<bool>(
       context: context,
-      builder: (c) => AlertDialog(
+      builder: (c) => TbtDialog(
         backgroundColor: const Color(0xFF121416),
         title: const Text('Gönderiyi sil'),
         content: const Text('Bu paylaşım kalıcı olarak silinecek.'),

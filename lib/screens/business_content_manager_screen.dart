@@ -1,3 +1,5 @@
+import '../widgets/tbt_dialog.dart';
+
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -107,15 +109,36 @@ class BusinessContentManagerScreen extends StatelessWidget {
                     Container(
                       width: 64,
                       height: 64,
-                      decoration: BoxDecoration(color: AppColors.cyan.withValues(alpha: .12), shape: BoxShape.circle),
+                      decoration: BoxDecoration(
+                        color: AppColors.cyan.withValues(alpha: .12),
+                        shape: BoxShape.circle,
+                      ),
                       child: Icon(icon, size: 30, color: AppColors.cyan),
                     ),
                     const SizedBox(height: 16),
-                    Text(heading, textAlign: TextAlign.center, style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w900)),
+                    Text(
+                      heading,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 19,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
                     const SizedBox(height: 8),
-                    Text(detail, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white60, height: 1.45)),
+                    Text(
+                      detail,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: Colors.white60,
+                        height: 1.45,
+                      ),
+                    ),
                     const SizedBox(height: 18),
-                    FilledButton.icon(onPressed: () => _edit(context), icon: const Icon(Icons.add_rounded), label: const Text('Yeni içerik ekle')),
+                    FilledButton.icon(
+                      onPressed: () => _edit(context),
+                      icon: const Icon(Icons.add_rounded),
+                      label: const Text('Yeni içerik ekle'),
+                    ),
                   ],
                 ),
               ),
@@ -248,9 +271,9 @@ class BusinessContentManagerScreen extends StatelessWidget {
                               if (context.mounted) _message(context, _error(e));
                             }
                           } else if (value == 'delete') {
-                            final ok = await showDialog<bool>(
+                            final ok = await showTbtDialog<bool>(
                               context: context,
-                              builder: (d) => AlertDialog(
+                              builder: (d) => TbtDialog(
                                 title: const Text('İçeriği sil?'),
                                 content: const Text('Bu işlem geri alınamaz.'),
                                 actions: [
@@ -454,79 +477,84 @@ class BusinessContentManagerScreen extends StatelessWidget {
               child: const Text('Vazgeç'),
             ),
             FilledButton(
-              onPressed: saving ? null : () async {
-                final cleanName = name.text.trim();
-                final cleanSection = section.text.trim();
-                final parsed = double.tryParse(price.text.replaceAll(',', '.'));
-                if (cleanName.length < 2) {
-                  _message(context, 'Ürün adını gir.');
-                  return;
-                }
-                if (cleanSection.isEmpty) {
-                  _message(context, 'Menü kategorisini gir.');
-                  return;
-                }
-                if (parsed == null || parsed < 0) {
-                  _message(context, 'Geçerli bir fiyat gir.');
-                  return;
-                }
-                setState(() => saving = true);
-                try {
-                  String itemId = id ?? '';
-                  if (id == null) {
-                    itemId = await BusinessService.instance.addMenuItem(
-                      category: category,
-                      venueId: venueId,
-                      name: cleanName,
-                      section: cleanSection,
-                      description: description.text.trim(),
-                      priceMinor: (parsed * 100).round(),
-                      available: available,
-                    );
-                  } else {
-                    await BusinessService.instance.updateContentItem(
-                      category: category,
-                      venueId: venueId,
-                      type: type,
-                      itemId: id,
-                      changes: {
-                        'name': cleanName,
-                        'section': cleanSection,
-                        'description': description.text.trim(),
-                        'priceMinor': (parsed * 100).round(),
-                        'available': available,
-                      },
-                    );
-                  }
-                  if (picked != null && itemId.isNotEmpty) {
-                    final media = await BusinessService.instance
-                        .uploadMenuImage(
-                          category: category,
-                          venueId: venueId,
-                          itemId: itemId,
-                          image: picked!,
-                        );
-                    await BusinessService.instance.updateContentItem(
-                      category: category,
-                      venueId: venueId,
-                      type: 'menu',
-                      itemId: itemId,
-                      changes: media,
-                    );
-                  }
-                  if (dialogContext.mounted) Navigator.pop(dialogContext);
-                  if (context.mounted)
-                    _message(
-                      context,
-                      id == null
-                          ? 'Menü ürünü eklendi.'
-                          : 'Menü ürünü güncellendi.',
-                    );
-                } catch (e) {
-                  if (context.mounted) _message(context, _error(e));
-                  if (dialogContext.mounted) setState(() => saving = false);
-                }
-              },
+              onPressed: saving
+                  ? null
+                  : () async {
+                      final cleanName = name.text.trim();
+                      final cleanSection = section.text.trim();
+                      final parsed = double.tryParse(
+                        price.text.replaceAll(',', '.'),
+                      );
+                      if (cleanName.length < 2) {
+                        _message(context, 'Ürün adını gir.');
+                        return;
+                      }
+                      if (cleanSection.isEmpty) {
+                        _message(context, 'Menü kategorisini gir.');
+                        return;
+                      }
+                      if (parsed == null || parsed < 0) {
+                        _message(context, 'Geçerli bir fiyat gir.');
+                        return;
+                      }
+                      setState(() => saving = true);
+                      try {
+                        String itemId = id ?? '';
+                        if (id == null) {
+                          itemId = await BusinessService.instance.addMenuItem(
+                            category: category,
+                            venueId: venueId,
+                            name: cleanName,
+                            section: cleanSection,
+                            description: description.text.trim(),
+                            priceMinor: (parsed * 100).round(),
+                            available: available,
+                          );
+                        } else {
+                          await BusinessService.instance.updateContentItem(
+                            category: category,
+                            venueId: venueId,
+                            type: type,
+                            itemId: id,
+                            changes: {
+                              'name': cleanName,
+                              'section': cleanSection,
+                              'description': description.text.trim(),
+                              'priceMinor': (parsed * 100).round(),
+                              'available': available,
+                            },
+                          );
+                        }
+                        if (picked != null && itemId.isNotEmpty) {
+                          final media = await BusinessService.instance
+                              .uploadMenuImage(
+                                category: category,
+                                venueId: venueId,
+                                itemId: itemId,
+                                image: picked!,
+                              );
+                          await BusinessService.instance.updateContentItem(
+                            category: category,
+                            venueId: venueId,
+                            type: 'menu',
+                            itemId: itemId,
+                            changes: media,
+                          );
+                        }
+                        if (dialogContext.mounted) Navigator.pop(dialogContext);
+                        if (context.mounted)
+                          _message(
+                            context,
+                            id == null
+                                ? 'Menü ürünü eklendi.'
+                                : 'Menü ürünü güncellendi.',
+                          );
+                      } catch (e) {
+                        if (context.mounted) _message(context, _error(e));
+                        if (dialogContext.mounted)
+                          setState(() => saving = false);
+                      }
+                    },
               child: Text(saving ? 'Kaydediliyor…' : 'Kaydet'),
             ),
           ],
@@ -586,6 +614,10 @@ class BusinessContentManagerScreen extends StatelessWidget {
                   onTap: () async {
                     final p = await showDatePicker(
                       context: context,
+                      builder: (context, child) => Theme(
+                        data: tbtDialogTheme(Theme.of(context)),
+                        child: child!,
+                      ),
                       firstDate: DateTime.now(),
                       lastDate: DateTime.now().add(const Duration(days: 730)),
                       initialDate: until.isBefore(DateTime.now())
@@ -699,6 +731,10 @@ class BusinessContentManagerScreen extends StatelessWidget {
                   onTap: () async {
                     final date = await showDatePicker(
                       context: context,
+                      builder: (context, child) => Theme(
+                        data: tbtDialogTheme(Theme.of(context)),
+                        child: child!,
+                      ),
                       firstDate: DateTime.now(),
                       lastDate: DateTime.now().add(const Duration(days: 730)),
                       initialDate: starts.isBefore(DateTime.now())
@@ -708,6 +744,10 @@ class BusinessContentManagerScreen extends StatelessWidget {
                     if (date == null || !context.mounted) return;
                     final time = await showTimePicker(
                       context: context,
+                      builder: (context, child) => Theme(
+                        data: tbtDialogTheme(Theme.of(context)),
+                        child: child!,
+                      ),
                       initialTime: TimeOfDay.fromDateTime(starts),
                     );
                     if (time != null)

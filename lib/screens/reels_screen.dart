@@ -1,3 +1,4 @@
+import '../services/video_audio_session.dart';
 import '../services/creator_service.dart';
 import '../widgets/creator_view_tracker.dart';
 
@@ -399,6 +400,7 @@ class _ReelPage extends StatelessWidget {
             autoplay: true,
             active: active,
             muted: false,
+            audioSession: VideoAudioSession.reels,
             fit: BoxFit.contain,
           ),
         ),

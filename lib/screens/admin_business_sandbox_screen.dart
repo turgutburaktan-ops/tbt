@@ -1,3 +1,5 @@
+import '../widgets/tbt_dialog.dart';
+
 import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
@@ -53,9 +55,9 @@ class _AdminBusinessSandboxScreenState
     final d = TextEditingController(text: _description);
     final p = TextEditingController(text: _phone);
     final w = TextEditingController(text: _website);
-    final save = await showDialog<bool>(
+    final save = await showTbtDialog<bool>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
+      builder: (dialogContext) => TbtDialog(
         title: const Text('Profil bilgilerini düzenle'),
         content: SingleChildScrollView(
           child: Column(
@@ -184,10 +186,10 @@ class _AdminBusinessSandboxScreenState
     var active = existing['active'] != false;
     var available = existing['available'] != false;
 
-    final save = await showDialog<bool>(
+    final save = await showTbtDialog<bool>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setDialog) => AlertDialog(
+        builder: (context, setDialog) => TbtDialog(
           title: Text(
             index == null
                 ? switch (type) {

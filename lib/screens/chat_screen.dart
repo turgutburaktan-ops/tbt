@@ -1,3 +1,5 @@
+import 'user_profile_screen.dart';
+
 import 'dart:async';
 import 'dart:typed_data';
 
@@ -56,6 +58,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   bool _typingSent = false;
   String? _error;
   ChatMessage? _replyTo;
+  ChatMessage? _editing;
+  String _draftBeforeEdit = "";
   String? _retryId;
   String? _retryText;
   String? _lastMarkedMessageId;
@@ -66,11 +70,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _blockedSubscription;
   ChatThread? _currentThread;
 
-  static const _bg = Color(0xFF191519);
-  static const _panel = Color(0xFF241E23);
-  static const _mine = Color(0xFF67434A);
-  static const _other = Color(0xFF30292C);
-  static const _accent = Color(0xFFF3B29B);
+  static const _bg = Color(0xFF0B1426);
+  static const _panel = Color(0xFF142238);
+  static const _mine = Color(0xFF294D7A);
+  static const _other = Color(0xFF1B2D47);
+  static const _accent = Color(0xFF9FC7FF);
 
   @override
   void initState() {
@@ -90,14 +94,32 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   Future<void> _prepare() async {
     try {
-      final id = widget.groupThreadId ?? await ChatService.instance.ensureDirectThread(
-        widget.otherUserId,
-        sourceType: widget.sourceType,
-        sourceId: widget.sourceId,
-      );
+      final id =
+          widget.groupThreadId ??
+          await ChatService.instance.ensureDirectThread(
+            widget.otherUserId,
+            sourceType: widget.sourceType,
+            sourceId: widget.sourceId,
+          );
       final uid = FirebaseAuth.instance.currentUser!.uid;
-      _blockedSubscription = FirebaseFirestore.instance.collection('users/$uid/blocked').snapshots().listen((snapshot) { if (mounted) setState(() => _blockedIds = snapshot.docs.map((d) => d.id).toSet()); });
-      _hiddenSubscription = FirebaseFirestore.instance.collection('users/$uid/chat_preferences/$id/hidden').snapshots().listen((snapshot) { if (mounted) setState(() => _hiddenIds = snapshot.docs.map((d) => d.id).toSet()); });
+      _blockedSubscription = FirebaseFirestore.instance
+          .collection('users/$uid/blocked')
+          .snapshots()
+          .listen((snapshot) {
+            if (mounted)
+              setState(
+                () => _blockedIds = snapshot.docs.map((d) => d.id).toSet(),
+              );
+          });
+      _hiddenSubscription = FirebaseFirestore.instance
+          .collection('users/$uid/chat_preferences/$id/hidden')
+          .snapshots()
+          .listen((snapshot) {
+            if (mounted)
+              setState(
+                () => _hiddenIds = snapshot.docs.map((d) => d.id).toSet(),
+              );
+          });
       try {
         await ChatService.instance.markThreadRead(id);
       } catch (_) {}
@@ -130,7 +152,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       });
     }
     _typingTimer?.cancel();
-    if (!hasText) {
+    if (!hasText && _editing == null) {
       _stopTyping();
       return;
     }
@@ -154,9 +176,30 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     final id = _threadId;
     final text = _controller.text.trim();
     if (id == null || text.isEmpty || _sending || _sendingMedia) return;
+    if (_editing != null) {
+      setState(() => _sending = true);
+      try {
+        await ChatService.instance.action('edit', {
+          'threadId': id,
+          'messageId': _editing!.id,
+          'text': text,
+        });
+        if (mounted) _finishEditing();
+      } catch (error) {
+        if (mounted) _showError(error);
+      } finally {
+        if (mounted) setState(() => _sending = false);
+      }
+      return;
+    }
     if (_retryText != text) {
       _retryText = text;
-      _retryId = FirebaseFirestore.instance.collection('chat_threads').doc(id).collection('messages').doc().id;
+      _retryId = FirebaseFirestore.instance
+          .collection('chat_threads')
+          .doc(id)
+          .collection('messages')
+          .doc()
+          .id;
     }
     setState(() => _sending = true);
     try {
@@ -173,7 +216,13 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       _stopTyping();
       if (mounted) setState(() => _replyTo = null);
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: const Text('Gönderim doğrulanamadı. Mesajın korunuyor.'), action: SnackBarAction(label: 'Tekrar dene', onPressed: _send)));
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Gönderim doğrulanamadı. Mesajın korunuyor.'),
+            action: SnackBarAction(label: 'Tekrar dene', onPressed: _send),
+          ),
+        );
     } finally {
       if (mounted) setState(() => _sending = false);
     }
@@ -231,17 +280,24 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
-        SnackBar(content: Text(error.toString().replaceFirst('Exception: ', ''))),
+        SnackBar(
+          content: Text(error.toString().replaceFirst('Exception: ', '')),
+        ),
       );
   }
 
   Future<void> _showVoiceRecorderSheet() async {
-    if (_currentThread?.requestStatus == 'pending') { _showError(Exception('Ses göndermek için isteğin kabul edilmesini bekle.')); return; }
+    if (_currentThread?.requestStatus == 'pending') {
+      _showError(
+        Exception('Ses göndermek için isteğin kabul edilmesini bekle.'),
+      );
+      return;
+    }
     if (_sending || _sendingMedia) return;
     await showModalBottomSheet<void>(
       context: context,
       useSafeArea: true,
-      backgroundColor: const Color(0xFF241E23),
+      backgroundColor: const Color(0xFF142238),
       showDragHandle: true,
       builder: (sheetContext) => Padding(
         padding: const EdgeInsets.fromLTRB(22, 4, 22, 26),
@@ -276,11 +332,18 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _showAttachMenu() async {
-    if (_currentThread?.requestStatus == 'pending') { _showError(Exception('Fotoğraf ve ses göndermek için isteğin kabul edilmesini bekle.')); return; }
+    if (_currentThread?.requestStatus == 'pending') {
+      _showError(
+        Exception(
+          'Fotoğraf ve ses göndermek için isteğin kabul edilmesini bekle.',
+        ),
+      );
+      return;
+    }
     final action = await showModalBottomSheet<String>(
       context: context,
       useSafeArea: true,
-      backgroundColor: const Color(0xFF241E23),
+      backgroundColor: const Color(0xFF142238),
       showDragHandle: true,
       builder: (sheetContext) => Padding(
         padding: const EdgeInsets.fromLTRB(16, 2, 16, 24),
@@ -346,7 +409,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     child: Container(
       padding: const EdgeInsets.symmetric(vertical: 17, horizontal: 4),
       decoration: BoxDecoration(
-        color: const Color(0xFF382C30),
+        color: const Color(0xFF203C62),
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: Colors.white10),
       ),
@@ -378,7 +441,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   Future<void> _showMessageActions(ChatMessage message, bool mine) async {
     final action = await showModalBottomSheet<String>(
       context: context,
-      backgroundColor: const Color(0xFF241E23),
+      backgroundColor: const Color(0xFF142238),
       showDragHandle: true,
       builder: (sheetContext) => SafeArea(
         child: Column(
@@ -392,10 +455,14 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                     .map(
                       (emoji) => InkWell(
                         borderRadius: BorderRadius.circular(24),
-                        onTap: () => Navigator.pop(sheetContext, 'react:$emoji'),
+                        onTap: () =>
+                            Navigator.pop(sheetContext, 'react:$emoji'),
                         child: Padding(
                           padding: const EdgeInsets.all(8),
-                          child: Text(emoji, style: const TextStyle(fontSize: 24)),
+                          child: Text(
+                            emoji,
+                            style: const TextStyle(fontSize: 24),
+                          ),
                         ),
                       ),
                     )
@@ -413,12 +480,33 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                 title: const Text('Kopyala'),
                 onTap: () => Navigator.pop(sheetContext, 'copy'),
               ),
-            if (mine && message.type == 'text') ListTile(leading: const Icon(Icons.edit_outlined), title: const Text('Düzenle'), onTap: () => Navigator.pop(sheetContext, 'edit')),
-            ListTile(leading: const Icon(Icons.hide_source), title: const Text('Benden sil'), onTap: () => Navigator.pop(sheetContext, 'hide')),
-            if (_currentThread?.isGroup != true || (_currentThread?.adminIds.contains(FirebaseAuth.instance.currentUser?.uid) ?? false)) ListTile(leading: const Icon(Icons.push_pin_outlined), title: const Text('Sabitle / kaldır'), onTap: () => Navigator.pop(sheetContext, 'pin')),
+            if (mine && message.type == 'text')
+              ListTile(
+                leading: const Icon(Icons.edit_outlined),
+                title: const Text('Düzenle'),
+                onTap: () => Navigator.pop(sheetContext, 'edit'),
+              ),
+            ListTile(
+              leading: const Icon(Icons.hide_source),
+              title: const Text('Benden sil'),
+              onTap: () => Navigator.pop(sheetContext, 'hide'),
+            ),
+            if (_currentThread?.isGroup != true ||
+                (_currentThread?.adminIds.contains(
+                      FirebaseAuth.instance.currentUser?.uid,
+                    ) ??
+                    false))
+              ListTile(
+                leading: const Icon(Icons.push_pin_outlined),
+                title: const Text('Sabitle / kaldır'),
+                onTap: () => Navigator.pop(sheetContext, 'pin'),
+              ),
             if (mine)
               ListTile(
-                leading: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent),
+                leading: const Icon(
+                  Icons.delete_outline_rounded,
+                  color: Colors.redAccent,
+                ),
                 title: const Text(
                   'Herkesten geri al',
                   style: TextStyle(color: Colors.redAccent),
@@ -437,15 +525,26 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     } else if (action == 'copy') {
       await Clipboard.setData(ClipboardData(text: message.text));
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Mesaj kopyalandı.')),
-        );
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text('Mesaj kopyalandı.')));
       }
     } else if (action == 'edit') {
-      final text = await chatTextPrompt(context, 'Mesajı düzenle', initial: message.text);
-      if (text != null && mounted) await runChatAction(context, 'edit', {'threadId': _threadId, 'messageId': message.id, 'text': text});
+      if (!mounted || _sending || _sendingMedia) return;
+      if (_editing == null) _draftBeforeEdit = _controller.text;
+      setState(() {
+        _editing = message;
+        _replyTo = null;
+        _controller.text = message.text;
+        _controller.selection = TextSelection.collapsed(
+          offset: _controller.text.length,
+        );
+      });
+      _focusNode.requestFocus();
     } else if (action == 'hide' || action == 'pin') {
-      await runChatAction(context, action, {'threadId': _threadId, 'messageId': message.id});
+      await runChatAction(context, action, {
+        'threadId': _threadId,
+        'messageId': message.id,
+      });
     } else if (action == 'delete') {
       try {
         await ChatService.instance.deleteForEveryone(
@@ -487,8 +586,16 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   bool _isSeen(ChatMessage message, ChatThread? thread) {
     if (thread?.isGroup == true) {
-      final others = thread!.memberIds.where((id) => id != FirebaseAuth.instance.currentUser?.uid);
-      return others.isNotEmpty && message.createdAt != null && others.every((id) => thread.lastReadAt[id] != null && !thread.lastReadAt[id]!.isBefore(message.createdAt!));
+      final others = thread!.memberIds.where(
+        (id) => id != FirebaseAuth.instance.currentUser?.uid,
+      );
+      return others.isNotEmpty &&
+          message.createdAt != null &&
+          others.every(
+            (id) =>
+                thread.lastReadAt[id] != null &&
+                !thread.lastReadAt[id]!.isBefore(message.createdAt!),
+          );
     }
     final readAt = thread?.lastReadAt[widget.otherUserId];
     final sentAt = message.createdAt;
@@ -497,7 +604,13 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   }
 
   bool _otherTyping(ChatThread? thread) {
-    if (thread?.isGroup == true) return thread!.typingAt.entries.any((e) => e.key != FirebaseAuth.instance.currentUser?.uid && e.value != null && DateTime.now().difference(e.value!).inSeconds < 5);
+    if (thread?.isGroup == true)
+      return thread!.typingAt.entries.any(
+        (e) =>
+            e.key != FirebaseAuth.instance.currentUser?.uid &&
+            e.value != null &&
+            DateTime.now().difference(e.value!).inSeconds < 5,
+      );
     final at = thread?.typingAt[widget.otherUserId];
     if (at == null) return false;
     return DateTime.now().difference(at.toLocal()) < const Duration(seconds: 6);
@@ -535,10 +648,22 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       return;
     }
     if (message.sharedType == 'route') {
-      try { final doc = await FirebaseFirestore.instance.doc('travel_plans/$id').get();
+      try {
+        final doc = await FirebaseFirestore.instance
+            .doc('travel_plans/$id')
+            .get();
         if (!doc.exists) throw Exception('Rota artık mevcut değil.');
-        if (mounted) await Navigator.push(context, MaterialPageRoute(builder: (_) => TravelPlanDetailScreen(plan: TravelPlan.fromDoc(doc))));
-      } catch (e) { _showError(e); }
+        if (mounted)
+          await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) =>
+                  TravelPlanDetailScreen(plan: TravelPlan.fromDoc(doc)),
+            ),
+          );
+      } catch (e) {
+        _showError(e);
+      }
       return;
     }
     if (message.sharedType == 'event') {
@@ -653,7 +778,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       child: Container(
         width: 248,
         decoration: BoxDecoration(
-          color: const Color(0xFF241E23),
+          color: const Color(0xFF142238),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: Colors.white12),
         ),
@@ -668,7 +793,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                 child: FirebaseMediaImage(
                   imageUrl: imageUrl,
                   fit: BoxFit.cover,
-                  errorWidget: const ColoredBox(color: Color(0xFF382C30)),
+                  errorWidget: const ColoredBox(color: Color(0xFF203C62)),
                 ),
               )
             else
@@ -676,7 +801,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                 height: 82,
                 width: double.infinity,
                 alignment: Alignment.center,
-                color: const Color(0xFF382C30),
+                color: const Color(0xFF203C62),
                 child: Icon(icon, size: 34, color: _accent),
               ),
             Padding(
@@ -731,7 +856,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
             (entry) => Container(
               padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
               decoration: BoxDecoration(
-                color: const Color(0xFF382C30),
+                color: const Color(0xFF203C62),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: Colors.white10),
               ),
@@ -747,12 +872,15 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   bool get _canReply {
     final thread = _currentThread;
-    return thread != null && thread.requestStatus != 'rejected' &&
+    return thread != null &&
+        thread.requestStatus != 'rejected' &&
         !(thread.requestStatus == 'pending' &&
-          thread.requestRecipientId == FirebaseAuth.instance.currentUser?.uid);
+            thread.requestRecipientId ==
+                FirebaseAuth.instance.currentUser?.uid);
   }
 
   void _beginReply(ChatMessage message) {
+    if (_editing != null) _finishEditing();
     if (!mounted || !_canReply || message.deleted) return;
     setState(() => _replyTo = message);
     _focusNode.requestFocus();
@@ -780,7 +908,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           ),
           child: const Text(
             'Mesaj geri alındı',
-            style: TextStyle(color: Colors.white38, fontStyle: FontStyle.italic),
+            style: TextStyle(
+              color: Colors.white38,
+              fontStyle: FontStyle.italic,
+            ),
           ),
         ),
       );
@@ -791,137 +922,160 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       enabled: _canReply,
       onReply: () => _beginReply(message),
       child: Align(
-      alignment: mine ? Alignment.centerRight : Alignment.centerLeft,
-      child: GestureDetector(
-        onDoubleTap: () => _react(message, '❤️'),
-        onLongPress: () => _showMessageActions(message, mine),
-        child: Container(
-          constraints: BoxConstraints(
-            maxWidth: MediaQuery.sizeOf(context).width * .78,
-          ),
-          margin: EdgeInsets.only(bottom: reactions.isEmpty ? 8 : 4),
-          child: Column(
-            crossAxisAlignment:
-                mine ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-            children: [
-              Container(
-                padding: mediaLike
-                    ? const EdgeInsets.all(4)
-                    : const EdgeInsets.fromLTRB(13, 9, 11, 6),
-                decoration: BoxDecoration(
-                  color: mine ? _mine : _other,
-                  borderRadius: BorderRadius.only(
-                    topLeft: const Radius.circular(18),
-                    topRight: const Radius.circular(18),
-                    bottomLeft: Radius.circular(mine ? 18 : 6),
-                    bottomRight: Radius.circular(mine ? 6 : 18),
+        alignment: mine ? Alignment.centerRight : Alignment.centerLeft,
+        child: GestureDetector(
+          onDoubleTap: () => _react(message, '❤️'),
+          onLongPress: () => _showMessageActions(message, mine),
+          child: Container(
+            constraints: BoxConstraints(
+              maxWidth: MediaQuery.sizeOf(context).width * .78,
+            ),
+            margin: EdgeInsets.only(bottom: reactions.isEmpty ? 8 : 4),
+            child: Column(
+              crossAxisAlignment: mine
+                  ? CrossAxisAlignment.end
+                  : CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: mediaLike
+                      ? const EdgeInsets.all(4)
+                      : const EdgeInsets.fromLTRB(13, 9, 11, 6),
+                  decoration: BoxDecoration(
+                    color: mine ? _mine : _other,
+                    borderRadius: BorderRadius.only(
+                      topLeft: const Radius.circular(18),
+                      topRight: const Radius.circular(18),
+                      bottomLeft: Radius.circular(mine ? 18 : 6),
+                      bottomRight: Radius.circular(mine ? 6 : 18),
+                    ),
+                    border: Border.all(
+                      color: mine
+                          ? _accent.withValues(alpha: .18)
+                          : Colors.white.withValues(alpha: .06),
+                    ),
                   ),
-                  border: Border.all(
-                    color: mine
-                        ? _accent.withValues(alpha: .18)
-                        : Colors.white.withValues(alpha: .06),
-                  ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    if (message.hasReply)
-                      Padding(
-                        padding: mediaLike
-                            ? const EdgeInsets.fromLTRB(5, 5, 5, 0)
-                            : EdgeInsets.zero,
-                        child: _replyPreview(message, mine),
-                      ),
-                    if (message.isImage)
-                      GestureDetector(
-                        onTap: () => _openImage(message.mediaUrl!),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(14),
-                          child: SizedBox(
-                            width: 238,
-                            height: 246,
-                            child: FirebaseMediaImage(
-                              imageUrl: message.mediaUrl!,
-                              fit: BoxFit.cover,
-                              errorWidget: const ColoredBox(
-                                color: Color(0xFF15191E),
-                                child: Center(
-                                  child: Icon(
-                                    Icons.broken_image_outlined,
-                                    color: Colors.white54,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      if (message.hasReply)
+                        Padding(
+                          padding: mediaLike
+                              ? const EdgeInsets.fromLTRB(5, 5, 5, 0)
+                              : EdgeInsets.zero,
+                          child: _replyPreview(message, mine),
+                        ),
+                      if (message.isImage)
+                        GestureDetector(
+                          onTap: () => _openImage(message.mediaUrl!),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(14),
+                            child: SizedBox(
+                              width: 238,
+                              height: 246,
+                              child: FirebaseMediaImage(
+                                imageUrl: message.mediaUrl!,
+                                fit: BoxFit.cover,
+                                errorWidget: const ColoredBox(
+                                  color: Color(0xFF15191E),
+                                  child: Center(
+                                    child: Icon(
+                                      Icons.broken_image_outlined,
+                                      color: Colors.white54,
+                                    ),
                                   ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
-                      )
-                    else if (message.isAudio)
-                      ChatAudioBubble(
-                        url: message.mediaUrl!,
-                        durationMs: message.durationMs,
-                        mine: mine,
-                      )
-                    else if (message.type == 'poll')
-                      ChatPollCard(threadId: _threadId!, message: message)
-                    else if (message.isShare)
-                      _shareCard(message)
-                    else
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          message.text,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 15.2,
-                            height: 1.28,
-                          ),
-                        ),
-                      ),
-                    Padding(
-                      padding: mediaLike
-                          ? const EdgeInsets.fromLTRB(7, 5, 7, 3)
-                          : const EdgeInsets.only(top: 4),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            '${message.edited ? 'Düzenlendi · ' : ''}$time',
+                        )
+                      else if (message.isAudio)
+                        ChatAudioBubble(
+                          url: message.mediaUrl!,
+                          durationMs: message.durationMs,
+                          mine: mine,
+                        )
+                      else if (message.type == 'poll')
+                        ChatPollCard(threadId: _threadId!, message: message)
+                      else if (message.isShare)
+                        _shareCard(message)
+                      else
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            message.text,
                             style: const TextStyle(
-                              color: Colors.white38,
-                              fontSize: 10.3,
-                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                              fontSize: 15.2,
+                              height: 1.28,
                             ),
                           ),
-                          if (mine) ...[
-                            const SizedBox(width: 4),
-                            Icon(
-                              message.pending ? Icons.schedule : (seen || delivered) ? Icons.done_all_rounded : Icons.done_rounded,
-                              size: 14,
-                              color: seen ? _accent : Colors.white38,
+                        ),
+                      Padding(
+                        padding: mediaLike
+                            ? const EdgeInsets.fromLTRB(7, 5, 7, 3)
+                            : const EdgeInsets.only(top: 4),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              '${message.edited ? 'Düzenlendi · ' : ''}$time',
+                              style: const TextStyle(
+                                color: Colors.white38,
+                                fontSize: 10.3,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
+                            if (mine) ...[
+                              const SizedBox(width: 4),
+                              Icon(
+                                message.pending
+                                    ? Icons.schedule
+                                    : (seen || delivered)
+                                    ? Icons.done_all_rounded
+                                    : Icons.done_rounded,
+                                size: 14,
+                                color: seen ? _accent : Colors.white38,
+                              ),
+                            ],
                           ],
-                        ],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-              if (reactions.isNotEmpty) ...[
-                const SizedBox(height: 3),
-                _reactionBar(reactions),
-                const SizedBox(height: 5),
+                if (reactions.isNotEmpty) ...[
+                  const SizedBox(height: 3),
+                  _reactionBar(reactions),
+                  const SizedBox(height: 5),
+                ],
               ],
-            ],
+            ),
           ),
         ),
-      ),
       ),
     );
   }
 
   Widget _conversationHeader() {
-    if (widget.groupThreadId != null) return StreamBuilder<ChatThread?>(stream: _threadStream, builder: (context, snapshot) => ListTile(contentPadding: EdgeInsets.zero, title: Text(snapshot.data?.name ?? 'Grup', maxLines: 1, overflow: TextOverflow.ellipsis), subtitle: Text('${snapshot.data?.memberIds.length ?? 0} üye'), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ChatGroupInfo(threadId: widget.groupThreadId!)))));
+    if (widget.groupThreadId != null)
+      return StreamBuilder<ChatThread?>(
+        stream: _threadStream,
+        builder: (context, snapshot) => ListTile(
+          contentPadding: EdgeInsets.zero,
+          title: Text(
+            snapshot.data?.name ?? 'Grup',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          subtitle: Text('${snapshot.data?.memberIds.length ?? 0} üye'),
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => ChatGroupInfo(threadId: widget.groupThreadId!),
+            ),
+          ),
+        ),
+      );
     return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
       stream: FirebaseFirestore.instance
           .collection('users')
@@ -930,8 +1084,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       builder: (context, snapshot) {
         final data = snapshot.data?.data() ?? const <String, dynamic>{};
         final photoUrl = (data['photoUrl'] ?? '').toString();
-        final online = data['showOnlineStatus'] != false && data['isOnline'] == true;
-        final raw = data['showOnlineStatus'] == false ? null : data['lastSeenAt'];
+        final online =
+            data['showOnlineStatus'] != false && data['isOnline'] == true;
+        final raw = data['showOnlineStatus'] == false
+            ? null
+            : data['lastSeenAt'];
         final lastSeen = raw is Timestamp ? raw.toDate() : null;
         return Row(
           children: [
@@ -944,12 +1101,15 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                   child: ClipOval(
                     child: FirebaseMediaImage(
                       imageUrl: photoUrl,
-                      fallbackStoragePaths:
-                          FirebaseMediaImage.avatarPaths(widget.otherUserId),
+                      fallbackStoragePaths: FirebaseMediaImage.avatarPaths(
+                        widget.otherUserId,
+                      ),
                       fit: BoxFit.cover,
                       errorWidget: const ColoredBox(
                         color: Color(0xFF20252B),
-                        child: Center(child: Icon(Icons.person_rounded, size: 21)),
+                        child: Center(
+                          child: Icon(Icons.person_rounded, size: 21),
+                        ),
                       ),
                     ),
                   ),
@@ -1023,7 +1183,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
             icon: const Icon(Icons.close_rounded),
           ),
           filled: true,
-          fillColor: const Color(0xFF30292C),
+          fillColor: const Color(0xFF1B2D47),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(20),
             borderSide: BorderSide.none,
@@ -1050,6 +1210,14 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     );
   }
 
+  void _finishEditing() {
+    setState(() {
+      _editing = null;
+      _controller.text = _draftBeforeEdit;
+      _draftBeforeEdit = '';
+    });
+  }
+
   Widget _composer() {
     return SafeArea(
       top: false,
@@ -1062,13 +1230,30 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            if (_editing != null)
+              ListTile(
+                dense: true,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                leading: const Icon(Icons.edit_outlined, color: _accent),
+                title: const Text(
+                  'Mesajı düzenliyorsun',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                trailing: TextButton(
+                  onPressed: _sending ? null : _finishEditing,
+                  child: const Text('Vazgeç'),
+                ),
+              ),
             if (_replyTo != null)
               Container(
                 width: double.infinity,
                 margin: const EdgeInsets.fromLTRB(4, 0, 4, 7),
                 padding: const EdgeInsets.fromLTRB(11, 8, 4, 8),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF382C30),
+                  color: const Color(0xFF203C62),
                   borderRadius: BorderRadius.circular(13),
                   border: Border.all(color: Colors.white10),
                 ),
@@ -1082,7 +1267,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                         children: [
                           const Text(
                             'Yanıtlıyorsun',
-                            style: TextStyle(fontSize: 10.8, fontWeight: FontWeight.w900),
+                            style: TextStyle(
+                              fontSize: 10.8,
+                              fontWeight: FontWeight.w900,
+                            ),
                           ),
                           Text(
                             _replyTo!.isImage
@@ -1094,7 +1282,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                                 : _replyTo!.text,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(color: Colors.white38, fontSize: 11.5),
+                            style: const TextStyle(
+                              color: Colors.white38,
+                              fontSize: 11.5,
+                            ),
                           ),
                         ],
                       ),
@@ -1114,9 +1305,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                   tooltip: 'Fotoğraf veya ses gönder',
                   style: IconButton.styleFrom(
                     foregroundColor: _accent,
-                    backgroundColor: const Color(0xFF382C30),
+                    backgroundColor: const Color(0xFF203C62),
                   ),
-                  onPressed: _sendingMedia ? null : _showAttachMenu,
+                  onPressed: _sendingMedia || _editing != null
+                      ? null
+                      : _showAttachMenu,
                   icon: _sendingMedia
                       ? const SizedBox(
                           width: 18,
@@ -1140,7 +1333,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                       hintText: 'Mesaj yaz…',
                       hintStyle: const TextStyle(color: Colors.white38),
                       filled: true,
-                      fillColor: const Color(0xFF30292C),
+                      fillColor: const Color(0xFF1B2D47),
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: 16,
                         vertical: 11,
@@ -1158,7 +1351,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                   valueListenable: _controller,
                   builder: (context, value, _) {
                     final hasText = value.text.trim().isNotEmpty;
-                    if (!hasText) {
+                    if (!hasText && _editing == null) {
                       return ChatVoiceRecordButton(
                         disabled: _sending || _sendingMedia,
                         onRecorded: _sendVoice,
@@ -1170,14 +1363,24 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                         backgroundColor: _accent,
                         foregroundColor: const Color(0xFF081016),
                       ),
-                      onPressed: (_sending || _sendingMedia) ? null : _send,
+                      onPressed: (_sending || _sendingMedia || !hasText)
+                          ? null
+                          : _send,
                       icon: _sending
                           ? const SizedBox(
                               width: 18,
                               height: 18,
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
-                          : const Icon(Icons.send_rounded, size: 20),
+                          : Icon(
+                              _editing != null
+                                  ? Icons.check_rounded
+                                  : Icons.send_rounded,
+                              size: 20,
+                            ),
+                      tooltip: _editing != null
+                          ? 'Değişikliği kaydet'
+                          : 'Gönder',
                     );
                   },
                 ),
@@ -1191,27 +1394,75 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   Widget _requestBanner(ChatThread thread, String myId) {
     final incoming = thread.requestRecipientId == myId;
-    return Container(padding: const EdgeInsets.all(12), color: _panel, child: Column(mainAxisSize: MainAxisSize.min, children: [
-      Text(incoming ? 'Mesaj isteği · Kabul edene kadar okundu bilgin paylaşılmaz.' : 'Mesaj isteğin gönderildi. Kabul edilene kadar yalnızca metin gönderebilirsin.', style: const TextStyle(fontSize: 12)),
-      if (incoming) Wrap(spacing: 8, children: [
-        FilledButton(onPressed: () async {
-          try { await ChatService.instance.action('acceptRequest', {'threadId': thread.id}); await ChatService.instance.markThreadRead(thread.id); }
-          catch (e) { _showError(e); }
-        }, child: const Text('Kabul et')),
-        TextButton(onPressed: () => runChatAction(context, 'rejectRequest', {'threadId': thread.id}), child: const Text('Reddet')),
-        TextButton(onPressed: () async {
-          try { await ChatService.instance.action('rejectRequest', {'threadId': thread.id}); await ChatService.instance.blockUser(widget.otherUserId); if (mounted) Navigator.pop(context); }
-          catch (e) { _showError(e); }
-        }, child: const Text('Engelle')),
-      ]),
-    ]));
+    return Container(
+      padding: const EdgeInsets.all(12),
+      color: _panel,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            incoming
+                ? 'Mesaj isteği · Kabul edene kadar okundu bilgin paylaşılmaz.'
+                : 'Mesaj isteğin gönderildi. Kabul edilene kadar yalnızca metin gönderebilirsin.',
+            style: const TextStyle(fontSize: 12),
+          ),
+          if (incoming)
+            Wrap(
+              spacing: 8,
+              children: [
+                FilledButton(
+                  onPressed: () async {
+                    try {
+                      await ChatService.instance.action('acceptRequest', {
+                        'threadId': thread.id,
+                      });
+                      await ChatService.instance.markThreadRead(thread.id);
+                    } catch (e) {
+                      _showError(e);
+                    }
+                  },
+                  child: const Text('Kabul et'),
+                ),
+                TextButton(
+                  onPressed: () => runChatAction(context, 'rejectRequest', {
+                    'threadId': thread.id,
+                  }),
+                  child: const Text('Reddet'),
+                ),
+                TextButton(
+                  onPressed: () async {
+                    try {
+                      await ChatService.instance.action('rejectRequest', {
+                        'threadId': thread.id,
+                      });
+                      await ChatService.instance.blockUser(widget.otherUserId);
+                      if (mounted) Navigator.pop(context);
+                    } catch (e) {
+                      _showError(e);
+                    }
+                  },
+                  child: const Text('Engelle'),
+                ),
+              ],
+            ),
+        ],
+      ),
+    );
   }
 
   Future<void> _showSafetyMenu() async {
-    if (widget.groupThreadId != null) { await Navigator.push(context, MaterialPageRoute(builder: (_) => ChatGroupInfo(threadId: widget.groupThreadId!))); return; }
+    if (widget.groupThreadId != null) {
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ChatGroupInfo(threadId: widget.groupThreadId!),
+        ),
+      );
+      return;
+    }
     final action = await showModalBottomSheet<String>(
       context: context,
-      backgroundColor: const Color(0xFF241E23),
+      backgroundColor: const Color(0xFF142238),
       builder: (sheetContext) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -1264,168 +1515,293 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     final myId = FirebaseAuth.instance.currentUser?.uid ?? '';
-    return ChatSurface(child: Builder(builder: (context) => Scaffold(
-      backgroundColor: _bg,
-      appBar: AppBar(
-        toolbarHeight: 62,
-        backgroundColor: _bg,
-        foregroundColor: Colors.white,
-        elevation: 0,
-        titleSpacing: 0,
-        title: _conversationHeader(),
-        actions: [
-          if (_threadId != null) ChatPreferencesButton(threadId: _threadId!),
-          if (widget.groupThreadId != null && _threadId != null) PopupMenuButton<String>(tooltip: 'Birlikte planla', icon: const Icon(Icons.add_circle_outline), onSelected: (v) => v == 'poll' ? createChatPoll(context, _threadId!) : createGroupPlan(context, _threadId!), itemBuilder: (_) => const [PopupMenuItem(value: 'poll', child: Text('Anket oluştur')), PopupMenuItem(value: 'plan', child: Text('Etkinlik planla'))]),
-          IconButton(
-            tooltip: 'Sohbette ara',
-            onPressed: () => setState(() => _searching = !_searching),
-            icon: const Icon(Icons.search_rounded),
-          ),
-          IconButton(
-            onPressed: _showSafetyMenu,
-            icon: const Icon(Icons.more_vert_rounded),
-          ),
-        ],
-      ),
-      body: ChatBackdrop(child: _loading
-          ? const Center(child: CircularProgressIndicator(color: _accent))
-          : _error != null
-          ? Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Text(
-                  _error!,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(color: Colors.white70),
-                ),
-              ),
-            )
-          : StreamBuilder<ChatThread?>(
-              stream: _threadStream,
-              builder: (context, threadSnapshot) {
-                final thread = threadSnapshot.data;
-                _currentThread = thread;
-                if (threadSnapshot.hasError) return const Center(child: Text('Bu sohbete erişimin yok.'));
-                return Column(
-                  children: [
-                    _searchBar(),
-                    if (thread?.pinnedMessageId != null) StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(stream: FirebaseFirestore.instance.doc('chat_threads/$_threadId/messages/${thread!.pinnedMessageId}').snapshots(), builder: (context, snap) => ListTile(dense: true, leading: const Icon(Icons.push_pin_outlined), title: Text((snap.data?.data()?['text'] ?? 'Sabitlenmiş mesaj').toString(), maxLines: 2, overflow: TextOverflow.ellipsis))),
-                    Expanded(
-                      child: StreamBuilder<List<ChatMessage>>(
-                        stream: _messagesStream,
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState == ConnectionState.waiting &&
-                              !snapshot.hasData) {
-                            return const Center(
-                              child: CircularProgressIndicator(color: _accent),
-                            );
-                          }
-                          if (snapshot.hasError) {
-                            return Center(
-                              child: Padding(
-                                padding: const EdgeInsets.all(24),
-                                child: Text(
-                                  'Mesajlar yüklenemedi.\n${snapshot.error}',
-                                  textAlign: TextAlign.center,
-                                  style: const TextStyle(color: Colors.white60),
-                                ),
-                              ),
-                            );
-                          }
-                          final allMessages = (snapshot.data ?? const <ChatMessage>[]).where((m) => !_hiddenIds.contains(m.id) && !_blockedIds.contains(m.senderId)).toList();
-                          _markReadFromMessages(allMessages, myId);
-                          final query = _searchController.text.trim().toLowerCase();
-                          final messages = query.isEmpty
-                              ? allMessages
-                              : allMessages.where((message) {
-                                  final haystack =
-                                      '${message.text} ${message.sharedTitle ?? ''}'
-                                          .toLowerCase();
-                                  return haystack.contains(query);
-                                }).toList(growable: false);
-
-                          if (messages.isEmpty) {
-                            return Center(
-                              child: Padding(
-                                padding: const EdgeInsets.all(28),
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(
-                                      query.isEmpty
-                                          ? Icons.forum_outlined
-                                          : Icons.search_off_rounded,
-                                      size: 44,
-                                      color: Colors.white24,
-                                    ),
-                                    const SizedBox(height: 12),
-                                    Text(
-                                      query.isEmpty
-                                          ? 'İlk mesajı gönder'
-                                          : 'Eşleşen mesaj yok',
-                                      style: const TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w900,
-                                      ),
-                                    ),
-                                    if (query.isEmpty) ...[
-                                      const SizedBox(height: 5),
-                                      const Text(
-                                        'Fotoğraf, sesli mesaj ve içerik paylaşabilirsin.',
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(color: Colors.white38),
-                                      ),
-                                    ],
-                                  ],
-                                ),
-                              ),
-                            );
-                          }
-
-                          return ListView.builder(
-                            reverse: true,
-                            keyboardDismissBehavior:
-                                ScrollViewKeyboardDismissBehavior.onDrag,
-                            padding: const EdgeInsets.fromLTRB(11, 13, 11, 9),
-                            itemCount: messages.length,
-                            itemBuilder: (context, index) {
-                              final message = messages[index];
-                              final mine = message.senderId == myId;
-                              final removed =
-                                  message.deleted ||
-                                  (thread?.deletedMessageIds.contains(message.id) ??
-                                      false);
-                              final reactions =
-                                  thread?.messageReactions[message.id] ??
-                                  message.reactions;
-                              return KeyedSubtree(
-                                key: ValueKey('chat-message-${message.id}'),
-                                child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                                  if (thread?.isGroup == true && !mine) Padding(padding: const EdgeInsets.only(left: 8, top: 6), child: Text(message.senderName, style: const TextStyle(color: _accent, fontSize: 11))),
-                                  _messageBubble(
-                                  message: message,
-                                  mine: mine,
-                                  seen: mine && _isSeen(message, thread),
-                                  delivered: mine && message.createdAt != null && (thread?.memberIds.where((id) => id != myId).any((id) => thread!.lastDeliveredAt[id] != null && !thread.lastDeliveredAt[id]!.isBefore(message.createdAt!)) ?? false),
-                                  removed: removed,
-                                  reactions: reactions,
-                                ),
-                                ]),
-                              );
-                            },
-                          );
-                        },
+    return ChatSurface(
+      child: Builder(
+        builder: (context) => Scaffold(
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+          appBar: AppBar(
+            toolbarHeight: 62,
+            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+            foregroundColor: Colors.white,
+            elevation: 0,
+            titleSpacing: 0,
+            title: widget.groupThreadId != null
+                ? _conversationHeader()
+                : InkWell(
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            UserProfileScreen(userId: widget.otherUserId),
                       ),
                     ),
-                    _typingIndicator(thread),
-                    if (thread?.requestStatus == 'pending') _requestBanner(thread!, myId),
-                    if (thread?.requestStatus == 'rejected') const Padding(padding: EdgeInsets.all(20), child: Text('Bu mesaj isteği kabul edilmedi.'))
-                    else if (thread?.requestStatus != 'pending' || thread?.requestRecipientId != myId) _composer(),
+                    child: _conversationHeader(),
+                  ),
+            actions: [
+              if (_threadId != null)
+                ChatPreferencesButton(threadId: _threadId!),
+              if (widget.groupThreadId != null && _threadId != null)
+                PopupMenuButton<String>(
+                  tooltip: 'Birlikte planla',
+                  icon: const Icon(Icons.add_circle_outline),
+                  onSelected: (v) => v == 'poll'
+                      ? createChatPoll(context, _threadId!)
+                      : createGroupPlan(context, _threadId!),
+                  itemBuilder: (_) => const [
+                    PopupMenuItem(value: 'poll', child: Text('Anket oluştur')),
+                    PopupMenuItem(
+                      value: 'plan',
+                      child: Text('Etkinlik planla'),
+                    ),
                   ],
-                );
-              },
-            )),
-    )));
+                ),
+              IconButton(
+                tooltip: 'Sohbette ara',
+                onPressed: () => setState(() => _searching = !_searching),
+                icon: const Icon(Icons.search_rounded),
+              ),
+              IconButton(
+                onPressed: _showSafetyMenu,
+                icon: const Icon(Icons.more_vert_rounded),
+              ),
+            ],
+          ),
+          body: ChatBackdrop(
+            child: _loading
+                ? const Center(child: CircularProgressIndicator(color: _accent))
+                : _error != null
+                ? Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Text(
+                        _error!,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(color: Colors.white70),
+                      ),
+                    ),
+                  )
+                : StreamBuilder<ChatThread?>(
+                    stream: _threadStream,
+                    builder: (context, threadSnapshot) {
+                      final thread = threadSnapshot.data;
+                      _currentThread = thread;
+                      if (threadSnapshot.hasError)
+                        return const Center(
+                          child: Text('Bu sohbete erişimin yok.'),
+                        );
+                      return Column(
+                        children: [
+                          _searchBar(),
+                          if (thread?.pinnedMessageId != null)
+                            StreamBuilder<
+                              DocumentSnapshot<Map<String, dynamic>>
+                            >(
+                              stream: FirebaseFirestore.instance
+                                  .doc(
+                                    'chat_threads/$_threadId/messages/${thread!.pinnedMessageId}',
+                                  )
+                                  .snapshots(),
+                              builder: (context, snap) => ListTile(
+                                dense: true,
+                                leading: const Icon(Icons.push_pin_outlined),
+                                title: Text(
+                                  (snap.data?.data()?['text'] ??
+                                          'Sabitlenmiş mesaj')
+                                      .toString(),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ),
+                          Expanded(
+                            child: StreamBuilder<List<ChatMessage>>(
+                              stream: _messagesStream,
+                              builder: (context, snapshot) {
+                                if (snapshot.connectionState ==
+                                        ConnectionState.waiting &&
+                                    !snapshot.hasData) {
+                                  return const Center(
+                                    child: CircularProgressIndicator(
+                                      color: _accent,
+                                    ),
+                                  );
+                                }
+                                if (snapshot.hasError) {
+                                  return Center(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(24),
+                                      child: Text(
+                                        'Mesajlar yüklenemedi.\n${snapshot.error}',
+                                        textAlign: TextAlign.center,
+                                        style: const TextStyle(
+                                          color: Colors.white60,
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                }
+                                final allMessages =
+                                    (snapshot.data ?? const <ChatMessage>[])
+                                        .where(
+                                          (m) =>
+                                              !_hiddenIds.contains(m.id) &&
+                                              !_blockedIds.contains(m.senderId),
+                                        )
+                                        .toList();
+                                _markReadFromMessages(allMessages, myId);
+                                final query = _searchController.text
+                                    .trim()
+                                    .toLowerCase();
+                                final messages = query.isEmpty
+                                    ? allMessages
+                                    : allMessages
+                                          .where((message) {
+                                            final haystack =
+                                                '${message.text} ${message.sharedTitle ?? ''}'
+                                                    .toLowerCase();
+                                            return haystack.contains(query);
+                                          })
+                                          .toList(growable: false);
+
+                                if (messages.isEmpty) {
+                                  return Center(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(28),
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            query.isEmpty
+                                                ? Icons.forum_outlined
+                                                : Icons.search_off_rounded,
+                                            size: 44,
+                                            color: Colors.white24,
+                                          ),
+                                          const SizedBox(height: 12),
+                                          Text(
+                                            query.isEmpty
+                                                ? 'İlk mesajı gönder'
+                                                : 'Eşleşen mesaj yok',
+                                            style: const TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w900,
+                                            ),
+                                          ),
+                                          if (query.isEmpty) ...[
+                                            const SizedBox(height: 5),
+                                            const Text(
+                                              'Fotoğraf, sesli mesaj ve içerik paylaşabilirsin.',
+                                              textAlign: TextAlign.center,
+                                              style: TextStyle(
+                                                color: Colors.white38,
+                                              ),
+                                            ),
+                                          ],
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                }
+
+                                return ListView.builder(
+                                  reverse: true,
+                                  keyboardDismissBehavior:
+                                      ScrollViewKeyboardDismissBehavior.onDrag,
+                                  padding: const EdgeInsets.fromLTRB(
+                                    11,
+                                    13,
+                                    11,
+                                    9,
+                                  ),
+                                  itemCount: messages.length,
+                                  itemBuilder: (context, index) {
+                                    final message = messages[index];
+                                    final mine = message.senderId == myId;
+                                    final removed =
+                                        message.deleted ||
+                                        (thread?.deletedMessageIds.contains(
+                                              message.id,
+                                            ) ??
+                                            false);
+                                    final reactions =
+                                        thread?.messageReactions[message.id] ??
+                                        message.reactions;
+                                    return KeyedSubtree(
+                                      key: ValueKey(
+                                        'chat-message-${message.id}',
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.stretch,
+                                        children: [
+                                          if (thread?.isGroup == true && !mine)
+                                            Padding(
+                                              padding: const EdgeInsets.only(
+                                                left: 8,
+                                                top: 6,
+                                              ),
+                                              child: Text(
+                                                message.senderName,
+                                                style: const TextStyle(
+                                                  color: _accent,
+                                                  fontSize: 11,
+                                                ),
+                                              ),
+                                            ),
+                                          _messageBubble(
+                                            message: message,
+                                            mine: mine,
+                                            seen:
+                                                mine &&
+                                                _isSeen(message, thread),
+                                            delivered:
+                                                mine &&
+                                                message.createdAt != null &&
+                                                (thread?.memberIds
+                                                        .where(
+                                                          (id) => id != myId,
+                                                        )
+                                                        .any(
+                                                          (id) =>
+                                                              thread!.lastDeliveredAt[id] !=
+                                                                  null &&
+                                                              !thread
+                                                                  .lastDeliveredAt[id]!
+                                                                  .isBefore(
+                                                                    message
+                                                                        .createdAt!,
+                                                                  ),
+                                                        ) ??
+                                                    false),
+                                            removed: removed,
+                                            reactions: reactions,
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  },
+                                );
+                              },
+                            ),
+                          ),
+                          _typingIndicator(thread),
+                          if (thread?.requestStatus == 'pending')
+                            _requestBanner(thread!, myId),
+                          if (thread?.requestStatus == 'rejected')
+                            const Padding(
+                              padding: EdgeInsets.all(20),
+                              child: Text('Bu mesaj isteği kabul edilmedi.'),
+                            )
+                          else if (thread?.requestStatus != 'pending' ||
+                              thread?.requestRecipientId != myId)
+                            _composer(),
+                        ],
+                      );
+                    },
+                  ),
+          ),
+        ),
+      ),
+    );
   }
 }
-

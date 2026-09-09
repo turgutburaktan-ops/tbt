@@ -1,3 +1,4 @@
+import 'tbt_dialog.dart';
 import 'shared_post_card.dart';
 import '../screens/post_deep_link_screen.dart';
 
@@ -561,9 +562,9 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
 
   Future<void> _delete() async {
     _pause();
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showTbtDialog<bool>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
+      builder: (dialogContext) => TbtDialog(
         title: const Text('Story silinsin mi?'),
         content: const Text(
           'Bu Story aktif akıştan ve arşivden kalıcı olarak silinecek.',

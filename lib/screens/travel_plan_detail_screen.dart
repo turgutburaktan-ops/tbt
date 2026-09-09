@@ -1,3 +1,5 @@
+import '../widgets/tbt_dialog.dart';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -37,9 +39,9 @@ class _TravelPlanDetailScreenState extends State<TravelPlanDetailScreen> {
   Future<void> _renamePlan() async {
     if (!_owned) return;
     final controller = TextEditingController(text: _title);
-    final value = await showDialog<String>(
+    final value = await showTbtDialog<String>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
+      builder: (dialogContext) => TbtDialog(
         title: const Text('Rota adını değiştir'),
         content: TextField(
           controller: controller,
@@ -70,9 +72,9 @@ class _TravelPlanDetailScreenState extends State<TravelPlanDetailScreen> {
     final labelController = TextEditingController(
       text: (current['label'] ?? '').toString(),
     );
-    final continueToMap = await showDialog<bool>(
+    final continueToMap = await showTbtDialog<bool>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
+      builder: (dialogContext) => TbtDialog(
         title: const Text('Buluşma noktası'),
         content: TextField(
           controller: labelController,
@@ -125,7 +127,9 @@ class _TravelPlanDetailScreenState extends State<TravelPlanDetailScreen> {
     final longitude = (point['longitude'] as num?)?.toDouble();
     if (latitude == null || longitude == null) return;
     await launchUrl(
-      Uri.parse('https://www.google.com/maps/search/?api=1&query=$latitude,$longitude'),
+      Uri.parse(
+        'https://www.google.com/maps/search/?api=1&query=$latitude,$longitude',
+      ),
       mode: LaunchMode.externalApplication,
     );
   }
@@ -185,7 +189,9 @@ class _TravelPlanDetailScreenState extends State<TravelPlanDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final member = plan.memberIds.contains(FirebaseAuth.instance.currentUser?.uid);
+    final member = plan.memberIds.contains(
+      FirebaseAuth.instance.currentUser?.uid,
+    );
     return DefaultTabController(
       length: member ? 3 : 2,
       child: Scaffold(
@@ -268,186 +274,227 @@ class _TravelPlanDetailScreenState extends State<TravelPlanDetailScreen> {
         return ListView(
           padding: const EdgeInsets.fromLTRB(14, 14, 14, 28),
           children: [
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            gradient: AppColors.subtleGradient,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: AppColors.borderAccent),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                gradient: AppColors.subtleGradient,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: AppColors.borderAccent),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: Text(
-                      _title,
-                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          _title,
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                      ),
+                      if (_public)
+                        IconButton(
+                          tooltip: 'Sohbete gönder',
+                          icon: const Icon(Icons.send_outlined),
+                          onPressed: () => shareCardToChat(
+                            context,
+                            sharedType: 'route',
+                            sharedId: plan.id,
+                            title: _title,
+                          ),
+                        ),
+                      if (_owned)
+                        IconButton(
+                          tooltip: 'Rota adını değiştir',
+                          onPressed: _renamePlan,
+                          icon: const Icon(Icons.edit_outlined),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    '${start.day.toString().padLeft(2, '0')}.${start.month.toString().padLeft(2, '0')}.${start.year} • ${start.hour.toString().padLeft(2, '0')}:${start.minute.toString().padLeft(2, '0')}',
+                    style: const TextStyle(color: AppColors.textMuted),
+                  ),
+                  const SizedBox(height: 14),
+                  Wrap(
+                    spacing: 16,
+                    runSpacing: 10,
+                    children: [
+                      _Metric(
+                        Icons.route_rounded,
+                        '${plan.distanceKm.toStringAsFixed(1)} km',
+                      ),
+                      _Metric(
+                        Icons.schedule_rounded,
+                        '${plan.travelMinutes} dk yol',
+                      ),
+                      _Metric(
+                        Icons.payments_outlined,
+                        '≈ ${plan.estimatedBudget} TL',
+                      ),
+                      if (plan.weatherSummary.isNotEmpty)
+                        _Metric(Icons.cloud_outlined, plan.weatherSummary),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 14),
+            Card(
+              child: ListTile(
+                leading: const Icon(Icons.handshake_outlined),
+                title: Text(
+                  hasPoint
+                      ? (point['label'] ?? 'Buluşma noktası').toString()
+                      : 'Buluşma noktası belirle',
+                  style: const TextStyle(fontWeight: FontWeight.w900),
+                ),
+                subtitle: Text(
+                  hasPoint
+                      ? 'Haritada görmek için karta dokun'
+                      : 'Plan başlamadan önce buluşacağınız yeri seçin',
+                ),
+                onTap: hasPoint
+                    ? () => _openMeetingPoint(point)
+                    : () => _pickMeetingPoint(point),
+                trailing: _owned
+                    ? PopupMenuButton<String>(
+                        onSelected: (value) {
+                          if (value == 'edit') _pickMeetingPoint(point);
+                          if (value == 'remove') _removeMeetingPoint();
+                        },
+                        itemBuilder: (_) => [
+                          const PopupMenuItem(
+                            value: 'edit',
+                            child: Text('Değiştir'),
+                          ),
+                          if (hasPoint)
+                            const PopupMenuItem(
+                              value: 'remove',
+                              child: Text('Kaldır'),
+                            ),
+                        ],
+                      )
+                    : const Icon(Icons.open_in_new_rounded),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                const Expanded(
+                  child: Text(
+                    'Rota sıralaması',
+                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.w900),
+                  ),
+                ),
+                if (_owned)
+                  const Text(
+                    'Sürükle • düzenle • sil',
+                    style: TextStyle(color: AppColors.textMuted, fontSize: 11),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            if (_owned)
+              ReorderableListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: stops.length,
+                onReorder: (oldIndex, newIndex) async {
+                  if (newIndex > oldIndex) newIndex--;
+                  final reordered = List<Map<String, dynamic>>.from(stops);
+                  final moved = reordered.removeAt(oldIndex);
+                  reordered.insert(newIndex, moved);
+                  await TravelPlanService.instance.updateStops(
+                    plan.id,
+                    reordered,
+                  );
+                },
+                itemBuilder: (context, index) => Card(
+                  key: ValueKey('${stops[index]['id']}_$index'),
+                  margin: const EdgeInsets.only(bottom: 6),
+                  child: ListTile(
+                    leading: CircleAvatar(child: Text('${index + 1}')),
+                    title: Text(stops[index]['name'].toString()),
+                    subtitle: Text(
+                      index == 0 ? 'Başlangıç durağı' : 'Sonraki durak',
+                    ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          tooltip: 'Rotadan kaldır',
+                          onPressed: stops.length <= 1
+                              ? null
+                              : () async {
+                                  final updated =
+                                      List<Map<String, dynamic>>.from(stops)
+                                        ..removeAt(index);
+                                  await TravelPlanService.instance.updateStops(
+                                    plan.id,
+                                    updated,
+                                  );
+                                },
+                          icon: const Icon(Icons.delete_outline_rounded),
+                        ),
+                        ReorderableDragStartListener(
+                          index: index,
+                          child: const Padding(
+                            padding: EdgeInsets.all(10),
+                            child: Icon(Icons.drag_handle_rounded),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  if (_public) IconButton(tooltip: 'Sohbete gönder', icon: const Icon(Icons.send_outlined), onPressed: () => shareCardToChat(context, sharedType: 'route', sharedId: plan.id, title: _title)),
-                  if (_owned)
-                    IconButton(
-                      tooltip: 'Rota adını değiştir',
-                      onPressed: _renamePlan,
-                      icon: const Icon(Icons.edit_outlined),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 6),
-              Text(
-                '${start.day.toString().padLeft(2, '0')}.${start.month.toString().padLeft(2, '0')}.${start.year} • ${start.hour.toString().padLeft(2, '0')}:${start.minute.toString().padLeft(2, '0')}',
-                style: const TextStyle(color: AppColors.textMuted),
-              ),
-              const SizedBox(height: 14),
-              Wrap(
-                spacing: 16,
-                runSpacing: 10,
-                children: [
-                  _Metric(Icons.route_rounded, '${plan.distanceKm.toStringAsFixed(1)} km'),
-                  _Metric(Icons.schedule_rounded, '${plan.travelMinutes} dk yol'),
-                  _Metric(Icons.payments_outlined, '≈ ${plan.estimatedBudget} TL'),
-                  if (plan.weatherSummary.isNotEmpty)
-                    _Metric(Icons.cloud_outlined, plan.weatherSummary),
-                ],
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 14),
-        Card(
-          child: ListTile(
-            leading: const Icon(Icons.handshake_outlined),
-            title: Text(
-              hasPoint
-                  ? (point['label'] ?? 'Buluşma noktası').toString()
-                  : 'Buluşma noktası belirle',
-              style: const TextStyle(fontWeight: FontWeight.w900),
-            ),
-            subtitle: Text(
-              hasPoint
-                  ? 'Haritada görmek için karta dokun'
-                  : 'Plan başlamadan önce buluşacağınız yeri seçin',
-            ),
-            onTap: hasPoint
-                ? () => _openMeetingPoint(point)
-                : () => _pickMeetingPoint(point),
-            trailing: _owned
-                ? PopupMenuButton<String>(
-                    onSelected: (value) {
-                      if (value == 'edit') _pickMeetingPoint(point);
-                      if (value == 'remove') _removeMeetingPoint();
-                    },
-                    itemBuilder: (_) => [
-                      const PopupMenuItem(value: 'edit', child: Text('Değiştir')),
-                      if (hasPoint)
-                        const PopupMenuItem(value: 'remove', child: Text('Kaldır')),
-                    ],
-                  )
-                : const Icon(Icons.open_in_new_rounded),
-          ),
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            const Expanded(
-              child: Text(
-                'Rota sıralaması',
-                style: TextStyle(fontSize: 17, fontWeight: FontWeight.w900),
-              ),
-            ),
-            if (_owned)
-              const Text(
-                'Sürükle • düzenle • sil',
-                style: TextStyle(color: AppColors.textMuted, fontSize: 11),
-              ),
-          ],
-        ),
-        const SizedBox(height: 6),
-        if (_owned)
-          ReorderableListView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: stops.length,
-            onReorder: (oldIndex, newIndex) async {
-              if (newIndex > oldIndex) newIndex--;
-              final reordered = List<Map<String, dynamic>>.from(stops);
-              final moved = reordered.removeAt(oldIndex);
-              reordered.insert(newIndex, moved);
-              await TravelPlanService.instance.updateStops(plan.id, reordered);
-            },
-            itemBuilder: (context, index) => Card(
-              key: ValueKey('${stops[index]['id']}_$index'),
-              margin: const EdgeInsets.only(bottom: 6),
-              child: ListTile(
-                leading: CircleAvatar(child: Text('${index + 1}')),
-                title: Text(stops[index]['name'].toString()),
-                subtitle: Text(index == 0 ? 'Başlangıç durağı' : 'Sonraki durak'),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      tooltip: 'Rotadan kaldır',
-                      onPressed: stops.length <= 1
-                          ? null
-                          : () async {
-                              final updated = List<Map<String, dynamic>>.from(stops)
-                                ..removeAt(index);
-                              await TravelPlanService.instance.updateStops(plan.id, updated);
-                            },
-                      icon: const Icon(Icons.delete_outline_rounded),
-                    ),
-                    ReorderableDragStartListener(
-                      index: index,
-                      child: const Padding(
-                        padding: EdgeInsets.all(10),
-                        child: Icon(Icons.drag_handle_rounded),
-                      ),
-                    ),
-                  ],
+                ),
+              )
+            else
+              ...List.generate(
+                stops.length,
+                (index) => ListTile(
+                  leading: CircleAvatar(child: Text('${index + 1}')),
+                  title: Text(stops[index]['name'].toString()),
+                  subtitle: Text(
+                    index == 0 ? 'Başlangıç durağı' : 'Sonraki durak',
+                  ),
                 ),
               ),
+            const SizedBox(height: 12),
+            FilledButton.icon(
+              onPressed: _openRoute,
+              icon: const Icon(Icons.map_rounded),
+              label: const Text('Rotayı Haritada Aç'),
             ),
-          )
-        else
-          ...List.generate(
-            stops.length,
-            (index) => ListTile(
-              leading: CircleAvatar(child: Text('${index + 1}')),
-              title: Text(stops[index]['name'].toString()),
-              subtitle: Text(index == 0 ? 'Başlangıç durağı' : 'Sonraki durak'),
+            const SizedBox(height: 8),
+            FilledButton.tonalIcon(
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => _LiveTripScreen(plan: plan)),
+              ),
+              icon: const Icon(Icons.navigation_rounded),
+              label: const Text('Canlı Gezi Modunu Başlat'),
             ),
-          ),
-        const SizedBox(height: 12),
-        FilledButton.icon(
-          onPressed: _openRoute,
-          icon: const Icon(Icons.map_rounded),
-          label: const Text('Rotayı Haritada Aç'),
-        ),
-        const SizedBox(height: 8),
-        FilledButton.tonalIcon(
-          onPressed: () => Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => _LiveTripScreen(plan: plan)),
-          ),
-          icon: const Icon(Icons.navigation_rounded),
-          label: const Text('Canlı Gezi Modunu Başlat'),
-        ),
-        const SizedBox(height: 8),
-        OutlinedButton.icon(
-          onPressed: _savingOffline ? null : _saveOffline,
-          icon: const Icon(Icons.offline_pin_outlined),
-          label: const Text('Çevrimdışı Kullanmak İçin İndir'),
-        ),
-        if (_owned)
-          SwitchListTile(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 4),
-            value: _public,
-            onChanged: _setPublic,
-            title: const Text('Hazır rotalarda yayınla'),
-            subtitle: const Text('Diğer kullanıcılar rotanı bulup puanlayabilir.'),
-          ),
+            const SizedBox(height: 8),
+            OutlinedButton.icon(
+              onPressed: _savingOffline ? null : _saveOffline,
+              icon: const Icon(Icons.offline_pin_outlined),
+              label: const Text('Çevrimdışı Kullanmak İçin İndir'),
+            ),
+            if (_owned)
+              SwitchListTile(
+                contentPadding: const EdgeInsets.symmetric(horizontal: 4),
+                value: _public,
+                onChanged: _setPublic,
+                title: const Text('Hazır rotalarda yayınla'),
+                subtitle: const Text(
+                  'Diğer kullanıcılar rotanı bulup puanlayabilir.',
+                ),
+              ),
           ],
         );
       },
@@ -532,8 +579,7 @@ class _PlanGroupTabState extends State<_PlanGroupTab> {
           city: widget.plan.city,
           addressLabel: _proposal.text.trim(),
           title: 'Durak Konumunu Seç',
-          instruction:
-              'Eklemek istediğin durağın tam noktasına dokun. Pini sürükleyerek düzeltebilirsin.',
+          instruction: 'Eklemek istediğin durağın tam noktasına dokun. Pini sürükleyerek düzeltebilirsin.',
         ),
       ),
     );
@@ -599,9 +645,8 @@ class _PlanGroupTabState extends State<_PlanGroupTab> {
       proposalId,
     );
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$text rotaya eklendi.')),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('$text rotaya eklendi.')));
     }
   }
 
@@ -626,7 +671,10 @@ class _PlanGroupTabState extends State<_PlanGroupTab> {
                 ),
               ),
             ),
-            IconButton(onPressed: _addProposal, icon: const Icon(Icons.add_circle_rounded)),
+            IconButton(
+              onPressed: _addProposal,
+              icon: const Icon(Icons.add_circle_rounded),
+            ),
           ],
         ),
         if (_suggestions.isNotEmpty)
@@ -656,7 +704,9 @@ class _PlanGroupTabState extends State<_PlanGroupTab> {
             ),
           ),
         StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-          stream: TravelPlanCollaborationService.instance.proposals(widget.plan.id),
+          stream: TravelPlanCollaborationService.instance.proposals(
+            widget.plan.id,
+          ),
           builder: (_, snapshot) {
             final docs = snapshot.data?.docs ?? const [];
             return Column(
@@ -665,9 +715,13 @@ class _PlanGroupTabState extends State<_PlanGroupTab> {
                 final voters = (data['voterIds'] as List<dynamic>? ?? const [])
                     .map((id) => id.toString())
                     .toList();
-                final voted = voters.contains(FirebaseAuth.instance.currentUser?.uid);
+                final voted = voters.contains(
+                  FirebaseAuth.instance.currentUser?.uid,
+                );
                 final accepted = data['status'] == 'accepted';
-                final owned = widget.plan.ownerId == FirebaseAuth.instance.currentUser?.uid;
+                final owned =
+                    widget.plan.ownerId ==
+                    FirebaseAuth.instance.currentUser?.uid;
                 return Card(
                   child: ListTile(
                     title: Text((data['text'] ?? '').toString()),
@@ -678,11 +732,13 @@ class _PlanGroupTabState extends State<_PlanGroupTab> {
                         TextButton.icon(
                           onPressed: voted
                               ? null
-                              : () => TravelPlanCollaborationService.instance.vote(
-                                    widget.plan.id,
-                                    doc.id,
-                                  ),
-                          icon: Icon(voted ? Icons.thumb_up_rounded : Icons.thumb_up_outlined),
+                              : () => TravelPlanCollaborationService.instance
+                                    .vote(widget.plan.id, doc.id),
+                          icon: Icon(
+                            voted
+                                ? Icons.thumb_up_rounded
+                                : Icons.thumb_up_outlined,
+                          ),
                           label: Text('${voters.length}'),
                         ),
                         if (owned && !accepted)
@@ -709,7 +765,9 @@ class _PlanGroupTabState extends State<_PlanGroupTab> {
         SizedBox(
           height: 300,
           child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-            stream: TravelPlanCollaborationService.instance.messages(widget.plan.id),
+            stream: TravelPlanCollaborationService.instance.messages(
+              widget.plan.id,
+            ),
             builder: (_, snapshot) {
               final docs = snapshot.data?.docs ?? const [];
               if (docs.isEmpty) {
@@ -720,14 +778,20 @@ class _PlanGroupTabState extends State<_PlanGroupTab> {
                 itemCount: docs.length,
                 itemBuilder: (_, index) {
                   final data = docs[index].data();
-                  final mine = data['senderId'] == FirebaseAuth.instance.currentUser?.uid;
+                  final mine =
+                      data['senderId'] ==
+                      FirebaseAuth.instance.currentUser?.uid;
                   return Align(
-                    alignment: mine ? Alignment.centerRight : Alignment.centerLeft,
+                    alignment: mine
+                        ? Alignment.centerRight
+                        : Alignment.centerLeft,
                     child: Container(
                       margin: const EdgeInsets.symmetric(vertical: 4),
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: mine ? AppColors.surfaceElevated : AppColors.surface,
+                        color: mine
+                            ? AppColors.surfaceElevated
+                            : AppColors.surface,
                         borderRadius: BorderRadius.circular(13),
                       ),
                       child: Column(
@@ -736,7 +800,10 @@ class _PlanGroupTabState extends State<_PlanGroupTab> {
                           if (!mine)
                             Text(
                               (data['senderName'] ?? '').toString(),
-                              style: const TextStyle(fontSize: 10, color: AppColors.cyan),
+                              style: const TextStyle(
+                                fontSize: 10,
+                                color: AppColors.cyan,
+                              ),
                             ),
                           Text((data['text'] ?? '').toString()),
                         ],
@@ -750,7 +817,12 @@ class _PlanGroupTabState extends State<_PlanGroupTab> {
         ),
         Row(
           children: [
-            Expanded(child: TextField(controller: _message, decoration: const InputDecoration(hintText: 'Mesaj yaz'))),
+            Expanded(
+              child: TextField(
+                controller: _message,
+                decoration: const InputDecoration(hintText: 'Mesaj yaz'),
+              ),
+            ),
             IconButton(onPressed: _send, icon: const Icon(Icons.send_rounded)),
           ],
         ),
@@ -800,14 +872,21 @@ class _PlanMemoriesTab extends StatelessWidget {
           itemBuilder: (_, index) {
             final doc = docs[index];
             final data = {...doc.data(), 'id': doc.id};
-            final image = (data['thumbnailUrl'] ?? data['imageUrl'] ?? '').toString();
-            final path = (data['thumbnailStoragePath'] ?? data['storagePath'] ?? '').toString();
+            final image = (data['thumbnailUrl'] ?? data['imageUrl'] ?? '')
+                .toString();
+            final path =
+                (data['thumbnailStoragePath'] ?? data['storagePath'] ?? '')
+                    .toString();
             return InkWell(
               onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => PostDetailScreen(post: data)),
               ),
-              child: FirebaseMediaImage(imageUrl: image, storagePath: path, fit: BoxFit.cover),
+              child: FirebaseMediaImage(
+                imageUrl: image,
+                storagePath: path,
+                fit: BoxFit.cover,
+              ),
             );
           },
         );
@@ -844,13 +923,13 @@ class _LiveTripScreenState extends State<_LiveTripScreen> {
       }
     } catch (_) {}
     await TravelPlanCollaborationService.instance.setLiveState(
-        planId: widget.plan.id,
-        stopIndex: _index,
-        stopName: widget.plan.spotNames[_index],
-        active: active,
-        latitude: position?.latitude,
-        longitude: position?.longitude,
-      );
+      planId: widget.plan.id,
+      stopIndex: _index,
+      stopName: widget.plan.spotNames[_index],
+      active: active,
+      latitude: position?.latitude,
+      longitude: position?.longitude,
+    );
   }
 
   @override
@@ -865,13 +944,24 @@ class _LiveTripScreenState extends State<_LiveTripScreen> {
           children: [
             LinearProgressIndicator(value: (_index + 1) / stops.length),
             const SizedBox(height: 28),
-            const Text('ŞU ANKİ DURAK', style: TextStyle(color: AppColors.textMuted, fontSize: 11)),
+            const Text(
+              'ŞU ANKİ DURAK',
+              style: TextStyle(color: AppColors.textMuted, fontSize: 11),
+            ),
             const SizedBox(height: 8),
-            Text(stops[_index], textAlign: TextAlign.center, style: const TextStyle(fontSize: 25, fontWeight: FontWeight.w900)),
+            Text(
+              stops[_index],
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 25, fontWeight: FontWeight.w900),
+            ),
             const SizedBox(height: 10),
             Text('${_index + 1} / ${stops.length}'),
             const SizedBox(height: 24),
-            FilledButton.icon(onPressed: () => _update(true), icon: const Icon(Icons.location_on_rounded), label: const Text('Buradayım')),
+            FilledButton.icon(
+              onPressed: () => _update(true),
+              icon: const Icon(Icons.location_on_rounded),
+              label: const Text('Buradayım'),
+            ),
             const SizedBox(height: 8),
             if (_index < stops.length - 1)
               OutlinedButton.icon(
@@ -883,10 +973,15 @@ class _LiveTripScreenState extends State<_LiveTripScreen> {
                 label: const Text('Sonraki Durağa Geç'),
               ),
             const SizedBox(height: 26),
-            const Align(alignment: Alignment.centerLeft, child: Text('Gruptakiler', style: _titleStyle)),
+            const Align(
+              alignment: Alignment.centerLeft,
+              child: Text('Gruptakiler', style: _titleStyle),
+            ),
             Expanded(
               child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-                stream: TravelPlanCollaborationService.instance.liveStates(widget.plan.id),
+                stream: TravelPlanCollaborationService.instance.liveStates(
+                  widget.plan.id,
+                ),
                 builder: (_, snapshot) {
                   final docs = snapshot.data?.docs ?? const [];
                   return ListView(
@@ -895,8 +990,14 @@ class _LiveTripScreenState extends State<_LiveTripScreen> {
                       final latitude = (data['latitude'] as num?)?.toDouble();
                       final longitude = (data['longitude'] as num?)?.toDouble();
                       return ListTile(
-                        leading: Icon(data['active'] == true ? Icons.location_on_rounded : Icons.location_off_outlined),
-                        title: Text((data['userName'] ?? 'TBT kullanıcısı').toString()),
+                        leading: Icon(
+                          data['active'] == true
+                              ? Icons.location_on_rounded
+                              : Icons.location_off_outlined,
+                        ),
+                        title: Text(
+                          (data['userName'] ?? 'TBT kullanıcısı').toString(),
+                        ),
                         subtitle: Text((data['stopName'] ?? '').toString()),
                         trailing: latitude == null || longitude == null
                             ? null

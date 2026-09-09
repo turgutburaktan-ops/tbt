@@ -1,3 +1,5 @@
+import '../widgets/tbt_dialog.dart';
+
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -102,10 +104,10 @@ class _BusinessHubScreenState extends State<BusinessHubScreen> {
     var category = 'cafe';
     var loading = false, locating = false;
     double? latitude, longitude;
-    await showDialog<void>(
+    await showTbtDialog<void>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setD) => AlertDialog(
+        builder: (context, setD) => TbtDialog(
           title: const Text('İşletmem listede yok'),
           content: SingleChildScrollView(
             child: Column(

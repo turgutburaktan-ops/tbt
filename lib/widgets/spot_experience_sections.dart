@@ -1,3 +1,5 @@
+import 'tbt_dialog.dart';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -251,6 +253,8 @@ class TogetherGoSection extends StatelessWidget {
           Future<void> chooseDateTime() async {
             final date = await showDatePicker(
               context: context,
+              builder: (context, child) =>
+                  Theme(data: tbtDialogTheme(Theme.of(context)), child: child!),
               initialDate: selected,
               firstDate: DateTime.now(),
               lastDate: DateTime.now().add(const Duration(days: 90)),
@@ -259,6 +263,8 @@ class TogetherGoSection extends StatelessWidget {
 
             final time = await showTimePicker(
               context: context,
+              builder: (context, child) =>
+                  Theme(data: tbtDialogTheme(Theme.of(context)), child: child!),
               initialTime: TimeOfDay.fromDateTime(selected),
             );
             if (time == null) return;

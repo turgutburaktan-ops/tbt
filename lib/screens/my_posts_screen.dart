@@ -1,3 +1,5 @@
+import '../widgets/tbt_dialog.dart';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -221,10 +223,10 @@ class MyPostsScreen extends StatelessWidget {
   }
 
   Future<void> _confirmDelete(BuildContext context, String documentId) async {
-    final shouldDelete = await showDialog<bool>(
+    final shouldDelete = await showTbtDialog<bool>(
       context: context,
       builder: (dialogContext) {
-        return AlertDialog(
+        return TbtDialog(
           backgroundColor: const Color(0xFF161B22),
           title: const Text(
             'Çekimi sil',

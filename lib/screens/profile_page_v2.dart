@@ -1,3 +1,4 @@
+import '../widgets/tbt_dialog.dart';
 import '../widgets/profile_sharing_section.dart';
 import '../services/social_event_service.dart';
 import '../widgets/profile_reservations.dart';
@@ -839,9 +840,9 @@ class _ProfileEventsSection extends StatelessWidget {
     String eventId,
     String title,
   ) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showTbtDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => TbtDialog(
         title: const Text('Etkinliği sil?'),
         content: Text(
           '“$title” iptal edilecek ve profilinden kaldırılacak. Katılımcılara iptal bilgisi gönderilecek.',

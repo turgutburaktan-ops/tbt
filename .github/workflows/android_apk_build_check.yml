@@ -93,6 +93,8 @@ jobs:
           ! grep -q 'CI_DUMMY_MAPS_KEY' android/app/src/main/AndroidManifest.xml
           main_activity=$(find android/app/src/main/kotlin -name MainActivity.kt -print -quit)
           grep -q '^package com.tbt.social$' "$main_activity"
+      - name: Configure notification replies
+        run: python3 tool/configure_notifications.py android
       - name: Build debug APK
         run: flutter build apk --debug --no-pub
       - name: Verify APK signing identity

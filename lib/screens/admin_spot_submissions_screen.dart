@@ -1,3 +1,5 @@
+import '../widgets/tbt_dialog.dart';
+
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/material.dart';
 
@@ -55,9 +57,9 @@ class _AdminSpotSubmissionsScreenState
     String reason = '';
     if (decision != 'approved') {
       final controller = TextEditingController();
-      final ok = await showDialog<bool>(
+      final ok = await showTbtDialog<bool>(
         context: context,
-        builder: (context) => AlertDialog(
+        builder: (context) => TbtDialog(
           title: Text(
             decision == 'duplicate' ? 'Mükerrer işaretle' : 'Öneriyi reddet',
           ),

@@ -79,10 +79,16 @@ async function recordMetric(db, uid, postId, metric) {
     const receipt = db.doc(`creator_metric_receipts/${key(uid, postId, metric, day())}`);
     if ((await tx.get(receipt)).exists) return {recorded: false};
     const limit = await quota(db, uid, 'metrics', tx, 500);
+    const tracking = db.doc(`creator_stats/${data.ownerId}`);
+    const trackingSnap = await tx.get(tracking);
     tx.create(receipt, {userId:uid, createdAt: FieldValue.serverTimestamp()});
     tx.set(db.doc(`creator_stats/${data.ownerId}/content/${postId}`), {
       [metric]: FieldValue.increment(1), updatedAt: FieldValue.serverTimestamp(),
     }, {merge:true});
+    if (!trackingSnap.data()?.dailyTrackingSince) tx.set(tracking, {dailyTrackingSince:FieldValue.serverTimestamp()}, {merge:true});
+    for (const path of [`creator_stats/${data.ownerId}/daily/${day()}`, `creator_stats/${data.ownerId}/content/${postId}/daily/${day()}`]) {
+      tx.set(db.doc(path), {day:day(),[metric]:FieldValue.increment(1)}, {merge:true});
+    }
     spend(tx, limit, uid);
     return {recorded: true};
   });

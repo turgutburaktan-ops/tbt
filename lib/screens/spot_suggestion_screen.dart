@@ -1,3 +1,5 @@
+import '../widgets/tbt_dialog.dart';
+
 import 'dart:io';
 
 import 'package:cloud_functions/cloud_functions.dart';
@@ -138,9 +140,9 @@ class _SpotSuggestionScreenState extends State<SpotSuggestionScreen> {
       final data = Map<String, dynamic>.from(result.data as Map);
       if (!mounted) return;
       final duplicate = data['duplicateWarning'] == true;
-      await showDialog<void>(
+      await showTbtDialog<void>(
         context: context,
-        builder: (context) => AlertDialog(
+        builder: (context) => TbtDialog(
           title: const Text('Önerin alındı'),
           content: Text(
             duplicate
