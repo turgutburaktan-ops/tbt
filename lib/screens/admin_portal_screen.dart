@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import '../services/admin_access.dart';
 import 'admin_businesses_v2_screen.dart';
+import 'admin_creator_invites_screen.dart';
 import 'admin_music_screen.dart';
 import 'admin_broadcast_screen.dart';
 
@@ -180,6 +181,14 @@ class _AdminPortalScreenState extends State<AdminPortalScreen> {
             style: TextStyle(fontSize: 19, fontWeight: FontWeight.w900),
           ),
           const SizedBox(height: 9),
+          _HeroAction(
+            icon: Icons.auto_awesome_rounded,
+            title: 'Creator Davetleri',
+            subtitle: 'Influencerlar için sınırlı Creator kodu ve özel davet linki oluştur.',
+            button: 'Creator Daveti Oluştur',
+            onTap: () => _open(const AdminCreatorInvitesScreen()),
+          ),
+          const SizedBox(height: 10),
           _HeroAction(
             icon: Icons.campaign_rounded,
             title: 'TBT Duyurusu',
