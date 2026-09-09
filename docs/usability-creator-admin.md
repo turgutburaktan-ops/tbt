@@ -61,3 +61,5 @@ Android hızlı yanıt destekleyen yeni istemciler eylemli bildirim alır; eski 
 Mobil sürümle birlikte güncellenen Functions, Firestore ve Storage kuralları yayımlanmalıdır. Android host üretildikten sonra `tool/configure_notifications.py android` çalışır; iOS paylaşım kurulumuna bildirim kurulumu dahildir.
 
 Derleme kontrolü dışında fiziksel Android/iOS cihazda arka planda ve uygulama kapalıyken yanıt, oturum değişikliği ve çevrimdışı yeniden deneme kontrolü gerekir. Bu kod değişikliği gerçek kullanıcılara duyuru göndermez.
+
+Functions yayını mevcut Deploy Firebase Functions iş akışındaki `usability-creator` kapsamıyla veya `[usability-creator]` commit işaretiyle yapılır. Bu kapsam yalnız ilgili işlevleri günceller. Gerekli Creator indeksleri eklemeli oluşturulur; mevcut indeksler silinmez. Kurallar iş akışı Storage kurallarını da yayımlar.

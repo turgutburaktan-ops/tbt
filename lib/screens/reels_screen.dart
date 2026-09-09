@@ -401,6 +401,7 @@ class _ReelPage extends StatelessWidget {
             active: active,
             muted: false,
             audioSession: VideoAudioSession.reels,
+            showMuteControl: false,
             fit: BoxFit.contain,
           ),
         ),
@@ -569,6 +570,19 @@ class _ReelPage extends StatelessWidget {
                 label: 'Gönder',
                 onTap: () => _share(context),
               ),
+              const SizedBox(height: 14),
+              ListenableBuilder(
+                listenable: VideoAudioSession.reels,
+                builder: (context, _) => _Action(
+                  icon: VideoAudioSession.reels.muted
+                      ? Icons.volume_off_rounded
+                      : Icons.volume_up_rounded,
+                  label: VideoAudioSession.reels.muted
+                      ? 'Sesi aç'
+                      : 'Sesi kapat',
+                  onTap: VideoAudioSession.reels.toggle,
+                ),
+              ),
             ],
           ),
         ),
@@ -598,6 +612,7 @@ class _Action extends StatelessWidget {
         shape: const CircleBorder(),
         child: IconButton(
           onPressed: onTap,
+          tooltip: label,
           icon: Icon(
             icon,
             color: active ? const Color(0xFFFF4D67) : Colors.white,

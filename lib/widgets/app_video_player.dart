@@ -50,7 +50,7 @@ class AppVideoPlayer extends StatefulWidget {
   final bool autoplay, muted, loop, showControls, active;
   final double volume;
   final VideoAudioSession? audioSession;
-  final bool holdToSpeed;
+  final bool holdToSpeed, showMuteControl;
   final BoxFit fit;
   final Widget? loading, errorWidget;
   final VoidCallback? onTap;
@@ -64,6 +64,7 @@ class AppVideoPlayer extends StatefulWidget {
     this.volume = 1,
     this.audioSession,
     this.holdToSpeed = false,
+    this.showMuteControl = true,
     this.loop = true,
     this.showControls = true,
     this.active = true,
@@ -82,6 +83,7 @@ class AppVideoPlayer extends StatefulWidget {
     this.volume = 1,
     this.audioSession,
     this.holdToSpeed = false,
+    this.showMuteControl = true,
     this.loop = true,
     this.showControls = true,
     this.active = true,
@@ -353,24 +355,25 @@ class _AppVideoPlayerState extends State<AppVideoPlayer>
               ),
             ),
           ),
-        Positioned(
-          right: 10,
-          bottom: 10,
-          child: IconButton.filledTonal(
-            tooltip: _muted ? 'Sesi aç' : 'Sesi kapat',
-            onPressed: () {
-              if (widget.audioSession != null) {
-                widget.audioSession!.toggle();
-                return;
-              }
-              setState(() => _muted = !_muted);
-              _controller!.setVolume(_muted ? 0 : widget.volume.clamp(0, 1));
-            },
-            icon: Icon(
-              _muted ? Icons.volume_off_rounded : Icons.volume_up_rounded,
+        if (widget.showMuteControl)
+          Positioned(
+            right: 10,
+            bottom: 10,
+            child: IconButton.filledTonal(
+              tooltip: _muted ? 'Sesi aç' : 'Sesi kapat',
+              onPressed: () {
+                if (widget.audioSession != null) {
+                  widget.audioSession!.toggle();
+                  return;
+                }
+                setState(() => _muted = !_muted);
+                _controller!.setVolume(_muted ? 0 : widget.volume.clamp(0, 1));
+              },
+              icon: Icon(
+                _muted ? Icons.volume_off_rounded : Icons.volume_up_rounded,
+              ),
             ),
           ),
-        ),
       ],
     );
   }

@@ -2,6 +2,12 @@ name: Deploy Firebase Functions
 
 on:
   workflow_dispatch:
+    inputs:
+      scope:
+        description: 'Explicit deployment scope'
+        type: choice
+        default: commit-marker
+        options: [commit-marker, usability-creator]
   push:
     branches: [main, feature/video-v1]
     paths:
@@ -25,6 +31,8 @@ jobs:
         run: node --test functions/test/business_publication.test.js
       - name: Test music
         run: node --test functions/test/music*.test.js
+      - name: Test Creator and photo notification policies
+        run: node --test functions/test/social_publishing.test.js functions/test/push_payload.test.js functions/test/broadcast_photo.test.js
       - name: Test reservations
         run: node --test functions/test/reservation*.test.js
       - name: Install Firebase CLI
@@ -35,7 +43,7 @@ jobs:
           distribution: temurin
           java-version: '21'
       - name: Test chat collaboration against emulator
-        run: firebase emulators:exec --only firestore --project demo-tbt "node tool/test_chat_collaboration.cjs" --non-interactive
+        run: firebase emulators:exec --only firestore --project demo-tbt "node tool/test_chat_collaboration.cjs && node tool/test_social_publishing.cjs && node tool/test_usability_creator_admin.cjs" --non-interactive
       - name: Authenticate Firebase CLI
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
@@ -61,6 +69,7 @@ jobs:
         run: node functions/scripts/repair_business_publication.js dining:user_4xFEQcn0tjLktR5Cq85n
       - name: Deploy Firebase Functions
         env:
+          USABILITY_CREATOR_UPDATE: ${{ inputs.scope == 'usability-creator' || contains(github.event.head_commit.message, '[usability-creator]') }}
           ACCOUNT_CLEANUP_UPDATE: ${{ contains(github.event.head_commit.message, '[account-cleanup]') }}
           RESTORE_UPDATE: ${{ contains(github.event.head_commit.message, '[restore-update]') }}
           MUSIC_UPDATE: ${{ contains(github.event.head_commit.message, '[music-update]') }}
@@ -71,7 +80,10 @@ jobs:
           RESERVATION_UPDATE: ${{ contains(github.event.head_commit.message, '[reservation-update]') }}
           PUBLICATION_REPAIR: ${{ contains(github.event.head_commit.message, '[repair-burak-publication]') }}
         run: |
-          if [ "$CREATOR_RESTORE" = "true" ]; then
+          if [ "$USABILITY_CREATOR_UPDATE" = "true" ]; then
+            node tool/ensure_creator_indexes.cjs
+            firebase deploy --only functions:replyToNotification,functions:creatorAdmin,functions:socialPublishing,functions:creatorStudio,functions:createCreatorInvite,functions:getCreatorInvitePreview,functions:redeemCreatorInvite,functions:sendAdminBroadcast,functions:deliverAdminBroadcast,functions:pushOnNotificationCreated,functions:getMyBusinessReservations,functions:deleteAccountNow --project en-iyi-cekim-noktasi --non-interactive
+          elif [ "$CREATOR_RESTORE" = "true" ]; then
             firebase deploy --only functions:createCreatorInvite,functions:getCreatorInvitePreview,functions:redeemCreatorInvite --project en-iyi-cekim-noktasi --non-interactive
           elif [ "$ACCOUNT_CLEANUP_UPDATE" = "true" ]; then
             firebase deploy --only functions:deleteAccountNow --project en-iyi-cekim-noktasi --non-interactive
@@ -94,7 +106,7 @@ jobs:
             exit 1
           fi
       - name: Restore callable invoker access
-        if: "!contains(github.event.head_commit.message, '[creator-restore]') && !contains(github.event.head_commit.message, '[account-cleanup]') && !contains(github.event.head_commit.message, '[restore-update]') && !contains(github.event.head_commit.message, '[music-update]') && !contains(github.event.head_commit.message, '[chat-update]') && !contains(github.event.head_commit.message, '[repair-burak-publication]') && !contains(github.event.head_commit.message, '[reservation-update]') && !contains(github.event.head_commit.message, '[reservation-index]') && !contains(github.event.head_commit.message, '[preparation-update]')"
+        if: "inputs.scope != 'usability-creator' && !contains(github.event.head_commit.message, '[usability-creator]') && !contains(github.event.head_commit.message, '[creator-restore]') && !contains(github.event.head_commit.message, '[account-cleanup]') && !contains(github.event.head_commit.message, '[restore-update]') && !contains(github.event.head_commit.message, '[music-update]') && !contains(github.event.head_commit.message, '[chat-update]') && !contains(github.event.head_commit.message, '[repair-burak-publication]') && !contains(github.event.head_commit.message, '[reservation-update]') && !contains(github.event.head_commit.message, '[reservation-index]') && !contains(github.event.head_commit.message, '[preparation-update]')"
         run: |
           set -euo pipefail
           gcloud auth activate-service-account --key-file="$GOOGLE_APPLICATION_CREDENTIALS"
