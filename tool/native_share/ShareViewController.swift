@@ -31,8 +31,20 @@ final class ShareViewController: UIViewController {
         cancel.addTarget(self, action: #selector(close), for: .touchUpInside)
         let stack = UIStackView(arrangedSubviews: [title, status, caption, save, cancel])
         stack.axis = .vertical; stack.spacing = 20; stack.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(stack)
-        NSLayoutConstraint.activate([stack.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 24), stack.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -24), stack.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 30)])
+        let scroll = UIScrollView(); scroll.translatesAutoresizingMaskIntoConstraints = false
+        scroll.keyboardDismissMode = .interactive
+        view.addSubview(scroll); scroll.addSubview(stack)
+        NSLayoutConstraint.activate([
+            scroll.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor),
+            scroll.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor),
+            scroll.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            scroll.bottomAnchor.constraint(equalTo: view.keyboardLayoutGuide.topAnchor),
+            stack.leadingAnchor.constraint(equalTo: scroll.contentLayoutGuide.leadingAnchor, constant: 24),
+            stack.trailingAnchor.constraint(equalTo: scroll.contentLayoutGuide.trailingAnchor, constant: -24),
+            stack.topAnchor.constraint(equalTo: scroll.contentLayoutGuide.topAnchor, constant: 30),
+            stack.bottomAnchor.constraint(equalTo: scroll.contentLayoutGuide.bottomAnchor, constant: -24),
+            stack.widthAnchor.constraint(equalTo: scroll.frameLayoutGuide.widthAnchor, constant: -48)
+        ])
         let incoming = (extensionContext?.inputItems as? [NSExtensionItem]) ?? []
         providers = incoming.flatMap { $0.attachments ?? [] }
         caption.text = incoming.compactMap { $0.attributedContentText?.string }.joined(separator: "\n")
