@@ -31,6 +31,14 @@ const call = (uid, actionName, data = {}) => action({auth: {uid, token: {name: u
   await call('picker', 'addMembers', {threadId: picked.threadId, memberIds: ['new-member']});
   assert.equal((await db.doc(`chat_threads/${picked.threadId}`).get()).data().removedIds.includes('new-member'), false);
 
+  const full = db.doc('chat_threads/capacity-test');
+  const existingMembers = ['capacity-owner', ...Array.from({length: 48}, (_, i) => `existing-${i}`)];
+  await full.set({type: 'group', memberIds: existingMembers, adminIds: ['capacity-owner'], ownerId: 'capacity-owner'});
+  for (const id of ['last-slot-a', 'last-slot-b']) await db.doc(`users/${id}`).set({displayName: id});
+  const competing = await Promise.allSettled(['last-slot-a', 'last-slot-b'].map(id => call('capacity-owner', 'addMembers', {threadId: full.id, memberIds: [id]})));
+  assert.equal(competing.filter(result => result.status === 'fulfilled').length, 1);
+  assert.equal((await full.get()).data().memberIds.length, 50, 'concurrent additions cannot exceed capacity');
+
   const {threadId} = await call('owner', 'create', {name: 'Test gezisi'});
   const args = {threadId}, ref = db.doc(`chat_threads/${threadId}`);
   await assert.rejects(call('outsider', 'rename', {...args, name: 'Hijack'}));

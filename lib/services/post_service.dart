@@ -7,6 +7,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 
 import 'app_notification_service.dart';
+import 'external_source_url.dart';
 import 'video_media_service.dart';
 
 class PostService {
@@ -40,6 +41,7 @@ class PostService {
       'userPhotoUrl': user.photoURL ?? '',
       'userEmail': user.email ?? '',
       'caption': caption.trim(),
+      if (externalSourceUrl(caption) != null) 'externalSourceUrl': externalSourceUrl(caption).toString(),
       'spotName': spotName.trim(),
       'latitude': latitude,
       'longitude': longitude,

@@ -89,6 +89,10 @@ class ExternalShareService {
         await nav.push(MaterialPageRoute(builder: (_) => ImportShareScreen(text: draft['text'] as String? ?? '', images: List<String>.from(draft['images'] as List? ?? []), videos: List<String>.from(draft['videos'] as List? ?? []))));
         _queue.remove(draft);
         await _persist();
+        final root = (await getApplicationSupportDirectory()).path;
+        for (final path in [...List<String>.from(draft['images'] as List? ?? []), ...List<String>.from(draft['videos'] as List? ?? [])]) {
+          if (path.startsWith('$root/incoming_shares/')) { try { await File(path).delete(); } catch (_) {} }
+        }
       } finally { _open = false; _drain(); }
     });
     WidgetsBinding.instance.ensureVisualUpdate();
