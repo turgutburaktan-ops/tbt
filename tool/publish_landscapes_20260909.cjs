@@ -14,7 +14,8 @@ async function get(url, method = 'GET') {
     const r = await fetch(url, {method, signal: AbortSignal.timeout(60000)});
     if (r.ok) return r;
     if (![429,500,502,503,504].includes(r.status) || n === 3) throw new Error('HTTP ' + r.status + ' on media request');
-    const delay = Number(r.headers.get('retry-after') || 15 * (n + 1));
+    const delay = Math.max(15 * (n + 1), Number(r.headers.get('retry-after') || 0));
+    console.log('Media source busy; waiting '+delay+' seconds.');
     check(delay <= 60, 'Provider requests longer pause; retry later');
     await r.body?.cancel();
     await new Promise(resolve => setTimeout(resolve, delay * 1000));
