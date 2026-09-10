@@ -25,8 +25,10 @@ jobs:
           FIREBASE_TEST_UID: 3REINLO48adcWmRO7aC76gOI1q63
         shell: bash
         run: |
-          set -euo pipefail
-          node <<'NODE' | tee verification_email_result.txt
+          set -uo pipefail
+          : > verification_email_result.txt
+          set +e
+          node <<'NODE' 2>/tmp/email-smoke-error.log | tee -a verification_email_result.txt
           const fs = require('node:fs');
           const {initializeApp, cert} = require('./functions/node_modules/firebase-admin/app');
           const {getAuth} = require('./functions/node_modules/firebase-admin/auth');
@@ -79,6 +81,12 @@ jobs:
             console.log('CALLABLE_RESULT=' + JSON.stringify({stage: 'exception', type: error?.name || 'Error'}));
           });
           NODE
+          node_status=${PIPESTATUS[0]}
+          set -e
+          if [ "$node_status" -ne 0 ]; then
+            echo 'HTTP_STATUS=0' | tee -a verification_email_result.txt
+            echo 'CALLABLE_RESULT={"stage":"runner_exception"}' | tee -a verification_email_result.txt
+          fi
       - name: Store sanitized send result
         shell: bash
         run: |
