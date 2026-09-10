@@ -310,6 +310,26 @@ class _PhoneVerificationScreenState extends State<_PhoneVerificationScreen> {
     if (mounted && _busy) setState(() => _busy = false);
   }
 
+  String _phoneErrorMessage(FirebaseAuthException error) {
+    debugPrint('Phone verification failed: ${error.code}');
+    return switch (error.code) {
+      'invalid-phone-number' =>
+        'Telefon numarası geçersiz. +90 ile birlikte tekrar kontrol et.',
+      'too-many-requests' || 'quota-exceeded' =>
+        'Çok fazla SMS denemesi yapıldı. Bir süre sonra tekrar dene.',
+      'network-request-failed' =>
+        'İnternet bağlantısı kurulamadı. Bağlantını kontrol edip tekrar dene.',
+      'credential-already-in-use' =>
+        'Bu telefon numarası başka bir hesapta kullanılıyor.',
+      'internal-error' ||
+      'app-not-authorized' ||
+      'captcha-check-failed' ||
+      'missing-client-identifier' =>
+        'SMS doğrulaması şu anda kullanılamıyor. Şimdi Değil / Atla ile devam edip Ayarlar’dan daha sonra doğrulayabilirsin.',
+      _ => 'SMS gönderilemedi. Biraz sonra tekrar dene veya şimdilik atla.',
+    };
+  }
+
   Future<void> _sendCode() async {
     final phone = _phone.text.replaceAll(' ', '').trim();
     if (!phone.startsWith('+') || phone.length < 10) {
@@ -337,8 +357,7 @@ class _PhoneVerificationScreenState extends State<_PhoneVerificationScreen> {
           if (mounted) {
             setState(() {
               _busy = false;
-              _error =
-                  '${e.message ?? 'SMS gönderilemedi.'} (Firebase kodu: ${e.code})';
+              _error = _phoneErrorMessage(e);
             });
           }
         },
@@ -366,7 +385,7 @@ class _PhoneVerificationScreenState extends State<_PhoneVerificationScreen> {
       if (mounted) {
         setState(() {
           _busy = false;
-          _error = e.message ?? 'SMS doğrulaması başlatılamadı.';
+          _error = _phoneErrorMessage(e);
         });
       }
     } catch (_) {
@@ -432,9 +451,7 @@ class _PhoneVerificationScreenState extends State<_PhoneVerificationScreen> {
     } on FirebaseAuthException catch (e) {
       if (mounted) {
         setState(() {
-          _error = e.code == 'credential-already-in-use'
-              ? 'Bu telefon numarası başka bir hesapta kullanılıyor.'
-              : '${e.message ?? 'Telefon doğrulanamadı.'} (Firebase kodu: ${e.code})';
+          _error = _phoneErrorMessage(e);
         });
       }
     } on TimeoutException {

@@ -2,6 +2,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import '../data/turkey_selection_data.dart';
+import '../widgets/searchable_selection_field.dart';
+
 class AppOnboardingScreen extends StatefulWidget {
   const AppOnboardingScreen({super.key});
 
@@ -29,6 +32,26 @@ class _AppOnboardingScreenState extends State<AppOnboardingScreen> {
     'Yemek',
   ];
 
+  static String _normalizeCity(String value) => value
+      .trim()
+      .toLowerCase()
+      .replaceAll('ı', 'i')
+      .replaceAll('ğ', 'g')
+      .replaceAll('ü', 'u')
+      .replaceAll('ş', 's')
+      .replaceAll('ö', 'o')
+      .replaceAll('ç', 'c')
+      .replaceAll('â', 'a');
+
+  String? _canonicalCity() {
+    final value = _normalizeCity(_city.text);
+    if (value.isEmpty) return null;
+    for (final city in turkeyCities) {
+      if (_normalizeCity(city) == value) return city;
+    }
+    return null;
+  }
+
   @override
   void dispose() {
     _city.dispose();
@@ -38,10 +61,17 @@ class _AppOnboardingScreenState extends State<AppOnboardingScreen> {
   Future<void> _finish() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null || _saving) return;
+    final city = _canonicalCity();
+    if (city == null) {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(const SnackBar(content: Text('İlini yazıp listeden seç.')));
+      return;
+    }
     setState(() => _saving = true);
     try {
       await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
-        'city': _city.text.trim(),
+        'city': city,
         'interests': _interests.toList(),
         'appOnboardingCompleted': true,
         'notificationPreferences': {
@@ -95,9 +125,14 @@ class _AppOnboardingScreenState extends State<AppOnboardingScreen> {
                 .toList(),
           ),
           const SizedBox(height: 20),
-          TextField(
+          SearchableSelectionField(
             controller: _city,
-            decoration: const InputDecoration(labelText: 'Şehir'),
+            options: turkeyCities,
+            labelText: 'İl',
+            hintText: 'Yaz veya listeden seç',
+            prefixIcon: Icons.location_city_outlined,
+            enabled: !_saving,
+            maxSuggestions: 10,
           ),
           const SizedBox(height: 20),
           SwitchListTile(
