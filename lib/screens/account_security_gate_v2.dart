@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
+import '../services/verification_email_service.dart';
 
 /// Account security gate without device biometrics.
 /// E-mail and SMS verification remain in place; once verified the app opens
@@ -102,31 +103,51 @@ class _EmailVerificationScreen extends StatefulWidget {
 class _EmailVerificationScreenState extends State<_EmailVerificationScreen> {
   bool _busy = false;
   String? _message;
+  int _retryAfterSeconds = 0;
+  Timer? _retryTimer;
+
+  @override
+  void dispose() {
+    _retryTimer?.cancel();
+    super.dispose();
+  }
+
+  void _startRetryTimer(int seconds) {
+    _retryTimer?.cancel();
+    setState(() => _retryAfterSeconds = seconds.clamp(1, 3600).toInt());
+    _retryTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted || _retryAfterSeconds <= 1) {
+        timer.cancel();
+        if (mounted) setState(() => _retryAfterSeconds = 0);
+        return;
+      }
+      setState(() => _retryAfterSeconds--);
+    });
+  }
 
   Future<void> _sendAgain() async {
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null || user.email == null || _busy) return;
+    if (user == null || user.email == null || _busy || _retryAfterSeconds > 0) return;
     setState(() {
       _busy = true;
       _message = null;
     });
     try {
-      await user
-          .sendEmailVerification()
-          .timeout(const Duration(seconds: 12));
+      final result = await VerificationEmailService.instance.send();
       if (mounted) {
+        if (result.alreadyVerified) {
+          await user.reload();
+          await FirebaseAuth.instance.currentUser?.getIdToken(true);
+          widget.onVerified();
+          return;
+        }
         setState(() => _message = 'Doğrulama e-postası yeniden gönderildi.');
+        _startRetryTimer(result.retryAfterSeconds);
       }
-    } on FirebaseAuthException catch (e) {
+    } catch (error) {
       if (mounted) {
-        setState(() => _message = e.message ?? 'E-posta gönderilemedi.');
+        setState(() => _message = VerificationEmailService.instance.messageFor(error));
       }
-    } on TimeoutException {
-      if (mounted) {
-        setState(() => _message = 'İşlem zaman aşımına uğradı. Tekrar dene.');
-      }
-    } catch (_) {
-      if (mounted) setState(() => _message = 'E-posta gönderilemedi.');
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -143,9 +164,10 @@ class _EmailVerificationScreenState extends State<_EmailVerificationScreen> {
       await user.reload().timeout(const Duration(seconds: 10));
       final refreshed = FirebaseAuth.instance.currentUser;
       if (refreshed?.emailVerified == true) {
+        await refreshed!.getIdToken(true);
         await FirebaseFirestore.instance
             .collection('users')
-            .doc(refreshed!.uid)
+            .doc(refreshed.uid)
             .set({
               'emailVerified': true,
               'emailVerifiedAt': FieldValue.serverTimestamp(),
@@ -225,8 +247,12 @@ class _EmailVerificationScreenState extends State<_EmailVerificationScreen> {
               label: const Text('Doğruladım, kontrol et'),
             ),
             TextButton(
-              onPressed: _busy ? null : _sendAgain,
-              child: const Text('Doğrulama e-postasını yeniden gönder'),
+              onPressed: _busy || _retryAfterSeconds > 0 ? null : _sendAgain,
+              child: Text(
+                _retryAfterSeconds > 0
+                    ? '$_retryAfterSeconds sn sonra yeniden gönder'
+                    : 'Doğrulama e-postasını yeniden gönder',
+              ),
             ),
             if (_message != null) ...[
               const SizedBox(height: 14),
