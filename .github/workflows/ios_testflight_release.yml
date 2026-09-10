@@ -300,7 +300,7 @@ jobs:
           flutter build ipa \
             --release \
             --build-name=1.0.13 \
-            --build-number=21 \
+            --build-number=22 \
             --export-options-plist=ios/ExportOptions.plist \
             --dart-define="FIREBASE_IOS_API_KEY=$FIREBASE_IOS_API_KEY" \
             --dart-define="FIREBASE_IOS_APP_ID=$FIREBASE_IOS_APP_ID" \
