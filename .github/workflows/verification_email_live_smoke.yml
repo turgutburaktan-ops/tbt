@@ -40,7 +40,7 @@ jobs:
 
           (async () => {
             const source = fs.readFileSync('lib/firebase_options.dart', 'utf8');
-            const apiKey = source.match(/apiKey:\\s*'([^']+)'/)?.[1];
+            const apiKey = source.match(/apiKey:\s*'([^']+)'/)?.[1];
             if (!apiKey) throw new Error('Android Firebase API key is missing.');
 
             const customToken = await getAuth().createCustomToken(process.env.FIREBASE_TEST_UID);
