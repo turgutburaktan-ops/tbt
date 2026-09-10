@@ -73,6 +73,24 @@ jobs:
               console.log('BILLING=unavailable_' + String(error.response?.status || 'unknown'));
             }
 
+            const serviceStates = {};
+            for (const service of [
+              'identitytoolkit.googleapis.com',
+              'playintegrity.googleapis.com',
+              'firebaseappcheck.googleapis.com',
+              'recaptchaenterprise.googleapis.com',
+            ]) {
+              try {
+                const serviceResponse = await client.request({
+                  url: `https://serviceusage.googleapis.com/v1/projects/${project}/services/${service}`,
+                });
+                serviceStates[service] = serviceResponse.data?.state || 'UNKNOWN';
+              } catch (error) {
+                serviceStates[service] = 'unavailable_' + String(error.response?.status || 'unknown');
+              }
+            }
+            console.log('SERVICES=' + JSON.stringify(serviceStates));
+
             try {
               const options = fs.readFileSync('lib/firebase_options.dart', 'utf8');
               const apiKey = options.match(/apiKey:\s*'([^']+)'/)?.[1];
