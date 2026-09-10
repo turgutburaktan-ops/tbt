@@ -96,6 +96,29 @@ jobs:
               const options = fs.readFileSync('lib/firebase_options.dart', 'utf8');
               const apiKey = options.match(/apiKey:\s*'([^']+)'/)?.[1];
               if (!apiKey) throw new Error('missing_key');
+              const probe = async (headers = {}) => {
+                const response = await fetch(
+                  'https://identitytoolkit.googleapis.com/v1/projects?key=' + encodeURIComponent(apiKey),
+                  {headers},
+                );
+                let reason = '';
+                try {
+                  const body = await response.json();
+                  reason = String(body?.error?.status || body?.error?.details?.[0]?.reason || '');
+                } catch (_) {}
+                return {status: response.status, reason};
+              };
+              const plainProbe = await probe();
+              const androidProbes = {};
+              for (const certificate of certificates.filter((item) => item.certType === 'SHA_1')) {
+                const hash = String(certificate.shaHash || '').toUpperCase();
+                androidProbes[hash] = await probe({
+                  'X-Android-Package': 'com.tbt.social',
+                  'X-Android-Cert': hash,
+                });
+              }
+              console.log('API_PROBE=' + JSON.stringify({plain: plainProbe, android: androidProbes}));
+
               const lookup = await client.request({
                 url: 'https://apikeys.googleapis.com/v2/keys:lookupKey',
                 params: {keyString: apiKey},
