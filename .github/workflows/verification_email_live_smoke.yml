@@ -1,4 +1,4 @@
-name: Live Verification Email Smoke
+name: Diagnose Verification Email Delivery
 
 on:
   push:
@@ -8,7 +8,7 @@ permissions:
   contents: read
 
 jobs:
-  smoke:
+  diagnose:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -17,7 +17,7 @@ jobs:
         with:
           node-version: '20'
       - run: npm install --prefix functions --ignore-scripts --no-audit --no-fund
-      - name: Send one verification email through the deployed callable
+      - name: Read the latest provider status without sensitive values
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
           TARGET_UID: '3REINLO48adcWmRO7aC76gOI1q63'
@@ -25,7 +25,6 @@ jobs:
         run: |
           set -euo pipefail
           node <<'NODE'
-          const fs = require('node:fs');
           const admin = require('./functions/node_modules/firebase-admin');
 
           const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT || '{}');
@@ -33,48 +32,21 @@ jobs:
           admin.initializeApp({credential: admin.credential.cert(serviceAccount)});
 
           (async () => {
-            const uid = process.env.TARGET_UID;
-            const user = await admin.auth().getUser(uid);
-            if (!user.email || user.emailVerified) {
-              throw new Error('Target must be an unverified email account.');
-            }
-            const options = fs.readFileSync('lib/firebase_options.dart', 'utf8');
-            const apiKey = options.match(/apiKey:\s*'([^']+)'/)?.[1];
-            if (!apiKey) throw new Error('Android Firebase API key was not found.');
-
-            const customToken = await admin.auth().createCustomToken(uid);
-            const authResponse = await fetch(
-              `https://identitytoolkit.googleapis.com/v1/accounts:signInWithCustomToken?key=${apiKey}`,
-              {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({token: customToken, returnSecureToken: true}),
-              },
-            );
-            const authBody = await authResponse.json();
-            if (!authResponse.ok || !authBody.idToken) {
-              throw new Error(`Custom sign-in failed with HTTP ${authResponse.status}.`);
-            }
-
-            const callableResponse = await fetch(
-              'https://europe-west1-en-iyi-cekim-noktasi.cloudfunctions.net/sendVerificationEmail',
-              {
-                method: 'POST',
-                headers: {
-                  'Authorization': `Bearer ${authBody.idToken}`,
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({data: {}}),
-              },
-            );
-            const callableBody = await callableResponse.json();
-            const result = callableBody.result || callableBody.data;
-            if (!callableResponse.ok || result?.ok !== true) {
-              throw new Error(`Verification callable failed with HTTP ${callableResponse.status}.`);
-            }
-            const [local, domain] = user.email.toLowerCase().split('@');
-            const masked = `${local.slice(0, 2)}***@${domain}`;
-            console.log(`Verification email accepted for ${masked}.`);
+            const snapshot = await admin.firestore()
+              .collection('verification_email_deliveries')
+              .orderBy('createdAt', 'desc')
+              .limit(100)
+              .get();
+            const match = snapshot.docs
+              .map((doc) => doc.data())
+              .find((item) => item.uid === process.env.TARGET_UID);
+            if (!match) throw new Error('No verification delivery record was found.');
+            console.log(JSON.stringify({
+              provider: String(match.provider || ''),
+              status: String(match.status || ''),
+              errorCode: String(match.errorCode || ''),
+              maskedEmail: String(match.maskedEmail || '***'),
+            }));
           })().catch((error) => {
             console.error(error.message);
             process.exitCode = 1;
