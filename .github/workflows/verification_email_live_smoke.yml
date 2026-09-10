@@ -50,6 +50,7 @@ jobs:
               testNumbers: Object.keys(phone.testPhoneNumbers || {}).length,
               smsRegionConfig: config.smsRegionConfig || null,
               recaptchaConfig: config.recaptchaConfig || null,
+              authorizedDomains: config.authorizedDomains || [],
             }));
 
             const appId = encodeURIComponent(process.env.FIREBASE_ANDROID_APP_ID);
