@@ -59,13 +59,16 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
       'too-many-requests' =>
         'Çok fazla deneme yapıldı. Bir süre sonra tekrar dene.',
       'quota-exceeded' => 'SMS kotası geçici olarak dolu.',
+      'network-request-failed' =>
+        'İnternet bağlantısı kurulamadı. Bağlantını kontrol edip tekrar dene.',
+      'internal-error' ||
       'app-not-authorized' ||
       'captcha-check-failed' ||
       'missing-client-identifier' ||
-      'invalid-app-credential' => 'Uygulama güvenlik sertifikası doğrulanamadı. TBT’yi güncelleyip tekrar dene.',
+      'invalid-app-credential' =>
+        'SMS doğrulaması şu anda kullanılamıyor. Biraz sonra tekrar dene.',
       _ =>
-        error.message ??
-            (sending ? 'SMS gönderilemedi.' : 'Telefon doğrulanamadı.'),
+        sending ? 'SMS gönderilemedi.' : 'Telefon doğrulanamadı.',
     };
   }
 
