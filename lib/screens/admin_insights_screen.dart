@@ -102,6 +102,8 @@ class _AdminInsightsScreenState extends State<AdminInsightsScreen> {
               else if (_data != null) ...[
                 _MetricsGrid(data: _data!),
                 const SizedBox(height: 20),
+                _VerificationEmailPanel(data: _data!),
+                const SizedBox(height: 20),
                 const Text(
                   'Son uygulama hataları',
                   style: TextStyle(
@@ -123,6 +125,144 @@ class _AdminInsightsScreenState extends State<AdminInsightsScreen> {
       ),
     );
   }
+}
+
+class _VerificationEmailPanel extends StatelessWidget {
+  final AdminInsightsData data;
+  const _VerificationEmailPanel({required this.data});
+
+  String _statusLabel(String status) => switch (status) {
+    'delivered' => 'Teslim edildi',
+    'accepted' || 'sent' => 'Gönderildi',
+    'delayed' => 'Gecikiyor',
+    'bounced' => 'Geri döndü',
+    'complained' => 'Şikâyet',
+    'suppressed' => 'Engellendi',
+    'failed' => 'Başarısız',
+    'preparing' => 'Hazırlanıyor',
+    _ => 'Bilinmiyor',
+  };
+
+  Color _statusColor(String status) => switch (status) {
+    'delivered' => AppColors.success,
+    'accepted' || 'sent' => AppColors.cyan,
+    'delayed' => Colors.amber,
+    'failed' || 'bounced' || 'complained' || 'suppressed' => Colors.redAccent,
+    _ => Colors.white54,
+  };
+
+  String _time(dynamic millis) {
+    final value = (millis as num?)?.toInt();
+    if (value == null || value <= 0) return '';
+    final date = DateTime.fromMillisecondsSinceEpoch(value).toLocal();
+    String two(int number) => number.toString().padLeft(2, '0');
+    return '${two(date.day)}.${two(date.month)} ${two(date.hour)}:${two(date.minute)}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final deliveries = data.verificationEmails.take(12).toList();
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.mark_email_read_outlined, color: AppColors.cyan),
+              SizedBox(width: 9),
+              Expanded(
+                child: Text(
+                  'Doğrulama e-postaları',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _EmailMetric(label: 'Son kayıtlar', value: data.value('verificationEmails')),
+              _EmailMetric(label: 'Son 24 saat', value: data.value('verificationEmails24h')),
+              _EmailMetric(label: 'Teslim', value: data.value('verificationEmailsDelivered')),
+              _EmailMetric(label: 'Sorun', value: data.value('verificationEmailProblems')),
+            ],
+          ),
+          const SizedBox(height: 14),
+          if (deliveries.isEmpty)
+            const Text(
+              'Henüz özel sistem üzerinden gönderim yapılmadı.',
+              style: TextStyle(color: Colors.white60),
+            )
+          else
+            ...deliveries.map((item) {
+              final status = (item['status'] ?? '').toString();
+              return Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 9,
+                      height: 9,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: _statusColor(status),
+                      ),
+                    ),
+                    const SizedBox(width: 9),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            (item['maskedEmail'] ?? '***').toString(),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontWeight: FontWeight.w700),
+                          ),
+                          Text(
+                            _statusLabel(status),
+                            style: TextStyle(color: _statusColor(status), fontSize: 12),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Text(
+                      _time(item['createdAtMs']),
+                      style: const TextStyle(color: Colors.white38, fontSize: 11),
+                    ),
+                  ],
+                ),
+              );
+            }),
+        ],
+      ),
+    );
+  }
+}
+
+class _EmailMetric extends StatelessWidget {
+  final String label;
+  final int value;
+  const _EmailMetric({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 9),
+    decoration: BoxDecoration(
+      color: AppColors.background,
+      borderRadius: BorderRadius.circular(13),
+      border: Border.all(color: AppColors.border),
+    ),
+    child: Text('$label: $value', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+  );
 }
 
 class _HeaderCard extends StatelessWidget {

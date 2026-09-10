@@ -8,6 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../services/auth_service.dart';
 import '../services/app_locale_service.dart';
+import '../services/verification_email_service.dart';
 import '../l10n/app_strings.dart';
 import '../theme/app_theme.dart';
 import 'password_change_screen.dart';
@@ -314,10 +315,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     if (action == 'email') {
       try {
-        await user.sendEmailVerification();
-        _message('Doğrulama e-postası gönderildi.');
-      } on FirebaseAuthException catch (e) {
-        _message(e.message ?? 'Doğrulama e-postası gönderilemedi.');
+        final result = await VerificationEmailService.instance.send();
+        _message(
+          result.alreadyVerified
+              ? 'E-posta adresin zaten doğrulanmış.'
+              : 'Doğrulama e-postası gönderildi.',
+        );
+      } catch (error) {
+        _message(VerificationEmailService.instance.messageFor(error));
       }
     }
     if (action == 'phone') {
@@ -334,6 +339,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (action == 'check') {
       await user.reload();
       user = FirebaseAuth.instance.currentUser;
+      await user?.getIdToken(true);
       _message('Doğrulama durumu güncellendi.');
       if (mounted) setState(() {});
     }

@@ -116,10 +116,11 @@ exports.getAdminInsights = onCall({region: 'europe-west1'}, async (request) => {
   const values = await Promise.all(entries.map(([, query]) => safeCount(query)));
   const counts = Object.fromEntries(entries.map(([key], index) => [key, values[index]]));
 
-  const [recentUsersSnap, topPostsSnap, errorSnap] = await Promise.all([
+  const [recentUsersSnap, topPostsSnap, errorSnap, verificationEmailSnap] = await Promise.all([
     db.collection('users').orderBy('createdAt', 'desc').limit(12).get().catch(() => ({docs: []})),
     db.collection('posts').orderBy('likesCount', 'desc').limit(8).get().catch(() => ({docs: []})),
     db.collection('app_errors').orderBy('createdAt', 'desc').limit(20).get().catch(() => ({docs: []})),
+    db.collection('verification_email_deliveries').orderBy('createdAt', 'desc').limit(40).get().catch(() => ({docs: []})),
   ]);
 
   const recentUsers = recentUsersSnap.docs.map((doc) => {
@@ -150,12 +151,31 @@ exports.getAdminInsights = onCall({region: 'europe-west1'}, async (request) => {
       createdAt: timestampMillis(d.createdAt),
     };
   });
+  const verificationEmails = verificationEmailSnap.docs.map((doc) => {
+    const d = doc.data() || {};
+    return {
+      id: doc.id,
+      maskedEmail: String(d.maskedEmail || '***'),
+      provider: String(d.provider || ''),
+      status: String(d.status || 'unknown'),
+      errorCode: String(d.errorCode || ''),
+      createdAtMs: timestampMillis(d.createdAt),
+      updatedAtMs: timestampMillis(d.updatedAt),
+    };
+  });
+  counts.verificationEmails = verificationEmails.length;
+  counts.verificationEmails24h = verificationEmails.filter((item) =>
+    Number(item.createdAtMs || 0) >= now - 24 * 60 * 60 * 1000).length;
+  counts.verificationEmailsDelivered = verificationEmails.filter((item) => item.status === 'delivered').length;
+  counts.verificationEmailProblems = verificationEmails.filter((item) =>
+    ['failed', 'bounced', 'complained', 'suppressed'].includes(item.status)).length;
 
   return {
     generatedAtMs: now,
     counts,
     recentUsers,
     topPosts,
+    verificationEmails,
     errors: errorSnap.docs.map((doc) => ({id: doc.id, ...doc.data()})),
   };
 });

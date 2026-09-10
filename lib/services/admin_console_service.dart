@@ -152,7 +152,15 @@ class AdminConsoleService {
     final errors = ((data['errors'] as List?) ?? const [])
         .map((item) => Map<String, dynamic>.from(item as Map))
         .toList();
-    return AdminInsightsData(counts: counts, errors: errors);
+    final verificationEmails =
+        ((data['verificationEmails'] as List?) ?? const [])
+            .map((item) => Map<String, dynamic>.from(item as Map))
+            .toList();
+    return AdminInsightsData(
+      counts: counts,
+      errors: errors,
+      verificationEmails: verificationEmails,
+    );
   }
 
   Future<void> deleteVenue({
@@ -186,8 +194,13 @@ class AdminConsoleService {
 class AdminInsightsData {
   final Map<String, dynamic> counts;
   final List<Map<String, dynamic>> errors;
+  final List<Map<String, dynamic>> verificationEmails;
 
-  const AdminInsightsData({required this.counts, required this.errors});
+  const AdminInsightsData({
+    required this.counts,
+    required this.errors,
+    required this.verificationEmails,
+  });
 
   int value(String key) => (counts[key] as num?)?.toInt() ?? 0;
 }

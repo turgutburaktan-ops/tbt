@@ -26,7 +26,7 @@ jobs:
       - name: Install function dependencies
         run: npm install --prefix functions
       - name: Test restored authentication and broadcasts
-        run: node --test functions/test/auth_helpers.test.js functions/test/broadcast_worker.test.js functions/test/account_lifecycle.test.js
+        run: node --test functions/test/auth_helpers.test.js functions/test/broadcast_worker.test.js functions/test/account_lifecycle.test.js functions/test/verification_email.test.js
       - name: Test business publication
         run: node --test functions/test/business_publication.test.js
       - name: Test music
@@ -79,6 +79,7 @@ jobs:
           RESERVATION_INDEX: ${{ contains(github.event.head_commit.message, '[reservation-index]') }}
           RESERVATION_UPDATE: ${{ contains(github.event.head_commit.message, '[reservation-update]') }}
           PUBLICATION_REPAIR: ${{ contains(github.event.head_commit.message, '[repair-burak-publication]') }}
+          VERIFICATION_EMAIL_UPDATE: ${{ contains(github.event.head_commit.message, '[verification-email]') }}
         run: |
           if [ "$USABILITY_CREATOR_UPDATE" = "true" ]; then
             node tool/ensure_creator_indexes.cjs
@@ -101,12 +102,14 @@ jobs:
             firebase deploy --only functions:getBusinessDashboard,functions:getMyBusinessReservations,functions:requestBusinessReservation,functions:respondBusinessReservation --project en-iyi-cekim-noktasi --non-interactive
           elif [ "$PUBLICATION_REPAIR" = "true" ]; then
             firebase deploy --only functions:adminReviewBusinessClaim,functions:adminReviewBusinessClaimHttp,functions:publishVerifiedBusinessCandidate,functions:createBusinessCandidate --project en-iyi-cekim-noktasi --non-interactive
+          elif [ "$VERIFICATION_EMAIL_UPDATE" = "true" ]; then
+            firebase deploy --only functions:sendVerificationEmail,functions:resendVerificationEmailWebhook,functions:getAdminInsights --project en-iyi-cekim-noktasi --non-interactive
           else
             echo "::error::Refusing unscoped deployment. Select an explicit function update marker; remote-only functions must be preserved."
             exit 1
           fi
       - name: Restore callable invoker access
-        if: "inputs.scope != 'usability-creator' && !contains(github.event.head_commit.message, '[usability-creator]') && !contains(github.event.head_commit.message, '[creator-restore]') && !contains(github.event.head_commit.message, '[account-cleanup]') && !contains(github.event.head_commit.message, '[restore-update]') && !contains(github.event.head_commit.message, '[music-update]') && !contains(github.event.head_commit.message, '[chat-update]') && !contains(github.event.head_commit.message, '[repair-burak-publication]') && !contains(github.event.head_commit.message, '[reservation-update]') && !contains(github.event.head_commit.message, '[reservation-index]') && !contains(github.event.head_commit.message, '[preparation-update]')"
+        if: "inputs.scope != 'usability-creator' && !contains(github.event.head_commit.message, '[usability-creator]') && !contains(github.event.head_commit.message, '[creator-restore]') && !contains(github.event.head_commit.message, '[account-cleanup]') && !contains(github.event.head_commit.message, '[restore-update]') && !contains(github.event.head_commit.message, '[music-update]') && !contains(github.event.head_commit.message, '[chat-update]') && !contains(github.event.head_commit.message, '[repair-burak-publication]') && !contains(github.event.head_commit.message, '[reservation-update]') && !contains(github.event.head_commit.message, '[reservation-index]') && !contains(github.event.head_commit.message, '[preparation-update]') && !contains(github.event.head_commit.message, '[verification-email]')"
         run: |
           set -euo pipefail
           gcloud auth activate-service-account --key-file="$GOOGLE_APPLICATION_CREDENTIALS"

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import '../services/username_service.dart';
 import '../services/full_name_validator.dart';
+import '../services/verification_email_service.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -145,14 +146,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
       // Account/profile creation is complete. A mail provider failure must not
       // delete the account or invalidate a verification link already sent.
       try {
-        await FirebaseAuth.instance.currentUser
-            ?.sendEmailVerification()
-            .timeout(const Duration(seconds: 12));
-      } catch (_) {
+        await VerificationEmailService.instance.send();
+      } catch (error) {
         if (mounted) {
           _showMessage(
             'Hesabın oluşturuldu ancak doğrulama e-postası gönderimi '
-            'tamamlanamadı. Doğrulama ekranından yeniden gönderebilirsin.',
+            'tamamlanamadı. ${VerificationEmailService.instance.messageFor(error)}',
           );
         }
       }
