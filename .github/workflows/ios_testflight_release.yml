@@ -193,9 +193,9 @@ jobs:
         env:
           IOS_DISTRIBUTION_P12_BASE64: ${{ secrets.IOS_DISTRIBUTION_P12_BASE64 }}
           IOS_DISTRIBUTION_P12_PASSWORD: ${{ secrets.IOS_DISTRIBUTION_P12_PASSWORD }}
-          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
-          APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
-          APP_STORE_CONNECT_API_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+          ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+          ASC_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
           KEYCHAIN_PASSWORD: ${{ github.run_id }}-${{ github.run_attempt }}
           FASTLANE_SKIP_UPDATE_CHECK: "1"
         run: |
@@ -204,18 +204,18 @@ jobs:
           MAIN_PROFILE_PATH="$RUNNER_TEMP/tbt-app-store.mobileprovision"
           SHARE_PROFILE_PATH="$RUNNER_TEMP/tbt-share.mobileprovision"
           KEYCHAIN_PATH="$RUNNER_TEMP/tbt-signing.keychain-db"
-          API_KEY_PATH="$RUNNER_TEMP/AuthKey_${APP_STORE_CONNECT_API_KEY_ID}.p8"
+          API_KEY_PATH="$RUNNER_TEMP/AuthKey_${ASC_KEY_ID}.p8"
           API_KEY_JSON="$RUNNER_TEMP/app-store-connect-api-key.json"
           SHARE_PROFILE_REQUESTED_NAME="TBT Share App Store 2026"
 
           test -n "$IOS_DISTRIBUTION_P12_BASE64"
           test -n "$IOS_DISTRIBUTION_P12_PASSWORD"
-          test -n "$APP_STORE_CONNECT_API_KEY_ID"
-          test -n "$APP_STORE_CONNECT_API_ISSUER_ID"
-          test -n "$APP_STORE_CONNECT_API_KEY"
+          test -n "$ASC_KEY_ID"
+          test -n "$ASC_ISSUER_ID"
+          test -n "$ASC_PRIVATE_KEY"
 
           printf '%s' "$IOS_DISTRIBUTION_P12_BASE64" | base64 --decode > "$CERTIFICATE_PATH"
-          printf '%s' "$APP_STORE_CONNECT_API_KEY" > "$API_KEY_PATH"
+          printf '%s' "$ASC_PRIVATE_KEY" > "$API_KEY_PATH"
           chmod 600 "$API_KEY_PATH"
 
           python3 - <<'PYKEY'
@@ -224,9 +224,9 @@ jobs:
           from pathlib import Path
 
           payload = {
-              "key_id": os.environ["APP_STORE_CONNECT_API_KEY_ID"],
-              "issuer_id": os.environ["APP_STORE_CONNECT_API_ISSUER_ID"],
-              "key": os.environ["APP_STORE_CONNECT_API_KEY"],
+              "key_id": os.environ["ASC_KEY_ID"],
+              "issuer_id": os.environ["ASC_ISSUER_ID"],
+              "key": os.environ["ASC_PRIVATE_KEY"],
               "in_house": False,
           }
           Path(os.environ["RUNNER_TEMP"], "app-store-connect-api-key.json").write_text(
