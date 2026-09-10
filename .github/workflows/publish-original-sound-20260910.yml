@@ -1,0 +1,28 @@
+name: Publish Rehber original sound videos 20260910
+on:
+  push:
+    branches: [codex/rehber-original-sound-20260910]
+    paths:
+      - .github/workflows/publish-original-sound-20260910.yml
+      - tool/publish_original_sound_20260910.cjs
+      - tool/editorial/original-sound-20260910.json
+permissions:
+  contents: read
+concurrency:
+  group: tbt-rehber-original-sound-20260910
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: sudo apt-get update -qq && sudo apt-get install -y ffmpeg
+      - run: npm install --prefix functions --ignore-scripts --no-audit --no-fund
+      - name: Publish two original sound videos
+        run: node tool/publish_original_sound_20260910.cjs --publish
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
