@@ -67,4 +67,21 @@ jobs:
           node tool/ensure_creator_indexes.cjs
 
       - name: Deploy Firestore rules
-        run: firebase deploy --only firestore:rules,storage --project en-iyi-cekim-noktasi --non-interactive
+        run: |
+          # Target the bucket already configured in lib/firebase_options.dart.
+          # Deployment keeps its existing IAM checks; no discovery permission is needed.
+          node <<'NODE'
+          const fs = require('node:fs');
+          const config = JSON.parse(fs.readFileSync('firebase.json', 'utf8'));
+          const bucket = 'en-iyi-cekim-noktasi.firebasestorage.app';
+          const options = fs.readFileSync('lib/firebase_options.dart', 'utf8');
+          if (!options.includes("storageBucket: '" + bucket + "'")) {
+            throw new Error('Storage deployment target must match the app');
+          }
+          if (!config.storage || config.storage.rules !== 'storage.rules') {
+            throw new Error('Unexpected Storage rules configuration');
+          }
+          config.storage = [{bucket, rules: config.storage.rules}];
+          fs.writeFileSync('firebase.json', JSON.stringify(config, null, 2) + '\n');
+          NODE
+          firebase deploy --only firestore:rules,storage --project en-iyi-cekim-noktasi --non-interactive
