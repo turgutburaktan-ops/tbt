@@ -20,6 +20,8 @@ class _SafetyPrivacyCenterScreenState extends State<SafetyPrivacyCenterScreen> {
   bool _likes = true;
   bool _comments = true;
   bool _events = true;
+  bool _reservations = true;
+  bool _recommendations = true;
   bool _social = true;
   bool _marketing = false;
   bool _attendeesOnly = true;
@@ -54,6 +56,8 @@ class _SafetyPrivacyCenterScreenState extends State<SafetyPrivacyCenterScreen> {
         _likes = prefs['likes'] != false;
         _comments = prefs['comments'] != false;
         _events = prefs['events'] != false;
+        _reservations = prefs['reservations'] != false;
+        _recommendations = prefs['recommendations'] != false;
         _social = prefs['social'] != false;
         _marketing = prefs['marketing'] == true;
       }
@@ -78,6 +82,8 @@ class _SafetyPrivacyCenterScreenState extends State<SafetyPrivacyCenterScreen> {
       'likes': _likes,
       'comments': _comments,
       'events': _events,
+      'reservations': _reservations,
+      'recommendations': _recommendations,
       'social': _social,
       'marketing': _marketing,
     });
@@ -245,6 +251,18 @@ class _SafetyPrivacyCenterScreenState extends State<SafetyPrivacyCenterScreen> {
             value: _events,
             onChanged: (v) => setState(() => _events = v),
             title: const Text('Etkinlikler ve Radar'),
+          ),
+          SwitchListTile(
+            value: _reservations,
+            onChanged: (v) => setState(() => _reservations = v),
+            title: const Text('Rezervasyonlar'),
+            subtitle: const Text('Onay, değişiklik ve yaklaşan rezervasyonlar.'),
+          ),
+          SwitchListTile(
+            value: _recommendations,
+            onChanged: (v) => setState(() => _recommendations = v),
+            title: const Text('Keşif önerileri'),
+            subtitle: const Text('Yakındaki yerler, etkinlikler ve haftalık özet.'),
           ),
           SwitchListTile(
             value: _social,

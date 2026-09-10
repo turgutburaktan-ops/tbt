@@ -5,6 +5,7 @@ const {initializeApp} = require('firebase-admin/app');
 const {getFirestore, FieldValue, Timestamp} = require('firebase-admin/firestore');
 const {getMessaging} = require('firebase-admin/messaging');
 const {marketingPushAllowed} = require('./broadcast_policy');
+const {preferenceKeyForType, pushPreferenceAllowed} = require('./notification_policy');
 
 initializeApp();
 
@@ -20,32 +21,60 @@ exports.pushOnNotificationCreated = onDocumentCreated(
 
     const userId = event.params.userId;
     const db = getFirestore();
+    const userRef = db.collection('users').doc(userId);
+    const user = await userRef.get();
     if (['message','group_message'].includes(data.type) && data.sourceId) {
       const preferences = await db.doc(`users/${userId}/chat_preferences/${data.sourceId}`).get();
-      if (preferences.data()?.muted) return;
+      if (preferences.data()?.muted) {
+        await event.data.ref.set({pushStatus: 'suppressed', pushReason: 'chat_muted'}, {merge: true});
+        return;
+      }
       const thread = (await db.doc(`chat_threads/${data.sourceId}`).get()).data();
-      if (thread?.requestStatus === 'rejected') return;
+      if (thread?.requestStatus === 'rejected') {
+        await event.data.ref.set({pushStatus: 'suppressed', pushReason: 'request_rejected'}, {merge: true});
+        return;
+      }
       if (thread?.requestStatus === 'pending') {
         // Requests stay in the requests inbox without repeated push interruptions.
+        await event.data.ref.set({pushStatus: 'suppressed', pushReason: 'request_pending'}, {merge: true});
         return;
       }
     }
     if (data.type === 'tbt_broadcast') {
       // Re-check consent at delivery time, not only when the queue was made.
       if (data.pushAllowed !== true || !/^[a-zA-Z0-9_-]{16,80}$/.test(data.sourceId || '')) return;
-      const [user, job] = await Promise.all([
-        db.collection('users').doc(userId).get(),
-        db.collection('admin_broadcasts').doc(data.sourceId).get(),
-      ]);
+      const job = await db.collection('admin_broadcasts').doc(data.sourceId).get();
       if (!marketingPushAllowed(user.data()) || !job.exists ||
           job.data().sentBy !== data.actorId || job.data().title !== data.title ||
           job.data().body !== data.body || (job.data().imageUrl||'')!==(data.imageUrl||'')) return;
     }
-    const tokensSnap = await db.collection('users').doc(userId).collection('push_tokens').get();
+
+    if (!pushPreferenceAllowed(user.data(), data.type)) {
+      await event.data.ref.set({
+        pushStatus: 'suppressed',
+        pushReason: `preference_${preferenceKeyForType(data.type) || 'all'}`,
+        pushProcessedAt: FieldValue.serverTimestamp(),
+      }, {merge: true});
+      return;
+    }
+
+    const tokensSnap = await userRef.collection('push_tokens').get();
     const tokens = tokensSnap.docs
       .map((doc) => (doc.data().token || '').trim())
       .filter(Boolean);
-    if (!tokens.length) return;
+    if (!tokens.length) {
+      await event.data.ref.set({
+        pushStatus: 'no_token',
+        pushProcessedAt: FieldValue.serverTimestamp(),
+      }, {merge: true});
+      if (data.type === 'tbt_broadcast') {
+        await db.collection('admin_broadcasts').doc(data.sourceId).set({
+          noTokenRecipientCount: FieldValue.increment(1),
+          updatedAt: FieldValue.serverTimestamp(),
+        }, {merge: true});
+      }
+      return;
+    }
 
     const groups=[tokensSnap.docs.filter(d=>d.data().platform==='android'&&d.data().replyActions===1),tokensSnap.docs.filter(d=>!(d.data().platform==='android'&&d.data().replyActions===1))];
     const responses=[],sentTokens=[];
@@ -74,6 +103,46 @@ exports.pushOnNotificationCreated = onDocumentCreated(
         db.collection('users').doc(userId).collection('push_tokens').doc(token).delete()
       )
     );
+
+    const pushSuccessCount = result.responses.filter((response) => response.success).length;
+    const pushFailureCount = result.responses.length - pushSuccessCount;
+    await event.data.ref.set({
+      pushStatus: pushSuccessCount > 0 ? 'sent' : 'failed',
+      pushSuccessCount,
+      pushFailureCount,
+      pushProcessedAt: FieldValue.serverTimestamp(),
+    }, {merge: true});
+    if (data.type === 'tbt_broadcast') {
+      await db.collection('admin_broadcasts').doc(data.sourceId).set({
+        pushSuccessCount: FieldValue.increment(pushSuccessCount),
+        pushFailureCount: FieldValue.increment(pushFailureCount),
+        updatedAt: FieldValue.serverTimestamp(),
+      }, {merge: true});
+    }
+  }
+);
+
+exports.trackNotificationOpened = onDocumentUpdated(
+  'users/{userId}/notifications/{notificationId}',
+  async (event) => {
+    const before = event.data?.before?.data() || {};
+    const after = event.data?.after?.data() || {};
+    if (before.read === true || after.read !== true || after.type !== 'tbt_broadcast') return;
+    const broadcastId = String(after.sourceId || '');
+    if (!/^[a-zA-Z0-9_-]{16,80}$/.test(broadcastId)) return;
+    const db = getFirestore();
+    const jobRef = db.collection('admin_broadcasts').doc(broadcastId);
+    await db.runTransaction(async (tx) => {
+      const job = await tx.get(jobRef);
+      if (!job.exists) return;
+      tx.set(jobRef, {
+        openedRecipientCount: FieldValue.increment(1),
+        updatedAt: FieldValue.serverTimestamp(),
+      }, {merge: true});
+      tx.set(event.data.after.ref, {
+        openTrackedAt: FieldValue.serverTimestamp(),
+      }, {merge: true});
+    });
   }
 );
 
@@ -168,12 +237,19 @@ exports.sendReengagementNotifications = onSchedule(
     const db = getFirestore();
     const now = Date.now();
     const cutoff = Timestamp.fromMillis(now - 48 * 60 * 60 * 1000);
-    const usersSnap = await db
-      .collection('users')
-      .where('lastActiveAt', '<=', cutoff)
-      .orderBy('lastActiveAt', 'asc')
-      .limit(400)
-      .get();
+    const [usersSnap, eventsSnap] = await Promise.all([
+      db.collection('users')
+        .where('lastActiveAt', '<=', cutoff)
+        .orderBy('lastActiveAt', 'asc')
+        .limit(400)
+        .get(),
+      db.collection('social_events')
+        .where('startsAt', '>=', Timestamp.fromMillis(now))
+        .where('startsAt', '<=', Timestamp.fromMillis(now + 7 * 86400000))
+        .orderBy('startsAt', 'asc')
+        .limit(200)
+        .get(),
+    ]);
 
     if (usersSnap.empty) return;
 
@@ -186,47 +262,76 @@ exports.sendReengagementNotifications = onSchedule(
       .format(new Date(now))
       .replaceAll('-', '');
 
-    const writes = [];
+    const eventByCity = new Map();
+    for (const eventDoc of eventsSnap.docs) {
+      const event = eventDoc.data() || {};
+      if (String(event.status || 'open') !== 'open' ||
+          String(event.visibility || 'public') !== 'public') continue;
+      const city = String(event.city || '').trim().toLocaleLowerCase('tr-TR');
+      if (city && !eventByCity.has(city)) eventByCity.set(city, {id: eventDoc.id, ...event});
+    }
+
+    const candidates = [];
     for (const userDoc of usersSnap.docs) {
       const data = userDoc.data() || {};
-      if (data.pushReengagementEnabled === false) continue;
+      if (!pushPreferenceAllowed(data, 'reengagement')) continue;
 
       const lastActiveAt = data.lastActiveAt instanceof Timestamp
         ? data.lastActiveAt.toMillis()
         : 0;
       if (!lastActiveAt) continue;
+      const lastSentAt = data.lastReengagementNotificationAt instanceof Timestamp
+        ? data.lastReengagementNotificationAt.toMillis()
+        : 0;
+      if (lastSentAt && now - lastSentAt < 72 * 60 * 60 * 1000) continue;
 
       const inactiveDays = Math.max(2, Math.floor((now - lastActiveAt) / 86400000));
       let title = 'TBT’de yeni şeyler seni bekliyor';
       let body = 'Yeni fotoğraf noktalarına, paylaşımlara ve etkinliklere göz at.';
+      let sourceId = null;
+      let eventId = null;
 
-      if (inactiveDays >= 7) {
+      const city = String(data.city || '').trim();
+      const cityEvent = eventByCity.get(city.toLocaleLowerCase('tr-TR'));
+      if (cityEvent) {
+        title = `${city}’da yaklaşan bir etkinlik var`;
+        body = String(cityEvent.title || 'Etkinliğin ayrıntılarını görmek için dokun.').slice(0, 220);
+        sourceId = cityEvent.id;
+        eventId = cityEvent.id;
+      }
+
+      if (!cityEvent && inactiveDays >= 7) {
         title = 'Bir süredir yoksun 👀';
         body = 'Yeni çekim noktaları ve etkinlikler eklendi. TBT’ye dönüp keşfet.';
-      } else if (inactiveDays >= 3) {
+      } else if (!cityEvent && inactiveDays >= 3) {
         title = 'Bugün keşfedecek yeni bir yer olabilir';
         body = 'Yakınındaki yeni çekim noktalarına ve etkinliklere göz at.';
       }
 
       const ref = notificationRef(db, userDoc.id, `reengagement_${dayKey}`);
-      writes.push(
-        ref.set(
-          {
-            type: 'reengagement',
-            title,
-            body,
-            sourceId: null,
-            actorId: null,
-            read: false,
-            smart: true,
-            createdAt: FieldValue.serverTimestamp(),
-          },
-          {merge: false}
-        )
-      );
+      candidates.push({userDoc, ref, title, body, sourceId, eventId});
     }
 
-    await Promise.all(writes);
+    for (let offset = 0; offset < candidates.length; offset += 200) {
+      const batch = db.batch();
+      for (const item of candidates.slice(offset, offset + 200)) {
+        batch.set(item.ref, {
+          type: 'reengagement',
+          title: item.title,
+          body: item.body,
+          sourceId: item.sourceId,
+          eventId: item.eventId,
+          actorId: null,
+          read: false,
+          smart: true,
+          createdAt: FieldValue.serverTimestamp(),
+        }, {merge: false});
+        batch.set(item.userDoc.ref, {
+          lastReengagementNotificationAt: FieldValue.serverTimestamp(),
+        }, {merge: true});
+      }
+      await batch.commit();
+    }
   }
 );
 

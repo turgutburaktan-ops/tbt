@@ -1,4 +1,4 @@
-const EVENT_TYPES = new Set(['event_join','social_event_join','event_cancelled','social_event_cancelled','event_updated','event_time_changed','community_event','event_memory','campus_digest']);
+const EVENT_TYPES = new Set(['event_join','social_event_join','event_cancelled','social_event_cancelled','event_updated','event_time_changed','event_reminder','community_event','event_memory','campus_digest']);
 // Android clients advertise action support before receiving data-only chat pushes.
 function notificationPayload(data,{userId,notificationId,modernAndroid=false}){
   const type=String(data.type||'general'),sourceId=String(data.sourceId||''),actorId=String(data.actorId||''),isChat=['message','group_message'].includes(type);

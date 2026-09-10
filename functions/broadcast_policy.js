@@ -1,4 +1,5 @@
 const ADMIN_EMAIL = 'turgutburaktan@gmail.com';
+const {pushPreferenceAllowed} = require('./notification_policy');
 
 function isNamedAdmin(auth) {
   return Boolean(auth?.uid && auth.token?.admin === true &&
@@ -7,8 +8,7 @@ function isNamedAdmin(auth) {
 }
 
 function marketingPushAllowed(user) {
-  return user?.notificationPreferences?.marketing === true &&
-    user?.settings?.notifyMarketing !== false;
+  return pushPreferenceAllowed(user, 'tbt_broadcast');
 }
 
 module.exports = {isNamedAdmin, marketingPushAllowed};

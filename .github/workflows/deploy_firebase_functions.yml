@@ -32,7 +32,7 @@ jobs:
       - name: Test music
         run: node --test functions/test/music*.test.js
       - name: Test Creator and photo notification policies
-        run: node --test functions/test/social_publishing.test.js functions/test/push_payload.test.js functions/test/broadcast_photo.test.js
+        run: node --test functions/test/social_publishing.test.js functions/test/push_payload.test.js functions/test/broadcast_photo.test.js functions/test/notification_policy.test.js functions/test/event_reminders.test.js functions/test/retention.test.js
       - name: Test reservations
         run: node --test functions/test/reservation*.test.js
       - name: Install Firebase CLI
@@ -92,6 +92,7 @@ jobs:
           RESERVATION_UPDATE: ${{ contains(github.event.head_commit.message, '[reservation-update]') }}
           PUBLICATION_REPAIR: ${{ contains(github.event.head_commit.message, '[repair-burak-publication]') }}
           VERIFICATION_EMAIL_UPDATE: ${{ contains(github.event.head_commit.message, '[verification-email]') }}
+          NOTIFICATION_UPDATE: ${{ contains(github.event.head_commit.message, '[notification-update]') }}
         run: |
           if [ "$USABILITY_CREATOR_UPDATE" = "true" ]; then
             node tool/ensure_creator_indexes.cjs
@@ -116,12 +117,14 @@ jobs:
             firebase deploy --only functions:adminReviewBusinessClaim,functions:adminReviewBusinessClaimHttp,functions:publishVerifiedBusinessCandidate,functions:createBusinessCandidate --project en-iyi-cekim-noktasi --non-interactive
           elif [ "$VERIFICATION_EMAIL_UPDATE" = "true" ]; then
             firebase deploy --only functions:sendVerificationEmail,functions:resendVerificationEmailWebhook,functions:getAdminInsights --project en-iyi-cekim-noktasi --non-interactive
+          elif [ "$NOTIFICATION_UPDATE" = "true" ]; then
+            firebase deploy --only functions:pushOnNotificationCreated,functions:trackNotificationOpened,functions:notifyEventStatusChanges,functions:sendEventReminders,functions:sendReengagementNotifications,functions:sendRetentionDigest,functions:sendAdminBroadcast,functions:deliverAdminBroadcast --project en-iyi-cekim-noktasi --non-interactive
           else
             echo "::error::Refusing unscoped deployment. Select an explicit function update marker; remote-only functions must be preserved."
             exit 1
           fi
       - name: Restore callable invoker access
-        if: "inputs.scope != 'usability-creator' && !contains(github.event.head_commit.message, '[usability-creator]') && !contains(github.event.head_commit.message, '[creator-restore]') && !contains(github.event.head_commit.message, '[account-cleanup]') && !contains(github.event.head_commit.message, '[restore-update]') && !contains(github.event.head_commit.message, '[music-update]') && !contains(github.event.head_commit.message, '[chat-update]') && !contains(github.event.head_commit.message, '[repair-burak-publication]') && !contains(github.event.head_commit.message, '[reservation-update]') && !contains(github.event.head_commit.message, '[reservation-index]') && !contains(github.event.head_commit.message, '[preparation-update]') && !contains(github.event.head_commit.message, '[verification-email]')"
+        if: "inputs.scope != 'usability-creator' && !contains(github.event.head_commit.message, '[usability-creator]') && !contains(github.event.head_commit.message, '[creator-restore]') && !contains(github.event.head_commit.message, '[account-cleanup]') && !contains(github.event.head_commit.message, '[restore-update]') && !contains(github.event.head_commit.message, '[music-update]') && !contains(github.event.head_commit.message, '[chat-update]') && !contains(github.event.head_commit.message, '[repair-burak-publication]') && !contains(github.event.head_commit.message, '[reservation-update]') && !contains(github.event.head_commit.message, '[reservation-index]') && !contains(github.event.head_commit.message, '[preparation-update]') && !contains(github.event.head_commit.message, '[verification-email]') && !contains(github.event.head_commit.message, '[notification-update]')"
         run: |
           set -euo pipefail
           gcloud auth activate-service-account --key-file="$GOOGLE_APPLICATION_CREDENTIALS"

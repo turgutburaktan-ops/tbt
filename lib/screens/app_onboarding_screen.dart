@@ -80,6 +80,8 @@ class _AppOnboardingScreenState extends State<AppOnboardingScreen> {
           'messages': true,
           'likes': true,
           'comments': true,
+          'reservations': true,
+          'recommendations': true,
           'marketing': false,
         },
         'privacy': {

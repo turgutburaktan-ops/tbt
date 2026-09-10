@@ -46,6 +46,8 @@ test('broadcast delivery paginates and preserves per-user push consent', async (
   const h = harness(205); await h.run();
   assert.equal(h.job().status, 'completed');
   assert.equal(h.job().recipientCount, 205);
+  assert.equal(h.job().pushEligibleCount, 103);
+  assert.equal(h.job().pushSuppressedCount, 102);
   assert.equal(h.inbox().length, 205);
   assert.equal(h.inbox()[0][1].imageUrl, 'https://example.com/tbt.jpg');
   assert.equal(h.inbox().filter(([, n]) => n.pushAllowed).length, 103);
@@ -57,6 +59,7 @@ test('interrupted delivery resumes without duplicating notifications', async () 
   await h.run(); await h.run();
   assert.equal(h.inbox().length, 205);
   assert.equal(h.job().recipientCount, 205);
+  assert.equal(h.job().pushEligibleCount, 103);
 });
 test('empty audience completes with an actual count of zero', async () => {
   const h = harness(0); await h.run();

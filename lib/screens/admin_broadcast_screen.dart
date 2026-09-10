@@ -273,10 +273,34 @@ class _AdminBroadcastScreenState extends State<AdminBroadcastScreen> {
                 );
               final data = snapshot.data?.data();
               final done = data?['status'] == 'completed';
+              final recipients = (data?['recipientCount'] as num?)?.toInt() ?? 0;
+              final eligible = (data?['pushEligibleCount'] as num?)?.toInt() ?? 0;
+              final delivered = (data?['pushSuccessCount'] as num?)?.toInt() ?? 0;
+              final failed = (data?['pushFailureCount'] as num?)?.toInt() ?? 0;
+              final opened = (data?['openedRecipientCount'] as num?)?.toInt() ?? 0;
               return Padding(
                 padding: const EdgeInsets.only(top: 20),
-                child: Text(
-                  '${done ? 'Tamamlandı' : 'Gönderim sırasında'} · ${data?['recipientCount'] ?? 0} bildirim merkezine eklendi. Telefon teslim sayısı değildir.',
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(color: AppColors.cyan.withValues(alpha: .35)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        done ? 'Gönderim tamamlandı' : 'Gönderim sürüyor…',
+                        style: const TextStyle(fontWeight: FontWeight.w900),
+                      ),
+                      const SizedBox(height: 8),
+                      Text('$recipients bildirim merkezine eklendi'),
+                      Text('$eligible kullanıcı telefon bildirimi için uygun'),
+                      Text('$delivered cihaz teslimi · $failed başarısız deneme'),
+                      Text('$opened kullanıcı duyuruyu açtı'),
+                    ],
+                  ),
                 ),
               );
             },
