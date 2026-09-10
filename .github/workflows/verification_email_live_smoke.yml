@@ -17,7 +17,7 @@ jobs:
         with:
           node-version: '20'
       - run: npm install --prefix functions --ignore-scripts --no-audit --no-fund
-      - name: Inspect Firebase phone auth and Android certificates
+      - name: Inspect Firebase phone auth, billing, certificates and API restrictions
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
           FIREBASE_PROJECT_ID: en-iyi-cekim-noktasi
@@ -26,6 +26,7 @@ jobs:
         run: |
           set -euo pipefail
           node <<'NODE'
+          const fs = require('node:fs');
           const {GoogleAuth} = require('./functions/node_modules/google-auth-library');
           const credentials = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT || '{}');
           if (!credentials.project_id) throw new Error('Firebase service account is missing.');
@@ -46,6 +47,7 @@ jobs:
               enabled: phone.enabled === true,
               testNumbers: Object.keys(phone.testPhoneNumbers || {}).length,
               smsRegionConfig: config.smsRegionConfig || null,
+              recaptchaConfig: config.recaptchaConfig || null,
             }));
 
             const appId = encodeURIComponent(process.env.FIREBASE_ANDROID_APP_ID);
@@ -57,6 +59,42 @@ jobs:
               shaHash: item.shaHash,
             }));
             console.log('ANDROID_SHA=' + JSON.stringify(certificates));
+
+            try {
+              const billingResponse = await client.request({
+                url: `https://cloudbilling.googleapis.com/v1/projects/${project}/billingInfo`,
+              });
+              console.log('BILLING=' + JSON.stringify({
+                billingEnabled: billingResponse.data?.billingEnabled === true,
+              }));
+            } catch (error) {
+              console.log('BILLING=unavailable_' + String(error.response?.status || 'unknown'));
+            }
+
+            try {
+              const options = fs.readFileSync('lib/firebase_options.dart', 'utf8');
+              const apiKey = options.match(/apiKey:\s*'([^']+)'/)?.[1];
+              if (!apiKey) throw new Error('missing_key');
+              const lookup = await client.request({
+                url: 'https://apikeys.googleapis.com/v2/keys:lookupKey',
+                params: {keyString: apiKey},
+              });
+              const resourceName = lookup.data?.name;
+              if (!resourceName) throw new Error('missing_resource');
+              const keyResponse = await client.request({
+                url: `https://apikeys.googleapis.com/v2/${resourceName}`,
+              });
+              const restrictions = keyResponse.data?.restrictions || {};
+              console.log('API_RESTRICTIONS=' + JSON.stringify({
+                hasBrowserRestrictions: Boolean(restrictions.browserKeyRestrictions),
+                allowedReferrers: restrictions.browserKeyRestrictions?.allowedReferrers || [],
+                hasAndroidRestrictions: Boolean(restrictions.androidKeyRestrictions),
+                androidApplications: restrictions.androidKeyRestrictions?.allowedApplications || [],
+                apiTargets: (restrictions.apiTargets || []).map((item) => item.service),
+              }));
+            } catch (error) {
+              console.log('API_RESTRICTIONS=unavailable_' + String(error.response?.status || error.message));
+            }
           })().catch((error) => {
             console.error(error.response?.data?.error?.message || error.message);
             process.exitCode = 1;
