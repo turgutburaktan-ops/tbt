@@ -188,22 +188,52 @@ jobs:
       - name: Configure iOS share extension
         run: python3 tool/configure_ios_share.py
 
-      - name: Install signing certificate and profile
+      - name: Install signing certificate and provisioning profiles
         shell: bash
         env:
           IOS_DISTRIBUTION_P12_BASE64: ${{ secrets.IOS_DISTRIBUTION_P12_BASE64 }}
           IOS_DISTRIBUTION_P12_PASSWORD: ${{ secrets.IOS_DISTRIBUTION_P12_PASSWORD }}
-          IOS_PROVISIONING_PROFILE_BASE64: ${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}
-          IOS_SHARE_PROVISIONING_PROFILE_BASE64: ${{ secrets.IOS_SHARE_PROVISIONING_PROFILE_BASE64 }}
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
           KEYCHAIN_PASSWORD: ${{ github.run_id }}-${{ github.run_attempt }}
+          FASTLANE_SKIP_UPDATE_CHECK: "1"
         run: |
           set -euo pipefail
           CERTIFICATE_PATH="$RUNNER_TEMP/tbt-distribution.p12"
-          PROFILE_PATH="$RUNNER_TEMP/tbt-app-store.mobileprovision"
+          MAIN_PROFILE_PATH="$RUNNER_TEMP/tbt-app-store.mobileprovision"
+          SHARE_PROFILE_PATH="$RUNNER_TEMP/tbt-share.mobileprovision"
           KEYCHAIN_PATH="$RUNNER_TEMP/tbt-signing.keychain-db"
+          API_KEY_PATH="$RUNNER_TEMP/AuthKey_${APP_STORE_CONNECT_API_KEY_ID}.p8"
+          API_KEY_JSON="$RUNNER_TEMP/app-store-connect-api-key.json"
+          SHARE_PROFILE_REQUESTED_NAME="TBT Share App Store 2026"
+
+          test -n "$IOS_DISTRIBUTION_P12_BASE64"
+          test -n "$IOS_DISTRIBUTION_P12_PASSWORD"
+          test -n "$APP_STORE_CONNECT_API_KEY_ID"
+          test -n "$APP_STORE_CONNECT_API_ISSUER_ID"
+          test -n "$APP_STORE_CONNECT_API_KEY"
 
           printf '%s' "$IOS_DISTRIBUTION_P12_BASE64" | base64 --decode > "$CERTIFICATE_PATH"
-          printf '%s' "$IOS_PROVISIONING_PROFILE_BASE64" | base64 --decode > "$PROFILE_PATH"
+          printf '%s' "$APP_STORE_CONNECT_API_KEY" > "$API_KEY_PATH"
+          chmod 600 "$API_KEY_PATH"
+
+          python3 - <<'PYKEY'
+          import json
+          import os
+          from pathlib import Path
+
+          payload = {
+              "key_id": os.environ["APP_STORE_CONNECT_API_KEY_ID"],
+              "issuer_id": os.environ["APP_STORE_CONNECT_API_ISSUER_ID"],
+              "key": os.environ["APP_STORE_CONNECT_API_KEY"],
+              "in_house": False,
+          }
+          Path(os.environ["RUNNER_TEMP"], "app-store-connect-api-key.json").write_text(
+              json.dumps(payload)
+          )
+          PYKEY
+          chmod 600 "$API_KEY_JSON"
 
           security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
           security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
@@ -220,36 +250,74 @@ jobs:
             -k "$KEYCHAIN_PASSWORD" \
             "$KEYCHAIN_PATH"
 
+          sudo gem install fastlane -N
+          fastlane sigh \
+            --api_key_path "$API_KEY_JSON" \
+            --app_identifier "$BUNDLE_ID" \
+            --team_id "$DEVELOPMENT_TEAM" \
+            --provisioning_name "$PROFILE_NAME" \
+            --output_path "$RUNNER_TEMP" \
+            --filename "$(basename "$MAIN_PROFILE_PATH")" \
+            --force \
+            --skip_install
+          fastlane sigh \
+            --api_key_path "$API_KEY_JSON" \
+            --app_identifier com.tbt.social.TBTShare \
+            --team_id "$DEVELOPMENT_TEAM" \
+            --provisioning_name "$SHARE_PROFILE_REQUESTED_NAME" \
+            --output_path "$RUNNER_TEMP" \
+            --filename "$(basename "$SHARE_PROFILE_PATH")" \
+            --force \
+            --skip_install
+
           mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
-          security cms -D -i "$PROFILE_PATH" > "$RUNNER_TEMP/profile.plist"
+          security cms -D -i "$MAIN_PROFILE_PATH" > "$RUNNER_TEMP/profile.plist"
+          security cms -D -i "$SHARE_PROFILE_PATH" > "$RUNNER_TEMP/share-profile.plist"
+
+          python3 - <<'PYPROFILE'
+          import os
+          import plistlib
+          from pathlib import Path
+
+          group = "group.com.tbt.social.share"
+          expected = [
+              ("profile.plist", "com.tbt.social"),
+              ("share-profile.plist", "com.tbt.social.TBTShare"),
+          ]
+          for filename, suffix in expected:
+              data = plistlib.loads((Path(os.environ["RUNNER_TEMP"]) / filename).read_bytes())
+              rights = data.get("Entitlements", {})
+              assert rights.get("application-identifier", "").endswith(
+                  "." + suffix
+              ), "Profile bundle identifier mismatch"
+              assert group in rights.get(
+                  "com.apple.security.application-groups", []
+              ), "App Group missing from signing profile"
+          PYPROFILE
+
           PROFILE_UUID=$(/usr/libexec/PlistBuddy -c 'Print :UUID' "$RUNNER_TEMP/profile.plist")
           PROFILE_DISPLAY_NAME=$(/usr/libexec/PlistBuddy -c 'Print :Name' "$RUNNER_TEMP/profile.plist")
           test "$PROFILE_DISPLAY_NAME" = "$PROFILE_NAME"
-          cp "$PROFILE_PATH" "$HOME/Library/MobileDevice/Provisioning Profiles/$PROFILE_UUID.mobileprovision"
-          test -n "$IOS_SHARE_PROVISIONING_PROFILE_BASE64" || { echo 'Missing IOS_SHARE_PROVISIONING_PROFILE_BASE64 for TBT share extension'; exit 1; }
-          printf '%s' "$IOS_SHARE_PROVISIONING_PROFILE_BASE64" | base64 --decode > "$RUNNER_TEMP/tbt-share.mobileprovision"
-          security cms -D -i "$RUNNER_TEMP/tbt-share.mobileprovision" > "$RUNNER_TEMP/share-profile.plist"
-          python3 - <<'PYPROFILE'
-          import os, plistlib
-          from pathlib import Path
-          group = 'group.com.tbt.social.share'
-          for filename, suffix in [('profile.plist', 'com.tbt.social'), ('share-profile.plist', 'com.tbt.social.TBTShare')]:
-              data = plistlib.loads((Path(os.environ['RUNNER_TEMP']) / filename).read_bytes())
-              rights = data.get('Entitlements', {})
-              assert rights.get('application-identifier', '').endswith('.' + suffix), 'Profile bundle identifier mismatch'
-              assert group in rights.get('com.apple.security.application-groups', []), 'App Group missing from signing profile'
-          PYPROFILE
+          cp "$MAIN_PROFILE_PATH" "$HOME/Library/MobileDevice/Provisioning Profiles/$PROFILE_UUID.mobileprovision"
+
           SHARE_UUID=$(/usr/libexec/PlistBuddy -c 'Print :UUID' "$RUNNER_TEMP/share-profile.plist")
           SHARE_PROFILE_NAME=$(/usr/libexec/PlistBuddy -c 'Print :Name' "$RUNNER_TEMP/share-profile.plist")
-          cp "$RUNNER_TEMP/tbt-share.mobileprovision" "$HOME/Library/MobileDevice/Provisioning Profiles/$SHARE_UUID.mobileprovision"
+          cp "$SHARE_PROFILE_PATH" "$HOME/Library/MobileDevice/Provisioning Profiles/$SHARE_UUID.mobileprovision"
           echo "SHARE_PROFILE_NAME=$SHARE_PROFILE_NAME" >> "$GITHUB_ENV"
           export SHARE_PROFILE_NAME
+
           ruby <<'RUBYSHARE'
           require 'xcodeproj'
           project = Xcodeproj::Project.open('ios/Runner.xcodeproj')
           share = project.targets.find { |item| item.name == 'TBTShare' }
+          abort('TBTShare target missing') unless share
           share.build_configurations.each do |config|
-            config.build_settings.merge!({'CODE_SIGN_STYLE' => 'Manual', 'DEVELOPMENT_TEAM' => ENV.fetch('DEVELOPMENT_TEAM'), 'CODE_SIGN_IDENTITY' => 'Apple Distribution', 'PROVISIONING_PROFILE_SPECIFIER' => ENV.fetch('SHARE_PROFILE_NAME')})
+            config.build_settings.merge!({
+              'CODE_SIGN_STYLE' => 'Manual',
+              'DEVELOPMENT_TEAM' => ENV.fetch('DEVELOPMENT_TEAM'),
+              'CODE_SIGN_IDENTITY' => 'Apple Distribution',
+              'PROVISIONING_PROFILE_SPECIFIER' => ENV.fetch('SHARE_PROFILE_NAME'),
+            })
           end
           project.save
           RUBYSHARE
