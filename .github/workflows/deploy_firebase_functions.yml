@@ -64,6 +64,18 @@ jobs:
           with open(os.environ['GITHUB_ENV'], 'a', encoding='utf-8') as env_file:
               env_file.write(f'GOOGLE_APPLICATION_CREDENTIALS={target}\n')
           PY
+      - name: Sync verification email secrets
+        if: contains(github.event.head_commit.message, '[verification-email]')
+        env:
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          RESEND_WEBHOOK_SECRET: ${{ secrets.RESEND_WEBHOOK_SECRET }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$RESEND_API_KEY"
+          test -n "$RESEND_WEBHOOK_SECRET"
+          printf '%s' "$RESEND_API_KEY" | firebase functions:secrets:set RESEND_API_KEY --data-file=- --project en-iyi-cekim-noktasi --non-interactive
+          printf '%s' "$RESEND_WEBHOOK_SECRET" | firebase functions:secrets:set RESEND_WEBHOOK_SECRET --data-file=- --project en-iyi-cekim-noktasi --non-interactive
       - name: Repair the reported Burak business listing
         if: contains(github.event.head_commit.message, '[repair-burak-publication]')
         run: node functions/scripts/repair_business_publication.js dining:user_4xFEQcn0tjLktR5Cq85n
