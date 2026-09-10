@@ -2,6 +2,11 @@ name: iOS TestFlight Release
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/ios_testflight_release.yml
 
 permissions:
   contents: read
@@ -305,7 +310,7 @@ jobs:
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
         with:
-          name: tbt-ios-ipa-1.0.13-build21
+          name: tbt-ios-ipa-1.0.13-build22
           path: build/ios/ipa/*.ipa
           if-no-files-found: error
           retention-days: 14
