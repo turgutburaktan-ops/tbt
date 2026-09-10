@@ -1,2 +1,2 @@
 HTTP_STATUS=0
-CALLABLE_RESULT={"stage":"runner_exception"}
+CALLABLE_RESULT={"stage":"load_modules","type":"Error","code":"MODULE_NOT_FOUND"}
