@@ -1,0 +1,48 @@
+{
+  "batch": "music-videos-20260910",
+  "music": {
+    "artist": "Kevin MacLeod",
+    "attributionText": "Carefree — Kevin MacLeod (incompetech.com). CC BY 4.0: https://creativecommons.org/licenses/by/4.0/ . TBT videolarında kesilmiş ve karıştırılmış bölümler kullanılır.",
+    "category": "Enstrümantal",
+    "downloadUrl": "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Carefree.mp3",
+    "durationMs": 205139,
+    "id": "incompetech_USUAN1400037",
+    "license": "CC-BY-4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+    "mood": "Gezi",
+    "provider": "incompetech_cc",
+    "sha256": "8433b770a630d9b1594fd484442c677907ece899a4d149954cd2e74fd733e311",
+    "sourceUrl": "https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1400037",
+    "title": "Carefree"
+  },
+  "posts": [
+    {
+      "author": "Okan Demiray",
+      "caption": "Köprüde trafik, kıyıda vapurlar, ufukta İstanbul… Haliç’e bir de yukarıdan bak. 🎶\nBu manzarayı hangi arkadaşınla izlemek isterdin?",
+      "city": "İstanbul",
+      "id": "tbt-rehber-musicvideo-20260910-01",
+      "key": "galata",
+      "license": "Pexels License",
+      "licenseUrl": "https://www.pexels.com/license/",
+      "place": "Galata Köprüsü · Haliç",
+      "sha256": "df43706f1dd9ef08d716b9f5178a5e6ca0c0f473f716f1ee5e7899f6814629b1",
+      "sourcePage": "https://www.pexels.com/video/aerial-view-of-galata-bridge-in-istanbul-turkey-31822001/",
+      "src": "https://videos.pexels.com/video-files/31822001/13557499_3840_2160_60fps.mp4",
+      "title": "Galata Köprüsü’nde şehir hiç durmuyor"
+    },
+    {
+      "author": "Sururi Ballıdağ Director",
+      "caption": "Birbirini izleyen binalar, caddeler ve şehrin ufka uzanan silüeti… Ankara’nın günlük koşturmacasına müzikli bir mola. 🎶",
+      "city": "Ankara",
+      "id": "tbt-rehber-musicvideo-20260910-02",
+      "key": "ankara",
+      "license": "Pexels License",
+      "licenseUrl": "https://www.pexels.com/license/",
+      "place": "Ankara şehir manzarası",
+      "sha256": "2e2650ca5da72a0ca4f1b2db46fd151bbdcf25f7e3694a0f36acd5cbcbe6cede",
+      "sourcePage": "https://www.pexels.com/video/a-view-of-a-city-from-a-high-building-27093698/",
+      "src": "https://videos.pexels.com/video-files/27093698/12069404_2160_3840_30fps.mp4",
+      "title": "Ankara’ya yukarıdan bir bakış"
+    }
+  ]
+}
