@@ -1,2 +1,2 @@
-HTTP_STATUS=0
-CALLABLE_RESULT={"stage":"load_modules","type":"Error","code":"MODULE_NOT_FOUND"}
+HTTP_STATUS=200
+CALLABLE_RESULT={"result":{"ok":true,"status":"accepted","retryAfterSeconds":60}}
