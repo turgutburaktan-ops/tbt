@@ -251,24 +251,24 @@ jobs:
             "$KEYCHAIN_PATH"
 
           sudo gem install fastlane -N
-          fastlane sigh \
-            --api_key_path "$API_KEY_JSON" \
-            --app_identifier "$BUNDLE_ID" \
-            --team_id "$DEVELOPMENT_TEAM" \
-            --provisioning_name "$PROFILE_NAME" \
-            --output_path "$RUNNER_TEMP" \
-            --filename "$(basename "$MAIN_PROFILE_PATH")" \
-            --force \
-            --skip_install
-          fastlane sigh \
-            --api_key_path "$API_KEY_JSON" \
-            --app_identifier com.tbt.social.TBTShare \
-            --team_id "$DEVELOPMENT_TEAM" \
-            --provisioning_name "$SHARE_PROFILE_REQUESTED_NAME" \
-            --output_path "$RUNNER_TEMP" \
-            --filename "$(basename "$SHARE_PROFILE_PATH")" \
-            --force \
-            --skip_install
+          fastlane run sigh \
+            api_key_path:"$API_KEY_JSON" \
+            app_identifier:"$BUNDLE_ID" \
+            team_id:"$DEVELOPMENT_TEAM" \
+            provisioning_name:"$PROFILE_NAME" \
+            output_path:"$RUNNER_TEMP" \
+            filename:"$(basename "$MAIN_PROFILE_PATH")" \
+            force:true \
+            skip_install:true
+          fastlane run sigh \
+            api_key_path:"$API_KEY_JSON" \
+            app_identifier:"com.tbt.social.TBTShare" \
+            team_id:"$DEVELOPMENT_TEAM" \
+            provisioning_name:"$SHARE_PROFILE_REQUESTED_NAME" \
+            output_path:"$RUNNER_TEMP" \
+            filename:"$(basename "$SHARE_PROFILE_PATH")" \
+            force:true \
+            skip_install:true
 
           mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
           security cms -D -i "$MAIN_PROFILE_PATH" > "$RUNNER_TEMP/profile.plist"
