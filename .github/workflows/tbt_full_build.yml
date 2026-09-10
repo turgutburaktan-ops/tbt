@@ -144,6 +144,8 @@ jobs:
           ! grep -q 'CI_DUMMY_MAPS_KEY' android/app/src/main/AndroidManifest.xml
       - name: Align share plugin JVM targets
         run: python3 tool/patch_receive_sharing_intent.py
+      - name: Configure notification replies
+        run: python3 tool/configure_notifications.py android
       - name: Build Android APK
         run: flutter build apk --debug --no-pub
       - name: Verify APK signing identity
@@ -270,7 +272,7 @@ jobs:
       - name: Install chat test dependencies
         run: npm --prefix functions install --ignore-scripts --no-package-lock
       - name: Firebase rules emulator
-        run: npm install -g firebase-tools && firebase emulators:exec --only firestore --project demo-tbt "node tool/test_chat_collaboration.cjs" --non-interactive
+        run: npm install -g firebase-tools && firebase emulators:exec --only firestore --project demo-tbt "node tool/test_chat_collaboration.cjs && node tool/test_social_publishing.cjs && node tool/test_usability_creator_admin.cjs" --non-interactive
       - name: Cloud Functions audit
         working-directory: functions
         run: npm install --package-lock-only --ignore-scripts && npm audit --omit=dev --audit-level=high

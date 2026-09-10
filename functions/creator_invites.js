@@ -66,7 +66,7 @@ exports.createCreatorInvite = onCall({region: REGION}, async (request) => {
   return {
     ok: true,
     code,
-    url: `https://tbttr.com/creator/${code}`,
+    url: `https://www.trtbt.com/creator/${code}`,
     maxUses,
     expiresAtMs: expiresAt.toMillis(),
   };
@@ -106,7 +106,8 @@ exports.redeemCreatorInvite = onCall({region: REGION}, async (request) => {
     ]);
     if (!userSnap.exists) throw new HttpsError('failed-precondition', 'Önce TBT profilini oluştur.');
     const user = userSnap.data() || {};
-    if (user.isCreator === true) {
+    if (user.accountStatus === 'frozen' || user.disabled === true || user.banned === true) throw new HttpsError('permission-denied', 'Hesap kullanılamıyor.');
+    if (user.isCreator === true && redemptionSnap.exists) {
       return {
         ok: true,
         alreadyCreator: true,

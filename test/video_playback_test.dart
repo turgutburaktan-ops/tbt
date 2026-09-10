@@ -1,3 +1,4 @@
+import 'package:best_photo_spot/services/video_audio_session.dart';
 import 'package:flutter/material.dart';
 import 'package:best_photo_spot/widgets/expandable_caption.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -9,6 +10,7 @@ class _VideoPlatform extends VideoPlayerPlatform {
   int next = 0;
   final playing = <int, bool>{};
   final speeds = <int, double>{};
+  final volumes = <int, double>{};
   @override
   Future<void> init() async {}
   @override
@@ -33,9 +35,15 @@ class _VideoPlatform extends VideoPlayerPlatform {
   @override
   Future<void> setLooping(int id, bool looping) async {}
   @override
-  Future<void> setVolume(int id, double volume) async {}
+  Future<void> setVolume(int id, double volume) async {
+    volumes[id] = volume;
+  }
+
   @override
-  Future<void> setPlaybackSpeed(int id, double speed) async { speeds[id] = speed; }
+  Future<void> setPlaybackSpeed(int id, double speed) async {
+    speeds[id] = speed;
+  }
+
   @override
   Future<void> play(int id) async {
     playing[id] = true;
@@ -55,36 +63,136 @@ class _VideoPlatform extends VideoPlayerPlatform {
 }
 
 void main() {
-  testWidgets('right hold is 2x only while held; caption keeps playback', (tester) async {
+  testWidgets(
+    'mute and reset update existing and subsequently created video controllers',
+    (tester) async {
+      final platform = _VideoPlatform();
+      VideoPlayerPlatform.instance = platform;
+      final audio = VideoAudioSession();
+      var second = false;
+      late StateSetter update;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: StatefulBuilder(
+            builder: (context, setState) {
+              update = setState;
+              return Scaffold(
+                body: Column(
+                  children: [
+                    Expanded(
+                      child: AppVideoPlayer.network(
+                        url: 'https://example.com/shared-one.mp4',
+                        autoplay: true,
+                        audioSession: audio,
+                      ),
+                    ),
+                    if (second)
+                      Expanded(
+                        child: AppVideoPlayer.network(
+                          url: 'https://example.com/shared-two.mp4',
+                          autoplay: true,
+                          audioSession: audio,
+                        ),
+                      ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+      );
+      Future<void> tick() async {
+        for (var i = 0; i < 8; i++) {
+          await tester.pump(const Duration(milliseconds: 100));
+        }
+      }
+
+      await tick();
+      expect(platform.volumes.values, [1.0]);
+      await tester.tap(find.byTooltip('Sesi kapat'));
+      await tick();
+      expect(platform.volumes.values, [0.0]);
+      update(() => second = true);
+      await tick();
+      expect(platform.volumes.length, 2);
+      expect(platform.volumes.values.every((v) => v == 0), true);
+      audio.reset();
+      await tick();
+      expect(platform.volumes.values.every((v) => v == 1), true);
+      expect(
+        platform.playing.values.where((v) => v).length,
+        lessThanOrEqualTo(1),
+      );
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump(const Duration(milliseconds: 300));
+      audio.dispose();
+    },
+  );
+  testWidgets('right hold is 2x only while held; caption keeps playback', (
+    tester,
+  ) async {
     final platform = _VideoPlatform();
     VideoPlayerPlatform.instance = platform;
     final nav = GlobalKey<NavigatorState>();
-    await tester.pumpWidget(MaterialApp(navigatorKey: nav, home: Scaffold(body: Stack(children: [
-      const Positioned.fill(child: AppVideoPlayer.network(url: 'https://example.com/hold.mp4', autoplay: true, holdToSpeed: true)),
-      const Positioned(bottom: 20, left: 10, width: 200, child: ExpandableCaption(text: 'Uzun açıklama\nİkinci açıklama satırı', detailsInSheet: true)),
-    ]))));
-    Future<void> tick() async { for (var i = 0; i < 8; i++) { await tester.pump(const Duration(milliseconds: 100)); } }
+    await tester.pumpWidget(
+      MaterialApp(
+        navigatorKey: nav,
+        home: Scaffold(
+          body: Stack(
+            children: [
+              const Positioned.fill(
+                child: AppVideoPlayer.network(
+                  url: 'https://example.com/hold.mp4',
+                  autoplay: true,
+                  holdToSpeed: true,
+                ),
+              ),
+              const Positioned(
+                bottom: 20,
+                left: 10,
+                width: 200,
+                child: ExpandableCaption(
+                  text: 'Uzun açıklama\nİkinci açıklama satırı',
+                  detailsInSheet: true,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    Future<void> tick() async {
+      for (var i = 0; i < 8; i++) {
+        await tester.pump(const Duration(milliseconds: 100));
+      }
+    }
+
     await tick();
     final id = platform.playing.keys.single;
     final gesture = await tester.startGesture(const Offset(650, 200));
     await tester.pump(const Duration(milliseconds: 600));
     expect(platform.speeds[id], 2);
     expect(find.text('2x ▶▶'), findsOneWidget);
-    await gesture.up(); await tester.pump();
+    await gesture.up();
+    await tester.pump();
     expect(platform.speeds[id], 1);
     final left = await tester.startGesture(const Offset(100, 200));
     await tester.pump(const Duration(milliseconds: 600));
     expect(platform.speeds[id], 1);
     await left.up();
-    await tester.tap(find.text('Devamını gör')); await tick();
+    await tester.tap(find.text('Devamını gör'));
+    await tick();
     expect(platform.playing[id], true);
-    nav.currentState!.pop(); await tick();
+    nav.currentState!.pop();
+    await tick();
     final cancelled = await tester.startGesture(const Offset(650, 200));
     await tester.pump(const Duration(milliseconds: 600));
     expect(platform.speeds[id], 2);
-    await cancelled.cancel(); await tester.pump();
+    await cancelled.cancel();
+    await tester.pump();
     expect(platform.speeds[id], 1);
-    await tester.pumpWidget(const SizedBox()); await tester.pump(const Duration(milliseconds: 300));
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(milliseconds: 300));
   });
 
   testWidgets(
@@ -201,4 +309,3 @@ void main() {
     },
   );
 }
-

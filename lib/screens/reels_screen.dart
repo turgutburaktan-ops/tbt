@@ -1,3 +1,7 @@
+import '../services/video_audio_session.dart';
+import '../services/creator_service.dart';
+import '../widgets/creator_view_tracker.dart';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -7,6 +11,7 @@ import '../widgets/post_sound_chip.dart';
 import '../widgets/app_video_player.dart';
 import '../widgets/like_burst.dart';
 import '../widgets/share_recipient_picker.dart';
+import '../widgets/post_sharing_actions.dart';
 
 import '../services/content_engagement_service.dart';
 import '../services/social_service.dart';
@@ -160,11 +165,15 @@ class _ReelsScreenState extends State<ReelsScreen> {
                     }
                     final adsBefore = index < 6 ? 0 : 1 + ((index - 6) ~/ 11);
                     final doc = docs[index - adsBefore];
-                    return _ReelPage(
-                      key: ValueKey(doc['id']),
+                    return CreatorViewTracker(
+                      key: ValueKey('reel-view-${doc['id']}'),
                       postId: doc['id'].toString(),
-                      data: doc,
-                      active: index == _activeIndex,
+                      child: _ReelPage(
+                        key: ValueKey(doc['id']),
+                        postId: doc['id'].toString(),
+                        data: doc,
+                        active: index == _activeIndex,
+                      ),
                     );
                   },
                 ),
@@ -270,6 +279,7 @@ class _ReelPage extends StatelessWidget {
   String get _spotName => (data['spotName'] ?? '').toString();
 
   Future<void> _openProfile(BuildContext context) async {
+    CreatorService.instance.recordProfileVisit(postId);
     if (_ownerId.isEmpty) return;
     await Navigator.push(
       context,
@@ -293,31 +303,49 @@ class _ReelPage extends StatelessWidget {
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (sheetContext) => Padding(
-        padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(sheetContext).bottom),
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
+        ),
         child: SizedBox(
-        height: (MediaQuery.sizeOf(sheetContext).height - MediaQuery.viewInsetsOf(sheetContext).bottom) * .68,
-        child: Column(
-          children: [
-            const Padding(
-              padding: EdgeInsets.fromLTRB(18, 16, 18, 10),
-              child: Row(
+          height:
+              (MediaQuery.sizeOf(sheetContext).height -
+                  MediaQuery.viewInsetsOf(sheetContext).bottom) *
+              .68,
+          child: Column(
+            children: [
+              const Padding(
+                padding: EdgeInsets.fromLTRB(18, 16, 18, 10),
+                child: Row(
+                  children: [
+                    Icon(Icons.send_outlined),
+                    SizedBox(width: 9),
+                    Text(
+                      'Birine gönder',
+                      style: TextStyle(
+                        fontSize: 19,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.send_outlined),
-                  SizedBox(width: 9),
-                  Text(
-                    'Birine gönder',
-                    style: TextStyle(fontSize: 19, fontWeight: FontWeight.w900),
-                  ),
+                  PostSharingActions(postId: postId),
+                  const Text('Hikâyede paylaş / yeniden paylaş'),
                 ],
               ),
-            ),
-            const Divider(height: 1, color: Colors.white12),
-            Expanded(child: ShareRecipientPicker(
-              onSelected: (user) => Navigator.pop(sheetContext, user),
-            )),
-          ],
+              const Divider(height: 1, color: Colors.white12),
+              Expanded(
+                child: ShareRecipientPicker(
+                  onSelected: (user) => Navigator.pop(sheetContext, user),
+                ),
+              ),
+            ],
+          ),
         ),
-      )),
+      ),
     );
     if (selected == null || !context.mounted) return;
     try {
@@ -372,6 +400,8 @@ class _ReelPage extends StatelessWidget {
             autoplay: true,
             active: active,
             muted: false,
+            audioSession: VideoAudioSession.reels,
+            showMuteControl: false,
             fit: BoxFit.contain,
           ),
         ),
@@ -540,6 +570,19 @@ class _ReelPage extends StatelessWidget {
                 label: 'Gönder',
                 onTap: () => _share(context),
               ),
+              const SizedBox(height: 14),
+              ListenableBuilder(
+                listenable: VideoAudioSession.reels,
+                builder: (context, _) => _Action(
+                  icon: VideoAudioSession.reels.muted
+                      ? Icons.volume_off_rounded
+                      : Icons.volume_up_rounded,
+                  label: VideoAudioSession.reels.muted
+                      ? 'Sesi aç'
+                      : 'Sesi kapat',
+                  onTap: VideoAudioSession.reels.toggle,
+                ),
+              ),
             ],
           ),
         ),
@@ -569,6 +612,7 @@ class _Action extends StatelessWidget {
         shape: const CircleBorder(),
         child: IconButton(
           onPressed: onTap,
+          tooltip: label,
           icon: Icon(
             icon,
             color: active ? const Color(0xFFFF4D67) : Colors.white,
@@ -588,4 +632,3 @@ class _Action extends StatelessWidget {
     ],
   );
 }
-

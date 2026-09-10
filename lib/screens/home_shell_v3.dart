@@ -1,4 +1,6 @@
+import '../services/video_audio_session.dart';
 import '../widgets/playback_indexed_stack.dart';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -57,6 +59,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _selectDestination(int index) async {
     if (!mounted || index == _selectedIndex) return;
+    if (index == 0) VideoAudioSession.feed.reset();
     setState(() {
       _loadedTabs.add(index);
       _selectedIndex = index;
@@ -69,6 +72,7 @@ class _HomeScreenState extends State<HomeScreen> {
       return;
     }
     if (_selectedIndex != 0) {
+      VideoAudioSession.feed.reset();
       setState(() {
         _loadedTabs.add(0);
         _selectedIndex = 0;
@@ -135,7 +139,11 @@ class _BottomNav extends StatelessWidget {
       (Icons.place_outlined, Icons.place_rounded, strings.text('places')),
       (Icons.explore_outlined, Icons.explore_rounded, strings.text('plan')),
       (Icons.near_me_outlined, Icons.near_me_rounded, strings.text('nearby')),
-      (Icons.person_outline_rounded, Icons.person_rounded, strings.text('profile')),
+      (
+        Icons.person_outline_rounded,
+        Icons.person_rounded,
+        strings.text('profile'),
+      ),
     ];
     return SafeArea(
       top: false,
@@ -166,7 +174,9 @@ class _BottomNav extends StatelessWidget {
                                 gradient: selected
                                     ? AppColors.accentGradientHorizontal
                                     : null,
-                                color: selected ? null : AppColors.surfaceStrong,
+                                color: selected
+                                    ? null
+                                    : AppColors.surfaceStrong,
                                 borderRadius: BorderRadius.circular(10),
                                 border: Border.all(
                                   color: selected
@@ -235,6 +245,7 @@ class _HomeFeedHubState extends State<_HomeFeedHub> {
 
   void _setSection(int value) {
     if (value == _section) return;
+    if (value == 0) VideoAudioSession.feed.reset();
     _chromeCollapse.value = 0;
     setState(() {
       _loadedSections.add(value);
@@ -365,53 +376,56 @@ class _HomeFeedHubState extends State<_HomeFeedHub> {
               bottom: false,
               child: Column(
                 children: [
-            const _HomeHeader(showBrand: true),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(10, 0, 10, 2),
-              child: _SegmentTabs(
-                labels: [AppStrings.of(context).text('home'), AppStrings.of(context).text('discover')],
-                selected: _section,
-                prominent: true,
-                onChanged: _setSection,
-              ),
-            ),
-            Expanded(
-              child: NotificationListener<ScrollNotification>(
-                onNotification: _handleFeedScroll,
-                child: PlaybackIndexedStack(
-                  index: _section,
-                  children: [
-                    _loadedSections.contains(0)
-                        ? Column(
-                            children: [
-                              _scrollLinkedChrome(),
-                              Expanded(
-                                child: PlaybackIndexedStack(
-                                  index: _photoMode,
+                  const _HomeHeader(showBrand: true),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(10, 0, 10, 2),
+                    child: _SegmentTabs(
+                      labels: [
+                        AppStrings.of(context).text('home'),
+                        AppStrings.of(context).text('discover'),
+                      ],
+                      selected: _section,
+                      prominent: true,
+                      onChanged: _setSection,
+                    ),
+                  ),
+                  Expanded(
+                    child: NotificationListener<ScrollNotification>(
+                      onNotification: _handleFeedScroll,
+                      child: PlaybackIndexedStack(
+                        index: _section,
+                        children: [
+                          _loadedSections.contains(0)
+                              ? Column(
                                   children: [
-                                    _loadedPhotoModes.contains(0)
-                                        ? const _AuthAwareFeed(
-                                            mode: FeedMode.forYou,
-                                          )
-                                        : const SizedBox.shrink(),
-                                    _loadedPhotoModes.contains(1)
-                                        ? const _AuthAwareFeed(
-                                            mode: FeedMode.following,
-                                          )
-                                        : const SizedBox.shrink(),
+                                    _scrollLinkedChrome(),
+                                    Expanded(
+                                      child: PlaybackIndexedStack(
+                                        index: _photoMode,
+                                        children: [
+                                          _loadedPhotoModes.contains(0)
+                                              ? const _AuthAwareFeed(
+                                                  mode: FeedMode.forYou,
+                                                )
+                                              : const SizedBox.shrink(),
+                                          _loadedPhotoModes.contains(1)
+                                              ? const _AuthAwareFeed(
+                                                  mode: FeedMode.following,
+                                                )
+                                              : const SizedBox.shrink(),
+                                        ],
+                                      ),
+                                    ),
                                   ],
-                                ),
-                              ),
-                            ],
-                          )
-                        : const SizedBox.shrink(),
-                    _loadedSections.contains(1)
-                        ? const HomeDiscoverScreen()
-                        : const SizedBox.shrink(),
-                  ],
-                ),
-              ),
-            ),
+                                )
+                              : const SizedBox.shrink(),
+                          _loadedSections.contains(1)
+                              ? const HomeDiscoverScreen()
+                              : const SizedBox.shrink(),
+                        ],
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -735,13 +749,11 @@ class _PlanningHub extends StatelessWidget {
             _PlanningActionCard(
               icon: Icons.auto_awesome_rounded,
               title: 'Akıllı Plan Oluştur',
-              subtitle: 'Şehir, süre ve ilgi alanına göre rotanı TBT hazırlasın.',
+              subtitle:
+                  'Şehir, süre ve ilgi alanına göre rotanı TBT hazırlasın.',
               accent: AppColors.cyan,
               featured: true,
-              onTap: () => _openAuthenticated(
-                context,
-                const SmartPlanScreen(),
-              ),
+              onTap: () => _openAuthenticated(context, const SmartPlanScreen()),
             ),
             const SizedBox(height: 10),
             _PlanningActionCard(
@@ -749,10 +761,8 @@ class _PlanningHub extends StatelessWidget {
               title: 'Planlarım',
               subtitle: 'Kaydettiğin ve davet edildiğin rotaları görüntüle.',
               accent: AppColors.violetBright,
-              onTap: () => _openAuthenticated(
-                context,
-                const TravelPlansScreen(),
-              ),
+              onTap: () =>
+                  _openAuthenticated(context, const TravelPlansScreen()),
             ),
             const SizedBox(height: 10),
             _PlanningActionCard(
@@ -760,10 +770,8 @@ class _PlanningHub extends StatelessWidget {
               title: 'Arkadaşlarla Planla',
               subtitle: 'Yeni bir rota hazırla ve arkadaşlarını davet et.',
               accent: AppColors.success,
-              onTap: () => _openAuthenticated(
-                context,
-                const CollaborativePlansScreen(),
-              ),
+              onTap: () =>
+                  _openAuthenticated(context, const CollaborativePlansScreen()),
             ),
             const SizedBox(height: 10),
             _PlanningActionCard(
@@ -771,10 +779,7 @@ class _PlanningHub extends StatelessWidget {
               title: 'Hazır Rotaları Keşfet',
               subtitle: 'Topluluğun paylaştığı rotaları bul, puanla ve kaydet.',
               accent: AppColors.warning,
-              onTap: () => _open(
-                context,
-                const PublicTravelPlansScreen(),
-              ),
+              onTap: () => _open(context, const PublicTravelPlansScreen()),
             ),
             const Padding(
               padding: EdgeInsets.fromLTRB(2, 20, 2, 10),
@@ -791,7 +796,8 @@ class _PlanningHub extends StatelessWidget {
             _PlanningActionCard(
               icon: Icons.route_rounded,
               title: 'Manuel Rota Oluştur',
-              subtitle: 'Duraklarını kendin seç, sırala ve yolculuğunu hazırla.',
+              subtitle:
+                  'Duraklarını kendin seç, sırala ve yolculuğunu hazırla.',
               accent: AppColors.cyan,
               onTap: () => _open(context, const RoutePlannerScreen()),
             ),
@@ -801,10 +807,8 @@ class _PlanningHub extends StatelessWidget {
               title: 'Etkinlik Oluştur',
               subtitle: 'Tarih, konum ve ayrıntıları belirleyerek yayınla.',
               accent: AppColors.violetBright,
-              onTap: () => _openAuthenticated(
-                context,
-                const EventCreateScreenV2(),
-              ),
+              onTap: () =>
+                  _openAuthenticated(context, const EventCreateScreenV2()),
             ),
             const SizedBox(height: 10),
             _PlanningActionCard(
@@ -812,10 +816,8 @@ class _PlanningHub extends StatelessWidget {
               title: 'Buluşma Başlat',
               subtitle: 'Hızlı bir plan seç, detaylarını ekle ve paylaş.',
               accent: AppColors.success,
-              onTap: () => _openAuthenticated(
-                context,
-                const EventPhotoCreateScreen(),
-              ),
+              onTap: () =>
+                  _openAuthenticated(context, const EventPhotoCreateScreen()),
             ),
             const SizedBox(height: 10),
             _PlanningActionCard(

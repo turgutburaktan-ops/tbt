@@ -45,6 +45,11 @@ service firebase.storage {
       allow delete: if isOwner(uid);
     }
 
+    match /admin_broadcasts/{broadcastId}/image.jpg {
+      allow read: if true;
+      allow create: if signedIn() && request.auth.token.admin == true && request.auth.token.email_verified == true && request.auth.token.email == 'turgutburaktan@gmail.com' && safeImageWrite() && request.resource.contentType == 'image/jpeg' && request.resource.size <= 10 * 1024 * 1024;
+      allow update, delete: if false;
+    }
     // No un-namespaced uploads are accepted.
     match /{allPaths=**} {
       allow read, write: if false;

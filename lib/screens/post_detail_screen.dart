@@ -1,3 +1,6 @@
+import '../widgets/tbt_dialog.dart';
+import '../services/creator_service.dart';
+import '../widgets/creator_view_tracker.dart';
 import 'reels_screen.dart';
 import '../widgets/like_burst.dart';
 
@@ -60,6 +63,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   }
 
   void _openProfile() {
+    CreatorService.instance.recordProfileVisit(_post['id'].toString());
     final uid = (_post['userId'] ?? '').toString().trim();
     if (uid.isNotEmpty)
       Navigator.push(
@@ -208,9 +212,9 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   }
 
   Future<void> _delete() async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showTbtDialog<bool>(
       context: context,
-      builder: (c) => AlertDialog(
+      builder: (c) => TbtDialog(
         backgroundColor: const Color(0xFF121416),
         title: const Text('Gönderiyi sil'),
         content: const Text('Bu paylaşım kalıcı olarak silinecek.'),
@@ -534,11 +538,13 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
             ),
         ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.only(bottom: 36),
-        children: content,
+      body: CreatorViewTracker(
+        postId: _post['id'].toString(),
+        child: ListView(
+          padding: const EdgeInsets.only(bottom: 36),
+          children: content,
+        ),
       ),
     );
   }
 }
-

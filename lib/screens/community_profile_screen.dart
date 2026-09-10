@@ -1,3 +1,5 @@
+import '../widgets/tbt_dialog.dart';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -53,6 +55,8 @@ class CommunityProfileScreen extends StatelessWidget {
           Future<void> pickDateTime() async {
             final date = await showDatePicker(
               context: context,
+              builder: (context, child) =>
+                  Theme(data: tbtDialogTheme(Theme.of(context)), child: child!),
               initialDate: startsAt,
               firstDate: DateTime.now(),
               lastDate: DateTime.now().add(const Duration(days: 365)),
@@ -60,6 +64,8 @@ class CommunityProfileScreen extends StatelessWidget {
             if (date == null || !context.mounted) return;
             final time = await showTimePicker(
               context: context,
+              builder: (context, child) =>
+                  Theme(data: tbtDialogTheme(Theme.of(context)), child: child!),
               initialTime: TimeOfDay.fromDateTime(startsAt),
             );
             if (time == null) return;

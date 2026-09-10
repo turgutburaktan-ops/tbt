@@ -1,3 +1,4 @@
+const {notificationPayload}=require('./push_payload');
 const {onDocumentCreated, onDocumentUpdated} = require('firebase-functions/v2/firestore');
 const {onSchedule} = require('firebase-functions/v2/scheduler');
 const {initializeApp} = require('firebase-admin/app');
@@ -6,18 +7,6 @@ const {getMessaging} = require('firebase-admin/messaging');
 const {marketingPushAllowed} = require('./broadcast_policy');
 
 initializeApp();
-
-const EVENT_TYPES = new Set([
-  'event_join',
-  'social_event_join',
-  'event_cancelled',
-  'social_event_cancelled',
-  'event_updated',
-  'event_time_changed',
-  'community_event',
-  'event_memory',
-  'campus_digest',
-]);
 
 function notificationRef(db, userId, id) {
   return db.collection('users').doc(userId).collection('notifications').doc(id);
@@ -50,7 +39,7 @@ exports.pushOnNotificationCreated = onDocumentCreated(
       ]);
       if (!marketingPushAllowed(user.data()) || !job.exists ||
           job.data().sentBy !== data.actorId || job.data().title !== data.title ||
-          job.data().body !== data.body) return;
+          job.data().body !== data.body || (job.data().imageUrl||'')!==(data.imageUrl||'')) return;
     }
     const tokensSnap = await db.collection('users').doc(userId).collection('push_tokens').get();
     const tokens = tokensSnap.docs
@@ -58,37 +47,17 @@ exports.pushOnNotificationCreated = onDocumentCreated(
       .filter(Boolean);
     if (!tokens.length) return;
 
-    const sourceId = data.sourceId ? String(data.sourceId) : '';
-    const actorId = data.actorId ? String(data.actorId) : '';
-    const type = data.type ? String(data.type) : 'general';
-    const message = {
-      tokens,
-      notification: {
-        title: String(data.title || 'TBT'),
-        body: String(data.body || 'Yeni bir bildirimin var.'),
-      },
-      data: {
-        type,
-        sourceId,
-        actorId,
-        eventId: EVENT_TYPES.has(type) ? sourceId : '',
-        communityId: type === 'community' ? sourceId : '',
-      },
-      android: {
-        priority: 'high',
-        notification: {sound: 'default'},
-      },
-      apns: {
-        payload: {
-          aps: {
-            sound: 'default',
-            badge: 1,
-          },
-        },
-      },
-    };
-
-    const result = await getMessaging().sendEachForMulticast(message);
+    const groups=[tokensSnap.docs.filter(d=>d.data().platform==='android'&&d.data().replyActions===1),tokensSnap.docs.filter(d=>!(d.data().platform==='android'&&d.data().replyActions===1))];
+    const responses=[],sentTokens=[];
+    for(let group=0;group<groups.length;group++){
+      const list=groups[group].map(d=>(d.data().token||'').trim()).filter(Boolean);
+      for(let offset=0;offset<list.length;offset+=500){
+        const batch=list.slice(offset,offset+500);
+        const result=await getMessaging().sendEachForMulticast({tokens:batch,...notificationPayload(data,{userId,notificationId:event.params.notificationId,modernAndroid:group===0})});
+        responses.push(...result.responses);sentTokens.push(...batch);
+      }
+    }
+    const result={responses};
     const stale = [];
     result.responses.forEach((response, index) => {
       const code = response.error?.code || '';
@@ -96,7 +65,7 @@ exports.pushOnNotificationCreated = onDocumentCreated(
         code === 'messaging/registration-token-not-registered' ||
         code === 'messaging/invalid-registration-token'
       ) {
-        stale.push(tokens[index]);
+        stale.push(sentTokens[index]);
       }
     });
 

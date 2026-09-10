@@ -21,6 +21,7 @@ exports.deliverAdminBroadcast = onDocumentCreated({
       for (const user of users.docs) {
         tx.create(user.ref.collection('notifications').doc(`broadcast_${ref.id}`), {
           type: 'tbt_broadcast', title: job.title, body: job.body,
+          imageUrl:job.imageUrl||'', imagePath:job.imagePath||'',
           sourceId: ref.id, actorId: job.sentBy, senderName: 'TBT',
           pushAllowed: marketingPushAllowed(user.data()),
           read: false, createdAt: FieldValue.serverTimestamp(),

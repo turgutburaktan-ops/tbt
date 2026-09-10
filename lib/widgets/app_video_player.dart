@@ -1,3 +1,5 @@
+import '../services/video_audio_session.dart';
+
 import 'dart:async';
 import 'dart:io';
 
@@ -47,7 +49,8 @@ class AppVideoPlayer extends StatefulWidget {
   final File? file;
   final bool autoplay, muted, loop, showControls, active;
   final double volume;
-  final bool holdToSpeed;
+  final VideoAudioSession? audioSession;
+  final bool holdToSpeed, showMuteControl;
   final BoxFit fit;
   final Widget? loading, errorWidget;
   final VoidCallback? onTap;
@@ -59,7 +62,9 @@ class AppVideoPlayer extends StatefulWidget {
     this.autoplay = false,
     this.muted = true,
     this.volume = 1,
+    this.audioSession,
     this.holdToSpeed = false,
+    this.showMuteControl = true,
     this.loop = true,
     this.showControls = true,
     this.active = true,
@@ -76,7 +81,9 @@ class AppVideoPlayer extends StatefulWidget {
     this.autoplay = false,
     this.muted = true,
     this.volume = 1,
+    this.audioSession,
     this.holdToSpeed = false,
+    this.showMuteControl = true,
     this.loop = true,
     this.showControls = true,
     this.active = true,
@@ -108,6 +115,7 @@ class _AppVideoPlayerState extends State<AppVideoPlayer>
     _controller?.setPlaybackSpeed(value ? 2 : 1);
     if (mounted) setState(() {});
   }
+
   final _visibilityKey = UniqueKey();
   String get _source => widget.url ?? widget.file!.path;
   bool get _eligible =>
@@ -125,7 +133,8 @@ class _AppVideoPlayerState extends State<AppVideoPlayer>
     VisibilityDetectorController.instance.updateInterval = const Duration(
       milliseconds: 80,
     );
-    _muted = widget.muted;
+    _muted = widget.audioSession?.muted ?? widget.muted;
+    widget.audioSession?.addListener(_audioChanged);
     _wantsPlay = widget.autoplay;
     WidgetsBinding.instance.addObserver(this);
     _PlaybackOwner.register(this);
@@ -134,6 +143,11 @@ class _AppVideoPlayerState extends State<AppVideoPlayer>
   @override
   void didUpdateWidget(covariant AppVideoPlayer old) {
     super.didUpdateWidget(old);
+    if (old.audioSession != widget.audioSession) {
+      old.audioSession?.removeListener(_audioChanged);
+      widget.audioSession?.addListener(_audioChanged);
+      _audioChanged();
+    }
     if (old.url != widget.url || old.file?.path != widget.file?.path) {
       ++_attempt;
       _speed(false);
@@ -149,7 +163,7 @@ class _AppVideoPlayerState extends State<AppVideoPlayer>
     if (!widget.active || !widget.holdToSpeed) _speed(false);
     if (old.autoplay != widget.autoplay) _wantsPlay = widget.autoplay;
     if (old.muted != widget.muted || old.volume != widget.volume) {
-      _muted = widget.muted;
+      _muted = widget.audioSession?.muted ?? widget.muted;
       _controller?.setVolume(_muted ? 0 : widget.volume.clamp(0, 1));
     }
     if (old.start != widget.start || old.end != widget.end)
@@ -157,6 +171,12 @@ class _AppVideoPlayerState extends State<AppVideoPlayer>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _PlaybackOwner.update();
     });
+  }
+
+  void _audioChanged() {
+    if (!mounted) return;
+    setState(() => _muted = widget.audioSession?.muted ?? widget.muted);
+    _controller?.setVolume(_muted ? 0 : widget.volume.clamp(0, 1));
   }
 
   @override
@@ -244,6 +264,7 @@ class _AppVideoPlayerState extends State<AppVideoPlayer>
 
   @override
   void dispose() {
+    widget.audioSession?.removeListener(_audioChanged);
     ++_attempt;
     WidgetsBinding.instance.removeObserver(this);
     _PlaybackOwner.unregister(this);
@@ -291,25 +312,39 @@ class _AppVideoPlayerState extends State<AppVideoPlayer>
     return Stack(
       fit: StackFit.expand,
       children: [
-        LayoutBuilder(builder: (context, constraints) => Listener(
-          onPointerUp: (_) => _speed(false),
-          onPointerCancel: (_) => _speed(false),
-          child: GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: _tap,
-          onLongPressStart: widget.holdToSpeed ? (details) {
-            if (_playing && details.localPosition.dx >= constraints.maxWidth / 2) {
-              _speed(true);
-            }
-          } : null,
-          onLongPressEnd: widget.holdToSpeed ? (_) => _speed(false) : null,
-          onLongPressCancel: widget.holdToSpeed ? () => _speed(false) : null,
-          child: video,
-        ))),
+        LayoutBuilder(
+          builder: (context, constraints) => Listener(
+            onPointerUp: (_) => _speed(false),
+            onPointerCancel: (_) => _speed(false),
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: _tap,
+              onLongPressStart: widget.holdToSpeed
+                  ? (details) {
+                      if (_playing &&
+                          details.localPosition.dx >=
+                              constraints.maxWidth / 2) {
+                        _speed(true);
+                      }
+                    }
+                  : null,
+              onLongPressEnd: widget.holdToSpeed ? (_) => _speed(false) : null,
+              onLongPressCancel: widget.holdToSpeed
+                  ? () => _speed(false)
+                  : null,
+              child: video,
+            ),
+          ),
+        ),
         if (_speeding)
-          const Positioned(top: 88, left: 0, right: 0, child: IgnorePointer(
-            child: Center(child: Chip(label: Text('2x ▶▶'))),
-          )),
+          const Positioned(
+            top: 88,
+            left: 0,
+            right: 0,
+            child: IgnorePointer(
+              child: Center(child: Chip(label: Text('2x ▶▶'))),
+            ),
+          ),
         if (!_playing)
           const IgnorePointer(
             child: Center(
@@ -320,22 +355,26 @@ class _AppVideoPlayerState extends State<AppVideoPlayer>
               ),
             ),
           ),
-        Positioned(
-          right: 10,
-          bottom: 10,
-          child: IconButton.filledTonal(
-            tooltip: _muted ? 'Sesi aç' : 'Sesi kapat',
-            onPressed: () {
-              setState(() => _muted = !_muted);
-              _controller!.setVolume(_muted ? 0 : widget.volume.clamp(0, 1));
-            },
-            icon: Icon(
-              _muted ? Icons.volume_off_rounded : Icons.volume_up_rounded,
+        if (widget.showMuteControl)
+          Positioned(
+            right: 10,
+            bottom: 10,
+            child: IconButton.filledTonal(
+              tooltip: _muted ? 'Sesi aç' : 'Sesi kapat',
+              onPressed: () {
+                if (widget.audioSession != null) {
+                  widget.audioSession!.toggle();
+                  return;
+                }
+                setState(() => _muted = !_muted);
+                _controller!.setVolume(_muted ? 0 : widget.volume.clamp(0, 1));
+              },
+              icon: Icon(
+                _muted ? Icons.volume_off_rounded : Icons.volume_up_rounded,
+              ),
             ),
           ),
-        ),
       ],
     );
   }
 }
-

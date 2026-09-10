@@ -137,7 +137,7 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
             return ListTile(
               leading: CircleAvatar(
                 radius: 24,
-                backgroundColor: const Color(0xFF50383E),
+                backgroundColor: const Color(0xFF203C62),
                 backgroundImage: photoUrl.isEmpty
                     ? null
                     : NetworkImage(photoUrl),
@@ -269,7 +269,7 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
                 .toList(growable: false);
             if (thread.isGroup) return ListTile(
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
-              tileColor: const Color(0xA6241E23),
+              tileColor: const Color(0xA6142238),
               leading: const CircleAvatar(child: Icon(Icons.groups_outlined)),
               title: Text(thread.name), subtitle: Text(thread.lastMessage, maxLines: 1, overflow: TextOverflow.ellipsis),
               onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ChatScreen(otherUserId: '', groupThreadId: thread.id))),
@@ -295,9 +295,9 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
     final myId = FirebaseAuth.instance.currentUser?.uid;
 
     return ChatSurface(child: Builder(builder: (context) => Scaffold(
-      backgroundColor: const Color(0xFF191519),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF191519),
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         foregroundColor: Colors.white,
         title: const Text('Mesajlar'),
         titleSpacing: 0,
@@ -422,14 +422,14 @@ class _ThreadTile extends StatelessWidget {
 
         return ListTile(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
-          tileColor: unread ? const Color(0xFF3B2B31) : const Color(0xA6241E23),
+          tileColor: unread ? const Color(0xFF203654) : const Color(0xA6142238),
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 16,
             vertical: 5,
           ),
           leading: CircleAvatar(
             radius: 25,
-            backgroundColor: const Color(0xFF50383E),
+            backgroundColor: const Color(0xFF203C62),
             backgroundImage: photoUrl.isNotEmpty
                 ? NetworkImage(photoUrl)
                 : null,
@@ -455,7 +455,7 @@ class _ThreadTile extends StatelessWidget {
                 Text(
                   _threadTime(thread.lastMessageAt),
                   style: TextStyle(
-                    color: unread ? const Color(0xFFF3B29B) : Colors.white38,
+                    color: unread ? const Color(0xFF9FC7FF) : Colors.white38,
                     fontSize: 11,
                     fontWeight: unread ? FontWeight.w800 : FontWeight.w500,
                   ),
@@ -476,7 +476,7 @@ class _ThreadTile extends StatelessWidget {
           ),
           trailing: unread
               ? const Badge(
-                  backgroundColor: Color(0xFFF3B29B),
+                  backgroundColor: Color(0xFF9FC7FF),
                   smallSize: 9,
                   child: Icon(Icons.chevron_right, color: Colors.white54),
                 )
@@ -577,4 +577,5 @@ class _CachedThreadUser {
   bool get isExpired =>
       DateTime.now().difference(savedAt) > _ThreadUserCache._lifetime;
 }
+
 

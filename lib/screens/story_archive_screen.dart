@@ -1,3 +1,5 @@
+import '../widgets/tbt_dialog.dart';
+
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -35,7 +37,8 @@ class _StoryArchiveScreenState extends State<StoryArchiveScreen> {
       story.createdAt.month == now.month &&
       story.createdAt.day == now.day;
 
-  int _yearsAgo(AppStory story, DateTime now) => now.year - story.createdAt.year;
+  int _yearsAgo(AppStory story, DateTime now) =>
+      now.year - story.createdAt.year;
 
   String _duration(AppStory story) {
     final total = (story.durationMs / 1000).round();
@@ -51,12 +54,16 @@ class _StoryArchiveScreenState extends State<StoryArchiveScreen> {
       await StoryService.instance.repostArchivedStory(story);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Story yeniden 24 saatliğine paylaşıldı.')),
+        const SnackBar(
+          content: Text('Story yeniden 24 saatliğine paylaşıldı.'),
+        ),
       );
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error.toString().replaceFirst('Exception: ', ''))),
+        SnackBar(
+          content: Text(error.toString().replaceFirst('Exception: ', '')),
+        ),
       );
     } finally {
       if (mounted) setState(() => _sharing.remove(story.id));
@@ -64,9 +71,9 @@ class _StoryArchiveScreenState extends State<StoryArchiveScreen> {
   }
 
   Future<void> _delete(AppStory story) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showTbtDialog<bool>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
+      builder: (dialogContext) => TbtDialog(
         title: const Text('Story silinsin mi?'),
         content: const Text('Bu Story arşivden kalıcı olarak silinecek.'),
         actions: [
@@ -91,15 +98,20 @@ class _StoryArchiveScreenState extends State<StoryArchiveScreen> {
     }
   }
 
-  Widget _preview(AppStory story) => FirebaseMediaImage(
-        imageUrl: story.previewUrl,
-        storagePath: story.previewStoragePath,
-        fit: BoxFit.cover,
-        errorWidget: const ColoredBox(
-          color: AppColors.surfaceStrong,
-          child: Icon(Icons.broken_image_outlined),
-        ),
-      );
+  Widget _preview(AppStory story) => story.sharedPostId.isNotEmpty
+      ? const ColoredBox(
+          color: Color(0xFF142238),
+          child: Center(child: Icon(Icons.link_rounded, color: Colors.white)),
+        )
+      : FirebaseMediaImage(
+          imageUrl: story.previewUrl,
+          storagePath: story.previewStoragePath,
+          fit: BoxFit.cover,
+          errorWidget: const ColoredBox(
+            color: AppColors.surfaceStrong,
+            child: Icon(Icons.broken_image_outlined),
+          ),
+        );
 
   void _openStory(AppStory story) {
     showDialog<void>(
@@ -120,7 +132,11 @@ class _StoryArchiveScreenState extends State<StoryArchiveScreen> {
                     gradient: LinearGradient(
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
-                      colors: [Colors.black54, Colors.transparent, Colors.black87],
+                      colors: [
+                        Colors.black54,
+                        Colors.transparent,
+                        Colors.black87,
+                      ],
                       stops: [0, .35, 1],
                     ),
                   ),
@@ -161,13 +177,16 @@ class _StoryArchiveScreenState extends State<StoryArchiveScreen> {
                                     : () async {
                                         setSheetState(() {});
                                         await _repost(story);
-                                        if (context.mounted) setSheetState(() {});
+                                        if (context.mounted)
+                                          setSheetState(() {});
                                       },
                                 icon: _sharing.contains(story.id)
                                     ? const SizedBox(
                                         width: 17,
                                         height: 17,
-                                        child: CircularProgressIndicator(strokeWidth: 2),
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                        ),
                                       )
                                     : const Icon(Icons.replay_rounded),
                                 label: const Text('Tekrar Paylaş'),
@@ -186,7 +205,9 @@ class _StoryArchiveScreenState extends State<StoryArchiveScreen> {
                                   ? const SizedBox(
                                       width: 18,
                                       height: 18,
-                                      child: CircularProgressIndicator(strokeWidth: 2),
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
                                     )
                                   : const Icon(Icons.delete_outline_rounded),
                             ),
@@ -241,12 +262,16 @@ class _StoryArchiveScreenState extends State<StoryArchiveScreen> {
                           right: 6,
                           bottom: 6,
                           child: Text(
-                            years == 1 ? 'Geçen sene bugün' : '$years yıl önce bugün',
+                            years == 1
+                                ? 'Geçen sene bugün'
+                                : '$years yıl önce bugün',
                             maxLines: 2,
                             style: const TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.w900,
-                              shadows: [Shadow(blurRadius: 8, color: Colors.black)],
+                              shadows: [
+                                Shadow(blurRadius: 8, color: Colors.black),
+                              ],
                             ),
                           ),
                         ),
@@ -263,111 +288,113 @@ class _StoryArchiveScreenState extends State<StoryArchiveScreen> {
   }
 
   Widget _archiveTile(AppStory story) => GestureDetector(
-        onTap: () => _openStory(story),
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            _preview(story),
-            if (story.isVideo)
-              Positioned(
-                left: 6,
-                bottom: 6,
-                child: Row(
-                  children: [
-                    const Icon(Icons.play_arrow_rounded, size: 15),
-                    if (story.durationMs > 0) ...[
-                      const SizedBox(width: 2),
-                      Text(
-                        _duration(story),
-                        style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w800,
-                          shadows: [Shadow(blurRadius: 6, color: Colors.black)],
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-          ],
-        ),
-      );
+    onTap: () => _openStory(story),
+    child: Stack(
+      fit: StackFit.expand,
+      children: [
+        _preview(story),
+        if (story.isVideo)
+          Positioned(
+            left: 6,
+            bottom: 6,
+            child: Row(
+              children: [
+                const Icon(Icons.play_arrow_rounded, size: 15),
+                if (story.durationMs > 0) ...[
+                  const SizedBox(width: 2),
+                  Text(
+                    _duration(story),
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      shadows: [Shadow(blurRadius: 6, color: Colors.black)],
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+      ],
+    ),
+  );
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        backgroundColor: AppColors.background,
-        appBar: AppBar(
-          title: const Text('Story Arşivi'),
-          actions: [
-            PopupMenuButton<String>(
-              icon: const Icon(Icons.more_vert_rounded),
-              itemBuilder: (_) => const [
-                PopupMenuItem<String>(
-                  enabled: false,
-                  value: 'info',
-                  child: Text('Story’lerin yalnızca sana görünür'),
-                ),
-              ],
+    backgroundColor: AppColors.background,
+    appBar: AppBar(
+      title: const Text('Story Arşivi'),
+      actions: [
+        PopupMenuButton<String>(
+          icon: const Icon(Icons.more_vert_rounded),
+          itemBuilder: (_) => const [
+            PopupMenuItem<String>(
+              enabled: false,
+              value: 'info',
+              child: Text('Story’lerin yalnızca sana görünür'),
             ),
           ],
         ),
-        body: StreamBuilder<List<AppStory>>(
-          stream: StoryService.instance.watchArchive(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            if (snapshot.hasError) {
-              return const Center(child: Text('Story arşivi yüklenemedi.'));
-            }
-            final stories = (snapshot.data ?? const <AppStory>[])
-                .where((story) => !story.isActive)
-                .toList(growable: false);
-            if (stories.isEmpty) {
-              return const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(32),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.archive_outlined, size: 54, color: Colors.white38),
-                      SizedBox(height: 12),
-                      Text(
-                        'Arşivlenmiş Story yok',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
-                      ),
-                      SizedBox(height: 6),
-                      Text(
-                        '24 saati dolan Story’lerin burada saklanacak.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: Colors.white54),
-                      ),
-                    ],
+      ],
+    ),
+    body: StreamBuilder<List<AppStory>>(
+      stream: StoryService.instance.watchArchive(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (snapshot.hasError) {
+          return const Center(child: Text('Story arşivi yüklenemedi.'));
+        }
+        final stories = (snapshot.data ?? const <AppStory>[])
+            .where((story) => !story.isActive)
+            .toList(growable: false);
+        if (stories.isEmpty) {
+          return const Center(
+            child: Padding(
+              padding: EdgeInsets.all(32),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.archive_outlined, size: 54, color: Colors.white38),
+                  SizedBox(height: 12),
+                  Text(
+                    'Arşivlenmiş Story yok',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
                   ),
-                ),
-              );
-            }
-            final now = DateTime.now();
-            final memories = stories.where((story) => _isMemory(story, now)).toList();
-            return CustomScrollView(
-              slivers: [
-                SliverToBoxAdapter(child: _memorySection(memories, now)),
-                SliverGrid(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) => _archiveTile(stories[index]),
-                    childCount: stories.length,
+                  SizedBox(height: 6),
+                  Text(
+                    '24 saati dolan Story’lerin burada saklanacak.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.white54),
                   ),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 3,
-                    crossAxisSpacing: 2,
-                    mainAxisSpacing: 2,
-                    childAspectRatio: .72,
-                  ),
-                ),
-                const SliverToBoxAdapter(child: SizedBox(height: 24)),
-              ],
-            );
-          },
-        ),
-      );
+                ],
+              ),
+            ),
+          );
+        }
+        final now = DateTime.now();
+        final memories = stories
+            .where((story) => _isMemory(story, now))
+            .toList();
+        return CustomScrollView(
+          slivers: [
+            SliverToBoxAdapter(child: _memorySection(memories, now)),
+            SliverGrid(
+              delegate: SliverChildBuilderDelegate(
+                (context, index) => _archiveTile(stories[index]),
+                childCount: stories.length,
+              ),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                crossAxisSpacing: 2,
+                mainAxisSpacing: 2,
+                childAspectRatio: .72,
+              ),
+            ),
+            const SliverToBoxAdapter(child: SizedBox(height: 24)),
+          ],
+        );
+      },
+    ),
+  );
 }

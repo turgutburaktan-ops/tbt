@@ -45,6 +45,8 @@ jobs:
           grep -q 'namespace = "com.tbt.social"' android/app/build.gradle.kts
           main_activity=$(find android/app/src/main/kotlin -name MainActivity.kt -print -quit)
           grep -q '^package com.tbt.social$' "$main_activity"
+      - name: Configure notification replies
+        run: python3 tool/configure_notifications.py android
       - name: Build debug APK
         run: flutter build apk --debug
       - name: Upload validation APK

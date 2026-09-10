@@ -1,5 +1,12 @@
+import 'package:firebase_core/firebase_core.dart';
+
+import '../firebase_options.dart';
+import 'notification_reply_service.dart';
+import 'app_notification_service.dart';
+import '../screens/broadcast_detail_screen.dart';
 import '../screens/reservation_inbox_screen.dart';
 import '../screens/business_web_portal_screen.dart';
+
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -15,7 +22,17 @@ import '../screens/post_detail_screen.dart';
 import '../screens/user_profile_screen.dart';
 
 @pragma('vm:entry-point')
-Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {}
+Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  if (Firebase.apps.isEmpty)
+    await Firebase.initializeApp(
+      options: AppFirebaseOptions.currentPlatform,
+    );
+  if (defaultTargetPlatform == TargetPlatform.android &&
+      message.notification == null &&
+      NotificationReplyService.isChat(message.data)) {
+    await NotificationReplyService.show(message.data);
+  }
+}
 
 class PushNotificationService with WidgetsBindingObserver {
   PushNotificationService._();
@@ -70,6 +87,11 @@ class PushNotificationService with WidgetsBindingObserver {
       return;
     }
 
+    try {
+      await NotificationReplyService.initialize(
+        onOpen: (data) => _openMessage(RemoteMessage(data: data)),
+      );
+    } catch (_) {}
     await _authSub?.cancel();
     _authSub = _auth.authStateChanges().listen((user) {
       if (user == null) {
@@ -90,10 +112,21 @@ class PushNotificationService with WidgetsBindingObserver {
     await _foregroundSub?.cancel();
     _foregroundSub = FirebaseMessaging.onMessage.listen(
       (message) {
+        if (NotificationReplyService.ready &&
+            NotificationReplyService.isChat(message.data)) {
+          unawaited(NotificationReplyService.show(message.data));
+          return;
+        }
         final context = navigatorKey.currentContext;
         if (context == null) return;
-        final title = message.notification?.title ?? 'Yeni bildirim';
-        final body = message.notification?.body ?? '';
+        final title =
+            message.notification?.title ??
+            message.data['title']?.toString() ??
+            'Yeni bildirim';
+        final body =
+            message.notification?.body ??
+            message.data['body']?.toString() ??
+            '';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(body.isEmpty ? title : '$title\n$body'),
@@ -118,9 +151,9 @@ class PushNotificationService with WidgetsBindingObserver {
     );
 
     try {
-      final initial = await _messaging
-          .getInitialMessage()
-          .timeout(const Duration(seconds: 4));
+      final initial = await _messaging.getInitialMessage().timeout(
+        const Duration(seconds: 4),
+      );
       if (initial != null) {
         WidgetsBinding.instance.addPostFrameCallback(
           (_) => unawaited(_openMessage(initial)),
@@ -135,10 +168,7 @@ class PushNotificationService with WidgetsBindingObserver {
   }
 
   Future<void> _refreshRegistration() async {
-    await Future.wait<void>([
-      _markActive(force: true),
-      _saveCurrentToken(),
-    ]);
+    await Future.wait<void>([_markActive(force: true), _saveCurrentToken()]);
   }
 
   @override
@@ -158,10 +188,14 @@ class PushNotificationService with WidgetsBindingObserver {
       return;
     }
     try {
-      await _firestore.collection('users').doc(user.uid).set({
-        'lastActiveAt': FieldValue.serverTimestamp(),
-        'lastActivePlatform': _platformName,
-      }, SetOptions(merge: true)).timeout(const Duration(seconds: 4));
+      await _firestore
+          .collection('users')
+          .doc(user.uid)
+          .set({
+            'lastActiveAt': FieldValue.serverTimestamp(),
+            'lastActivePlatform': _platformName,
+          }, SetOptions(merge: true))
+          .timeout(const Duration(seconds: 4));
       _lastActivityWrite = now;
     } catch (_) {
       // Activity tracking must never block the app.
@@ -200,6 +234,7 @@ class PushNotificationService with WidgetsBindingObserver {
           .set({
             'token': token,
             'platform': _platformName,
+            'replyActions': NotificationReplyService.ready ? 1 : 0,
             'updatedAt': FieldValue.serverTimestamp(),
           }, SetOptions(merge: true))
           .timeout(const Duration(seconds: 5));
@@ -225,7 +260,8 @@ class PushNotificationService with WidgetsBindingObserver {
   }
 
   bool _claimOpen(RemoteMessage message) {
-    final key = message.messageId ??
+    final key =
+        message.messageId ??
         '${message.data['type']}|${message.data['sourceId']}|${message.data['actorId']}|${message.data['eventId']}';
     if (_recentOpenedMessages.contains(key)) return false;
     _recentOpenedMessages.add(key);
@@ -237,6 +273,9 @@ class PushNotificationService with WidgetsBindingObserver {
   }
 
   Future<void> _openMessage(RemoteMessage message) async {
+    if (message.data['recipientId'] != null &&
+        message.data['recipientId'] != _auth.currentUser?.uid)
+      return;
     if (!_claimOpen(message)) return;
     final navigator = _navigatorKey?.currentState;
     if (navigator == null) return;
@@ -248,9 +287,41 @@ class PushNotificationService with WidgetsBindingObserver {
     final eventId = (message.data['eventId'] ?? '').toString().trim();
     final communityId = (message.data['communityId'] ?? '').toString().trim();
 
-    if(type.startsWith('business_preparation')||type.startsWith('business_reservation')){
-      final owner=type=='business_reservation'||type=='business_reservation_owner_action';
-      navigator.push(MaterialPageRoute<void>(builder:(_)=>owner?const BusinessWebPortalScreen():const ReservationInboxScreen()));return;
+    if (type == 'tbt_broadcast') {
+      final uid = _auth.currentUser?.uid;
+      final id = message.data['notificationId']?.toString();
+      if (uid == null || id == null || id.contains('/')) return;
+      try {
+        final doc = await _firestore
+            .collection('users')
+            .doc(uid)
+            .collection('notifications')
+            .doc(id)
+            .get();
+        if (doc.exists && navigator.mounted)
+          navigator.push(
+            MaterialPageRoute(
+              builder: (_) => BroadcastDetailScreen(
+                item: AppNotificationItem.fromDocument(doc),
+              ),
+            ),
+          );
+      } catch (_) {}
+      return;
+    }
+    if (type.startsWith('business_preparation') ||
+        type.startsWith('business_reservation')) {
+      final owner =
+          type == 'business_reservation' ||
+          type == 'business_reservation_owner_action';
+      navigator.push(
+        MaterialPageRoute<void>(
+          builder: (_) => owner
+              ? const BusinessWebPortalScreen()
+              : const ReservationInboxScreen(),
+        ),
+      );
+      return;
     }
     if (eventId.isNotEmpty) {
       navigator.push(
@@ -269,7 +340,11 @@ class PushNotificationService with WidgetsBindingObserver {
       return;
     }
     if (type == 'group_message' && sourceId.isNotEmpty) {
-      navigator.push(MaterialPageRoute(builder: (_) => ChatScreen(otherUserId: '', groupThreadId: sourceId)));
+      navigator.push(
+        MaterialPageRoute(
+          builder: (_) => ChatScreen(otherUserId: '', groupThreadId: sourceId),
+        ),
+      );
       return;
     }
     if (type == 'message' && actorId.isNotEmpty) {

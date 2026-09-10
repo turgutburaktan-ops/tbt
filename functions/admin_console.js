@@ -1,3 +1,4 @@
+const {getStorage,getDownloadURL}=require('firebase-admin/storage');
 const {onCall, HttpsError} = require('firebase-functions/v2/https');
 const {getFirestore, Timestamp, FieldValue} = require('firebase-admin/firestore');
 const {isNamedAdmin} = require('./broadcast_policy');
@@ -164,22 +165,31 @@ exports.sendAdminBroadcast = onCall({region: 'europe-west1'}, async (request) =>
   const title = String(request.data?.title || '').trim();
   const body = String(request.data?.body || '').trim();
   const requestId = String(request.data?.requestId || '');
+  const imagePath=String(request.data?.imagePath||'');
   if (!title || title.length > 100 || !body || body.length > 600 ||
       !/^[a-zA-Z0-9_-]{16,80}$/.test(requestId)) {
     throw new HttpsError('invalid-argument', 'Başlık, mesaj ve geçerli gönderim kimliği zorunludur.');
   }
   const db = getFirestore();
+  let imageUrl='';
+  if(imagePath){
+    if(imagePath!==`admin_broadcasts/${requestId}/image.jpg`)throw new HttpsError('invalid-argument','Geçersiz duyuru fotoğrafı.');
+    const file=getStorage().bucket().file(imagePath);
+    let meta;try{[meta]=await file.getMetadata();}catch(_){throw new HttpsError('not-found','Fotoğraf yüklenemedi.');}
+    if(meta.contentType!=='image/jpeg'||Number(meta.size)>10*1024*1024||Number(meta.size)<=0)throw new HttpsError('invalid-argument','Geçersiz fotoğraf boyutu veya türü.');
+    imageUrl=await getDownloadURL(file);
+  }
   const ref = db.collection('admin_broadcasts').doc(requestId);
   return db.runTransaction(async tx => {
     const existing = await tx.get(ref);
     if (existing.exists) {
       const job = existing.data();
-      if (job.sentBy !== adminUid || job.title !== title || job.body !== body) {
+      if (job.sentBy !== adminUid || job.title !== title || job.body !== body || (job.imagePath||'')!==imagePath) {
         throw new HttpsError('already-exists', 'Bu gönderim kimliği başka bir duyuruya ait.');
       }
       return {ok: true, broadcastId: ref.id, status: job.status, recipientCount: job.recipientCount};
     }
-    tx.create(ref, {title, body, sentBy: adminUid, status: 'queued',
+    tx.create(ref, {title, body, imagePath, imageUrl, sentBy: adminUid, status: 'queued',
       recipientCount: 0, cursor: null, createdAt: FieldValue.serverTimestamp()});
     return {ok: true, broadcastId: ref.id, status: 'queued', recipientCount: 0};
   });

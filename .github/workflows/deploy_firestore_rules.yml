@@ -5,6 +5,8 @@ on:
     branches: [main, feature/video-v1]
     paths:
       - 'firestore.rules'
+      - 'firestore.indexes.json'
+      - 'tool/ensure_creator_indexes.cjs'
       - 'storage.rules'
       - 'firebase.json'
       - '.github/workflows/deploy_firestore_rules.yml'
@@ -62,6 +64,7 @@ jobs:
         run: |
           npm install --prefix functions
           node tool/ensure_event_index.cjs
+          node tool/ensure_creator_indexes.cjs
 
       - name: Deploy Firestore rules
-        run: firebase deploy --only firestore:rules --project en-iyi-cekim-noktasi --non-interactive
+        run: firebase deploy --only firestore:rules,storage --project en-iyi-cekim-noktasi --non-interactive

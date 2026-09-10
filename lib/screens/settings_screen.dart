@@ -1,3 +1,6 @@
+import 'profile_history_screen.dart';
+import '../widgets/tbt_dialog.dart';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -47,7 +50,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _language() async {
     final current = AppLocaleService.instance.locale.value.languageCode;
-    final selected = await showDialog<String>(context: context, builder: (context) => SimpleDialog(title: Text(AppStrings.of(context).text('appLanguage')), children: ['tr', 'en', 'de', 'ar'].map((code) => RadioListTile<String>(value: code, groupValue: current, title: Text(AppLocaleService.instance.languageName(code)), onChanged: (value) => Navigator.pop(context, value))).toList()));
+    final selected = await showTbtDialog<String>(
+      context: context,
+      builder: (context) => TbtDialog(
+        title: Text(AppStrings.of(context).text('appLanguage')),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: ['tr', 'en', 'de', 'ar']
+              .map(
+                (code) => RadioListTile<String>(
+                  value: code,
+                  groupValue: current,
+                  title: Text(AppLocaleService.instance.languageName(code)),
+                  onChanged: (value) => Navigator.pop(context, value),
+                ),
+              )
+              .toList(),
+        ),
+      ),
+    );
     if (selected != null) await AppLocaleService.instance.setLanguage(selected);
     if (mounted) setState(() {});
   }
@@ -251,9 +272,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     var user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
-    final action = await showDialog<String>(
+    final action = await showTbtDialog<String>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
+      builder: (dialogContext) => TbtDialog(
         title: const Text('Doğrulama'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -418,9 +439,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     ),
   );
 
-  void _help() => showDialog<void>(
+  void _help() => showTbtDialog<void>(
     context: context,
-    builder: (c) => AlertDialog(
+    builder: (c) => TbtDialog(
       title: const Text('Yardım ve destek'),
       content: const Text(
         'Bir hesabı, içeriği veya mekanı şikayet etmek için ilgili içerikteki üç nokta menüsünü kullan. Hesap güvenliği için Gizlilik ve Güvenlik bölümünü kullanabilirsin.',
@@ -433,9 +454,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ],
     ),
   );
-  void _about() => showDialog<void>(
+  void _about() => showTbtDialog<void>(
     context: context,
-    builder: (c) => AlertDialog(
+    builder: (c) => TbtDialog(
       title: const Text('TBT'),
       content: const Text(
         'TBT; içerik, mekan, gezi noktası ve etkinlikleri tek sosyal keşif deneyiminde bir araya getirir.',
@@ -488,8 +509,43 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       'E-posta ve telefon doğrulamasını yönet',
                       _verification,
                     ),
+                    _section('Geçmiş'),
+                    _tile(
+                      Icons.confirmation_number_outlined,
+                      'Geçmiş kuponlar',
+                      'Kullanılan ve süresi dolan kuponlar',
+                      () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              const ProfileHistoryScreen(coupons: true),
+                        ),
+                      ),
+                    ),
+                    _tile(
+                      Icons.event_note_outlined,
+                      'Geçmiş rezervasyonlar',
+                      'Geçmiş ve sonuçlanan rezervasyonlar',
+                      () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              const ProfileHistoryScreen(coupons: false),
+                        ),
+                      ),
+                    ),
                     _section('Gizlilik'),
-                    _tile(Icons.chat_outlined, 'Mesaj ayarları', 'Görüldü ve çevrimiçi görünürlüğü', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MessagePrivacySettingsScreen()))),
+                    _tile(
+                      Icons.chat_outlined,
+                      'Mesaj ayarları',
+                      'Görüldü ve çevrimiçi görünürlüğü',
+                      () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const MessagePrivacySettingsScreen(),
+                        ),
+                      ),
+                    ),
                     _switchTile(
                       Icons.lock_person_outlined,
                       'Gizli hesap',
@@ -520,7 +576,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       Icons.campaign_outlined,
                       AppStrings.of(context).text('marketing'),
                       AppStrings.of(context).text('marketingBody'),
-                      (data['notificationPreferences'] as Map?)?['marketing'] == true && settings['notifyMarketing'] != false,
+                      (data['notificationPreferences'] as Map?)?['marketing'] ==
+                              true &&
+                          settings['notifyMarketing'] != false,
                       _marketing,
                     ),
                     _switchTile(
@@ -606,8 +664,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                     ],
                     _section('Uygulama'),
-                    Padding(padding: const EdgeInsets.all(16), child: Text(AppStrings.of(context).text('translationBeta'), style: const TextStyle(color: Colors.white60))),
-                    _tile(Icons.language_rounded, AppStrings.of(context).text('language'), AppLocaleService.instance.languageName(AppLocaleService.instance.locale.value.languageCode), _language),
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Text(
+                        AppStrings.of(context).text('translationBeta'),
+                        style: const TextStyle(color: Colors.white60),
+                      ),
+                    ),
+                    _tile(
+                      Icons.language_rounded,
+                      AppStrings.of(context).text('language'),
+                      AppLocaleService.instance.languageName(
+                        AppLocaleService.instance.locale.value.languageCode,
+                      ),
+                      _language,
+                    ),
                     _tile(
                       Icons.storage_outlined,
                       'Veri ve depolama',

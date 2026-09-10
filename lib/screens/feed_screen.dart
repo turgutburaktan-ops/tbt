@@ -1,3 +1,8 @@
+import '../services/video_audio_session.dart';
+import '../widgets/tbt_dialog.dart';
+import '../services/creator_service.dart';
+import '../widgets/shared_post_card.dart';
+import '../widgets/creator_view_tracker.dart';
 import 'reels_screen.dart';
 import '../widgets/like_burst.dart';
 
@@ -39,17 +44,53 @@ class FeedScreen extends StatefulWidget {
   State<FeedScreen> createState() => _FeedScreenState();
 }
 
-class _FeedScreenState extends State<FeedScreen> {
-  late final _query = FirebaseFirestore.instance.collection('posts').orderBy('createdAt', descending: true).limit(120);
-  late Stream<QuerySnapshot<Map<String, dynamic>>> _postsStream = _query.snapshots();
+class _FeedScreenState extends State<FeedScreen> with RouteAware {
+  PageRoute<dynamic>? _observedRoute;
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final route = ModalRoute.of(context);
+    if (route is PageRoute && route != _observedRoute) {
+      videoRouteObserver.unsubscribe(this);
+      _observedRoute = route;
+      videoRouteObserver.subscribe(this, route);
+    }
+  }
+
+  @override
+  void didPopNext() {
+    VideoAudioSession.feed.reset();
+  }
+
+  @override
+  void dispose() {
+    videoRouteObserver.unsubscribe(this);
+    super.dispose();
+  }
+
+  late final _query = FirebaseFirestore.instance
+      .collection('posts')
+      .orderBy('createdAt', descending: true)
+      .limit(120);
+  late Stream<QuerySnapshot<Map<String, dynamic>>> _postsStream = _query
+      .snapshots();
+  late final _repostsStream = FirebaseFirestore.instance
+      .collection('post_reposts')
+      .orderBy('createdAt', descending: true)
+      .limit(120)
+      .snapshots();
   late final _followingStream = SocialService.instance.followingIds();
-  late final _eventsStream = SocialEventService.instance.watchUpcoming(limit: 50);
+  late final _eventsStream = SocialEventService.instance.watchUpcoming(
+    limit: 50,
+  );
   QuerySnapshot<Map<String, dynamic>>? _refreshSnapshot;
   int _refreshVersion = 0;
 
   Future<void> _refresh() async {
     try {
-      final snapshot = await _query.get(const GetOptions(source: Source.server)).timeout(const Duration(seconds: 12));
+      final snapshot = await _query
+          .get(const GetOptions(source: Source.server))
+          .timeout(const Duration(seconds: 12));
       if (!mounted) return;
       setState(() {
         _refreshSnapshot = snapshot;
@@ -57,7 +98,14 @@ class _FeedScreenState extends State<FeedScreen> {
         _postsStream = _query.snapshots();
       });
     } catch (_) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Akış yenilenemedi. Bağlantını kontrol edip tekrar dene.')));
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Akış yenilenemedi. Bağlantını kontrol edip tekrar dene.',
+            ),
+          ),
+        );
     }
   }
 
@@ -81,7 +129,9 @@ class _FeedScreenState extends State<FeedScreen> {
                 stream: _postsStream,
                 initialData: _refreshSnapshot,
                 builder: (context, postsSnapshot) {
-                  if (postsSnapshot.connectionState == ConnectionState.waiting && !postsSnapshot.hasData)
+                  if (postsSnapshot.connectionState ==
+                          ConnectionState.waiting &&
+                      !postsSnapshot.hasData)
                     return const _FeedLoading();
                   if (postsSnapshot.hasError)
                     return Center(
@@ -94,155 +144,206 @@ class _FeedScreenState extends State<FeedScreen> {
                         ),
                       ),
                     );
-                  final docs = postsSnapshot.data?.docs.toList() ?? [];
-                  docs.removeWhere(
-                    (doc) => doc.data()['accountFrozen'] == true,
-                  );
-                  if (widget.mode == FeedMode.following) {
-                    docs.removeWhere((doc) {
-                      final owner = (doc.data()['userId'] ?? '').toString();
-                      return owner != currentUser.uid &&
-                          !followingIds.contains(owner);
-                    });
-                  }
-                  // The server query is newest-first. Following has its own tab;
-                  // older followed posts must not bury newly published posts.
-                  return StreamBuilder<List<SocialEvent>>(
-                    stream: _eventsStream,
-                    builder: (context, eventsSnapshot) {
-                      final now = DateTime.now();
-                      final events =
-                          (widget.includeEvents
-                                  ? eventsSnapshot.data ?? const <SocialEvent>[]
-                                  : const <SocialEvent>[])
-                              .where((event) {
-                                final visible =
-                                    event.visibility ==
-                                        EventVisibility.public ||
-                                    event.hostId == currentUser.uid ||
-                                    event.participantIds.contains(
-                                      currentUser.uid,
-                                    ) ||
-                                    event.allowedUserIds.contains(
-                                      currentUser.uid,
-                                    );
-                                if (!visible) return false;
-                                if (widget.mode == FeedMode.following &&
-                                    !(followingIds.contains(event.hostId) ||
-                                        event.participantIds.any(
-                                          followingIds.contains,
-                                        )))
-                                  return false;
-                                return true;
-                              })
-                              .toList()
-                            ..sort((a, b) => a.startsAt.compareTo(b.startsAt));
-                      final tonight = events
-                          .where((event) {
-                            final d = event.startsAt.toLocal();
-                            return d.year == now.year &&
-                                d.month == now.month &&
-                                d.day == now.day;
-                          })
-                          .take(6)
-                          .toList();
-                      final items = <Widget>[];
-                      if (widget.mode == FeedMode.forYou && tonight.isNotEmpty)
-                        items.add(
-                          _TonightStrip(
-                            events: tonight,
-                            followingIds: followingIds,
-                          ),
-                        );
-                      var eventIndex = 0;
-                      for (var i = 0; i < docs.length; i++) {
-                        final doc = docs[i], data = doc.data();
-                        final videoUrl = (data['videoUrl'] ?? '').toString(),
-                            mediaType = (data['mediaType'] ?? '').toString();
-                        if (mediaType == 'route') {
-                          items.add(_FeedRouteCard(postId: doc.id, data: data));
-                        } else {
-                          var mediaUrls = _strings(data['mediaUrls']),
-                              mediaPaths = _strings(data['mediaStoragePaths']);
-                          final legacyUrl = (data['imageUrl'] ?? '').toString(),
-                              legacyPath = (data['storagePath'] ?? '')
-                                  .toString();
-                          if (mediaUrls.isEmpty && legacyUrl.isNotEmpty)
-                            mediaUrls = [legacyUrl];
-                          if (mediaPaths.isEmpty && legacyPath.isNotEmpty)
-                            mediaPaths = [legacyPath];
-                          items.add(
-                            _FeedPostCard(
-                              key: ValueKey(doc.id),
-                              postId: doc.id,
-                              userId: (data['userId'] ?? '').toString(),
-                              userName: (data['userName'] ?? 'Topluluk üyesi')
-                                  .toString(),
-                              userPhotoUrl:
-                                  (data['userPhotoUrl'] ??
-                                          data['photoUrl'] ??
-                                          '')
-                                      .toString(),
-                              mediaType:
-                                  mediaType == 'video' || videoUrl.isNotEmpty
-                                  ? 'video'
-                                  : 'image',
-                              imageUrl: legacyUrl,
-                              storagePath: legacyPath,
-                              mediaUrls: mediaUrls,
-                              mediaStoragePaths: mediaPaths,
-                              videoUrl: videoUrl,
-                              videoStoragePath: (data['videoStoragePath'] ?? '')
-                                  .toString(),
-                              thumbnailUrl:
-                                  (data['thumbnailUrl'] ??
-                                          data['imageUrl'] ??
-                                          '')
-                                      .toString(),
-                              thumbnailStoragePath:
-                                  (data['thumbnailStoragePath'] ??
-                                          data['storagePath'] ??
-                                          '')
-                                      .toString(),
-                              externalSourceUrl: (data['externalSourceUrl'] ?? '').toString(),
-                              caption: (data['caption'] ?? '').toString(),
-                              spotName: (data['spotName'] ?? '').toString(),
-                              createdAt: data['createdAt'],
-                            ),
-                          );
-                        }
-                        if (i == 5 || (i > 5 && (i - 5) % 10 == 0))
-                          items.add(
-                            const Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 14),
-                              child: SponsoredNativeAd(),
-                            ),
-                          );
-                        if ((i + 1) % 4 == 0 && eventIndex < events.length)
-                          items.add(
-                            _EventFeedCard(
-                              event: events[eventIndex++],
-                              followingIds: followingIds,
-                            ),
-                          );
+                  return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                    stream: _repostsStream,
+                    builder: (context, repostSnapshot) {
+                      final docs = [
+                        ...?postsSnapshot.data?.docs,
+                        ...?repostSnapshot.data?.docs,
+                      ];
+                      docs.sort((a, b) {
+                        final at = a.data()['createdAt'],
+                            bt = b.data()['createdAt'];
+                        if (at is Timestamp && bt is Timestamp)
+                          return bt.compareTo(at);
+                        return a.id.compareTo(b.id);
+                      });
+                      docs.removeWhere(
+                        (doc) => doc.data()['accountFrozen'] == true,
+                      );
+                      if (widget.mode == FeedMode.following) {
+                        docs.removeWhere((doc) {
+                          final owner = (doc.data()['userId'] ?? '').toString();
+                          return owner != currentUser.uid &&
+                              !followingIds.contains(owner);
+                        });
                       }
-                      while (eventIndex < events.length && items.length < 10)
-                        items.add(
-                          _EventFeedCard(
-                            event: events[eventIndex++],
-                            followingIds: followingIds,
-                          ),
-                        );
-                      if (docs.isEmpty && events.isEmpty)
-                        items.add(_EmptyFeed(mode: widget.mode));
-                      return RefreshIndicator(
-                        onRefresh: _refresh,
-                        child: ListView.builder(
-                          physics: const AlwaysScrollableScrollPhysics(),
-                          padding: const EdgeInsets.only(bottom: 24),
-                          itemCount: items.length,
-                          itemBuilder: (_, i) => items[i],
-                        ),
+                      // The server query is newest-first. Following has its own tab;
+                      // older followed posts must not bury newly published posts.
+                      return StreamBuilder<List<SocialEvent>>(
+                        stream: _eventsStream,
+                        builder: (context, eventsSnapshot) {
+                          final now = DateTime.now();
+                          final events =
+                              (widget.includeEvents
+                                      ? eventsSnapshot.data ??
+                                            const <SocialEvent>[]
+                                      : const <SocialEvent>[])
+                                  .where((event) {
+                                    final visible =
+                                        event.visibility ==
+                                            EventVisibility.public ||
+                                        event.hostId == currentUser.uid ||
+                                        event.participantIds.contains(
+                                          currentUser.uid,
+                                        ) ||
+                                        event.allowedUserIds.contains(
+                                          currentUser.uid,
+                                        );
+                                    if (!visible) return false;
+                                    if (widget.mode == FeedMode.following &&
+                                        !(followingIds.contains(event.hostId) ||
+                                            event.participantIds.any(
+                                              followingIds.contains,
+                                            )))
+                                      return false;
+                                    return true;
+                                  })
+                                  .toList()
+                                ..sort(
+                                  (a, b) => a.startsAt.compareTo(b.startsAt),
+                                );
+                          final tonight = events
+                              .where((event) {
+                                final d = event.startsAt.toLocal();
+                                return d.year == now.year &&
+                                    d.month == now.month &&
+                                    d.day == now.day;
+                              })
+                              .take(6)
+                              .toList();
+                          final items = <Widget>[];
+                          if (widget.mode == FeedMode.forYou &&
+                              tonight.isNotEmpty)
+                            items.add(
+                              _TonightStrip(
+                                events: tonight,
+                                followingIds: followingIds,
+                              ),
+                            );
+                          var eventIndex = 0;
+                          for (var i = 0; i < docs.length; i++) {
+                            final doc = docs[i], data = doc.data();
+                            final videoUrl = (data['videoUrl'] ?? '')
+                                    .toString(),
+                                mediaType = (data['mediaType'] ?? '')
+                                    .toString();
+                            final cardIndex = items.length;
+                            final isRepost =
+                                doc.reference.parent.id == 'post_reposts';
+                            if (isRepost) {
+                              items.add(
+                                SharedPostCard(
+                                  key: ValueKey('repost-${doc.id}'),
+                                  postId: data['postId'].toString(),
+                                  repostId: doc.id,
+                                ),
+                              );
+                            } else if (mediaType == 'route') {
+                              items.add(
+                                _FeedRouteCard(postId: doc.id, data: data),
+                              );
+                            } else {
+                              var mediaUrls = _strings(data['mediaUrls']),
+                                  mediaPaths = _strings(
+                                    data['mediaStoragePaths'],
+                                  );
+                              final legacyUrl = (data['imageUrl'] ?? '')
+                                      .toString(),
+                                  legacyPath = (data['storagePath'] ?? '')
+                                      .toString();
+                              if (mediaUrls.isEmpty && legacyUrl.isNotEmpty)
+                                mediaUrls = [legacyUrl];
+                              if (mediaPaths.isEmpty && legacyPath.isNotEmpty)
+                                mediaPaths = [legacyPath];
+                              items.add(
+                                _FeedPostCard(
+                                  key: ValueKey(doc.id),
+                                  postId: doc.id,
+                                  userId: (data['userId'] ?? '').toString(),
+                                  userName:
+                                      (data['userName'] ?? 'Topluluk üyesi')
+                                          .toString(),
+                                  userPhotoUrl:
+                                      (data['userPhotoUrl'] ??
+                                              data['photoUrl'] ??
+                                              '')
+                                          .toString(),
+                                  mediaType:
+                                      mediaType == 'video' ||
+                                          videoUrl.isNotEmpty
+                                      ? 'video'
+                                      : 'image',
+                                  imageUrl: legacyUrl,
+                                  storagePath: legacyPath,
+                                  mediaUrls: mediaUrls,
+                                  mediaStoragePaths: mediaPaths,
+                                  videoUrl: videoUrl,
+                                  videoStoragePath:
+                                      (data['videoStoragePath'] ?? '')
+                                          .toString(),
+                                  thumbnailUrl:
+                                      (data['thumbnailUrl'] ??
+                                              data['imageUrl'] ??
+                                              '')
+                                          .toString(),
+                                  thumbnailStoragePath:
+                                      (data['thumbnailStoragePath'] ??
+                                              data['storagePath'] ??
+                                              '')
+                                          .toString(),
+                                  externalSourceUrl:
+                                      (data['externalSourceUrl'] ?? '')
+                                          .toString(),
+                                  caption: (data['caption'] ?? '').toString(),
+                                  spotName: (data['spotName'] ?? '').toString(),
+                                  createdAt: data['createdAt'],
+                                ),
+                              );
+                            }
+                            if (!isRepost)
+                              items[cardIndex] = CreatorViewTracker(
+                                key: ValueKey('view-${doc.reference.path}'),
+                                postId: isRepost
+                                    ? data['postId'].toString()
+                                    : doc.id,
+                                child: items[cardIndex],
+                              );
+                            if (i == 5 || (i > 5 && (i - 5) % 10 == 0))
+                              items.add(
+                                const Padding(
+                                  padding: EdgeInsets.symmetric(horizontal: 14),
+                                  child: SponsoredNativeAd(),
+                                ),
+                              );
+                            if ((i + 1) % 4 == 0 && eventIndex < events.length)
+                              items.add(
+                                _EventFeedCard(
+                                  event: events[eventIndex++],
+                                  followingIds: followingIds,
+                                ),
+                              );
+                          }
+                          while (eventIndex < events.length &&
+                              items.length < 10)
+                            items.add(
+                              _EventFeedCard(
+                                event: events[eventIndex++],
+                                followingIds: followingIds,
+                              ),
+                            );
+                          if (docs.isEmpty && events.isEmpty)
+                            items.add(_EmptyFeed(mode: widget.mode));
+                          return RefreshIndicator(
+                            onRefresh: _refresh,
+                            child: ListView.builder(
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              padding: const EdgeInsets.only(bottom: 24),
+                              itemCount: items.length,
+                              itemBuilder: (_, i) => items[i],
+                            ),
+                          );
+                        },
                       );
                     },
                   );
@@ -563,6 +664,13 @@ class _FeedRouteCard extends StatelessWidget {
                     '+${stops.length - 3} durak daha',
                     style: const TextStyle(color: Colors.white54),
                   ),
+                if ((data['guideNote'] ?? '').toString().isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    child: Text(
+                      '“${data['guideNote']}” — ${data['userName'] ?? ''}',
+                    ),
+                  ),
                 ContentEngagementBar(
                   collection: 'posts',
                   contentId: postId,
@@ -636,6 +744,7 @@ class _FeedPostCardState extends State<_FeedPostCard> {
   }
 
   void _profile() {
+    CreatorService.instance.recordProfileVisit(widget.postId);
     if (widget.userId.isNotEmpty)
       Navigator.push(
         context,
@@ -674,6 +783,7 @@ class _FeedPostCardState extends State<_FeedPostCard> {
         ),
         autoplay: true,
         muted: false,
+        audioSession: VideoAudioSession.feed,
         loop: true,
         showControls: true,
         fit: BoxFit.cover,
@@ -725,9 +835,9 @@ class _FeedPostCardState extends State<_FeedPostCard> {
   }
 
   Future<void> _delete() async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showTbtDialog<bool>(
       context: context,
-      builder: (c) => AlertDialog(
+      builder: (c) => TbtDialog(
         title: const Text('Gönderiyi sil'),
         content: const Text('Bu gönderi kalıcı olarak silinecek.'),
         actions: [
@@ -1001,5 +1111,3 @@ class _FeedLoading extends StatelessWidget {
     ),
   );
 }
-
-

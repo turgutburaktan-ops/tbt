@@ -1,3 +1,5 @@
+import '../widgets/tbt_dialog.dart';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -115,7 +117,10 @@ class _SafetyPrivacyCenterScreenState extends State<SafetyPrivacyCenterScreen> {
               onTap: () => Navigator.pop(sheetContext, 'freeze'),
             ),
             ListTile(
-              leading: const Icon(Icons.delete_forever_rounded, color: Colors.redAccent),
+              leading: const Icon(
+                Icons.delete_forever_rounded,
+                color: Colors.redAccent,
+              ),
               title: const Text('Hesabı kalıcı sil'),
               subtitle: const Text(
                 'Admin onayı veya bekleme olmadan hesabın ve verilerin silinir.',
@@ -128,9 +133,9 @@ class _SafetyPrivacyCenterScreenState extends State<SafetyPrivacyCenterScreen> {
     );
     if (!mounted || action == null) return;
     if (action == 'freeze') {
-      final confirmed = await showDialog<bool>(
+      final confirmed = await showTbtDialog<bool>(
         context: context,
-        builder: (dialogContext) => AlertDialog(
+        builder: (dialogContext) => TbtDialog(
           title: const Text('Hesabı dondur'),
           content: const Text(
             'Hesabın süre sınırı olmadan dondurulacak. İstediğin zaman yeniden açabilirsin.',
@@ -154,9 +159,8 @@ class _SafetyPrivacyCenterScreenState extends State<SafetyPrivacyCenterScreen> {
           if (mounted) Navigator.of(context).popUntil((route) => route.isFirst);
         } catch (error) {
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(_accountError(error))),
-            );
+            ScaffoldMessenger.of(context)
+                .showSnackBar(SnackBar(content: Text(_accountError(error))));
           }
         } finally {
           if (mounted) setState(() => _accountBusy = false);
@@ -165,9 +169,9 @@ class _SafetyPrivacyCenterScreenState extends State<SafetyPrivacyCenterScreen> {
       return;
     }
 
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showTbtDialog<bool>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
+      builder: (dialogContext) => TbtDialog(
         title: const Text('Hesabı kalıcı sil'),
         content: const Text(
           'Bu işlem geri alınamaz. Hesabın admin onayı veya bekleme süresi olmadan kalıcı olarak silinecek.',
@@ -193,9 +197,8 @@ class _SafetyPrivacyCenterScreenState extends State<SafetyPrivacyCenterScreen> {
         if (mounted) Navigator.of(context).popUntil((route) => route.isFirst);
       } catch (error) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(_accountError(error))),
-          );
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(_accountError(error))));
         }
       } finally {
         if (mounted) setState(() => _accountBusy = false);

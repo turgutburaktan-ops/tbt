@@ -1,3 +1,5 @@
+import '../widgets/tbt_dialog.dart';
+
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -212,9 +214,9 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
 
   Future<void> _addCustomStop(LatLng point) async {
     final nameController = TextEditingController();
-    final name = await showDialog<String>(
+    final name = await showTbtDialog<String>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
+      builder: (dialogContext) => TbtDialog(
         title: const Text('Haritadan durak ekle'),
         content: TextField(
           controller: nameController,
@@ -267,9 +269,9 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
   Future<void> _editStop(int index) async {
     final stop = _stops[index];
     final controller = TextEditingController(text: stop.name);
-    final updatedName = await showDialog<String>(
+    final updatedName = await showTbtDialog<String>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
+      builder: (dialogContext) => TbtDialog(
         title: const Text('Durağı düzenle'),
         content: TextField(
           controller: controller,
@@ -282,7 +284,8 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
             child: const Text('Vazgeç'),
           ),
           FilledButton(
-            onPressed: () => Navigator.pop(dialogContext, controller.text.trim()),
+            onPressed: () =>
+                Navigator.pop(dialogContext, controller.text.trim()),
             child: const Text('Kaydet'),
           ),
         ],
@@ -471,10 +474,10 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
         builder: (context, setSheetState) {
           final key = _normalize(query);
           final excluded = _stops.map((s) => s.id).toSet();
-          final categories = <String>['Tümü', ..._allSpots.map((s) => s.category)]
-              .toSet()
-              .take(16)
-              .toList();
+          final categories = <String>[
+            'Tümü',
+            ..._allSpots.map((s) => s.category),
+          ].toSet().take(16).toList();
           var matches = _allSpots.where((spot) {
             if (excluded.contains(spot.id)) return false;
             if (category != 'Tümü' && spot.category != category) return false;
@@ -537,9 +540,8 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
                     itemBuilder: (_, index) => ChoiceChip(
                       label: Text(categories[index]),
                       selected: category == categories[index],
-                      onSelected: (_) => setSheetState(
-                        () => category = categories[index],
-                      ),
+                      onSelected: (_) =>
+                          setSheetState(() => category = categories[index]),
                     ),
                   ),
                 ),
@@ -602,7 +604,10 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
     // Keep the controller alive until the bottom-sheet dismissal animation has
     // fully detached its inherited dependencies. Disposing synchronously here
     // could trigger framework `_dependents.isEmpty` assertions on Android.
-    Future<void>.delayed(const Duration(milliseconds: 500), queryController.dispose);
+    Future<void>.delayed(
+      const Duration(milliseconds: 500),
+      queryController.dispose,
+    );
     if (selected == null || !mounted) return;
     setState(() {
       _stops.add(selected);
@@ -901,17 +906,22 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
                   ),
                   InkWell(
                     borderRadius: BorderRadius.circular(10),
-                    onTap: () => setState(() => _detailsExpanded = !_detailsExpanded),
+                    onTap: () =>
+                        setState(() => _detailsExpanded = !_detailsExpanded),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(vertical: 4),
                       child: Row(
                         children: [
                           const Icon(Icons.tune_rounded, size: 18),
                           const SizedBox(width: 8),
-                          const Expanded(child: Text('Rota notu ve ayrıntılar')),
-                          Icon(_detailsExpanded
-                              ? Icons.keyboard_arrow_up_rounded
-                              : Icons.keyboard_arrow_down_rounded),
+                          const Expanded(
+                            child: Text('Rota notu ve ayrıntılar'),
+                          ),
+                          Icon(
+                            _detailsExpanded
+                                ? Icons.keyboard_arrow_up_rounded
+                                : Icons.keyboard_arrow_down_rounded,
+                          ),
                         ],
                       ),
                     ),
@@ -1080,7 +1090,10 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
                       const SizedBox(width: 10),
                       Expanded(
                         child: FilledButton.icon(
-                          style: FilledButton.styleFrom(backgroundColor: _accent, foregroundColor: Colors.black),
+                          style: FilledButton.styleFrom(
+                            backgroundColor: _accent,
+                            foregroundColor: Colors.black,
+                          ),
                           onPressed: _stops.isEmpty ? null : _openInGoogleMaps,
                           icon: const Icon(Icons.navigation_rounded),
                           label: const Text('Google Maps'),
@@ -1092,8 +1105,13 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
                     Padding(
                       padding: const EdgeInsets.only(top: 6),
                       child: Text(
-                        _stops.isEmpty ? 'Başlamak için ilk durağını ekle.' : 'Akıllı sıralama için en az 3 durak ekle.',
-                        style: const TextStyle(color: Colors.white38, fontSize: 11),
+                        _stops.isEmpty
+                            ? 'Başlamak için ilk durağını ekle.'
+                            : 'Akıllı sıralama için en az 3 durak ekle.',
+                        style: const TextStyle(
+                          color: Colors.white38,
+                          fontSize: 11,
+                        ),
                       ),
                     ),
                 ],
@@ -1139,24 +1157,24 @@ class _EmptyRoute extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-          const Icon(Icons.route_outlined, size: 56, color: Colors.white24),
-          const SizedBox(height: 12),
-          const Text(
-            'Rotan henüz boş',
-            style: TextStyle(fontWeight: FontWeight.w900, fontSize: 17),
-          ),
-          const SizedBox(height: 6),
-          const Text(
-            'Listeden nokta seçebilir veya haritada boş bir yere uzun basarak kendi durağını ekleyebilirsin.',
-            textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.white54, height: 1.4),
-          ),
-          const SizedBox(height: 14),
-          FilledButton.icon(
-            onPressed: onAdd,
-            icon: const Icon(Icons.add_location_alt_outlined),
-            label: const Text('İlk noktayı ekle'),
-          ),
+            const Icon(Icons.route_outlined, size: 56, color: Colors.white24),
+            const SizedBox(height: 12),
+            const Text(
+              'Rotan henüz boş',
+              style: TextStyle(fontWeight: FontWeight.w900, fontSize: 17),
+            ),
+            const SizedBox(height: 6),
+            const Text(
+              'Listeden nokta seçebilir veya haritada boş bir yere uzun basarak kendi durağını ekleyebilirsin.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.white54, height: 1.4),
+            ),
+            const SizedBox(height: 14),
+            FilledButton.icon(
+              onPressed: onAdd,
+              icon: const Icon(Icons.add_location_alt_outlined),
+              label: const Text('İlk noktayı ekle'),
+            ),
           ],
         ),
       ),

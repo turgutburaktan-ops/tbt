@@ -1,3 +1,5 @@
+import '../widgets/tbt_dialog.dart';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -29,10 +31,9 @@ class _AdminBusinessPremiumScreenState
 
   Future<void> _check() async {
     final user = FirebaseAuth.instance.currentUser;
-    final token = await user?.getIdTokenResult(
-      true,
-    );
-    if (mounted) setState(() => _allowed = AdminAccess.tokenMatches(user, token));
+    final token = await user?.getIdTokenResult(true);
+    if (mounted)
+      setState(() => _allowed = AdminAccess.tokenMatches(user, token));
   }
 
   @override
@@ -89,11 +90,15 @@ class _AdminBusinessPremiumScreenState
   Future<void> _openGrantDialog(String venueKey, String name) async {
     var days = 90;
     final note = TextEditingController();
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showTbtDialog<bool>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setLocal) => AlertDialog(
-          icon: const Icon(Icons.workspace_premium_rounded, color: Color(0xFFFFC857), size: 34),
+        builder: (context, setLocal) => TbtDialog(
+          icon: const Icon(
+            Icons.workspace_premium_rounded,
+            color: Color(0xFFFFC857),
+            size: 34,
+          ),
           title: Text('$name için Premium'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -287,8 +292,8 @@ class _AdminBusinessPremiumScreenState
                     final premiumUntil = adminActive
                         ? until?.toDate()
                         : trialActive
-                            ? trialUntil.toDate()
-                            : null;
+                        ? trialUntil.toDate()
+                        : null;
                     final verified = d['verified'] == true;
                     final busy = _busyId == doc.id;
                     final category = _category(

@@ -38,6 +38,7 @@ async function updateQuery(db, query, data) {
 const ownedContent = [
   ['posts', 'userId'],
   ['stories', 'userId'],
+  ['post_reposts', 'userId'],
   ['social_events', 'hostId'],
   ['event_memories', 'userId'],
   ['travel_plans', 'ownerId'],
@@ -119,6 +120,11 @@ exports.deleteAccountNow = onCall(
 
     const ownedQueries = [
       ...ownedContent,
+      ['post_bookmarks', 'userId'],
+      ['creator_referrals', 'userId'],
+      ['creator_referrals', 'creatorId'],
+      ['creator_metric_receipts', 'userId'],
+      ['social_publish_limits', 'userId'],
       ['user_map_points', 'ownerId'],
       ['moderation_reports', 'reporterId'],
       ['reports', 'reporterId'],
@@ -173,6 +179,7 @@ exports.deleteAccountNow = onCall(
 
     await getStorage().bucket().deleteFiles({prefix: `users/${uid}/`, force: true})
       .catch((error) => console.error('Account storage cleanup failed', uid, error));
+    await Promise.all(['creator_profiles', 'creator_stats', 'notification_reply_limits'].map(collection => db.recursiveDelete(db.collection(collection).doc(uid))));
     await db.recursiveDelete(userRef);
     await db.collection('account_delete_requests').doc(uid).delete().catch(() => {});
     await getAuth().deleteUser(uid).catch((error) => {

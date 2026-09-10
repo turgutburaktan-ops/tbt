@@ -1,3 +1,5 @@
+import '../widgets/tbt_dialog.dart';
+
 import 'package:flutter/material.dart';
 
 import '../services/auth_service.dart';
@@ -52,17 +54,15 @@ class _LoginScreenState extends State<LoginScreen> {
     final controller = TextEditingController(
       text: _emailController.text.trim(),
     );
-    final email = await showDialog<String>(
+    final email = await showTbtDialog<String>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
+      builder: (dialogContext) => TbtDialog(
         title: Text(AppStrings.of(context).text('resetPassword')),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              AppStrings.of(context).text('resetBody'),
-            ),
+            Text(AppStrings.of(context).text('resetBody')),
             const SizedBox(height: 14),
             TextField(
               controller: controller,
@@ -153,7 +153,10 @@ class _LoginScreenState extends State<LoginScreen> {
               controller: _emailController,
               keyboardType: TextInputType.text,
               autocorrect: false,
-              autofillHints: const [AutofillHints.username, AutofillHints.email],
+              autofillHints: const [
+                AutofillHints.username,
+                AutofillHints.email,
+              ],
               style: const TextStyle(color: Colors.white),
               decoration: _decoration(
                 label: strings.text('identifier'),
@@ -171,7 +174,9 @@ class _LoginScreenState extends State<LoginScreen> {
                 label: strings.text('password'),
                 icon: Icons.lock_outline,
                 suffix: IconButton(
-                  tooltip: _hidePassword ? strings.text('showPassword') : strings.text('hidePassword'),
+                  tooltip: _hidePassword
+                      ? strings.text('showPassword')
+                      : strings.text('hidePassword'),
                   icon: Icon(
                     _hidePassword ? Icons.visibility_off : Icons.visibility,
                   ),

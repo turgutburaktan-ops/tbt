@@ -1,3 +1,5 @@
+import '../widgets/tbt_dialog.dart';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -10,16 +12,17 @@ class PublicTravelPlansScreen extends StatefulWidget {
   const PublicTravelPlansScreen({super.key});
 
   @override
-  State<PublicTravelPlansScreen> createState() => _PublicTravelPlansScreenState();
+  State<PublicTravelPlansScreen> createState() =>
+      _PublicTravelPlansScreenState();
 }
 
 class _PublicTravelPlansScreenState extends State<PublicTravelPlansScreen> {
   String _query = '';
 
   Future<void> _rate(TravelPlan plan) async {
-    final rating = await showDialog<int>(
+    final rating = await showTbtDialog<int>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
+      builder: (dialogContext) => TbtDialog(
         title: const Text('Rotayı puanla'),
         content: Wrap(
           alignment: WrapAlignment.center,
@@ -79,9 +82,8 @@ class _PublicTravelPlansScreenState extends State<PublicTravelPlansScreen> {
       }
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Rota kaydedilemedi.')),
-        );
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text('Rota kaydedilemedi.')));
       }
     }
   }
@@ -100,7 +102,8 @@ class _PublicTravelPlansScreenState extends State<PublicTravelPlansScreen> {
                 hintText: 'Şehir veya rota adı ara',
                 prefixIcon: Icon(Icons.search_rounded),
               ),
-              onChanged: (value) => setState(() => _query = value.toLowerCase()),
+              onChanged: (value) =>
+                  setState(() => _query = value.toLowerCase()),
             ),
           ),
           Expanded(
@@ -112,13 +115,16 @@ class _PublicTravelPlansScreenState extends State<PublicTravelPlansScreen> {
                 }
                 final plans = (snapshot.data ?? const <TravelPlan>[])
                     .where(
-                      (plan) => _query.isEmpty ||
+                      (plan) =>
+                          _query.isEmpty ||
                           plan.title.toLowerCase().contains(_query) ||
                           plan.city.toLowerCase().contains(_query),
                     )
                     .toList();
                 if (plans.isEmpty) {
-                  return const Center(child: Text('Henüz herkese açık rota yok.'));
+                  return const Center(
+                    child: Text('Henüz herkese açık rota yok.'),
+                  );
                 }
                 return ListView.separated(
                   padding: const EdgeInsets.fromLTRB(14, 4, 14, 30),
@@ -132,18 +138,50 @@ class _PublicTravelPlansScreenState extends State<PublicTravelPlansScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(plan.title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900)),
+                            Text(
+                              plan.title,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
                             const SizedBox(height: 4),
-                            Text('${plan.city} • ${plan.durationHours} saat • ${plan.spotNames.length} durak', style: const TextStyle(color: AppColors.textMuted)),
+                            Text(
+                              '${plan.city} • ${plan.durationHours} saat • ${plan.spotNames.length} durak',
+                              style: const TextStyle(
+                                color: AppColors.textMuted,
+                              ),
+                            ),
                             const SizedBox(height: 8),
-                            Text(plan.spotNames.join(' → '), maxLines: 2, overflow: TextOverflow.ellipsis),
+                            Text(
+                              plan.spotNames.join(' → '),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                             const SizedBox(height: 10),
                             Wrap(
                               spacing: 6,
                               children: [
-                                TextButton.icon(onPressed: () => _rate(plan), icon: const Icon(Icons.star_outline_rounded), label: const Text('Puanla')),
-                                TextButton.icon(onPressed: () => _copy(plan), icon: const Icon(Icons.bookmark_add_outlined), label: const Text('Kaydet')),
-                                FilledButton(onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => TravelPlanDetailScreen(plan: plan))), child: const Text('İncele')),
+                                TextButton.icon(
+                                  onPressed: () => _rate(plan),
+                                  icon: const Icon(Icons.star_outline_rounded),
+                                  label: const Text('Puanla'),
+                                ),
+                                TextButton.icon(
+                                  onPressed: () => _copy(plan),
+                                  icon: const Icon(Icons.bookmark_add_outlined),
+                                  label: const Text('Kaydet'),
+                                ),
+                                FilledButton(
+                                  onPressed: () => Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) =>
+                                          TravelPlanDetailScreen(plan: plan),
+                                    ),
+                                  ),
+                                  child: const Text('İncele'),
+                                ),
                               ],
                             ),
                           ],

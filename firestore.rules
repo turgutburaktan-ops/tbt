@@ -7,7 +7,7 @@ service cloud.firestore {
     function safeUserCreate(uid) {
       return isSelf(uid) && request.resource.data.uid == uid &&
         !request.resource.data.keys().hasAny([
-          'admin','isAdmin','role','roles','claims','permissions',
+          'isCreator','creatorTier','creatorBadge','creatorInviteCode','creatorProgramVersion','creatorJoinedAt','admin','isAdmin','role','roles','claims','permissions',
           'verified','verificationStatus','businessVerified','venueVerified',
           'moderationStatus','trustLevel','banned','disabled'
         ]);
@@ -15,7 +15,7 @@ service cloud.firestore {
     function safeUserUpdate(uid) {
       return isSelf(uid) && (request.resource.data.get('showOnlineStatus', true) != false || (request.resource.data.get('isOnline', false) == false && request.resource.data.get('lastSeenAt', null) == null)) && (!('uid' in request.resource.data) || request.resource.data.uid == uid) &&
         !request.resource.data.diff(resource.data).affectedKeys().hasAny([
-          'uid','admin','isAdmin','role','roles','claims','permissions',
+          'uid','isCreator','creatorTier','creatorBadge','creatorInviteCode','creatorProgramVersion','creatorJoinedAt','admin','isAdmin','role','roles','claims','permissions',
           'verified','verificationStatus','businessVerified','venueVerified',
           'moderationStatus','trustLevel','banned','disabled','xp','dailyXp',
           'weeklyXp','dailyActions','weeklyActions','stats'
@@ -284,7 +284,8 @@ service cloud.firestore {
       match /map_points/{pointId} { allow read, create, update, delete: if isSelf(uid) && (request.method == 'delete' || request.resource.data.ownerId == uid); }
       match /story_archive/{storyId} {
         allow read: if isSelf(uid);
-        allow create, update: if isSelf(uid) && request.resource.data.userId == uid;
+        allow create: if isSelf(uid) && request.resource.data.userId == uid && request.resource.data.get('sharedPostId', '') == '';
+        allow update: if isSelf(uid) && request.resource.data.userId == uid && request.resource.data.get('sharedPostId', '') == '' && resource.data.get('sharedPostId', '') == '';
         allow delete: if isSelf(uid);
       }
     }
@@ -349,8 +350,8 @@ service cloud.firestore {
     }
     match /stories/{storyId} {
       allow read: if signedIn();
-      allow create: if signedIn() && request.resource.data.userId == request.auth.uid && request.resource.data.expiresAt > request.time && validMusicFields(request.resource.data, 15000);
-      allow update: if signedIn() && resource.data.userId == request.auth.uid && request.resource.data.userId == resource.data.userId && validMusicFields(request.resource.data, 15000);
+      allow create: if signedIn() && request.resource.data.userId == request.auth.uid && request.resource.data.get('sharedPostId', '') == '' && request.resource.data.expiresAt > request.time && validMusicFields(request.resource.data, 15000);
+      allow update: if signedIn() && resource.data.userId == request.auth.uid && request.resource.data.userId == resource.data.userId && request.resource.data.get('sharedPostId', '') == '' && resource.data.get('sharedPostId', '') == '' && validMusicFields(request.resource.data, 15000);
       allow delete: if signedIn() && resource.data.userId == request.auth.uid;
       match /interactions/{uid} { allow read: if signedIn() && (uid == request.auth.uid || get(/databases/$(database)/documents/stories/$(storyId)).data.userId == request.auth.uid); allow create, update: if validStoryInteraction(storyId, uid); allow delete: if signedIn() && uid == request.auth.uid; }
     }
@@ -400,6 +401,13 @@ service cloud.firestore {
       match /tags/{taggedUserId} { allow read: if memoryVisible(get(/databases/$(database)/documents/event_memories/$(memoryId)).data); allow create: if signedIn() && request.resource.data.userId == taggedUserId && request.resource.data.taggedBy == request.auth.uid; allow update, delete: if signedIn() && resource.data.taggedBy == request.auth.uid; }
       match /{sub}/{docId} { allow read, write: if false; }
     }
+    match /post_reposts/{id} { allow read: if signedIn(); allow write: if false; }
+    match /post_bookmarks/{id} { allow read: if signedIn() && resource.data.userId == request.auth.uid; allow write: if false; }
+    match /creator_profiles/{uid} { allow read: if signedIn(); allow write: if false; }
+    match /creator_stats/{uid} { allow read, write: if false; match /{sub}/{id} { allow read, write: if false; } }
+    match /creator_referrals/{uid} { allow read, write: if false; }
+    match /creator_metric_receipts/{id} { allow read, write: if false; }
+    match /social_publish_limits/{id} { allow read, write: if false; }
     match /posts/{postId} {
       allow read: if true;
       allow create: if validPostCreate() && validBusinessPost() && validPostMusic(postId);

@@ -73,9 +73,9 @@ class AdminConsoleService {
 
   Future<List<Map<String, dynamic>>> recentUsers({int limit = 60}) async {
     await _ensureFreshAdminAuth();
-    final result = await _functions
-        .httpsCallable('adminListRecentUsers')
-        .call({'limit': limit});
+    final result = await _functions.httpsCallable('adminListRecentUsers').call({
+      'limit': limit,
+    });
     final data = Map<String, dynamic>.from(result.data as Map);
     return (data['items'] as List? ?? const [])
         .map((item) => Map<String, dynamic>.from(item as Map))
@@ -167,11 +167,17 @@ class AdminConsoleService {
   }
 
   Future<Map<String, dynamic>> sendBroadcast({
-    required String requestId, required String title, required String body,
+    required String requestId,
+    required String title,
+    required String body,
+    String imagePath = '',
   }) async {
     await _ensureFreshAdminAuth();
     final result = await _functions.httpsCallable('sendAdminBroadcast').call({
-      'requestId': requestId, 'title': title, 'body': body,
+      'requestId': requestId,
+      'title': title,
+      'body': body,
+      'imagePath': imagePath,
     });
     return Map<String, dynamic>.from(result.data as Map);
   }

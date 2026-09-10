@@ -7,7 +7,7 @@ function harness(userCount, interrupt = false) {
   let records = new Map(), commits = 0, interrupted = false;
   const jobPath = 'admin_broadcasts/broadcast_test_0001';
   const ref = path => ({path, id: path.split('/').at(-1), collection: name => ({doc: id => ref(`${path}/${name}/${id}`)})});
-  records.set(jobPath, {status: 'queued', title: 'Test title', body: 'Test body', sentBy: 'admin', cursor: null, recipientCount: 0});
+  records.set(jobPath, {status: 'queued', title: 'Test title', body: 'Test body', imageUrl: 'https://example.com/tbt.jpg', imagePath: 'admin_broadcasts/broadcast_test_0001/image.jpg', sentBy: 'admin', cursor: null, recipientCount: 0});
   for (let i = 0; i < userCount; i++) records.set(`users/u${String(i).padStart(4, '0')}`, {notificationPreferences: {marketing: i % 2 === 0}});
   const db = {
     collection: () => {
@@ -47,6 +47,7 @@ test('broadcast delivery paginates and preserves per-user push consent', async (
   assert.equal(h.job().status, 'completed');
   assert.equal(h.job().recipientCount, 205);
   assert.equal(h.inbox().length, 205);
+  assert.equal(h.inbox()[0][1].imageUrl, 'https://example.com/tbt.jpg');
   assert.equal(h.inbox().filter(([, n]) => n.pushAllowed).length, 103);
 });
 test('interrupted delivery resumes without duplicating notifications', async () => {

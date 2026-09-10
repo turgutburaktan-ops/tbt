@@ -1,3 +1,5 @@
+import '../widgets/tbt_dialog.dart';
+
 import 'dart:math' as math;
 
 import 'package:firebase_auth/firebase_auth.dart';
@@ -73,12 +75,13 @@ class _SmartPlanScreenState extends State<SmartPlanScreen> {
   Future<void> _load() async {
     try {
       final spots = await SpotRepository.instance.loadSpots();
-      final cities = spots
-          .map((spot) => spot.city.trim())
-          .where((city) => city.isNotEmpty)
-          .toSet()
-          .toList()
-        ..sort();
+      final cities =
+          spots
+              .map((spot) => spot.city.trim())
+              .where((city) => city.isNotEmpty)
+              .toSet()
+              .toList()
+            ..sort();
       if (!mounted) return;
       setState(() {
         _allSpots = spots;
@@ -149,9 +152,8 @@ class _SmartPlanScreenState extends State<SmartPlanScreen> {
     final ordered = <PhotoSpot>[candidates.first];
     while (remaining.isNotEmpty) {
       remaining.sort(
-        (a, b) => _distance(ordered.last, a).compareTo(
-          _distance(ordered.last, b),
-        ),
+        (a, b) =>
+            _distance(ordered.last, a).compareTo(_distance(ordered.last, b)),
       );
       ordered.add(remaining.removeAt(0));
     }
@@ -238,14 +240,15 @@ class _SmartPlanScreenState extends State<SmartPlanScreen> {
         : _duration <= 5
         ? 5
         : 7;
-    final candidates = _allSpots
-        .where(
-          (spot) =>
-              _normalize(spot.city) == _normalize(city) &&
-              _inSelectedArea(spot),
-        )
-        .toList()
-      ..sort((a, b) => _score(b).compareTo(_score(a)));
+    final candidates =
+        _allSpots
+            .where(
+              (spot) =>
+                  _normalize(spot.city) == _normalize(city) &&
+                  _inSelectedArea(spot),
+            )
+            .toList()
+          ..sort((a, b) => _score(b).compareTo(_score(a)));
     var selected = _orderNearby(candidates.take(count).toList());
     if (selected.isEmpty) {
       setState(() => _generating = false);
@@ -275,8 +278,9 @@ class _SmartPlanScreenState extends State<SmartPlanScreen> {
       final venueStops = <PhotoSpot>[];
       for (final group in venueGroups) {
         group.sort((a, b) {
-          final routeOrder = (b.routeRecommended ? 1 : 0)
-              .compareTo(a.routeRecommended ? 1 : 0);
+          final routeOrder = (b.routeRecommended ? 1 : 0).compareTo(
+            a.routeRecommended ? 1 : 0,
+          );
           if (routeOrder != 0) return routeOrder;
           return (b.sponsored ? 1 : 0).compareTo(a.sponsored ? 1 : 0);
         });
@@ -292,16 +296,14 @@ class _SmartPlanScreenState extends State<SmartPlanScreen> {
           : _duration <= 5
           ? 2
           : 4;
-      selected = _orderNearby([
-        ...selected,
-        ...venueStops.take(mealLimit),
-      ]);
+      selected = _orderNearby([...selected, ...venueStops.take(mealLimit)]);
     } catch (_) {}
     var intelligence = await TravelIntelligenceService.instance.analyze(
       selected,
       transport: _transport,
     );
-    final rainy = intelligence.weatherSummary.contains('Yağmurlu') ||
+    final rainy =
+        intelligence.weatherSummary.contains('Yağmurlu') ||
         intelligence.weatherSummary.contains('Sağanak') ||
         intelligence.weatherSummary.contains('Fırtınalı');
     if (rainy) {
@@ -314,6 +316,7 @@ class _SmartPlanScreenState extends State<SmartPlanScreen> {
             ? 1
             : 0;
       }
+
       selected.sort((a, b) => indoorScore(b).compareTo(indoorScore(a)));
       intelligence = await TravelIntelligenceService.instance.analyze(
         selected,
@@ -366,9 +369,7 @@ class _SmartPlanScreenState extends State<SmartPlanScreen> {
           final matches = normalizedQuery.isEmpty
               ? _cities
               : _cities
-                    .where(
-                      (city) => _normalize(city).contains(normalizedQuery),
-                    )
+                    .where((city) => _normalize(city).contains(normalizedQuery))
                     .toList(growable: false);
           return SafeArea(
             top: false,
@@ -390,8 +391,7 @@ class _SmartPlanScreenState extends State<SmartPlanScreen> {
                         hintText: 'Şehir ara',
                         prefixIcon: Icon(Icons.search_rounded),
                       ),
-                      onChanged: (value) =>
-                          setSheetState(() => query = value),
+                      onChanged: (value) => setSheetState(() => query = value),
                     ),
                   ),
                   Expanded(
@@ -414,8 +414,7 @@ class _SmartPlanScreenState extends State<SmartPlanScreen> {
                                         color: AppColors.cyan,
                                       )
                                     : null,
-                                onTap: () =>
-                                    Navigator.pop(sheetContext, city),
+                                onTap: () => Navigator.pop(sheetContext, city),
                               );
                             },
                           ),
@@ -524,8 +523,7 @@ class _SmartPlanScreenState extends State<SmartPlanScreen> {
                   maxLines: 4,
                   decoration: InputDecoration(
                     labelText: 'Nasıl bir plan istiyorsun?',
-                    hintText:
-                        'Örn: Elazığ’da arabayla 6 saat, tarih, yemek ve kahve ağırlıklı ekonomik rota',
+                    hintText: 'Örn: Elazığ’da arabayla 6 saat, tarih, yemek ve kahve ağırlıklı ekonomik rota',
                     prefixIcon: const Icon(Icons.auto_awesome_rounded),
                     suffixIcon: IconButton(
                       tooltip: 'İsteği uygula',
@@ -570,10 +568,8 @@ class _SmartPlanScreenState extends State<SmartPlanScreen> {
                     ),
                     items: _availableAreas
                         .map(
-                          (area) => DropdownMenuItem(
-                            value: area,
-                            child: Text(area),
-                          ),
+                          (area) =>
+                              DropdownMenuItem(value: area, child: Text(area)),
                         )
                         .toList(),
                     onChanged: (value) => setState(() {
@@ -594,6 +590,10 @@ class _SmartPlanScreenState extends State<SmartPlanScreen> {
                   onTap: () async {
                     final date = await showDatePicker(
                       context: context,
+                      builder: (context, child) => Theme(
+                        data: tbtDialogTheme(Theme.of(context)),
+                        child: child!,
+                      ),
                       firstDate: DateTime.now(),
                       lastDate: DateTime.now().add(const Duration(days: 365)),
                       initialDate: _startAt.isBefore(DateTime.now())
@@ -603,6 +603,10 @@ class _SmartPlanScreenState extends State<SmartPlanScreen> {
                     if (date == null || !mounted) return;
                     final time = await showTimePicker(
                       context: context,
+                      builder: (context, child) => Theme(
+                        data: tbtDialogTheme(Theme.of(context)),
+                        child: child!,
+                      ),
                       initialTime: TimeOfDay.fromDateTime(_startAt),
                     );
                     if (time == null || !mounted) return;
@@ -707,7 +711,10 @@ class _SmartPlanScreenState extends State<SmartPlanScreen> {
                       onSelected: (value) => setState(() => _addCafe = value),
                     ),
                     FilterChip(
-                      avatar: const Icon(Icons.breakfast_dining_rounded, size: 17),
+                      avatar: const Icon(
+                        Icons.breakfast_dining_rounded,
+                        size: 17,
+                      ),
                       label: const Text('Kahvaltı'),
                       selected: _addBreakfast,
                       onSelected: (value) =>

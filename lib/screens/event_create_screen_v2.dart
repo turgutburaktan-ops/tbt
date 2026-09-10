@@ -1,3 +1,5 @@
+import '../widgets/tbt_dialog.dart';
+
 import 'dart:io';
 
 import 'package:cloud_functions/cloud_functions.dart';
@@ -91,7 +93,10 @@ class _EventCreateScreenV2State extends State<EventCreateScreenV2> {
     super.initState();
     if (widget.initialGroupMembers.isNotEmpty) {
       _visibility = EventVisibility.selectedPeople;
-      _selectedPeople = {for (final id in widget.initialGroupMembers) if (id != FirebaseAuth.instance.currentUser?.uid) id: 'Grup üyesi'};
+      _selectedPeople = {
+        for (final id in widget.initialGroupMembers)
+          if (id != FirebaseAuth.instance.currentUser?.uid) id: 'Grup üyesi',
+      };
     }
     _title = TextEditingController(text: widget.initialTitle);
     _city = TextEditingController(text: widget.initialCity);
@@ -116,15 +121,32 @@ class _EventCreateScreenV2State extends State<EventCreateScreenV2> {
     final local = value.toLocal();
     final roundedMinute = ((local.minute + 4) ~/ 5) * 5;
     if (roundedMinute >= 60) {
-      return DateTime(local.year, local.month, local.day, local.hour)
-          .add(const Duration(hours: 1));
+      return DateTime(
+        local.year,
+        local.month,
+        local.day,
+        local.hour,
+      ).add(const Duration(hours: 1));
     }
-    return DateTime(local.year, local.month, local.day, local.hour, roundedMinute);
+    return DateTime(
+      local.year,
+      local.month,
+      local.day,
+      local.hour,
+      roundedMinute,
+    );
   }
 
   @override
   void dispose() {
-    for (final c in [_title, _city, _location, _description, _customType, _capacity]) {
+    for (final c in [
+      _title,
+      _city,
+      _location,
+      _description,
+      _customType,
+      _capacity,
+    ]) {
       c.dispose();
     }
     super.dispose();
@@ -207,20 +229,28 @@ class _EventCreateScreenV2State extends State<EventCreateScreenV2> {
     final now = DateTime.now();
     final date = await showDatePicker(
       context: context,
+      builder: (context, child) =>
+          Theme(data: tbtDialogTheme(Theme.of(context)), child: child!),
       initialDate: _startsAt.isBefore(now) ? now : _startsAt,
       firstDate: DateTime(now.year, now.month, now.day),
       lastDate: now.add(const Duration(days: 365)),
-      builder: _pickerTheme,
     );
     if (date == null || !mounted) return;
     final rounded = _roundToFive(_startsAt);
     final time = await showTimePicker(
       context: context,
+      builder: (context, child) =>
+          Theme(data: tbtDialogTheme(Theme.of(context)), child: child!),
       initialTime: TimeOfDay(hour: rounded.hour, minute: rounded.minute),
-      builder: _pickerTheme,
     );
     if (time == null || !mounted) return;
-    var chosen = DateTime(date.year, date.month, date.day, time.hour, time.minute);
+    var chosen = DateTime(
+      date.year,
+      date.month,
+      date.day,
+      time.hour,
+      time.minute,
+    );
     chosen = _roundToFive(chosen);
     if (chosen.isBefore(DateTime.now())) {
       chosen = _roundToFive(DateTime.now().add(const Duration(minutes: 10)));
@@ -267,7 +297,13 @@ class _EventCreateScreenV2State extends State<EventCreateScreenV2> {
                 child: Row(
                   children: [
                     const Expanded(
-                      child: Text('Kişileri Seç', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900)),
+                      child: Text(
+                        'Kişileri Seç',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
                     ),
                     TextButton(
                       onPressed: () => Navigator.pop(sheet, {
@@ -283,20 +319,29 @@ class _EventCreateScreenV2State extends State<EventCreateScreenV2> {
                 child: StreamBuilder(
                   stream: EventPrivacyService.instance.users(),
                   builder: (_, snapshot) {
-                    if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
-                    final docs = snapshot.data!.docs.where((d) => d.id != me).toList();
+                    if (!snapshot.hasData)
+                      return const Center(child: CircularProgressIndicator());
+                    final docs = snapshot.data!.docs
+                        .where((d) => d.id != me)
+                        .toList();
                     return ListView.builder(
                       itemCount: docs.length,
                       itemBuilder: (_, index) {
                         final doc = docs[index], data = doc.data();
-                        final name = (data['displayName'] ?? data['email'] ?? 'Kullanıcı').toString();
+                        final name =
+                            (data['displayName'] ??
+                                    data['email'] ??
+                                    'Kullanıcı')
+                                .toString();
                         names[doc.id] = name;
                         final checked = selected.contains(doc.id);
                         return CheckboxListTile(
                           value: checked,
                           title: Text(name),
                           onChanged: (value) => setSheetState(() {
-                            value == true ? selected.add(doc.id) : selected.remove(doc.id);
+                            value == true
+                                ? selected.add(doc.id)
+                                : selected.remove(doc.id);
                           }),
                         );
                       },
@@ -356,7 +401,8 @@ class _EventCreateScreenV2State extends State<EventCreateScreenV2> {
       setState(() => _error = 'Haritadan kesin konumu seç.');
       return;
     }
-    if (_visibility == EventVisibility.selectedPeople && _selectedPeople.isEmpty) {
+    if (_visibility == EventVisibility.selectedPeople &&
+        _selectedPeople.isEmpty) {
       setState(() => _error = 'En az bir kişi seçmelisin.');
       return;
     }
@@ -386,16 +432,28 @@ class _EventCreateScreenV2State extends State<EventCreateScreenV2> {
         visibility: _visibility,
         allowedUserIds: allowed,
       );
-      final ref = FirebaseStorage.instance.ref().child('users/${user.uid}/events/$eventId/cover.jpg');
-      await ref.putFile(_image!, SettableMetadata(contentType: 'image/jpeg')).timeout(const Duration(seconds: 30));
-      final url = await ref.getDownloadURL().timeout(const Duration(seconds: 8));
+      final ref = FirebaseStorage.instance.ref().child(
+        'users/${user.uid}/events/$eventId/cover.jpg',
+      );
+      await ref
+          .putFile(_image!, SettableMetadata(contentType: 'image/jpeg'))
+          .timeout(const Duration(seconds: 30));
+      final url = await ref.getDownloadURL().timeout(
+        const Duration(seconds: 8),
+      );
       await FirebaseFunctions.instanceFor(region: 'europe-west1')
           .httpsCallable('setSocialEventCover')
-          .call({'eventId': eventId, 'coverImageUrl': url, 'coverStoragePath': ref.fullPath})
+          .call({
+            'eventId': eventId,
+            'coverImageUrl': url,
+            'coverStoragePath': ref.fullPath,
+          })
           .timeout(const Duration(seconds: 12));
-      if (mounted) Navigator.pop(context, widget.returnEventId ? eventId : true);
+      if (mounted)
+        Navigator.pop(context, widget.returnEventId ? eventId : true);
     } catch (e) {
-      if (mounted) setState(() => _error = e.toString().replaceFirst('Exception: ', ''));
+      if (mounted)
+        setState(() => _error = e.toString().replaceFirst('Exception: ', ''));
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -426,7 +484,11 @@ class _EventCreateScreenV2State extends State<EventCreateScreenV2> {
                   Expanded(
                     child: Text(
                       'Şablon hazır. Konumu, zamanı ve kapağı tamamlayıp planı hemen yayınlayabilirsin.',
-                      style: TextStyle(color: Colors.white70, fontSize: 12, height: 1.3),
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 12,
+                        height: 1.3,
+                      ),
                     ),
                   ),
                 ],
@@ -448,11 +510,24 @@ class _EventCreateScreenV2State extends State<EventCreateScreenV2> {
                   ? const Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.add_a_photo_outlined, size: 38, color: AppColors.violetBright),
+                        Icon(
+                          Icons.add_a_photo_outlined,
+                          size: 38,
+                          color: AppColors.violetBright,
+                        ),
                         SizedBox(height: 8),
-                        Text('Kapak fotoğrafı ekle', style: TextStyle(fontWeight: FontWeight.w900)),
+                        Text(
+                          'Kapak fotoğrafı ekle',
+                          style: TextStyle(fontWeight: FontWeight.w900),
+                        ),
                         SizedBox(height: 3),
-                        Text('Çek veya galeriden seç', style: TextStyle(color: Colors.white54, fontSize: 11.5)),
+                        Text(
+                          'Çek veya galeriden seç',
+                          style: TextStyle(
+                            color: Colors.white54,
+                            fontSize: 11.5,
+                          ),
+                        ),
                       ],
                     )
                   : Stack(
@@ -475,7 +550,10 @@ class _EventCreateScreenV2State extends State<EventCreateScreenV2> {
           const SizedBox(height: 12),
           TextField(
             controller: _title,
-            decoration: const InputDecoration(labelText: 'Plan başlığı', prefixIcon: Icon(Icons.title)),
+            decoration: const InputDecoration(
+              labelText: 'Plan başlığı',
+              prefixIcon: Icon(Icons.title),
+            ),
           ),
           const SizedBox(height: 10),
           SearchableSelectionField(
@@ -495,15 +573,26 @@ class _EventCreateScreenV2State extends State<EventCreateScreenV2> {
           const SizedBox(height: 10),
           TextField(
             controller: _location,
-            decoration: const InputDecoration(labelText: 'Buluşma adresi', prefixIcon: Icon(Icons.place_outlined)),
+            decoration: const InputDecoration(
+              labelText: 'Buluşma adresi',
+              prefixIcon: Icon(Icons.place_outlined),
+            ),
           ),
           const SizedBox(height: 7),
           SizedBox(
             width: double.infinity,
             child: OutlinedButton.icon(
               onPressed: _saving ? null : _chooseLocation,
-              icon: Icon(_selectedLocation == null ? Icons.map_outlined : Icons.location_on_rounded),
-              label: Text(_selectedLocation == null ? 'Haritadan konumu seç' : 'Konum seçildi • Değiştir'),
+              icon: Icon(
+                _selectedLocation == null
+                    ? Icons.map_outlined
+                    : Icons.location_on_rounded,
+              ),
+              label: Text(
+                _selectedLocation == null
+                    ? 'Haritadan konumu seç'
+                    : 'Konum seçildi • Değiştir',
+              ),
             ),
           ),
           const SizedBox(height: 4),
@@ -514,8 +603,14 @@ class _EventCreateScreenV2State extends State<EventCreateScreenV2> {
               border: Border.all(color: AppColors.border),
             ),
             child: ListTile(
-              leading: const Icon(Icons.schedule_rounded, color: AppColors.cyan),
-              title: const Text('Tarih ve saat', style: TextStyle(fontWeight: FontWeight.w800)),
+              leading: const Icon(
+                Icons.schedule_rounded,
+                color: AppColors.cyan,
+              ),
+              title: const Text(
+                'Tarih ve saat',
+                style: TextStyle(fontWeight: FontWeight.w800),
+              ),
               subtitle: Text(_dateLabel()),
               trailing: const Icon(Icons.edit_calendar_outlined),
               onTap: _saving ? null : _chooseDateTime,
@@ -526,7 +621,10 @@ class _EventCreateScreenV2State extends State<EventCreateScreenV2> {
             controller: _capacity,
             keyboardType: TextInputType.number,
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-            decoration: const InputDecoration(labelText: 'Kişi sayısı', prefixIcon: Icon(Icons.groups_2_outlined)),
+            decoration: const InputDecoration(
+              labelText: 'Kişi sayısı',
+              prefixIcon: Icon(Icons.groups_2_outlined),
+            ),
           ),
           const SizedBox(height: 12),
           Container(
@@ -539,41 +637,88 @@ class _EventCreateScreenV2State extends State<EventCreateScreenV2> {
               initiallyExpanded: _advancedOpen,
               onExpansionChanged: (value) => _advancedOpen = value,
               leading: const Icon(Icons.tune_rounded, color: Colors.white60),
-              title: const Text('Ek detaylar', style: TextStyle(fontWeight: FontWeight.w900)),
-              subtitle: const Text('Tür, görünürlük ve açıklama', style: TextStyle(color: Colors.white54, fontSize: 11)),
+              title: const Text(
+                'Ek detaylar',
+                style: TextStyle(fontWeight: FontWeight.w900),
+              ),
+              subtitle: const Text(
+                'Tür, görünürlük ve açıklama',
+                style: TextStyle(color: Colors.white54, fontSize: 11),
+              ),
               childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 14),
               children: [
                 DropdownButtonFormField<SocialEventType>(
                   initialValue: _type,
                   isExpanded: true,
                   decoration: const InputDecoration(labelText: 'Etkinlik türü'),
-                  items: SocialEventType.values.map((e) => DropdownMenuItem(value: e, child: Text(e.label))).toList(),
-                  onChanged: _saving ? null : (value) => setState(() => _type = value ?? SocialEventType.social),
+                  items: SocialEventType.values
+                      .map(
+                        (e) => DropdownMenuItem(value: e, child: Text(e.label)),
+                      )
+                      .toList(),
+                  onChanged: _saving
+                      ? null
+                      : (value) => setState(
+                          () => _type = value ?? SocialEventType.social,
+                        ),
                 ),
                 if (_type == SocialEventType.other) ...[
                   const SizedBox(height: 10),
-                  TextField(controller: _customType, decoration: const InputDecoration(labelText: 'Etkinlik türünün adı')),
+                  TextField(
+                    controller: _customType,
+                    decoration: const InputDecoration(
+                      labelText: 'Etkinlik türünün adı',
+                    ),
+                  ),
                 ],
                 const SizedBox(height: 10),
                 DropdownButtonFormField<EventVisibility>(
                   initialValue: _visibility,
                   isExpanded: true,
-                  decoration: const InputDecoration(labelText: 'Kimler görebilir?', prefixIcon: Icon(Icons.shield_outlined)),
-                  items: EventVisibility.values.map((e) => DropdownMenuItem(value: e, child: Row(children: [Icon(_visibilityIcon(e), size: 18), const SizedBox(width: 8), Text(e.label)]))).toList(),
-                  onChanged: _saving ? null : (value) => setState(() {
-                    _visibility = value ?? EventVisibility.public;
-                    if (_visibility != EventVisibility.selectedPeople) _selectedPeople = {};
-                  }),
+                  decoration: const InputDecoration(
+                    labelText: 'Kimler görebilir?',
+                    prefixIcon: Icon(Icons.shield_outlined),
+                  ),
+                  items: EventVisibility.values
+                      .map(
+                        (e) => DropdownMenuItem(
+                          value: e,
+                          child: Row(
+                            children: [
+                              Icon(_visibilityIcon(e), size: 18),
+                              const SizedBox(width: 8),
+                              Text(e.label),
+                            ],
+                          ),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: _saving
+                      ? null
+                      : (value) => setState(() {
+                          _visibility = value ?? EventVisibility.public;
+                          if (_visibility != EventVisibility.selectedPeople)
+                            _selectedPeople = {};
+                        }),
                 ),
                 if (_visibility == EventVisibility.selectedPeople) ...[
                   const SizedBox(height: 8),
                   OutlinedButton.icon(
-                    onPressed: _saving ? null : () async {
-                      final value = await _pickPeople(_selectedPeople.keys.toSet());
-                      if (mounted) setState(() => _selectedPeople = value);
-                    },
+                    onPressed: _saving
+                        ? null
+                        : () async {
+                            final value = await _pickPeople(
+                              _selectedPeople.keys.toSet(),
+                            );
+                            if (mounted)
+                              setState(() => _selectedPeople = value);
+                          },
                     icon: const Icon(Icons.person_add_alt_1),
-                    label: Text(_selectedPeople.isEmpty ? 'Kişileri seç' : '${_selectedPeople.length} kişi seçildi'),
+                    label: Text(
+                      _selectedPeople.isEmpty
+                          ? 'Kişileri seç'
+                          : '${_selectedPeople.length} kişi seçildi',
+                    ),
                   ),
                 ],
                 const SizedBox(height: 10),
@@ -582,12 +727,17 @@ class _EventCreateScreenV2State extends State<EventCreateScreenV2> {
                   minLines: 2,
                   maxLines: 4,
                   maxLength: 500,
-                  decoration: const InputDecoration(labelText: 'Açıklama / not'),
+                  decoration: const InputDecoration(
+                    labelText: 'Açıklama / not',
+                  ),
                 ),
                 const SizedBox(height: 6),
                 const Align(
                   alignment: Alignment.centerLeft,
-                  child: Text('Ücretsiz etkinlik • ücretli etkinlikler şimdilik kapalı', style: TextStyle(color: Colors.white54, fontSize: 10.5)),
+                  child: Text(
+                    'Ücretsiz etkinlik • ücretli etkinlikler şimdilik kapalı',
+                    style: TextStyle(color: Colors.white54, fontSize: 10.5),
+                  ),
                 ),
               ],
             ),
@@ -602,7 +752,11 @@ class _EventCreateScreenV2State extends State<EventCreateScreenV2> {
             child: FilledButton.icon(
               onPressed: _saving ? null : _save,
               icon: _saving
-                  ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
                   : const Icon(Icons.event_available_outlined),
               label: Text(_saving ? 'Oluşturuluyor…' : 'Planı Yayınla'),
             ),

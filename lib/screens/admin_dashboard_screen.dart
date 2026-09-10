@@ -1,3 +1,5 @@
+import '../widgets/tbt_dialog.dart';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -143,9 +145,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     String reason = '';
     if (!approve) {
       final controller = TextEditingController();
-      final result = await showDialog<String>(
+      final result = await showTbtDialog<String>(
         context: context,
-        builder: (dialogContext) => AlertDialog(
+        builder: (dialogContext) => TbtDialog(
           title: const Text('Başvuruyu reddet'),
           content: TextField(
             controller: controller,
@@ -172,9 +174,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       if (result == null || result.trim().length < 3) return;
       reason = result.trim();
     } else {
-      final confirmed = await showDialog<bool>(
+      final confirmed = await showTbtDialog<bool>(
         context: context,
-        builder: (dialogContext) => AlertDialog(
+        builder: (dialogContext) => TbtDialog(
           title: const Text('İşletmeyi doğrula?'),
           content: const Text(
             'Belge, iletişim bilgileri ve mekan eşleşmesini kontrol ettiğini onaylıyor musun?',
@@ -226,9 +228,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       );
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('İşlem tamamlanamadı: $error')),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('İşlem tamamlanamadı: $error')));
     }
   }
 

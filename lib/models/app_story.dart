@@ -14,6 +14,7 @@ class AppStory {
   final String thumbnailStoragePath;
   final int durationMs;
   final String caption;
+  final String sharedPostId;
   final String overlayUrl;
   final String overlayStoragePath;
   final String musicTrackId;
@@ -48,6 +49,7 @@ class AppStory {
     required this.thumbnailStoragePath,
     required this.durationMs,
     this.caption = '',
+    this.sharedPostId = '',
     this.overlayUrl = '',
     this.overlayStoragePath = '',
     this.musicTrackId = '',
@@ -98,6 +100,7 @@ class AppStory {
       thumbnailStoragePath: (data['thumbnailStoragePath'] ?? '').toString(),
       durationMs: _int(data['durationMs']),
       caption: (data['caption'] ?? '').toString(),
+      sharedPostId: (data['sharedPostId'] ?? '').toString(),
       overlayUrl: (data['overlayUrl'] ?? '').toString(),
       overlayStoragePath: (data['overlayStoragePath'] ?? '').toString(),
       musicTrackId: (data['musicTrackId'] ?? '').toString(),

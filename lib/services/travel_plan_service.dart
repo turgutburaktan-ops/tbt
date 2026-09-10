@@ -1,3 +1,5 @@
+import 'creator_service.dart';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -161,14 +163,18 @@ class TravelPlanService {
     if (stops.isEmpty || stops.length > 12) {
       throw Exception('Rotada 1-12 durak bulunmalı.');
     }
-    final normalized = stops.map((stop) {
-      final item = Map<String, dynamic>.from(stop);
-      item.removeWhere((key, value) => value == null);
-      return item;
-    }).toList(growable: false);
+    final normalized = stops
+        .map((stop) {
+          final item = Map<String, dynamic>.from(stop);
+          item.removeWhere((key, value) => value == null);
+          return item;
+        })
+        .toList(growable: false);
     await _firestore.collection('travel_plans').doc(planId).update({
       'spotIds': normalized.map((s) => (s['id'] ?? '').toString()).toList(),
-      'spotNames': normalized.map((s) => (s['name'] ?? 'Durak').toString()).toList(),
+      'spotNames': normalized
+          .map((s) => (s['name'] ?? 'Durak').toString())
+          .toList(),
       'stopSnapshots': normalized,
       'updatedAt': FieldValue.serverTimestamp(),
     });
@@ -179,36 +185,12 @@ class TravelPlanService {
     if (plan.ownerId != user.uid) {
       throw Exception('Yalnızca kendi rotanı paylaşabilirsin.');
     }
-    final postRef = _firestore.collection('posts').doc('route_${plan.id}');
-    final existing = await postRef.get();
-    await _firestore.collection('travel_plans').doc(plan.id).update({
-      'isPublic': true,
-      'updatedAt': FieldValue.serverTimestamp(),
-    });
-    await postRef.set({
-      'userId': user.uid,
-      'userName': (user.displayName ?? '').trim().isEmpty
-          ? 'TBT kullanıcısı'
-          : user.displayName!.trim(),
-      'userPhotoUrl': user.photoURL ?? '',
-      'mediaType': 'route',
-      'contentType': 'route',
-      'travelPlanId': plan.id,
-      'routeTitle': plan.title,
-      'routeCity': plan.city,
-      'routeDurationHours': plan.durationHours,
-      'routeBudget': plan.budget,
-      'routeTransport': plan.transport,
-      'routeSpotIds': plan.spotIds,
-      'routeSpotNames': plan.spotNames,
-      'routeStopSnapshots': plan.stopSnapshots,
-      'caption': '${plan.title} rotasını paylaştı.',
-      'spotName': plan.city,
-      'isPublic': true,
-      if (!existing.exists) 'createdAt': FieldValue.serverTimestamp(),
-      'updatedAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
-    return postRef.id;
+    final result = await CreatorService.instance.publishing(
+      'publishRoute',
+      'route_${plan.id}',
+      {'planId': plan.id},
+    );
+    return result['id'].toString();
   }
 
   Future<void> addStop(String planId, PhotoSpot spot) async {
@@ -239,7 +221,9 @@ class TravelPlanService {
     String city = '',
   }) async {
     _requireUser();
-    final cleanName = name.trim().isEmpty ? 'Haritadan seçilen durak' : name.trim();
+    final cleanName = name.trim().isEmpty
+        ? 'Haritadan seçilen durak'
+        : name.trim();
     final id =
         'custom_${latitude.toStringAsFixed(6)}_${longitude.toStringAsFixed(6)}';
     await _firestore.collection('travel_plans').doc(planId).update({
@@ -292,25 +276,29 @@ class TravelPlanService {
     final all = await SpotRepository.instance.loadSpots();
     final byId = {for (final spot in all) spot.id: spot};
     final snapshots = {
-      for (final item in plan.stopSnapshots) (item['id'] ?? '').toString(): item,
+      for (final item in plan.stopSnapshots)
+        (item['id'] ?? '').toString(): item,
     };
-    return plan.spotIds.map((id) {
-      final existing = byId[id];
-      if (existing != null) return existing;
-      final item = snapshots[id];
-      if (item == null) return null;
-      return PhotoSpot(
-        id: id,
-        name: (item['name'] ?? 'Rota durağı').toString(),
-        city: (item['city'] ?? plan.city).toString(),
-        latitude: (item['latitude'] as num?)?.toDouble() ?? 0,
-        longitude: (item['longitude'] as num?)?.toDouble() ?? 0,
-        rating: 0,
-        bestTime: (item['bestTime'] ?? '').toString(),
-        angle: '',
-        imageUrl: '',
-        category: (item['category'] ?? 'Mekan').toString(),
-      );
-    }).whereType<PhotoSpot>().toList(growable: false);
+    return plan.spotIds
+        .map((id) {
+          final existing = byId[id];
+          if (existing != null) return existing;
+          final item = snapshots[id];
+          if (item == null) return null;
+          return PhotoSpot(
+            id: id,
+            name: (item['name'] ?? 'Rota durağı').toString(),
+            city: (item['city'] ?? plan.city).toString(),
+            latitude: (item['latitude'] as num?)?.toDouble() ?? 0,
+            longitude: (item['longitude'] as num?)?.toDouble() ?? 0,
+            rating: 0,
+            bestTime: (item['bestTime'] ?? '').toString(),
+            angle: '',
+            imageUrl: '',
+            category: (item['category'] ?? 'Mekan').toString(),
+          );
+        })
+        .whereType<PhotoSpot>()
+        .toList(growable: false);
   }
 }

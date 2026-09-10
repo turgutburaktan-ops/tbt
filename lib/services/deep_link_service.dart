@@ -1,3 +1,5 @@
+import '../screens/creator_welcome_screen.dart';
+
 import 'dart:async';
 
 import 'package:app_links/app_links.dart';
@@ -42,9 +44,9 @@ class DeepLinkService {
 
   Future<void> _openInitialLink() async {
     try {
-      final uri = await _appLinks
-          .getInitialLink()
-          .timeout(const Duration(seconds: 3));
+      final uri = await _appLinks.getInitialLink().timeout(
+        const Duration(seconds: 3),
+      );
       if (uri != null) _open(uri);
     } catch (error, stackTrace) {
       if (kDebugMode) {
@@ -78,6 +80,17 @@ class DeepLinkService {
       if (navigator == null) return;
 
       switch (target.type) {
+        case 'creator':
+        case 'creator-profile':
+          navigator.push(
+            MaterialPageRoute(
+              builder: (_) => CreatorWelcomeScreen(
+                id: target.id,
+                enrollment: target.type == 'creator',
+              ),
+            ),
+          );
+          break;
         case 'group':
           startGroupChat(navigator.context, join: true, initialCode: target.id);
           break;
@@ -120,4 +133,3 @@ class DeepLinkService {
     });
   }
 }
-

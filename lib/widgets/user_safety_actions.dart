@@ -1,3 +1,5 @@
+import 'tbt_dialog.dart';
+
 import 'package:flutter/material.dart';
 
 import '../services/trust_safety_service.dart';
@@ -8,9 +10,9 @@ class UserSafetyActions extends StatelessWidget {
 
   Future<void> _report(BuildContext context) async {
     final controller = TextEditingController();
-    final reason = await showDialog<String>(
+    final reason = await showTbtDialog<String>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
+      builder: (dialogContext) => TbtDialog(
         title: const Text('Kullanıcıyı şikâyet et'),
         content: TextField(
           controller: controller,
@@ -50,9 +52,9 @@ class UserSafetyActions extends StatelessWidget {
   }
 
   Future<void> _block(BuildContext context) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showTbtDialog<bool>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
+      builder: (dialogContext) => TbtDialog(
         title: const Text('Kullanıcıyı engelle?'),
         content: const Text(
           'Bu kullanıcıyla sosyal etkileşimlerini sınırlandıracağız.',

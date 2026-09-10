@@ -62,6 +62,8 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
 
+      - name: Configure notification replies
+        run: python3 tool/configure_notifications.py android
       - name: Build release APK
         run: flutter build apk --release --split-per-abi
 

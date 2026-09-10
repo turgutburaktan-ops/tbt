@@ -1,5 +1,8 @@
+import '../widgets/tbt_dialog.dart';
+import '../widgets/profile_sharing_section.dart';
 import '../services/social_event_service.dart';
 import '../widgets/profile_reservations.dart';
+
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -223,8 +226,20 @@ class _ProfileBodyState extends State<_ProfileBody> {
                       profile,
                     ),
                   ),
+                  SliverToBoxAdapter(
+                    child: ProfileSharingSection(
+                      userId: widget.user.uid,
+                      creator: profile['isCreator'] == true,
+                      own: true,
+                    ),
+                  ),
                   SliverToBoxAdapter(child: _typeModule(type)),
-                  SliverToBoxAdapter(child: ProfileReservations(key: ValueKey(widget.user.uid), userId: widget.user.uid)),
+                  SliverToBoxAdapter(
+                    child: ProfileReservations(
+                      key: ValueKey(widget.user.uid),
+                      userId: widget.user.uid,
+                    ),
+                  ),
                   SliverToBoxAdapter(
                     child: ProfileBusinessCoupons(userId: widget.user.uid),
                   ),
@@ -320,88 +335,87 @@ class _ProfileBodyState extends State<_ProfileBody> {
     );
   }
 
-  Widget _topBar(Map<String, dynamic> profile, String type) =>
-      Padding(
-        padding: const EdgeInsets.fromLTRB(14, 8, 8, 6),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                'Profilim',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: -.35,
-                ),
+  Widget _topBar(Map<String, dynamic> profile, String type) => Padding(
+    padding: const EdgeInsets.fromLTRB(14, 8, 8, 6),
+    child: Row(
+      children: [
+        Expanded(
+          child: Text(
+            'Profilim',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w900,
+              letterSpacing: -.35,
+            ),
+          ),
+        ),
+        IconButton(
+          tooltip: 'Ayarlar',
+          onPressed: () => Navigator.pushNamed(context, '/settings'),
+          icon: const Icon(Icons.settings_outlined, color: Colors.white70),
+        ),
+        PopupMenuButton<String>(
+          tooltip: 'Profil işlemleri',
+          icon: const Icon(Icons.more_horiz_rounded, color: Colors.white70),
+          color: AppColors.surfaceAlt,
+          onSelected: (v) => _menu(v, profile),
+          itemBuilder: (_) => [
+            const PopupMenuItem(
+              value: 'settings',
+              child: ListTile(
+                dense: true,
+                leading: Icon(Icons.settings_outlined),
+                title: Text('Ayarlar'),
               ),
             ),
-            IconButton(
-              tooltip: 'Ayarlar',
-              onPressed: () => Navigator.pushNamed(context, '/settings'),
-              icon: const Icon(Icons.settings_outlined, color: Colors.white70),
+            const PopupMenuItem(
+              value: 'stats',
+              child: ListTile(
+                dense: true,
+                leading: Icon(Icons.query_stats_rounded),
+                title: Text('İstatistikler'),
+              ),
             ),
-            PopupMenuButton<String>(
-              tooltip: 'Profil işlemleri',
-              icon: const Icon(Icons.more_horiz_rounded, color: Colors.white70),
-              color: AppColors.surfaceAlt,
-              onSelected: (v) => _menu(v, profile),
-              itemBuilder: (_) => [
-                const PopupMenuItem(
-                  value: 'settings',
-                  child: ListTile(
-                    dense: true,
-                    leading: Icon(Icons.settings_outlined),
-                    title: Text('Ayarlar'),
-                  ),
-                ),
-                const PopupMenuItem(
-                  value: 'stats',
-                  child: ListTile(
-                    dense: true,
-                    leading: Icon(Icons.query_stats_rounded),
-                    title: Text('İstatistikler'),
-                  ),
-                ),
-                const PopupMenuItem(
-                  value: 'share',
-                  child: ListTile(
-                    dense: true,
-                    leading: Icon(Icons.share_outlined),
-                    title: Text('Profili paylaş'),
-                  ),
-                ),
-                const PopupMenuItem(
-                  value: 'safety',
-                  child: ListTile(
-                    dense: true,
-                    leading: Icon(Icons.shield_outlined),
-                    title: Text('Gizlilik ve Güvenlik'),
-                  ),
-                ),
-                const PopupMenuItem(
-                  value: 'business',
-                  child: ListTile(
-                    dense: true,
-                    leading: Icon(Icons.storefront_outlined),
-                    title: Text('Mekanlarım'),
-                  ),
-                ),
-                const PopupMenuDivider(),
-                const PopupMenuItem(
-                  value: 'logout',
-                  child: ListTile(
-                    dense: true,
-                    leading: Icon(Icons.logout_rounded),
-                    title: Text('Çıkış yap'),
-                  ),
-                ),
-              ],
+            const PopupMenuItem(
+              value: 'share',
+              child: ListTile(
+                dense: true,
+                leading: Icon(Icons.share_outlined),
+                title: Text('Profili paylaş'),
+              ),
+            ),
+            const PopupMenuItem(
+              value: 'safety',
+              child: ListTile(
+                dense: true,
+                leading: Icon(Icons.shield_outlined),
+                title: Text('Gizlilik ve Güvenlik'),
+              ),
+            ),
+            const PopupMenuItem(
+              value: 'business',
+              child: ListTile(
+                dense: true,
+                leading: Icon(Icons.storefront_outlined),
+                title: Text('Mekanlarım'),
+              ),
+            ),
+            const PopupMenuDivider(),
+            const PopupMenuItem(
+              value: 'logout',
+              child: ListTile(
+                dense: true,
+                leading: Icon(Icons.logout_rounded),
+                title: Text('Çıkış yap'),
+              ),
             ),
           ],
         ),
-      );
+      ],
+    ),
+  );
 
   Widget _identity(
     String name,
@@ -414,185 +428,185 @@ class _ProfileBodyState extends State<_ProfileBody> {
   ) => ProfileRewardSurface(
     profile: profile,
     child: Padding(
-    padding: const EdgeInsets.fromLTRB(16, 4, 16, 14),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Stack(
-              clipBehavior: Clip.none,
-              children: [
-                CircleAvatar(
-                  radius: 43,
-                  backgroundColor: AppColors.surfaceStrong,
-                  child: ClipOval(
-                    child: SizedBox(
-                      width: 82,
-                      height: 82,
-                      child: FirebaseMediaImage(
-                        imageUrl: photo,
-                        fallbackStoragePaths: FirebaseMediaImage.avatarPaths(
-                          widget.user.uid,
-                        ),
-                        fit: BoxFit.cover,
-                        errorWidget: const ColoredBox(
-                          color: AppColors.surface,
-                          child: Center(
-                            child: Icon(
-                              Icons.person,
-                              size: 42,
-                              color: Colors.white38,
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  CircleAvatar(
+                    radius: 43,
+                    backgroundColor: AppColors.surfaceStrong,
+                    child: ClipOval(
+                      child: SizedBox(
+                        width: 82,
+                        height: 82,
+                        child: FirebaseMediaImage(
+                          imageUrl: photo,
+                          fallbackStoragePaths: FirebaseMediaImage.avatarPaths(
+                            widget.user.uid,
+                          ),
+                          fit: BoxFit.cover,
+                          errorWidget: const ColoredBox(
+                            color: AppColors.surface,
+                            child: Center(
+                              child: Icon(
+                                Icons.person,
+                                size: 42,
+                                color: Colors.white38,
+                              ),
                             ),
                           ),
                         ),
                       ),
                     ),
                   ),
-                ),
-                Positioned(
-                  right: -2,
-                  bottom: 0,
-                  child: InkWell(
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const MainCameraScreen(
-                          initialMode: CameraShareMode.story,
+                  Positioned(
+                    right: -2,
+                    bottom: 0,
+                    child: InkWell(
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const MainCameraScreen(
+                            initialMode: CameraShareMode.story,
+                          ),
+                        ),
+                      ),
+                      child: Container(
+                        width: 27,
+                        height: 27,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: AppColors.surfaceStrong,
+                          border: Border.all(color: AppColors.cyan),
+                        ),
+                        child: const Icon(
+                          Icons.add_rounded,
+                          size: 18,
+                          color: AppColors.cyan,
                         ),
                       ),
                     ),
-                    child: Container(
-                      width: 27,
-                      height: 27,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: AppColors.surfaceStrong,
-                        border: Border.all(color: AppColors.cyan),
-                      ),
-                      child: const Icon(
-                        Icons.add_rounded,
-                        size: 18,
-                        color: AppColors.cyan,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  _Stat('$postCount', 'Gönderi', onTap: _openStatistics),
-                  StreamBuilder<int>(
-                    stream: SocialService.instance.followersCount(
-                      widget.user.uid,
-                    ),
-                    builder: (_, s) => _Stat(
-                      '${s.data ?? 0}',
-                      'Takipçi',
-                      onTap: () => _openFollowList(true),
-                    ),
-                  ),
-                  StreamBuilder<int>(
-                    stream: SocialService.instance.followingCount(
-                      widget.user.uid,
-                    ),
-                    builder: (_, s) => _Stat(
-                      '${s.data ?? 0}',
-                      'Takip',
-                      onTap: () => _openFollowList(false),
-                    ),
                   ),
                 ],
               ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 13),
-        Row(
-          children: [
-            Flexible(
-              child: Text(
-                name,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w900,
-                  fontSize: 16,
+              const SizedBox(width: 16),
+              Expanded(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _Stat('$postCount', 'Gönderi', onTap: _openStatistics),
+                    StreamBuilder<int>(
+                      stream: SocialService.instance.followersCount(
+                        widget.user.uid,
+                      ),
+                      builder: (_, s) => _Stat(
+                        '${s.data ?? 0}',
+                        'Takipçi',
+                        onTap: () => _openFollowList(true),
+                      ),
+                    ),
+                    StreamBuilder<int>(
+                      stream: SocialService.instance.followingCount(
+                        widget.user.uid,
+                      ),
+                      builder: (_, s) => _Stat(
+                        '${s.data ?? 0}',
+                        'Takip',
+                        onTap: () => _openFollowList(false),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ),
-            const SizedBox(width: 7),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: AppColors.surfaceStrong,
-                borderRadius: BorderRadius.circular(99),
-                border: Border.all(color: AppColors.border),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(_typeIcon(type), size: 12, color: AppColors.cyan),
-                  const SizedBox(width: 4),
-                  Text(
-                    _typeLabel(type),
-                    style: const TextStyle(
-                      fontSize: 10.5,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.white70,
-                    ),
+            ],
+          ),
+          const SizedBox(height: 13),
+          Row(
+            children: [
+              Flexible(
+                child: Text(
+                  name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w900,
+                    fontSize: 16,
                   ),
-                ],
+                ),
               ),
+              const SizedBox(width: 7),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceStrong,
+                  borderRadius: BorderRadius.circular(99),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(_typeIcon(type), size: 12, color: AppColors.cyan),
+                    const SizedBox(width: 4),
+                    Text(
+                      _typeLabel(type),
+                      style: const TextStyle(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white70,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          if (username.trim().isNotEmpty) ...[
+            const SizedBox(height: 3),
+            Text(
+              username.startsWith('@') ? username : '@$username',
+              style: const TextStyle(color: Colors.white54, fontSize: 12),
             ),
           ],
-        ),
-        if (username.trim().isNotEmpty) ...[
-          const SizedBox(height: 3),
+          const SizedBox(height: 6),
           Text(
-            username.startsWith('@') ? username : '@$username',
-            style: const TextStyle(color: Colors.white54, fontSize: 12),
+            bio.trim().isEmpty ? 'Profiline bir açıklama ekle' : bio,
+            maxLines: 4,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: bio.trim().isEmpty ? Colors.white30 : Colors.white70,
+              fontSize: 12.5,
+              height: 1.35,
+            ),
+          ),
+          const SizedBox(height: 9),
+          PublicAchievementBadges(profile: profile),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () => _editProfile(name, bio),
+                  icon: const Icon(Icons.edit_outlined, size: 17),
+                  label: const Text('Profili Düzenle'),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () => Navigator.pushNamed(context, '/settings'),
+                  icon: const Icon(Icons.settings_outlined, size: 17),
+                  label: const Text('Ayarlar'),
+                ),
+              ),
+            ],
           ),
         ],
-        const SizedBox(height: 6),
-        Text(
-          bio.trim().isEmpty ? 'Profiline bir açıklama ekle' : bio,
-          maxLines: 4,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(
-            color: bio.trim().isEmpty ? Colors.white30 : Colors.white70,
-            fontSize: 12.5,
-            height: 1.35,
-          ),
-        ),
-        const SizedBox(height: 9),
-        PublicAchievementBadges(profile: profile),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: () => _editProfile(name, bio),
-                icon: const Icon(Icons.edit_outlined, size: 17),
-                label: const Text('Profili Düzenle'),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: () => Navigator.pushNamed(context, '/settings'),
-                icon: const Icon(Icons.settings_outlined, size: 17),
-                label: const Text('Ayarlar'),
-              ),
-            ),
-          ],
-        ),
-      ],
-    ),
+      ),
     ),
   );
 
@@ -821,22 +835,45 @@ class _ProfileEventsSection extends StatelessWidget {
 
   const _ProfileEventsSection({required this.userId, this.publicOnly = false});
 
-  Future<void> _remove(BuildContext context, String eventId, String title) async {
-    final confirmed = await showDialog<bool>(context: context, builder: (context) => AlertDialog(
-      title: const Text('Etkinliği sil?'),
-      content: Text('“$title” iptal edilecek ve profilinden kaldırılacak. Katılımcılara iptal bilgisi gönderilecek.'),
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Vazgeç')),
-        FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Etkinliği sil')),
-      ],
-    ));
+  Future<void> _remove(
+    BuildContext context,
+    String eventId,
+    String title,
+  ) async {
+    final confirmed = await showTbtDialog<bool>(
+      context: context,
+      builder: (context) => TbtDialog(
+        title: const Text('Etkinliği sil?'),
+        content: Text(
+          '“$title” iptal edilecek ve profilinden kaldırılacak. Katılımcılara iptal bilgisi gönderilecek.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Vazgeç'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Etkinliği sil'),
+          ),
+        ],
+      ),
+    );
     if (confirmed != true || !context.mounted) return;
     final messenger = ScaffoldMessenger.of(context);
     try {
       await SocialEventService.instance.leave(eventId);
-      messenger.showSnackBar(const SnackBar(content: Text('Etkinlik iptal edildi ve profilinden kaldırıldı.')));
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text('Etkinlik iptal edildi ve profilinden kaldırıldı.'),
+        ),
+      );
     } catch (_) {
-      messenger.showSnackBar(const SnackBar(content: Text('Etkinlik silinemedi. Lütfen tekrar dene.')));
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text('Etkinlik silinemedi. Lütfen tekrar dene.'),
+        ),
+      );
     }
   }
 
@@ -864,22 +901,36 @@ class _ProfileEventsSection extends StatelessWidget {
             child: Center(child: CircularProgressIndicator()),
           );
         }
-        final events = [...?snapshot.data?.docs].where((doc) => doc.data()['status'] != 'cancelled').toList()
-          ..sort((a, b) => _date(b.data()['startsAt'])
-              .compareTo(_date(a.data()['startsAt'])));
+        final events =
+            [...?snapshot.data?.docs]
+                .where((doc) => doc.data()['status'] != 'cancelled')
+                .toList()
+              ..sort(
+                (a, b) =>
+                    _date(b.data()['startsAt'])
+                        .compareTo(_date(a.data()['startsAt'])),
+              );
         if (events.isEmpty) {
           return const Padding(
             padding: EdgeInsets.fromLTRB(24, 30, 24, 100),
             child: Column(
               children: [
-                Icon(Icons.event_busy_outlined, size: 42, color: Colors.white30),
+                Icon(
+                  Icons.event_busy_outlined,
+                  size: 42,
+                  color: Colors.white30,
+                ),
                 SizedBox(height: 10),
-                Text('Henüz etkinlik yok',
-                    style: TextStyle(fontWeight: FontWeight.w900)),
+                Text(
+                  'Henüz etkinlik yok',
+                  style: TextStyle(fontWeight: FontWeight.w900),
+                ),
                 SizedBox(height: 5),
-                Text('Oluşturduğun etkinlikler burada profilinde görünür.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.white54)),
+                Text(
+                  'Oluşturduğun etkinlikler burada profilinde görünür.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.white54),
+                ),
               ],
             ),
           );
@@ -889,55 +940,65 @@ class _ProfileEventsSection extends StatelessWidget {
           child: Column(
             children: [
               for (final doc in events) ...[
-                Builder(builder: (context) {
-                  final data = doc.data();
-                  final cover = (data['coverImageUrl'] ?? '').toString();
-                  final storage = (data['coverStoragePath'] ?? '').toString();
-                  final title = (data['title'] ?? 'Etkinlik').toString();
-                  final city = (data['city'] ?? '').toString();
-                  return Card(
-                    margin: EdgeInsets.zero,
-                    clipBehavior: Clip.antiAlias,
-                    child: ListTile(
-                      contentPadding: const EdgeInsets.fromLTRB(8, 7, 8, 7),
-                      leading: SizedBox(
-                        width: 58,
-                        height: 58,
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
-                          child: FirebaseMediaImage(
-                            imageUrl: cover,
-                            storagePath: storage,
-                            fit: BoxFit.cover,
-                            errorWidget: const ColoredBox(
-                              color: AppColors.surfaceStrong,
-                              child: Icon(Icons.event_outlined),
+                Builder(
+                  builder: (context) {
+                    final data = doc.data();
+                    final cover = (data['coverImageUrl'] ?? '').toString();
+                    final storage = (data['coverStoragePath'] ?? '').toString();
+                    final title = (data['title'] ?? 'Etkinlik').toString();
+                    final city = (data['city'] ?? '').toString();
+                    return Card(
+                      margin: EdgeInsets.zero,
+                      clipBehavior: Clip.antiAlias,
+                      child: ListTile(
+                        contentPadding: const EdgeInsets.fromLTRB(8, 7, 8, 7),
+                        leading: SizedBox(
+                          width: 58,
+                          height: 58,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: FirebaseMediaImage(
+                              imageUrl: cover,
+                              storagePath: storage,
+                              fit: BoxFit.cover,
+                              errorWidget: const ColoredBox(
+                                color: AppColors.surfaceStrong,
+                                child: Icon(Icons.event_outlined),
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                      title: Text(title,
+                        title: Text(
+                          title,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontWeight: FontWeight.w900)),
-                      subtitle: Text(
-                        '${_dateLabel(data['startsAt'])}${city.isEmpty ? '' : ' • $city'}',
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      trailing: FirebaseAuth.instance.currentUser?.uid == userId
-                          ? IconButton(tooltip: 'Etkinliği sil', icon: const Icon(Icons.delete_outline),
-                              onPressed: () => _remove(context, doc.id, title))
-                          : const Icon(Icons.chevron_right_rounded),
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => EventDeepLinkScreen(eventId: doc.id),
+                          style: const TextStyle(fontWeight: FontWeight.w900),
+                        ),
+                        subtitle: Text(
+                          '${_dateLabel(data['startsAt'])}${city.isEmpty ? '' : ' • $city'}',
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        trailing:
+                            FirebaseAuth.instance.currentUser?.uid == userId
+                            ? IconButton(
+                                tooltip: 'Etkinliği sil',
+                                icon: const Icon(Icons.delete_outline),
+                                onPressed: () =>
+                                    _remove(context, doc.id, title),
+                              )
+                            : const Icon(Icons.chevron_right_rounded),
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                EventDeepLinkScreen(eventId: doc.id),
+                          ),
                         ),
                       ),
-                    ),
-                  );
-                }),
+                    );
+                  },
+                ),
                 const SizedBox(height: 9),
               ],
             ],
@@ -986,7 +1047,9 @@ class _ProfileRoutesSection extends StatelessWidget {
       messenger
         ..hideCurrentSnackBar()
         ..showSnackBar(
-          const SnackBar(content: Text('Rota profilinde ve akışta paylaşıldı.')),
+          const SnackBar(
+            content: Text('Rota profilinde ve akışta paylaşıldı.'),
+          ),
         );
     } catch (error) {
       if (!context.mounted) return;
@@ -1016,11 +1079,7 @@ class _ProfileRoutesSection extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(24, 30, 24, 100),
           child: Column(
             children: [
-              const Icon(
-                Icons.route_outlined,
-                size: 42,
-                color: Colors.white30,
-              ),
+              const Icon(Icons.route_outlined, size: 42, color: Colors.white30),
               const SizedBox(height: 10),
               const Text(
                 'Henüz rotan yok',
@@ -1184,4 +1243,3 @@ class _Stat extends StatelessWidget {
           );
   }
 }
-

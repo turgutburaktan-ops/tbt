@@ -1,3 +1,5 @@
+import '../widgets/tbt_dialog.dart';
+
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -137,10 +139,17 @@ class _MapScreenState extends State<MapScreen> {
           : _mapZoom < 9
           ? _spots.take(320)
           : _spots;
-      final cellSize = _mapZoom < 7 ? 2.2 : _mapZoom < 9 ? .65 : _mapZoom < 11 ? .18 : .025;
+      final cellSize = _mapZoom < 7
+          ? 2.2
+          : _mapZoom < 9
+          ? .65
+          : _mapZoom < 11
+          ? .18
+          : .025;
       final grouped = <String, List<PhotoSpot>>{};
       for (final spot in candidates) {
-        final key = '${(spot.latitude / cellSize).floor()}:${(spot.longitude / cellSize).floor()}';
+        final key =
+            '${(spot.latitude / cellSize).floor()}:${(spot.longitude / cellSize).floor()}';
         grouped.putIfAbsent(key, () => <PhotoSpot>[]).add(spot);
       }
       for (final group in grouped.values) {
@@ -435,9 +444,23 @@ class _MapScreenState extends State<MapScreen> {
   ) async {
     void paint(List<NearbyVenue> items) {
       if (!mounted || generation != _venueLoadGeneration) return;
-      final sorted = List<NearbyVenue>.of(items)..sort((a,b) =>
-        Geolocator.distanceBetween(position.latitude, position.longitude, a.latitude, a.longitude)
-          .compareTo(Geolocator.distanceBetween(position.latitude, position.longitude, b.latitude, b.longitude)));
+      final sorted = List<NearbyVenue>.of(items)
+        ..sort(
+          (a, b) =>
+              Geolocator.distanceBetween(
+                position.latitude,
+                position.longitude,
+                a.latitude,
+                a.longitude,
+              ).compareTo(
+                Geolocator.distanceBetween(
+                  position.latitude,
+                  position.longitude,
+                  b.latitude,
+                  b.longitude,
+                ),
+              ),
+        );
       setState(() {
         _nearbyVenues = [
           ..._nearbyVenues.where((venue) => venue.category != category),
@@ -445,6 +468,7 @@ class _MapScreenState extends State<MapScreen> {
         ];
       });
     }
+
     try {
       final venues = await NearbyVenueService.instance.nearby(
         category: category,
@@ -673,9 +697,9 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   Future<void> _deleteUserPoint(UserMapPoint point) async {
-    final approved = await showDialog<bool>(
+    final approved = await showTbtDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => TbtDialog(
         title: const Text('Noktayı sil?'),
         content: Text('${point.name} kendi haritandan kaldırılacak.'),
         actions: [
@@ -717,330 +741,356 @@ class _MapScreenState extends State<MapScreen> {
             return StreamBuilder<List<ActivityDemand>>(
               stream: ActivityDemandService.instance.watchActive(limit: 600),
               builder: (context, demandSnapshot) {
-                final activeDemands = demandSnapshot.data ?? const <ActivityDemand>[];
+                final activeDemands =
+                    demandSnapshot.data ?? const <ActivityDemand>[];
                 return SafeArea(
-              child: Stack(
-                children: [
-                  GoogleMap(
-                    initialCameraPosition: const CameraPosition(
-                      target: _defaultLocation,
-                      zoom: 10.5,
-                    ),
-                    markers: _markers,
-                    polylines: _polylines,
-                    myLocationEnabled: _locationPermissionGranted,
-                    myLocationButtonEnabled: false,
-                    zoomControlsEnabled: false,
-                    mapToolbarEnabled: false,
-                    compassEnabled: true,
-                    onLongPress: _addPointAt,
-                    onMapCreated: (controller) async {
-                      if (!mounted || _mapDisposed) return;
-                      _mapController = controller;
-                      final position = _currentPosition;
-                      if (position != null) {
-                        await _animateMap(
-                          CameraUpdate.newLatLngZoom(
-                            LatLng(position.latitude, position.longitude),
-                            15,
-                          ),
-                        );
-                      }
-                    },
-                    onCameraMove: (position) {
-                      if (!mounted || _mapDisposed) return;
-                      if ((position.zoom - _mapZoom).abs() >= .75) {
-                        setState(() => _mapZoom = position.zoom);
-                      }
-                    },
-                  ),
-                  Positioned(
-                    top: 14,
-                    left: 12,
-                    right: 12,
-                    child: Column(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.fromLTRB(14, 8, 8, 8),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF0F1113)
-                                .withValues(alpha: .95),
-                            borderRadius: BorderRadius.circular(18),
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(
-                                Icons.explore_outlined,
-                                color: Color(0xFFB7BCC2),
+                  child: Stack(
+                    children: [
+                      GoogleMap(
+                        initialCameraPosition: const CameraPosition(
+                          target: _defaultLocation,
+                          zoom: 10.5,
+                        ),
+                        markers: _markers,
+                        polylines: _polylines,
+                        myLocationEnabled: _locationPermissionGranted,
+                        myLocationButtonEnabled: false,
+                        zoomControlsEnabled: false,
+                        mapToolbarEnabled: false,
+                        compassEnabled: true,
+                        onLongPress: _addPointAt,
+                        onMapCreated: (controller) async {
+                          if (!mounted || _mapDisposed) return;
+                          _mapController = controller;
+                          final position = _currentPosition;
+                          if (position != null) {
+                            await _animateMap(
+                              CameraUpdate.newLatLngZoom(
+                                LatLng(position.latitude, position.longitude),
+                                15,
                               ),
-                              const SizedBox(width: 9),
-                              const Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Harita',
-                                      style: TextStyle(
-                                        fontSize: 17,
-                                        fontWeight: FontWeight.w900,
-                                      ),
-                                    ),
-                                    Text(
-                                      'Uzun basarak kendi noktanı ekle',
-                                      style: TextStyle(
-                                        fontSize: 10.5,
-                                        color: Colors.white54,
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                            );
+                          }
+                        },
+                        onCameraMove: (position) {
+                          if (!mounted || _mapDisposed) return;
+                          if ((position.zoom - _mapZoom).abs() >= .75) {
+                            setState(() => _mapZoom = position.zoom);
+                          }
+                        },
+                      ),
+                      Positioned(
+                        top: 14,
+                        left: 12,
+                        right: 12,
+                        child: Column(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.fromLTRB(14, 8, 8, 8),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF0F1113)
+                                    .withValues(alpha: .95),
+                                borderRadius: BorderRadius.circular(18),
                               ),
-                              if (_loadingSpots || _loadingNearbyVenues)
-                                const SizedBox(
-                                  width: 18,
-                                  height: 18,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
+                              child: Row(
+                                children: [
+                                  const Icon(
+                                    Icons.explore_outlined,
                                     color: Color(0xFFB7BCC2),
                                   ),
-                                ),
-                              IconButton(
-                                tooltip: _routeSpots.isEmpty
-                                    ? 'Rota oluştur'
-                                    : 'Rotayı aç (${_routeSpots.length})',
-                                onPressed: _openRoutePlanner,
-                                icon: Badge(
-                                  isLabelVisible: _routeSpots.isNotEmpty,
-                                  label: Text('${_routeSpots.length}'),
-                                  child: const Icon(
-                                    Icons.route_rounded,
-                                    color: Colors.white70,
-                                  ),
-                                ),
-                              ),
-                              IconButton(
-                                tooltip: 'Nokta ekle',
-                                onPressed: () async {
-                                  final camera = await _mapController
-                                      ?.getLatLng(
-                                        ScreenCoordinate(
-                                          x:
-                                              MediaQuery.sizeOf(context)
-                                                  .width ~/
-                                              2,
-                                          y:
-                                              MediaQuery.sizeOf(context)
-                                                  .height ~/
-                                              2,
+                                  const SizedBox(width: 9),
+                                  const Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Harita',
+                                          style: TextStyle(
+                                            fontSize: 17,
+                                            fontWeight: FontWeight.w900,
+                                          ),
                                         ),
-                                      );
-                                  if (camera != null) await _addPointAt(camera);
-                                },
-                                icon: const Icon(
-                                  Icons.add_location_alt_outlined,
-                                  color: Colors.white70,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 7),
-                        const Align(
-                          alignment: Alignment.centerLeft,
-                          child: _MapLegend(),
-                        ),
-                        if (activeDemands.isNotEmpty) ...[
-                          const SizedBox(height: 8),
-                          Align(
-                            alignment: Alignment.centerLeft,
-                            child: Material(
-                              color: const Color(0xFF0F1113).withValues(alpha: .95),
-                              borderRadius: BorderRadius.circular(14),
-                              child: InkWell(
-                                borderRadius: BorderRadius.circular(14),
-                                onTap: _openEvents,
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      const Icon(Icons.people_alt_outlined, size: 17, color: Color(0xFF62E6D2)),
-                                      const SizedBox(width: 7),
-                                      Text(
-                                        '${activeDemands.length} topluluk sinyali',
-                                        style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w800),
-                                      ),
-                                      const SizedBox(width: 6),
-                                      const Text('• kişi konumu gösterilmez', style: TextStyle(fontSize: 10.5, color: Colors.white54)),
-                                    ],
+                                        Text(
+                                          'Uzun basarak kendi noktanı ekle',
+                                          style: TextStyle(
+                                            fontSize: 10.5,
+                                            color: Colors.white54,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                ),
+                                  if (_loadingSpots || _loadingNearbyVenues)
+                                    const SizedBox(
+                                      width: 18,
+                                      height: 18,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Color(0xFFB7BCC2),
+                                      ),
+                                    ),
+                                  IconButton(
+                                    tooltip: _routeSpots.isEmpty
+                                        ? 'Rota oluştur'
+                                        : 'Rotayı aç (${_routeSpots.length})',
+                                    onPressed: _openRoutePlanner,
+                                    icon: Badge(
+                                      isLabelVisible: _routeSpots.isNotEmpty,
+                                      label: Text('${_routeSpots.length}'),
+                                      child: const Icon(
+                                        Icons.route_rounded,
+                                        color: Colors.white70,
+                                      ),
+                                    ),
+                                  ),
+                                  IconButton(
+                                    tooltip: 'Nokta ekle',
+                                    onPressed: () async {
+                                      final camera = await _mapController
+                                          ?.getLatLng(
+                                            ScreenCoordinate(
+                                              x:
+                                                  MediaQuery.sizeOf(context)
+                                                      .width ~/
+                                                  2,
+                                              y:
+                                                  MediaQuery.sizeOf(context)
+                                                      .height ~/
+                                                  2,
+                                            ),
+                                          );
+                                      if (camera != null)
+                                        await _addPointAt(camera);
+                                    },
+                                    icon: const Icon(
+                                      Icons.add_location_alt_outlined,
+                                      color: Colors.white70,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                          ),
-                        ],
-                        const SizedBox(height: 8),
-                        Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF0F1113)
-                                .withValues(alpha: .95),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Row(
-                            children: [
-                              _FilterButton(
-                                label: 'Tümü',
-                                selected: _filter == _MapContentFilter.all,
-                                onTap: () => setState(
-                                  () => _filter = _MapContentFilter.all,
+                            const SizedBox(height: 7),
+                            const Align(
+                              alignment: Alignment.centerLeft,
+                              child: _MapLegend(),
+                            ),
+                            if (activeDemands.isNotEmpty) ...[
+                              const SizedBox(height: 8),
+                              Align(
+                                alignment: Alignment.centerLeft,
+                                child: Material(
+                                  color: const Color(0xFF0F1113)
+                                      .withValues(alpha: .95),
+                                  borderRadius: BorderRadius.circular(14),
+                                  child: InkWell(
+                                    borderRadius: BorderRadius.circular(14),
+                                    onTap: _openEvents,
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 8,
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          const Icon(
+                                            Icons.people_alt_outlined,
+                                            size: 17,
+                                            color: Color(0xFF62E6D2),
+                                          ),
+                                          const SizedBox(width: 7),
+                                          Text(
+                                            '${activeDemands.length} topluluk sinyali',
+                                            style: const TextStyle(
+                                              fontSize: 11.5,
+                                              fontWeight: FontWeight.w800,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 6),
+                                          const Text(
+                                            '• kişi konumu gösterilmez',
+                                            style: TextStyle(
+                                              fontSize: 10.5,
+                                              color: Colors.white54,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
                                 ),
                               ),
-                              _FilterButton(
-                                label: 'Yerler',
-                                selected: _filter == _MapContentFilter.spots,
-                                onTap: () => setState(() {
-                                  _filter = _MapContentFilter.spots;
-                                  _selectedEvent = null;
-                                  _selectedUserPoint = null;
-                                }),
-                              ),
-                              _FilterButton(
-                                label: 'Etkinlik',
-                                selected: _filter == _MapContentFilter.events,
-                                onTap: () => setState(() {
-                                  _filter = _MapContentFilter.events;
-                                  _selectedSpot = null;
-                                  _selectedUserPoint = null;
-                                  _selectedVenue = null;
-                                }),
-                              ),
-                              _FilterButton(
-                                label: 'Benim',
-                                selected: _filter == _MapContentFilter.mine,
-                                onTap: () => setState(() {
-                                  _filter = _MapContentFilter.mine;
-                                  _selectedSpot = null;
-                                  _selectedEvent = null;
-                                  _selectedVenue = null;
-                                }),
-                              ),
                             ],
+                            const SizedBox(height: 8),
+                            Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF0F1113)
+                                    .withValues(alpha: .95),
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: Row(
+                                children: [
+                                  _FilterButton(
+                                    label: 'Tümü',
+                                    selected: _filter == _MapContentFilter.all,
+                                    onTap: () => setState(
+                                      () => _filter = _MapContentFilter.all,
+                                    ),
+                                  ),
+                                  _FilterButton(
+                                    label: 'Yerler',
+                                    selected:
+                                        _filter == _MapContentFilter.spots,
+                                    onTap: () => setState(() {
+                                      _filter = _MapContentFilter.spots;
+                                      _selectedEvent = null;
+                                      _selectedUserPoint = null;
+                                    }),
+                                  ),
+                                  _FilterButton(
+                                    label: 'Etkinlik',
+                                    selected:
+                                        _filter == _MapContentFilter.events,
+                                    onTap: () => setState(() {
+                                      _filter = _MapContentFilter.events;
+                                      _selectedSpot = null;
+                                      _selectedUserPoint = null;
+                                      _selectedVenue = null;
+                                    }),
+                                  ),
+                                  _FilterButton(
+                                    label: 'Benim',
+                                    selected: _filter == _MapContentFilter.mine,
+                                    onTap: () => setState(() {
+                                      _filter = _MapContentFilter.mine;
+                                      _selectedSpot = null;
+                                      _selectedEvent = null;
+                                      _selectedVenue = null;
+                                    }),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Positioned(
+                        right: 16,
+                        bottom: bottomOffset + 68,
+                        child: FloatingActionButton(
+                          heroTag: 'myLocation',
+                          backgroundColor: const Color(0xFF0F1113),
+                          foregroundColor: const Color(0xFFB7BCC2),
+                          onPressed: _gettingLocation ? null : _goToMyLocation,
+                          child: _gettingLocation
+                              ? const SizedBox(
+                                  width: 22,
+                                  height: 22,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2.5,
+                                    color: Color(0xFFB7BCC2),
+                                  ),
+                                )
+                              : const Icon(Icons.my_location_rounded),
+                        ),
+                      ),
+                      Positioned(
+                        right: 16,
+                        bottom: bottomOffset,
+                        child: FloatingActionButton(
+                          heroTag: 'allMapContent',
+                          backgroundColor: const Color(0xFF0F1113),
+                          foregroundColor: const Color(0xFFB7BCC2),
+                          onPressed: _showAll,
+                          child: const Icon(Icons.fit_screen),
+                        ),
+                      ),
+                      if (_selectedSpot != null)
+                        Positioned(
+                          left: 16,
+                          right: 16,
+                          bottom: 16,
+                          child: _SpotCard(
+                            spot: _selectedSpot!,
+                            distanceLabel: _distanceText(
+                              _selectedSpot!.latitude,
+                              _selectedSpot!.longitude,
+                            ),
+                            inRoute: _routeSpots.any(
+                              (item) => item.id == _selectedSpot!.id,
+                            ),
+                            onClose: _clearSelection,
+                            onOpen: () => _openSpot(_selectedSpot!),
+                            onToggleRoute: () =>
+                                _toggleRouteSpot(_selectedSpot!),
                           ),
                         ),
-                      ],
-                    ),
+                      if (_selectedEvent != null)
+                        Positioned(
+                          left: 16,
+                          right: 16,
+                          bottom: 16,
+                          child: _EventCard(
+                            event: _selectedEvent!,
+                            dateLabel: _eventDate(_selectedEvent!.startsAt),
+                            distanceLabel: () {
+                              final p = _eventPosition(_selectedEvent!);
+                              return p == null
+                                  ? ''
+                                  : _distanceText(p.latitude, p.longitude);
+                            }(),
+                            onClose: _clearSelection,
+                            onOpen: _openEvents,
+                          ),
+                        ),
+                      if (_selectedUserPoint != null)
+                        Positioned(
+                          left: 16,
+                          right: 16,
+                          bottom: 16,
+                          child: _UserPointCard(
+                            point: _selectedUserPoint!,
+                            distanceLabel: _distanceText(
+                              _selectedUserPoint!.latitude,
+                              _selectedUserPoint!.longitude,
+                            ),
+                            inRoute: _routeSpots.any(
+                              (item) =>
+                                  item.id == 'user-${_selectedUserPoint!.id}',
+                            ),
+                            onClose: _clearSelection,
+                            onToggleRoute: () =>
+                                _toggleUserPointRoute(_selectedUserPoint!),
+                            onDelete: () =>
+                                _deleteUserPoint(_selectedUserPoint!),
+                          ),
+                        ),
+                      if (_selectedVenue != null)
+                        Positioned(
+                          left: 16,
+                          right: 16,
+                          bottom: 16,
+                          child: _VenueCard(
+                            venue: _selectedVenue!,
+                            distanceLabel: _distanceText(
+                              _selectedVenue!.latitude,
+                              _selectedVenue!.longitude,
+                            ),
+                            inRoute: _routeSpots.any(
+                              (item) =>
+                                  item.id ==
+                                  'venue:${_selectedVenue!.category.name}:${_selectedVenue!.id}',
+                            ),
+                            onClose: _clearSelection,
+                            onToggleRoute: () =>
+                                _toggleVenueRoute(_selectedVenue!),
+                          ),
+                        ),
+                    ],
                   ),
-                  Positioned(
-                    right: 16,
-                    bottom: bottomOffset + 68,
-                    child: FloatingActionButton(
-                      heroTag: 'myLocation',
-                      backgroundColor: const Color(0xFF0F1113),
-                      foregroundColor: const Color(0xFFB7BCC2),
-                      onPressed: _gettingLocation ? null : _goToMyLocation,
-                      child: _gettingLocation
-                          ? const SizedBox(
-                              width: 22,
-                              height: 22,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2.5,
-                                color: Color(0xFFB7BCC2),
-                              ),
-                            )
-                          : const Icon(Icons.my_location_rounded),
-                    ),
-                  ),
-                  Positioned(
-                    right: 16,
-                    bottom: bottomOffset,
-                    child: FloatingActionButton(
-                      heroTag: 'allMapContent',
-                      backgroundColor: const Color(0xFF0F1113),
-                      foregroundColor: const Color(0xFFB7BCC2),
-                      onPressed: _showAll,
-                      child: const Icon(Icons.fit_screen),
-                    ),
-                  ),
-                  if (_selectedSpot != null)
-                    Positioned(
-                      left: 16,
-                      right: 16,
-                      bottom: 16,
-                      child: _SpotCard(
-                        spot: _selectedSpot!,
-                        distanceLabel: _distanceText(
-                          _selectedSpot!.latitude,
-                          _selectedSpot!.longitude,
-                        ),
-                        inRoute: _routeSpots.any(
-                          (item) => item.id == _selectedSpot!.id,
-                        ),
-                        onClose: _clearSelection,
-                        onOpen: () => _openSpot(_selectedSpot!),
-                        onToggleRoute: () => _toggleRouteSpot(_selectedSpot!),
-                      ),
-                    ),
-                  if (_selectedEvent != null)
-                    Positioned(
-                      left: 16,
-                      right: 16,
-                      bottom: 16,
-                      child: _EventCard(
-                        event: _selectedEvent!,
-                        dateLabel: _eventDate(_selectedEvent!.startsAt),
-                        distanceLabel: () {
-                          final p = _eventPosition(_selectedEvent!);
-                          return p == null
-                              ? ''
-                              : _distanceText(p.latitude, p.longitude);
-                        }(),
-                        onClose: _clearSelection,
-                        onOpen: _openEvents,
-                      ),
-                    ),
-                  if (_selectedUserPoint != null)
-                    Positioned(
-                      left: 16,
-                      right: 16,
-                      bottom: 16,
-                      child: _UserPointCard(
-                        point: _selectedUserPoint!,
-                        distanceLabel: _distanceText(
-                          _selectedUserPoint!.latitude,
-                          _selectedUserPoint!.longitude,
-                        ),
-                        inRoute: _routeSpots.any(
-                          (item) => item.id == 'user-${_selectedUserPoint!.id}',
-                        ),
-                        onClose: _clearSelection,
-                        onToggleRoute: () =>
-                            _toggleUserPointRoute(_selectedUserPoint!),
-                        onDelete: () => _deleteUserPoint(_selectedUserPoint!),
-                      ),
-                    ),
-                  if (_selectedVenue != null)
-                    Positioned(
-                      left: 16,
-                      right: 16,
-                      bottom: 16,
-                      child: _VenueCard(
-                        venue: _selectedVenue!,
-                        distanceLabel: _distanceText(
-                          _selectedVenue!.latitude,
-                          _selectedVenue!.longitude,
-                        ),
-                        inRoute: _routeSpots.any(
-                          (item) =>
-                              item.id ==
-                              'venue:${_selectedVenue!.category.name}:${_selectedVenue!.id}',
-                        ),
-                        onClose: _clearSelection,
-                        onToggleRoute: () => _toggleVenueRoute(_selectedVenue!),
-                      ),
-                    ),
-                ],
-              ),
                 );
               },
             );
@@ -1083,9 +1133,20 @@ class _LegendDot extends StatelessWidget {
   Widget build(BuildContext context) => Row(
     mainAxisSize: MainAxisSize.min,
     children: [
-      Container(width: 7, height: 7, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+      Container(
+        width: 7,
+        height: 7,
+        decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+      ),
       const SizedBox(width: 4),
-      Text(label, style: const TextStyle(fontSize: 10, color: Colors.white70, fontWeight: FontWeight.w700)),
+      Text(
+        label,
+        style: const TextStyle(
+          fontSize: 10,
+          color: Colors.white70,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
     ],
   );
 }

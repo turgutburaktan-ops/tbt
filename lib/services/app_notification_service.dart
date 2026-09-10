@@ -10,6 +10,7 @@ class AppNotificationItem {
   final String type;
   final String title;
   final String body;
+  final String imageUrl;
   final String? sourceId;
   final String? actorId;
   final bool read;
@@ -20,13 +21,15 @@ class AppNotificationItem {
     required this.type,
     required this.title,
     required this.body,
+    this.imageUrl = '',
     this.sourceId,
     this.actorId,
     required this.read,
     this.createdAt,
   });
 
-  bool get isMessage => ['message', 'group_message'].contains(type.toLowerCase());
+  bool get isMessage =>
+      ['message', 'group_message'].contains(type.toLowerCase());
 
   factory AppNotificationItem.fromDocument(
     DocumentSnapshot<Map<String, dynamic>> doc,
@@ -38,6 +41,7 @@ class AppNotificationItem {
       type: (data['type'] ?? 'general').toString(),
       title: (data['title'] ?? '').toString(),
       body: (data['body'] ?? '').toString(),
+      imageUrl: (data['imageUrl'] ?? '').toString(),
       sourceId: data['sourceId']?.toString(),
       actorId: data['actorId']?.toString(),
       read: data['read'] == true,
@@ -66,15 +70,16 @@ class AppNotificationService {
     return switchAuthStream<List<AppNotificationItem>>(
       auth: _auth,
       signedOutValue: const <AppNotificationItem>[],
-      signedIn: (user) => _items(user.uid)
-          .orderBy('createdAt', descending: true)
-          .limit(limit)
-          .snapshots()
-          .map(
-            (snapshot) => snapshot.docs
-                .map(AppNotificationItem.fromDocument)
-                .toList(growable: false),
-          ),
+      signedIn: (user) =>
+          _items(user.uid)
+              .orderBy('createdAt', descending: true)
+              .limit(limit)
+              .snapshots()
+              .map(
+                (snapshot) => snapshot.docs
+                    .map(AppNotificationItem.fromDocument)
+                    .toList(growable: false),
+              ),
     );
   }
 
@@ -114,15 +119,17 @@ class AppNotificationService {
     final current = _auth.currentUser;
     if (current != null && current.uid == target) return;
 
-    await _items(target).add({
-      'type': type.trim().isEmpty ? 'general' : type.trim(),
-      'title': title.trim(),
-      'body': body.trim(),
-      'sourceId': sourceId,
-      'actorId': actorId ?? current?.uid,
-      'read': false,
-      'createdAt': FieldValue.serverTimestamp(),
-    }).timeout(const Duration(seconds: 6));
+    await _items(target)
+        .add({
+          'type': type.trim().isEmpty ? 'general' : type.trim(),
+          'title': title.trim(),
+          'body': body.trim(),
+          'sourceId': sourceId,
+          'actorId': actorId ?? current?.uid,
+          'read': false,
+          'createdAt': FieldValue.serverTimestamp(),
+        })
+        .timeout(const Duration(seconds: 6));
   }
 
   Future<void> notifyUsers({
@@ -176,17 +183,19 @@ class AppNotificationService {
     final ref = _items(user.uid).doc('smart_$safeKey');
     final existing = await ref.get().timeout(const Duration(seconds: 5));
     if (existing.exists) return;
-    await ref.set({
-      'type': type,
-      'title': title.trim(),
-      'body': body.trim(),
-      'sourceId': sourceId,
-      'actorId': null,
-      'read': false,
-      'smart': true,
-      'dedupeKey': dedupeKey,
-      'createdAt': FieldValue.serverTimestamp(),
-    }).timeout(const Duration(seconds: 6));
+    await ref
+        .set({
+          'type': type,
+          'title': title.trim(),
+          'body': body.trim(),
+          'sourceId': sourceId,
+          'actorId': null,
+          'read': false,
+          'smart': true,
+          'dedupeKey': dedupeKey,
+          'createdAt': FieldValue.serverTimestamp(),
+        })
+        .timeout(const Duration(seconds: 6));
   }
 
   Future<void> refreshCampusDigest() async {
@@ -250,10 +259,13 @@ class AppNotificationService {
   Future<void> markRead(String notificationId) async {
     final user = _auth.currentUser;
     if (user == null || notificationId.trim().isEmpty) return;
-    await _items(user.uid).doc(notificationId).set({
-      'read': true,
-      'readAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true)).timeout(const Duration(seconds: 6));
+    await _items(user.uid)
+        .doc(notificationId)
+        .set({
+          'read': true,
+          'readAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true))
+        .timeout(const Duration(seconds: 6));
   }
 
   Future<void> markAllRead() async {
@@ -267,11 +279,13 @@ class AppNotificationService {
       final snapshot = await query.get().timeout(const Duration(seconds: 8));
       if (snapshot.docs.isEmpty) return;
 
-      final unreadDocs = snapshot.docs.where((doc) {
-        final data = doc.data();
-        final type = (data['type'] ?? '').toString().toLowerCase();
-        return data['read'] != true && type != 'message';
-      }).toList(growable: false);
+      final unreadDocs = snapshot.docs
+          .where((doc) {
+            final data = doc.data();
+            final type = (data['type'] ?? '').toString().toLowerCase();
+            return data['read'] != true && type != 'message';
+          })
+          .toList(growable: false);
       if (unreadDocs.isNotEmpty) {
         final batch = _firestore.batch();
         for (final doc in unreadDocs) {
@@ -296,14 +310,11 @@ class _ReplayLatest<T> {
   bool _hasValue = false;
 
   _ReplayLatest(Stream<T> source) {
-    _sourceSubscription = source.listen(
-      (value) {
-        _lastValue = value;
-        _hasValue = true;
-        _controller.add(value);
-      },
-      onError: _controller.addError,
-    );
+    _sourceSubscription = source.listen((value) {
+      _lastValue = value;
+      _hasValue = true;
+      _controller.add(value);
+    }, onError: _controller.addError);
   }
 
   Stream<T> get stream => Stream<T>.multi((subscriber) {

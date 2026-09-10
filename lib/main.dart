@@ -1,3 +1,5 @@
+import 'services/video_audio_session.dart';
+
 import 'dart:async';
 import 'dart:ui';
 
@@ -129,8 +131,7 @@ Future<void> _initializeDeferredBootstrapServices() async {
   if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
     try {
       await WidgetsBinding.instance.endOfFrame;
-      final status =
-          await AppTrackingTransparency.trackingAuthorizationStatus;
+      final status = await AppTrackingTransparency.trackingAuthorizationStatus;
       if (status == TrackingStatus.notDetermined) {
         await AppTrackingTransparency.requestTrackingAuthorization();
       }
@@ -273,7 +274,13 @@ class _BestPhotoSpotAppState extends State<BestPhotoSpotApp> {
     }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       unawaited(_initializePostFrameServices());
-      unawaited(ExternalShareService.instance.start(_navigatorKey).catchError((Object error) { if (kDebugMode) debugPrint('Share startup: $error'); }));
+      unawaited(
+        ExternalShareService.instance.start(_navigatorKey).catchError((
+          Object error,
+        ) {
+          if (kDebugMode) debugPrint('Share startup: $error');
+        }),
+      );
     });
   }
 
@@ -282,9 +289,9 @@ class _BestPhotoSpotAppState extends State<BestPhotoSpotApp> {
       await _trackingAuthorizationGate.future;
     }
     try {
-      await PushNotificationService.instance.initialize(_navigatorKey).timeout(
-        const Duration(seconds: 8),
-      );
+      await PushNotificationService.instance
+          .initialize(_navigatorKey)
+          .timeout(const Duration(seconds: 8));
     } catch (error, stackTrace) {
       if (kDebugMode) {
         debugPrint('Push initialization skipped: $error');
@@ -310,51 +317,56 @@ class _BestPhotoSpotAppState extends State<BestPhotoSpotApp> {
   Widget build(BuildContext context) => ValueListenableBuilder<Locale>(
     valueListenable: AppLocaleService.instance.locale,
     builder: (context, locale, _) => MaterialApp(
-    navigatorKey: _navigatorKey,
-    debugShowCheckedModeBanner: false,
-    title: 'TBT',
-    theme: AppTheme.dark,
-    locale: locale,
-    supportedLocales: const [Locale('tr'), Locale('en'), Locale('de'), Locale('ar')],
-    localizationsDelegates: GlobalMaterialLocalizations.delegates,
-    builder: (context, child) {
-      final media = MediaQuery.of(context);
-      final currentScale = media.textScaler.scale(1.0);
-      final clampedScale = currentScale.clamp(0.90, 1.25).toDouble();
-      return MediaQuery(
-        data: media.copyWith(textScaler: TextScaler.linear(clampedScale)),
-        child: child ?? const SizedBox.shrink(),
-      );
-    },
-    routes: {
-      '/import': (_) => const ImportShareScreen(),
-      '/messages': (_) => const ChatInboxScreen(),
-      '/notifications': (_) => const NotificationsScreen(),
-      '/rewards': (_) => const RewardsHubScreen(),
-      '/settings': (_) => const SettingsScreen(),
-      '/story-archive': (_) => const StoryArchiveScreen(),
-      '/business': (_) => const BusinessWebPortalScreen(),
-      '/business-claim': (_) => const BusinessWebPortalScreen(),
-      '/admin': (_) => const AdminPortalScreen(),
-      '/admin-dashboard': (_) => const AdminDashboardScreen(),
-      '/admin-users': (_) => const AdminUsersScreen(),
-      '/admin-businesses': (_) => const AdminBusinessesV2Screen(),
-      '/admin-business-premium': (_) => const AdminBusinessPremiumScreen(),
-      '/admin-business-preview': (_) => const AdminBusinessPreviewScreen(),
-      '/admin-growth': (_) => const AdminGrowthScreen(),
-      '/admin-preview': (_) => const AdminRolePreviewScreen(),
-      '/admin-insights': (_) => const AdminInsightsScreen(),
-      '/admin-spot-submissions': (_) => const AdminSpotSubmissionsScreen(),
-      '/admin-published-spots': (_) => const AdminPublishedSpotsScreen(),
-      '/moderation': (_) => const ModerationCenterScreen(),
-      '/safety-privacy': (_) => const SafetyPrivacyCenterScreen(),
-      '/search': (_) => const GlobalSearchScreen(),
-      '/campus': (_) => const CampusHomeScreen(),
-      '/campus-profile': (_) => const CampusProfileScreen(),
-      '/communities': (_) => const CommunitiesScreen(),
-    },
-    home: const InstallOnboardingGate(child: AppEntryGate()),
+      navigatorKey: _navigatorKey,
+      navigatorObservers: [videoRouteObserver],
+      debugShowCheckedModeBanner: false,
+      title: 'TBT',
+      theme: AppTheme.dark,
+      locale: locale,
+      supportedLocales: const [
+        Locale('tr'),
+        Locale('en'),
+        Locale('de'),
+        Locale('ar'),
+      ],
+      localizationsDelegates: GlobalMaterialLocalizations.delegates,
+      builder: (context, child) {
+        final media = MediaQuery.of(context);
+        final currentScale = media.textScaler.scale(1.0);
+        final clampedScale = currentScale.clamp(0.90, 1.25).toDouble();
+        return MediaQuery(
+          data: media.copyWith(textScaler: TextScaler.linear(clampedScale)),
+          child: child ?? const SizedBox.shrink(),
+        );
+      },
+      routes: {
+        '/import': (_) => const ImportShareScreen(),
+        '/messages': (_) => const ChatInboxScreen(),
+        '/notifications': (_) => const NotificationsScreen(),
+        '/rewards': (_) => const RewardsHubScreen(),
+        '/settings': (_) => const SettingsScreen(),
+        '/story-archive': (_) => const StoryArchiveScreen(),
+        '/business': (_) => const BusinessWebPortalScreen(),
+        '/business-claim': (_) => const BusinessWebPortalScreen(),
+        '/admin': (_) => const AdminPortalScreen(),
+        '/admin-dashboard': (_) => const AdminDashboardScreen(),
+        '/admin-users': (_) => const AdminUsersScreen(),
+        '/admin-businesses': (_) => const AdminBusinessesV2Screen(),
+        '/admin-business-premium': (_) => const AdminBusinessPremiumScreen(),
+        '/admin-business-preview': (_) => const AdminBusinessPreviewScreen(),
+        '/admin-growth': (_) => const AdminGrowthScreen(),
+        '/admin-preview': (_) => const AdminRolePreviewScreen(),
+        '/admin-insights': (_) => const AdminInsightsScreen(),
+        '/admin-spot-submissions': (_) => const AdminSpotSubmissionsScreen(),
+        '/admin-published-spots': (_) => const AdminPublishedSpotsScreen(),
+        '/moderation': (_) => const ModerationCenterScreen(),
+        '/safety-privacy': (_) => const SafetyPrivacyCenterScreen(),
+        '/search': (_) => const GlobalSearchScreen(),
+        '/campus': (_) => const CampusHomeScreen(),
+        '/campus-profile': (_) => const CampusProfileScreen(),
+        '/communities': (_) => const CommunitiesScreen(),
+      },
+      home: const InstallOnboardingGate(child: AppEntryGate()),
     ),
   );
 }
-

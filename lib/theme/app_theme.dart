@@ -151,6 +151,27 @@ class AppTheme {
           letterSpacing: .05,
         ),
       ),
+      dialogTheme: const DialogThemeData(
+        backgroundColor: Color(0xFF0D1B30),
+        surfaceTintColor: Colors.transparent,
+        titleTextStyle: TextStyle(
+          color: Colors.white,
+          fontSize: 20,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+      datePickerTheme: const DatePickerThemeData(
+        backgroundColor: Color(0xFF0D1B30),
+        surfaceTintColor: Colors.transparent,
+        headerBackgroundColor: Color(0xFF162A43),
+        headerForegroundColor: Colors.white,
+      ),
+      timePickerTheme: const TimePickerThemeData(
+        backgroundColor: Color(0xFF0D1B30),
+        dialBackgroundColor: Color(0xFF162A43),
+        dialHandColor: Color(0xFF8ACDFF),
+        entryModeIconColor: Color(0xFF8ACDFF),
+      ),
       iconTheme: const IconThemeData(color: Color(0xFFD7DBE3), size: 22),
       cardTheme: CardThemeData(
         color: AppColors.surface,

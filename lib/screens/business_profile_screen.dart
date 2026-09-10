@@ -1,3 +1,5 @@
+import '../widgets/tbt_dialog.dart';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -94,7 +96,8 @@ class BusinessProfileScreen extends StatelessWidget {
         final liveHours = _HoursStatus.from(profile['weeklyHours']);
         final trialUntil = profile['premiumTrialUntil'] as Timestamp?;
         final adminUntil = profile['adminPremiumUntil'] as Timestamp?;
-        final premiumActive = profile['subscriptionStatus'] == 'active' ||
+        final premiumActive =
+            profile['subscriptionStatus'] == 'active' ||
             (profile['premiumTrialStatus'] == 'active' &&
                 trialUntil != null &&
                 trialUntil.toDate().isAfter(DateTime.now())) ||
@@ -667,10 +670,8 @@ class _BusinessCollectionTab extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 36),
             itemCount: docs.length,
             separatorBuilder: (_, __) => const SizedBox(height: 8),
-            itemBuilder: (_, index) => builder({
-              ...docs[index].data(),
-              'id': docs[index].id,
-            }),
+            itemBuilder: (_, index) =>
+                builder({...docs[index].data(), 'id': docs[index].id}),
           );
         },
       );
@@ -876,29 +877,53 @@ class _CouponCardState extends State<_CouponCard> {
       if (data['status'] != 'ready' ||
           ((data['validUntilMs'] as num?)?.toInt() ?? 0) <=
               DateTime.now().millisecondsSinceEpoch) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(data['status'] == 'used'
-              ? 'Bu kupon kullanıldı.' : 'Bu kuponun süresi doldu.'),
-        ));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              data['status'] == 'used'
+                  ? 'Bu kupon kullanıldı.'
+                  : 'Bu kuponun süresi doldu.',
+            ),
+          ),
+        );
         return;
       }
-      await showDialog<void>(
+      await showTbtDialog<void>(
         context: context,
-        builder: (dialogContext) => AlertDialog(
+        builder: (dialogContext) => TbtDialog(
           title: const Text('Müşteri kuponun'),
-          content: Column(mainAxisSize: MainAxisSize.min, children: [
-            Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18)),
-              child: QrImageView(data: token, size: 210),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: QrImageView(data: token, size: 210),
+              ),
+              const SizedBox(height: 14),
+              SelectableText(token, textAlign: TextAlign.center),
+              Text(
+                (widget.data['title'] ?? 'TBT Kuponu').toString(),
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontWeight: FontWeight.w900),
+              ),
+              const SizedBox(height: 6),
+              const Text(
+                'İşletmede bu QR kodunu göster. Profilindeki Kuponlarım bölümünden tekrar açabilirsin. Kupon yalnız bir kez kullanılabilir.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.white60, height: 1.35),
+              ),
+            ],
+          ),
+          actions: [
+            FilledButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Tamam'),
             ),
-            const SizedBox(height: 14),
-            SelectableText(token, textAlign: TextAlign.center),
-            Text((widget.data['title'] ?? 'TBT Kuponu').toString(), textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.w900)),
-            const SizedBox(height: 6),
-            const Text('İşletmede bu QR kodunu göster. Profilindeki Kuponlarım bölümünden tekrar açabilirsin. Kupon yalnız bir kez kullanılabilir.', textAlign: TextAlign.center, style: TextStyle(color: Colors.white60, height: 1.35)),
-          ]),
-          actions: [FilledButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Tamam'))],
+          ],
         ),
       );
     } on FirebaseFunctionsException catch (error) {
@@ -920,26 +945,64 @@ class _CouponCardState extends State<_CouponCard> {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(15),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const Row(children: [
-            Icon(Icons.qr_code_2_rounded, color: AppColors.cyan),
-            SizedBox(width: 8),
-            Text('QR KUPON', style: TextStyle(color: AppColors.cyan, fontSize: 11, fontWeight: FontWeight.w900)),
-          ]),
-          const SizedBox(height: 9),
-          Text((widget.data['title'] ?? '').toString(), style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900)),
-          if ((widget.data['description'] ?? '').toString().isNotEmpty) ...[
-            const SizedBox(height: 5),
-            Text((widget.data['description'] ?? '').toString(), style: const TextStyle(color: Colors.white60, height: 1.4)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Row(
+              children: [
+                Icon(Icons.qr_code_2_rounded, color: AppColors.cyan),
+                SizedBox(width: 8),
+                Text(
+                  'QR KUPON',
+                  style: TextStyle(
+                    color: AppColors.cyan,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 9),
+            Text(
+              (widget.data['title'] ?? '').toString(),
+              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900),
+            ),
+            if ((widget.data['description'] ?? '').toString().isNotEmpty) ...[
+              const SizedBox(height: 5),
+              Text(
+                (widget.data['description'] ?? '').toString(),
+                style: const TextStyle(color: Colors.white60, height: 1.4),
+              ),
+            ],
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    until == null
+                        ? ''
+                        : '${until.toDate().day}.${until.toDate().month}.${until.toDate().year} tarihine kadar',
+                    style: const TextStyle(color: Colors.white54, fontSize: 11),
+                  ),
+                ),
+                if (remaining > 0)
+                  Text(
+                    '${(remaining - claimed).clamp(0, remaining)} kupon kaldı',
+                    style: const TextStyle(color: Colors.white54, fontSize: 11),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 11),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: _busy ? null : _claim,
+                icon: const Icon(Icons.confirmation_number_outlined),
+                label: Text(_busy ? 'Hazırlanıyor…' : 'Kuponu Al'),
+              ),
+            ),
           ],
-          const SizedBox(height: 10),
-          Row(children: [
-            Expanded(child: Text(until == null ? '' : '${until.toDate().day}.${until.toDate().month}.${until.toDate().year} tarihine kadar', style: const TextStyle(color: Colors.white54, fontSize: 11))),
-            if (remaining > 0) Text('${(remaining - claimed).clamp(0, remaining)} kupon kaldı', style: const TextStyle(color: Colors.white54, fontSize: 11)),
-          ]),
-          const SizedBox(height: 11),
-          SizedBox(width: double.infinity, child: FilledButton.icon(onPressed: _busy ? null : _claim, icon: const Icon(Icons.confirmation_number_outlined), label: Text(_busy ? 'Hazırlanıyor…' : 'Kuponu Al'))),
-        ]),
+        ),
       ),
     );
   }
