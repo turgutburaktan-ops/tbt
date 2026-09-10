@@ -2,11 +2,6 @@ name: iOS TestFlight Release
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
-    paths:
-      - .github/workflows/ios_testflight_release.yml
 
 permissions:
   contents: read
