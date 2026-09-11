@@ -1,6 +1,7 @@
 const {onCall, HttpsError} = require('firebase-functions/v2/https');
 const {getFirestore, FieldValue, Timestamp} = require('firebase-admin/firestore');
 const crypto = require('crypto');
+const {getAuth} = require('firebase-admin/auth');
 
 function clean(value, max = 300) { return String(value || '').trim().slice(0, max); }
 function auth(request) {
@@ -113,8 +114,11 @@ exports.addBusinessStaff = onCall({region: 'europe-west1'}, async request => {
   const venueKey = clean(request.data?.venueKey, 240), email = clean(request.data?.email, 240).toLowerCase(), role = clean(request.data?.role, 60) || 'staff';
   const {venueRef, uid} = await businessOwner(request, venueKey);
   if (!email.includes('@')) throw new HttpsError('invalid-argument', 'Geçerli bir e-posta gir.');
+  let userUid = null;
+  try { userUid = (await getAuth().getUserByEmail(email)).uid; }
+  catch (error) { if (error.code !== 'auth/user-not-found') throw error; }
   const id = Buffer.from(email).toString('base64url');
-  await venueRef.collection('staff').doc(id).set({email, role, active: true, addedBy: uid, createdAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp()}, {merge: true});
+  await venueRef.collection('staff').doc(id).set({email, userUid, role, active: true, addedBy: uid, createdAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp()}, {merge: true});
   return {id};
 });
 

@@ -1,3 +1,4 @@
+import '../widgets/venue_quality_badge.dart';
 import '../widgets/tbt_dialog.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -171,6 +172,7 @@ class BusinessProfileScreen extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 9),
+                        VenueQualityBadge(venueKey: '${venue.category.name}:${venue.id}'),
                         VenueBadgeStrip(
                           verified: verified,
                           premium: premiumActive,

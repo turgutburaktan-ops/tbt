@@ -145,6 +145,8 @@ exports.deleteAccountNow = onCall(
       ['attendance', 'userId'],
       ['interactions', 'userId'],
       ['ratings', 'userId'],
+      ['reviews', 'userId'],
+      ['visits', 'userId'],
       ['helpful', 'userId'],
       ['messages', 'senderId'],
       ['reservations', 'userUid'],

@@ -7,7 +7,7 @@ on:
         description: 'Explicit deployment scope'
         type: choice
         default: commit-marker
-        options: [commit-marker, usability-creator, reputation]
+        options: [commit-marker, usability-creator, reputation, venue-quality]
   push:
     branches: [main, feature/video-v1]
     paths:
@@ -33,6 +33,8 @@ jobs:
         run: node --test functions/test/music*.test.js
       - name: Test Creator and photo notification policies
         run: node --test functions/test/social_publishing.test.js functions/test/reputation_system.test.js functions/test/role_invites.test.js functions/test/push_payload.test.js functions/test/broadcast_photo.test.js functions/test/notification_policy.test.js functions/test/event_reminders.test.js functions/test/retention.test.js
+      - name: Test verified venue quality
+        run: node --test functions/test/venue_quality.test.js
       - name: Test reservations
         run: node --test functions/test/reservation*.test.js
       - name: Install Firebase CLI
@@ -93,9 +95,12 @@ jobs:
           PUBLICATION_REPAIR: ${{ contains(github.event.head_commit.message, '[repair-burak-publication]') }}
           VERIFICATION_EMAIL_UPDATE: ${{ contains(github.event.head_commit.message, '[verification-email]') }}
           NOTIFICATION_UPDATE: ${{ contains(github.event.head_commit.message, '[notification-update]') }}
+          VENUE_QUALITY_UPDATE: ${{ inputs.scope == 'venue-quality' || contains(github.event.head_commit.message, '[venue-quality-update]') }}
           REPUTATION_UPDATE: ${{ inputs.scope == 'reputation' || contains(github.event.head_commit.message, '[reputation-update]') }}
         run: |
-          if [ "$REPUTATION_UPDATE" = "true" ]; then
+          if [ "$VENUE_QUALITY_UPDATE" = "true" ]; then
+            firebase deploy --only functions:venueQuality,functions:refreshVenueQualityReview,functions:refreshVenueQualityDaily,functions:refreshVenueQualityCoupon,functions:refreshVenueQualityReservation,functions:refreshVenueQualityStaff,functions:refreshVenueQualityOwner,functions:addBusinessStaff,functions:deleteAccountNow --project en-iyi-cekim-noktasi --non-interactive
+          elif [ "$REPUTATION_UPDATE" = "true" ]; then
             firebase deploy --only hosting --project en-iyi-cekim-noktasi --non-interactive
             firebase deploy --only functions:getMyReputation,functions:awardApprovedSpotReputation,functions:awardPublishedRouteReputation,functions:awardVerifiedEventAttendance,functions:awardGourmetReviewReputation,functions:awardUsedCouponReputation,functions:awardCompletedReservationReputation,functions:createRoleInvite,functions:getRoleInvitePreview,functions:redeemRoleInvite,functions:activateEmailRoleInvites,functions:activateVerifiedEmailRoleInvites,functions:awardPostXp,functions:awardStoryXp,functions:awardEventCreateXp,functions:awardEventMemoryXp,functions:awardEventJoinXp,functions:awardFiftyLikesXp,functions:creatorAdmin --project en-iyi-cekim-noktasi --non-interactive
           elif [ "$USABILITY_CREATOR_UPDATE" = "true" ]; then
@@ -128,7 +133,7 @@ jobs:
             exit 1
           fi
       - name: Restore callable invoker access
-        if: "inputs.scope != 'usability-creator' && inputs.scope != 'reputation' && !contains(github.event.head_commit.message, '[reputation-update]') && !contains(github.event.head_commit.message, '[usability-creator]') && !contains(github.event.head_commit.message, '[creator-restore]') && !contains(github.event.head_commit.message, '[account-cleanup]') && !contains(github.event.head_commit.message, '[restore-update]') && !contains(github.event.head_commit.message, '[music-update]') && !contains(github.event.head_commit.message, '[chat-update]') && !contains(github.event.head_commit.message, '[repair-burak-publication]') && !contains(github.event.head_commit.message, '[reservation-update]') && !contains(github.event.head_commit.message, '[reservation-index]') && !contains(github.event.head_commit.message, '[preparation-update]') && !contains(github.event.head_commit.message, '[verification-email]') && !contains(github.event.head_commit.message, '[notification-update]')"
+        if: "inputs.scope != 'venue-quality' && !contains(github.event.head_commit.message, '[venue-quality-update]') && inputs.scope != 'usability-creator' && inputs.scope != 'reputation' && !contains(github.event.head_commit.message, '[reputation-update]') && !contains(github.event.head_commit.message, '[usability-creator]') && !contains(github.event.head_commit.message, '[creator-restore]') && !contains(github.event.head_commit.message, '[account-cleanup]') && !contains(github.event.head_commit.message, '[restore-update]') && !contains(github.event.head_commit.message, '[music-update]') && !contains(github.event.head_commit.message, '[chat-update]') && !contains(github.event.head_commit.message, '[repair-burak-publication]') && !contains(github.event.head_commit.message, '[reservation-update]') && !contains(github.event.head_commit.message, '[reservation-index]') && !contains(github.event.head_commit.message, '[preparation-update]') && !contains(github.event.head_commit.message, '[verification-email]') && !contains(github.event.head_commit.message, '[notification-update]')"
         run: |
           set -euo pipefail
           gcloud auth activate-service-account --key-file="$GOOGLE_APPLICATION_CREDENTIALS"

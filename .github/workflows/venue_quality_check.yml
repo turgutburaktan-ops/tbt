@@ -1,0 +1,29 @@
+name: Venue quality checks
+on:
+  push:
+    branches: [codex/reputation-role-system]
+    paths:
+      - 'functions/venue_quality*'
+      - 'functions/test/venue_quality*'
+      - 'lib/**'
+      - '.github/workflows/venue_quality_check.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: node --test functions/test/venue_quality.test.js
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Analyze venue quality screens
+        run: flutter analyze --no-fatal-infos --no-fatal-warnings lib/services/venue_quality_service.dart lib/widgets/venue_quality_section.dart lib/widgets/venue_quality_badge.dart lib/screens/venue_quality_admin_screen.dart lib/widgets/venue_reviews_section.dart lib/screens/business_profile_screen.dart lib/widgets/nearby_places_view.dart lib/screens/admin_portal_screen.dart

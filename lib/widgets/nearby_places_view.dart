@@ -1,3 +1,4 @@
+import 'venue_quality_badge.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -605,6 +606,7 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w900),
                     ),
+                    VenueQualityBadge(venueKey: '${venue.category.name}:${venue.id}'),
                     const SizedBox(height: 5),
                     Wrap(
                       spacing: 7,

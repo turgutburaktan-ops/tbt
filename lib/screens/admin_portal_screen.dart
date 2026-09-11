@@ -1,3 +1,4 @@
+import 'venue_quality_admin_screen.dart';
 import 'creator_admin_screen.dart';
 
 import 'package:firebase_auth/firebase_auth.dart';
@@ -174,6 +175,14 @@ class _AdminPortalScreenState extends State<AdminPortalScreen> {
             'İşletmeye Premium/Pro ver veya geri al.',
             '/admin-business-premium',
             accent: true,
+          ),
+          const SizedBox(height: 10),
+          _HeroAction(
+            icon: Icons.stars_rounded,
+            title: 'TBT Mekân Unvanları',
+            subtitle: 'Doğrulanmış değerlendirmeler, adaylar, şikâyetler ve unvan incelemeleri.',
+            button: 'Mekân unvanlarını aç',
+            onTap: () => _open(const VenueQualityAdminScreen()),
           ),
           const SizedBox(height: 22),
           const Text(

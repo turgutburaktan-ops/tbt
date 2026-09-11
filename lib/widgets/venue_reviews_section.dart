@@ -1,3 +1,5 @@
+import 'venue_quality_section.dart';
+import '../services/venue_quality_service.dart';
 import 'package:flutter/material.dart';
 
 import '../services/venue_rating_service.dart';
@@ -121,6 +123,8 @@ class _VenueReviewsSectionState extends State<VenueReviewsSection> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (VenueQualityService.supports(widget.category))
+              VenueQualitySection(category: widget.category, venueId: widget.venueId, venueName: widget.venueName),
             Row(
               children: [
                 const Icon(
