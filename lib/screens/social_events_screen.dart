@@ -200,7 +200,7 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
                               selected.remove(doc.id);
                             }
                           }),
-                          secondary: CircleAvatar(
+                          secondary: CircleAvatar(backgroundColor: const Color(0xFF0D1B30), foregroundColor: Colors.white70,
                             backgroundImage: photo.isEmpty
                                 ? null
                                 : NetworkImage(photo),

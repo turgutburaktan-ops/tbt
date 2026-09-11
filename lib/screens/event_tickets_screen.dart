@@ -69,7 +69,7 @@ class EventTicketsScreen extends StatelessWidget {
                 child: ListTile(
                   contentPadding: const EdgeInsets.all(14),
                   leading: CircleAvatar(
-                    backgroundColor: const Color(0x22285F8C),
+                    backgroundColor: const Color(0x228B5CF6),
                     foregroundColor: const Color(0xFFB7BCC2),
                     child: const Icon(Icons.confirmation_number_outlined),
                   ),

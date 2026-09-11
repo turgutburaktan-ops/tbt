@@ -443,7 +443,7 @@ class _BusinessHeader extends StatelessWidget {
       Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFF10252B), Color(0xFF0D1B30)],
+            colors: [Color(0xFF10252B), Color(0xFF241735)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),

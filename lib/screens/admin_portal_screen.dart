@@ -115,7 +115,7 @@ class _AdminPortalScreenState extends State<AdminPortalScreen> {
               gradient: const LinearGradient(
                 colors: [
                   Color(0xFF10242A),
-                  Color(0xFF0D1B30),
+                  Color(0xFF171523),
                   Color(0xFF101116),
                 ],
                 begin: Alignment.topLeft,

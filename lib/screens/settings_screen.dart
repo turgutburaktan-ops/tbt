@@ -741,7 +741,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         children: [
           CircleAvatar(
             radius: 27,
-            backgroundColor: AppColors.surfaceStrong,
+            backgroundColor: const Color(0xFF0D1B30),
             backgroundImage: photo.isEmpty ? null : NetworkImage(photo),
             child: photo.isEmpty
                 ? const Icon(Icons.person_outline_rounded)

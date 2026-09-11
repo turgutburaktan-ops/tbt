@@ -137,7 +137,7 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
             return ListTile(
               leading: CircleAvatar(
                 radius: 24,
-                backgroundColor: const Color(0xFF203C62),
+                backgroundColor: const Color(0xFF0D1B30),
                 backgroundImage: photoUrl.isEmpty
                     ? null
                     : NetworkImage(photoUrl),
@@ -429,7 +429,7 @@ class _ThreadTile extends StatelessWidget {
           ),
           leading: CircleAvatar(
             radius: 25,
-            backgroundColor: const Color(0xFF203C62),
+            backgroundColor: const Color(0xFF0D1B30),
             backgroundImage: photoUrl.isNotEmpty
                 ? NetworkImage(photoUrl)
                 : null,

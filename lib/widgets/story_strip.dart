@@ -194,7 +194,7 @@ class _AddStoryCircle extends StatelessWidget {
                           colors: [
                             Color(0xFF39E7E0),
                             Color(0xFF6977FF),
-                            Color(0xFF285F8C),
+                            Color(0xFFB65CFF),
                           ],
                         )
                       : null,
@@ -212,7 +212,7 @@ class _AddStoryCircle extends StatelessWidget {
                         userId,
                       ),
                       errorWidget: const ColoredBox(
-                        color: Color(0xFF20242A),
+                        color: Color(0xFF0D1B30),
                         child: Icon(Icons.person_outline_rounded),
                       ),
                     ),
@@ -298,7 +298,7 @@ class _StoryCircle extends StatelessWidget {
                         colors: [
                           Color(0xFF39E7E0),
                           Color(0xFF6977FF),
-                          Color(0xFF285F8C),
+                          Color(0xFFB65CFF),
                         ],
                       ),
               ),
@@ -754,7 +754,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
                               final x = items[i];
                               return ListTile(
                                 leading: CircleAvatar(
-                                  backgroundColor: const Color(0xFF22252A),
+                                  backgroundColor: const Color(0xFF0D1B30),
                                   child: ClipOval(
                                     child: FirebaseMediaImage(
                                       imageUrl: (x['userPhotoUrl'] ?? '')
@@ -1068,7 +1068,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
                                         current.userId,
                                       ),
                                   errorWidget: const ColoredBox(
-                                    color: Color(0xFF22252A),
+                                    color: Color(0xFF0D1B30),
                                     child: Icon(Icons.person_outline, size: 20),
                                   ),
                                 ),

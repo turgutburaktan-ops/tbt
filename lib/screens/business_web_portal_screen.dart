@@ -30,7 +30,7 @@ class BusinessWebPortalScreen extends StatelessWidget {
           padding: const EdgeInsets.all(22),
           decoration: BoxDecoration(
             gradient: const LinearGradient(
-              colors: [Color(0xFF10252B), Color(0xFF0D1B30), Color(0xFF101116)],
+              colors: [Color(0xFF10252B), Color(0xFF181427), Color(0xFF101116)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),

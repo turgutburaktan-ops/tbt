@@ -10,7 +10,7 @@ import 'post_sharing_actions.dart';
 import 'share_recipient_picker.dart';
 
 const _tbtGradient = LinearGradient(
-  colors: [Color(0xFF38E8FF), Color(0xFF4A7DFF), Color(0xFF285F8C)],
+  colors: [Color(0xFF38E8FF), Color(0xFF4A7DFF), Color(0xFF9B4DFF)],
   begin: Alignment.topLeft,
   end: Alignment.bottomRight,
 );
@@ -171,7 +171,7 @@ class ContentEngagementBar extends StatelessWidget {
                             return ListTile(
                               contentPadding: EdgeInsets.zero,
                               leading: const CircleAvatar(
-                                backgroundColor: Color(0xFF1A1D20),
+                                backgroundColor: const Color(0xFF0D1B30),
                                 child: Icon(Icons.person_outline),
                               ),
                               title: Text(

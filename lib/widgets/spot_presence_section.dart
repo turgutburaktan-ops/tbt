@@ -81,7 +81,7 @@ class _SpotPresenceSectionState extends State<SpotPresenceSection> {
                           vertical: 6,
                         ),
                         decoration: BoxDecoration(
-                          color: const Color(0x22285F8C),
+                          color: const Color(0x228B5CF6),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
@@ -303,7 +303,7 @@ class _PresenceAvatar extends StatelessWidget {
         children: [
           CircleAvatar(
             radius: 23,
-            backgroundColor: const Color(0xFF252C37),
+            backgroundColor: const Color(0xFF0D1B30),
             backgroundImage: item.photoUrl.isNotEmpty
                 ? NetworkImage(item.photoUrl)
                 : null,

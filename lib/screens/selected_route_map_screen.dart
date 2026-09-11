@@ -80,7 +80,7 @@ class _SelectedRouteMapScreenState extends State<SelectedRouteMapScreen> {
           icon: BitmapDescriptor.defaultMarkerWithHue(
             i == widget.places.length - 1
                 ? BitmapDescriptor.hueAzure
-                : BitmapDescriptor.hueBlue,
+                : BitmapDescriptor.hueViolet,
           ),
         ),
       );

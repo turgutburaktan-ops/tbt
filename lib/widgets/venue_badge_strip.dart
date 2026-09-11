@@ -27,7 +27,7 @@ class VenueBadgeStrip extends StatelessWidget {
       if (rating >= 4.6 && (ratingCount == 0 || ratingCount >= 10))
         const _VenueBadge('Yüksek Puanlı', Icons.star_rounded, Color(0xFFFFC857)),
       if (normalized.contains('foto') || normalized.contains('manzara'))
-        const _VenueBadge('Fotoğraf Noktası', Icons.photo_camera_rounded, Color(0xFF8ACDFF)),
+        const _VenueBadge('Fotoğraf Noktası', Icons.photo_camera_rounded, Color(0xFFC89BFF)),
       if (normalized.contains('kafe') || normalized.contains('restoran') || normalized.contains('lezzet'))
         const _VenueBadge('Lezzet Durağı', Icons.restaurant_rounded, Color(0xFFFF8A65)),
       if (normalized.contains('gizli') || normalized.contains('yerel'))

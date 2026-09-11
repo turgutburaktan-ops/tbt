@@ -1009,7 +1009,7 @@ class _FeedPostCardState extends State<_FeedPostCard> {
                         widget.userId,
                       ),
                       errorWidget: const ColoredBox(
-                        color: Color(0xFF22262A),
+                        color: Color(0xFF0D1B30),
                         child: Icon(Icons.person_outline),
                       ),
                     ),

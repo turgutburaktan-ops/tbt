@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class AppColors {
   AppColors._();
 
-  // TBT visual identity: cinematic dark surfaces + midnight blue and readable blue accents.
+  // TBT visual identity: cinematic dark surfaces + controlled cyan/violet neon.
   static const background = Color(0xFF05060A);
   static const backgroundRaised = Color(0xFF080A10);
   static const surface = Color(0xFF0D1017);
@@ -13,10 +13,10 @@ class AppColors {
   static const navigation = Color(0xFF090B11);
 
   static const cyan = Color(0xFF45E7F2);
-  static const violet = Color(0xFF285F8C);
-  static const violetBright = Color(0xFF8ACDFF);
+  static const violet = Color(0xFF9B67F6);
+  static const violetBright = Color(0xFFB482FF);
   static const cyanSoft = Color(0x2245E7F2);
-  static const violetSoft = Color(0x22285F8C);
+  static const violetSoft = Color(0x229B67F6);
 
   static const primary = violet;
   static const primaryBright = Color(0xFFF5F4FA);
@@ -25,7 +25,7 @@ class AppColors {
 
   static const border = Color(0xFF252B37);
   static const borderStrong = Color(0xFF343C4B);
-  static const borderAccent = Color(0x668ACDFF);
+  static const borderAccent = Color(0x668F73E8);
   static const textMuted = Color(0xFF9CA4B2);
   static const textSubtle = Color(0xFF6F7888);
   static const liked = Color(0xFFFF617A);
@@ -45,7 +45,7 @@ class AppColors {
   );
 
   static const subtleGradient = LinearGradient(
-    colors: [Color(0x2245E7F2), Color(0x22285F8C)],
+    colors: [Color(0x2245E7F2), Color(0x229B67F6)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
@@ -86,11 +86,6 @@ class AppTheme {
       useMaterial3: true,
       scaffoldBackgroundColor: AppColors.background,
       colorScheme: scheme,
-      textSelectionTheme: const TextSelectionThemeData(
-        cursorColor: Color(0xFF8ACDFF),
-        selectionColor: Color(0x66285F8C),
-        selectionHandleColor: Color(0xFF8ACDFF),
-      ),
       visualDensity: const VisualDensity(horizontal: -1, vertical: -1),
       splashFactory: InkSparkle.splashFactory,
       appBarTheme: const AppBarTheme(
@@ -156,6 +151,15 @@ class AppTheme {
           letterSpacing: .05,
         ),
       ),
+      bottomSheetTheme: const BottomSheetThemeData(
+        backgroundColor: Color(0xFF0D1B30),
+        modalBackgroundColor: Color(0xFF0D1B30),
+        surfaceTintColor: Colors.transparent,
+      ),
+      popupMenuTheme: const PopupMenuThemeData(
+        color: Color(0xFF0D1B30),
+        surfaceTintColor: Colors.transparent,
+      ),
       dialogTheme: const DialogThemeData(
         backgroundColor: Color(0xFF0D1B30),
         surfaceTintColor: Colors.transparent,
@@ -211,7 +215,7 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadii.medium),
-          borderSide: const BorderSide(color: AppColors.violetBright, width: 1.35),
+          borderSide: const BorderSide(color: AppColors.violet, width: 1.35),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadii.medium),
@@ -256,7 +260,7 @@ class AppTheme {
       ),
       chipTheme: ChipThemeData(
         backgroundColor: AppColors.surfaceAlt,
-        selectedColor: const Color(0xFF203C62),
+        selectedColor: const Color(0xFF242139),
         disabledColor: AppColors.surface,
         padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
         labelPadding: const EdgeInsets.symmetric(horizontal: 2),
@@ -288,7 +292,7 @@ class AppTheme {
           ),
           backgroundColor: WidgetStateProperty.resolveWith(
             (states) => states.contains(WidgetState.selected)
-                ? const Color(0xFF203C62)
+                ? const Color(0xFF242139)
                 : AppColors.surface,
           ),
           side: WidgetStateProperty.resolveWith(
@@ -308,7 +312,7 @@ class AppTheme {
       navigationBarTheme: const NavigationBarThemeData(
         height: 62,
         backgroundColor: AppColors.navigation,
-        indicatorColor: Color(0xFF203C62),
+        indicatorColor: Color(0xFF242139),
         surfaceTintColor: Colors.transparent,
         labelTextStyle: WidgetStatePropertyAll(
           TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700),

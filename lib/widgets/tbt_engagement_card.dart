@@ -81,10 +81,10 @@ class TbtEngagementCard extends StatelessWidget {
                     width: 42,
                     height: 42,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF8ACDFF).withValues(alpha: .13),
+                      color: const Color(0xFFB8A1FF).withValues(alpha: .13),
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(level.icon, color: const Color(0xFF8ACDFF)),
+                    child: Icon(level.icon, color: const Color(0xFFB8A1FF)),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
@@ -152,7 +152,7 @@ class TbtEngagementCard extends StatelessWidget {
                         Text(
                           '+${mission.points}',
                           style: const TextStyle(
-                            color: Color(0xFF8ACDFF),
+                            color: Color(0xFFB8A1FF),
                             fontSize: 11,
                             fontWeight: FontWeight.w900,
                           ),
@@ -196,14 +196,14 @@ class _Badge extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
     decoration: BoxDecoration(
-      color: const Color(0xFF8ACDFF).withValues(alpha: .12),
+      color: const Color(0xFFB8A1FF).withValues(alpha: .12),
       borderRadius: BorderRadius.circular(99),
-      border: Border.all(color: const Color(0xFF8ACDFF).withValues(alpha: .35)),
+      border: Border.all(color: const Color(0xFFB8A1FF).withValues(alpha: .35)),
     ),
     child: Text(
       label,
       style: const TextStyle(
-        color: Color(0xFF8ACDFF),
+        color: Color(0xFFD4C7FF),
         fontSize: 9.5,
         fontWeight: FontWeight.w900,
         letterSpacing: .5,

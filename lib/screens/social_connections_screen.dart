@@ -87,7 +87,7 @@ class _UserTile extends StatelessWidget {
           ),
           leading: CircleAvatar(
             radius: 25,
-            backgroundColor: const Color(0xFF1A1D20),
+            backgroundColor: const Color(0xFF0D1B30),
             backgroundImage: photoUrl.isNotEmpty
                 ? NetworkImage(photoUrl)
                 : null,

@@ -111,7 +111,7 @@ class _AdminBusinessPreviewScreenState
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
-                colors: [Color(0xFF112229), Color(0xFF0D1B30)],
+                colors: [Color(0xFF112229), Color(0xFF1A1428)],
               ),
               borderRadius: BorderRadius.circular(18),
               border: Border.all(color: AppColors.cyan.withValues(alpha: .35)),

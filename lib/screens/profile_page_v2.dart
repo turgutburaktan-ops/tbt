@@ -439,7 +439,7 @@ class _ProfileBodyState extends State<_ProfileBody> {
                 children: [
                   CircleAvatar(
                     radius: 43,
-                    backgroundColor: AppColors.surfaceStrong,
+                    backgroundColor: const Color(0xFF0D1B30),
                     child: ClipOval(
                       child: SizedBox(
                         width: 82,
@@ -451,7 +451,7 @@ class _ProfileBodyState extends State<_ProfileBody> {
                           ),
                           fit: BoxFit.cover,
                           errorWidget: const ColoredBox(
-                            color: AppColors.surface,
+                            color: Color(0xFF0D1B30),
                             child: Center(
                               child: Icon(
                                 Icons.person,
@@ -766,7 +766,7 @@ class _ProfileBodyState extends State<_ProfileBody> {
                       onTap: pick,
                       child: CircleAvatar(
                         radius: 42,
-                        backgroundColor: AppColors.surfaceStrong,
+                        backgroundColor: const Color(0xFF0D1B30),
                         backgroundImage: photo == null
                             ? null
                             : FileImage(photo!),

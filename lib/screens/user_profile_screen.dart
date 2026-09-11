@@ -161,7 +161,7 @@ class UserProfileScreen extends StatelessWidget {
                                               ? const LinearGradient(
                                                   colors: [
                                                     Color(0xFF42F5E9),
-                                                    Color(0xFF285F8C),
+                                                    Color(0xFF8B5CF6),
                                                   ],
                                                 )
                                               : null,
@@ -192,7 +192,7 @@ class UserProfileScreen extends StatelessWidget {
                                                       userId,
                                                     ),
                                                 errorWidget: const ColoredBox(
-                                                  color: Color(0xFF1A1D20),
+                                                  color: Color(0xFF0D1B30),
                                                   child: Center(
                                                     child: Icon(
                                                       Icons.person,

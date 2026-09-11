@@ -13,7 +13,7 @@ class PublicAchievementBadges extends StatelessWidget {
   static const _catalog = <_BadgeDefinition>[
     _BadgeDefinition('ambassador', 'TBT Elçisi', Icons.workspace_premium_rounded, Color(0xFFFFC857)),
     _BadgeDefinition('verified', 'Doğrulanmış', Icons.verified_rounded, Color(0xFF48C7FF)),
-    _BadgeDefinition('creator', 'Creator', Icons.auto_awesome_rounded, Color(0xFF285F8C)),
+    _BadgeDefinition('creator', 'Creator', Icons.auto_awesome_rounded, Color(0xFFA66BFF)),
     _BadgeDefinition('explorer', 'Kâşif', Icons.explore_rounded, Color(0xFF55D6BE)),
     _BadgeDefinition('social', 'Sosyal', Icons.groups_rounded, Color(0xFFFF8A65)),
     _BadgeDefinition('gourmet', 'Gurme', Icons.restaurant_rounded, Color(0xFFFFD166)),

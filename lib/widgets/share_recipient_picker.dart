@@ -125,7 +125,7 @@ class _ShareRecipientPickerState extends State<ShareRecipientPicker> {
           final name = _name(data), photo = (data['photoUrl'] ?? '').toString();
           final username = (data['username'] ?? data['userName'] ?? '').toString();
           return ListTile(
-            leading: CircleAvatar(backgroundImage: photo.isEmpty ? null : NetworkImage(photo), child: photo.isEmpty ? const Icon(Icons.person_outline) : null),
+            leading: CircleAvatar(backgroundColor: const Color(0xFF0D1B30), foregroundColor: Colors.white70, backgroundImage: photo.isEmpty ? null : NetworkImage(photo), child: photo.isEmpty ? const Icon(Icons.person_outline) : null),
             title: Text(name, maxLines: 1, overflow: TextOverflow.ellipsis),
             subtitle: Text([if (username.isNotEmpty) '@${username.replaceFirst('@', '')}', if (_following.contains(doc.id)) 'Takip ediyorsun'].join(' · ')),
             trailing: widget.selectedIds.contains(doc.id) ? const Icon(Icons.check_circle, color: Color(0xFF55D6D0)) : null,

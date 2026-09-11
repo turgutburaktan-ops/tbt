@@ -189,7 +189,7 @@ class ChatGroupInfo extends StatelessWidget {
         return ListView(
           children: [
             ListTile(
-              leading: CircleAvatar(
+              leading: CircleAvatar(backgroundColor: const Color(0xFF0D1B30), foregroundColor: Colors.white70,
                 backgroundImage: t.photoUrl == null
                     ? null
                     : NetworkImage(t.photoUrl!),

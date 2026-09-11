@@ -1434,7 +1434,7 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
               : null,
           gradient: x.backgroundStyle == 3
               ? const LinearGradient(
-                  colors: [Color(0xCC285F8C), Color(0xCC25C7D9)],
+                  colors: [Color(0xCC754CFF), Color(0xCC25C7D9)],
                 )
               : null,
           borderRadius: BorderRadius.circular(14),
@@ -1491,7 +1491,7 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
                   colors: <Color>[
                     Color(0xFF38E8FF),
                     Color(0xFF4A7DFF),
-                    Color(0xFF285F8C),
+                    Color(0xFF9B4DFF),
                   ],
                 ),
               ),
@@ -1559,7 +1559,7 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
 
   static Shader _musicShader(Rect bounds) {
     return const LinearGradient(
-      colors: <Color>[Color(0xFF38E8FF), Color(0xFF4A7DFF), Color(0xFF285F8C)],
+      colors: <Color>[Color(0xFF38E8FF), Color(0xFF4A7DFF), Color(0xFF9B4DFF)],
     ).createShader(bounds);
   }
 
@@ -1646,7 +1646,7 @@ class _MentionSheetState extends State<_MentionSheet> {
                             .toString();
                     final String user = (data['username'] ?? '').toString();
                     return ListTile(
-                      leading: const CircleAvatar(
+                      leading: const CircleAvatar(backgroundColor: const Color(0xFF0D1B30), foregroundColor: Colors.white70,
                         child: Icon(Icons.person_outline),
                       ),
                       title: Text(name),

@@ -232,7 +232,7 @@ class _LiveSocialMapTabState extends State<_LiveSocialMapTab> {
             markers.add(Marker(
               markerId: MarkerId('event_${doc.id}'),
               position: LatLng(lat, lng),
-              icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
+              icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueViolet),
               infoWindow: InfoWindow(title: (d['title'] ?? 'Etkinlik').toString(), snippet: 'Etkinlik sinyali'),
             ));
           }

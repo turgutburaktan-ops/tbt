@@ -123,14 +123,14 @@ class ProfileFavoritePlacesSection extends StatelessWidget {
                                   width: 44,
                                   height: 44,
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFF8ACDFF)
+                                    color: const Color(0xFFB8A1FF)
                                         .withValues(alpha: .12),
                                     borderRadius: BorderRadius.circular(13),
                                   ),
                                   child: Icon(
                                     type.icon,
                                     size: 23,
-                                    color: const Color(0xFF8ACDFF),
+                                    color: const Color(0xFFB8A1FF),
                                   ),
                                 ),
                                 const SizedBox(width: 12),
@@ -180,7 +180,7 @@ class ProfileFavoritePlacesSection extends StatelessWidget {
                                         ? Icons.add_circle_outline_rounded
                                         : Icons.edit_outlined,
                                     size: 21,
-                                    color: const Color(0xFF8ACDFF),
+                                    color: const Color(0xFFB8A1FF),
                                   )
                                 else
                                   const Icon(
@@ -293,12 +293,12 @@ class _ProgressCard extends StatelessWidget {
                 width: 36,
                 height: 36,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF8ACDFF).withValues(alpha: .12),
+                  color: const Color(0xFFB8A1FF).withValues(alpha: .12),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
                   Icons.workspace_premium_rounded,
-                  color: Color(0xFF8ACDFF),
+                  color: Color(0xFFB8A1FF),
                   size: 20,
                 ),
               ),
@@ -565,7 +565,7 @@ class _FavoritePlacePickerState extends State<_FavoritePlacePicker> {
                     return ListTile(
                       leading: Icon(
                         widget.type.icon,
-                        color: const Color(0xFF8ACDFF),
+                        color: const Color(0xFFB8A1FF),
                       ),
                       title: Text(
                         item.name,

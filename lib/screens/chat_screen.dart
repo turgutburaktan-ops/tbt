@@ -1106,7 +1106,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                       ),
                       fit: BoxFit.cover,
                       errorWidget: const ColoredBox(
-                        color: Color(0xFF20252B),
+                        color: Color(0xFF0D1B30),
                         child: Center(
                           child: Icon(Icons.person_rounded, size: 21),
                         ),

@@ -381,7 +381,7 @@ class _EventMemoriesScreenState extends State<EventMemoriesScreen> {
                             children: [
                               const CircleAvatar(
                                 radius: 18,
-                                backgroundColor: Color(0xFF25292E),
+                                backgroundColor: const Color(0xFF0D1B30),
                                 child: Icon(Icons.person_outline, size: 19),
                               ),
                               const SizedBox(width: 9),

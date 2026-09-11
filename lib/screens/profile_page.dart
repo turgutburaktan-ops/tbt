@@ -192,7 +192,7 @@ class _ProfileBodyState extends State<_ProfileBody> {
                                     ),
                                     child: CircleAvatar(
                                       radius: 47,
-                                      backgroundColor: const Color(0xFFB7BCC2),
+                                      backgroundColor: const Color(0xFF0D1B30),
                                       child: CircleAvatar(
                                         radius: 43,
                                         backgroundColor: const Color(
@@ -420,7 +420,7 @@ class _ProfileBodyState extends State<_ProfileBody> {
                     onTap: pick,
                     child: CircleAvatar(
                       radius: 48,
-                      backgroundColor: const Color(0xFF1A1D20),
+                      backgroundColor: const Color(0xFF0D1B30),
                       backgroundImage: photo != null ? FileImage(photo!) : null,
                       child: photo == null
                           ? const Icon(

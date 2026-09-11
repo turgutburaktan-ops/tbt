@@ -370,7 +370,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                           ),
                           fit: BoxFit.cover,
                           errorWidget: const ColoredBox(
-                            color: Color(0xFF1A1D20),
+                            color: Color(0xFF0D1B30),
                             child: Center(
                               child: Icon(
                                 Icons.person_outline_rounded,

@@ -77,7 +77,7 @@ class _RewardsHubScreenState extends State<RewardsHubScreen> {
                 const SizedBox(height: 12),
                 _RoleCard(
                   label: 'TBT Creator', icon: Icons.auto_awesome_rounded,
-                  color: const Color(0xFF285F8C), score: _number(scores['creator']), threshold: 500,
+                  color: const Color(0xFFA66BFF), score: _number(scores['creator']), threshold: 500,
                   state: _map(roles['creator']),
                   requirement: '25 özgün içerik ve en az 60 günlük hesap',
                   earning: 'Fotoğraf +5 · Reels +8 · kaliteli içerik bonusu +15',

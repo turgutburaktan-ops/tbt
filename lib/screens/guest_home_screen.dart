@@ -419,7 +419,7 @@ class _GuestPostCard extends StatelessWidget {
                         userId,
                       ),
                       errorWidget: const ColoredBox(
-                        color: Color(0xFF22262A),
+                        color: Color(0xFF0D1B30),
                         child: Center(child: Icon(Icons.person_outline)),
                       ),
                     ),

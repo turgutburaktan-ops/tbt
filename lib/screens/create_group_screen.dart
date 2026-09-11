@@ -82,7 +82,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
             )),
           if (_details)
             Expanded(child: ListView(children: _selected.entries.map((e) => ListTile(
-              leading: const CircleAvatar(backgroundColor: Color(0xFF1A2326), child: Icon(Icons.person_outline, color: _accent)),
+              leading: const CircleAvatar(backgroundColor: const Color(0xFF0D1B30), child: Icon(Icons.person_outline, color: _accent)),
               title: Text(e.value),
               trailing: IconButton(tooltip: 'Seçimden çıkar', icon: const Icon(Icons.close), onPressed: _saving ? null : () => setState(() => _selected.remove(e.key))),
             )).toList()))
@@ -104,7 +104,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                   final name = (u['displayName'] ?? u['name'] ?? u['username'] ?? 'Kullanıcı').toString();
                   final selected = _selected.containsKey(doc.id);
                   return ListTile(
-                    leading: const CircleAvatar(backgroundColor: Color(0xFF1A2326), child: Icon(Icons.person_outline, color: _accent)),
+                    leading: const CircleAvatar(backgroundColor: const Color(0xFF0D1B30), child: Icon(Icons.person_outline, color: _accent)),
                     title: Text(name), subtitle: Text((u['username'] ?? '').toString()),
                     trailing: Icon(selected ? Icons.check_circle : Icons.radio_button_unchecked, color: selected ? _accent : Colors.white38),
                     onTap: () {

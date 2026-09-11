@@ -615,7 +615,7 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
                         if (venue.sponsored)
                           const _MetaPill(
                             label: 'Öne çıkarıldı',
-                            color: Color(0xFF8ACDFF),
+                            color: Color(0xFFB68CFF),
                           ),
                         if (venue.routeRecommended)
                           const _MetaPill(

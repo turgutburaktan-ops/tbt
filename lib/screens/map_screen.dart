@@ -217,7 +217,7 @@ class _MapScreenState extends State<MapScreen> {
             markerId: MarkerId('event_${event.id}'),
             position: position,
             icon: BitmapDescriptor.defaultMarkerWithHue(
-              BitmapDescriptor.hueBlue,
+              BitmapDescriptor.hueViolet,
             ),
             infoWindow: InfoWindow(
               title: '🎟️ ${event.title}',
@@ -1117,7 +1117,7 @@ class _MapLegend extends StatelessWidget {
       children: [
         _LegendDot(Colors.red, 'Yer'),
         SizedBox(width: 9),
-        _LegendDot(Colors.blue, 'Etkinlik'),
+        _LegendDot(Colors.purple, 'Etkinlik'),
         SizedBox(width: 9),
         _LegendDot(Colors.lightBlue, 'Benim'),
       ],
@@ -1204,7 +1204,7 @@ class _EventCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Card(
-    color: const Color(0xFF0D1B30),
+    color: const Color(0xFF161226),
     clipBehavior: Clip.antiAlias,
     child: InkWell(
       onTap: onOpen,
@@ -1214,10 +1214,10 @@ class _EventCard extends StatelessWidget {
           children: [
             const CircleAvatar(
               radius: 30,
-              backgroundColor: Color(0x33203C62),
+              backgroundColor: Color(0x334B2A8A),
               child: Icon(
                 Icons.confirmation_number_outlined,
-                color: Color(0xFF8ACDFF),
+                color: Color(0xFFB794F6),
                 size: 28,
               ),
             ),
@@ -1239,7 +1239,7 @@ class _EventCard extends StatelessWidget {
                   Text(
                     '${event.typeLabel} • $dateLabel',
                     style: const TextStyle(
-                      color: Color(0xFF8ACDFF),
+                      color: Color(0xFFB794F6),
                       fontWeight: FontWeight.w700,
                       fontSize: 12,
                     ),
@@ -1497,7 +1497,7 @@ class _UserPointCard extends StatelessWidget {
         children: [
           const CircleAvatar(
             radius: 30,
-            backgroundColor: Color(0x2237E3D0),
+            backgroundColor: const Color(0xFF0D1B30),
             child: Icon(
               Icons.person_pin_circle_outlined,
               color: Color(0xFF62E6D2),

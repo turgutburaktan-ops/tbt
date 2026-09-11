@@ -348,7 +348,7 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
           markerId: MarkerId('nearby_${spot.id}'),
           position: LatLng(spot.latitude, spot.longitude),
           icon: BitmapDescriptor.defaultMarkerWithHue(
-            BitmapDescriptor.hueBlue,
+            BitmapDescriptor.hueViolet,
           ),
           infoWindow: InfoWindow(
             title: spot.name,

@@ -476,7 +476,7 @@ class _MeetupCardState extends State<_MeetupCard> {
                 height: 42,
                 decoration: const BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Color(0x22285F8C),
+                  color: Color(0x228B5CF6),
                 ),
                 child: const Icon(
                   Icons.people_alt_outlined,
@@ -650,7 +650,7 @@ class _Shell extends StatelessWidget {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: const Color(0x22285F8C),
+                  color: const Color(0x228B5CF6),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(icon, color: const Color(0xFFB7BCC2)),

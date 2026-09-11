@@ -245,7 +245,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           borderRadius: BorderRadius.circular(24),
           gradient: selected
               ? const LinearGradient(
-                  colors: [Color(0xFF43D5D0), Color(0xFF285F8C)],
+                  colors: [Color(0xFF43D5D0), Color(0xFF7C5CFF)],
                 )
               : null,
           color: selected ? null : const Color(0xFF151719),
@@ -314,7 +314,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   fallbackStoragePaths: FirebaseMediaImage.avatarPaths(actorId),
                   fit: BoxFit.cover,
                   errorWidget: const ColoredBox(
-                    color: Color(0xFF1A1D20),
+                    color: Color(0xFF0D1B30),
                     child: Icon(Icons.person_rounded, color: Colors.white54),
                   ),
                 ),
@@ -413,7 +413,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 width: 8,
                 height: 8,
                 decoration: const BoxDecoration(
-                  color: Color(0xFF285F8C),
+                  color: Color(0xFF8066FF),
                   shape: BoxShape.circle,
                 ),
               ),
