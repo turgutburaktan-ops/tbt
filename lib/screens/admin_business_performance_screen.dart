@@ -97,7 +97,7 @@ class _AdminBusinessPerformanceScreenState
                         padding: const EdgeInsets.all(18),
                         decoration: BoxDecoration(
                           gradient: const LinearGradient(
-                            colors: [Color(0xFF10262B), Color(0xFF181426), Color(0xFF111217)],
+                            colors: [Color(0xFF10262B), Color(0xFF0D1B30), Color(0xFF111217)],
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                           ),
@@ -219,7 +219,7 @@ class _DailyPerformance extends StatelessWidget {
               child: Column(mainAxisAlignment: MainAxisAlignment.end, children: [
                 Text('$value', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800)),
                 const SizedBox(height: 4),
-                Container(height: 12 + 60 * value / maxValue, decoration: BoxDecoration(gradient: const LinearGradient(colors: [AppColors.cyan, Color(0xFF7456E8)], begin: Alignment.bottomCenter, end: Alignment.topCenter), borderRadius: BorderRadius.circular(8))),
+                Container(height: 12 + 60 * value / maxValue, decoration: BoxDecoration(gradient: const LinearGradient(colors: [AppColors.cyan, Color(0xFF285F8C)], begin: Alignment.bottomCenter, end: Alignment.topCenter), borderRadius: BorderRadius.circular(8))),
                 const SizedBox(height: 5),
                 Text(label.length >= 10 ? label.substring(8, 10) : label, style: const TextStyle(color: Colors.white54, fontSize: 10)),
               ]),

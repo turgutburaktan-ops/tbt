@@ -217,7 +217,7 @@ class _MapScreenState extends State<MapScreen> {
             markerId: MarkerId('event_${event.id}'),
             position: position,
             icon: BitmapDescriptor.defaultMarkerWithHue(
-              BitmapDescriptor.hueViolet,
+              BitmapDescriptor.hueBlue,
             ),
             infoWindow: InfoWindow(
               title: '🎟️ ${event.title}',
@@ -1117,7 +1117,7 @@ class _MapLegend extends StatelessWidget {
       children: [
         _LegendDot(Colors.red, 'Yer'),
         SizedBox(width: 9),
-        _LegendDot(Colors.purple, 'Etkinlik'),
+        _LegendDot(Colors.blue, 'Etkinlik'),
         SizedBox(width: 9),
         _LegendDot(Colors.lightBlue, 'Benim'),
       ],
@@ -1204,7 +1204,7 @@ class _EventCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Card(
-    color: const Color(0xFF161226),
+    color: const Color(0xFF0D1B30),
     clipBehavior: Clip.antiAlias,
     child: InkWell(
       onTap: onOpen,
@@ -1214,10 +1214,10 @@ class _EventCard extends StatelessWidget {
           children: [
             const CircleAvatar(
               radius: 30,
-              backgroundColor: Color(0x334B2A8A),
+              backgroundColor: Color(0x33203C62),
               child: Icon(
                 Icons.confirmation_number_outlined,
-                color: Color(0xFFB794F6),
+                color: Color(0xFF8ACDFF),
                 size: 28,
               ),
             ),
@@ -1239,7 +1239,7 @@ class _EventCard extends StatelessWidget {
                   Text(
                     '${event.typeLabel} • $dateLabel',
                     style: const TextStyle(
-                      color: Color(0xFFB794F6),
+                      color: Color(0xFF8ACDFF),
                       fontWeight: FontWeight.w700,
                       fontSize: 12,
                     ),

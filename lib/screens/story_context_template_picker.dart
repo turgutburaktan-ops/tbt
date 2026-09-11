@@ -458,7 +458,7 @@ class _TemplatePreview extends StatelessWidget {
     if (id.startsWith('event_')) return const Color(0xFFFF8A65);
     if (id.startsWith('venue_')) return const Color(0xFFFFC857);
     if (id.startsWith('spot_')) return const Color(0xFF45D6C8);
-    return const Color(0xFF9A7CFF);
+    return const Color(0xFF8ACDFF);
   }
 }
 

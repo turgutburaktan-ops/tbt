@@ -10,7 +10,7 @@ import 'post_sharing_actions.dart';
 import 'share_recipient_picker.dart';
 
 const _tbtGradient = LinearGradient(
-  colors: [Color(0xFF38E8FF), Color(0xFF4A7DFF), Color(0xFF9B4DFF)],
+  colors: [Color(0xFF38E8FF), Color(0xFF4A7DFF), Color(0xFF285F8C)],
   begin: Alignment.topLeft,
   end: Alignment.bottomRight,
 );
@@ -57,6 +57,7 @@ class ContentEngagementBar extends StatelessWidget {
       return;
     }
     final controller = TextEditingController();
+    var sending = false;
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -67,7 +68,6 @@ class ContentEngagementBar extends StatelessWidget {
       ),
       builder: (sheetContext) => StatefulBuilder(
         builder: (context, setSheetState) {
-          var sending = false;
           Future<void> sendComment() async {
             final text = controller.text.trim();
             if (text.isEmpty || sending) return;
@@ -331,7 +331,16 @@ class ContentEngagementBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const accent = Color(0xFFB7BCC2);
-    return Wrap(
+    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      stream: contentId.trim().isEmpty ? null :
+          ContentEngagementService.instance.comments(collection, contentId),
+      builder: (context, snapshot) {
+        final docs = snapshot.hasError ? null : snapshot.data?.docs;
+        final first = docs != null && docs.isNotEmpty ? docs.first.data() : null;
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [Wrap(
       alignment: WrapAlignment.spaceBetween,
       crossAxisAlignment: WrapCrossAlignment.center,
       children: [
@@ -431,28 +440,22 @@ class ContentEngagementBar extends StatelessWidget {
             },
           ),
         ),
-        StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-          stream: ContentEngagementService.instance.comments(
-            collection,
-            contentId,
-          ),
-          builder: (_, snapshot) {
-            final hasComments = (snapshot.data?.docs.isNotEmpty ?? false);
-            return IconButton(
-              tooltip: 'Yorumlar',
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              tooltip: docs == null ? 'Yorumlar' : '${docs.length} yorum',
               visualDensity: VisualDensity.compact,
-              onPressed: contentId.trim().isEmpty
-                  ? null
-                  : () => _comments(context),
-              icon: hasComments
+              onPressed: contentId.trim().isEmpty ? null : () => _comments(context),
+              icon: docs != null && docs.isNotEmpty
                   ? const _GradientIcon(Icons.chat_bubble_rounded, size: 25)
-                  : const Icon(
-                      Icons.chat_bubble_outline_rounded,
-                      size: 25,
-                      color: Colors.white,
-                    ),
-            );
-          },
+                  : const Icon(Icons.chat_bubble_outline_rounded,
+                      size: 25, color: Colors.white),
+            ),
+            if (docs != null)
+              Text('${docs.length}', style: const TextStyle(
+                color: Colors.white, fontSize: 12, fontWeight: FontWeight.w800)),
+          ],
         ),
         if (showTagAction)
           IconButton(
@@ -518,6 +521,32 @@ class ContentEngagementBar extends StatelessWidget {
           icon: const Icon(Icons.send_outlined, size: 26),
         ),
       ],
+    ),
+    if (first != null)
+      Padding(
+        padding: const EdgeInsets.fromLTRB(8, 2, 8, 10),
+        child: InkWell(
+          onTap: () => _comments(context),
+          borderRadius: BorderRadius.circular(8),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            child: Text.rich(
+              TextSpan(children: [
+                TextSpan(text: '${first['userName'] ?? 'Kullanıcı'}  ',
+                    style: const TextStyle(fontWeight: FontWeight.w800,
+                        color: Colors.white)),
+                TextSpan(text: (first['text'] ?? '').toString()),
+              ]),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(color: Colors.white70, fontSize: 13),
+            ),
+          ),
+        ),
+      ),
+    ],
+    );
+    },
     );
   }
 }

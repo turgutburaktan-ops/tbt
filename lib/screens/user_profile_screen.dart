@@ -161,7 +161,7 @@ class UserProfileScreen extends StatelessWidget {
                                               ? const LinearGradient(
                                                   colors: [
                                                     Color(0xFF42F5E9),
-                                                    Color(0xFF8B5CF6),
+                                                    Color(0xFF285F8C),
                                                   ],
                                                 )
                                               : null,

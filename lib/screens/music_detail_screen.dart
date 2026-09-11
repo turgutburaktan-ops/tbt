@@ -157,7 +157,7 @@ class _MusicDetailScreenState extends State<MusicDetailScreen> {
               colors: <Color>[
                 Color(0xFF18D8EE),
                 Color(0xFF5D58F5),
-                Color(0xFFA63DFF),
+                Color(0xFF285F8C),
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,

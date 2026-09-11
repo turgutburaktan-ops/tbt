@@ -245,7 +245,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           borderRadius: BorderRadius.circular(24),
           gradient: selected
               ? const LinearGradient(
-                  colors: [Color(0xFF43D5D0), Color(0xFF7C5CFF)],
+                  colors: [Color(0xFF43D5D0), Color(0xFF285F8C)],
                 )
               : null,
           color: selected ? null : const Color(0xFF151719),
@@ -413,7 +413,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 width: 8,
                 height: 8,
                 decoration: const BoxDecoration(
-                  color: Color(0xFF8066FF),
+                  color: Color(0xFF285F8C),
                   shape: BoxShape.circle,
                 ),
               ),

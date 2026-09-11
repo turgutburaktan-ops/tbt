@@ -485,7 +485,7 @@ class _MissionCard extends StatelessWidget {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(16),
                   gradient: const LinearGradient(
-                    colors: [Color(0xFF151B24), Color(0xFF191226)],
+                    colors: [Color(0xFF151B24), Color(0xFF0D1B30)],
                   ),
                   border: Border.all(color: AppColors.border),
                 ),

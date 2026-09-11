@@ -204,7 +204,7 @@ class _StoryMusicPickerState extends State<StoryMusicPicker> {
                     selected: item == _category,
                     label: Text(item),
                     onSelected: (_) => setState(() => _category = item),
-                    selectedColor: const Color(0xFF6947F5),
+                    selectedColor: const Color(0xFF285F8C),
                     backgroundColor: const Color(0xFF15181E),
                     side: BorderSide.none,
                   );
@@ -289,7 +289,7 @@ class _TrackTile extends StatelessWidget {
       height: 52,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
-        gradient: const LinearGradient(colors: <Color>[Color(0xFF38E8FF), Color(0xFF4A7DFF), Color(0xFF9B4DFF)]),
+        gradient: const LinearGradient(colors: <Color>[Color(0xFF38E8FF), Color(0xFF4A7DFF), Color(0xFF285F8C)]),
       ),
       child: const Icon(Icons.music_note_rounded, color: Colors.white),
     ),
@@ -376,7 +376,7 @@ class _ClipSheetState extends State<_ClipSheet> {
         Row(children: <Widget>[
           Container(
             width: 58, height: 58,
-            decoration: BoxDecoration(borderRadius: BorderRadius.circular(14), gradient: const LinearGradient(colors: <Color>[Color(0xFF38E8FF), Color(0xFF4A7DFF), Color(0xFF9B4DFF)])),
+            decoration: BoxDecoration(borderRadius: BorderRadius.circular(14), gradient: const LinearGradient(colors: <Color>[Color(0xFF38E8FF), Color(0xFF4A7DFF), Color(0xFF285F8C)])),
             child: const Icon(Icons.music_note_rounded),
           ),
           const SizedBox(width: 12),
@@ -402,7 +402,7 @@ class _ClipSheetState extends State<_ClipSheet> {
           height: 54,
           padding: const EdgeInsets.symmetric(horizontal: 6),
           decoration: BoxDecoration(color: const Color(0xFF15181E), borderRadius: BorderRadius.circular(18)),
-          child: Row(children: List<Widget>.generate(24, (i) => Expanded(child: Center(child: Container(width: 3, height: 10 + ((i * 7) % 30).toDouble(), decoration: BoxDecoration(color: i.isEven ? const Color(0xFF38E8FF) : const Color(0xFF9B4DFF), borderRadius: BorderRadius.circular(4))))))),
+          child: Row(children: List<Widget>.generate(24, (i) => Expanded(child: Center(child: Container(width: 3, height: 10 + ((i * 7) % 30).toDouble(), decoration: BoxDecoration(color: i.isEven ? const Color(0xFF38E8FF) : const Color(0xFF285F8C), borderRadius: BorderRadius.circular(4))))))),
         ),
         Slider(
           value: maxStart == 0 ? 0 : _startMs.clamp(0, maxStart.toDouble()).toDouble(),
@@ -450,7 +450,7 @@ class _ClipSheetState extends State<_ClipSheet> {
         SizedBox(
           height: 52,
           child: DecoratedBox(
-            decoration: BoxDecoration(gradient: const LinearGradient(colors: <Color>[Color(0xFF38E8FF), Color(0xFF4A7DFF), Color(0xFF9B4DFF)]), borderRadius: BorderRadius.circular(18)),
+            decoration: BoxDecoration(gradient: const LinearGradient(colors: <Color>[Color(0xFF38E8FF), Color(0xFF4A7DFF), Color(0xFF285F8C)]), borderRadius: BorderRadius.circular(18)),
             child: FilledButton(
               style: FilledButton.styleFrom(backgroundColor: Colors.transparent, shadowColor: Colors.transparent),
               onPressed: () => Navigator.pop(context, StoryMusicSelection(

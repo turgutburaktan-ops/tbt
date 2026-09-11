@@ -194,7 +194,7 @@ class _AddStoryCircle extends StatelessWidget {
                           colors: [
                             Color(0xFF39E7E0),
                             Color(0xFF6977FF),
-                            Color(0xFFB65CFF),
+                            Color(0xFF285F8C),
                           ],
                         )
                       : null,
@@ -298,7 +298,7 @@ class _StoryCircle extends StatelessWidget {
                         colors: [
                           Color(0xFF39E7E0),
                           Color(0xFF6977FF),
-                          Color(0xFFB65CFF),
+                          Color(0xFF285F8C),
                         ],
                       ),
               ),
