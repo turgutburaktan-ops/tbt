@@ -1,3 +1,4 @@
+import 'today_plan_screen.dart';
 import '../services/video_audio_session.dart';
 import '../widgets/playback_indexed_stack.dart';
 
@@ -334,6 +335,23 @@ class _HomeFeedHubState extends State<_HomeFeedHub> {
     child: Column(
       mainAxisSize: MainAxisSize.min,
       children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(12, 4, 12, 6),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(16),
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TodayPlanScreen())),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(color: const Color(0xFF0D1B30), borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.borderAccent)),
+              child: const Row(children: [Icon(Icons.explore_outlined, color: AppColors.cyan), SizedBox(width: 10),
+                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text('Bugün ne yapalım?', style: TextStyle(fontWeight: FontWeight.w900)),
+                  Text('Sürene ve bütçene göre bir gün planla', style: TextStyle(fontSize: 11, color: AppColors.textMuted)),
+                ])), Icon(Icons.chevron_right),
+              ]),
+            ),
+          ),
+        ),
         const StoryStrip(),
         Padding(
           padding: const EdgeInsets.fromLTRB(10, 0, 10, 2),
@@ -748,11 +766,27 @@ class _PlanningHub extends StatelessWidget {
             const SizedBox(height: 14),
             _PlanningActionCard(
               icon: Icons.auto_awesome_rounded,
-              title: 'Akıllı Plan Oluştur',
+              title: 'Bugün ne yapalım?',
               subtitle:
-                  'Şehir, süre ve ilgi alanına göre rotanı TBT hazırlasın.',
+                  'Süre, kişi sayısı ve bütçeyle seçeneklerini karşılaştır.',
               accent: AppColors.cyan,
               featured: true,
+              onTap: () => _open(context, const TodayPlanScreen()),
+            ),
+            const SizedBox(height: 10),
+            _PlanningActionCard(
+              icon: Icons.public_rounded,
+              title: 'Türkiye’yi keşfet',
+              subtitle: '81 ilde bir sonraki gezini planla; durakları kaydet.',
+              accent: AppColors.cyan,
+              onTap: () => _open(context, const TodayPlanScreen(exploreTurkey: true)),
+            ),
+            const SizedBox(height: 10),
+            _PlanningActionCard(
+              icon: Icons.tune_rounded,
+              title: 'Ayrıntılı akıllı rota',
+              subtitle: 'İlgi alanı, bölge ve konaklama tercihleriyle planla.',
+              accent: AppColors.violetBright,
               onTap: () => _openAuthenticated(context, const SmartPlanScreen()),
             ),
             const SizedBox(height: 10),

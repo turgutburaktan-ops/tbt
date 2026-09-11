@@ -37,11 +37,15 @@ extension RouteTravelModeX on RouteTravelMode {
 class RoutePlannerScreen extends StatefulWidget {
   final PhotoSpot? initialSpot;
   final List<PhotoSpot> initialSpots;
+  final bool initialUseCurrentLocation;
+  final String initialTransport;
 
   const RoutePlannerScreen({
     super.key,
     this.initialSpot,
     this.initialSpots = const <PhotoSpot>[],
+    this.initialUseCurrentLocation = true,
+    this.initialTransport = 'Araç',
   });
 
   @override
@@ -78,6 +82,8 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
   @override
   void initState() {
     super.initState();
+    _useCurrentLocation = widget.initialUseCurrentLocation;
+    _travelMode = RouteTravelMode.values.firstWhere((v) => v.label == widget.initialTransport, orElse: () => RouteTravelMode.driving);
     final initialIds = <String>{};
     for (final spot in widget.initialSpots) {
       if (initialIds.add(spot.id)) _stops.add(spot);
@@ -97,7 +103,7 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
         _allSpots = spots;
         _loading = false;
       });
-      await _readCurrentLocation(requestIfNeeded: false);
+      if (widget.initialUseCurrentLocation) await _readCurrentLocation(requestIfNeeded: false);
       await _fitRoute();
     } catch (_) {
       if (mounted) setState(() => _loading = false);

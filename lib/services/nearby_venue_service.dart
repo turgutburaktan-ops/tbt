@@ -228,9 +228,13 @@ class NearbyVenueService {
     required double longitude,
     int radiusMeters = cityScaleRadiusMeters,
     bool forceRefresh = false,
+    bool useSelectedCity = true,
     void Function(List<NearbyVenue>)? onUpdate,
   }) {
-    final state = _snapshotState(latitude, longitude);
+    final state = useSelectedCity ? _snapshotState(latitude, longitude) : _VenueQueryState(
+      cityName: null, latitude: latitude, longitude: longitude,
+      south: null, west: null, north: null, east: null, selectedCity: false,
+    );
     final key = _cacheKeyForState(category, state, radiusMeters);
     if (onUpdate != null) {
       (_listeners[key] ??= <void Function(List<NearbyVenue>)>{}).add(onUpdate);

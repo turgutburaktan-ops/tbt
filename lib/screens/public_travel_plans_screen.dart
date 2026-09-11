@@ -73,6 +73,8 @@ class _PublicTravelPlansScreenState extends State<PublicTravelPlansScreen> {
         distanceKm: plan.distanceKm,
         travelMinutes: plan.travelMinutes,
         estimatedBudget: plan.estimatedBudget,
+        dayPlan: plan.dayPlan,
+        stopDetails: plan.stopSnapshots,
         weatherSummary: plan.weatherSummary,
       );
       if (mounted) {

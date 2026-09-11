@@ -20,6 +20,7 @@ class TravelPlan {
   final int travelMinutes;
   final int estimatedBudget;
   final String weatherSummary;
+  final Map<String, dynamic> dayPlan;
   final bool isPublic;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -44,6 +45,7 @@ class TravelPlan {
     this.travelMinutes = 0,
     this.estimatedBudget = 0,
     this.weatherSummary = '',
+    this.dayPlan = const {},
     this.isPublic = false,
     required this.createdAt,
     required this.updatedAt,
@@ -89,6 +91,7 @@ class TravelPlan {
       travelMinutes: (data['travelMinutes'] as num?)?.toInt() ?? 0,
       estimatedBudget: (data['estimatedBudget'] as num?)?.toInt() ?? 0,
       weatherSummary: (data['weatherSummary'] ?? '').toString(),
+      dayPlan: Map<String, dynamic>.from(data['dayPlan'] as Map? ?? {}),
       isPublic: data['isPublic'] == true,
       createdAt: readDate('createdAt'),
       updatedAt: readDate('updatedAt'),

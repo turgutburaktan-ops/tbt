@@ -83,6 +83,17 @@ class TravelPlanCollaborationService {
         });
   }
 
+  Future<void> proposeStopIfAbsent(String planId, String text, {required String spotId, required double latitude, required double longitude, required String city}) async {
+    final uid = _uid();
+    final proposal = _firestore.collection('travel_plans').doc(planId).collection('proposals').doc('today_${Uri.encodeComponent(spotId)}');
+    await _firestore.runTransaction((tx) async {
+      if ((await tx.get(proposal)).exists) return;
+      tx.set(proposal, {'authorId':uid,'text':text.length > 180 ? text.substring(0,180) : text,'spotId':spotId,
+        'latitude':latitude,'longitude':longitude,'city':city,'voterIds':<String>[],
+        'createdAt':FieldValue.serverTimestamp(),'updatedAt':FieldValue.serverTimestamp()});
+    });
+  }
+
   Future<void> setMeetingPoint({
     required String planId,
     required String label,
@@ -182,6 +193,7 @@ class TravelPlanCollaborationService {
       'distanceKm': plan.distanceKm,
       'travelMinutes': plan.travelMinutes,
       'estimatedBudget': plan.estimatedBudget,
+      'dayPlan': plan.dayPlan,
       'weatherSummary': plan.weatherSummary,
       'spotNames': plan.spotNames,
       'stopSnapshots': plan.stopSnapshots,

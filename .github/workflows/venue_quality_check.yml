@@ -6,6 +6,8 @@ on:
       - 'functions/venue_quality*'
       - 'functions/test/venue_quality*'
       - 'lib/**'
+      - 'test/day_plan_engine_test.dart'
+      - 'test/nearby_venue_loading_test.dart'
       - '.github/workflows/venue_quality_check.yml'
   workflow_dispatch:
 permissions:
@@ -27,3 +29,7 @@ jobs:
       - run: flutter pub get
       - name: Analyze venue quality screens
         run: flutter analyze --no-fatal-infos --no-fatal-warnings lib/services/venue_quality_service.dart lib/widgets/venue_quality_section.dart lib/widgets/venue_quality_badge.dart lib/screens/venue_quality_admin_screen.dart lib/widgets/venue_reviews_section.dart lib/screens/business_profile_screen.dart lib/widgets/nearby_places_view.dart lib/screens/admin_portal_screen.dart
+      - name: Analyze daily planning
+        run: flutter analyze --no-fatal-infos --no-fatal-warnings lib/services/day_plan_engine.dart lib/services/day_plan_service.dart lib/screens/today_plan_screen.dart lib/models/travel_plan.dart lib/services/travel_plan_service.dart lib/services/travel_plan_collaboration_service.dart lib/services/nearby_venue_service.dart lib/screens/travel_plan_detail_screen.dart lib/screens/travel_plans_screen.dart lib/screens/route_planner_screen.dart lib/screens/home_shell_v3.dart lib/screens/offline_travel_plans_screen.dart lib/screens/public_travel_plans_screen.dart
+      - name: Test route feasibility and city isolation
+        run: flutter test test/day_plan_engine_test.dart test/nearby_venue_loading_test.dart

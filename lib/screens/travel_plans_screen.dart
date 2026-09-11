@@ -9,7 +9,7 @@ import '../services/travel_plan_service.dart';
 import '../theme/app_theme.dart';
 import 'route_planner_screen.dart';
 import 'offline_travel_plans_screen.dart';
-import 'smart_plan_screen.dart';
+import 'today_plan_screen.dart';
 import 'travel_plan_detail_screen.dart';
 import 'travel_plan_invite_screen.dart';
 
@@ -34,7 +34,7 @@ class TravelPlansScreen extends StatelessWidget {
       ..hideCurrentSnackBar()
       ..showSnackBar(const SnackBar(content: Text('Rota hazırlanıyor…')));
     try {
-      final spots = await TravelPlanService.instance.resolveSpots(plan);
+      final spots = await TravelPlanService.instance.resolveRouteSpots(plan);
       if (!context.mounted) return;
       messenger.hideCurrentSnackBar();
       if (spots.isEmpty) {
@@ -46,7 +46,7 @@ class TravelPlansScreen extends StatelessWidget {
       await Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => RoutePlannerScreen(initialSpots: spots),
+          builder: (_) => RoutePlannerScreen(initialSpots: spots, initialUseCurrentLocation: plan.dayPlan.isEmpty, initialTransport: plan.transport),
         ),
       );
     } catch (_) {
@@ -110,7 +110,7 @@ class TravelPlansScreen extends StatelessWidget {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => const SmartPlanScreen()),
+          MaterialPageRoute(builder: (_) => const TodayPlanScreen()),
         ),
         icon: const Icon(Icons.add_rounded),
         label: const Text('Yeni plan'),

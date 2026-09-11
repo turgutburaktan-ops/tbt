@@ -1,4 +1,5 @@
 import 'creator_service.dart';
+import 'day_plan_engine.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -51,6 +52,8 @@ class TravelPlanService {
     int estimatedBudget = 0,
     String weatherSummary = '',
     bool isPublic = false,
+    Map<String, dynamic> dayPlan = const {},
+    List<Map<String, dynamic>> stopDetails = const [],
   }) async {
     final user = _requireUser();
     final reference = _firestore.collection('travel_plans').doc();
@@ -64,6 +67,7 @@ class TravelPlanService {
       'area': area,
       'mealPreferences': mealPreferences,
       'durationHours': durationHours,
+      if (dayPlan.isNotEmpty) 'dayPlan': dayPlan,
       'budget': budget,
       'transport': transport,
       'interests': interests,
@@ -79,6 +83,7 @@ class TravelPlanService {
               'longitude': spot.longitude,
               'category': spot.category,
               'bestTime': spot.bestTime,
+              ...{for (final detail in stopDetails.where((d) => d['id'] == spot.id)) ...detail},
             },
           )
           .toList(growable: false),
@@ -270,6 +275,14 @@ class TravelPlanService {
           'rating': rating,
           'updatedAt': FieldValue.serverTimestamp(),
         });
+  }
+
+  Future<List<PhotoSpot>> resolveRouteSpots(TravelPlan plan) async {
+    final stops = await resolveSpots(plan);
+    final lat = (plan.dayPlan['originLatitude'] as num?)?.toDouble();
+    final lon = (plan.dayPlan['originLongitude'] as num?)?.toDouble();
+    if (lat == null || lon == null || plan.dayPlan['returnIncluded'] != true) return stops;
+    return dayPlanRouteStops(stops, lat, lon, plan.city);
   }
 
   Future<List<PhotoSpot>> resolveSpots(TravelPlan plan) async {

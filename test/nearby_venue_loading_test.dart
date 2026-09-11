@@ -13,6 +13,19 @@ const key = 'city_venues_v9_cafe_80000_387_392_nearby';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
+  test('explicit planning coordinates ignore the selected city without changing it', () async {
+    SharedPreferences.setMockInitialValues({});
+    double? queriedLat, queriedLon;
+    final service = NearbyVenueService.forTesting(
+      clientFactory: () => MockClient((_) async => http.Response('{"elements":[]}', 200)),
+      businessLoader: (_, lat, lon, __) async { queriedLat=lat; queriedLon=lon; return []; },
+    );
+    service.selectCity(name:'İstanbul',latitude:41.0082,longitude:28.9784);
+    await service.nearby(category:NearbyVenueCategory.cafe,latitude:38.6748,longitude:39.2225,useSelectedCity:false);
+    expect(queriedLat,38.6748); expect(queriedLon,39.2225);
+    expect(service.selectedCityName,'İstanbul');
+  });
+
   test('disk cache is published while business refresh is pending', () async {
     SharedPreferences.setMockInitialValues({key: jsonEncode({
       'savedAt': DateTime.now().millisecondsSinceEpoch, 'venues': [venue.toJson()],
