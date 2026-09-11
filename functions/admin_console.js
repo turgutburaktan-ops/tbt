@@ -210,7 +210,10 @@ exports.sendAdminBroadcast = onCall({region: 'europe-west1'}, async (request) =>
       return {ok: true, broadcastId: ref.id, status: job.status, recipientCount: job.recipientCount};
     }
     tx.create(ref, {title, body, imagePath, imageUrl, sentBy: adminUid, status: 'queued',
-      recipientCount: 0, cursor: null, createdAt: FieldValue.serverTimestamp()});
+      recipientCount: 0, pushEligibleCount: 0, pushSuppressedCount: 0,
+      pushSuccessCount: 0, pushFailureCount: 0, noTokenRecipientCount: 0,
+      openedRecipientCount: 0,
+      cursor: null, createdAt: FieldValue.serverTimestamp()});
     return {ok: true, broadcastId: ref.id, status: 'queued', recipientCount: 0};
   });
 });

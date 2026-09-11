@@ -18,18 +18,23 @@ exports.deliverAdminBroadcast = onDocumentCreated({
       let query = db.collection('users').orderBy(FieldPath.documentId()).limit(200);
       if (job.cursor) query = query.startAfter(job.cursor);
       const users = await tx.get(query);
+      let pushEligible = 0;
       for (const user of users.docs) {
+        const pushAllowed = marketingPushAllowed(user.data());
+        if (pushAllowed) pushEligible++;
         tx.create(user.ref.collection('notifications').doc(`broadcast_${ref.id}`), {
           type: 'tbt_broadcast', title: job.title, body: job.body,
           imageUrl:job.imageUrl||'', imagePath:job.imagePath||'',
           sourceId: ref.id, actorId: job.sentBy, senderName: 'TBT',
-          pushAllowed: marketingPushAllowed(user.data()),
+          pushAllowed,
           read: false, createdAt: FieldValue.serverTimestamp(),
         });
       }
       const completed = users.size < 200;
       tx.update(ref, {status: completed ? 'completed' : 'sending',
         recipientCount: (job.recipientCount || 0) + users.size,
+        pushEligibleCount: (job.pushEligibleCount || 0) + pushEligible,
+        pushSuppressedCount: (job.pushSuppressedCount || 0) + users.size - pushEligible,
         cursor: users.docs.at(-1)?.id || job.cursor,
         updatedAt: FieldValue.serverTimestamp(),
         ...(completed ? {completedAt: FieldValue.serverTimestamp()} : {}),

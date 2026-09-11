@@ -27,6 +27,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     'social_event_join',
     'event_cancelled',
     'social_event_cancelled',
+    'event_updated',
+    'event_time_changed',
+    'event_reminder',
+    'reengagement',
     'community_event',
     'event_memory',
     'campus_digest',
@@ -64,6 +68,14 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       case 'event_cancelled':
       case 'social_event_cancelled':
         return Icons.event_busy_rounded;
+      case 'event_updated':
+      case 'event_time_changed':
+        return Icons.update_rounded;
+      case 'event_reminder':
+        return Icons.alarm_rounded;
+      case 'reengagement':
+      case 'weekly_digest':
+        return Icons.explore_rounded;
       case 'community_event':
         return Icons.groups_2_rounded;
       case 'event_memory':
@@ -143,6 +155,12 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           builder: (_) => EventDeepLinkScreen(eventId: sourceId),
         ),
       );
+      return;
+    }
+    if (item.type == 'reengagement' ||
+        item.type == 'weekly_digest' ||
+        item.type == 'retention') {
+      await Navigator.pushNamed(context, '/campus');
       return;
     }
     if (item.type.startsWith('post_') && sourceId.isNotEmpty) {

@@ -383,7 +383,9 @@ class PushNotificationService with WidgetsBindingObserver {
       );
       return;
     }
-    if (type == 'reengagement') {
+    if (type == 'reengagement' ||
+        type == 'weekly_digest' ||
+        type == 'retention') {
       navigator.pushNamed('/campus');
     }
   }
