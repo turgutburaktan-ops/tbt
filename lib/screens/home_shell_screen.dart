@@ -453,15 +453,6 @@ class _FeedHubState extends State<_FeedHub> {
 class _MissionCard extends StatelessWidget {
   const _MissionCard();
 
-  String _levelName(int xp) {
-    if (xp >= 5000) return 'Türkiye Kaşifi';
-    if (xp >= 2500) return 'Usta Kaşif';
-    if (xp >= 1200) return 'Şehir Rehberi';
-    if (xp >= 500) return 'Fotoğraf Avcısı';
-    if (xp >= 150) return 'Kaşif';
-    return 'Gezgin';
-  }
-
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
@@ -474,8 +465,14 @@ class _MissionCard extends StatelessWidget {
           .snapshots(),
       builder: (context, snapshot) {
         final data = snapshot.data?.data() ?? const <String, dynamic>{};
-        final xp = (data['xp'] as num?)?.toInt() ?? 0;
-        final level = (data['levelName'] ?? _levelName(xp)).toString();
+        final total = (data['reputationTotal'] as num?)?.toInt() ?? 0;
+        final rawRoles = data['accountTypes'];
+        final roles = rawRoles is Map
+            ? Map<String, dynamic>.from(rawRoles)
+            : const <String, dynamic>{};
+        final activeCount = roles.values
+            .where((value) => value is Map && value['active'] == true)
+            .length;
         return Padding(
           padding: const EdgeInsets.fromLTRB(14, 0, 14, 8),
           child: Material(
@@ -502,7 +499,7 @@ class _MissionCard extends StatelessWidget {
                         gradient: AppColors.accentGradient,
                       ),
                       alignment: Alignment.center,
-                      child: const Text('🔥', style: TextStyle(fontSize: 22)),
+                      child: const Icon(Icons.route_rounded, color: Colors.white),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -510,7 +507,7 @@ class _MissionCard extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Text(
-                            'Bugünün Görevi',
+                            'TBT Yolculuğum',
                             style: TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w900,
@@ -518,7 +515,7 @@ class _MissionCard extends StatelessWidget {
                           ),
                           const SizedBox(height: 3),
                           const Text(
-                            'Bugün bir fotoğraf veya video paylaş • +30 XP',
+                            'Creator, Kâşif, Sosyal ve Gurme ilerlemeni gör',
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
@@ -528,7 +525,7 @@ class _MissionCard extends StatelessWidget {
                           ),
                           const SizedBox(height: 7),
                           Text(
-                            '$level • $xp XP',
+                            '$activeCount hesap türü • $total gerçek katkı puanı',
                             style: const TextStyle(
                               color: AppColors.cyan,
                               fontSize: 10.8,

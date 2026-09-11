@@ -68,7 +68,7 @@ class _EventsHubScreenState extends State<EventsHubScreen> {
                     ),
                     const SizedBox(width: 8),
                     Tooltip(
-                      message: 'Etkinlik oluştur • +50 XP',
+                      message: 'Etkinlik oluştur',
                       child: Material(
                         color: AppColors.surfaceStrong,
                         borderRadius: BorderRadius.circular(13),
@@ -93,7 +93,7 @@ class _EventsHubScreenState extends State<EventsHubScreen> {
                                 Positioned(
                                   right: 2,
                                   top: 2,
-                                  child: _XpBadge(text: '+50'),
+                                  child: _XpBadge(text: 'Yeni'),
                                 ),
                               ],
                             ),
@@ -129,7 +129,7 @@ class _EventsHubScreenState extends State<EventsHubScreen> {
                           SizedBox(width: 7),
                           Expanded(
                             child: Text(
-                              'Etkinliğe katıl +15 XP  •  Etkinlik oluştur +50 XP',
+                              'Gerçekleşen etkinlik ve doğrulanmış katılım Sosyal puanı kazandırır',
                               style: TextStyle(
                                 fontSize: 11.5,
                                 fontWeight: FontWeight.w800,

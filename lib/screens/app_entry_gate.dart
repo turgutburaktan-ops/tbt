@@ -3,7 +3,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../widgets/retention_hub_quick_entry.dart';
-import '../widgets/daily_goals_prompt.dart';
 import 'account_security_gate_v2.dart';
 import 'app_onboarding_screen.dart';
 import 'frozen_account_screen.dart';
@@ -51,12 +50,8 @@ class AppEntryGate extends StatelessWidget {
             } else if (gate.onboardingRequired && !gate.onboardingCompleted) {
               next = const StudentOnboardingScreen();
             } else {
-              next = DailyGoalsPrompt(
-                key: ValueKey(user.uid),
-                userId: user.uid,
-                child: const RetentionHubQuickEntry(
-                  child: HomeScreen(),
-                ),
+              next = const RetentionHubQuickEntry(
+                child: HomeScreen(),
               );
             }
 

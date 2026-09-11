@@ -6,6 +6,7 @@ const {getFirestore, FieldValue, Timestamp} = require('firebase-admin/firestore'
 const {getMessaging} = require('firebase-admin/messaging');
 const {marketingPushAllowed} = require('./broadcast_policy');
 const {preferenceKeyForType, pushPreferenceAllowed} = require('./notification_policy');
+const {_awardReputation: awardReputation} = require('./reputation_system');
 
 initializeApp();
 
@@ -335,81 +336,39 @@ exports.sendReengagementNotifications = onSchedule(
   }
 );
 
-function levelForXp(xp) {
-  if (xp >= 6000) return {level: 6, title: 'Türkiye Kaşifi'};
-  if (xp >= 3000) return {level: 5, title: 'Usta Kaşif'};
-  if (xp >= 1500) return {level: 4, title: 'Şehir Rehberi'};
-  if (xp >= 600) return {level: 3, title: 'Fotoğraf Avcısı'};
-  if (xp >= 200) return {level: 2, title: 'Kaşif'};
-  return {level: 1, title: 'Gezgin'};
-}
-
-function periodKeys(now = new Date()) {
-  const parts = new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'Europe/Istanbul', year: 'numeric', month: '2-digit', day: '2-digit'
-  }).format(now);
-  const dayKey = parts.replaceAll('-', '');
-  const local = new Date(now.toLocaleString('en-US', {timeZone: 'Europe/Istanbul'}));
-  const day = local.getDay() || 7;
-  local.setDate(local.getDate() - day + 1);
-  const weekKey = new Intl.DateTimeFormat('en-CA', {
-    year: 'numeric', month: '2-digit', day: '2-digit'
-  }).format(local).replaceAll('-', '');
-  return {dayKey, weekKey};
-}
-
-async function awardXp({userId, points, action, sourceId, label}) {
-  if (!userId || !sourceId || points <= 0) return;
-  const db = getFirestore();
-  const userRef = db.collection('users').doc(userId);
-  const rewardRef = userRef.collection('xp_events').doc(`${action}_${sourceId}`);
-  const {dayKey, weekKey} = periodKeys();
-
-  await db.runTransaction(async (tx) => {
-    const [rewardSnap, userSnap] = await Promise.all([tx.get(rewardRef), tx.get(userRef)]);
-    if (rewardSnap.exists) return;
-    const user = userSnap.data() || {};
-    const oldXp = Number(user.xp || 0);
-    const newXp = oldXp + points;
-    const oldDailyKey = String(user.dailyXpKey || '');
-    const oldWeeklyKey = String(user.weeklyXpKey || '');
-    const dailyXp = (oldDailyKey === dayKey ? Number(user.dailyXp || 0) : 0) + points;
-    const weeklyXp = (oldWeeklyKey === weekKey ? Number(user.weeklyXp || 0) : 0) + points;
-    const dailyActions = oldDailyKey === dayKey ? {...(user.dailyActions || {})} : {};
-    const weeklyActions = oldWeeklyKey === weekKey ? {...(user.weeklyActions || {})} : {};
-    dailyActions[action] = Number(dailyActions[action] || 0) + 1;
-    weeklyActions[action] = Number(weeklyActions[action] || 0) + 1;
-    const rank = levelForXp(newXp);
-
-    tx.set(userRef, {
-      xp: newXp,
-      level: rank.level,
-      levelTitle: rank.title,
-      dailyXp,
-      dailyXpKey: dayKey,
-      dailyActions,
-      weeklyXp,
-      weeklyXpKey: weekKey,
-      weeklyActions,
-      gamificationUpdatedAt: FieldValue.serverTimestamp(),
-    }, {merge: true});
-    tx.set(rewardRef, {
-      points, action, sourceId, label,
-      createdAt: FieldValue.serverTimestamp(),
-    });
-  });
-}
-
 exports.awardPostXp = onDocumentCreated('posts/{postId}', async (event) => {
   const data = event.data?.data() || {};
   if (String(data.sourceType || 'post') === 'event_memory') return;
-  await awardXp({
-    userId: String(data.userId || ''),
-    points: 10,
-    action: 'post',
-    sourceId: event.params.postId,
-    label: 'Paylaşım yaptı',
-  });
+  const userId = String(data.userId || '');
+  const postId = event.params.postId;
+  const mediaType = String(data.mediaType || 'image');
+  const awards = [awardReputation({
+    userId, role: 'creator', points: mediaType === 'video' ? 8 : 5,
+    action: 'post', sourceId: postId,
+    label: mediaType === 'video' ? 'Özgün Reels paylaştı' : 'Özgün gönderi paylaştı',
+    stat: 'creatorContent',
+  })];
+  const hasLocation = data.latitude != null && data.longitude != null &&
+    Number.isFinite(Number(data.latitude)) && Number.isFinite(Number(data.longitude)) &&
+    String(data.spotName || '').trim();
+  if (hasLocation && !String(data.businessVenueKey || '').trim()) {
+    awards.push(awardReputation({
+      userId, role: 'explorer', points: 8, action: 'located_post', sourceId: postId,
+      label: 'Konumlu gezi paylaşımı yaptı', stat: 'explorerLocatedPosts', city: data.city,
+    }));
+  }
+  const venueKey = String(data.businessVenueKey || data.venueKey || '').trim();
+  if (venueKey) {
+    const venue = await getFirestore().doc(`business_venues/${venueKey}`).get();
+    if (venue.exists) {
+      awards.push(awardReputation({
+        userId, role: 'gourmet', points: 7, action: 'gourmet_post', sourceId: postId,
+        label: 'Mekândan fotoğraflı deneyim paylaştı',
+        stat: ['gourmetVenueContributions', 'gourmetPhotoReviews'], venueKey,
+      }));
+    }
+  }
+  await Promise.all(awards);
 });
 
 async function countMusicUsage(trackId) {
@@ -431,54 +390,50 @@ exports.countStoryMusicLinked = onDocumentUpdated('stories/{storyId}', async (ev
 
 exports.awardStoryXp = onDocumentCreated('stories/{storyId}', async (event) => {
   const data = event.data?.data() || {};
+  if (String(data.sharedPostId || '').trim()) return;
   await Promise.all([
-    awardXp({
+    awardReputation({
     userId: String(data.userId || data.ownerId || ''),
-    points: 5,
+    role: 'creator',
+    points: 3,
     action: 'story',
     sourceId: event.params.storyId,
-      label: 'Story paylaştı',
+      label: 'Özgün Story paylaştı',
+      stat: 'creatorStories',
     }),
     countMusicUsage(data.musicTrackId),
   ]);
 });
 
 exports.awardEventCreateXp = onDocumentCreated('social_events/{eventId}', async (event) => {
-  const data = event.data?.data() || {};
-  await awardXp({
-    userId: String(data.hostId || ''),
-    points: 50,
-    action: 'event_create',
-    sourceId: event.params.eventId,
-    label: 'Etkinlik oluşturdu',
-  });
+  // Etkinlik oluşturmak tek başına puan vermez. Gerçekleştiği, etkinlik anısı
+  // veya kullanılan bilet ile doğrulandığında Sosyal puanı kazanılır.
+  return;
 });
 
 exports.awardEventMemoryXp = onDocumentCreated('event_memories/{memoryId}', async (event) => {
   const data = event.data?.data() || {};
-  await awardXp({
-    userId: String(data.userId || ''),
-    points: 20,
-    action: 'event_memory',
-    sourceId: event.params.memoryId,
-    label: 'Etkinlik anısı ekledi',
-  });
+  const db = getFirestore();
+  const eventId = String(data.eventId || '');
+  const eventSnap = eventId ? await db.doc(`social_events/${eventId}`).get() : null;
+  const hostId = String(eventSnap?.data()?.hostId || '');
+  const awards = [awardReputation({
+    userId: String(data.userId || ''), role: 'social', points: 5,
+    action: 'event_memory', sourceId: event.params.memoryId,
+    label: 'Etkinlik anısı paylaştı', stat: 'socialMemories',
+  })];
+  if (hostId) awards.push(awardReputation({
+    userId: hostId, role: 'social', points: 25,
+    action: 'hosted_completed_event', sourceId: eventId,
+    label: 'Gerçekleşen etkinlik düzenledi', stat: 'socialHostedCompleted',
+  }));
+  await Promise.all(awards);
 });
 
 exports.awardEventJoinXp = onDocumentUpdated('social_events/{eventId}', async (event) => {
-  const before = event.data?.before?.data() || {};
-  const after = event.data?.after?.data() || {};
-  const beforeIds = new Set((before.participantIds || []).map(String));
-  const afterIds = new Set((after.participantIds || []).map(String));
-  const hostId = String(after.hostId || before.hostId || '');
-  const added = [...afterIds].filter((id) => id && id !== hostId && !beforeIds.has(id));
-  await Promise.all(added.map((userId) => awardXp({
-    userId,
-    points: 15,
-    action: 'event_join',
-    sourceId: `${event.params.eventId}_${userId}`,
-    label: 'Etkinliğe katıldı',
-  })));
+  // Katıl düğmesi yalnız niyet belirtir. Puan, bilet/katılım doğrulandığında
+  // awardVerifiedEventAttendance tarafından verilir.
+  return;
 });
 
 exports.awardFiftyLikesXp = onDocumentCreated('posts/{postId}/likes/{userId}', async (event) => {
@@ -491,11 +446,13 @@ exports.awardFiftyLikesXp = onDocumentCreated('posts/{postId}/likes/{userId}', a
   const count = likesSnap.data().count || 0;
   if (count < 50) return;
   const data = postSnap.data() || {};
-  await awardXp({
+  await awardReputation({
     userId: String(data.userId || ''),
-    points: 25,
+    role: 'creator',
+    points: 15,
     action: 'post_50_likes',
     sourceId: event.params.postId,
     label: 'Paylaşımı 50 beğeni aldı',
+    stat: 'creatorQualityBonuses',
   });
 });

@@ -610,8 +610,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                     _switchTile(
                       Icons.emoji_events_outlined,
-                      'XP ve görevler',
-                      'Puan, seviye ve görev gelişmelerini bildir',
+                      'TBT Yolculuğum',
+                      'Hesap türü ve itibar gelişmelerini bildir',
                       settings['notifyRewards'] != false,
                       (v) => _setBool('notifyRewards', v),
                     ),

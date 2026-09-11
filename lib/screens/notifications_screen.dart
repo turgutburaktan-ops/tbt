@@ -82,6 +82,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         return Icons.photo_library_rounded;
       case 'campus_digest':
         return Icons.school_rounded;
+      case 'reputation_role':
+        return Icons.workspace_premium_rounded;
       default:
         return Icons.notifications_rounded;
     }
@@ -115,6 +117,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   Future<void> _openItem(AppNotificationItem item) async {
     await AppNotificationService.instance.markRead(item.id);
     if (!mounted) return;
+    if (item.type == 'reputation_role') {
+      await Navigator.pushNamed(context, '/rewards');
+      return;
+    }
     if (item.type == 'tbt_broadcast') {
       await Navigator.push(
         context,

@@ -21,6 +21,38 @@ Object.assign(exports, require('./admin_broadcast_worker'));
 Object.assign(exports, require('./auth_helpers'));
 Object.assign(exports, require('./verification_email'));
 Object.assign(exports, require('./creator_invites'));
+const {
+  createRoleInvite,
+  getRoleInvitePreview,
+  redeemRoleInvite,
+  activateEmailRoleInvites,
+  activateVerifiedEmailRoleInvites,
+} = require('./role_invites');
+Object.assign(exports, {
+  createRoleInvite,
+  getRoleInvitePreview,
+  redeemRoleInvite,
+  activateEmailRoleInvites,
+  activateVerifiedEmailRoleInvites,
+});
+const {
+  getMyReputation,
+  awardApprovedSpotReputation,
+  awardPublishedRouteReputation,
+  awardVerifiedEventAttendance,
+  awardGourmetReviewReputation,
+  awardUsedCouponReputation,
+  awardCompletedReservationReputation,
+} = require('./reputation_system');
+Object.assign(exports, {
+  getMyReputation,
+  awardApprovedSpotReputation,
+  awardPublishedRouteReputation,
+  awardVerifiedEventAttendance,
+  awardGourmetReviewReputation,
+  awardUsedCouponReputation,
+  awardCompletedReservationReputation,
+});
 Object.assign(exports, require('./early_business_access'));
 Object.assign(exports, require('./event_cover'));
 Object.assign(exports, require('./retention'));

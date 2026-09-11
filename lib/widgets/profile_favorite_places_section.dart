@@ -29,33 +29,6 @@ class ProfileFavoritePlacesSection extends StatelessWidget {
     _FavoriteType('spot', 'Gezilecek', Icons.place_outlined),
   ];
 
-  String _levelName(int xp) {
-    if (xp >= 6000) return 'Türkiye Kaşifi';
-    if (xp >= 3000) return 'Usta Kaşif';
-    if (xp >= 1500) return 'Şehir Rehberi';
-    if (xp >= 600) return 'Fotoğraf Avcısı';
-    if (xp >= 200) return 'Kaşif';
-    return 'Gezgin';
-  }
-
-  int _nextLevelXp(int xp) {
-    if (xp < 200) return 200;
-    if (xp < 600) return 600;
-    if (xp < 1500) return 1500;
-    if (xp < 3000) return 3000;
-    if (xp < 6000) return 6000;
-    return 6000;
-  }
-
-  int _levelFloor(int xp) {
-    if (xp >= 6000) return 6000;
-    if (xp >= 3000) return 3000;
-    if (xp >= 1500) return 1500;
-    if (xp >= 600) return 600;
-    if (xp >= 200) return 200;
-    return 0;
-  }
-
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
@@ -70,21 +43,29 @@ class ProfileFavoritePlacesSection extends StatelessWidget {
             ? Map<String, dynamic>.from(raw)
             : <String, dynamic>{};
         final hasAny = _types.any((type) => favorites[type.key] is Map);
-        final xp = (profile['xp'] as num?)?.toInt() ?? 0;
+        final total = (profile['reputationTotal'] as num?)?.toInt() ?? 0;
+        final rawRoles = profile['accountTypes'];
+        final roles = rawRoles is Map
+            ? Map<String, dynamic>.from(rawRoles)
+            : const <String, dynamic>{};
+        final hasRole = roles.values.any(
+          (value) => value is Map && value['active'] == true,
+        );
 
-        if (!editable && !hasAny && xp <= 0) return const SizedBox.shrink();
+        if (!editable && !hasAny && total <= 0 && !hasRole) {
+          return const SizedBox.shrink();
+        }
 
         return Padding(
           padding: const EdgeInsets.fromLTRB(16, 6, 16, 10),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (showProgress && (editable || xp > 0)) ...[
+              if (showProgress && (editable || total > 0 || hasRole)) ...[
                 _ProgressCard(
-                  xp: xp,
-                  level: _levelName(xp),
-                  nextLevelXp: _nextLevelXp(xp),
-                  levelFloor: _levelFloor(xp),
+                  total: total,
+                  roles: roles,
+                  verified: profile['tbtVerified'] == true,
                   editable: editable,
                 ),
                 const SizedBox(height: 14),
@@ -266,26 +247,34 @@ class ProfileFavoritePlacesSection extends StatelessWidget {
 }
 
 class _ProgressCard extends StatelessWidget {
-  final int xp;
-  final String level;
-  final int nextLevelXp;
-  final int levelFloor;
+  final int total;
+  final Map<String, dynamic> roles;
+  final bool verified;
   final bool editable;
 
   const _ProgressCard({
-    required this.xp,
-    required this.level,
-    required this.nextLevelXp,
-    required this.levelFloor,
+    required this.total,
+    required this.roles,
+    required this.verified,
     required this.editable,
   });
 
   @override
   Widget build(BuildContext context) {
-    final target = nextLevelXp == levelFloor ? 1 : nextLevelXp - levelFloor;
-    final progress = nextLevelXp == levelFloor
-        ? 1.0
-        : ((xp - levelFloor) / target).clamp(0.0, 1.0).toDouble();
+    const labels = {
+      'creator': 'Creator',
+      'explorer': 'Kâşif',
+      'social': 'Sosyal',
+      'gourmet': 'Gurme',
+    };
+    final active = labels.entries
+        .where((entry) {
+          final value = roles[entry.key];
+          return value is Map && value['active'] == true;
+        })
+        .map((entry) => entry.value)
+        .toList();
+    final progress = (total / 1000).clamp(0.0, 1.0).toDouble();
 
     return Container(
       width: double.infinity,
@@ -319,7 +308,7 @@ class _ProgressCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      level,
+                      verified ? 'Doğrulanmış TBT hesabı' : 'TBT Yolculuğu',
                       style: const TextStyle(
                         fontSize: 14.5,
                         fontWeight: FontWeight.w900,
@@ -327,7 +316,9 @@ class _ProgressCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      '$xp XP',
+                      active.isEmpty
+                          ? '$total gerçek katkı puanı'
+                          : '${active.join(' · ')}  •  $total puan',
                       style: const TextStyle(
                         color: Colors.white54,
                         fontSize: 10.5,
@@ -338,7 +329,7 @@ class _ProgressCard extends StatelessWidget {
               ),
               if (editable)
                 IconButton(
-                  tooltip: 'Görevler ve ödüller',
+                  tooltip: 'TBT Yolculuğum',
                   onPressed: () => Navigator.push(
                     context,
                     MaterialPageRoute(builder: (_) => const RewardsHubScreen()),
@@ -368,8 +359,8 @@ class _ProgressCard extends StatelessWidget {
                         builder: (_) => const RewardsHubScreen(),
                       ),
                     ),
-                    icon: const Icon(Icons.task_alt_rounded, size: 18),
-                    label: const Text('Görevler'),
+                    icon: const Icon(Icons.route_rounded, size: 18),
+                    label: const Text('Yolculuğum'),
                     style: OutlinedButton.styleFrom(
                       visualDensity: VisualDensity.compact,
                     ),

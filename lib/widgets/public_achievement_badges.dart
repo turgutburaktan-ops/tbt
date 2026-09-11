@@ -11,23 +11,30 @@ class PublicAchievementBadges extends StatelessWidget {
   });
 
   static const _catalog = <_BadgeDefinition>[
-    _BadgeDefinition('verified', 'Doğrulanmış', Icons.verified_rounded, Color(0xFF48C7FF), 0),
-    _BadgeDefinition('turkiye_explorer', 'Türkiye Kaşifi', Icons.public_rounded, Color(0xFFFFC857), 6000),
-    _BadgeDefinition('master_explorer', 'Usta Kaşif', Icons.workspace_premium_rounded, Color(0xFFC89BFF), 3000),
-    _BadgeDefinition('local_guide', 'Yerel Rehber', Icons.explore_rounded, Color(0xFF55D6BE), 1500),
-    _BadgeDefinition('photo_hunter', 'Fotoğraf Avcısı', Icons.photo_camera_rounded, Color(0xFFFF8FA3), 600),
-    _BadgeDefinition('explorer', 'Kaşif', Icons.hiking_rounded, Color(0xFF8EA7FF), 200),
+    _BadgeDefinition('ambassador', 'TBT Elçisi', Icons.workspace_premium_rounded, Color(0xFFFFC857)),
+    _BadgeDefinition('verified', 'Doğrulanmış', Icons.verified_rounded, Color(0xFF48C7FF)),
+    _BadgeDefinition('creator', 'Creator', Icons.auto_awesome_rounded, Color(0xFFA66BFF)),
+    _BadgeDefinition('explorer', 'Kâşif', Icons.explore_rounded, Color(0xFF55D6BE)),
+    _BadgeDefinition('social', 'Sosyal', Icons.groups_rounded, Color(0xFFFF8A65)),
+    _BadgeDefinition('gourmet', 'Gurme', Icons.restaurant_rounded, Color(0xFFFFD166)),
   ];
 
   List<_BadgeDefinition> _earned() {
-    final xp = (profile['xp'] as num?)?.toInt() ?? 0;
-    final verified = profile['identityVerified'] == true || profile['verified'] == true;
+    final rawRoles = profile['accountTypes'];
+    final roles = rawRoles is Map
+        ? Map<String, dynamic>.from(rawRoles)
+        : const <String, dynamic>{};
+    final verified = profile['tbtVerified'] == true;
+    final ambassador = profile['tbtAmbassador'] == true;
     final selected = (profile['selectedBadgeIds'] as List<dynamic>? ?? const [])
         .map((item) => item.toString())
         .toSet();
     final result = _catalog.where((badge) {
       if (badge.id == 'verified') return verified;
-      return xp >= badge.requiredXp;
+      if (badge.id == 'ambassador') return ambassador;
+      if (badge.id == 'creator' && profile['isCreator'] == true) return true;
+      final state = roles[badge.id];
+      return state is Map && state['active'] == true;
     }).toList();
     if (selected.isNotEmpty) {
       result.sort((a, b) {
@@ -88,6 +95,5 @@ class _BadgeDefinition {
   final String label;
   final IconData icon;
   final Color color;
-  final int requiredXp;
-  const _BadgeDefinition(this.id, this.label, this.icon, this.color, this.requiredXp);
+  const _BadgeDefinition(this.id, this.label, this.icon, this.color);
 }

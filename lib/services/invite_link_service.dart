@@ -3,8 +3,9 @@ import 'package:share_plus/share_plus.dart';
 class InviteLinkTarget {
   final String type;
   final String id;
+  final String role;
 
-  const InviteLinkTarget({required this.type, required this.id});
+  const InviteLinkTarget({required this.type, required this.id, this.role = ''});
 }
 
 class InviteLinkService {
@@ -59,6 +60,12 @@ class InviteLinkService {
     final incomingScheme = uri.scheme.toLowerCase();
     final incomingHost = uri.host.toLowerCase();
     if (incomingScheme == scheme) {
+      if (incomingHost == 'davet' && uri.pathSegments.length == 2) {
+        final role = uri.pathSegments[0].trim().toLowerCase();
+        final id = uri.pathSegments[1].trim();
+        if (!_validRole(role) || !_safeId.hasMatch(id)) return null;
+        return InviteLinkTarget(type: 'role-invite', id: id, role: role);
+      }
       if (uri.pathSegments.length != 1) return null;
       final id = uri.pathSegments.first.trim();
       final type = incomingHost.trim();
@@ -67,7 +74,15 @@ class InviteLinkService {
     }
     final isWebInvite =
         incomingScheme == 'https' && _acceptedWebHosts.contains(incomingHost);
-    if (!isWebInvite || uri.pathSegments.length != 2) return null;
+    if (!isWebInvite) return null;
+    if (uri.pathSegments.length == 3 &&
+        uri.pathSegments[0].toLowerCase() == 'davet') {
+      final role = uri.pathSegments[1].trim().toLowerCase();
+      final id = uri.pathSegments[2].trim();
+      if (!_validRole(role) || !_safeId.hasMatch(id)) return null;
+      return InviteLinkTarget(type: 'role-invite', id: id, role: role);
+    }
+    if (uri.pathSegments.length != 2) return null;
     final type = uri.pathSegments[0].trim().toLowerCase();
     final id = uri.pathSegments[1].trim();
     if (!_validTarget(type, id)) return null;
@@ -86,6 +101,9 @@ class InviteLinkService {
       return false;
     return _safeId.hasMatch(id);
   }
+
+  bool _validRole(String role) =>
+      const {'creator', 'explorer', 'social', 'gourmet'}.contains(role);
 
   Future<void> shareCommunity({
     required String communityId,

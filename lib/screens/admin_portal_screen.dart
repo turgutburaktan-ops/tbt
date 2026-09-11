@@ -183,9 +183,9 @@ class _AdminPortalScreenState extends State<AdminPortalScreen> {
           const SizedBox(height: 9),
           _HeroAction(
             icon: Icons.workspace_premium_outlined,
-            title: 'Creator yönetimi',
-            subtitle: 'Creator hesapları, davetler ve içerik istatistikleri.',
-            button: 'Creator panelini aç',
+            title: 'Hesap Türleri',
+            subtitle: 'Creator, Kâşif, Sosyal ve Gurme hesapları, özel davetler ve puanlar.',
+            button: 'Hesap türlerini aç',
             onTap: () => _open(const CreatorAdminScreen()),
           ),
           const SizedBox(height: 10),

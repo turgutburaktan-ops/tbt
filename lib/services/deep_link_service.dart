@@ -1,4 +1,5 @@
 import '../screens/creator_welcome_screen.dart';
+import '../screens/role_invite_screen.dart';
 
 import 'dart:async';
 
@@ -80,6 +81,16 @@ class DeepLinkService {
       if (navigator == null) return;
 
       switch (target.type) {
+        case 'role-invite':
+          navigator.push(
+            MaterialPageRoute(
+              builder: (_) => RoleInviteScreen(
+                role: target.role,
+                code: target.id,
+              ),
+            ),
+          );
+          break;
         case 'creator':
         case 'creator-profile':
           navigator.push(

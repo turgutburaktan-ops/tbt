@@ -287,6 +287,10 @@ class PushNotificationService with WidgetsBindingObserver {
     final eventId = (message.data['eventId'] ?? '').toString().trim();
     final communityId = (message.data['communityId'] ?? '').toString().trim();
 
+    if (type == 'reputation_role') {
+      navigator.pushNamed('/rewards');
+      return;
+    }
     if (type == 'tbt_broadcast') {
       final uid = _auth.currentUser?.uid;
       final id = message.data['notificationId']?.toString();

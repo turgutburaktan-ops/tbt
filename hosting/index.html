@@ -75,8 +75,9 @@
   <script>
     (() => {
       const parts = location.pathname.split('/').filter(Boolean);
-      const type = parts[0] || '';
-      const id = parts[1] || '';
+      let type = parts[0] || '';
+      let id = parts[1] || '';
+      let role = '';
       const types = {
         event: { title: 'Etkinlik', description: "Bu etkinliği TBT'de aç.", icon: '◉' },
         community: { title: 'Topluluk', description: "Bu topluluğu TBT'de aç.", icon: '◎' },
@@ -86,7 +87,17 @@
         post: { title: 'TBT Paylaşımı', description: "Bu paylaşımı TBT'de aç.", icon: '▣' },
         spot: { title: 'Gezilecek Yer', description: "Bu yeri TBT'de keşfet.", icon: '⌖' }
       };
-      const valid = Object.hasOwn(types, type) && /^[A-Za-z0-9_-]{1,128}$/.test(id);
+      const roleNames = {
+        creator: 'Creator', explorer: 'Kâşif', social: 'Sosyal', gourmet: 'Gurme'
+      };
+      const roleInvite = type === 'davet' && parts.length === 3 &&
+        Object.hasOwn(roleNames, parts[1]) && /^[A-Za-z0-9_-]{1,128}$/.test(parts[2]);
+      if (roleInvite) {
+        role = parts[1];
+        id = parts[2];
+      }
+      const valid = roleInvite ||
+        (Object.hasOwn(types, type) && /^[A-Za-z0-9_-]{1,128}$/.test(id));
       const title = document.getElementById('title');
       const description = document.getElementById('description');
       const icon = document.getElementById('icon');
@@ -105,10 +116,14 @@
       }
 
       const cleanId = encodeURIComponent(id);
-      const appUrl = `tbt://${type}/${cleanId}`;
-      title.textContent = types[type].title;
-      description.textContent = types[type].description;
-      icon.textContent = types[type].icon;
+      const appUrl = roleInvite
+        ? `tbt://davet/${encodeURIComponent(role)}/${cleanId}`
+        : `tbt://${type}/${cleanId}`;
+      title.textContent = roleInvite ? `TBT ${roleNames[role]} Daveti` : types[type].title;
+      description.textContent = roleInvite
+        ? 'Sana gönderilen özel hesap davetini TBT uygulamasında aç.'
+        : types[type].description;
+      icon.textContent = roleInvite ? '✦' : types[type].icon;
 
       const openApp = () => {
         window.location.href = appUrl;

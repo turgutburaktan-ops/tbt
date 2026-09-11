@@ -1,201 +1,114 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import '../widgets/daily_goals_prompt.dart';
 
-class RewardsHubScreen extends StatelessWidget {
+class RewardsHubScreen extends StatefulWidget {
   const RewardsHubScreen({super.key});
 
-  static const _levels = <(int, String)>[
-    (0, 'Gezgin'),
-    (200, 'Kaşif'),
-    (600, 'Fotoğraf Avcısı'),
-    (1500, 'Şehir Rehberi'),
-    (3000, 'Usta Kaşif'),
-    (6000, 'Türkiye Kaşifi'),
-  ];
+  @override
+  State<RewardsHubScreen> createState() => _RewardsHubScreenState();
+}
 
-  (int, String, int) _levelInfo(int xp) {
-    var index = 0;
-    for (var i = 0; i < _levels.length; i++) {
-      if (xp >= _levels[i].$1) index = i;
+class _RewardsHubScreenState extends State<RewardsHubScreen> {
+  bool _refreshing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _refresh();
+  }
+
+  Future<void> _refresh() async {
+    if (_refreshing || FirebaseAuth.instance.currentUser == null) return;
+    setState(() => _refreshing = true);
+    try {
+      await FirebaseFunctions.instanceFor(region: 'europe-west1')
+          .httpsCallable('getMyReputation')
+          .call();
+    } catch (_) {
+      // Firestore'daki son güvenilir durum çevrimdışıyken de gösterilir.
+    } finally {
+      if (mounted) setState(() => _refreshing = false);
     }
-    final next = index + 1 < _levels.length ? _levels[index + 1].$1 : xp;
-    return (index + 1, _levels[index].$2, next);
   }
-
-  int _count(Map<String, dynamic> data, String period, String action) {
-    if (period == 'dailyActions' &&
-        data['dailyXpKey'] != dailyGoalsDayKey(DateTime.now())) return 0;
-    final raw = data[period];
-    if (raw is! Map) return 0;
-    return (raw[action] as num?)?.toInt() ?? 0;
-  }
-
-  int _bounded(int value, int max) => value.clamp(0, max).toInt();
 
   @override
   Widget build(BuildContext context) {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) {
       return const Scaffold(
-        body: Center(child: Text('Görevleri görmek için giriş yapmalısın.')),
+        body: Center(child: Text('TBT Yolculuğunu görmek için giriş yapmalısın.')),
       );
     }
-
     return Scaffold(
-      backgroundColor: const Color(0xFF090A0C),
+      backgroundColor: const Color(0xFF071426),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF090A0C),
-        title: const Text('Görevler & Ödüller'),
+        backgroundColor: const Color(0xFF071426),
+        title: const Text('TBT Yolculuğum'),
+        actions: [
+          IconButton(onPressed: _refreshing ? null : _refresh, icon: const Icon(Icons.refresh_rounded)),
+        ],
       ),
       body: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-        stream: FirebaseFirestore.instance
-            .collection('users')
-            .doc(uid)
-            .snapshots(),
+        stream: FirebaseFirestore.instance.collection('users').doc(uid).snapshots(),
         builder: (context, snapshot) {
-          if (!snapshot.hasData) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          final data = snapshot.data?.data() ?? const <String, dynamic>{};
-          final xp = (data['xp'] as num?)?.toInt() ?? 0;
-          final dailyXp = data['dailyXpKey'] == dailyGoalsDayKey(DateTime.now())
-              ? (data['dailyXp'] as num?)?.toInt() ?? 0 : 0;
-          final weeklyXp = (data['weeklyXp'] as num?)?.toInt() ?? 0;
-          final info = _levelInfo(xp);
-          final currentFloor = _levels[info.$1 - 1].$1;
-          final range = (info.$3 - currentFloor).clamp(1, 1000000).toInt();
-          final progress = info.$3 == xp && info.$1 == _levels.length
-              ? 1.0
-              : ((xp - currentFloor) / range).clamp(0.0, 1.0).toDouble();
-          final city = (data['city'] ?? '').toString().trim();
-
-          final dailyPost = _count(data, 'dailyActions', 'post');
-          final dailyStory = _count(data, 'dailyActions', 'story');
-          final dailyJoin = _count(data, 'dailyActions', 'event_join');
-          final weeklyPost = _count(data, 'weeklyActions', 'post');
-          final weeklyEvent = _count(data, 'weeklyActions', 'event_create');
-          final weeklyMemory = _count(data, 'weeklyActions', 'event_memory');
-
-          return ListView(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 36),
-            children: [
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF161B22), Color(0xFF11151C)],
-                  ),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: const Color(0x3345E7F2)),
+          if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+          final user = snapshot.data?.data() ?? const <String, dynamic>{};
+          final reputation = _map(user['reputation']);
+          final scores = _map(reputation['scores']);
+          final roles = _map(user['accountTypes'] ?? reputation['roles']);
+          final total = _number(user['reputationTotal'] ?? reputation['total']);
+          final verified = user['tbtVerified'] == true || reputation['verified'] == true;
+          final ambassador = user['tbtAmbassador'] == true || reputation['ambassador'] == true;
+          return RefreshIndicator(
+            onRefresh: _refresh,
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(16, 10, 16, 36),
+              children: [
+                _JourneyHeader(total: total, verified: verified, ambassador: ambassador),
+                const SizedBox(height: 18),
+                const Text('Hesap türlerin', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900)),
+                const SizedBox(height: 5),
+                const Text(
+                  'Her alan kendi puanıyla ilerler. Özel davet yalnızca davet edildiğin hesabın şartlarını kaldırır ve ücretsiz puan vermez.',
+                  style: TextStyle(color: Color(0xFF9FB0C5), height: 1.45),
                 ),
-                child: const Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(Icons.bolt_rounded, color: Color(0xFFFFD166), size: 25),
-                    SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'XP nasıl çalışır?',
-                            style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15),
-                          ),
-                          SizedBox(height: 4),
-                          Text(
-                            'Görevleri tamamla → XP kazan → seviyeni yükselt. Paylaşım, Story ve etkinlik katkıları ilerlemeni hızlandırır.',
-                            style: TextStyle(color: Colors.white60, fontSize: 12, height: 1.4),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+                const SizedBox(height: 12),
+                _RoleCard(
+                  label: 'TBT Creator', icon: Icons.auto_awesome_rounded,
+                  color: const Color(0xFFA66BFF), score: _number(scores['creator']), threshold: 500,
+                  state: _map(roles['creator']),
+                  requirement: '25 özgün içerik ve en az 60 günlük hesap',
+                  earning: 'Fotoğraf +5 · Reels +8 · kaliteli içerik bonusu +15',
                 ),
-              ),
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.all(18),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF14171B),
-                  borderRadius: BorderRadius.circular(22),
-                  border: Border.all(color: Colors.white12),
+                _RoleCard(
+                  label: 'TBT Kâşif', icon: Icons.explore_rounded,
+                  color: const Color(0xFF42D6C7), score: _number(scores['explorer']), threshold: 400,
+                  state: _map(roles['explorer']),
+                  requirement: '10 onaylı yer, 20 konumlu paylaşım ve 3 şehir',
+                  earning: 'Onaylı yer +30 · konumlu paylaşım +8 · rota +10',
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        const CircleAvatar(
-                          radius: 25,
-                          child: Icon(Icons.workspace_premium_rounded),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                info.$2,
-                                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
-                              ),
-                              Text(
-                                'Seviye ${info.$1} • $xp XP',
-                                style: const TextStyle(color: Colors.white60),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    LinearProgressIndicator(value: progress, minHeight: 8),
-                    const SizedBox(height: 8),
-                    Text(
-                      info.$1 == _levels.length
-                          ? 'En yüksek seviyedesin.'
-                          : 'Sonraki seviye için ${info.$3 - xp} XP kaldı.',
-                      style: const TextStyle(color: Colors.white60),
-                    ),
-                  ],
+                _RoleCard(
+                  label: 'TBT Sosyal', icon: Icons.groups_rounded,
+                  color: const Color(0xFFFF8A65), score: _number(scores['social']), threshold: 350,
+                  state: _map(roles['social']),
+                  requirement: '5 gerçekleşen etkinlik ve 10 doğrulanmış katılım',
+                  earning: 'Gerçekleşen etkinlik +25 · doğrulanmış katılım +10 · anı +5',
                 ),
-              ),
-              const SizedBox(height: 18),
-              const Text('Profil Ödülleri', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w900)),
-              const SizedBox(height: 8),
-              _ProfileRewards(uid: uid, profile: data, xp: xp),
-              const SizedBox(height: 20),
-              const Text('Bugünün Görevleri', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w900)),
-              const SizedBox(height: 8),
-              _Mission(title: 'Bir paylaşım yap', subtitle: '+10 XP', done: dailyPost >= 1, progress: _bounded(dailyPost, 1), target: 1),
-              _Mission(title: 'Bir Story paylaş', subtitle: '+5 XP', done: dailyStory >= 1, progress: _bounded(dailyStory, 1), target: 1),
-              _Mission(title: 'Bir etkinliğe katıl', subtitle: '+15 XP', done: dailyJoin >= 1, progress: _bounded(dailyJoin, 1), target: 1),
-              const SizedBox(height: 8),
-              Text('Bugün kazanılan: $dailyXp XP', style: const TextStyle(color: Colors.white60, fontWeight: FontWeight.w700)),
-              const SizedBox(height: 20),
-              const Text('Haftalık Hedefler', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w900)),
-              const SizedBox(height: 8),
-              _Mission(title: '3 paylaşım yap', subtitle: 'Akışı canlı tut', done: weeklyPost >= 3, progress: _bounded(weeklyPost, 3), target: 3),
-              _Mission(title: 'Bir etkinlik oluştur', subtitle: '+50 XP', done: weeklyEvent >= 1, progress: _bounded(weeklyEvent, 1), target: 1),
-              _Mission(title: '2 etkinlik anısı ekle', subtitle: 'Topluluğa katkı sağla', done: weeklyMemory >= 2, progress: _bounded(weeklyMemory, 2), target: 2),
-              const SizedBox(height: 8),
-              Text('Bu hafta kazanılan: $weeklyXp XP', style: const TextStyle(color: Colors.white60, fontWeight: FontWeight.w700)),
-              const SizedBox(height: 22),
-              Text(city.isEmpty ? 'Türkiye Sıralaması' : '$city Sıralaması', style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w900)),
-              const SizedBox(height: 8),
-              _Leaderboard(city: city),
-              const SizedBox(height: 22),
-              const Text('XP Kazanma', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w900)),
-              const SizedBox(height: 8),
-              const _XpRow('Gönderi paylaş', 10),
-              const _XpRow('Story paylaş', 5),
-              const _XpRow('Etkinlik oluştur', 50),
-              const _XpRow('Etkinliğe katıl', 15),
-              const _XpRow('Etkinlik anısı ekle', 20),
-              const _XpRow('Paylaşımın 50 beğeni alsın', 25),
-            ],
+                _RoleCard(
+                  label: 'TBT Gurme', icon: Icons.restaurant_rounded,
+                  color: const Color(0xFFFFC857), score: _number(scores['gourmet']), threshold: 400,
+                  state: _map(roles['gourmet']),
+                  requirement: '15 farklı mekân katkısı ve 10 fotoğraflı deneyim',
+                  earning: 'Mekân paylaşımı +7 · yorum +8 · rezervasyon/kupon +5',
+                ),
+                const SizedBox(height: 18),
+                _TrustCard(total: total, verified: verified),
+                const SizedBox(height: 10),
+                _AmbassadorCard(active: ambassador, roles: roles, verified: verified),
+              ],
+            ),
           );
         },
       ),
@@ -203,178 +116,148 @@ class RewardsHubScreen extends StatelessWidget {
   }
 }
 
-class _ProfileRewards extends StatelessWidget {
-  final String uid;
-  final Map<String, dynamic> profile;
-  final int xp;
-  const _ProfileRewards({required this.uid, required this.profile, required this.xp});
+Map<String, dynamic> _map(dynamic value) =>
+    value is Map ? Map<String, dynamic>.from(value) : <String, dynamic>{};
+int _number(dynamic value) => (value as num?)?.toInt() ?? 0;
 
-  static const themes = <(String, String, int, List<Color>)>[
-    ('default', 'Sade', 0, [Color(0xFF20242B), Color(0xFF111318)]),
-    ('aurora', 'Aurora', 500, [Color(0xFF38E8FF), Color(0xFF9B4DFF)]),
-    ('sunset', 'Gün Batımı', 1000, [Color(0xFFFF8A65), Color(0xFFFF5C8A)]),
-    ('midnight', 'Gece', 1500, [Color(0xFF4F6CFF), Color(0xFF211B45)]),
-    ('emerald', 'Zümrüt', 3000, [Color(0xFF44D7A8), Color(0xFF173A34)]),
-  ];
+class _JourneyHeader extends StatelessWidget {
+  const _JourneyHeader({required this.total, required this.verified, required this.ambassador});
+  final int total;
+  final bool verified;
+  final bool ambassador;
 
-  Future<void> _selectTheme(BuildContext context, String id, int requiredXp) async {
-    if (xp < requiredXp) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Bu arka plan için $requiredXp XP gerekli.')),
+  @override
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(colors: [Color(0xFF112C4C), Color(0xFF0C2038)]),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: const Color(0xFF2B4C70)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 60,
+              height: 60,
+              decoration: BoxDecoration(
+                color: ambassador ? const Color(0x33FFD166) : const Color(0x2242D6C7),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                ambassador ? Icons.explore_rounded : Icons.route_rounded,
+                color: ambassador ? const Color(0xFFFFD166) : const Color(0xFF73E4D6),
+                size: 31,
+              ),
+            ),
+            const SizedBox(width: 15),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    ambassador ? 'TBT Elçisi' : verified ? 'Doğrulanmış TBT hesabı' : 'TBT İtibar Puanı',
+                    style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w900),
+                  ),
+                  const SizedBox(height: 3),
+                  Text('$total gerçek katkı puanı', style: const TextStyle(color: Color(0xFFB6C7DA))),
+                ],
+              ),
+            ),
+            if (verified) const Icon(Icons.verified_rounded, color: Color(0xFF52D8FF)),
+          ],
+        ),
       );
-      return;
-    }
-    await FirebaseFirestore.instance.collection('users').doc(uid).set({
-      'selectedProfileTheme': id,
-      'profileRewardUpdatedAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
-  }
+}
 
-  Future<void> _selectBadge(String id) async {
-    await FirebaseFirestore.instance.collection('users').doc(uid).set({
-      'selectedBadgeIds': [id],
-      'profileRewardUpdatedAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
-  }
+class _RoleCard extends StatelessWidget {
+  const _RoleCard({
+    required this.label, required this.icon, required this.color,
+    required this.score, required this.threshold, required this.state,
+    required this.requirement, required this.earning,
+  });
+  final String label, requirement, earning;
+  final IconData icon;
+  final Color color;
+  final int score, threshold;
+  final Map<String, dynamic> state;
 
   @override
   Widget build(BuildContext context) {
-    final selectedTheme = (profile['selectedProfileTheme'] ?? 'default').toString();
-    final selectedBadges = (profile['selectedBadgeIds'] as List<dynamic>? ?? const [])
-        .map((item) => item.toString())
-        .toSet();
-    final earnedBadges = <(String, String, int)>[
-      ('explorer', 'Kaşif', 200),
-      ('photo_hunter', 'Fotoğraf Avcısı', 600),
-      ('local_guide', 'Yerel Rehber', 1500),
-      ('master_explorer', 'Usta Kaşif', 3000),
-      ('turkiye_explorer', 'Türkiye Kaşifi', 6000),
-    ].where((item) => xp >= item.$3).toList();
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: const Color(0xFF121416),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.white10),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text('Profil arka planı', style: TextStyle(fontWeight: FontWeight.w900)),
-          const SizedBox(height: 9),
-          SizedBox(
-            height: 78,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: themes.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 8),
-              itemBuilder: (_, index) {
-                final theme = themes[index];
-                final unlocked = xp >= theme.$3;
-                return InkWell(
-                  onTap: () => _selectTheme(context, theme.$1, theme.$3),
-                  borderRadius: BorderRadius.circular(13),
-                  child: Container(
-                    width: 104,
-                    padding: const EdgeInsets.all(9),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(colors: theme.$4),
-                      borderRadius: BorderRadius.circular(13),
-                      border: Border.all(
-                        color: selectedTheme == theme.$1 ? Colors.white : Colors.white24,
-                        width: selectedTheme == theme.$1 ? 2 : 1,
-                      ),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Icon(unlocked ? Icons.palette_outlined : Icons.lock_outline_rounded, size: 18),
-                        const Spacer(),
-                        Text(theme.$2, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w900)),
-                        Text(unlocked ? 'Kullanılabilir' : '${theme.$3} XP', style: const TextStyle(fontSize: 8.5, color: Colors.white70)),
-                      ],
-                    ),
-                  ),
-                );
-              },
+    final active = state['active'] == true;
+    final invited = state['source'] == 'invite';
+    final progress = (score / threshold).clamp(0.0, 1.0).toDouble();
+    return Card(
+      color: const Color(0xFF102139),
+      margin: const EdgeInsets.only(bottom: 10),
+      child: Padding(
+        padding: const EdgeInsets.all(15),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(color: color.withValues(alpha: .14), borderRadius: BorderRadius.circular(13)),
+                  child: Icon(icon, color: color),
+                ),
+                const SizedBox(width: 12),
+                Expanded(child: Text(label, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900))),
+                if (active) Icon(Icons.check_circle_rounded, color: color),
+              ],
             ),
-          ),
-          if (earnedBadges.isNotEmpty) ...[
-            const SizedBox(height: 14),
-            const Text('Profilinde öne çıkar', style: TextStyle(fontWeight: FontWeight.w900)),
-            const SizedBox(height: 7),
-            Wrap(
-              spacing: 7,
-              runSpacing: 7,
-              children: earnedBadges.map((badge) => ChoiceChip(
-                label: Text(badge.$2),
-                selected: selectedBadges.contains(badge.$1),
-                onSelected: (_) => _selectBadge(badge.$1),
-              )).toList(),
-            ),
+            const SizedBox(height: 12),
+            if (active && invited)
+              Text('Özel TBT davetiyle aktif · $score gerçek puan', style: TextStyle(color: color, fontWeight: FontWeight.w700))
+            else ...[
+              LinearProgressIndicator(value: progress, minHeight: 7, color: color, backgroundColor: Colors.white10),
+              const SizedBox(height: 7),
+              Text(active ? 'Hesap aktif · $score puan' : '$score / $threshold puan', style: const TextStyle(fontWeight: FontWeight.w800)),
+            ],
+            const SizedBox(height: 8),
+            Text(active ? earning : '$requirement\n$earning', style: const TextStyle(color: Color(0xFF9FB0C5), height: 1.4, fontSize: 12)),
           ],
-        ],
+        ),
       ),
     );
   }
 }
 
-class _Mission extends StatelessWidget {
-  final String title;
-  final String subtitle;
-  final bool done;
-  final int progress;
-  final int target;
-  const _Mission({required this.title, required this.subtitle, required this.done, required this.progress, required this.target});
-  @override
-  Widget build(BuildContext context) => Container(
-    margin: const EdgeInsets.only(bottom: 8),
-    padding: const EdgeInsets.all(14),
-    decoration: BoxDecoration(color: const Color(0xFF121416), borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.white10)),
-    child: Row(children: [
-      Icon(done ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded, color: done ? Colors.greenAccent : Colors.white38),
-      const SizedBox(width: 11),
-      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(title, style: const TextStyle(fontWeight: FontWeight.w800)), Text(subtitle, style: const TextStyle(color: Colors.white54, fontSize: 12))])),
-      Text('$progress/$target', style: const TextStyle(fontWeight: FontWeight.w900)),
-    ]),
-  );
-}
+class _TrustCard extends StatelessWidget {
+  const _TrustCard({required this.total, required this.verified});
+  final int total;
+  final bool verified;
 
-class _Leaderboard extends StatelessWidget {
-  final String city;
-  const _Leaderboard({required this.city});
   @override
-  Widget build(BuildContext context) => StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-    stream: FirebaseFirestore.instance.collection('users').limit(100).snapshots(),
-    builder: (context, snapshot) {
-      if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
-      final users = snapshot.data!.docs.where((doc) {
-        if (city.isEmpty) return true;
-        return (doc.data()['city'] ?? '').toString().trim().toLowerCase() == city.toLowerCase();
-      }).toList();
-      users.sort((a, b) => ((b.data()['xp'] as num?)?.toInt() ?? 0).compareTo((a.data()['xp'] as num?)?.toInt() ?? 0));
-      final top = users.take(10).toList();
-      if (top.isEmpty) return const Text('Sıralama henüz oluşmadı.', style: TextStyle(color: Colors.white54));
-      return Container(
-        decoration: BoxDecoration(color: const Color(0xFF121416), borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.white10)),
-        child: Column(children: List.generate(top.length, (index) {
-          final data = top[index].data();
-          final name = (data['displayName'] ?? data['username'] ?? 'Kaşif').toString();
-          final xp = (data['xp'] as num?)?.toInt() ?? 0;
-          return ListTile(dense: true, leading: CircleAvatar(radius: 16, child: Text('${index + 1}')), title: Text(name, maxLines: 1, overflow: TextOverflow.ellipsis), trailing: Text('$xp XP', style: const TextStyle(fontWeight: FontWeight.w900)));
-        })),
+  Widget build(BuildContext context) => Card(
+        color: const Color(0xFF102139),
+        child: ListTile(
+          leading: Icon(Icons.verified_user_rounded, color: verified ? const Color(0xFF52D8FF) : Colors.white54),
+          title: Text(verified ? 'Doğrulanmış hesap' : 'Doğrulanmış hesap ilerlemesi', style: const TextStyle(fontWeight: FontWeight.w900)),
+          subtitle: Text(verified ? 'Güven ve katkı şartlarını tamamladın.' : '${total.clamp(0, 1000)} / 1000 puan · Telefon, e-posta, hesap yaşı ve temiz kullanım şartları aranır.'),
+        ),
       );
-    },
-  );
 }
 
-class _XpRow extends StatelessWidget {
-  final String label;
-  final int xp;
-  const _XpRow(this.label, this.xp);
+class _AmbassadorCard extends StatelessWidget {
+  const _AmbassadorCard({required this.active, required this.roles, required this.verified});
+  final bool active, verified;
+  final Map<String, dynamic> roles;
+
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: 5),
-    child: Row(children: [Expanded(child: Text(label, style: const TextStyle(color: Colors.white70))), Text('+$xp XP', style: const TextStyle(fontWeight: FontWeight.w900))]),
-  );
+  Widget build(BuildContext context) {
+    final completed = const ['creator', 'explorer', 'social', 'gourmet']
+        .where((key) => _map(roles[key])['active'] == true)
+        .length;
+    return Card(
+      color: const Color(0xFF18233A),
+      child: ListTile(
+        leading: Icon(Icons.explore_rounded, color: active ? const Color(0xFFFFD166) : Colors.white54),
+        title: const Text('TBT Elçisi', style: TextStyle(fontWeight: FontWeight.w900)),
+        subtitle: Text(active ? 'Dört hesap türünü ve doğrulamayı tamamladın.' : '$completed/4 hesap türü · ${verified ? 'Doğrulama tamam' : 'Doğrulama bekleniyor'}'),
+        trailing: active ? const Icon(Icons.workspace_premium_rounded, color: Color(0xFFFFD166)) : null,
+      ),
+    );
+  }
 }

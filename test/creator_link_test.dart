@@ -27,6 +27,18 @@ void main() {
         links.parse(Uri.parse('https://www.trtbt.com/post/existing'))?.type,
         'post',
       );
+      final roleInvite = links.parse(
+        Uri.parse(
+          'https://www.trtbt.com/davet/gourmet/TBT-GRM-AABB1122',
+        ),
+      );
+      expect(roleInvite?.type, 'role-invite');
+      expect(roleInvite?.role, 'gourmet');
+      expect(roleInvite?.id, 'TBT-GRM-AABB1122');
+      expect(
+        links.parse(Uri.parse('tbt://davet/social/TBT-SOS-AABB1122'))?.role,
+        'social',
+      );
     },
   );
 }

@@ -9,7 +9,9 @@ service cloud.firestore {
         !request.resource.data.keys().hasAny([
           'isCreator','creatorTier','creatorBadge','creatorInviteCode','creatorProgramVersion','creatorJoinedAt','admin','isAdmin','role','roles','claims','permissions',
           'verified','verificationStatus','businessVerified','venueVerified',
-          'moderationStatus','trustLevel','banned','disabled'
+          'moderationStatus','trustLevel','banned','disabled',
+          'reputation','reputationTotal','accountTypes','tbtVerified','tbtAmbassador',
+          'reputationEmailVerified','reputationUpdatedAt'
         ]);
     }
     function safeUserUpdate(uid) {
@@ -18,24 +20,16 @@ service cloud.firestore {
           'uid','isCreator','creatorTier','creatorBadge','creatorInviteCode','creatorProgramVersion','creatorJoinedAt','admin','isAdmin','role','roles','claims','permissions',
           'verified','verificationStatus','businessVerified','venueVerified',
           'moderationStatus','trustLevel','banned','disabled','xp','dailyXp',
-          'weeklyXp','dailyActions','weeklyActions','stats'
-        ]) && profileRewardsValid();
+          'weeklyXp','dailyActions','weeklyActions','stats','reputation',
+          'reputationTotal','accountTypes','tbtVerified','tbtAmbassador',
+          'reputationEmailVerified','reputationUpdatedAt'
+        ]) && profileAppearanceValid();
     }
-    function profileRewardsValid() {
+    function profileAppearanceValid() {
       let theme = request.resource.data.get('selectedProfileTheme', 'default');
-      let xp = resource.data.get('xp', 0);
       let badges = request.resource.data.get('selectedBadgeIds', []);
       return theme in ['default','aurora','sunset','midnight','emerald'] &&
-        (theme != 'aurora' || xp >= 500) &&
-        (theme != 'sunset' || xp >= 1000) &&
-        (theme != 'midnight' || xp >= 1500) &&
-        (theme != 'emerald' || xp >= 3000) &&
-        badges is list && badges.size() <= 3 &&
-        (!badges.hasAny(['explorer']) || xp >= 200) &&
-        (!badges.hasAny(['photo_hunter']) || xp >= 600) &&
-        (!badges.hasAny(['local_guide']) || xp >= 1500) &&
-        (!badges.hasAny(['master_explorer']) || xp >= 3000) &&
-        (!badges.hasAny(['turkiye_explorer']) || xp >= 6000);
+        badges is list && badges.size() <= 3;
     }
     function eventVisible(d) {
       return !('visibility' in d) || d.visibility == 'public' || (signedIn() && (
@@ -292,6 +286,12 @@ service cloud.firestore {
 
     match /admin_broadcasts/{broadcastId} { allow read: if isAdmin(); allow write: if false; }
     match /admin_audit_logs/{logId} { allow read: if isAdmin(); allow write: if false; }
+    match /role_invites/{code} { allow read, write: if false; }
+    match /role_invite_redemptions/{id} { allow read, write: if false; }
+    match /reputation_events/{id} {
+      allow read: if signedIn() && resource.data.userId == request.auth.uid;
+      allow write: if false;
+    }
     match /usernames/{usernameId} {
       allow read: if true;
       allow create: if signedIn() && request.resource.data.uid == request.auth.uid && request.resource.data.normalized == usernameId && request.resource.data.username is string;

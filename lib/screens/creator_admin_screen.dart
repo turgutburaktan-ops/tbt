@@ -52,14 +52,24 @@ class CreatorAdminScreen extends StatefulWidget {
 }
 
 class _CreatorAdminScreenState extends State<CreatorAdminScreen> {
-  String _section = 'creators';
+  String _section = 'members';
+  String _role = 'creator';
+  Map<String, dynamic> _overview = const {};
   final _items = <Map<String, dynamic>>[];
   String? _cursor, _failure;
   bool _busy = false;
   @override
   void initState() {
     super.initState();
+    _loadOverview();
     _load();
+  }
+
+  Future<void> _loadOverview() async {
+    try {
+      final data = await _admin('overview');
+      if (mounted) setState(() => _overview = data);
+    } catch (_) {}
   }
 
   Future<void> _load({bool more = false}) async {
@@ -69,7 +79,11 @@ class _CreatorAdminScreenState extends State<CreatorAdminScreen> {
       _failure = null;
     });
     try {
-      final result = await _admin(_section, {if (more) 'cursor': _cursor});
+      final action = _section == 'members' ? 'members' : 'roleInvites';
+      final result = await _admin(action, {
+        'role': _role,
+        if (more) 'cursor': _cursor,
+      });
       if (mounted)
         setState(() {
           if (!more) _items.clear();
@@ -98,14 +112,14 @@ class _CreatorAdminScreenState extends State<CreatorAdminScreen> {
     setState(() => _busy = true);
     try {
       final result = await _creatorFunctions
-          .httpsCallable('createCreatorInvite')
+          .httpsCallable('createRoleInvite')
           .call(data);
       if (!mounted) return;
       final map = Map<String, dynamic>.from(result.data as Map);
       await showTbtDialog<void>(
         context: context,
         builder: (sheet) => TbtDialog(
-          title: const Text('Creator daveti hazır'),
+          title: Text('${map['roleLabel']} daveti hazır'),
           content: SelectableText(
             '${map['url']}\n\nSon kullanım: ${_date(map['expiresAtMs'])} · ${map['maxUses']} kişi',
           ),
@@ -122,6 +136,7 @@ class _CreatorAdminScreenState extends State<CreatorAdminScreen> {
         ),
       );
       _section = 'invites';
+      _role = '${map['role']}';
     } catch (e) {
       if (mounted) _error(context, e);
     } finally {
@@ -138,7 +153,7 @@ class _CreatorAdminScreenState extends State<CreatorAdminScreen> {
       builder: (sheet) => TbtDialog(
         title: const Text('Daveti kapat'),
         content: const Text(
-          'Bu bağlantı artık Creator kaydı açmayacak. Daha önce katılan hesaplar etkilenmez.',
+          'Bu özel bağlantı artık hesap türü vermeyecek. Daha önce kabul eden hesaplar etkilenmez.',
         ),
         actions: [
           TextButton(
@@ -155,7 +170,7 @@ class _CreatorAdminScreenState extends State<CreatorAdminScreen> {
     if (yes != true || !mounted) return;
     setState(() => _busy = true);
     try {
-      await _admin('disableInvite', {'code': invite['code']});
+      await _admin('disableRoleInvite', {'code': invite['code']});
     } catch (e) {
       if (mounted) _error(context, e);
     } finally {
@@ -170,7 +185,7 @@ class _CreatorAdminScreenState extends State<CreatorAdminScreen> {
   Widget build(BuildContext context) => Scaffold(
     backgroundColor: const Color(0xFF0B172A),
     appBar: AppBar(
-      title: const Text('Creator yönetimi'),
+      title: const Text('Hesap türleri'),
       actions: [
         IconButton(
           onPressed: _busy ? null : () => _load(),
@@ -181,14 +196,14 @@ class _CreatorAdminScreenState extends State<CreatorAdminScreen> {
     floatingActionButton: FloatingActionButton.extended(
       onPressed: _busy ? null : _create,
       icon: const Icon(Icons.add_link),
-      label: const Text('Creator daveti'),
+      label: const Text('Özel davet'),
     ),
     body: ListView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
       children: [
         SegmentedButton<String>(
           segments: const [
-            ButtonSegment(value: 'creators', label: Text('Creator hesapları')),
+            ButtonSegment(value: 'members', label: Text('Hesaplar')),
             ButtonSegment(value: 'invites', label: Text('Davetler')),
           ],
           selected: {_section},
@@ -204,8 +219,42 @@ class _CreatorAdminScreenState extends State<CreatorAdminScreen> {
                 },
         ),
         const SizedBox(height: 16),
+        DropdownButtonFormField<String>(
+          initialValue: _role,
+          decoration: const InputDecoration(labelText: 'Hesap türü'),
+          items: const [
+            DropdownMenuItem(value: 'creator', child: Text('TBT Creator')),
+            DropdownMenuItem(value: 'explorer', child: Text('TBT Kâşif')),
+            DropdownMenuItem(value: 'social', child: Text('TBT Sosyal')),
+            DropdownMenuItem(value: 'gourmet', child: Text('TBT Gurme')),
+          ],
+          onChanged: _busy ? null : (value) {
+            if (value == null) return;
+            setState(() {
+              _role = value;
+              _items.clear();
+              _cursor = null;
+            });
+            _load();
+          },
+        ),
+        const SizedBox(height: 12),
+        if (_overview.isNotEmpty)
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _MetricChip(label: 'Creator', value: _overview['roleCounts']?['creator']),
+              _MetricChip(label: 'Kâşif', value: _overview['roleCounts']?['explorer']),
+              _MetricChip(label: 'Sosyal', value: _overview['roleCounts']?['social']),
+              _MetricChip(label: 'Gurme', value: _overview['roleCounts']?['gourmet']),
+              _MetricChip(label: 'Doğrulanmış', value: _overview['verified']),
+              _MetricChip(label: 'TBT Elçisi', value: _overview['ambassadors']),
+            ],
+          ),
+        const SizedBox(height: 12),
         const Text(
-          'Creator daveti hesap yetkisi verir. Creator’ın profil paylaşım bağlantısı ise getirdiği kullanıcıları ölçer.',
+          'Davetler gizlidir. Yalnızca gönderdiğin özel bağlantıyı açan kişi seçilen hesap türünü puan şartı olmadan alır.',
         ),
         if (_busy) const LinearProgressIndicator(),
         if (_failure != null)
@@ -216,20 +265,22 @@ class _CreatorAdminScreenState extends State<CreatorAdminScreen> {
             child: Text('Henüz kayıt yok.'),
           ),
         ..._items.map((item) {
-          if (_section == 'creators')
+          if (_section == 'members')
             return Card(
               child: ListTile(
                 leading: const Icon(Icons.workspace_premium_outlined),
                 title: Text('${item['name']}'),
                 subtitle: Text(
-                  '${item['tier'] == 'founding' ? 'İlk 100 Creator' : 'Creator'} · ${item['active'] == true && item['isCreator'] == true ? 'Aktif' : 'Pasif'}\nKatılım: ${_date(item['joinedAtMs'])} · ${item['code']}',
+                  '${item['roleLabel']} · ${item['source'] == 'invite' ? 'Davetle' : 'Puanla'}\n${item['score']} puan · Toplam ${item['total']}${item['ambassador'] == true ? ' · TBT Elçisi' : ''}',
                 ),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) =>
-                        CreatorAdminDetailScreen(uid: '${item['uid']}'),
+                    builder: (_) => _RoleAdminDetailScreen(
+                      uid: '${item['uid']}',
+                      role: _role,
+                    ),
                   ),
                 ),
               ),
@@ -260,7 +311,7 @@ class _CreatorAdminScreenState extends State<CreatorAdminScreen> {
                     ),
                   ),
                   Text(
-                    '${item['code']} · $state\n${item['usesCount']}/${item['maxUses']} kullanım · Son tarih: ${_date(item['expiresAtMs'])}',
+                    '${item['roleLabel']} · ${item['code']} · $state\n${item['usesCount']}/${item['maxUses']} kullanım · Son tarih: ${_date(item['expiresAtMs'])}${item['recipientBound'] == true ? ' · Kişiye özel' : ''}',
                   ),
                   Wrap(
                     spacing: 8,
@@ -276,7 +327,7 @@ class _CreatorAdminScreenState extends State<CreatorAdminScreen> {
                           MaterialPageRoute(
                             builder: (_) => _CreatorPeopleScreen(
                               title: 'Daveti kullananlar',
-                              action: 'redemptions',
+                              action: 'roleRedemptions',
                               query: {'code': item['code']},
                             ),
                           ),
@@ -313,21 +364,47 @@ class _InviteForm extends StatefulWidget {
 
 class _InviteFormState extends State<_InviteForm> {
   final _form = GlobalKey<FormState>();
-  String _label = '';
+  String _label = '', _email = '', _role = 'creator';
   int _uses = 1, _days = 30;
   @override
   Widget build(BuildContext context) => TbtDialog(
-    title: const Text('Creator daveti oluştur'),
+    title: const Text('Özel hesap daveti'),
     content: Form(
       key: _form,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          DropdownButtonFormField<String>(
+            initialValue: _role,
+            decoration: const InputDecoration(labelText: 'Verilecek hesap'),
+            items: const [
+              DropdownMenuItem(value: 'creator', child: Text('TBT Creator')),
+              DropdownMenuItem(value: 'explorer', child: Text('TBT Kâşif')),
+              DropdownMenuItem(value: 'social', child: Text('TBT Sosyal')),
+              DropdownMenuItem(value: 'gourmet', child: Text('TBT Gurme')),
+            ],
+            onChanged: (value) => setState(() => _role = value ?? 'creator'),
+          ),
+          const SizedBox(height: 12),
           TextFormField(
             maxLength: 80,
             decoration: const InputDecoration(labelText: 'Kişi / davet adı'),
             onSaved: (v) => _label = v?.trim() ?? '',
           ),
+          TextFormField(
+            keyboardType: TextInputType.emailAddress,
+            decoration: const InputDecoration(
+              labelText: 'Kişinin e-postası (önerilir)',
+              helperText: 'Davet uygulama kurulurken kaybolsa bile hesaba bağlanır.',
+            ),
+            validator: (v) {
+              final value = v?.trim() ?? '';
+              if (value.isEmpty) return null;
+              return value.contains('@') ? null : 'Geçerli bir e-posta gir.';
+            },
+            onSaved: (v) => _email = v?.trim() ?? '',
+          ),
+          const SizedBox(height: 12),
           TextFormField(
             initialValue: '1',
             keyboardType: TextInputType.number,
@@ -370,7 +447,9 @@ class _InviteFormState extends State<_InviteForm> {
           if (!_form.currentState!.validate()) return;
           _form.currentState!.save();
           Navigator.pop(context, {
+            'role': _role,
             'label': _label,
+            'recipientEmail': _email,
             'maxUses': _uses,
             'expiresInDays': _days,
           });
@@ -380,6 +459,191 @@ class _InviteFormState extends State<_InviteForm> {
     ],
   );
 }
+
+class _MetricChip extends StatelessWidget {
+  const _MetricChip({required this.label, required this.value});
+  final String label;
+  final dynamic value;
+
+  @override
+  Widget build(BuildContext context) => Chip(
+        label: Text('$label: ${(value as num?)?.toInt() ?? 0}'),
+        avatar: const Icon(Icons.verified_outlined, size: 17),
+      );
+}
+
+class _RoleAdminDetailScreen extends StatefulWidget {
+  const _RoleAdminDetailScreen({required this.uid, required this.role});
+  final String uid;
+  final String role;
+
+  @override
+  State<_RoleAdminDetailScreen> createState() =>
+      _RoleAdminDetailScreenState();
+}
+
+class _RoleAdminDetailScreenState extends State<_RoleAdminDetailScreen> {
+  Map<String, dynamic>? _data;
+  Object? _failure;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      final data = await _admin('roleDetail', {
+        'userId': widget.uid,
+        'role': widget.role,
+      });
+      if (mounted) setState(() => _data = data);
+    } catch (error) {
+      if (mounted) setState(() => _failure = error);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final profile = Map<String, dynamic>.from(
+      _data?['profile'] as Map? ?? const {},
+    );
+    final reputation = Map<String, dynamic>.from(
+      _data?['reputation'] as Map? ?? const {},
+    );
+    final scores = Map<String, dynamic>.from(
+      reputation['scores'] as Map? ?? const {},
+    );
+    final stats = Map<String, dynamic>.from(
+      reputation['stats'] as Map? ?? const {},
+    );
+    final source = switch (profile['source']) {
+      'invite' || 'admin' => 'Özel davet',
+      'legacy_creator' => 'Eski Creator sistemi',
+      'founding' => 'Kurucu Creator',
+      _ => 'Puan ve şartlarla',
+    };
+    return Scaffold(
+      appBar: AppBar(title: Text('${profile['roleLabel'] ?? 'Hesap türü'}')),
+      body: _failure != null
+          ? Center(
+              child: FilledButton(
+                onPressed: _load,
+                child: const Text('Yeniden dene'),
+              ),
+            )
+          : _data == null
+          ? const Center(child: CircularProgressIndicator())
+          : ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                Card(
+                  child: ListTile(
+                    leading: const CircleAvatar(
+                      child: Icon(Icons.workspace_premium_rounded),
+                    ),
+                    title: Text(
+                      '${profile['name']}',
+                      style: const TextStyle(fontWeight: FontWeight.w900),
+                    ),
+                    subtitle: Text(
+                      '$source · ${profile['score'] ?? 0} puan\n'
+                      'Toplam ${profile['total'] ?? 0} gerçek katkı puanı',
+                    ),
+                    trailing: profile['verified'] == true
+                        ? const Icon(
+                            Icons.verified_rounded,
+                            color: Color(0xFF52D8FF),
+                          )
+                        : null,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  'Dört alanın puanı',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    _MetricChip(label: 'Creator', value: scores['creator']),
+                    _MetricChip(label: 'Kâşif', value: scores['explorer']),
+                    _MetricChip(label: 'Sosyal', value: scores['social']),
+                    _MetricChip(label: 'Gurme', value: scores['gourmet']),
+                  ],
+                ),
+                const SizedBox(height: 18),
+                const Text(
+                  'Doğrulanmış katkılar',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
+                ),
+                const SizedBox(height: 8),
+                if (stats.isEmpty)
+                  const Text('Henüz ayrıntılı katkı kaydı yok.')
+                else
+                  ...stats.entries.map(
+                    (entry) => ListTile(
+                      dense: true,
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(_statLabel(entry.key)),
+                      trailing: Text(
+                        entry.value is List
+                            ? '${(entry.value as List).length}'
+                            : '${entry.value}',
+                        style: const TextStyle(fontWeight: FontWeight.w900),
+                      ),
+                    ),
+                  ),
+                if (profile['ambassador'] == true)
+                  const Card(
+                    child: ListTile(
+                      leading: Icon(
+                        Icons.workspace_premium_rounded,
+                        color: Color(0xFFFFD166),
+                      ),
+                      title: Text('TBT Elçisi'),
+                      subtitle: Text('Dört hesap türü ve doğrulama tamamlandı.'),
+                    ),
+                  ),
+                if (widget.role == 'creator')
+                  FilledButton.icon(
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => CreatorAdminDetailScreen(
+                          uid: widget.uid,
+                        ),
+                      ),
+                    ),
+                    icon: const Icon(Icons.analytics_outlined),
+                    label: const Text('Creator içerik istatistikleri'),
+                  ),
+              ],
+            ),
+    );
+  }
+}
+
+String _statLabel(String key) => switch (key) {
+  'creatorContent' => 'Özgün içerik',
+  'creatorStories' => 'Story',
+  'creatorQualityBonuses' => 'Kalite bonusu',
+  'explorerApprovedSpots' => 'Onaylı yer',
+  'explorerLocatedPosts' => 'Konumlu paylaşım',
+  'explorerCities' => 'Farklı şehir',
+  'explorerRoutes' => 'Yayınlanan rota',
+  'socialHostedCompleted' => 'Gerçekleşen etkinlik',
+  'socialAttendance' => 'Doğrulanmış katılım',
+  'socialMemories' => 'Etkinlik anısı',
+  'gourmetVenues' => 'Farklı mekân',
+  'gourmetPhotoReviews' => 'Fotoğraflı deneyim',
+  'gourmetCoupons' => 'Kullanılan kupon',
+  'gourmetReservations' => 'Tamamlanan rezervasyon',
+  _ => key,
+};
 
 class CreatorAdminDetailScreen extends StatefulWidget {
   const CreatorAdminDetailScreen({super.key, required this.uid});
