@@ -1,0 +1,28 @@
+name: Publish Rehber relaxing video 20260911
+on:
+  push:
+    branches: [codex/rehber-relaxing-20260911]
+    paths:
+      - .github/workflows/publish-relaxing-20260911.yml
+      - tool/publish_relaxing_20260911.cjs
+      - tool/editorial/relaxing-20260911.json
+permissions:
+  contents: read
+concurrency:
+  group: tbt-rehber-relaxing-20260911
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: sudo apt-get update -qq && sudo apt-get install -y ffmpeg
+      - run: npm install --prefix functions --ignore-scripts --no-audit --no-fund
+      - name: Publish relaxing original sound video
+        run: node tool/publish_relaxing_20260911.cjs --publish
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
