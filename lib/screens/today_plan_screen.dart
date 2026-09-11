@@ -147,7 +147,7 @@ class _TodayPlanScreenState extends State<TodayPlanScreen> {
       final others=_alternatives.where((p)=>p!=_alternatives[index]).expand((p)=>p.stops).where((s)=>!selected.contains(s.id));
       for(final stop in others){
         await TravelPlanCollaborationService.instance.proposeStopIfAbsent(id,stop.spot.name,spotId:stop.spot.id,
-          latitude:stop.spot.latitude,longitude:stop.spot.longitude,city:stop.spot.city);
+          latitude:stop.spot.latitude,longitude:stop.spot.longitude,city:stop.spot.city,stopSnapshot:{'id':stop.spot.id,'name':stop.spot.name,'city':stop.spot.city,'latitude':stop.spot.latitude,'longitude':stop.spot.longitude,'category':stop.spot.category,'bestTime':stop.spot.bestTime,'priceNote':stop.priceNote,if(stop.venue!=null)'venue':stop.venue!.toJson()});
       }
       _message('Alternatif duraklar planın oylama bölümüne eklendi.');
     }catch(_){_message('Durak önerileri eklenemedi.');}

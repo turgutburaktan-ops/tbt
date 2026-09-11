@@ -83,14 +83,36 @@ class TravelPlanCollaborationService {
         });
   }
 
-  Future<void> proposeStopIfAbsent(String planId, String text, {required String spotId, required double latitude, required double longitude, required String city}) async {
+  Future<void> proposeStopIfAbsent(String planId, String text, {required String spotId, required double latitude, required double longitude, required String city, Map<String, dynamic>? stopSnapshot}) async {
     final uid = _uid();
     final proposal = _firestore.collection('travel_plans').doc(planId).collection('proposals').doc('today_${Uri.encodeComponent(spotId)}');
     await _firestore.runTransaction((tx) async {
       if ((await tx.get(proposal)).exists) return;
       tx.set(proposal, {'authorId':uid,'text':text.length > 180 ? text.substring(0,180) : text,'spotId':spotId,
-        'latitude':latitude,'longitude':longitude,'city':city,'voterIds':<String>[],
+        'latitude':latitude,'longitude':longitude,'city':city,if(stopSnapshot!=null)'stopSnapshot':stopSnapshot,'voterIds':<String>[],
         'createdAt':FieldValue.serverTimestamp(),'updatedAt':FieldValue.serverTimestamp()});
+    });
+  }
+
+  Future<void> acceptDayStopProposal(String planId, String proposalId) async {
+    final uid = _uid();
+    final planRef = _firestore.collection('travel_plans').doc(planId);
+    final proposalRef = planRef.collection('proposals').doc(proposalId);
+    await _firestore.runTransaction((tx) async {
+      final plan = (await tx.get(planRef)).data();
+      final proposal = (await tx.get(proposalRef)).data();
+      if (plan == null || proposal == null || plan['ownerId'] != uid) throw Exception('Plan sahibi gerekli.');
+      if (proposal['status'] == 'accepted') return;
+      final stop = Map<String, dynamic>.from(proposal['stopSnapshot'] as Map? ?? {});
+      if (stop['id'] is! String || stop['name'] is! String || stop['latitude'] is! num || stop['longitude'] is! num) throw Exception('Durak bilgisi eksik.');
+      final stops = (plan['stopSnapshots'] as List? ?? []).map((s) => Map<String, dynamic>.from(s as Map)).toList();
+      if (!stops.any((s) => s['id'] == stop['id'])) {
+        if (stops.length >= 12) throw Exception('Rotada en fazla 12 durak olabilir.');
+        stops.add(stop);
+        tx.update(planRef, {'spotIds':stops.map((s)=>s['id']).toList(),'spotNames':stops.map((s)=>s['name']).toList(),
+          'stopSnapshots':stops,if(plan['dayPlan'] is Map)'dayPlan':{...Map<String,dynamic>.from(plan['dayPlan'] as Map),'routeChanged':true},'updatedAt':FieldValue.serverTimestamp()});
+      }
+      tx.update(proposalRef, {'status':'accepted','updatedAt':FieldValue.serverTimestamp()});
     });
   }
 

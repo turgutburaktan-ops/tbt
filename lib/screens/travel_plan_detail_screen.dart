@@ -355,11 +355,11 @@ class _TravelPlanDetailScreenState extends State<TravelPlanDetailScreen> {
                     children: [
                       _Metric(
                         Icons.route_rounded,
-                        '${plan.distanceKm.toStringAsFixed(1)} km',
+                        dayPlan['routeChanged'] == true ? 'Rotayı yeniden hesapla' : '${plan.distanceKm.toStringAsFixed(1)} km',
                       ),
                       _Metric(
                         Icons.schedule_rounded,
-                        '${plan.travelMinutes} dk yol',
+                        dayPlan['routeChanged'] == true ? 'Süre güncellenmeli' : '${plan.travelMinutes} dk yol',
                       ),
                       _Metric(
                         Icons.payments_outlined,
@@ -648,6 +648,11 @@ class _PlanGroupTabState extends State<_PlanGroupTab> {
     String text,
     Map<String, dynamic> proposal,
   ) async {
+    if (proposal['stopSnapshot'] is Map) {
+      try { await TravelPlanCollaborationService.instance.acceptDayStopProposal(widget.plan.id, proposalId); }
+      catch (error) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error.toString().replaceFirst('Exception: ', '')))); }
+      return;
+    }
     final spotId = (proposal['spotId'] ?? '').toString();
     final allSpots = await SpotRepository.instance.loadSpots();
     final byId = allSpots.where((spot) => spot.id == spotId).toList();
@@ -760,6 +765,10 @@ class _PlanGroupTabState extends State<_PlanGroupTab> {
                   child: ListTile(
                     title: Text((data['text'] ?? '').toString()),
                     subtitle: accepted ? const Text('Rotaya eklendi') : null,
+                    onTap: data['stopSnapshot'] is Map && (data['stopSnapshot'] as Map)['venue'] is Map ? () {
+                      final venue = Map<String, dynamic>.from((data['stopSnapshot'] as Map)['venue'] as Map);
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => BusinessProfileScreen(venue: NearbyVenue.fromJson(venue))));
+                    } : null,
                     trailing: Wrap(
                       spacing: 2,
                       children: [

@@ -28,7 +28,7 @@ void main(){
     expect(plans.single.stops.length,1);expect(plans.single.stops.single.spot.id,'ok');
   });
   test('walking and driving produce different feasible reach',(){
-    final distant=stop('distant',lat:38.75,stay:30);
+    final distant=stop('distant',lat:38.72,stay:30);
     expect(DayPlanEngine.build(request(minutes:60),[distant]),isEmpty);
     expect(DayPlanEngine.build(request(minutes:60,transport:'Araç'),[distant]),isNotEmpty);
   });
