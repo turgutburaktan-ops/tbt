@@ -153,6 +153,9 @@ test('moderation cannot be bypassed by deleting and resubmitting a review', asyn
   await h.call('admin','moderate',{reviewUid:'user',excluded:true,reason:'Doğrulanan sahte deneyim'});
   await h.call('user','delete');
   await assert.rejects(h.call('user','submit',{scores:scores(5)}),{code:'failed-precondition'});
+  await h.call('admin','moderate',{reviewUid:'user',excluded:false,reason:'İtiraz üzerine yeniden incelendi'});
+  await h.call('user','submit',{scores:scores(4)});
+  assert.equal(h.records.get(`venue_quality_public/${h.key}`).count,1);
 });
 test('qualified candidates require admin approval, complaints do not remove awards, suspension hides award', async () => {
   const h=harness();

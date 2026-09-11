@@ -127,11 +127,11 @@ exports.venueQuality = onCall({region: REGION}, async request => {
   if (action === 'adminDetail') {
     requireAdmin(request);
     await recalculate(db, key);
-    const [s, decisions, reviews, reports] = await Promise.all([ref.get(), ref.collection('decisions').orderBy('at', 'desc').limit(30).get(),
-      ref.collection('reviews').orderBy(FieldPath.documentId()).limit(50).get(), ref.collection('reports').orderBy('at', 'desc').limit(50).get()]);
+    const [s, decisions, reviews, reports, moderation] = await Promise.all([ref.get(), ref.collection('decisions').orderBy('at', 'desc').limit(30).get(),
+      ref.collection('reviews').orderBy(FieldPath.documentId()).limit(50).get(), ref.collection('reports').orderBy('at', 'desc').limit(50).get(), ref.collection('moderation').where('excluded', '==', true).get()]);
     return {item: s.data(), levels: LEVELS, reviewCursor: reviews.size === 50 ? reviews.docs.at(-1).id : null, decisions: decisions.docs.map(d => ({id: d.id, ...d.data(), atMs: ms(d.data().at)})),
       reviews: reviews.docs.map(d => ({id: d.id, scores: d.data().scores, excluded: d.data().excluded === true, proofType: d.data().proof?.type})),
-      reports: reports.docs.map(d => ({id: d.id, ...d.data()}))};
+      reports: reports.docs.map(d => ({id: d.id, ...d.data()})), exclusions: moderation.docs.map(d => ({id: d.id, reason: d.data().reason}))};
   }
   if (action === 'decide') {
     requireAdmin(request);
@@ -155,9 +155,10 @@ exports.venueQuality = onCall({region: REGION}, async request => {
     const reviewUid = clean(data.reviewUid, 128), reason = clean(data.reason, 700);
     if (!reviewUid || reviewUid.includes('/') || reason.length < 10 || typeof data.excluded !== 'boolean') throw new HttpsError('invalid-argument', 'Değerlendirme ve gerekçe gerekli.');
     await db.runTransaction(async tx => {
-      const reviewRef = ref.collection('reviews').doc(reviewUid), review = await tx.get(reviewRef);
-      if (!review.exists) throw new HttpsError('not-found', 'Değerlendirme bulunamadı.');
-      tx.update(reviewRef, {excluded: data.excluded});
+      const reviewRef = ref.collection('reviews').doc(reviewUid);
+      const [review, previousModeration] = await Promise.all([tx.get(reviewRef), tx.get(ref.collection('moderation').doc(reviewUid))]);
+      if (!review.exists && !previousModeration.exists) throw new HttpsError('not-found', 'Değerlendirme bulunamadı.');
+      if (review.exists) tx.update(reviewRef, {excluded: data.excluded});
       tx.set(ref.collection('moderation').doc(reviewUid), {excluded: data.excluded, reason, by: uid});
       tx.create(ref.collection('decisions').doc(), {action: data.excluded ? 'exclude_review' : 'restore_review', reviewUid, reason, by: uid, at: Timestamp.now()});
     });

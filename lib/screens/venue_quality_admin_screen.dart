@@ -122,6 +122,8 @@ class _VenueQualityDetailState extends State<_VenueQualityDetail> {
       const SizedBox(height: 16),
       const Text('Son şikâyetler', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
       ..._rows('reports').map((r) => ListTile(title: Text('${r['reason']}'), subtitle: Text('${r['userId']}'))),
+      if (_rows('exclusions').isNotEmpty) const Text('Hesaplama dışında tutulanlar', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+      ..._rows('exclusions').map((r) => ListTile(title: Text('${r['id']}'), subtitle: Text('${r['reason']}'), trailing: TextButton(onPressed: _busy ? null : () => _action('moderate', {'reviewUid': r['id'], 'excluded': false}), child: const Text('Kısıtı kaldır')))),
       const Text('Doğrulanmış değerlendirmeler', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
       ..._rows('reviews').map((r) => Card(child: Padding(padding: const EdgeInsets.all(12), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text('${r['id']}'),
