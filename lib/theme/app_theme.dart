@@ -3,20 +3,20 @@ import 'package:flutter/material.dart';
 class AppColors {
   AppColors._();
 
-  // TBT visual identity: cinematic dark surfaces + controlled cyan/violet neon.
-  static const background = Color(0xFF05060A);
-  static const backgroundRaised = Color(0xFF080A10);
-  static const surface = Color(0xFF0D1017);
-  static const surfaceAlt = Color(0xFF131722);
-  static const surfaceStrong = Color(0xFF1A1F2C);
-  static const surfaceElevated = Color(0xFF202636);
-  static const navigation = Color(0xFF090B11);
+  // TBT visual identity: neutral black surfaces with one primary violet accent.
+  static const background = Color(0xFF08090B);
+  static const backgroundRaised = Color(0xFF101115);
+  static const surface = Color(0xFF15171C);
+  static const surfaceAlt = Color(0xFF1B1D23);
+  static const surfaceStrong = Color(0xFF23252D);
+  static const surfaceElevated = Color(0xFF292C35);
+  static const navigation = Color(0xFF08090B);
 
   static const cyan = Color(0xFF45E7F2);
-  static const violet = Color(0xFF9B67F6);
-  static const violetBright = Color(0xFFB482FF);
+  static const violet = Color(0xFFA78BFA);
+  static const violetBright = Color(0xFFBBA4FF);
   static const cyanSoft = Color(0x2245E7F2);
-  static const violetSoft = Color(0x229B67F6);
+  static const violetSoft = Color(0x22A78BFA);
 
   static const primary = violet;
   static const primaryBright = Color(0xFFF5F4FA);
@@ -27,7 +27,7 @@ class AppColors {
   static const borderStrong = Color(0xFF343C4B);
   static const borderAccent = Color(0x668F73E8);
   static const textMuted = Color(0xFF9CA4B2);
-  static const textSubtle = Color(0xFF6F7888);
+  static const textSubtle = Color(0xFF939AA8);
   static const liked = Color(0xFFFF617A);
   static const success = Color(0xFF67D6B1);
   static const warning = Color(0xFFF4BE6A);
@@ -45,7 +45,7 @@ class AppColors {
   );
 
   static const subtleGradient = LinearGradient(
-    colors: [Color(0x2245E7F2), Color(0x229B67F6)],
+    colors: [Color(0x2245E7F2), Color(0x22A78BFA)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );

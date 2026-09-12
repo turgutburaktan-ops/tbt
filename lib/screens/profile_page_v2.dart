@@ -1,3 +1,4 @@
+import '../models/profile_identity.dart';
 import '../widgets/tbt_dialog.dart';
 import '../widgets/profile_sharing_section.dart';
 import '../services/social_event_service.dart';
@@ -105,19 +106,13 @@ class _ProfileBodyState extends State<_ProfileBody> {
     SocialService.instance.ensureUserProfile();
   }
 
-  String _typeLabel(String type) => switch (type) {
-    'creator' => 'İçerik Üreticisi',
-    'business_owner' => 'İşletme Sahibi',
-    'venue_manager' => 'Mekan Yöneticisi',
-    'organizer' => 'Organizatör',
-    _ => 'Kişisel',
-  };
+  String _typeLabel(String type) => ProfileIdentity.labels[type] ?? 'Kişisel';
 
   IconData _typeIcon(String type) => switch (type) {
     'creator' => Icons.auto_awesome_outlined,
-    'business_owner' => Icons.business_center_outlined,
-    'venue_manager' => Icons.storefront_outlined,
-    'organizer' => Icons.event_available_outlined,
+    'explorer' => Icons.explore_outlined,
+    'social' => Icons.groups_outlined,
+    'gourmet' => Icons.restaurant_outlined,
     _ => Icons.person_outline_rounded,
   };
 
@@ -197,7 +192,8 @@ class _ProfileBodyState extends State<_ProfileBody> {
           final bio = (profile['bio'] ?? '').toString();
           final photo = (profile['photoUrl'] ?? widget.user.photoURL ?? '')
               .toString();
-          final type = (profile['profileType'] ?? 'personal').toString();
+          // Self-selected legacy profile types are not earned titles.
+          final type = ProfileIdentity.type(profile);
 
           return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
             stream: SocialService.instance.userPosts(widget.user.uid),
@@ -227,27 +223,13 @@ class _ProfileBodyState extends State<_ProfileBody> {
                     ),
                   ),
                   SliverToBoxAdapter(
-                    child: ProfileSharingSection(
-                      userId: widget.user.uid,
-                      creator: profile['isCreator'] == true,
-                      own: true,
-                    ),
-                  ),
-                  SliverToBoxAdapter(child: _typeModule(type)),
-                  SliverToBoxAdapter(
-                    child: ProfileReservations(
-                      key: ValueKey(widget.user.uid),
-                      userId: widget.user.uid,
-                    ),
-                  ),
-                  SliverToBoxAdapter(
-                    child: ProfileBusinessCoupons(userId: widget.user.uid),
-                  ),
-                  SliverToBoxAdapter(
-                    child: ProfileFavoritePlacesSection(
-                      userId: widget.user.uid,
-                      editable: true,
-                      showFavorites: false,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 14),
+                      child: TextButton.icon(
+                        onPressed: () => _openProfileTools(profile, type),
+                        icon: const Icon(Icons.widgets_outlined),
+                        label: const Text('Kaydedilenler ve hesap işlemleri'),
+                      ),
                     ),
                   ),
                   SliverToBoxAdapter(child: _contentTabs()),
@@ -331,6 +313,37 @@ class _ProfileBodyState extends State<_ProfileBody> {
             },
           );
         },
+      ),
+    );
+  }
+
+  void _openProfileTools(Map<String, dynamic> profile, String type) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      showDragHandle: true,
+      builder: (_) => FractionallySizedBox(
+        heightFactor: .85,
+        child: ListView(
+          padding: const EdgeInsets.only(bottom: 24),
+          children: [
+            const ListTile(title: Text('Hesap işlemleri')),
+            ProfileSharingSection(
+              userId: widget.user.uid,
+              creator: profile['isCreator'] == true,
+              own: true,
+            ),
+            _typeModule(type),
+            ProfileReservations(userId: widget.user.uid),
+            ProfileBusinessCoupons(userId: widget.user.uid),
+            ProfileFavoritePlacesSection(
+              userId: widget.user.uid,
+              editable: true,
+              showFavorites: false,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -482,12 +495,12 @@ class _ProfileBodyState extends State<_ProfileBody> {
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: AppColors.surfaceStrong,
-                          border: Border.all(color: AppColors.cyan),
+                          border: Border.all(color: AppColors.primary),
                         ),
                         child: const Icon(
                           Icons.add_rounded,
                           size: 18,
-                          color: AppColors.cyan,
+                          color: AppColors.primary,
                         ),
                       ),
                     ),
@@ -550,7 +563,7 @@ class _ProfileBodyState extends State<_ProfileBody> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(_typeIcon(type), size: 12, color: AppColors.cyan),
+                    Icon(_typeIcon(type), size: 12, color: AppColors.primary),
                     const SizedBox(width: 4),
                     Text(
                       _typeLabel(type),
@@ -598,9 +611,9 @@ class _ProfileBodyState extends State<_ProfileBody> {
               const SizedBox(width: 8),
               Expanded(
                 child: OutlinedButton.icon(
-                  onPressed: () => Navigator.pushNamed(context, '/settings'),
-                  icon: const Icon(Icons.settings_outlined, size: 17),
-                  label: const Text('Ayarlar'),
+                  onPressed: () => _shareProfile(name, username),
+                  icon: const Icon(Icons.share_outlined, size: 17),
+                  label: const Text('Profili paylaş'),
                 ),
               ),
             ],
@@ -645,34 +658,45 @@ class _ProfileBodyState extends State<_ProfileBody> {
     );
   }
 
-  Widget _contentTabs() => Padding(
-    padding: const EdgeInsets.fromLTRB(14, 0, 14, 8),
-    child: SegmentedButton<String>(
-      segments: const [
-        ButtonSegment(
-          value: 'all',
-          tooltip: 'Paylaşımlar',
-          icon: Icon(Icons.grid_view_rounded),
+  Widget _contentTabs() => Column(
+    children: [
+      Text(switch (_tab) {
+        'routes' => 'Rotalarım',
+        'events' => 'Etkinliklerim',
+        'favorites' => 'Favorilerim',
+        _ => 'Paylaşımlar',
+      }, style: const TextStyle(fontWeight: FontWeight.w700)),
+      const SizedBox(height: 8),
+      Padding(
+        padding: const EdgeInsets.fromLTRB(14, 0, 14, 8),
+        child: SegmentedButton<String>(
+          segments: const [
+            ButtonSegment(
+              value: 'all',
+              tooltip: 'Paylaşımlar',
+              icon: Icon(Icons.grid_view_rounded),
+            ),
+            ButtonSegment(
+              value: 'routes',
+              tooltip: 'Rotalarım',
+              icon: Icon(Icons.route_rounded),
+            ),
+            ButtonSegment(
+              value: 'events',
+              tooltip: 'Etkinliklerim',
+              icon: Icon(Icons.event_available_outlined),
+            ),
+            ButtonSegment(
+              value: 'favorites',
+              tooltip: 'Favori Mekanlarım',
+              icon: Icon(Icons.bookmark_rounded),
+            ),
+          ],
+          selected: {_tab},
+          onSelectionChanged: (v) => setState(() => _tab = v.first),
         ),
-        ButtonSegment(
-          value: 'routes',
-          tooltip: 'Rotalarım',
-          icon: Icon(Icons.route_rounded),
-        ),
-        ButtonSegment(
-          value: 'events',
-          tooltip: 'Etkinliklerim',
-          icon: Icon(Icons.event_available_outlined),
-        ),
-        ButtonSegment(
-          value: 'favorites',
-          tooltip: 'Favori Mekanlarım',
-          icon: Icon(Icons.bookmark_rounded),
-        ),
-      ],
-      selected: {_tab},
-      onSelectionChanged: (v) => setState(() => _tab = v.first),
-    ),
+      ),
+    ],
   );
 
   Widget _empty() => Center(
@@ -773,7 +797,7 @@ class _ProfileBodyState extends State<_ProfileBody> {
                         child: photo == null
                             ? const Icon(
                                 Icons.add_a_photo_outlined,
-                                color: AppColors.cyan,
+                                color: AppColors.primary,
                               )
                             : null,
                       ),
@@ -1026,7 +1050,7 @@ class _ModuleCard extends StatelessWidget {
       contentPadding: const EdgeInsets.fromLTRB(14, 7, 8, 7),
       leading: CircleAvatar(
         backgroundColor: AppColors.surfaceStrong,
-        child: Icon(icon, color: AppColors.cyan),
+        child: Icon(icon, color: AppColors.primary),
       ),
       title: Text(title, style: const TextStyle(fontWeight: FontWeight.w900)),
       subtitle: Text(subtitle),

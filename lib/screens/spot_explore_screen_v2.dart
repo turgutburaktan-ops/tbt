@@ -27,6 +27,7 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
   List<PhotoSpot> _all = const [];
   List<PhotoSpot> _visible = const [];
   bool _loading = true;
+  bool _loadFailed = false;
   Position? _position;
   String _search = '';
 
@@ -47,18 +48,26 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
 
   Future<void> _refreshRemote() async {
     try {
-      final remote = await SpotRepository.instance.discover();
+      final remote = await SpotRepository.instance.discover().timeout(
+        const Duration(seconds: 15),
+      );
       if (!mounted) return;
       // Replacement also applies to empty results: unpublished places must
       // never reappear from the bundled catalog.
+      _loadFailed = false;
       _all = remote;
       _applyFilter();
       setState(() {});
     } catch (_) {
+      _loadFailed = true;
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Gezilecek yerler alınamadı. Yeniden deneyebilirsin.'),
-        ));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Gezilecek yerler alınamadı. Yeniden deneyebilirsin.',
+            ),
+          ),
+        );
       }
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -161,7 +170,7 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
   @override
   Widget build(BuildContext context) => RefreshIndicator(
     onRefresh: _reload,
-    color: AppColors.cyan,
+    color: AppColors.primary,
     child: CustomScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
       slivers: [
@@ -224,9 +233,25 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
             child: Center(child: CircularProgressIndicator()),
           )
         else if (_visible.isEmpty)
-          const SliverFillRemaining(
+          SliverFillRemaining(
             hasScrollBody: false,
-            child: Center(child: Text('Gezilecek yer bulunamadı.')),
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    _loadFailed
+                        ? 'Yerler yüklenemedi.'
+                        : 'Bu aramada yer bulunamadı.',
+                  ),
+                  if (_loadFailed)
+                    TextButton(
+                      onPressed: _reload,
+                      child: const Text('Tekrar dene'),
+                    ),
+                ],
+              ),
+            ),
           )
         else ...[
           SliverToBoxAdapter(
@@ -243,7 +268,9 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
             ),
           ),
           SliverList.builder(
-            itemCount: _visible.length + (_visible.length <= 6 ? 0 : 1 + ((_visible.length - 7) ~/ 10)),
+            itemCount:
+                _visible.length +
+                (_visible.length <= 6 ? 0 : 1 + ((_visible.length - 7) ~/ 10)),
             itemBuilder: (context, index) {
               final isAd = index >= 6 && (index - 6) % 11 == 0;
               if (isAd) {
@@ -319,7 +346,7 @@ class _SpotVenueCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(15),
             border: Border.all(
               color: pinned || selected
-                  ? AppColors.cyan.withValues(alpha: .38)
+                  ? AppColors.primary.withValues(alpha: .38)
                   : AppColors.border,
             ),
           ),
@@ -342,13 +369,13 @@ class _SpotVenueCard extends StatelessWidget {
                           Icon(
                             Icons.push_pin_rounded,
                             size: 13,
-                            color: AppColors.cyan,
+                            color: AppColors.primary,
                           ),
                           SizedBox(width: 4),
                           Text(
                             'Sabitlenen yer',
                             style: TextStyle(
-                              color: AppColors.cyan,
+                              color: AppColors.primary,
                               fontSize: 10.5,
                               fontWeight: FontWeight.w900,
                             ),
@@ -384,7 +411,7 @@ class _SpotVenueCard extends StatelessWidget {
                           Text(
                             distanceLabel,
                             style: const TextStyle(
-                              color: AppColors.cyan,
+                              color: AppColors.primary,
                               fontWeight: FontWeight.w900,
                               fontSize: 10.5,
                             ),
@@ -397,7 +424,7 @@ class _SpotVenueCard extends StatelessWidget {
                         const Icon(
                           Icons.star_rounded,
                           size: 14,
-                          color: AppColors.cyan,
+                          color: AppColors.primary,
                         ),
                         const SizedBox(width: 3),
                         Text(
@@ -441,7 +468,7 @@ class _SpotVenueCard extends StatelessWidget {
                     onPressed: onToggleRoute,
                     style: IconButton.styleFrom(
                       backgroundColor: selected
-                          ? AppColors.cyan
+                          ? AppColors.primary
                           : AppColors.surfaceStrong,
                       foregroundColor: selected
                           ? const Color(0xFF041311)

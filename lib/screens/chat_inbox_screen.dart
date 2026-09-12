@@ -1,4 +1,6 @@
+import '../theme/app_theme.dart';
 import '../widgets/chat_surface.dart';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -117,8 +119,7 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
         return ListView.separated(
           padding: const EdgeInsets.fromLTRB(8, 6, 8, 24),
           itemCount: docs.length,
-          separatorBuilder: (_, __) =>
-              const SizedBox(height: 6),
+          separatorBuilder: (_, __) => const SizedBox(height: 6),
           itemBuilder: (context, index) {
             final doc = docs[index];
             final data = doc.data();
@@ -137,7 +138,7 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
             return ListTile(
               leading: CircleAvatar(
                 radius: 24,
-                backgroundColor: const Color(0xFF0D1B30),
+                backgroundColor: AppColors.surface,
                 backgroundImage: photoUrl.isEmpty
                     ? null
                     : NetworkImage(photoUrl),
@@ -236,12 +237,16 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
                   ),
                   const SizedBox(height: 14),
                   Text(
-                    _showRequests ? 'Bekleyen mesaj isteğin yok.' : 'Henüz mesajın yok.',
+                    _showRequests
+                        ? 'Bekleyen mesaj isteğin yok.'
+                        : 'Henüz mesajın yok.',
                     style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    _showRequests ? 'Takip etmediğin kişilerden gelen yeni mesajlar burada görünür.' : 'Yukarıdan bir kullanıcı ara ve doğrudan mesaj gönder.',
+                    _showRequests
+                        ? 'Takip etmediğin kişilerden gelen yeni mesajlar burada görünür.'
+                        : 'Yukarıdan bir kullanıcı ara ve doğrudan mesaj gönder.',
                     textAlign: TextAlign.center,
                     style: TextStyle(color: Colors.white54, height: 1.4),
                   ),
@@ -260,23 +265,37 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
         return ListView.separated(
           padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
           itemCount: threads.length,
-          separatorBuilder: (_, __) =>
-              const SizedBox(height: 6),
+          separatorBuilder: (_, __) => const SizedBox(height: 6),
           itemBuilder: (context, index) {
             final thread = threads[index];
             final otherIds = thread.memberIds
                 .where((id) => id != myId)
                 .toList(growable: false);
-            if (thread.isGroup) return ListTile(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
-              tileColor: const Color(0xA6142238),
-              leading: const CircleAvatar(child: Icon(Icons.groups_outlined)),
-              title: Text(thread.name), subtitle: Text(thread.lastMessage, maxLines: 1, overflow: TextOverflow.ellipsis),
-              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ChatScreen(otherUserId: '', groupThreadId: thread.id))),
-            );
+            if (thread.isGroup)
+              return ListTile(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(22),
+                ),
+                tileColor: const Color(0xA6142238),
+                leading: const CircleAvatar(child: Icon(Icons.groups_outlined)),
+                title: Text(thread.name),
+                subtitle: Text(
+                  thread.lastMessage,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        ChatScreen(otherUserId: '', groupThreadId: thread.id),
+                  ),
+                ),
+              );
             if (otherIds.isEmpty) return const SizedBox.shrink();
             final lastRead = thread.lastReadAt[myId];
-            final unread = thread.lastSenderId != myId &&
+            final unread =
+                thread.lastSenderId != myId &&
                 thread.lastMessageAt != null &&
                 (lastRead == null || thread.lastMessageAt!.isAfter(lastRead));
             return _ThreadTile(
@@ -294,92 +313,133 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
   Widget build(BuildContext context) {
     final myId = FirebaseAuth.instance.currentUser?.uid;
 
-    return ChatSurface(child: Builder(builder: (context) => Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        foregroundColor: Colors.white,
-        title: const Text('Mesajlar'),
-        titleSpacing: 0,
-        actions: [
-          IconButton(constraints: const BoxConstraints.tightFor(width: 40), padding: EdgeInsets.zero, tooltip: 'Mesaj ayarları', icon: const Icon(Icons.settings_outlined), onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MessagePrivacySettingsScreen()))),
-          PopupMenuButton<String>(padding: EdgeInsets.zero, constraints: const BoxConstraints(minWidth: 160), tooltip: 'Grup sohbeti', icon: const Icon(Icons.group_add_outlined), onSelected: (v) => startGroupChat(context, join: v == 'join'), itemBuilder: (_) => const [PopupMenuItem(value: 'create', child: Text('Yeni grup')), PopupMenuItem(value: 'join', child: Text('Davetle katıl'))]),
-          IconButton(
-            constraints: const BoxConstraints.tightFor(width: 40),
-            padding: EdgeInsets.zero,
-            tooltip: 'Yeni mesaj',
-            onPressed: () => _searchFocus.requestFocus(),
-            icon: const Icon(Icons.edit_square),
-          ),
-          StreamBuilder<int>(
-            stream: AppNotificationService.instance.unreadCount(),
-            builder: (context, snapshot) {
-              final count = snapshot.data ?? 0;
-              return IconButton(
-                constraints: const BoxConstraints.tightFor(width: 40),
-                padding: EdgeInsets.zero,
-                tooltip: 'Bildirimler',
-                onPressed: () => Navigator.pushNamed(context, '/notifications'),
-                icon: Badge(
-                  isLabelVisible: count > 0,
-                  label: Text(count > 99 ? '99+' : '$count'),
-                  child: const Icon(Icons.notifications_none_rounded),
-                ),
-              );
-            },
-          ),
-          const SizedBox(width: 6),
-        ],
-      ),
-      body: ChatBackdrop(child: myId == null
-          ? const Center(
-              child: Text(
-                'Mesajlarını görmek için giriş yapmalısın.',
-                style: TextStyle(color: Colors.white70),
+    return ChatSurface(
+      child: Builder(
+        builder: (context) => Scaffold(
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+          appBar: AppBar(
+            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+            foregroundColor: Colors.white,
+            title: const Text('Mesajlar'),
+            titleSpacing: 0,
+            actions: [
+              TextButton.icon(
+                onPressed: () => _searchFocus.requestFocus(),
+                icon: const Icon(Icons.edit_square, size: 18),
+                label: const Text('Yeni mesaj'),
               ),
-            )
-          : Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(14, 8, 14, 8),
-                  child: TextField(
-                    controller: _searchController,
-                    focusNode: _searchFocus,
-                    onChanged: (value) => setState(() => _query = value),
-                    textInputAction: TextInputAction.search,
-                    decoration: InputDecoration(
-                      hintText: 'Kullanıcı ara…',
-                      prefixIcon: const Icon(Icons.search_rounded),
-                      suffixIcon: _query.isEmpty
-                          ? null
-                          : IconButton(
-                              tooltip: 'Temizle',
-                              onPressed: () {
-                                _searchController.clear();
-                                setState(() => _query = '');
-                                _searchFocus.unfocus();
-                              },
-                              icon: const Icon(Icons.close_rounded),
-                            ),
-                    ),
+              PopupMenuButton<String>(
+                tooltip: 'Mesaj işlemleri',
+                onSelected: (value) {
+                  if (value == 'settings') {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const MessagePrivacySettingsScreen(),
+                      ),
+                    );
+                  } else if (value == 'notifications') {
+                    Navigator.pushNamed(context, '/notifications');
+                  } else {
+                    startGroupChat(context, join: value == 'join');
+                  }
+                },
+                itemBuilder: (_) => const [
+                  PopupMenuItem(value: 'create', child: Text('Yeni grup')),
+                  PopupMenuItem(value: 'join', child: Text('Davetle katıl')),
+                  PopupMenuItem(
+                    value: 'settings',
+                    child: Text('Mesaj ayarları'),
                   ),
-                ),
-                if (_query.trim().isEmpty) Padding(padding: const EdgeInsets.symmetric(horizontal: 16), child: Row(children: [
-                  ChoiceChip(label: const Text('Sohbetler'), selected: !_showRequests, onSelected: (_) => setState(() => _showRequests = false)),
-                  const SizedBox(width: 8),
-                  StreamBuilder<List<ChatThread>>(stream: ChatService.instance.myThreads(), builder: (context, snap) {
-                    final count = (snap.data ?? <ChatThread>[]).where((t) => t.requestRecipientId == myId && t.requestStatus == 'pending' && t.lastMessageAt != null).length;
-                    return ChoiceChip(label: Text('İstekler${count > 0 ? ' ($count)' : ''}'), selected: _showRequests, onSelected: (_) => setState(() => _showRequests = true));
-                  }),
-                ])),
-                Expanded(
-                  child: _query.trim().isEmpty
-                      ? _threads(myId)
-                      : _searchResults(myId),
-                ),
-              ],
-            )),
-    )));
+                  PopupMenuItem(
+                    value: 'notifications',
+                    child: Text('Bildirimler'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          body: ChatBackdrop(
+            child: myId == null
+                ? const Center(
+                    child: Text(
+                      'Mesajlarını görmek için giriş yapmalısın.',
+                      style: TextStyle(color: Colors.white70),
+                    ),
+                  )
+                : Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(14, 8, 14, 8),
+                        child: TextField(
+                          controller: _searchController,
+                          focusNode: _searchFocus,
+                          onChanged: (value) => setState(() => _query = value),
+                          textInputAction: TextInputAction.search,
+                          decoration: InputDecoration(
+                            hintText: 'Kullanıcı ara…',
+                            prefixIcon: const Icon(Icons.search_rounded),
+                            suffixIcon: _query.isEmpty
+                                ? null
+                                : IconButton(
+                                    tooltip: 'Temizle',
+                                    onPressed: () {
+                                      _searchController.clear();
+                                      setState(() => _query = '');
+                                      _searchFocus.unfocus();
+                                    },
+                                    icon: const Icon(Icons.close_rounded),
+                                  ),
+                          ),
+                        ),
+                      ),
+                      if (_query.trim().isEmpty)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: Row(
+                            children: [
+                              ChoiceChip(
+                                label: const Text('Sohbetler'),
+                                selected: !_showRequests,
+                                onSelected: (_) =>
+                                    setState(() => _showRequests = false),
+                              ),
+                              const SizedBox(width: 8),
+                              StreamBuilder<List<ChatThread>>(
+                                stream: ChatService.instance.myThreads(),
+                                builder: (context, snap) {
+                                  final count = (snap.data ?? <ChatThread>[])
+                                      .where(
+                                        (t) =>
+                                            t.requestRecipientId == myId &&
+                                            t.requestStatus == 'pending' &&
+                                            t.lastMessageAt != null,
+                                      )
+                                      .length;
+                                  return ChoiceChip(
+                                    label: Text(
+                                      'İstekler${count > 0 ? ' ($count)' : ''}',
+                                    ),
+                                    selected: _showRequests,
+                                    onSelected: (_) =>
+                                        setState(() => _showRequests = true),
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                      Expanded(
+                        child: _query.trim().isEmpty
+                            ? _threads(myId)
+                            : _searchResults(myId),
+                      ),
+                    ],
+                  ),
+          ),
+        ),
+      ),
+    );
   }
 }
 
@@ -421,7 +481,9 @@ class _ThreadTile extends StatelessWidget {
         final photoUrl = preview.photoUrl;
 
         return ListTile(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(22),
+          ),
           tileColor: unread ? const Color(0xFF203654) : const Color(0xA6142238),
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 16,
@@ -429,7 +491,7 @@ class _ThreadTile extends StatelessWidget {
           ),
           leading: CircleAvatar(
             radius: 25,
-            backgroundColor: const Color(0xFF0D1B30),
+            backgroundColor: AppColors.surface,
             backgroundImage: photoUrl.isNotEmpty
                 ? NetworkImage(photoUrl)
                 : null,
@@ -455,7 +517,7 @@ class _ThreadTile extends StatelessWidget {
                 Text(
                   _threadTime(thread.lastMessageAt),
                   style: TextStyle(
-                    color: unread ? const Color(0xFF9FC7FF) : Colors.white38,
+                    color: unread ? AppColors.primary : Colors.white38,
                     fontSize: 11,
                     fontWeight: unread ? FontWeight.w800 : FontWeight.w500,
                   ),
@@ -476,7 +538,7 @@ class _ThreadTile extends StatelessWidget {
           ),
           trailing: unread
               ? const Badge(
-                  backgroundColor: Color(0xFF9FC7FF),
+                  backgroundColor: AppColors.primary,
                   smallSize: 9,
                   child: Icon(Icons.chevron_right, color: Colors.white54),
                 )
@@ -547,10 +609,9 @@ class _ThreadUserCache {
           .get()
           .timeout(const Duration(seconds: 4));
       final data = doc.data() ?? const <String, dynamic>{};
-      final name =
-          (data['displayName'] ?? data['username'] ?? 'Topluluk üyesi')
-              .toString()
-              .trim();
+      final name = (data['displayName'] ?? data['username'] ?? 'Topluluk üyesi')
+          .toString()
+          .trim();
       final username = (data['username'] ?? data['handle'] ?? '')
           .toString()
           .trim()
@@ -577,5 +638,3 @@ class _CachedThreadUser {
   bool get isExpired =>
       DateTime.now().difference(savedAt) > _ThreadUserCache._lifetime;
 }
-
-

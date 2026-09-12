@@ -1,3 +1,5 @@
+import '../theme/app_theme.dart';
+
 import 'package:flutter/material.dart';
 
 import '../services/chat_appearance_service.dart';
@@ -6,9 +8,9 @@ import '../services/chat_appearance_service.dart';
 class ChatSurface extends StatefulWidget {
   const ChatSurface({super.key, required this.child});
   final Widget child;
-  static const background = Color(0xFF0B1426);
-  static const panel = Color(0xFF142238);
-  static const accent = Color(0xFF9FC7FF);
+  static const background = AppColors.background;
+  static const panel = AppColors.surface;
+  static const accent = AppColors.primary;
 
   @override
   State<ChatSurface> createState() => _ChatSurfaceState();

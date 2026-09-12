@@ -1,3 +1,5 @@
+import 'venue_category_filter.dart';
+
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
@@ -23,15 +25,30 @@ class CityVenueArea {
 }
 
 class NearbyVenueService {
-  NearbyVenueService._() : _clientFactory = (() => http.Client()), _businessLoader = null;
+  NearbyVenueService._()
+    : _clientFactory = (() => http.Client()),
+      _businessLoader = null;
 
   NearbyVenueService.forTesting({
     required http.Client Function() clientFactory,
-    required Future<List<NearbyVenue>> Function(NearbyVenueCategory, double, double, int) businessLoader,
-  }) : _clientFactory = clientFactory, _businessLoader = businessLoader;
+    required Future<List<NearbyVenue>> Function(
+      NearbyVenueCategory,
+      double,
+      double,
+      int,
+    )
+    businessLoader,
+  }) : _clientFactory = clientFactory,
+       _businessLoader = businessLoader;
 
   final http.Client Function() _clientFactory;
-  final Future<List<NearbyVenue>> Function(NearbyVenueCategory, double, double, int)? _businessLoader;
+  final Future<List<NearbyVenue>> Function(
+    NearbyVenueCategory,
+    double,
+    double,
+    int,
+  )?
+  _businessLoader;
   static final instance = NearbyVenueService._();
   static const _cacheLifetime = Duration(hours: 18);
   static const int cityScaleRadiusMeters = 80000;
@@ -75,29 +92,44 @@ class NearbyVenueService {
   Future<QuerySnapshot<Map<String, dynamic>>>? _businessRequest;
   SharedPreferences? _preferences;
 
+  static bool suitableForCategory(NearbyVenue venue) =>
+      suitableVenueCategory(venue);
+
   void _publish(String key, List<NearbyVenue> venues) {
+    venues = venues.where(suitableForCategory).toList();
     if (venues.isEmpty) return;
     _latestInFlight[key] = List<NearbyVenue>.of(venues);
-    for (final listener in List.of(_listeners[key] ?? <void Function(List<NearbyVenue>)>{})) {
+    for (final listener in List.of(
+      _listeners[key] ?? <void Function(List<NearbyVenue>)>{},
+    )) {
       listener(List<NearbyVenue>.of(venues));
     }
   }
 
   Future<QuerySnapshot<Map<String, dynamic>>> _businessCatalog() {
-    if (_businessSnapshot != null && _businessSnapshotAt != null &&
-        DateTime.now().difference(_businessSnapshotAt!) < const Duration(minutes: 5)) {
+    if (_businessSnapshot != null &&
+        _businessSnapshotAt != null &&
+        DateTime.now().difference(_businessSnapshotAt!) <
+            const Duration(minutes: 5)) {
       return Future.value(_businessSnapshot!);
     }
     if (_businessRequest != null) return _businessRequest!;
-    final request = FirebaseFirestore.instance.collection('business_venues')
-        .where('source', isEqualTo: 'user_submission').limit(500).get()
+    final request = FirebaseFirestore.instance
+        .collection('business_venues')
+        .where('source', isEqualTo: 'user_submission')
+        .limit(500)
+        .get()
         .timeout(const Duration(seconds: 5));
     _businessRequest = request;
-    return request.then((snapshot) {
-      _businessSnapshot = snapshot;
-      _businessSnapshotAt = DateTime.now();
-      return snapshot;
-    }).whenComplete(() { _businessRequest = null; });
+    return request
+        .then((snapshot) {
+          _businessSnapshot = snapshot;
+          _businessSnapshotAt = DateTime.now();
+          return snapshot;
+        })
+        .whenComplete(() {
+          _businessRequest = null;
+        });
   }
 
   double? _cityLatitude, _cityLongitude, _south, _west, _north, _east;
@@ -231,10 +263,18 @@ class NearbyVenueService {
     bool useSelectedCity = true,
     void Function(List<NearbyVenue>)? onUpdate,
   }) {
-    final state = useSelectedCity ? _snapshotState(latitude, longitude) : _VenueQueryState(
-      cityName: null, latitude: latitude, longitude: longitude,
-      south: null, west: null, north: null, east: null, selectedCity: false,
-    );
+    final state = useSelectedCity
+        ? _snapshotState(latitude, longitude)
+        : _VenueQueryState(
+            cityName: null,
+            latitude: latitude,
+            longitude: longitude,
+            south: null,
+            west: null,
+            north: null,
+            east: null,
+            selectedCity: false,
+          );
     final key = _cacheKeyForState(category, state, radiusMeters);
     if (onUpdate != null) {
       (_listeners[key] ??= <void Function(List<NearbyVenue>)>{}).add(onUpdate);
@@ -242,8 +282,11 @@ class NearbyVenueService {
     final running = _inFlight[key];
     if (running != null) {
       final latest = _latestInFlight[key];
-      if (onUpdate != null && latest != null) onUpdate(List<NearbyVenue>.of(latest));
-      return running.whenComplete(() { _listeners[key]?.remove(onUpdate); });
+      if (onUpdate != null && latest != null)
+        onUpdate(List<NearbyVenue>.of(latest));
+      return running.whenComplete(() {
+        _listeners[key]?.remove(onUpdate);
+      });
     }
 
     final request = _nearbyInternal(
@@ -277,27 +320,42 @@ class NearbyVenueService {
     var osmFailed = false;
     // Paint disk results before either network source completes.
     _publish(key, osm);
-    final businessFuture = _tbtBusinesses(category, state.latitude,
-        state.longitude, radiusMeters, state).then((items) {
-      business = items;
-      _publish(key, _merge(osm, business));
-    });
+    final businessFuture =
+        _tbtBusinesses(
+          category,
+          state.latitude,
+          state.longitude,
+          radiusMeters,
+          state,
+        ).then((items) {
+          business = items;
+          _publish(key, _merge(osm, business));
+        });
     final osmFuture = () async {
       if (!forceRefresh && cached != null && !cached.isExpired) return;
-      final fresh = await _fetchFreshOsm(category: category, state: state,
-          radiusMeters: radiusMeters);
-      if (fresh == null) { osmFailed = true; return; }
+      final fresh = await _fetchFreshOsm(
+        category: category,
+        state: state,
+        radiusMeters: radiusMeters,
+      );
+      if (fresh == null) {
+        osmFailed = true;
+        return;
+      }
       osm = fresh;
       _publish(key, _merge(osm, business));
       try {
-        await p.setString(key, jsonEncode({
-          'savedAt': DateTime.now().millisecondsSinceEpoch,
-          'venues': fresh.map((v) => v.toJson()).toList(),
-        }));
+        await p.setString(
+          key,
+          jsonEncode({
+            'savedAt': DateTime.now().millisecondsSinceEpoch,
+            'venues': fresh.map((v) => v.toJson()).toList(),
+          }),
+        );
       } catch (_) {}
     }();
     await Future.wait([businessFuture, osmFuture]);
-    final result = _merge(osm, business);
+    final result = _merge(osm, business).where(suitableForCategory).toList();
     if (result.isEmpty && cached == null && osmFailed) {
       throw Exception('Mekan verisi alınamadı.');
     }
@@ -329,7 +387,10 @@ class NearbyVenueService {
             .timeout(const Duration(seconds: 6));
         if (r.statusCode != 200) continue;
         final decoded = jsonDecode(r.body);
-        if (decoded is! Map || decoded['elements'] is! List || decoded['remark'] != null) continue;
+        if (decoded is! Map ||
+            decoded['elements'] is! List ||
+            decoded['remark'] != null)
+          continue;
         return _parse(r.body, category, state);
       } catch (_) {
         // Try the fallback without discarding already displayed results.
@@ -434,7 +495,8 @@ class NearbyVenueService {
         final boostUntil = d['boostActiveUntil'] is Timestamp
             ? (d['boostActiveUntil'] as Timestamp).toDate()
             : null;
-        final sponsored = d['boostActive'] == true &&
+        final sponsored =
+            d['boostActive'] == true &&
             boostUntil != null &&
             boostUntil.isAfter(DateTime.now());
         final routeSettings = d['routeSettings'] is Map
@@ -451,25 +513,28 @@ class NearbyVenueService {
             openingHours: (d['openingHours'] ?? '').toString(),
             phone: (d['phone'] ?? '').toString(),
             website: (d['website'] ?? '').toString(),
-            imageUrl: (
-              d['coverImageUrl'] ??
-              d['imageUrl'] ??
-              d['photoUrl'] ??
-              d['logoUrl'] ??
-              ''
-            ).toString(),
-            description: (
-              d['shortDescription'] ?? d['description'] ?? ''
-            ).toString(),
+            imageUrl:
+                (d['coverImageUrl'] ??
+                        d['imageUrl'] ??
+                        d['photoUrl'] ??
+                        d['logoUrl'] ??
+                        '')
+                    .toString(),
+            description: (d['shortDescription'] ?? d['description'] ?? '')
+                .toString(),
             sponsored: sponsored,
             routeRecommended: routeSettings['enabled'] == true,
           ),
         );
       }
       out.sort((a, b) {
-        final sponsoredOrder = (b.sponsored ? 1 : 0).compareTo(a.sponsored ? 1 : 0);
+        final sponsoredOrder = (b.sponsored ? 1 : 0).compareTo(
+          a.sponsored ? 1 : 0,
+        );
         if (sponsoredOrder != 0) return sponsoredOrder;
-        return (b.routeRecommended ? 1 : 0).compareTo(a.routeRecommended ? 1 : 0);
+        return (b.routeRecommended ? 1 : 0).compareTo(
+          a.routeRecommended ? 1 : 0,
+        );
       });
       return out;
     } catch (_) {
@@ -630,9 +695,8 @@ class NearbyVenueService {
           website: (tags['contact:website'] ?? tags['website'] ?? '')
               .toString(),
           imageUrl: _osmImageUrl(tags),
-          description: (
-            tags['description:tr'] ?? tags['description'] ?? ''
-          ).toString(),
+          description: (tags['description:tr'] ?? tags['description'] ?? '')
+              .toString(),
         ),
       );
       if (out.length >= 600) break;
@@ -663,7 +727,11 @@ class _VenueQueryState {
   });
 
   bool get hasBounds =>
-      selectedCity && south != null && west != null && north != null && east != null;
+      selectedCity &&
+      south != null &&
+      west != null &&
+      north != null &&
+      east != null;
 
   bool insideBounds(double lat, double lon) =>
       !hasBounds ||

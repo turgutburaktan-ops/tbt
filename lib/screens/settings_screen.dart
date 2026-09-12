@@ -1,3 +1,4 @@
+import '../models/profile_identity.dart';
 import 'profile_history_screen.dart';
 import '../widgets/tbt_dialog.dart';
 
@@ -93,16 +94,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       text: (data['displayName'] ?? user.displayName ?? '').toString(),
     );
     final bio = TextEditingController(text: (data['bio'] ?? '').toString());
-    var type = (data['profileType'] ?? 'personal').toString();
-    const valid = {
-      'personal',
-      'creator',
-      'business_owner',
-      'venue_manager',
-      'organizer',
-    };
-    if (!valid.contains(type)) type = 'personal';
-
     final save = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
@@ -137,36 +128,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 decoration: const InputDecoration(labelText: 'Biyografi'),
               ),
               const SizedBox(height: 8),
-              DropdownButtonFormField<String>(
-                value: type,
-                decoration: const InputDecoration(labelText: 'Profil türü'),
-                items: const [
-                  DropdownMenuItem(value: 'personal', child: Text('Kişisel')),
-                  DropdownMenuItem(
-                    value: 'creator',
-                    child: Text('İçerik Üreticisi'),
-                  ),
-                  DropdownMenuItem(
-                    value: 'business_owner',
-                    child: Text('İşletme Sahibi'),
-                  ),
-                  DropdownMenuItem(
-                    value: 'venue_manager',
-                    child: Text('Mekan Yöneticisi'),
-                  ),
-                  DropdownMenuItem(
-                    value: 'organizer',
-                    child: Text('Organizatör'),
-                  ),
-                ],
-                onChanged: (v) {
-                  if (v != null) setSheet(() => type = v);
-                },
-              ),
-              const SizedBox(height: 8),
               const Text(
-                'Profil türü seçimi hesap veya işletme doğrulaması vermez.',
-                style: TextStyle(color: Colors.white54, fontSize: 11.5),
+                'Hesabın kişiseldir. Creator, Kâşif, Sosyal ve Gurme unvanlarını TBT Yolculuğum üzerinden kazanabilirsin.',
+                style: TextStyle(color: AppColors.textMuted, fontSize: 12),
               ),
               const SizedBox(height: 16),
               FilledButton(
@@ -187,7 +151,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         await ref.set({
           'displayName': displayName,
           'bio': bio.text.trim(),
-          'profileType': type,
+          'profileType': 'personal',
           'updatedAt': FieldValue.serverTimestamp(),
         }, SetOptions(merge: true));
         await user.updateDisplayName(displayName);
@@ -491,7 +455,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 final settings = Map<String, dynamic>.from(
                   data['settings'] is Map ? data['settings'] as Map : {},
                 );
-                final type = (data['profileType'] ?? 'personal').toString();
+                final type = ProfileIdentity.type(data);
                 return ListView(
                   padding: const EdgeInsets.fromLTRB(14, 8, 14, 32),
                   children: [
@@ -500,7 +464,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     _tile(
                       Icons.person_outline_rounded,
                       'Profil bilgileri',
-                      'Ad, biyografi ve profil türü',
+                      'Ad ve biyografi',
                       () => _editProfile(data),
                     ),
                     _tile(
@@ -515,30 +479,34 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       'E-posta ve telefon doğrulamasını yönet',
                       _verification,
                     ),
-                    _section('Geçmiş'),
-                    _tile(
-                      Icons.confirmation_number_outlined,
-                      'Geçmiş kuponlar',
-                      'Kullanılan ve süresi dolan kuponlar',
-                      () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) =>
-                              const ProfileHistoryScreen(coupons: true),
+                    ExpansionTile(
+                      title: const Text('Arşiv ve geçmiş'),
+                      children: [
+                        _tile(
+                          Icons.confirmation_number_outlined,
+                          'Geçmiş kuponlar',
+                          'Kullanılan ve süresi dolan kuponlar',
+                          () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  const ProfileHistoryScreen(coupons: true),
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                    _tile(
-                      Icons.event_note_outlined,
-                      'Geçmiş rezervasyonlar',
-                      'Geçmiş ve sonuçlanan rezervasyonlar',
-                      () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) =>
-                              const ProfileHistoryScreen(coupons: false),
+                        _tile(
+                          Icons.event_note_outlined,
+                          'Geçmiş rezervasyonlar',
+                          'Geçmiş ve sonuçlanan rezervasyonlar',
+                          () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  const ProfileHistoryScreen(coupons: false),
+                            ),
+                          ),
                         ),
-                      ),
+                      ],
                     ),
                     _section('Gizlilik'),
                     _tile(
@@ -577,43 +545,48 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ),
                       ),
                     ),
-                    _section(AppStrings.of(context).text('notifications')),
-                    _switchTile(
-                      Icons.campaign_outlined,
-                      AppStrings.of(context).text('marketing'),
-                      AppStrings.of(context).text('marketingBody'),
-                      (data['notificationPreferences'] as Map?)?['marketing'] ==
-                              true &&
-                          settings['notifyMarketing'] != false,
-                      _marketing,
-                    ),
-                    _switchTile(
-                      Icons.chat_bubble_outline_rounded,
-                      'Mesajlar',
-                      'Yeni mesaj bildirimleri',
-                      settings['notifyMessages'] != false,
-                      (v) => _setBool('notifyMessages', v),
-                    ),
-                    _switchTile(
-                      Icons.favorite_border_rounded,
-                      'Beğeni ve yorumlar',
-                      'İçerik etkileşimlerini bildir',
-                      settings['notifyEngagement'] != false,
-                      (v) => _setBool('notifyEngagement', v),
-                    ),
-                    _switchTile(
-                      Icons.event_outlined,
-                      'Etkinlikler',
-                      'Daveti, katılımı ve hatırlatmaları bildir',
-                      settings['notifyEvents'] != false,
-                      (v) => _setBool('notifyEvents', v),
-                    ),
-                    _switchTile(
-                      Icons.emoji_events_outlined,
-                      'TBT Yolculuğum',
-                      'Hesap türü ve itibar gelişmelerini bildir',
-                      settings['notifyRewards'] != false,
-                      (v) => _setBool('notifyRewards', v),
+                    ExpansionTile(
+                      title: Text(AppStrings.of(context).text('notifications')),
+                      children: [
+                        _switchTile(
+                          Icons.campaign_outlined,
+                          AppStrings.of(context).text('marketing'),
+                          AppStrings.of(context).text('marketingBody'),
+                          (data['notificationPreferences']
+                                      as Map?)?['marketing'] ==
+                                  true &&
+                              settings['notifyMarketing'] != false,
+                          _marketing,
+                        ),
+                        _switchTile(
+                          Icons.chat_bubble_outline_rounded,
+                          'Mesajlar',
+                          'Yeni mesaj bildirimleri',
+                          settings['notifyMessages'] != false,
+                          (v) => _setBool('notifyMessages', v),
+                        ),
+                        _switchTile(
+                          Icons.favorite_border_rounded,
+                          'Beğeni ve yorumlar',
+                          'İçerik etkileşimlerini bildir',
+                          settings['notifyEngagement'] != false,
+                          (v) => _setBool('notifyEngagement', v),
+                        ),
+                        _switchTile(
+                          Icons.event_outlined,
+                          'Etkinlikler',
+                          'Daveti, katılımı ve hatırlatmaları bildir',
+                          settings['notifyEvents'] != false,
+                          (v) => _setBool('notifyEvents', v),
+                        ),
+                        _switchTile(
+                          Icons.emoji_events_outlined,
+                          'TBT Yolculuğum',
+                          'Hesap türü ve itibar gelişmelerini bildir',
+                          settings['notifyRewards'] != false,
+                          (v) => _setBool('notifyRewards', v),
+                        ),
+                      ],
                     ),
                     _section('İçerik ve Keşif'),
                     _tile(
@@ -768,7 +741,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 Text(
                   _profileTypeLabel(type),
                   style: const TextStyle(
-                    color: AppColors.cyan,
+                    color: AppColors.primary,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -780,13 +753,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  String _profileTypeLabel(String v) => switch (v) {
-    'creator' => 'İçerik Üreticisi',
-    'business_owner' => 'İşletme Sahibi',
-    'venue_manager' => 'Mekan Yöneticisi',
-    'organizer' => 'Organizatör',
-    _ => 'Kişisel',
-  };
+  String _profileTypeLabel(String v) => ProfileIdentity.labels[v] ?? 'Kişisel';
 
   Widget _verificationRow(
     String label,
@@ -807,7 +774,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             Text(
               verified ? 'Doğrulandı' : 'Doğrulanmadı',
               style: TextStyle(
-                color: verified ? AppColors.cyan : Colors.white54,
+                color: verified ? AppColors.primary : Colors.white54,
               ),
             ),
           ],
@@ -815,7 +782,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
       Icon(
         verified ? Icons.verified_rounded : Icons.error_outline_rounded,
-        color: verified ? AppColors.cyan : Colors.white38,
+        color: verified ? AppColors.primary : Colors.white38,
       ),
       if (actionLabel != null) ...[
         const SizedBox(width: 8),

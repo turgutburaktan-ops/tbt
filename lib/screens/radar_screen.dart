@@ -278,21 +278,8 @@ class _RadarScreenState extends State<RadarScreen> {
                         )
                         .toList()
                       ..sort((a, b) => a.startsAt.compareTo(b.startsAt));
-                final soon = events
-                    .where(
-                      (e) => e.startsAt.isBefore(
-                        DateTime.now().add(const Duration(hours: 3)),
-                      ),
-                    )
-                    .take(8)
-                    .toList();
-                final popular = [...events]
-                  ..sort(
-                    (a, b) => b.participantCount.compareTo(a.participantCount),
-                  );
-
                 return RefreshIndicator(
-                  color: AppColors.cyan,
+                  color: AppColors.primary,
                   onRefresh: _load,
                   child: ListView(
                     physics: const AlwaysScrollableScrollPhysics(),
@@ -307,28 +294,45 @@ class _RadarScreenState extends State<RadarScreen> {
                       const SizedBox(height: 10),
                       _categoryStrip(),
                       const SizedBox(height: 12),
-                      _hero(events, demands),
-                      const SizedBox(height: 18),
-                      _sectionTitle(
-                        '⚡ Şimdi Çık',
-                        'Önümüzdeki 3 saat içinde başlayacak planlar',
-                      ),
-                      const SizedBox(height: 9),
-                      _eventRail(soon),
-                      const SizedBox(height: 20),
-                      _sectionTitle(
-                        '🔥 Şehrin hareketli planları',
-                        'Katılımı en yüksek etkinlikler',
-                      ),
-                      const SizedBox(height: 9),
-                      _eventRail(popular.take(8).toList()),
-                      const SizedBox(height: 20),
-                      _sectionTitle(
-                        'Şu an ne yapmak istiyorlar?',
-                        'Aynı planı isteyen insanlarla buluş',
-                      ),
-                      const SizedBox(height: 9),
-                      _demandSection(demands),
+                      if (eventSnapshot.hasError || demandSnapshot.hasError)
+                        const Padding(
+                          padding: EdgeInsets.all(16),
+                          child: Text(
+                            'Etkinlikler yüklenemedi. Yenilemek için aşağı çek.',
+                          ),
+                        )
+                      else if (eventSnapshot.connectionState ==
+                              ConnectionState.waiting &&
+                          !eventSnapshot.hasData)
+                        const Center(child: CircularProgressIndicator())
+                      else ...[
+                        if (events.isEmpty) _hero(events, demands),
+                        if (events.isNotEmpty) ...[
+                          _sectionTitle(
+                            'Yaklaşan etkinlikler',
+                            'Bir plan seç, birlikte katıl',
+                          ),
+                          const SizedBox(height: 9),
+                          _eventRail(events.take(12).toList()),
+                        ],
+                        if (demands.isNotEmpty) ...[
+                          const SizedBox(height: 20),
+                          _sectionTitle(
+                            'Birlikte yapmak isteyenler',
+                            'Ortak bir ilgiyle buluş',
+                          ),
+                          const SizedBox(height: 9),
+                          _demandSection(demands),
+                        ],
+                        if (demands.isEmpty)
+                          TextButton.icon(
+                            onPressed: () => _openActivity('Sosyal'),
+                            icon: const Icon(Icons.group_add_outlined),
+                            label: const Text(
+                              'Birlikte yapmak istediğini paylaş',
+                            ),
+                          ),
+                      ],
                     ],
                   ),
                 );
@@ -347,7 +351,7 @@ class _RadarScreenState extends State<RadarScreen> {
         if (!widget.embedded) ...[
           const Row(
             children: [
-              Icon(Icons.radar_rounded, color: AppColors.cyan, size: 22),
+              Icon(Icons.radar_rounded, color: AppColors.primary, size: 22),
               SizedBox(width: 8),
               Text(
                 'Radar',
@@ -405,7 +409,9 @@ class _RadarScreenState extends State<RadarScreen> {
           showCheckmark: false,
           onSelected: (_) => setState(() => _category = label),
           visualDensity: VisualDensity.compact,
-          side: BorderSide(color: selected ? AppColors.cyan : AppColors.border),
+          side: BorderSide(
+            color: selected ? AppColors.primary : AppColors.border,
+          ),
         );
       },
     ),
@@ -421,9 +427,7 @@ class _RadarScreenState extends State<RadarScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF142129), Color(0xFF1D1529)],
-        ),
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: AppColors.border),
       ),
@@ -457,7 +461,9 @@ class _RadarScreenState extends State<RadarScreen> {
           ),
           const SizedBox(height: 6),
           Text(
-            '${events.length} etkinlik • ${participantIds.length} aktif kişi',
+            events.isEmpty
+                ? 'Henüz yaklaşan bir etkinlik yok. İlk buluşmayı sen başlat.'
+                : '${events.length} etkinlik',
             style: const TextStyle(color: Colors.white60, fontSize: 12.5),
           ),
           const SizedBox(height: 14),
@@ -568,7 +574,7 @@ class _RadarScreenState extends State<RadarScreen> {
                       child: Icon(
                         _eventIcon(event.type),
                         size: 19,
-                        color: AppColors.cyan,
+                        color: AppColors.primary,
                       ),
                     ),
                     const SizedBox(width: 9),
@@ -579,7 +585,7 @@ class _RadarScreenState extends State<RadarScreen> {
                           Text(
                             _timeUntil(event.startsAt),
                             style: const TextStyle(
-                              color: AppColors.cyan,
+                              color: AppColors.primary,
                               fontSize: 10.5,
                               fontWeight: FontWeight.w900,
                             ),
@@ -729,7 +735,7 @@ class _RadarScreenState extends State<RadarScreen> {
                   child: Icon(
                     _activityIcon(demand.activity),
                     size: 18,
-                    color: AppColors.cyan,
+                    color: AppColors.primary,
                   ),
                 ),
                 const SizedBox(width: 9),
@@ -852,7 +858,7 @@ class _LiveDotState extends State<_LiveDot>
         width: 7,
         height: 7,
         decoration: const BoxDecoration(
-          color: AppColors.cyan,
+          color: AppColors.primary,
           shape: BoxShape.circle,
         ),
       ),

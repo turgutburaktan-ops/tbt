@@ -107,7 +107,7 @@ class _StoryStripState extends State<StoryStrip> {
             });
 
             return SizedBox(
-              height: 104,
+              height: 94,
               child: ListView(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.fromLTRB(12, 8, 12, 7),
@@ -175,7 +175,7 @@ class _AddStoryCircle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => SizedBox(
-    width: 78,
+    width: 70,
     child: Column(
       children: [
         GestureDetector(
@@ -184,8 +184,8 @@ class _AddStoryCircle extends StatelessWidget {
             clipBehavior: Clip.none,
             children: [
               Container(
-                width: 64,
-                height: 64,
+                width: 56,
+                height: 56,
                 padding: EdgeInsets.all(hasStory ? 2.5 : 0),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
@@ -279,15 +279,15 @@ class _StoryCircle extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = stories.first;
     return SizedBox(
-      width: 78,
+      width: 70,
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(40),
         child: Column(
           children: [
             Container(
-              width: 64,
-              height: 64,
+              width: 56,
+              height: 56,
               padding: const EdgeInsets.all(2.5),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,

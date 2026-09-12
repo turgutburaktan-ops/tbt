@@ -1,3 +1,4 @@
+import '../services/compact_route_selection.dart';
 import '../widgets/tbt_dialog.dart';
 
 import 'dart:math' as math;
@@ -249,7 +250,12 @@ class _SmartPlanScreenState extends State<SmartPlanScreen> {
             )
             .toList()
           ..sort((a, b) => _score(b).compareTo(_score(a)));
-    var selected = _orderNearby(candidates.take(count).toList());
+    var selected = selectCompactRoute(
+      candidates,
+      hours: _duration,
+      transport: _transport,
+      limit: count,
+    );
     if (selected.isEmpty) {
       setState(() => _generating = false);
       _message('$city için uygun rota bulunamadı.');
@@ -296,7 +302,12 @@ class _SmartPlanScreenState extends State<SmartPlanScreen> {
           : _duration <= 5
           ? 2
           : 4;
-      selected = _orderNearby([...selected, ...venueStops.take(mealLimit)]);
+      selected = selectCompactRoute(
+        [...selected, ...venueStops.take(mealLimit)],
+        hours: _duration,
+        transport: _transport,
+        limit: count + mealLimit,
+      );
     } catch (_) {}
     var intelligence = await TravelIntelligenceService.instance.analyze(
       selected,
@@ -318,10 +329,29 @@ class _SmartPlanScreenState extends State<SmartPlanScreen> {
       }
 
       selected.sort((a, b) => indoorScore(b).compareTo(indoorScore(a)));
+      selected = selectCompactRoute(
+        selected,
+        hours: _duration,
+        transport: _transport,
+        limit: selected.length,
+      );
       intelligence = await TravelIntelligenceService.instance.analyze(
         selected,
         transport: _transport,
       );
+    }
+    while (selected.length > 1 &&
+        intelligence.travelMinutes + selected.length * 45 > _duration * 60) {
+      selected.removeLast();
+      intelligence = await TravelIntelligenceService.instance.analyze(
+        selected,
+        transport: _transport,
+      );
+    }
+    if (!mounted) return;
+    if (_city != city) {
+      setState(() => _generating = false);
+      return;
     }
     final estimated = TravelIntelligenceService.instance.estimateBudget(
       distanceKm: intelligence.distanceKm,
@@ -770,11 +800,11 @@ class _SmartPlanScreenState extends State<SmartPlanScreen> {
                           _PlanMetric(
                             icon: Icons.route_rounded,
                             text:
-                                '${_intelligence!.distanceKm.toStringAsFixed(1)} km',
+                                '≈ ${_intelligence!.distanceKm.toStringAsFixed(1)} km',
                           ),
                           _PlanMetric(
                             icon: Icons.schedule_rounded,
-                            text: '${_intelligence!.travelMinutes} dk yol',
+                            text: '≈ ${_intelligence!.travelMinutes} dk yol',
                           ),
                           _PlanMetric(
                             icon: Icons.payments_outlined,
