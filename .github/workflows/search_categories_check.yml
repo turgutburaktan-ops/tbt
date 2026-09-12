@@ -1,0 +1,20 @@
+name: Search categories check
+on:
+  push:
+    branches: [codex/search-category-tabs]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter analyze --no-fatal-infos --no-fatal-warnings lib/screens/home_discover_screen.dart lib/widgets/categorized_search.dart test/categorized_search_test.dart
+      - run: flutter test test/categorized_search_test.dart test/profile_name_navigation_test.dart
