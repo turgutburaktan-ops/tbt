@@ -357,6 +357,10 @@ jobs:
           </plist>
           PLIST
 
+
+      - name: Fix iOS rear camera mirroring
+        run: python3 tool/patch_ios_camera_mirroring.py
+
       - name: Build signed IPA
         shell: bash
         env:
