@@ -1,3 +1,4 @@
+import '../widgets/profile_photo_card.dart';
 import '../models/profile_identity.dart';
 import '../widgets/profile_sharing_section.dart';
 import 'post_deep_link_screen.dart';
@@ -149,9 +150,13 @@ class UserProfileScreen extends StatelessWidget {
                                         const <AppStory>[];
                                     final hasStory = stories.isNotEmpty;
                                     return GestureDetector(
-                                      onTap: hasStory
-                                          ? () => _openStories(context, stories)
-                                          : null,
+                                      behavior: HitTestBehavior.opaque,
+                                      onTap: () => showProfilePhotoCard(context,
+                                        userId: userId, photoUrl: photoUrl,
+                                        name: displayName, username: username,
+                                        onViewStory: hasStory
+                                            ? () => _openStories(context, stories)
+                                            : null),
                                       child: Container(
                                         padding: EdgeInsets.all(
                                           hasStory ? 3 : 2,
@@ -553,3 +558,4 @@ class _Stat extends StatelessWidget {
     );
   }
 }
+

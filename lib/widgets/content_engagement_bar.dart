@@ -1,3 +1,4 @@
+import 'profile_name_link.dart';
 // Shared engagement controls for posts and social events.
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -174,10 +175,11 @@ class ContentEngagementBar extends StatelessWidget {
                                 backgroundColor: const Color(0xFF0D1B30),
                                 child: Icon(Icons.person_outline),
                               ),
-                              title: Text(
-                                (data['userName'] ?? 'Kullanıcı').toString(),
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w800,
+                              title: ProfileNameLink(
+                                userId: (data['userId'] ?? '').toString(),
+                                child: Text(
+                                  (data['userName'] ?? 'Kullanıcı').toString(),
+                                  style: const TextStyle(fontWeight: FontWeight.w800),
                                 ),
                               ),
                               subtitle: MentionText(
@@ -530,17 +532,18 @@ class ContentEngagementBar extends StatelessWidget {
           borderRadius: BorderRadius.circular(8),
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 6),
-            child: Text.rich(
-              TextSpan(children: [
-                TextSpan(text: '${first['userName'] ?? 'Kullanıcı'}  ',
-                    style: const TextStyle(fontWeight: FontWeight.w800,
-                        color: Colors.white)),
-                TextSpan(text: (first['text'] ?? '').toString()),
-              ]),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(color: Colors.white70, fontSize: 13),
-            ),
+            child: Row(children: [
+              Flexible(child: ProfileNameLink(
+                userId: (first['userId'] ?? '').toString(),
+                child: Text((first['userName'] ?? 'Kullanıcı').toString(),
+                  maxLines: 1, overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontWeight: FontWeight.w800)),
+              )),
+              const SizedBox(width: 8),
+              Expanded(child: Text((first['text'] ?? '').toString(),
+                maxLines: 2, overflow: TextOverflow.ellipsis,
+                style: const TextStyle(color: Colors.white70, fontSize: 13))),
+            ]),
           ),
         ),
       ),
@@ -550,3 +553,4 @@ class ContentEngagementBar extends StatelessWidget {
     );
   }
 }
+

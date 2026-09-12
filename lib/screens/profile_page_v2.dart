@@ -1,3 +1,5 @@
+import '../widgets/profile_photo_card.dart';
+import '../widgets/description_field.dart';
 import '../widgets/profile_content_navigation.dart';
 import 'rewards_hub_screen.dart';
 import 'creator_center_screen.dart';
@@ -413,7 +415,12 @@ class _ProfileBodyState extends State<_ProfileBody> {
               Stack(
                 clipBehavior: Clip.none,
                 children: [
-                  CircleAvatar(
+                  GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () => showProfilePhotoCard(context,
+                      userId: widget.user.uid, photoUrl: photo,
+                      name: name, username: username),
+                    child: CircleAvatar(
                     radius: 43,
                     backgroundColor: const Color(0xFF0D1B30),
                     child: ClipOval(
@@ -439,6 +446,7 @@ class _ProfileBodyState extends State<_ProfileBody> {
                         ),
                       ),
                     ),
+                  ),
                   ),
                   Positioned(
                     right: -2,
@@ -808,7 +816,7 @@ class _ProfileBodyState extends State<_ProfileBody> {
                     ),
                   ),
                   const SizedBox(height: 10),
-                  TextField(
+                  DescriptionField(
                     controller: bioController,
                     maxLength: 160,
                     minLines: 3,
@@ -1261,3 +1269,4 @@ class _Stat extends StatelessWidget {
           );
   }
 }
+
