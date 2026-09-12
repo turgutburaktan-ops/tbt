@@ -355,7 +355,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  ProfileNameLink(userId: item.type == 'tbt_broadcast' ? '' : item.actorId, compact: true, child: Text(
+                  ProfileNameLink(userId: item.type == 'tbt_broadcast' ? '' : (item.actorId ?? ''), compact: true, child: Text(
                     item.title.isEmpty ? 'Bildirim' : item.title,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
