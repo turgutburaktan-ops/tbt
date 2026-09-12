@@ -90,6 +90,8 @@ jobs:
         grep -q ''^package com.tbt.social$'' "$main_activity"
 
         '
+    - name: Align share plugin JVM targets
+      run: python3 tool/patch_receive_sharing_intent.py
     - name: Configure notification replies
       run: python3 tool/configure_notifications.py android
     - name: Build debug APK
