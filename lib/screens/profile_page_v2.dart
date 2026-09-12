@@ -1,3 +1,6 @@
+import '../widgets/profile_content_navigation.dart';
+import 'rewards_hub_screen.dart';
+import 'creator_center_screen.dart';
 import '../models/profile_identity.dart';
 import '../widgets/tbt_dialog.dart';
 import '../widgets/profile_sharing_section.dart';
@@ -223,42 +226,35 @@ class _ProfileBodyState extends State<_ProfileBody> {
                     ),
                   ),
                   SliverToBoxAdapter(
-                    child: ProfileSharingSection(
-                      userId: widget.user.uid,
-                      creator: profile['isCreator'] == true,
-                      own: true,
-                    ),
-                  ),
-                  SliverToBoxAdapter(child: _typeModule(type)),
-                  SliverToBoxAdapter(
-                    child: ProfileReservations(
-                      key: ValueKey(widget.user.uid),
-                      userId: widget.user.uid,
-                    ),
-                  ),
-                  SliverToBoxAdapter(
-                    child: ProfileBusinessCoupons(userId: widget.user.uid),
-                  ),
-                  SliverToBoxAdapter(
-                    child: ProfileFavoritePlacesSection(
-                      userId: widget.user.uid,
-                      editable: true,
-                      showFavorites: false,
+                    child: ProfileJourneyRow(
+                      points:
+                          (profile['reputationTotal'] as num?)?.toInt() ?? 0,
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const RewardsHubScreen(),
+                        ),
+                      ),
                     ),
                   ),
                   SliverToBoxAdapter(child: _contentTabs()),
-                  if (_tab == 'routes')
-                    const SliverToBoxAdapter(child: _ProfileRoutesSection())
-                  else if (_tab == 'events')
+                  if (_tab == 'all' && profile['isCreator'] == true)
                     SliverToBoxAdapter(
-                      child: _ProfileEventsSection(userId: widget.user.uid),
-                    )
-                  else if (_tab == 'favorites')
-                    SliverToBoxAdapter(
-                      child: ProfileFavoritePlacesSection(
+                      child: ProfileSharingSection(
                         userId: widget.user.uid,
-                        editable: true,
-                        showProgress: false,
+                        creator: true,
+                        own: true,
+                        showReferences: false,
+                        showCreatorCenter: false,
+                      ),
+                    ),
+                  if (_tab == 'reposts' || _tab == 'saved')
+                    SliverToBoxAdapter(
+                      child: ProfileSharingSection(
+                        key: ValueKey(_tab),
+                        userId: widget.user.uid,
+                        own: true,
+                        referenceTab: _tab,
                       ),
                     )
                   else if (postSnapshot.connectionState ==
@@ -359,14 +355,6 @@ class _ProfileBodyState extends State<_ProfileBody> {
           onSelected: (v) => _menu(v, profile),
           itemBuilder: (_) => [
             const PopupMenuItem(
-              value: 'settings',
-              child: ListTile(
-                dense: true,
-                leading: Icon(Icons.settings_outlined),
-                title: Text('Ayarlar'),
-              ),
-            ),
-            const PopupMenuItem(
               value: 'stats',
               child: ListTile(
                 dense: true,
@@ -388,14 +376,6 @@ class _ProfileBodyState extends State<_ProfileBody> {
                 dense: true,
                 leading: Icon(Icons.shield_outlined),
                 title: Text('Gizlilik ve Güvenlik'),
-              ),
-            ),
-            const PopupMenuItem(
-              value: 'business',
-              child: ListTile(
-                dense: true,
-                leading: Icon(Icons.storefront_outlined),
-                title: Text('Mekanlarım'),
               ),
             ),
             const PopupMenuDivider(),
@@ -594,9 +574,9 @@ class _ProfileBodyState extends State<_ProfileBody> {
               const SizedBox(width: 8),
               Expanded(
                 child: OutlinedButton.icon(
-                  onPressed: () => Navigator.pushNamed(context, '/settings'),
-                  icon: const Icon(Icons.settings_outlined, size: 17),
-                  label: const Text('Ayarlar'),
+                  onPressed: () => _openActions(profile),
+                  icon: const Icon(Icons.dashboard_outlined, size: 17),
+                  label: const Text('İşlemlerim'),
                 ),
               ),
             ],
@@ -606,69 +586,111 @@ class _ProfileBodyState extends State<_ProfileBody> {
     ),
   );
 
-  Widget _typeModule(String type) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
-      child: Column(
-        children: [
-          _ModuleCard(
-            icon: Icons.storefront_outlined,
-            title: 'Mekanlarım',
-            subtitle:
-                'İstatistik, paylaşım, menü, kampanya ve etkinlik yönetimi',
-            onTap: () => Navigator.pushNamed(context, '/business'),
+  void _openPanel(String title, Widget child) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => Scaffold(
+          backgroundColor: AppColors.background,
+          appBar: AppBar(title: Text(title)),
+          body: ListView(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            children: [child],
           ),
-          if (type == 'organizer') ...[
-            const SizedBox(height: 10),
-            _ModuleCard(
-              icon: Icons.event_available_outlined,
-              title: 'Organizatör Profili',
-              subtitle: 'Etkinliklerin ve içeriklerin profilinde öne çıkar',
-              onTap: _openStatistics,
-            ),
-          ],
-          if (type == 'creator') ...[
-            const SizedBox(height: 10),
-            _ModuleCard(
-              icon: Icons.auto_awesome_outlined,
-              title: 'İçerik Üreticisi',
-              subtitle: 'İçerik performansını ve büyümeni takip et',
-              onTap: _openStatistics,
-            ),
-          ],
-        ],
+        ),
       ),
     );
   }
 
-  Widget _contentTabs() => Padding(
-    padding: const EdgeInsets.fromLTRB(14, 0, 14, 8),
-    child: SegmentedButton<String>(
-      segments: const [
-        ButtonSegment(
-          value: 'all',
-          tooltip: 'Paylaşımlar',
-          icon: Icon(Icons.grid_view_rounded),
+  Future<void> _openActions(Map<String, dynamic> profile) async {
+    final choice = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: AppColors.surfaceAlt,
+      useSafeArea: true,
+      isScrollControlled: true,
+      builder: (sheetContext) => SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Padding(
+              padding: EdgeInsets.all(16),
+              child: Text(
+                'İşlemlerim',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
+              ),
+            ),
+            for (final item in [
+              ('business', 'Mekanlarım', Icons.storefront_outlined),
+              ('reservations', 'Rezervasyonlarım', Icons.event_seat_outlined),
+              ('coupons', 'Kuponlarım', Icons.confirmation_number_outlined),
+              ('routes', 'Rotalarım', Icons.route_rounded),
+              ('events', 'Etkinliklerim', Icons.event_available_outlined),
+              ('favorites', 'Favori Mekanlarım', Icons.bookmark_outline),
+              if (profile['isCreator'] == true ||
+                  ProfileIdentity.type(profile) == 'creator')
+                ('creator', 'Creator Merkezi', Icons.auto_awesome_outlined),
+            ])
+              ListTile(
+                leading: Icon(item.$3),
+                title: Text(item.$2),
+                trailing: const Icon(Icons.chevron_right_rounded),
+                onTap: () => Navigator.pop(sheetContext, item.$1),
+              ),
+          ],
         ),
-        ButtonSegment(
-          value: 'routes',
-          tooltip: 'Rotalarım',
-          icon: Icon(Icons.route_rounded),
-        ),
-        ButtonSegment(
-          value: 'events',
-          tooltip: 'Etkinliklerim',
-          icon: Icon(Icons.event_available_outlined),
-        ),
-        ButtonSegment(
-          value: 'favorites',
-          tooltip: 'Favori Mekanlarım',
-          icon: Icon(Icons.bookmark_rounded),
-        ),
-      ],
-      selected: {_tab},
-      onSelectionChanged: (v) => setState(() => _tab = v.first),
-    ),
+      ),
+    );
+    if (!mounted || choice == null) return;
+    switch (choice) {
+      case 'business':
+        Navigator.pushNamed(context, '/business');
+        break;
+      case 'reservations':
+        _openPanel(
+          'Rezervasyonlarım',
+          ProfileReservations(userId: widget.user.uid, initiallyExpanded: true),
+        );
+        break;
+      case 'coupons':
+        _openPanel(
+          'Kuponlarım',
+          ProfileBusinessCoupons(
+            userId: widget.user.uid,
+            initiallyExpanded: true,
+          ),
+        );
+        break;
+      case 'routes':
+        _openPanel('Rotalarım', const _ProfileRoutesSection());
+        break;
+      case 'events':
+        _openPanel(
+          'Etkinliklerim',
+          _ProfileEventsSection(userId: widget.user.uid),
+        );
+        break;
+      case 'favorites':
+        _openPanel(
+          'Favori Mekanlarım',
+          ProfileFavoritePlacesSection(
+            userId: widget.user.uid,
+            editable: true,
+            showProgress: false,
+          ),
+        );
+        break;
+      case 'creator':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const CreatorCenterScreen()),
+        );
+        break;
+    }
+  }
+
+  Widget _contentTabs() => ProfileContentNavigation(
+    selected: _tab,
+    onChanged: (tab) => setState(() => _tab = tab),
   );
 
   Widget _empty() => Center(

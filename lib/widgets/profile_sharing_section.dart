@@ -13,68 +13,87 @@ class ProfileSharingSection extends StatelessWidget {
     required this.userId,
     this.creator = false,
     this.own = false,
+    this.referenceTab,
+    this.showReferences = true,
+    this.showCreatorCenter = true,
   });
+  final String? referenceTab;
+  final bool showReferences, showCreatorCenter;
   final String userId;
   final bool creator, own;
   @override
-  Widget build(BuildContext context) => Column(
-    crossAxisAlignment: CrossAxisAlignment.stretch,
-    children: [
-      if (creator && own)
-        Padding(
-          padding: const EdgeInsets.all(16),
-          child: FilledButton.icon(
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const CreatorCenterScreen()),
-            ),
-            icon: const Icon(Icons.auto_awesome),
-            label: const Text('Creator Merkezi'),
-          ),
-        ),
-      if (creator)
-        StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-          stream: FirebaseFirestore.instance
-              .doc('creator_profiles/$userId')
-              .snapshots(),
-          builder: (context, snapshot) {
-            final pins = List<String>.from(
-              snapshot.data?.data()?['pinnedPostIds'] as List? ?? const [],
-            );
-            if (pins.isEmpty) return const SizedBox.shrink();
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Text(
-                    'Creator’ın seçtikleri',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+  Widget build(BuildContext context) => referenceTab != null
+      ? (referenceTab == 'saved' && !own
+            ? const SizedBox.shrink()
+            : _ReferenceList(
+                userId: userId,
+                bookmarks: referenceTab == 'saved',
+              ))
+      : Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (creator && own && showCreatorCenter)
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: FilledButton.icon(
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const CreatorCenterScreen(),
+                    ),
                   ),
+                  icon: const Icon(Icons.auto_awesome),
+                  label: const Text('Creator Merkezi'),
                 ),
-                for (final id in pins.take(3))
-                  SharedPostCard(
-                    key: ValueKey('pin-$id'),
-                    postId: id,
-                    compact: true,
-                  ),
-              ],
-            );
-          },
-        ),
-      ExpansionTile(
-        title: const Text('Yeniden paylaşımlar'),
-        leading: const Icon(Icons.repeat),
-        children: [_ReferenceList(userId: userId, bookmarks: false)],
-      ),
-      if (own)
-        ExpansionTile(
-          title: const Text('Kaydedilen gönderiler'),
-          leading: const Icon(Icons.bookmark_outline),
-          children: [_ReferenceList(userId: userId, bookmarks: true)],
-        ),
-    ],
-  );
+              ),
+            if (creator)
+              StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+                stream: FirebaseFirestore.instance
+                    .doc('creator_profiles/$userId')
+                    .snapshots(),
+                builder: (context, snapshot) {
+                  final pins = List<String>.from(
+                    snapshot.data?.data()?['pinnedPostIds'] as List? ??
+                        const [],
+                  );
+                  if (pins.isEmpty) return const SizedBox.shrink();
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const Padding(
+                        padding: EdgeInsets.all(16),
+                        child: Text(
+                          'Creator’ın seçtikleri',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                          ),
+                        ),
+                      ),
+                      for (final id in pins.take(3))
+                        SharedPostCard(
+                          key: ValueKey('pin-$id'),
+                          postId: id,
+                          compact: true,
+                        ),
+                    ],
+                  );
+                },
+              ),
+            if (showReferences)
+              ExpansionTile(
+                title: const Text('Yeniden paylaşımlar'),
+                leading: const Icon(Icons.repeat),
+                children: [_ReferenceList(userId: userId, bookmarks: false)],
+              ),
+            if (own && showReferences)
+              ExpansionTile(
+                title: const Text('Kaydedilen gönderiler'),
+                leading: const Icon(Icons.bookmark_outline),
+                children: [_ReferenceList(userId: userId, bookmarks: true)],
+              ),
+          ],
+        );
 }
 
 class _ReferenceList extends StatelessWidget {

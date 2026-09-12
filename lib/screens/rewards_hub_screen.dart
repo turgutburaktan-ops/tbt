@@ -1,3 +1,4 @@
+import 'retention_hub_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -67,6 +68,7 @@ class _RewardsHubScreenState extends State<RewardsHubScreen> {
               padding: const EdgeInsets.fromLTRB(16, 10, 16, 36),
               children: [
                 _JourneyHeader(total: total, verified: verified, ambassador: ambassador),
+                TextButton.icon(onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RetentionHubScreen())), icon: const Icon(Icons.local_fire_department_rounded), label: const Text('Bugün TBT')),
                 const SizedBox(height: 18),
                 const Text('Hesap türlerin', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900)),
                 const SizedBox(height: 5),
