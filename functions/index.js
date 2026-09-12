@@ -31,14 +31,17 @@ exports.pushOnNotificationCreated = onDocumentCreated(
         return;
       }
       const thread = (await db.doc(`chat_threads/${data.sourceId}`).get()).data();
-      if (thread?.requestStatus === 'rejected') {
-        await event.data.ref.set({pushStatus: 'suppressed', pushReason: 'request_rejected'}, {merge: true});
-        return;
-      }
-      if (thread?.requestStatus === 'pending') {
-        // Requests stay in the requests inbox without repeated push interruptions.
-        await event.data.ref.set({pushStatus: 'suppressed', pushReason: 'request_pending'}, {merge: true});
-        return;
+      if (thread?.type === 'direct') {
+        const actor = data.actorId;
+        if (!actor || !thread.memberIds?.includes(actor) || !thread.memberIds?.includes(userId)) return;
+        const blocks = await Promise.all([
+          db.doc(`users/${userId}/blocked/${actor}`).get(),
+          db.doc(`users/${actor}/blocked/${userId}`).get(),
+        ]);
+        if (blocks.some(doc => doc.exists)) {
+          await event.data.ref.set({pushStatus: 'suppressed', pushReason: 'user_blocked'}, {merge: true});
+          return;
+        }
       }
     }
     if (data.type === 'tbt_broadcast') {
@@ -456,3 +459,4 @@ exports.awardFiftyLikesXp = onDocumentCreated('posts/{postId}/likes/{userId}', a
     stat: 'creatorQualityBonuses',
   });
 });
+

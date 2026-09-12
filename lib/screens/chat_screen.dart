@@ -12,7 +12,6 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../models/chat_message.dart';
 import '../widgets/chat_surface.dart';
-import '../widgets/chat_request_banner.dart';
 import '../widgets/swipe_to_reply.dart';
 import '../services/chat_service.dart';
 import '../widgets/chat_voice_message.dart';
@@ -288,12 +287,6 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _showVoiceRecorderSheet() async {
-    if (_currentThread?.requestStatus == 'pending') {
-      _showError(
-        Exception('Ses göndermek için isteğin kabul edilmesini bekle.'),
-      );
-      return;
-    }
     if (_sending || _sendingMedia) return;
     await showModalBottomSheet<void>(
       context: context,
@@ -333,14 +326,6 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _showAttachMenu() async {
-    if (_currentThread?.requestStatus == 'pending') {
-      _showError(
-        Exception(
-          'Fotoğraf ve ses göndermek için isteğin kabul edilmesini bekle.',
-        ),
-      );
-      return;
-    }
     final action = await showModalBottomSheet<String>(
       context: context,
       useSafeArea: true,
@@ -871,14 +856,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     );
   }
 
-  bool get _canReply {
-    final thread = _currentThread;
-    return thread != null &&
-        thread.requestStatus != 'rejected' &&
-        !(thread.requestStatus == 'pending' &&
-            thread.requestRecipientId ==
-                FirebaseAuth.instance.currentUser?.uid);
-  }
+  bool get _canReply => _currentThread != null;
 
   void _beginReply(ChatMessage message) {
     if (_editing != null) _finishEditing();
@@ -1393,36 +1371,6 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     );
   }
 
-  Widget _requestBanner(ChatThread thread, String myId) {
-    return ChatRequestBanner(
-      incoming: thread.requestRecipientId == myId,
-      onAccept: () async {
-        try {
-          await ChatService.instance.action('acceptRequest', {
-            'threadId': thread.id,
-          });
-          await ChatService.instance.markThreadRead(thread.id);
-        } catch (e) {
-          _showError(e);
-        }
-      },
-      onReject: () => runChatAction(context, 'rejectRequest', {
-        'threadId': thread.id,
-      }),
-      onBlock: () async {
-        try {
-          await ChatService.instance.action('rejectRequest', {
-            'threadId': thread.id,
-          });
-          await ChatService.instance.blockUser(widget.otherUserId);
-          if (mounted) Navigator.pop(context);
-        } catch (e) {
-          _showError(e);
-        }
-      },
-    );
-  }
-
   Future<void> _showSafetyMenu() async {
     if (widget.groupThreadId != null) {
       await Navigator.push(
@@ -1566,25 +1514,22 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                         children: [
                           _searchBar(),
                           if (thread?.pinnedMessageId != null)
-                            StreamBuilder<
-                              DocumentSnapshot<Map<String, dynamic>>
-                            >(
-                              stream: FirebaseFirestore.instance
-                                  .doc(
-                                    'chat_threads/$_threadId/messages/${thread!.pinnedMessageId}',
-                                  )
-                                  .snapshots(),
-                              builder: (context, snap) => ListTile(
-                                dense: true,
-                                leading: const Icon(Icons.push_pin_outlined),
-                                title: Text(
-                                  (snap.data?.data()?['text'] ??
-                                          'Sabitlenmiş mesaj')
-                                      .toString(),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
+                            StreamBuilder<ChatMessage?>(
+                              stream: ChatService.instance.visibleMessage(
+                                _threadId!, thread!.pinnedMessageId!),
+                              builder: (context, snap) {
+                                final message = snap.data;
+                                if (message == null || _hiddenIds.contains(message.id) ||
+                                    _blockedIds.contains(message.senderId)) {
+                                  return const SizedBox.shrink();
+                                }
+                                return ListTile(
+                                  dense: true,
+                                  leading: const Icon(Icons.push_pin_outlined),
+                                  title: Text(message.text, maxLines: 2,
+                                    overflow: TextOverflow.ellipsis),
+                                );
+                              },
                             ),
                           Expanded(
                             child: StreamBuilder<List<ChatMessage>>(
@@ -1758,16 +1703,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                             ),
                           ),
                           _typingIndicator(thread),
-                          if (thread?.requestStatus == 'pending')
-                            _requestBanner(thread!, myId),
-                          if (thread?.requestStatus == 'rejected')
-                            const Padding(
-                              padding: EdgeInsets.all(20),
-                              child: Text('Bu mesaj isteği kabul edilmedi.'),
-                            )
-                          else if (thread?.requestStatus != 'pending' ||
-                              thread?.requestRecipientId != myId)
-                            _composer(),
+                          _composer(),
                         ],
                       );
                     },
@@ -1778,3 +1714,4 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     );
   }
 }
+
