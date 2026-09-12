@@ -75,21 +75,19 @@ class SpotRepository {
     // the shared catalog (including searches with limit: 8).
     final remote = <PhotoSpot>[];
     try {
-      final docs =
-          await PublishedSpotCatalog.collectPages<
-            QueryDocumentSnapshot<Map<String, dynamic>>
-          >((cursor, pageSize) async {
-            Query<Map<String, dynamic>> page = _firestore
-                .collection(spotsCollection)
-                .where('status', isEqualTo: 'published')
-                .orderBy(FieldPath.documentId)
-                .limit(pageSize);
-            if (cursor != null) page = page.startAfterDocument(cursor);
-            final snapshot = await page
-                .get(const GetOptions(source: Source.server))
-                .timeout(const Duration(seconds: 10));
-            return snapshot.docs;
-          });
+      final docs = await PublishedSpotCatalog.collectPages<
+          QueryDocumentSnapshot<Map<String, dynamic>>>((cursor, pageSize) async {
+        Query<Map<String, dynamic>> page = _firestore
+          .collection(spotsCollection)
+          .where('status', isEqualTo: 'published')
+          .where('coordinateVerified', isEqualTo: true)
+          .orderBy(FieldPath.documentId)
+          .limit(pageSize);
+        if (cursor != null) page = page.startAfterDocument(cursor);
+        final snapshot = await page.get(const GetOptions(source: Source.server))
+            .timeout(const Duration(seconds: 10));
+        return snapshot.docs;
+      });
       remote.addAll(docs.map(_fromDocument).whereType<PhotoSpot>());
     } catch (_) {
       final stale = _cachedSafeSpots;
@@ -191,34 +189,32 @@ class SpotRepository {
     }
 
     final ref = _firestore.collection(submissionsCollection).doc();
-    await ref
-        .set({
-          'id': ref.id,
-          'name': name.trim(),
-          'city': city.trim(),
-          'cityKey': _key(city),
-          'latitude': latitude,
-          'longitude': longitude,
-          'coordinateVerified': false,
-          'imageVerified': false,
-          'category': category.trim().isEmpty ? 'Genel' : category.trim(),
-          'categoryKey': _key(category.trim().isEmpty ? 'Genel' : category),
-          'description': description.trim(),
-          'bestTime': bestTime.trim(),
-          'angle': angle.trim(),
-          'recommendedLens': recommendedLens.trim().isEmpty
-              ? '24-70mm'
-              : recommendedLens.trim(),
-          'tags': tags.map((e) => e.trim()).where((e) => e.isNotEmpty).toList(),
-          'imageUrl': imageUrl.trim(),
-          'submittedBy': user.uid,
-          'submittedByEmail': user.email ?? '',
-          'status': 'pending',
-          'sourceType': 'user',
-          'createdAt': FieldValue.serverTimestamp(),
-          'updatedAt': FieldValue.serverTimestamp(),
-        })
-        .timeout(const Duration(seconds: 8));
+    await ref.set({
+      'id': ref.id,
+      'name': name.trim(),
+      'city': city.trim(),
+      'cityKey': _key(city),
+      'latitude': latitude,
+      'longitude': longitude,
+      'coordinateVerified': false,
+      'imageVerified': false,
+      'category': category.trim().isEmpty ? 'Genel' : category.trim(),
+      'categoryKey': _key(category.trim().isEmpty ? 'Genel' : category),
+      'description': description.trim(),
+      'bestTime': bestTime.trim(),
+      'angle': angle.trim(),
+      'recommendedLens': recommendedLens.trim().isEmpty
+          ? '24-70mm'
+          : recommendedLens.trim(),
+      'tags': tags.map((e) => e.trim()).where((e) => e.isNotEmpty).toList(),
+      'imageUrl': imageUrl.trim(),
+      'submittedBy': user.uid,
+      'submittedByEmail': user.email ?? '',
+      'status': 'pending',
+      'sourceType': 'user',
+      'createdAt': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    }).timeout(const Duration(seconds: 8));
     return ref.id;
   }
 

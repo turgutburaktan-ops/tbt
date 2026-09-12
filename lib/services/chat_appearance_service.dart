@@ -7,7 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 enum ChatBackground {
   midnight('Gece mavisi', Color(0xFF0B1426)),
   charcoal('Antrasit', Color(0xFF191D24)),
-  black('Siyah', Color(0xFF08090B)),
+  black('Siyah', Color(0xFF080B10)),
   forest('Koyu yeşil', Color(0xFF0C231F)),
   purple('Koyu mor', Color(0xFF211830)),
   petrol('Petrol mavisi', Color(0xFF0B252E));
@@ -16,14 +16,16 @@ enum ChatBackground {
   final String label;
   final Color color;
 
-  static ChatBackground fromName(String? name) =>
-      values.firstWhere((value) => value.name == name, orElse: () => black);
+  static ChatBackground fromName(String? name) => values.firstWhere(
+    (value) => value.name == name,
+    orElse: () => midnight,
+  );
 }
 
 /// Cosmetic preferences are local and scoped to the signed-in account.
 class ChatAppearanceService extends ChangeNotifier {
   ChatAppearanceService({Future<SharedPreferences> Function()? preferences})
-    : _preferences = preferences ?? SharedPreferences.getInstance;
+      : _preferences = preferences ?? SharedPreferences.getInstance;
 
   static final instance = ChatAppearanceService();
   final Future<SharedPreferences> Function() _preferences;
@@ -31,7 +33,7 @@ class ChatAppearanceService extends ChangeNotifier {
   Future<void>? _loading;
   String? _userId;
   int _generation = 0;
-  ChatBackground _background = ChatBackground.black;
+  ChatBackground _background = ChatBackground.midnight;
   ChatBackground get background => _background;
   String? get userId => _userId;
   Future<void> get ready => _loading ?? Future<void>.value();
@@ -48,7 +50,7 @@ class ChatAppearanceService extends ChangeNotifier {
     if (_loading != null && userId == _userId) return _loading!;
     _userId = userId;
     final generation = ++_generation;
-    _background = ChatBackground.black;
+    _background = ChatBackground.midnight;
     notifyListeners();
     return _loading = _load(userId, generation);
   }

@@ -1,4 +1,3 @@
-import '../theme/app_theme.dart';
 import 'user_profile_screen.dart';
 
 import 'dart:async';
@@ -71,11 +70,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _blockedSubscription;
   ChatThread? _currentThread;
 
-  static const _bg = AppColors.background;
-  static const _panel = AppColors.surface;
-  static const _mine = AppColors.surfaceStrong;
-  static const _other = AppColors.surfaceAlt;
-  static const _accent = AppColors.primary;
+  static const _bg = Color(0xFF0B1426);
+  static const _panel = Color(0xFF142238);
+  static const _mine = Color(0xFF294D7A);
+  static const _other = Color(0xFF1B2D47);
+  static const _accent = Color(0xFF9FC7FF);
 
   @override
   void initState() {
@@ -94,23 +93,14 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _prepare() async {
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
-    await _blockedSubscription?.cancel();
-    await _hiddenSubscription?.cancel();
     try {
       final id =
           widget.groupThreadId ??
-          await ChatService.instance
-              .ensureDirectThread(
-                widget.otherUserId,
-                sourceType: widget.sourceType,
-                sourceId: widget.sourceId,
-              )
-              .timeout(const Duration(seconds: 15));
-      if (!mounted) return;
+          await ChatService.instance.ensureDirectThread(
+            widget.otherUserId,
+            sourceType: widget.sourceType,
+            sourceId: widget.sourceId,
+          );
       final uid = FirebaseAuth.instance.currentUser!.uid;
       _blockedSubscription = FirebaseFirestore.instance
           .collection('users/$uid/blocked')
@@ -130,12 +120,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                 () => _hiddenIds = snapshot.docs.map((d) => d.id).toSet(),
               );
           });
-      unawaited(
-        ChatService.instance
-            .markThreadRead(id)
-            .timeout(const Duration(seconds: 5))
-            .catchError((Object _) {}),
-      );
+      try {
+        await ChatService.instance.markThreadRead(id);
+      } catch (_) {}
       if (!mounted) return;
       setState(() {
         _threadId = id;
@@ -146,9 +133,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _error = e is TimeoutException
-            ? 'Sohbet açılamadı. Bağlantını kontrol edip yeniden dene.'
-            : e.toString().replaceFirst('Exception: ', '');
+        _error = e.toString().replaceFirst('Exception: ', '');
         _loading = false;
       });
     }
@@ -312,7 +297,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     await showModalBottomSheet<void>(
       context: context,
       useSafeArea: true,
-      backgroundColor: AppColors.surface,
+      backgroundColor: const Color(0xFF142238),
       showDragHandle: true,
       builder: (sheetContext) => Padding(
         padding: const EdgeInsets.fromLTRB(22, 4, 22, 26),
@@ -358,7 +343,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     final action = await showModalBottomSheet<String>(
       context: context,
       useSafeArea: true,
-      backgroundColor: AppColors.surface,
+      backgroundColor: const Color(0xFF142238),
       showDragHandle: true,
       builder: (sheetContext) => Padding(
         padding: const EdgeInsets.fromLTRB(16, 2, 16, 24),
@@ -456,7 +441,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   Future<void> _showMessageActions(ChatMessage message, bool mine) async {
     final action = await showModalBottomSheet<String>(
       context: context,
-      backgroundColor: AppColors.surface,
+      backgroundColor: const Color(0xFF142238),
       showDragHandle: true,
       builder: (sheetContext) => SafeArea(
         child: Column(
@@ -793,7 +778,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       child: Container(
         width: 248,
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: const Color(0xFF142238),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: Colors.white12),
         ),
@@ -1121,7 +1106,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                       ),
                       fit: BoxFit.cover,
                       errorWidget: const ColoredBox(
-                        color: AppColors.surface,
+                        color: Color(0xFF0D1B30),
                         child: Center(
                           child: Icon(Icons.person_rounded, size: 21),
                         ),
@@ -1198,7 +1183,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
             icon: const Icon(Icons.close_rounded),
           ),
           filled: true,
-          fillColor: AppColors.surfaceAlt,
+          fillColor: const Color(0xFF1B2D47),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(20),
             borderSide: BorderSide.none,
@@ -1348,7 +1333,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                       hintText: 'Mesaj yaz…',
                       hintStyle: const TextStyle(color: Colors.white38),
                       filled: true,
-                      fillColor: AppColors.surfaceAlt,
+                      fillColor: const Color(0xFF1B2D47),
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: 16,
                         vertical: 11,
@@ -1477,7 +1462,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     }
     final action = await showModalBottomSheet<String>(
       context: context,
-      backgroundColor: AppColors.surface,
+      backgroundColor: const Color(0xFF142238),
       builder: (sheetContext) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -1588,16 +1573,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                 ? Center(
                     child: Padding(
                       padding: const EdgeInsets.all(24),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(_error!, textAlign: TextAlign.center),
-                          const SizedBox(height: 12),
-                          FilledButton(
-                            onPressed: _prepare,
-                            child: const Text('Tekrar dene'),
-                          ),
-                        ],
+                      child: Text(
+                        _error!,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(color: Colors.white70),
                       ),
                     ),
                   )

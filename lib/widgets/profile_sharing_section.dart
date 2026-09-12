@@ -77,58 +77,31 @@ class ProfileSharingSection extends StatelessWidget {
   );
 }
 
-class _ReferenceList extends StatefulWidget {
+class _ReferenceList extends StatelessWidget {
   const _ReferenceList({required this.userId, required this.bookmarks});
   final String userId;
   final bool bookmarks;
   @override
-  State<_ReferenceList> createState() => _ReferenceListState();
-}
-
-class _ReferenceListState extends State<_ReferenceList> {
-  late Stream<QuerySnapshot<Map<String, dynamic>>> _stream = _watch();
-  Stream<QuerySnapshot<Map<String, dynamic>>> _watch() async* {
-    final query = FirebaseFirestore.instance
-        .collection(widget.bookmarks ? 'post_bookmarks' : 'post_reposts')
-        .where('userId', isEqualTo: widget.userId);
-    try {
-      yield* query.orderBy('createdAt', descending: true).limit(30).snapshots();
-    } on FirebaseException catch (error) {
-      if (error.code != 'failed-precondition') rethrow;
-      // Old deployments may lack the composite index. Retain owner filtering.
-      yield* query.snapshots();
-    }
-  }
-
-  @override
   Widget build(BuildContext context) =>
       StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-        stream: _stream,
+        stream: FirebaseFirestore.instance
+            .collection(bookmarks ? 'post_bookmarks' : 'post_reposts')
+            .where('userId', isEqualTo: userId)
+            .orderBy('createdAt', descending: true)
+            .limit(30)
+            .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.hasError)
-            return Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  const Text('Paylaşımlar yüklenemedi.'),
-                  TextButton(
-                    onPressed: () => setState(() => _stream = _watch()),
-                    child: const Text('Tekrar dene'),
-                  ),
-                ],
-              ),
+            return const Padding(
+              padding: EdgeInsets.all(16),
+              child: Text('Paylaşımlar yüklenemedi.'),
             );
           if (!snapshot.hasData)
             return const Padding(
               padding: EdgeInsets.all(16),
               child: CircularProgressIndicator(),
             );
-          final docs = [...snapshot.data!.docs]
-            ..sort((a, b) {
-              final at = a.data()['createdAt'], bt = b.data()['createdAt'];
-              if (at is Timestamp && bt is Timestamp) return bt.compareTo(at);
-              return a.id.compareTo(b.id);
-            });
+          final docs = snapshot.data!.docs;
           if (docs.isEmpty)
             return const Padding(
               padding: EdgeInsets.all(16),
@@ -136,13 +109,13 @@ class _ReferenceListState extends State<_ReferenceList> {
             );
           return Column(
             children: [
-              for (final doc in docs.take(30))
+              for (final doc in docs)
                 Column(
                   key: ValueKey(doc.id),
                   children: [
                     SharedPostCard(
                       postId: doc.data()['postId'].toString(),
-                      repostId: widget.bookmarks ? null : doc.id,
+                      repostId: bookmarks ? null : doc.id,
                       compact: true,
                     ),
                     Align(

@@ -104,15 +104,8 @@ class ChatService {
 
     final id = directThreadId(user.uid, otherUserId);
     final ref = _firestore.collection('chat_threads').doc(id);
-    DocumentSnapshot<Map<String, dynamic>>? existing;
-    try {
-      existing = await ref.get().timeout(const Duration(seconds: 6));
-    } on FirebaseException catch (error) {
-      // A missing thread has no memberIds for the read rule to authorize.
-      // Creation still goes through the callable's membership/privacy checks.
-      if (error.code != 'permission-denied') rethrow;
-    }
-    if (existing != null && existing.exists) {
+    final existing = await ref.get().timeout(const Duration(seconds: 6));
+    if (existing.exists) {
       final data = existing.data() ?? const <String, dynamic>{};
       final members = (data['memberIds'] as List? ?? const <dynamic>[])
           .map((value) => value.toString())
@@ -137,16 +130,14 @@ class ChatService {
     String? sourceId,
   }) async {
     try {
-      await ref
-          .set({
-            'sourceType': sourceType,
-            'sourceId': sourceId,
-            'lastReadAt': {userId: FieldValue.serverTimestamp()},
-            'typingAt': <String, dynamic>{},
-            'messageReactions': <String, dynamic>{},
-            'deletedMessageIds': <String>[],
-          }, SetOptions(merge: true))
-          .timeout(const Duration(seconds: 6));
+      await ref.set({
+        'sourceType': sourceType,
+        'sourceId': sourceId,
+        'lastReadAt': {userId: FieldValue.serverTimestamp()},
+        'typingAt': <String, dynamic>{},
+        'messageReactions': <String, dynamic>{},
+        'deletedMessageIds': <String>[],
+      }, SetOptions(merge: true)).timeout(const Duration(seconds: 6));
     } catch (_) {}
   }
 
@@ -161,24 +152,9 @@ class ChatService {
           .map((snapshot) {
             final items = snapshot.docs.map(ChatThread.fromDocument).toList();
             for (final t in items) {
-              if (t.requestStatus != 'pending' &&
-                  t.requestStatus != 'rejected' &&
-                  t.lastSenderId != user.uid &&
-                  t.lastMessageAt != null &&
-                  _delivered[t.id] != t.lastMessageAt) {
+              if (t.requestStatus != 'pending' && t.requestStatus != 'rejected' && t.lastSenderId != user.uid && t.lastMessageAt != null && _delivered[t.id] != t.lastMessageAt) {
                 _delivered[t.id] = t.lastMessageAt!;
-                unawaited(
-                  _firestore
-                      .collection('chat_threads')
-                      .doc(t.id)
-                      .update({
-                        'lastDeliveredAt.${user.uid}':
-                            FieldValue.serverTimestamp(),
-                      })
-                      .catchError((Object e) {
-                        _delivered.remove(t.id);
-                      }),
-                );
+                unawaited(_firestore.collection('chat_threads').doc(t.id).update({'lastDeliveredAt.${user.uid}': FieldValue.serverTimestamp()}).catchError((Object e) { _delivered.remove(t.id); }));
               }
             }
             items.sort((a, b) {
@@ -199,9 +175,7 @@ class ChatService {
       signedOutValue: 0,
       signedIn: (user) => myThreads().map((threads) {
         return threads.where((thread) {
-          if (thread.requestStatus == 'pending' ||
-              thread.requestStatus == 'rejected')
-            return false;
+          if (thread.requestStatus == 'pending' || thread.requestStatus == 'rejected') return false;
           if (thread.lastSenderId == user.uid || thread.lastMessageAt == null) {
             return false;
           }
@@ -243,13 +217,8 @@ class ChatService {
     );
   }
 
-  Future<Map<String, dynamic>> action(
-    String action,
-    Map<String, dynamic> data,
-  ) async {
-    final result = await FirebaseFunctions.instance
-        .httpsCallable('chatAction')
-        .call({'action': action, ...data});
+  Future<Map<String, dynamic>> action(String action, Map<String, dynamic> data) async {
+    final result = await FirebaseFunctions.instance.httpsCallable('chatAction').call({'action': action, ...data});
     return Map<String, dynamic>.from(result.data as Map);
   }
 
@@ -258,22 +227,13 @@ class ChatService {
     try {
       final profile = await _firestore.collection('users').doc(user.uid).get();
       if (profile.data()?['showReadReceipts'] == false) return;
-      final thread = await _firestore
-          .collection('chat_threads')
-          .doc(threadId)
-          .get();
-      if (thread.data()?['requestStatus'] == 'pending' ||
-          thread.data()?['requestStatus'] == 'rejected')
-        return;
-      final prefs = await _firestore
-          .doc('users/${user.uid}/chat_preferences/$threadId')
-          .get();
+      final thread = await _firestore.collection('chat_threads').doc(threadId).get();
+      if (thread.data()?['requestStatus'] == 'pending' || thread.data()?['requestStatus'] == 'rejected') return;
+      final prefs = await _firestore.doc('users/${user.uid}/chat_preferences/$threadId').get();
       if (prefs.data()?['readReceipts'] == false) return;
-      await _firestore
-          .collection('chat_threads')
-          .doc(threadId)
-          .update({'lastReadAt.${user.uid}': FieldValue.serverTimestamp()})
-          .timeout(const Duration(seconds: 5));
+      await _firestore.collection('chat_threads').doc(threadId).update({
+        'lastReadAt.${user.uid}': FieldValue.serverTimestamp(),
+      }).timeout(const Duration(seconds: 5));
     } catch (_) {}
   }
 
@@ -283,15 +243,11 @@ class ChatService {
     if (_typingState[key] == typing) return;
     _typingState[key] = typing;
     try {
-      await _firestore
-          .collection('chat_threads')
-          .doc(threadId)
-          .update({
-            'typingAt.${user.uid}': typing
-                ? FieldValue.serverTimestamp()
-                : FieldValue.delete(),
-          })
-          .timeout(const Duration(seconds: 5));
+      await _firestore.collection('chat_threads').doc(threadId).update({
+        'typingAt.${user.uid}': typing
+            ? FieldValue.serverTimestamp()
+            : FieldValue.delete(),
+      }).timeout(const Duration(seconds: 5));
     } catch (_) {
       if (_typingState[key] == typing) _typingState.remove(key);
     }
@@ -323,14 +279,10 @@ class ChatService {
         _lastPresenceAt = null;
         return;
       }
-      await _firestore
-          .collection('users')
-          .doc(user.uid)
-          .set({
-            'isOnline': online,
-            'lastSeenAt': FieldValue.serverTimestamp(),
-          }, SetOptions(merge: true))
-          .timeout(const Duration(seconds: 5));
+      await _firestore.collection('users').doc(user.uid).set({
+        'isOnline': online,
+        'lastSeenAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true)).timeout(const Duration(seconds: 5));
       _lastPresenceValue = online;
       _lastPresenceAt = now;
     } catch (_) {}
@@ -362,17 +314,10 @@ class ChatService {
     required String messageId,
     required String emoji,
   }) async {
-    await action('reaction', {
-      'threadId': threadId,
-      'messageId': messageId,
-      'emoji': emoji,
-    });
+    await action('reaction', {'threadId': threadId, 'messageId': messageId, 'emoji': emoji});
   }
 
-  Future<void> deleteForEveryone({
-    required String threadId,
-    required String messageId,
-  }) async {
+  Future<void> deleteForEveryone({required String threadId, required String messageId}) async {
     await action('delete', {'threadId': threadId, 'messageId': messageId});
   }
 
@@ -392,8 +337,7 @@ class ChatService {
     if (otherUserId == user.uid) {
       throw Exception('Kendine mesaj gönderemezsin.');
     }
-    if (otherUserId.isNotEmpty &&
-        threadId != directThreadId(user.uid, otherUserId)) {
+    if (otherUserId.isNotEmpty && threadId != directThreadId(user.uid, otherUserId)) {
       throw Exception('Geçersiz sohbet kimliği.');
     }
     ContentModerationService.instance.enforce(clean);
@@ -407,13 +351,7 @@ class ChatService {
       text: clean,
       type: 'text',
       replyTo: replyTo,
-      forcedMessageRef: clientMessageId == null
-          ? null
-          : _firestore
-                .collection('chat_threads')
-                .doc(threadId)
-                .collection('messages')
-                .doc(clientMessageId),
+      forcedMessageRef: clientMessageId == null ? null : _firestore.collection('chat_threads').doc(threadId).collection('messages').doc(clientMessageId),
     );
   }
 
@@ -449,9 +387,9 @@ class ChatService {
       await storageRef
           .putData(bytes, SettableMetadata(contentType: contentType))
           .timeout(const Duration(seconds: 25));
-      final mediaUrl = await storageRef.getDownloadURL().timeout(
-        const Duration(seconds: 8),
-      );
+      final mediaUrl = await storageRef
+          .getDownloadURL()
+          .timeout(const Duration(seconds: 8));
       await _sendPreparedMessage(
         threadId: threadId,
         otherUserId: otherUserId,
@@ -494,9 +432,9 @@ class ChatService {
       await storageRef
           .putData(bytes, SettableMetadata(contentType: 'audio/mp4'))
           .timeout(const Duration(seconds: 30));
-      final mediaUrl = await storageRef.getDownloadURL().timeout(
-        const Duration(seconds: 8),
-      );
+      final mediaUrl = await storageRef
+          .getDownloadURL()
+          .timeout(const Duration(seconds: 8));
       await _sendPreparedMessage(
         threadId: threadId,
         otherUserId: otherUserId,
@@ -527,9 +465,7 @@ class ChatService {
     required String title,
     String? imageUrl,
   }) async {
-    final label = sharedType == 'route'
-        ? '🗺️ Rota'
-        : sharedType == 'event'
+    final label = sharedType == 'route' ? '🗺️ Rota' : sharedType == 'event'
         ? '📅 Etkinlik'
         : sharedType == 'venue'
         ? '📍 Mekan'
@@ -573,15 +509,9 @@ class ChatService {
             .toList() ??
         const <String>[];
     final isGroup = thread.data()?['type'] == 'group';
-    if (thread.data()?['requestStatus'] == 'rejected')
-      throw Exception('Bu mesaj isteği kabul edilmedi.');
-    if (thread.data()?['requestStatus'] == 'pending' &&
-        (thread.data()?['requestRecipientId'] == user.uid || type != 'text'))
-      throw Exception(
-        'İstek kabul edilene kadar yalnızca gönderen metin yazabilir.',
-      );
-    if (!members.contains(user.uid) ||
-        (!isGroup && (members.length != 2 || !members.contains(otherUserId)))) {
+    if (thread.data()?['requestStatus'] == 'rejected') throw Exception('Bu mesaj isteği kabul edilmedi.');
+    if (thread.data()?['requestStatus'] == 'pending' && (thread.data()?['requestRecipientId'] == user.uid || type != 'text')) throw Exception('İstek kabul edilene kadar yalnızca gönderen metin yazabilir.');
+    if (!members.contains(user.uid) || (!isGroup && (members.length != 2 || !members.contains(otherUserId)))) {
       throw Exception('Bu sohbete erişimin yok.');
     }
 
@@ -623,18 +553,16 @@ class ChatService {
         : type == 'audio'
         ? '🎙️ Sesli mesaj'
         : text;
-    unawaited(
-      _afterMessageSent(
-        threadRef: threadRef,
-        threadId: threadId,
-        messageId: messageRef.id,
-        otherUserId: otherUserId,
-        user: user,
-        lastMessage: lastMessage,
-        type: type,
-        text: text,
-      ),
-    );
+    unawaited(_afterMessageSent(
+      threadRef: threadRef,
+      threadId: threadId,
+      messageId: messageRef.id,
+      otherUserId: otherUserId,
+      user: user,
+      lastMessage: lastMessage,
+      type: type,
+      text: text,
+    ));
   }
 
   Future<void> _afterMessageSent({
@@ -648,15 +576,13 @@ class ChatService {
     required String text,
   }) async {
     try {
-      await threadRef
-          .set({
-            'lastMessageId': messageId,
-            'lastMessage': lastMessage,
-            'lastSenderId': user.uid,
-            'lastMessageAt': FieldValue.serverTimestamp(),
-            'updatedAt': FieldValue.serverTimestamp(),
-          }, SetOptions(merge: true))
-          .timeout(const Duration(seconds: 6));
+      await threadRef.set({
+        'lastMessageId': messageId,
+        'lastMessage': lastMessage,
+        'lastSenderId': user.uid,
+        'lastMessageAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true)).timeout(const Duration(seconds: 6));
     } catch (_) {}
 
     unawaited(markThreadRead(threadId));
@@ -674,16 +600,14 @@ class ChatService {
         ? 'Seninle bir içerik paylaştı'
         : (text.length > 90 ? '${text.substring(0, 90)}…' : text);
     try {
-      await AppNotificationService.instance
-          .notifyUser(
-            userId: otherUserId,
-            type: 'message',
-            title: '$senderName sana mesaj gönderdi',
-            body: preview,
-            sourceId: threadId,
-            actorId: user.uid,
-          )
-          .timeout(const Duration(seconds: 6));
+      await AppNotificationService.instance.notifyUser(
+        userId: otherUserId,
+        type: 'message',
+        title: '$senderName sana mesaj gönderdi',
+        body: preview,
+        sourceId: threadId,
+        actorId: user.uid,
+      ).timeout(const Duration(seconds: 6));
     } catch (_) {}
   }
 
@@ -695,7 +619,10 @@ class ChatService {
         .doc(user.uid)
         .collection('blocked')
         .doc(otherUserId)
-        .set({'userId': otherUserId, 'createdAt': FieldValue.serverTimestamp()})
+        .set({
+          'userId': otherUserId,
+          'createdAt': FieldValue.serverTimestamp(),
+        })
         .timeout(const Duration(seconds: 8));
   }
 
@@ -717,16 +644,13 @@ class ChatService {
   }) async {
     final user = await _requiredUser();
     if (otherUserId == user.uid) throw Exception('Kendini raporlayamazsın.');
-    await _firestore
-        .collection('user_reports')
-        .add({
-          'reporterId': user.uid,
-          'reportedUserId': otherUserId,
-          'threadId': threadId,
-          'reason': reason.trim().isEmpty ? 'unspecified' : reason.trim(),
-          'status': 'pending',
-          'createdAt': FieldValue.serverTimestamp(),
-        })
-        .timeout(const Duration(seconds: 8));
+    await _firestore.collection('user_reports').add({
+      'reporterId': user.uid,
+      'reportedUserId': otherUserId,
+      'threadId': threadId,
+      'reason': reason.trim().isEmpty ? 'unspecified' : reason.trim(),
+      'status': 'pending',
+      'createdAt': FieldValue.serverTimestamp(),
+    }).timeout(const Duration(seconds: 8));
   }
 }

@@ -1,7 +1,3 @@
-import '../services/person_search_match.dart';
-
-import 'dart:async';
-
 import 'reels_screen.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -32,20 +28,17 @@ class HomeDiscoverScreen extends StatefulWidget {
 class _HomeDiscoverScreenState extends State<HomeDiscoverScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _query = '';
-  String _resultFilter = 'Tümü';
-  Timer? _searchDebounce;
-  Future<QuerySnapshot<Map<String, dynamic>>>? _legacyUserSearch;
   Future<List<QueryDocumentSnapshot<Map<String, dynamic>>>>? _userSearchFuture;
   Future<List<PhotoSpot>>? _spotSearchFuture;
 
   @override
   void dispose() {
-    _searchDebounce?.cancel();
     _searchController.dispose();
     super.dispose();
   }
 
-  String _normalize(Object? value) => normalizeSearchText(value);
+  String _normalize(Object? value) =>
+      (value ?? '').toString().trim().toLowerCase().replaceAll('ı', 'i');
 
   String _titleCase(String value) => value
       .trim()
@@ -67,7 +60,26 @@ class _HomeDiscoverScreenState extends State<HomeDiscoverScreen> {
   int _userMatchScore(
     QueryDocumentSnapshot<Map<String, dynamic>> doc,
     String query,
-  ) => personMatchScore(doc.data(), query);
+  ) {
+    final data = doc.data();
+    final q = _normalize(query.replaceFirst(RegExp(r'^@'), ''));
+    final displayName = _normalize(data['displayName'] ?? data['name']);
+    final username = _normalize(data['username'] ?? data['userName'])
+        .replaceFirst(RegExp(r'^@'), '');
+    final city = _normalize(data['city']);
+    final combined = '$displayName $username $city';
+    final tokens = q.split(RegExp(r'\s+')).where((e) => e.isNotEmpty).toList();
+
+    if (displayName == q) return 120;
+    if (username == q) return 115;
+    if (displayName.startsWith(q)) return 105;
+    if (username.startsWith(q)) return 100;
+    if (tokens.isNotEmpty && tokens.every(combined.contains)) return 85;
+    if (displayName.contains(q)) return 75;
+    if (username.contains(q)) return 70;
+    if (combined.contains(q)) return 60;
+    return 0;
+  }
 
   Future<List<QueryDocumentSnapshot<Map<String, dynamic>>>> _findUsers(
     String rawQuery,
@@ -90,8 +102,7 @@ class _HomeDiscoverScreenState extends State<HomeDiscoverScreen> {
             .startAt([prefix])
             .endAt(['$prefix\uf8ff'])
             .limit(24)
-            .get()
-            .timeout(const Duration(seconds: 8));
+            .get();
         for (final doc in snap.docs) {
           if (doc.data()['accountStatus'] == 'frozen') continue;
           byId[doc.id] = doc;
@@ -102,27 +113,25 @@ class _HomeDiscoverScreenState extends State<HomeDiscoverScreen> {
       }
     }
 
-    await Future.wait([
-      for (final prefix in variants)
-        for (final field in ['displayName', 'name', 'username', 'userName'])
-          addPrefix(field, prefix),
-    ]);
+    for (final prefix in variants) {
+      await Future.wait([
+        addPrefix('displayName', prefix),
+        addPrefix('name', prefix),
+        addPrefix('username', prefix),
+        addPrefix('userName', prefix),
+      ]);
+    }
 
     // Backward compatibility for accounts created before normalized search
     // fields existed. This is intentionally bounded, while prefix queries above
     // handle the normal scalable path.
     try {
-      final fallback = await (_legacyUserSearch ??= users
-          .limit(500)
-          .get()
-          .timeout(const Duration(seconds: 8)));
+      final fallback = await users.limit(500).get();
       for (final doc in fallback.docs) {
         if (doc.data()['accountStatus'] == 'frozen') continue;
         if (_userMatchScore(doc, typed) > 0) byId[doc.id] = doc;
       }
-    } catch (_) {
-      _legacyUserSearch = null;
-    }
+    } catch (_) {}
 
     final ranked =
         byId.values
@@ -146,21 +155,12 @@ class _HomeDiscoverScreenState extends State<HomeDiscoverScreen> {
 
   void _onSearchChanged(String value) {
     final next = value.trim();
-    _searchDebounce?.cancel();
     setState(() {
       _query = next;
-      _userSearchFuture = null;
-      _spotSearchFuture = null;
-    });
-    _searchDebounce = Timer(const Duration(milliseconds: 300), () {
-      if (!mounted) return;
-      setState(() {
-        _query = next;
-        _userSearchFuture = next.length < 2 ? null : _findUsers(next);
-        _spotSearchFuture = next.length < 2
-            ? null
-            : SpotRepository.instance.search(next, limit: 3000);
-      });
+      _userSearchFuture = next.length < 2 ? null : _findUsers(next);
+      _spotSearchFuture = next.length < 2
+          ? null
+          : SpotRepository.instance.search(next, limit: 3000);
     });
   }
 
@@ -312,7 +312,7 @@ class _HomeDiscoverScreenState extends State<HomeDiscoverScreen> {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(16),
-                borderSide: const BorderSide(color: AppColors.primary),
+                borderSide: const BorderSide(color: AppColors.cyan),
               ),
             ),
           ),
@@ -448,39 +448,20 @@ class _HomeDiscoverScreenState extends State<HomeDiscoverScreen> {
   Widget _buildSearchResults() => ListView(
     padding: const EdgeInsets.fromLTRB(14, 0, 14, 24),
     children: [
-      SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: ['Tümü', 'Kişiler', 'Yerler', 'Etkinlikler']
-              .map(
-                (label) => Padding(
-                  padding: const EdgeInsets.only(right: 6),
-                  child: ChoiceChip(
-                    label: Text(label),
-                    selected: _resultFilter == label,
-                    onSelected: (_) => setState(() => _resultFilter = label),
-                  ),
-                ),
-              )
-              .toList(),
-        ),
-      ),
-      if (_resultFilter == 'Tümü' || _resultFilter == 'Kişiler') _userResults(),
-      if (_resultFilter == 'Tümü' || _resultFilter == 'Yerler') _spotResults(),
-      if (_resultFilter == 'Tümü') _postResults(),
-      if (_resultFilter == 'Tümü' || _resultFilter == 'Yerler')
-        _genericResults('business_venues', 'Mekanlar', const [
-          'venueName',
-          'name',
-          'city',
-          'address',
-        ], Icons.storefront_outlined),
-      if (_resultFilter == 'Tümü' || _resultFilter == 'Etkinlikler')
-        _genericResults('social_events', 'Etkinlikler', const [
-          'title',
-          'locationLabel',
-          'city',
-        ], Icons.event_outlined),
+      _userResults(),
+      _spotResults(),
+      _postResults(),
+      _genericResults('business_venues', 'Mekanlar', const [
+        'venueName',
+        'name',
+        'city',
+        'address',
+      ], Icons.storefront_outlined),
+      _genericResults('social_events', 'Etkinlikler', const [
+        'title',
+        'locationLabel',
+        'city',
+      ], Icons.event_outlined),
     ],
   );
 
@@ -488,7 +469,6 @@ class _HomeDiscoverScreenState extends State<HomeDiscoverScreen> {
     final future = _spotSearchFuture;
     if (_query.length < 2 || future == null) return const SizedBox.shrink();
     return FutureBuilder<List<PhotoSpot>>(
-      key: ValueKey(_query),
       future: future,
       builder: (context, snapshot) {
         final spots = snapshot.data ?? const <PhotoSpot>[];
@@ -502,7 +482,7 @@ class _HomeDiscoverScreenState extends State<HomeDiscoverScreen> {
                   contentPadding: EdgeInsets.zero,
                   leading: const CircleAvatar(
                     backgroundColor: AppColors.surfaceStrong,
-                    child: Icon(Icons.place_outlined, color: AppColors.primary),
+                    child: Icon(Icons.place_outlined, color: AppColors.cyan),
                   ),
                   title: Text(
                     spot.name,
@@ -531,7 +511,6 @@ class _HomeDiscoverScreenState extends State<HomeDiscoverScreen> {
     if (_query.length < 2 || future == null) return const SizedBox.shrink();
 
     return FutureBuilder<List<QueryDocumentSnapshot<Map<String, dynamic>>>>(
-      key: ValueKey(_query),
       future: future,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {

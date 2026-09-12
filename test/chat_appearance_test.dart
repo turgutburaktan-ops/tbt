@@ -11,7 +11,7 @@ void main() {
 
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
-  test('New, unknown and malformed preferences use black', () async {
+  test('New, unknown and malformed preferences use midnight blue', () async {
     SharedPreferences.setMockInitialValues({
       'chat_background_v1_unknown': 'removed-color',
       'chat_background_v1_malformed': 42,
@@ -20,7 +20,7 @@ void main() {
     addTearDown(service.dispose);
     for (final id in ['new', 'unknown', 'malformed']) {
       await service.loadForUser(id);
-      expect(service.background, ChatBackground.black);
+      expect(service.background, ChatBackground.midnight);
     }
   });
 
@@ -34,10 +34,10 @@ void main() {
     await second.loadForUser('alice');
     expect(second.background, ChatBackground.forest);
     await second.loadForUser('bob');
-    expect(second.background, ChatBackground.black);
+    expect(second.background, ChatBackground.midnight);
     await second.select(ChatBackground.purple);
     await second.loadForUser(null);
-    expect(second.background, ChatBackground.black);
+    expect(second.background, ChatBackground.midnight);
     await second.loadForUser('alice');
     expect(second.background, ChatBackground.forest);
   });
@@ -66,9 +66,9 @@ void main() {
     final service = ChatAppearanceService(preferences: () async => throw StateError('Unavailable'));
     addTearDown(service.dispose);
     await service.loadForUser('alice');
-    expect(service.background, ChatBackground.black);
+    expect(service.background, ChatBackground.midnight);
     await expectLater(service.select(ChatBackground.forest), throwsStateError);
-    expect(service.background, ChatBackground.black);
+    expect(service.background, ChatBackground.midnight);
   });
 
   testWidgets('Preview can be cancelled and saved on a narrow screen', (tester) async {
@@ -94,11 +94,11 @@ void main() {
     await tester.ensureVisible(find.text('Koyu yeşil'));
     await tester.tap(find.text('Koyu yeşil'));
     await tester.pump();
-    expect(service.background, ChatBackground.black);
+    expect(service.background, ChatBackground.midnight);
     await tester.ensureVisible(find.text('Vazgeç'));
     await tester.tap(find.text('Vazgeç'));
     await tester.pumpAndSettle();
-    expect(service.background, ChatBackground.black);
+    expect(service.background, ChatBackground.midnight);
     await tester.tap(find.text('Open'));
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.text('Koyu yeşil'));

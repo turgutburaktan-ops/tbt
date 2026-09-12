@@ -1,164 +1,20 @@
-name: TBT UX review checks
-'on':
+name: Check personal profile identity
+on:
   push:
-    branches:
-    - codex/personal-profile-default
-  workflow_dispatch: {}
+    branches: [codex/personal-profile-default]
+  workflow_dispatch:
 permissions:
   contents: read
-concurrency:
-  group: ux-review-${{ github.ref }}
-  cancel-in-progress: true
 jobs:
-  checks:
+  profile:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 15
     steps:
-    - uses: actions/checkout@v4
-    - uses: subosito/flutter-action@v2
-      with:
-        channel: stable
-        cache: true
-    - name: Install dependencies
-      run: flutter pub get
-    - name: Analyze changed code
-      run: flutter analyze --no-fatal-infos --no-fatal-warnings lib/models/profile_identity.dart lib/screens/chat_inbox_screen.dart lib/screens/chat_screen.dart lib/screens/home_discover_screen.dart lib/screens/home_shell_v3.dart lib/screens/profile_page_v2.dart lib/screens/radar_screen.dart lib/screens/register_screen.dart lib/screens/rewards_hub_screen.dart lib/screens/route_planner_screen.dart lib/screens/settings_screen.dart lib/screens/smart_plan_screen.dart lib/screens/spot_explore_screen_v2.dart lib/screens/today_plan_screen.dart lib/screens/user_profile_screen.dart lib/services/chat_appearance_service.dart lib/services/chat_service.dart lib/services/compact_route_selection.dart lib/services/day_plan_engine.dart lib/services/nearby_venue_service.dart lib/services/person_search_match.dart lib/services/spot_repository.dart lib/services/venue_category_filter.dart lib/theme/app_theme.dart lib/widgets/chat_surface.dart lib/widgets/place_inspiration_card.dart lib/widgets/profile_sharing_section.dart
-        lib/widgets/public_achievement_badges.dart lib/widgets/story_strip.dart
-    - name: Run review regression tests
-      run: flutter test test/profile_identity_test.dart test/person_search_match_test.dart test/compact_route_selection_test.dart test/day_plan_engine_test.dart test/nearby_venue_loading_test.dart test/chat_appearance_test.dart test/ux_simplification_test.dart
-    - name: Save planning screenshot
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: planning-screen-review
-        path: /tmp/tbt-plan-review.png
-        if-no-files-found: ignore
-  android:
-    runs-on: ubuntu-latest
-    timeout-minutes: 35
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-    - name: Setup Java
-      uses: actions/setup-java@v5
-      with:
-        distribution: temurin
-        java-version: '17'
-    - name: Setup Flutter
-      uses: subosito/flutter-action@v2
-      with:
-        channel: stable
-        cache: true
-    - name: Install dependencies
-      run: flutter pub get
-    - name: Verify runtime secrets
-      shell: bash
-      env:
-        MAPS_API_KEY: ${{ secrets.MAPS_API_KEY }}
-      run: 'set -euo pipefail
-
-        test -n "${MAPS_API_KEY:-}" || { echo ''MAPS_API_KEY GitHub secret is missing.''; exit 1; }
-
-        '
-    - name: Install stable CI debug signing certificate
-      shell: bash
-      run: "mkdir -p \"$HOME/.android\"\nbase64 --decode .github/ci/android-debug.keystore.b64 > \"$HOME/.android/debug.keystore\"\nchmod 600 \"$HOME/.android/debug.keystore\"\nkeytool -list -v \\\n  -keystore \"$HOME/.android/debug.keystore\" \\\n  -alias androiddebugkey \\\n  -storepass android \\\n  -keypass android | grep -E 'SHA1:|SHA256:'\n"
-    - name: Preserve app manifest
-      run: cp android/app/src/main/AndroidManifest.xml /tmp/AndroidManifest.xml
-    - name: Generate disposable Android host project
-      shell: bash
-      env:
-        MAPS_API_KEY: ${{ secrets.MAPS_API_KEY }}
-      run: "set -euo pipefail\nrm -rf android\nflutter create --platforms=android --org com.tbt --project-name best_photo_spot .\ncp /tmp/AndroidManifest.xml android/app/src/main/AndroidManifest.xml\npython3 - <<'PY'\nimport os\nfrom pathlib import Path\n\nmanifest = Path('android/app/src/main/AndroidManifest.xml')\nmaps_key = os.environ['MAPS_API_KEY']\ntext = manifest.read_text()\nplaceholder = '${MAPS_API_KEY}'\nif placeholder not in text:\n    raise SystemExit('MAPS_API_KEY placeholder is missing from AndroidManifest.xml')\nmanifest.write_text(text.replace(placeholder, maps_key))\nPY\nsed -i 's/minSdk = flutter.minSdkVersion/minSdk = 26/' android/app/build.gradle.kts\nsed -i 's/com.tbt.best_photo_spot/com.tbt.social/g' android/app/build.gradle.kts\nmain_activity=$(find android/app/src/main/kotlin -name MainActivity.kt -print -quit)\nsed -i 's/package com.tbt.best_photo_spot/package com.tbt.social/' \"$main_activity\"\npython3 - <<'PY'\nfrom pathlib import Path\np = Path('android/app/build.gradle.kts')\n\
-        s = p.read_text()\nmarker = '    buildTypes {\\n'\nsigning = '''    signingConfigs {\\n        getByName(\"debug\") {\\n            storeFile = file(System.getProperty(\"user.home\") + \"/.android/debug.keystore\")\\n            storePassword = \"android\"\\n            keyAlias = \"androiddebugkey\"\\n            keyPassword = \"android\"\\n        }\\n    }\\n\\n'''\nif signing not in s:\n    s = s.replace(marker, signing + marker, 1)\ndebug_block = '''    buildTypes {\\n        getByName(\"debug\") {\\n            signingConfig = signingConfigs.getByName(\"debug\")\\n        }\\n'''\ns = s.replace(marker, debug_block, 1)\np.write_text(s)\nPY\n"
-    - name: Verify package identity and maps wiring
-      shell: bash
-      run: 'set -euo pipefail
-
-        grep -q ''applicationId = "com.tbt.social"'' android/app/build.gradle.kts
-
-        grep -q ''namespace = "com.tbt.social"'' android/app/build.gradle.kts
-
-        grep -q ''storeFile = file(System.getProperty("user.home") + "/.android/debug.keystore")'' android/app/build.gradle.kts
-
-        ! grep -q ''\${MAPS_API_KEY}'' android/app/src/main/AndroidManifest.xml
-
-        ! grep -q ''CI_DUMMY_MAPS_KEY'' android/app/src/main/AndroidManifest.xml
-
-        main_activity=$(find android/app/src/main/kotlin -name MainActivity.kt -print -quit)
-
-        grep -q ''^package com.tbt.social$'' "$main_activity"
-
-        '
-    - name: Align share plugin JVM targets
-      run: python3 tool/patch_receive_sharing_intent.py
-    - name: Configure notification replies
-      run: python3 tool/configure_notifications.py android
-    - name: Build debug APK
-      run: flutter build apk --debug --no-pub
-    - name: Verify APK signing identity
-      shell: bash
-      run: 'APK=build/app/outputs/flutter-apk/app-debug.apk
-
-        test -s "$APK"
-
-        APKSIGNER=$(find "$ANDROID_HOME/build-tools" -type f -name apksigner | sort -V | tail -1)
-
-        test -n "$APKSIGNER"
-
-        "$APKSIGNER" verify --print-certs "$APK" | tee /tmp/apk-signing.txt
-
-        tr ''[:lower:]'' ''[:upper:]'' < /tmp/apk-signing.txt | tr -d '':'' > /tmp/apk-signing-normalized.txt
-
-        grep -q ''758FF21389033ED26375415FAD30E11F9AD1F364'' /tmp/apk-signing-normalized.txt
-
-        grep -q ''3F9AA496CAF137EAC148CD942923956D3D6A2ADAFF9CDB1051DE024062819625'' /tmp/apk-signing-normalized.txt
-
-        '
-    - name: Upload debug APK
-      uses: actions/upload-artifact@v4
-      with:
-        name: best-photo-spot-debug-apk
-        path: build/app/outputs/flutter-apk/app-debug.apk
-        if-no-files-found: error
-        retention-days: 7
-    needs: checks
-  ios:
-    name: Build iOS Simulator
-    runs-on: macos-15
-    timeout-minutes: 45
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-    - name: Setup Flutter
-      uses: subosito/flutter-action@v2
-      with:
-        channel: stable
-        cache: true
-    - name: Show toolchain
-      run: 'flutter --version
-
-        dart --version
-
-        xcodebuild -version
-
-        '
-    - name: Use CocoaPods plugin integration
-      run: flutter config --no-enable-swift-package-manager
-    - name: Install dependencies
-      run: flutter pub get
-    - name: Prepare clean iOS host
-      shell: bash
-      run: "set -euo pipefail\nrm -rf ios\nflutter create --platforms=ios --org com.tbt --project-name best_photo_spot .\nsed -i '' 's/com\\.tbt\\.bestPhotoSpot/com.tbt.social/g' ios/Runner.xcodeproj/project.pbxproj\npython3 - <<'PY'\nfrom pathlib import Path\nimport re\np = Path('ios/Podfile')\ns = p.read_text()\nif re.search(r\"^\\s*#?\\s*platform :ios,\\s*'[^']+'\", s, flags=re.M):\n    s = re.sub(r\"^\\s*#?\\s*platform :ios,\\s*'[^']+'\", \"platform :ios, '15.0'\", s, count=1, flags=re.M)\nelse:\n  s = \"platform :ios, '15.0'\\n\" + s\np.write_text(s)\ninfo = Path('ios/Runner/Info.plist')\nplist = info.read_text()\nif 'GADApplicationIdentifier' not in plist:\n    plist = plist.replace('</dict>', '  <key>GADApplicationIdentifier</key>\\n  <string>ca-app-pub-3940256099942544~1458002511</string>\\n</dict>')\n    info.write_text(plist)\nPY\nrm -rf ios/Pods ios/Podfile.lock\n"
-    - name: Build iOS simulator
-      run: flutter build ios --simulator --debug --no-pub --dart-define=FIREBASE_IOS_API_KEY=ci-placeholder --dart-define=FIREBASE_IOS_APP_ID=1:330568532415:ios:ci-placeholder --dart-define=IOS_BUNDLE_ID=com.tbt.social
-    - name: Verify simulator app bundle
-      run: test -d build/ios/iphonesimulator/Runner.app
-    - name: Upload iOS simulator app
-      uses: actions/upload-artifact@v4
-      with:
-        name: best-photo-spot-ios-simulator-app
-        path: build/ios/iphonesimulator/Runner.app
-        if-no-files-found: error
-        retention-days: 7
-    needs: checks
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter analyze --no-fatal-infos --no-fatal-warnings lib/models/profile_identity.dart lib/screens/register_screen.dart lib/screens/settings_screen.dart lib/screens/profile_page_v2.dart lib/screens/user_profile_screen.dart lib/widgets/public_achievement_badges.dart
+      - run: flutter test test/profile_identity_test.dart

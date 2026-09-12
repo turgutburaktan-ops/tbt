@@ -479,34 +479,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       'E-posta ve telefon doğrulamasını yönet',
                       _verification,
                     ),
-                    ExpansionTile(
-                      title: const Text('Arşiv ve geçmiş'),
-                      children: [
-                        _tile(
-                          Icons.confirmation_number_outlined,
-                          'Geçmiş kuponlar',
-                          'Kullanılan ve süresi dolan kuponlar',
-                          () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) =>
-                                  const ProfileHistoryScreen(coupons: true),
-                            ),
-                          ),
+                    _section('Geçmiş'),
+                    _tile(
+                      Icons.confirmation_number_outlined,
+                      'Geçmiş kuponlar',
+                      'Kullanılan ve süresi dolan kuponlar',
+                      () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              const ProfileHistoryScreen(coupons: true),
                         ),
-                        _tile(
-                          Icons.event_note_outlined,
-                          'Geçmiş rezervasyonlar',
-                          'Geçmiş ve sonuçlanan rezervasyonlar',
-                          () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) =>
-                                  const ProfileHistoryScreen(coupons: false),
-                            ),
-                          ),
+                      ),
+                    ),
+                    _tile(
+                      Icons.event_note_outlined,
+                      'Geçmiş rezervasyonlar',
+                      'Geçmiş ve sonuçlanan rezervasyonlar',
+                      () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              const ProfileHistoryScreen(coupons: false),
                         ),
-                      ],
+                      ),
                     ),
                     _section('Gizlilik'),
                     _tile(
@@ -545,48 +541,43 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ),
                       ),
                     ),
-                    ExpansionTile(
-                      title: Text(AppStrings.of(context).text('notifications')),
-                      children: [
-                        _switchTile(
-                          Icons.campaign_outlined,
-                          AppStrings.of(context).text('marketing'),
-                          AppStrings.of(context).text('marketingBody'),
-                          (data['notificationPreferences']
-                                      as Map?)?['marketing'] ==
-                                  true &&
-                              settings['notifyMarketing'] != false,
-                          _marketing,
-                        ),
-                        _switchTile(
-                          Icons.chat_bubble_outline_rounded,
-                          'Mesajlar',
-                          'Yeni mesaj bildirimleri',
-                          settings['notifyMessages'] != false,
-                          (v) => _setBool('notifyMessages', v),
-                        ),
-                        _switchTile(
-                          Icons.favorite_border_rounded,
-                          'Beğeni ve yorumlar',
-                          'İçerik etkileşimlerini bildir',
-                          settings['notifyEngagement'] != false,
-                          (v) => _setBool('notifyEngagement', v),
-                        ),
-                        _switchTile(
-                          Icons.event_outlined,
-                          'Etkinlikler',
-                          'Daveti, katılımı ve hatırlatmaları bildir',
-                          settings['notifyEvents'] != false,
-                          (v) => _setBool('notifyEvents', v),
-                        ),
-                        _switchTile(
-                          Icons.emoji_events_outlined,
-                          'TBT Yolculuğum',
-                          'Hesap türü ve itibar gelişmelerini bildir',
-                          settings['notifyRewards'] != false,
-                          (v) => _setBool('notifyRewards', v),
-                        ),
-                      ],
+                    _section(AppStrings.of(context).text('notifications')),
+                    _switchTile(
+                      Icons.campaign_outlined,
+                      AppStrings.of(context).text('marketing'),
+                      AppStrings.of(context).text('marketingBody'),
+                      (data['notificationPreferences'] as Map?)?['marketing'] ==
+                              true &&
+                          settings['notifyMarketing'] != false,
+                      _marketing,
+                    ),
+                    _switchTile(
+                      Icons.chat_bubble_outline_rounded,
+                      'Mesajlar',
+                      'Yeni mesaj bildirimleri',
+                      settings['notifyMessages'] != false,
+                      (v) => _setBool('notifyMessages', v),
+                    ),
+                    _switchTile(
+                      Icons.favorite_border_rounded,
+                      'Beğeni ve yorumlar',
+                      'İçerik etkileşimlerini bildir',
+                      settings['notifyEngagement'] != false,
+                      (v) => _setBool('notifyEngagement', v),
+                    ),
+                    _switchTile(
+                      Icons.event_outlined,
+                      'Etkinlikler',
+                      'Daveti, katılımı ve hatırlatmaları bildir',
+                      settings['notifyEvents'] != false,
+                      (v) => _setBool('notifyEvents', v),
+                    ),
+                    _switchTile(
+                      Icons.emoji_events_outlined,
+                      'TBT Yolculuğum',
+                      'Hesap türü ve itibar gelişmelerini bildir',
+                      settings['notifyRewards'] != false,
+                      (v) => _setBool('notifyRewards', v),
                     ),
                     _section('İçerik ve Keşif'),
                     _tile(
@@ -741,7 +732,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 Text(
                   _profileTypeLabel(type),
                   style: const TextStyle(
-                    color: AppColors.primary,
+                    color: AppColors.cyan,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -774,7 +765,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             Text(
               verified ? 'Doğrulandı' : 'Doğrulanmadı',
               style: TextStyle(
-                color: verified ? AppColors.primary : Colors.white54,
+                color: verified ? AppColors.cyan : Colors.white54,
               ),
             ),
           ],
@@ -782,7 +773,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
       Icon(
         verified ? Icons.verified_rounded : Icons.error_outline_rounded,
-        color: verified ? AppColors.primary : Colors.white38,
+        color: verified ? AppColors.cyan : Colors.white38,
       ),
       if (actionLabel != null) ...[
         const SizedBox(width: 8),

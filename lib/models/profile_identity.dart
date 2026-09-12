@@ -11,8 +11,7 @@ class ProfileIdentity {
 
   static String type(Map<String, dynamic> profile) {
     final reputation = profile['reputation'];
-    final rawRoles =
-        profile['accountTypes'] ??
+    final rawRoles = profile['accountTypes'] ??
         (reputation is Map ? reputation['roles'] : null);
     // Older redeemed Creator invitations predate accountTypes.
     if (rawRoles == null && profile['isCreator'] == true) return 'creator';
