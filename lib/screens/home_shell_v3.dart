@@ -1,5 +1,3 @@
-import 'route_create_screen.dart';
-import 'today_plan_screen.dart';
 import '../services/video_audio_session.dart';
 import '../widgets/playback_indexed_stack.dart';
 
@@ -12,12 +10,15 @@ import '../models/nearby_venue.dart';
 import '../l10n/app_strings.dart';
 import '../services/app_notification_service.dart';
 import '../services/chat_service.dart';
+import '../services/nearby_venue_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/nearby_places_view.dart';
 import '../widgets/story_strip.dart';
 import '../widgets/tbt_brand_mark.dart';
 import 'campus_home_screen.dart';
 import 'chat_inbox_screen.dart';
+import 'collaborative_plans_screen.dart';
+import 'event_create_screen_v2.dart';
 import 'event_photo_create_screen.dart';
 import 'feed_screen.dart';
 import 'home_discover_screen.dart';
@@ -27,6 +28,8 @@ import 'map_screen.dart';
 import 'profile_page_v2.dart';
 import 'public_travel_plans_screen.dart';
 import 'radar_screen.dart';
+import 'route_planner_screen.dart';
+import 'smart_plan_screen.dart';
 import 'spot_explore_screen_v2.dart';
 import 'travel_plans_screen.dart';
 
@@ -331,23 +334,6 @@ class _HomeFeedHubState extends State<_HomeFeedHub> {
     child: Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(12, 4, 12, 6),
-          child: InkWell(
-            borderRadius: BorderRadius.circular(16),
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TodayPlanScreen())),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              decoration: BoxDecoration(color: const Color(0xFF0D1B30), borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.borderAccent)),
-              child: const Row(children: [Icon(Icons.explore_outlined, color: AppColors.cyan), SizedBox(width: 10),
-                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text('Bugün ne yapalım?', style: TextStyle(fontWeight: FontWeight.w900)),
-                  Text('Sürene ve bütçene göre bir gün planla', style: TextStyle(fontSize: 11, color: AppColors.textMuted)),
-                ])), Icon(Icons.chevron_right),
-              ]),
-            ),
-          ),
-        ),
         const StoryStrip(),
         Padding(
           padding: const EdgeInsets.fromLTRB(10, 0, 10, 2),
@@ -710,7 +696,7 @@ class _PlanningHub extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        'Rotanı oluştur, kaydet veya birlikte yola çık.',
+                        'Gezini, etkinliğini ve buluşmanı buradan başlat.',
                         style: TextStyle(
                           color: AppColors.textMuted,
                           fontSize: 11.5,
@@ -736,7 +722,7 @@ class _PlanningHub extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Bugün ne yapmak istersin?',
+                          'Rotanı oluştur',
                           style: TextStyle(
                             fontSize: 19,
                             fontWeight: FontWeight.w900,
@@ -744,7 +730,7 @@ class _PlanningHub extends StatelessWidget {
                         ),
                         SizedBox(height: 6),
                         Text(
-                          'Rotanı kur, insanları bir araya getir veya paylaşılan rotalara katıl.',
+                          'Rotanı kur, insanları bir araya getir veya çevrendeki planlara katıl.',
                           style: TextStyle(
                             color: AppColors.textMuted,
                             fontSize: 12.5,
@@ -761,28 +747,83 @@ class _PlanningHub extends StatelessWidget {
             ),
             const SizedBox(height: 14),
             _PlanningActionCard(
-              icon: Icons.auto_awesome_rounded,
-              title: 'Rota oluştur',
-              subtitle: 'Duraklarını seç; tek başına veya birlikte yola çık.',
-              accent: AppColors.cyan,
-              featured: true,
-              onTap: () => _openAuthenticated(context, const RouteCreateScreen()),
+              icon: Icons.tune_rounded,
+              title: 'Akıllı rota',
+              subtitle: 'Duraklarını listeden veya haritadan kendin seç.',
+              accent: AppColors.violetBright,
+              onTap: () => _openAuthenticated(context, const SmartPlanScreen()),
             ),
             const SizedBox(height: 10),
             _PlanningActionCard(
               icon: Icons.bookmarks_rounded,
-              title: 'Rotalarım',
-              subtitle: 'Oluşturduğun, kaydettiğin ve katıldığın rotalar.',
+              title: 'Planlarım',
+              subtitle: 'Kaydettiğin ve davet edildiğin rotaları görüntüle.',
               accent: AppColors.violetBright,
-              onTap: () => _openAuthenticated(context, const TravelPlansScreen()),
+              onTap: () =>
+                  _openAuthenticated(context, const TravelPlansScreen()),
+            ),
+            const SizedBox(height: 10),
+            _PlanningActionCard(
+              icon: Icons.group_add_rounded,
+              title: 'Arkadaşlarla Planla',
+              subtitle: 'Yeni bir rota hazırla ve arkadaşlarını davet et.',
+              accent: AppColors.success,
+              onTap: () =>
+                  _openAuthenticated(context, const CollaborativePlansScreen()),
             ),
             const SizedBox(height: 10),
             _PlanningActionCard(
               icon: Icons.public_rounded,
-              title: 'Rotaları keşfet',
-              subtitle: 'Hazır rotaları kaydet veya birlikte gidilecek rotalara katıl.',
+              title: 'Hazır Rotaları Keşfet',
+              subtitle: 'Topluluğun paylaştığı rotaları bul, puanla ve kaydet.',
               accent: AppColors.warning,
               onTap: () => _open(context, const PublicTravelPlansScreen()),
+            ),
+            const Padding(
+              padding: EdgeInsets.fromLTRB(2, 20, 2, 10),
+              child: Text(
+                'HIZLI İŞLEMLER',
+                style: TextStyle(
+                  color: AppColors.textSubtle,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1.1,
+                ),
+              ),
+            ),
+            _PlanningActionCard(
+              icon: Icons.route_rounded,
+              title: 'Manuel Rota Oluştur',
+              subtitle:
+                  'Duraklarını kendin seç, sırala ve yolculuğunu hazırla.',
+              accent: AppColors.cyan,
+              onTap: () => _open(context, const RoutePlannerScreen()),
+            ),
+            const SizedBox(height: 10),
+            _PlanningActionCard(
+              icon: Icons.event_available_rounded,
+              title: 'Etkinlik Oluştur',
+              subtitle: 'Tarih, konum ve ayrıntıları belirleyerek yayınla.',
+              accent: AppColors.violetBright,
+              onTap: () =>
+                  _openAuthenticated(context, const EventCreateScreenV2()),
+            ),
+            const SizedBox(height: 10),
+            _PlanningActionCard(
+              icon: Icons.groups_2_rounded,
+              title: 'Buluşma Başlat',
+              subtitle: 'Hızlı bir plan seç, detaylarını ekle ve paylaş.',
+              accent: AppColors.success,
+              onTap: () =>
+                  _openAuthenticated(context, const EventPhotoCreateScreen()),
+            ),
+            const SizedBox(height: 10),
+            _PlanningActionCard(
+              icon: Icons.near_me_rounded,
+              title: 'Yakınımda Ne Var?',
+              subtitle: 'Yakındaki etkinlikleri ve buluşmaları keşfet.',
+              accent: AppColors.warning,
+              onTap: onOpenNearby,
             ),
           ],
         ),

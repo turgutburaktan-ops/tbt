@@ -82,14 +82,19 @@ class _ChatBackgroundPickerState extends State<ChatBackgroundPicker> {
           const SizedBox(height: 8),
           const Text('Seçtiğin renk bu cihazda tüm sohbetlerinde yalnızca sana görünür.', style: TextStyle(color: Colors.white70)),
           const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(color: _selected.color, borderRadius: BorderRadius.circular(18)),
-            child: Column(children: [
-              _previewBubble('Hafta sonu nereye gidiyoruz?', false),
-              const SizedBox(height: 12),
-              _previewBubble('Yeni yerler keşfedelim 🌍', true),
-            ]),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(18),
+            child: ChatBackdrop(
+              color: _selected.color,
+              child: Padding(
+                padding: const EdgeInsets.all(18),
+                child: Column(children: [
+                  _previewBubble('Hafta sonu nereye gidiyoruz?', false),
+                  const SizedBox(height: 12),
+                  _previewBubble('Yeni yerler keşfedelim 🌍', true),
+                ]),
+              ),
+            ),
           ),
           const SizedBox(height: 16),
           Wrap(

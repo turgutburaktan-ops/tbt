@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+export 'chat_backdrop.dart';
+
 import '../services/chat_appearance_service.dart';
 
 /// Shared by the inbox and conversations, without affecting the rest of TBT.
@@ -84,16 +86,5 @@ class _ChatSurfaceState extends State<ChatSurface> {
         child: child!,
       );
     },
-  );
-}
-
-class ChatBackdrop extends StatelessWidget {
-  const ChatBackdrop({super.key, required this.child});
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) => ColoredBox(
-    color: Theme.of(context).scaffoldBackgroundColor,
-    child: child,
   );
 }
