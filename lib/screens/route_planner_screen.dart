@@ -19,6 +19,8 @@ import '../models/photo_spot.dart';
 import '../services/spot_repository.dart';
 import '../widgets/spot_image.dart';
 
+enum RouteStopSelection { catalog, map }
+
 enum RouteTravelMode { driving, walking, bicycling }
 
 extension RouteTravelModeX on RouteTravelMode {
@@ -42,6 +44,7 @@ extension RouteTravelModeX on RouteTravelMode {
 }
 
 class RoutePlannerScreen extends StatefulWidget {
+  final RouteStopSelection? initialSelection;
   final List<List<PhotoSpot>> alternatives;
   final String? routeId;
   final String initialTitle;
@@ -57,6 +60,7 @@ class RoutePlannerScreen extends StatefulWidget {
 
   const RoutePlannerScreen({
     super.key,
+    this.initialSelection,
     this.routeId,
     this.initialTitle = '',
     this.alternatives = const [],
@@ -137,7 +141,13 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
       final spots = await SpotRepository.instance.loadSpots();
       if (!mounted) return;
       setState(() {
-        _allSpots = spots;
+        _allSpots = widget.city.trim().isEmpty
+            ? spots
+            : spots
+                  .where(
+                    (spot) => _normalize(spot.city) == _normalize(widget.city),
+                  )
+                  .toList();
         _loading = false;
       });
       if (widget.initialUseCurrentLocation)
@@ -145,6 +155,12 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
       await _fitRoute();
     } catch (_) {
       if (mounted) setState(() => _loading = false);
+    }
+    if (!mounted) return;
+    if (widget.initialSelection == RouteStopSelection.catalog) {
+      await _pickSpot();
+    } else if (widget.initialSelection == RouteStopSelection.map) {
+      await _pickMapStop();
     }
   }
 
@@ -527,6 +543,22 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
     return _road!.legs[legIndex].label;
   }
 
+  Future<void> _pickMapStop() async {
+    final p = await Navigator.push<EventLocationSelection>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => EventLocationPickerScreen(
+          city: widget.city,
+          addressLabel: 'Yeni durak',
+          title: 'Durak ekle',
+          instruction: 'Eklemek istediğin noktayı haritadan seç.',
+        ),
+      ),
+    );
+    if (p != null && mounted)
+      await _addCustomStop(LatLng(p.latitude, p.longitude));
+  }
+
   Future<void> _chooseStop() async {
     final choice = await showModalBottomSheet<int>(
       context: context,
@@ -560,19 +592,7 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
       return;
     }
     if (choice == 1) {
-      final p = await Navigator.push<EventLocationSelection>(
-        context,
-        MaterialPageRoute(
-          builder: (_) => EventLocationPickerScreen(
-            city: widget.city,
-            addressLabel: 'Yeni durak',
-            title: 'Durak ekle',
-            instruction: 'Eklemek istediğin noktayı haritadan seç.',
-          ),
-        ),
-      );
-      if (p != null && mounted)
-        await _addCustomStop(LatLng(p.latitude, p.longitude));
+      await _pickMapStop();
     }
     if (choice == 2) {
       await _readCurrentLocation(requestIfNeeded: true);
@@ -1060,7 +1080,11 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
                       Container(width: 1, height: 34, color: _border),
                       Expanded(
                         child: _SummaryItem(
-                          value: _routing ? 'Hesaplanıyor…' : _road == null ? '—' : distance < 10
+                          value: _routing
+                              ? 'Hesaplanıyor…'
+                              : _road == null
+                              ? '—'
+                              : distance < 10
                               ? '${distance.toStringAsFixed(1)} km'
                               : '${distance.toStringAsFixed(0)} km',
                           label: 'Yol mesafesi',
@@ -1093,7 +1117,9 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
                         child: Text(
                           _useCurrentLocation && _currentPosition != null
                               ? 'Başlangıç: Konumum'
-                              : _fixedOrigin != null ? 'Başlangıç: Kaydedilen konum' : 'Başlangıç: İlk çekim noktası',
+                              : _fixedOrigin != null
+                              ? 'Başlangıç: Kaydedilen konum'
+                              : 'Başlangıç: İlk çekim noktası',
                           style: const TextStyle(
                             color: Colors.white70,
                             fontWeight: FontWeight.w700,
@@ -1188,7 +1214,7 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
                   ),
                 ),
                 TextButton.icon(
-                  onPressed: _pickSpot,
+                  onPressed: _chooseStop,
                   icon: const Icon(Icons.add_rounded),
                   label: const Text('Nokta ekle'),
                 ),
@@ -1199,7 +1225,7 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
             child: _loading
                 ? const Center(child: CircularProgressIndicator())
                 : _stops.isEmpty
-                ? _EmptyRoute(onAdd: _pickSpot)
+                ? _EmptyRoute(onAdd: _chooseStop)
                 : ReorderableListView.builder(
                     padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
                     itemCount: _stops.length,
