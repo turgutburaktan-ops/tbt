@@ -1,0 +1,54 @@
+name: Check existing Play publishing access
+on:
+  push:
+    branches: [codex/check-play-publishing-access]
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify existing access without granting permissions
+        env:
+          EXISTING_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          node <<'NODE'
+          const crypto = require('node:crypto');
+          const enc = obj => Buffer.from(JSON.stringify(obj)).toString('base64url');
+          (async () => {
+            const sa = JSON.parse(process.env.EXISTING_SERVICE_ACCOUNT || '{}');
+            if (!sa.private_key || !sa.client_email) throw new Error('Configured service account missing');
+            const now = Math.floor(Date.now()/1000);
+            const input = enc({alg:'RS256',typ:'JWT'})+'.'+enc({
+              iss:sa.client_email,scope:'https://www.googleapis.com/auth/androidpublisher',
+              aud:'https://oauth2.googleapis.com/token',iat:now,exp:now+600
+            });
+            const assertion=input+'.'+crypto.sign('RSA-SHA256',Buffer.from(input),sa.private_key).toString('base64url');
+            const tr=await fetch('https://oauth2.googleapis.com/token',{method:'POST',body:new URLSearchParams({grant_type:'urn:ietf:params:oauth:grant-type:jwt-bearer',assertion})});
+            const token=await tr.json();
+            if(!tr.ok || !token.access_token) throw new Error('Google authentication failed HTTP '+tr.status);
+            const headers={Authorization:'Bearer '+token.access_token,'Content-Type':'application/json'};
+            const base='https://androidpublisher.googleapis.com/androidpublisher/v3/applications/com.tbt.social/edits';
+            const r=await fetch(base,{method:'POST',headers,body:'{}'});
+            const result=await r.json();
+            if(!r.ok) {
+              const reason=result.error?.details?.find(d=>d.reason)?.reason || result.error?.errors?.[0]?.reason || result.error?.status || 'UNKNOWN';
+              console.log('PLAY_ACCESS_DENIED HTTP '+r.status+' reason='+String(reason).replace(/[^a-zA-Z0-9_-]/g,''));
+              process.exitCode=1; return;
+            }
+            try {
+              const tracks=await fetch(base+'/'+encodeURIComponent(result.id)+'/tracks',{headers});
+              if(!tracks.ok) throw new Error('Track access failed HTTP '+tracks.status);
+              const body=await tracks.json();
+              console.log('PLAY_ACCESS_OK tracks='+JSON.stringify((body.tracks||[]).map(t=>t.track)));
+            } finally {
+              const cleanup=await fetch(base+'/'+encodeURIComponent(result.id),{method:'DELETE',headers});
+              if(!cleanup.ok) throw new Error('Temporary edit cleanup failed HTTP '+cleanup.status);
+              console.log('Temporary edit removed; no release changed.');
+            }
+          })().catch(e=>{console.error('Access check failed: '+e.message);process.exitCode=1;});
+          NODE
