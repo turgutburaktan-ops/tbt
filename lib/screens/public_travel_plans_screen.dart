@@ -22,6 +22,7 @@ class PublicTravelPlansScreen extends StatefulWidget {
 
 class _PublicTravelPlansScreenState extends State<PublicTravelPlansScreen> {
   String _query = '';
+  String _filter = 'Tümü';
 
   Future<void> _rate(TravelPlan plan) async {
     final rating = await showTbtDialog<int>(
@@ -117,6 +118,18 @@ class _PublicTravelPlansScreenState extends State<PublicTravelPlansScreen> {
                   setState(() => _query = value.toLowerCase()),
             ),
           ),
+          Wrap(
+            spacing: 8,
+            children: ['Tümü', 'Hazır rotalar', 'Birlikte gidelim']
+                .map(
+                  (v) => ChoiceChip(
+                    label: Text(v),
+                    selected: _filter == v,
+                    onSelected: (_) => setState(() => _filter = v),
+                  ),
+                )
+                .toList(),
+          ),
           Expanded(
             child: StreamBuilder<List<TravelPlan>>(
               stream: TravelPlanService.instance.watchPublic(),
@@ -131,6 +144,13 @@ class _PublicTravelPlansScreenState extends State<PublicTravelPlansScreen> {
                     ),
                   );
                 final plans = (snapshot.data ?? const <TravelPlan>[])
+                    .where(
+                      (plan) =>
+                          _filter == 'Tümü' ||
+                          (_filter == 'Birlikte gidelim'
+                              ? plan.joinEnabled
+                              : !plan.joinEnabled),
+                    )
                     .where(
                       (plan) =>
                           _query.isEmpty ||

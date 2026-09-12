@@ -22,6 +22,8 @@ class TravelPlan {
   final String weatherSummary;
   final Map<String, dynamic> dayPlan;
   final bool isPublic;
+  final bool joinEnabled;
+  final Map<String, dynamic> routeOrigin;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -47,23 +49,24 @@ class TravelPlan {
     this.weatherSummary = '',
     this.dayPlan = const {},
     this.isPublic = false,
+    this.joinEnabled = false,
+    this.routeOrigin = const {},
     required this.createdAt,
     required this.updatedAt,
   });
 
-  factory TravelPlan.fromDoc(
-    DocumentSnapshot<Map<String, dynamic>> document,
-  ) {
+  factory TravelPlan.fromDoc(DocumentSnapshot<Map<String, dynamic>> document) {
     final data = document.data() ?? const <String, dynamic>{};
     DateTime readDate(String key) {
       final value = data[key];
       return value is Timestamp ? value.toDate() : DateTime.now();
     }
 
-    List<String> strings(String key) => (data[key] as List<dynamic>? ?? const [])
-        .map((item) => item.toString())
-        .where((item) => item.isNotEmpty)
-        .toList(growable: false);
+    List<String> strings(String key) =>
+        (data[key] as List<dynamic>? ?? const [])
+            .map((item) => item.toString())
+            .where((item) => item.isNotEmpty)
+            .toList(growable: false);
 
     return TravelPlan(
       id: document.id,
@@ -93,6 +96,8 @@ class TravelPlan {
       weatherSummary: (data['weatherSummary'] ?? '').toString(),
       dayPlan: Map<String, dynamic>.from(data['dayPlan'] as Map? ?? {}),
       isPublic: data['isPublic'] == true,
+      joinEnabled: data['joinEnabled'] == true,
+      routeOrigin: Map<String, dynamic>.from(data['routeOrigin'] as Map? ?? {}),
       createdAt: readDate('createdAt'),
       updatedAt: readDate('updatedAt'),
     );

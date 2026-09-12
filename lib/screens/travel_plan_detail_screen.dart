@@ -250,13 +250,35 @@ class _TravelPlanDetailScreenState extends State<TravelPlanDetailScreen> {
     );
   }
 
-  Future<void> _setPublic(bool value) async {
-    setState(() => _public = value);
-    try {
-      await TravelPlanService.instance.setPublic(plan.id, value);
-    } catch (_) {
-      if (mounted) setState(() => _public = !value);
-    }
+  Future<void> _showStop(Map<String, dynamic> stop) async {
+    await showTbtDialog<void>(
+      context: context,
+      builder: (c) => TbtDialog(
+        title: Text(stop['name']?.toString() ?? 'Durak'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if ((stop['imageUrl'] ?? '').toString().isNotEmpty)
+                Image.network(
+                  stop['imageUrl'].toString(),
+                  height: 220,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) =>
+                      const Text('Fotoğraf yüklenemedi.'),
+                ),
+              Text((stop['description'] ?? '').toString()),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(c),
+            child: const Text('Kapat'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -411,7 +433,17 @@ class _TravelPlanDetailScreenState extends State<TravelPlanDetailScreen> {
                       label: const Text('Ortak başlangıç saatini değiştir'),
                     ),
                   RouteRoadSummary(
-                    stops: stops,
+                    stops: [
+                      if (data['routeOrigin'] is Map &&
+                          (data['routeOrigin'] as Map)['latitude'] is num)
+                        {
+                          ...Map<String, dynamic>.from(
+                            data['routeOrigin'] as Map,
+                          ),
+                          'name': 'Başlangıç',
+                        },
+                      ...stops,
+                    ],
                     transport: (data['transport'] ?? plan.transport).toString(),
                   ),
                   RouteParticipation(routeId: plan.id, data: data),
@@ -511,7 +543,7 @@ class _TravelPlanDetailScreenState extends State<TravelPlanDetailScreen> {
                     title: Text(stops[index]['name'].toString()),
                     onTap: stops[index]['venue'] is Map
                         ? () => _openVenueStop(stops[index])
-                        : null,
+                        : () => _showStop(stops[index]),
                     subtitle: Text(
                       index == 0 ? 'Başlangıç durağı' : 'Sonraki durak',
                     ),

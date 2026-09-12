@@ -112,12 +112,14 @@ class TravelPlanService {
   Future<void> updateRoutePreferences(
     String id,
     String transport,
-    String note,
-  ) async {
+    String note, {
+    Map<String, dynamic>? origin,
+  }) async {
     _requireUser();
     await _firestore.collection('travel_plans').doc(id).update({
       'transport': transport,
       'routeNote': note,
+      'routeOrigin': origin ?? {},
       'updatedAt': FieldValue.serverTimestamp(),
     });
   }
@@ -399,6 +401,22 @@ class TravelPlanService {
 
   Future<List<PhotoSpot>> resolveRouteSpots(TravelPlan plan) async {
     final stops = await resolveSpots(plan);
+    final origin = plan.routeOrigin;
+    if (origin['latitude'] is num && origin['longitude'] is num)
+      return [
+        PhotoSpot(
+          id: 'route_origin',
+          name: 'Başlangıç',
+          city: plan.city,
+          latitude: (origin['latitude'] as num).toDouble(),
+          longitude: (origin['longitude'] as num).toDouble(),
+          rating: 0,
+          bestTime: '',
+          angle: '',
+          imageUrl: '',
+        ),
+        ...stops,
+      ];
     final lat = (plan.dayPlan['originLatitude'] as num?)?.toDouble();
     final lon = (plan.dayPlan['originLongitude'] as num?)?.toDouble();
     if (lat == null || lon == null || plan.dayPlan['returnIncluded'] != true)

@@ -10,7 +10,6 @@ import '../services/travel_plan_service.dart';
 import '../theme/app_theme.dart';
 import 'route_planner_screen.dart';
 import 'offline_travel_plans_screen.dart';
-import 'today_plan_screen.dart';
 import 'travel_plan_detail_screen.dart';
 import 'travel_plan_invite_screen.dart';
 
@@ -237,7 +236,7 @@ class TravelPlansScreen extends StatelessWidget {
                         Text(
                           owned
                               ? '${plan.memberIds.length - 1} davetli'
-                              : 'Davet edildiğin plan',
+                              : 'Katıldığın rota',
                           style: const TextStyle(
                             color: AppColors.textMuted,
                             fontSize: 11.5,

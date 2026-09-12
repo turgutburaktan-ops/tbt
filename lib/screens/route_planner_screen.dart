@@ -13,7 +13,6 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../models/photo_spot.dart';
@@ -610,6 +609,12 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
         _savedId!,
         _travelMode.label,
         _routeNoteController.text.trim(),
+        origin: _useCurrentLocation && _currentPosition != null
+            ? {
+                'latitude': _currentPosition!.latitude,
+                'longitude': _currentPosition!.longitude,
+              }
+            : null,
       );
       if (!mounted) return;
       await Navigator.push(
@@ -935,26 +940,6 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
     if (!launched) _message('Google Maps açılamadı.');
   }
 
-  Future<void> _shareRoute() async {
-    if (_stops.isEmpty) {
-      _message('Paylaşmak için rotaya en az bir durak ekle.');
-      return;
-    }
-    final title = _routeNameController.text.trim().isEmpty
-        ? 'Manuel gezi rotam'
-        : _routeNameController.text.trim();
-    final note = _routeNoteController.text.trim();
-    final stopLines = _stops
-        .asMap()
-        .entries
-        .map((entry) => '${entry.key + 1}. ${entry.value.name}')
-        .join('\n');
-    await Share.share(
-      '$title\n${note.isEmpty ? '' : '$note\n'}\n$stopLines\n\nTBT ile oluşturuldu.',
-      subject: title,
-    );
-  }
-
   static String _normalize(String value) => value
       .trim()
       .toLowerCase()
@@ -1275,10 +1260,6 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
                           ),
                           subtitle: Builder(
                             builder: (_) {
-                              final km = _distanceToMeKm(spot);
-                              final distanceLabel = km == null
-                                  ? ''
-                                  : ' • ${km < 10 ? km.toStringAsFixed(1) : km.toStringAsFixed(0)} km';
                               return Text(
                                 '${spot.city} • ${_legLabel(index)}',
                                 maxLines: 1,

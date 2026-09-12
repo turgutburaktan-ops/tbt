@@ -21,6 +21,10 @@ jobs:
       - run: flutter pub get
       - run: flutter analyze --no-fatal-infos --no-fatal-warnings lib/screens/route_create_screen.dart lib/screens/route_sharing_screen.dart lib/screens/route_planner_screen.dart lib/screens/home_shell_v3.dart lib/screens/travel_plan_detail_screen.dart lib/screens/public_travel_plans_screen.dart lib/screens/travel_plans_screen.dart lib/services/route_itinerary_service.dart lib/services/travel_plan_service.dart lib/widgets/route_road_summary.dart
       - run: flutter test test/route_itinerary_test.dart test/route_create_test.dart test/profile_identity_test.dart
+      - uses: actions/upload-artifact@v4
+        with:
+          name: route-create-review
+          path: /tmp/route-create-review.png
       - uses: actions/setup-java@v5
         with:
           distribution: temurin

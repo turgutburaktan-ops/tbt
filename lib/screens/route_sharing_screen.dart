@@ -26,6 +26,7 @@ class _RouteSharingScreenState extends State<RouteSharingScreen> {
   DateTime? _start;
   EventLocationSelection? _point;
   final _limit = TextEditingController();
+  final _meetingName = TextEditingController(text: 'Buluşma noktası');
   bool _busy = false, _loaded = false;
   @override
   void initState() {
@@ -45,12 +46,14 @@ class _RouteSharingScreenState extends State<RouteSharingScreen> {
       setState(() {
         _visibility = d['isPublic'] == true
             ? 'Herkese açık'
-            : widget.inviteFriends
+            : widget.inviteFriends || (d['memberIds'] as List? ?? []).length > 1
             ? 'Arkadaşlarım'
             : 'Sadece ben';
         _kind = d['joinEnabled'] == true ? 'Birlikte gidelim' : 'Rotayı paylaş';
         _start = (d['startAt'] as Timestamp?)?.toDate();
         final p = d['meetingPoint'];
+        if (p is Map)
+          _meetingName.text = p['label']?.toString() ?? 'Buluşma noktası';
         if (p is Map)
           _point = EventLocationSelection(
             latitude: (p['latitude'] as num).toDouble(),
@@ -74,6 +77,7 @@ class _RouteSharingScreenState extends State<RouteSharingScreen> {
   @override
   void dispose() {
     _limit.dispose();
+    _meetingName.dispose();
     super.dispose();
   }
 
@@ -135,7 +139,9 @@ class _RouteSharingScreenState extends State<RouteSharingScreen> {
         meetingPoint: _point == null
             ? null
             : {
-                'label': _point!.label,
+                'label': _meetingName.text.trim().isEmpty
+                    ? _point!.label
+                    : _meetingName.text.trim(),
                 'latitude': _point!.latitude,
                 'longitude': _point!.longitude,
               },
@@ -215,6 +221,13 @@ class _RouteSharingScreenState extends State<RouteSharingScreen> {
                     ),
                     onTap: _date,
                   ),
+                  TextField(
+                    controller: _meetingName,
+                    maxLength: 160,
+                    decoration: const InputDecoration(
+                      labelText: 'Buluşma yerinin adı',
+                    ),
+                  ),
                   ListTile(
                     title: const Text('Buluşma noktası'),
                     subtitle: Text(_point?.label ?? 'Haritadan seç'),
@@ -222,9 +235,11 @@ class _RouteSharingScreenState extends State<RouteSharingScreen> {
                       final p = await Navigator.push<EventLocationSelection>(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => const EventLocationPickerScreen(
+                          builder: (_) => EventLocationPickerScreen(
                             city: '',
-                            addressLabel: 'Buluşma noktası',
+                            addressLabel: _meetingName.text.trim().isEmpty
+                                ? 'Buluşma noktası'
+                                : _meetingName.text.trim(),
                             title: 'Buluşma noktası',
                             instruction: 'Buluşacağınız noktayı haritadan seç.',
                           ),
