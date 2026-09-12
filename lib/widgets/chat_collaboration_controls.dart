@@ -1,3 +1,4 @@
+import 'profile_name_link.dart';
 import 'tbt_dialog.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -261,7 +262,7 @@ class ChatGroupInfo extends StatelessWidget {
                   final name = (user.data?.data()?['displayName'] ?? 'Üye')
                       .toString();
                   return ListTile(
-                    title: Text(name),
+                    title: ProfileNameLink(userId: member, compact: true, child: Text(name)),
                     subtitle: Text(
                       member == t.ownerId
                           ? 'Grup sahibi'

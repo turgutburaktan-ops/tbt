@@ -1,3 +1,4 @@
+import 'profile_name_link.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -371,6 +372,7 @@ class _PostTile extends StatelessWidget {
     return _InfoTile(
       icon: Icons.photo_camera_back_rounded,
       title: name,
+      userId: (data['userId'] ?? '').toString(),
       subtitle: spot.isNotEmpty ? '$spot konumundan yeni paylaşım' : (caption.isNotEmpty ? caption : 'Yeni paylaşım yaptı'),
     );
   }
@@ -399,7 +401,8 @@ class _EventTile extends StatelessWidget {
 class _InfoTile extends StatelessWidget {
   final IconData icon;
   final String title, subtitle;
-  const _InfoTile({required this.icon, required this.title, required this.subtitle});
+  final String userId;
+  const _InfoTile({required this.icon, required this.title, required this.subtitle, this.userId = ''});
   @override
   Widget build(BuildContext context) => Container(
     margin: const EdgeInsets.only(bottom: 7),
@@ -418,7 +421,7 @@ class _InfoTile extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13)),
+              ProfileNameLink(userId: userId, compact: true, child: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13))),
               if (subtitle.isNotEmpty) ...[
                 const SizedBox(height: 2),
                 Text(subtitle, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(color: Colors.white.withValues(alpha: .50), fontSize: 11.5)),

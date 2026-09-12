@@ -1,3 +1,4 @@
+import 'profile_name_link.dart';
 import 'venue_quality_section.dart';
 import '../services/venue_quality_service.dart';
 import 'package:flutter/material.dart';
@@ -270,12 +271,12 @@ class _VenueReviewsSectionState extends State<VenueReviewsSection> {
                           Row(
                             children: [
                               Expanded(
-                                child: Text(
+                                child: ProfileNameLink(userId: review.userId, compact: true, child: Text(
                                   review.userName,
                                   style: const TextStyle(
                                     fontWeight: FontWeight.w900,
                                   ),
-                                ),
+                                )),
                               ),
                               Text(
                                 _dateLabel(review.updatedAt),

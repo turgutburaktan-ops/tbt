@@ -1,3 +1,4 @@
+import 'profile_name_link.dart';
 import 'tbt_dialog.dart';
 import '../screens/user_profile_screen.dart';
 
@@ -294,13 +295,13 @@ class _EventChatState extends State<_EventChat> {
                   itemBuilder: (c, i) {
                     final d = docs[i].data();
                     return ListTile(
-                      title: Text(
+                      title: ProfileNameLink(userId: (d['senderId'] ?? '').toString(), compact: true, child: Text(
                         '${d['senderName'] ?? 'Katılımcı'}',
                         style: const TextStyle(
                           fontSize: 13,
                           color: Colors.grey,
                         ),
-                      ),
+                      )),
                       subtitle: Text(
                         '${d['text'] ?? ''}',
                         style: const TextStyle(fontSize: 16),

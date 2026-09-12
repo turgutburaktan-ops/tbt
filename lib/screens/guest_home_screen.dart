@@ -1,3 +1,4 @@
+import '../widgets/profile_name_link.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -430,12 +431,12 @@ class _GuestPostCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
+                      ProfileNameLink(userId: (data['userId'] ?? '').toString(), compact: true, child: Text(
                         userName,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(fontWeight: FontWeight.w900),
-                      ),
+                      )),
                       if (spotName.isNotEmpty)
                         Text(
                           spotName,
@@ -517,10 +518,9 @@ class _GuestPostCard extends StatelessWidget {
               child: Text.rich(
                 TextSpan(
                   children: [
-                    TextSpan(
-                      text: '$userName ',
-                      style: const TextStyle(fontWeight: FontWeight.w900),
-                    ),
+                    WidgetSpan(alignment: PlaceholderAlignment.middle,
+                      child: ProfileNameLink(userId: (data['userId'] ?? '').toString(), compact: true,
+                        child: Text('$userName ', style: const TextStyle(fontWeight: FontWeight.w900)))),
                     TextSpan(
                       text: caption,
                       style: const TextStyle(

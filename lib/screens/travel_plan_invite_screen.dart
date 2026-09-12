@@ -1,3 +1,4 @@
+import '../widgets/profile_name_link.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -165,14 +166,14 @@ class _TravelPlanInviteScreenState extends State<TravelPlanInviteScreen> {
                                 )
                               : null,
                         ),
-                        title: Text(user.name),
-                        subtitle: Text(
+                        title: ProfileNameLink(userId: user.id, compact: true, child: Text(user.name)),
+                        subtitle: ProfileNameLink(userId: user.id, compact: true, child: Text(
                           invited
                               ? 'Zaten planda'
                               : user.username.isEmpty
                               ? 'Takip ediyorsun'
                               : '@${user.username}',
-                        ),
+                        )),
                       );
                     },
                   ),

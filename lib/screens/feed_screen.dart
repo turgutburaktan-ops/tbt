@@ -1,3 +1,4 @@
+import '../widgets/profile_name_link.dart';
 import '../services/video_audio_session.dart';
 import '../widgets/tbt_dialog.dart';
 import '../services/creator_service.dart';
@@ -632,10 +633,10 @@ class _FeedRouteCard extends StatelessWidget {
                     const CircleAvatar(child: Icon(Icons.route_rounded)),
                     const SizedBox(width: 10),
                     Expanded(
-                      child: Text(
+                      child: ProfileNameLink(userId: (data['userId'] ?? '').toString(), compact: true, child: Text(
                         (data['userName'] ?? 'TBT kullanıcısı').toString(),
                         style: const TextStyle(fontWeight: FontWeight.w900),
-                      ),
+                      )),
                     ),
                     const Icon(Icons.chevron_right_rounded),
                   ],
@@ -667,9 +668,9 @@ class _FeedRouteCard extends StatelessWidget {
                 if ((data['guideNote'] ?? '').toString().isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 12),
-                    child: Text(
+                    child: ProfileNameLink(userId: (data['userId'] ?? '').toString(), compact: true, child: Text(
                       '“${data['guideNote']}” — ${data['userName'] ?? ''}',
-                    ),
+                    )),
                   ),
                 ContentEngagementBar(
                   collection: 'posts',

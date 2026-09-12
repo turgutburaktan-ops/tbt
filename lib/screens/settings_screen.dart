@@ -1,3 +1,4 @@
+import '../widgets/profile_name_link.dart';
 import '../models/profile_identity.dart';
 import 'profile_history_screen.dart';
 import '../widgets/tbt_dialog.dart';
@@ -716,18 +717,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                ProfileNameLink(userId: user.uid, compact: true, child: Text(
                   name,
                   style: const TextStyle(
                     fontSize: 17,
                     fontWeight: FontWeight.w900,
                   ),
-                ),
+                )),
                 if (username.isNotEmpty)
-                  Text(
+                  ProfileNameLink(userId: user.uid, compact: true, child: Text(
                     username.startsWith('@') ? username : '@$username',
                     style: const TextStyle(color: Colors.white60),
-                  ),
+                  )),
                 const SizedBox(height: 3),
                 Text(
                   _profileTypeLabel(type),

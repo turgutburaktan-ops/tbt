@@ -1,3 +1,4 @@
+import '../widgets/profile_name_link.dart';
 import '../widgets/description_field.dart';
 import 'dart:io';
 
@@ -217,7 +218,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
               final name = (data['displayName'] ?? data['email'] ?? 'Kullanıcı').toString().trim();
               final username = (data['username'] ?? data['usernameNormalized'] ?? '').toString().trim();
               final mention = username.isNotEmpty ? username : name.replaceAll(' ', '');
-              return ListTile(title: Text(name), subtitle: username.isEmpty ? null : Text('@$username'), onTap: () => Navigator.pop(sheetContext, {'id': doc.id, 'name': name, 'mention': mention}));
+              return ListTile(title: ProfileNameLink(userId: doc.id, compact: true, child: Text(name)), subtitle: username.isEmpty ? null : ProfileNameLink(userId: doc.id, compact: true, child: Text('@$username')), onTap: () => Navigator.pop(sheetContext, {'id': doc.id, 'name': name, 'mention': mention}));
             });
           },
         ))]),

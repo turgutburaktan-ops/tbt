@@ -1,3 +1,4 @@
+import '../widgets/profile_name_link.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../models/chat_message.dart';
@@ -52,7 +53,7 @@ class _AddGroupMembersScreenState extends State<AddGroupMembersScreen> {
             Padding(padding: const EdgeInsets.all(12), child: Text('${members.length}/50 üye · ${selected.length} kişi seçildi')),
             if (selected.isNotEmpty) SizedBox(height: 48, child: ListView(scrollDirection: Axis.horizontal, children: selected.map((id) => Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: InputChip(label: Text(_selected[id]!), onDeleted: () => setState(() => _selected.remove(id))),
+              child: InputChip(label: ProfileNameLink(userId: id, compact: true, child: Text(_selected[id]!)), onDeleted: () => setState(() => _selected.remove(id))),
             )).toList())),
             Expanded(child: ShareRecipientPicker(excludedIds: members.toSet(), selectedIds: selected, onSelected: (user) {
               final id = user['id']!;

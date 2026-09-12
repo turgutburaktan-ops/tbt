@@ -1,3 +1,4 @@
+import '../widgets/profile_name_link.dart';
 import 'route_sharing_screen.dart';
 import '../widgets/route_road_summary.dart';
 import '../models/nearby_venue.dart';
@@ -954,13 +955,13 @@ class _PlanGroupTabState extends State<_PlanGroupTab> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           if (!mine)
-                            Text(
+                            ProfileNameLink(userId: (data['senderId'] ?? '').toString(), compact: true, child: Text(
                               (data['senderName'] ?? '').toString(),
                               style: const TextStyle(
                                 fontSize: 10,
                                 color: AppColors.cyan,
                               ),
-                            ),
+                            )),
                           Text((data['text'] ?? '').toString()),
                         ],
                       ),
@@ -1151,9 +1152,9 @@ class _LiveTripScreenState extends State<_LiveTripScreen> {
                               ? Icons.location_on_rounded
                               : Icons.location_off_outlined,
                         ),
-                        title: Text(
+                        title: ProfileNameLink(userId: doc.id, compact: true, child: Text(
                           (data['userName'] ?? 'TBT kullanıcısı').toString(),
-                        ),
+                        )),
                         subtitle: Text((data['stopName'] ?? '').toString()),
                         trailing: latitude == null || longitude == null
                             ? null

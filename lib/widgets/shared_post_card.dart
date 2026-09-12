@@ -1,3 +1,4 @@
+import 'profile_name_link.dart';
 import 'shared_story_video.dart';
 import 'creator_view_tracker.dart';
 
@@ -25,6 +26,7 @@ class SharedPostCard extends StatefulWidget {
     this.active = true,
     this.note = '',
     this.onStoryReady,
+    this.onProfileOpening, this.onProfileReturned,
   });
   final String postId;
   final String? repostId;
@@ -33,6 +35,7 @@ class SharedPostCard extends StatefulWidget {
   final bool storyPresentation, active;
   final String note;
   final ValueChanged<Duration>? onStoryReady;
+  final VoidCallback? onProfileOpening, onProfileReturned;
   final Future<void> Function()? onOpen;
   @override
   State<SharedPostCard> createState() => _SharedPostCardState();
@@ -215,6 +218,8 @@ class _SharedPostCardState extends State<SharedPostCard> {
     if (widget.storyPresentation && videoUrl.isNotEmpty) {
       return CreatorViewTracker(postId: widget.postId, child: SharedStoryVideo(
         url: videoUrl, author: (post['userName'] ?? '').toString(),
+        authorId: (post['userId'] ?? '').toString(),
+        onProfileOpening: widget.onProfileOpening, onProfileReturned: widget.onProfileReturned,
         note: widget.note, active: widget.active,
         onReady: _storyReady, onError: () => _storyReady(),
       ));
@@ -233,13 +238,13 @@ class _SharedPostCardState extends State<SharedPostCard> {
               if (widget.repostId != null && _sharedBy != null)
                 Padding(
                   padding: const EdgeInsets.fromLTRB(14, 12, 14, 0),
-                  child: Text(
+                  child: ProfileNameLink(userId: (_sharedBy!['userId'] ?? '').toString(), compact: true, onOpening: widget.onProfileOpening, onReturned: widget.onProfileReturned, child: Text(
                     '${_sharedBy!['name']} yeniden paylaştı',
                     style: const TextStyle(
                       color: Color(0xFF9FC7FF),
                       fontSize: 12,
                     ),
-                  ),
+                  )),
                 ),
               ListTile(
                 dense: true,
@@ -251,6 +256,8 @@ class _SharedPostCardState extends State<SharedPostCard> {
                 ),
                 subtitle: const Text('Asıl gönderi'),
                 onTap: () async {
+                  widget.onProfileOpening?.call();
+                  try {
                   unawaited(
                     CreatorService.instance
                         .publishing('profileVisit', widget.postId)
@@ -263,6 +270,7 @@ class _SharedPostCardState extends State<SharedPostCard> {
                           UserProfileScreen(userId: post['userId'].toString()),
                     ),
                   );
+                  } finally { if (mounted) widget.onProfileReturned?.call(); }
                 },
               ),
               if ((post['imageUrl'] ?? '').toString().isNotEmpty)
@@ -309,11 +317,11 @@ class _SharedPostCardState extends State<SharedPostCard> {
                     horizontal: 14,
                     vertical: 8,
                   ),
-                  child: Text(
+                  child: ProfileNameLink(userId: (post['userId'] ?? '').toString(), compact: true, onOpening: widget.onProfileOpening, onReturned: widget.onProfileReturned, child: Text(
                     '“${post['guideNote']}” — ${post['userName']}',
                     maxLines: widget.compact ? 3 : 8,
                     overflow: TextOverflow.ellipsis,
-                  ),
+                  )),
                 ),
               const Padding(
                 padding: EdgeInsets.fromLTRB(14, 0, 14, 14),

@@ -1,3 +1,4 @@
+import '../widgets/profile_name_link.dart';
 import '../widgets/tbt_dialog.dart';
 
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -814,13 +815,13 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
                           Row(
                             children: [
                               Expanded(
-                                child: Text(
+                                child: ProfileNameLink(userId: event.hostId, compact: true, child: Text(
                                   'Düzenleyen: ${event.hostName}',
                                   style: const TextStyle(
                                     color: Colors.white54,
                                     fontSize: 12,
                                   ),
-                                ),
+                                )),
                               ),
                               if (attending && !hidden && !isHost)
                                 StreamBuilder<EventTicket?>(

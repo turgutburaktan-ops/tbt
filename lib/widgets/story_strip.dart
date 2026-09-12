@@ -1,3 +1,5 @@
+import 'story_navigation_surface.dart';
+import 'profile_name_link.dart';
 import 'tbt_dialog.dart';
 import 'shared_post_card.dart';
 import '../screens/post_deep_link_screen.dart';
@@ -327,7 +329,7 @@ class _StoryCircle extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 5),
-            Text(
+            ProfileNameLink(userId: s.userId, compact: true, child: Text(
               s.userName,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -336,7 +338,7 @@ class _StoryCircle extends StatelessWidget {
                 fontWeight: FontWeight.w700,
                 color: viewed ? Colors.white60 : Colors.white,
               ),
-            ),
+            )),
           ],
         ),
       ),
@@ -779,12 +781,12 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
                                     ),
                                   ),
                                 ),
-                                title: Text(
+                                title: ProfileNameLink(userId: (x['userId'] ?? x['id'] ?? '').toString(), compact: true, child: Text(
                                   (x['userName'] ?? 'Kullanıcı').toString(),
                                   style: const TextStyle(
                                     fontWeight: FontWeight.w800,
                                   ),
-                                ),
+                                )),
                                 subtitle:
                                     (x['message'] ?? '').toString().isEmpty
                                     ? null
@@ -868,6 +870,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
         storyId: s.id, compact: true, storyPresentation: true,
         active: s.id == _current.id && !_storyPaused,
         note: s.caption, onOpen: _openSharedPost,
+        onProfileOpening: _pause, onProfileReturned: _resume,
         onStoryReady: (duration) {
           _sharedDurations[s.id] = duration;
           if (!mounted || s.id != _current.id) return;
@@ -885,7 +888,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
         child: Stack(
           fit: StackFit.expand,
           children: [
-            AppVideoPlayer.network(
+            IgnorePointer(child: AppVideoPlayer.network(
               key: ValueKey(s.id),
               url: s.videoUrl,
               active: s.id == _current.id && !_storyPaused,
@@ -895,7 +898,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
               loop: false,
               showControls: false,
               fit: BoxFit.cover,
-            ),
+            )),
             if (s.overlayUrl.isNotEmpty)
               IgnorePointer(
                 child: Image.network(s.overlayUrl, fit: BoxFit.fill),
@@ -948,7 +951,11 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
                 SizedBox(
                   width: width,
                   height: height,
-                  child: PageView.builder(
+                  child: StoryNavigationSurface(
+                    onPrevious: _previous, onNext: _next,
+                    onPause: _pause, onResume: _resume,
+                    onOpenShared: current.sharedPostId.isEmpty ? null : _openSharedPost,
+                    child: PageView.builder(
                     controller: _controller,
                     itemCount: _stories.length,
                     physics: const NeverScrollableScrollPhysics(),
@@ -959,39 +966,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
                       _restartProgress();
                     },
                     itemBuilder: (_, i) => _media(_stories[i], width, height),
-                  ),
-                ),
-                Positioned.fill(
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.translucent,
-                    onLongPressStart: (_) => _pause(),
-                    onLongPressEnd: (_) => _resume(),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: GestureDetector(
-                            behavior: HitTestBehavior.translucent,
-                            onTap: _previous,
-                          ),
-                        ),
-                        if (current.sharedPostId.isNotEmpty)
-                          Expanded(
-                            flex: 4,
-                            child: GestureDetector(
-                              behavior: HitTestBehavior.translucent,
-                              onTap: _openSharedPost,
-                              child: const SizedBox.expand(),
-                            ),
-                          ),
-                        Expanded(
-                          child: GestureDetector(
-                            behavior: HitTestBehavior.translucent,
-                            onTap: _next,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                  )),
                 ),
                 Positioned(
                   top: 0,
@@ -1072,7 +1047,9 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
                             ),
                             const SizedBox(width: 9),
                             Expanded(
-                              child: RichText(
+                              child: ProfileNameLink(userId: current.userId,
+                                onOpening: _pause, onReturned: _resume,
+                                child: RichText(
                                 text: TextSpan(
                                   style: const TextStyle(
                                     color: Colors.white,
@@ -1094,7 +1071,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
                                     ),
                                   ],
                                 ),
-                              ),
+                              )),
                             ),
                             if (_mine)
                               IconButton(

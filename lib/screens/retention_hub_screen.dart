@@ -1,3 +1,4 @@
+import '../widgets/profile_name_link.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -366,7 +367,7 @@ class _DiscoveryCard extends StatelessWidget {
           right: 10,
           bottom: 9,
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(user, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w900)),
+            ProfileNameLink(userId: (data['userId'] ?? '').toString(), compact: true, child: Text(user, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w900))),
             if (spot.isNotEmpty) Text(spot, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 10.5, color: Colors.white70)),
           ]),
         ),

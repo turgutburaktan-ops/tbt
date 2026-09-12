@@ -1,3 +1,4 @@
+import 'profile_name_link.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -318,13 +319,13 @@ class _PresenceAvatar extends StatelessWidget {
                 : null,
           ),
           const SizedBox(height: 5),
-          Text(
+          ProfileNameLink(userId: item.userId, compact: true, child: Text(
             item.displayName,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             textAlign: TextAlign.center,
             style: const TextStyle(fontSize: 10.5, color: Colors.white70),
-          ),
+          )),
         ],
       ),
     );

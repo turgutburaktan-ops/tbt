@@ -1,3 +1,4 @@
+import '../widgets/profile_name_link.dart';
 import 'package:video_compress/video_compress.dart';
 
 import '../widgets/app_video_player.dart';
@@ -1649,8 +1650,8 @@ class _MentionSheetState extends State<_MentionSheet> {
                       leading: const CircleAvatar(backgroundColor: const Color(0xFF0D1B30), foregroundColor: Colors.white70,
                         child: Icon(Icons.person_outline),
                       ),
-                      title: Text(name),
-                      subtitle: user.isEmpty ? null : Text('@$user'),
+                      title: ProfileNameLink(userId: doc.id, compact: true, child: Text(name)),
+                      subtitle: user.isEmpty ? null : ProfileNameLink(userId: doc.id, compact: true, child: Text('@$user')),
                       onTap: () {
                         Navigator.pop(
                           context,

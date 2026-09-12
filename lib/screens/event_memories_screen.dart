@@ -1,3 +1,4 @@
+import '../widgets/profile_name_link.dart';
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -386,12 +387,12 @@ class _EventMemoriesScreenState extends State<EventMemoriesScreen> {
                               ),
                               const SizedBox(width: 9),
                               Expanded(
-                                child: Text(
+                                child: ProfileNameLink(userId: (d['userId'] ?? '').toString(), compact: true, child: Text(
                                   name,
                                   style: const TextStyle(
                                     fontWeight: FontWeight.w900,
                                   ),
-                                ),
+                                )),
                               ),
                               Icon(
                                 isVideo

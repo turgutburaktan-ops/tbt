@@ -1,3 +1,4 @@
+import '../widgets/profile_name_link.dart';
 import '../widgets/event_hub_panel.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -144,12 +145,12 @@ class EventDeepLinkScreen extends StatelessWidget {
                                       ),
                                     ),
                                     const SizedBox(height: 5),
-                                    Text(
+                                    ProfileNameLink(userId: event.hostId, compact: true, child: Text(
                                       event.hostName,
                                       style: const TextStyle(
                                         color: Colors.white60,
                                       ),
-                                    ),
+                                    )),
                                   ],
                                 ),
                               ),

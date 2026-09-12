@@ -1,3 +1,4 @@
+import '../widgets/profile_name_link.dart';
 import '../widgets/chat_surface.dart';
 import '../widgets/chat_delete_action.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -161,21 +162,21 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
                     ? const Icon(Icons.person_outline, color: Colors.white54)
                     : null,
               ),
-              title: Text(
+              title: ProfileNameLink(userId: doc.id, compact: true, child: Text(
                 displayName.isEmpty ? 'Kullanıcı' : displayName,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(fontWeight: FontWeight.w800),
-              ),
+              )),
               subtitle: username.isEmpty
                   ? const Text(
                       'Mesaj gönder',
                       style: TextStyle(color: Colors.white54),
                     )
-                  : Text(
+                  : ProfileNameLink(userId: doc.id, compact: true, child: Text(
                       '@$username',
                       style: const TextStyle(color: Colors.white54),
-                    ),
+                    )),
               trailing: const Icon(
                 Icons.chat_bubble_outline_rounded,
                 color: Colors.white54,
@@ -447,7 +448,7 @@ class _ThreadTile extends StatelessWidget {
           title: Row(
             children: [
               Expanded(
-                child: Text(
+                child: ProfileNameLink(userId: otherUserId, compact: true, child: Text(
                   name,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -455,7 +456,7 @@ class _ThreadTile extends StatelessWidget {
                     color: Colors.white,
                     fontWeight: unread ? FontWeight.w900 : FontWeight.w700,
                   ),
-                ),
+                )),
               ),
               if (thread.lastMessageAt != null) ...[
                 const SizedBox(width: 8),
@@ -470,7 +471,7 @@ class _ThreadTile extends StatelessWidget {
               ],
             ],
           ),
-          subtitle: Text(
+          subtitle: ProfileNameLink(userId: thread.lastMessage.isEmpty && username.isNotEmpty ? otherUserId : '', compact: true, child: Text(
             thread.lastMessage.isEmpty
                 ? (username.isEmpty ? 'Sohbeti aç' : '@$username')
                 : thread.lastMessage,
@@ -480,7 +481,7 @@ class _ThreadTile extends StatelessWidget {
               color: unread ? Colors.white : Colors.white54,
               fontWeight: unread ? FontWeight.w700 : FontWeight.w400,
             ),
-          ),
+          )),
           trailing: Badge(
             isLabelVisible: unread,
             backgroundColor: const Color(0xFF9FC7FF),

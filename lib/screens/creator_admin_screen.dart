@@ -1,3 +1,4 @@
+import '../widgets/profile_name_link.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -269,7 +270,7 @@ class _CreatorAdminScreenState extends State<CreatorAdminScreen> {
             return Card(
               child: ListTile(
                 leading: const Icon(Icons.workspace_premium_outlined),
-                title: Text('${item['name']}'),
+                title: ProfileNameLink(userId: (item['uid'] ?? '').toString(), compact: true, child: Text('${item['name']}')),
                 subtitle: Text(
                   '${item['roleLabel']} · ${item['source'] == 'invite' ? 'Davetle' : 'Puanla'}\n${item['score']} puan · Toplam ${item['total']}${item['ambassador'] == true ? ' · TBT Elçisi' : ''}',
                 ),
@@ -543,10 +544,10 @@ class _RoleAdminDetailScreenState extends State<_RoleAdminDetailScreen> {
                     leading: const CircleAvatar(
                       child: Icon(Icons.workspace_premium_rounded),
                     ),
-                    title: Text(
+                    title: ProfileNameLink(userId: widget.uid, compact: true, child: Text(
                       '${profile['name']}',
                       style: const TextStyle(fontWeight: FontWeight.w900),
-                    ),
+                    )),
                     subtitle: Text(
                       '$source · ${profile['score'] ?? 0} puan\n'
                       'Toplam ${profile['total'] ?? 0} gerçek katkı puanı',
@@ -695,7 +696,7 @@ class _CreatorAdminDetailScreenState extends State<CreatorAdminDetailScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFF0B172A),
       appBar: AppBar(
-        title: Text('${p['name'] ?? 'Creator istatistikleri'}'),
+        title: ProfileNameLink(userId: widget.uid, compact: true, child: Text('${p['name'] ?? 'Creator istatistikleri'}')),
         actions: [
           IconButton(
             onPressed: _busy ? null : () => _load(),
@@ -903,7 +904,7 @@ class _CreatorPeopleScreenState extends State<_CreatorPeopleScreen> {
           ),
         ..._items.map(
           (p) => ListTile(
-            title: Text('${p['name']}'),
+            title: ProfileNameLink(userId: (p['uid'] ?? '').toString(), compact: true, child: Text('${p['name']}')),
             subtitle: Text('Katılım: ${_date(p['joinedAtMs'])}'),
             onTap: () => Navigator.push(
               context,
