@@ -2,6 +2,8 @@ name: iOS Build Check
 
 on:
   workflow_dispatch:
+  push:
+    branches: [codex/fix-ios-camera-mirroring]
 
 permissions:
   contents: read
@@ -56,6 +58,10 @@ jobs:
               info.write_text(plist)
           PY
           rm -rf ios/Pods ios/Podfile.lock
+
+      - name: Fix iOS rear camera mirroring
+        run: python3 tool/patch_ios_camera_mirroring.py
+
       - name: Build iOS simulator
         run: >-
           flutter build ios --simulator --debug --no-pub
