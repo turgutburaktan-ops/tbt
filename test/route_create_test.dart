@@ -16,6 +16,14 @@ void main() {
   setUpAll(() async {
     final flutterRoot = Platform.environment['FLUTTER_ROOT'];
     if (flutterRoot != null) {
+      // Explicit component text styles inherit the test font; provide its real glyphs too.
+      final fallback = FontLoader('Ahem');
+      fallback.addFont(
+        File(
+          '$flutterRoot/bin/cache/artifacts/material_fonts/Roboto-Regular.ttf',
+        ).readAsBytes().then(ByteData.sublistView),
+      );
+      await fallback.load();
       final font = FontLoader('Roboto');
       for (final name in ['Roboto-Regular.ttf', 'Roboto-Bold.ttf']) {
         final f = File('$flutterRoot/bin/cache/artifacts/material_fonts/$name');
@@ -48,6 +56,20 @@ void main() {
           debugShowCheckedModeBanner: false,
           theme: AppTheme.dark.copyWith(
             textTheme: AppTheme.dark.textTheme.apply(fontFamily: 'Roboto'),
+            appBarTheme: AppTheme.dark.appBarTheme.copyWith(
+              titleTextStyle: AppTheme.dark.appBarTheme.titleTextStyle
+                  ?.copyWith(fontFamily: 'Roboto'),
+            ),
+            filledButtonTheme: FilledButtonThemeData(
+              style: AppTheme.dark.filledButtonTheme.style?.copyWith(
+                textStyle: WidgetStatePropertyAll(
+                  AppTheme.dark.filledButtonTheme.style?.textStyle
+                          ?.resolve({})
+                          ?.copyWith(fontFamily: 'Roboto') ??
+                      const TextStyle(fontFamily: 'Roboto'),
+                ),
+              ),
+            ),
           ),
           home: RepaintBoundary(
             key: boundary,
