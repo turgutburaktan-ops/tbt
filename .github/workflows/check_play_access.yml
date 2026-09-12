@@ -24,7 +24,7 @@ jobs:
             if (!sa.private_key || !sa.client_email) throw new Error('Configured service account missing');
             const now = Math.floor(Date.now()/1000);
             const input = enc({alg:'RS256',typ:'JWT'})+'.'+enc({
-              iss:sa.client_email,scope:'https://www.googleapis.com/auth/androidpublisher https://www.googleapis.com/auth/service.management',
+              iss:sa.client_email,scope:'https://www.googleapis.com/auth/androidpublisher https://www.googleapis.com/auth/cloud-platform',
               aud:'https://oauth2.googleapis.com/token',iat:now,exp:now+600
             });
             const assertion=input+'.'+crypto.sign('RSA-SHA256',Buffer.from(input),sa.private_key).toString('base64url');
@@ -35,7 +35,7 @@ jobs:
             if(sa.project_id !== 'en-iyi-cekim-noktasi') throw new Error('Unexpected project');
             const service='https://serviceusage.googleapis.com/v1/projects/330568532415/services/androidpublisher.googleapis.com';
             const current=await fetch(service,{headers});
-            if(!current.ok) throw new Error('Cannot inspect Play API state HTTP '+current.status);
+            if(!current.ok) { const err=await current.json(); const reason=err.error?.details?.find(d=>d.reason)?.reason || err.error?.status || 'UNKNOWN'; throw new Error('Cannot inspect Play API state HTTP '+current.status+' '+String(reason).replace(/[^a-zA-Z0-9_-]/g,'')); }
             if((await current.json()).state !== 'ENABLED') {
               const enable=await fetch(service+':enable',{method:'POST',headers,body:'{}'});
               if(!enable.ok) throw new Error('Cannot enable Play API with existing permissions HTTP '+enable.status);
