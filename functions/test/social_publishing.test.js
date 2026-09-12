@@ -32,3 +32,19 @@ test('unpublished and moderated sources cannot be reshared',async()=>{
     await assert.rejects(f.resolve(),{code:'not-found'});
   }
 });
+
+test('video reshare resolves playback URL only while source remains accessible', async () => {
+  const f = fixture();
+  Object.assign(f.records.get('posts/post'), {mediaType:'video', videoUrl:'https://example.com/video.mp4'});
+  const result = await f.resolve();
+  assert.equal(result.post.videoUrl, 'https://example.com/video.mp4');
+  assert.equal('storagePath' in result.post, false);
+  f.records.get('posts/post').allowReshare = false;
+  await assert.rejects(f.resolve(), {code:'not-found'});
+});
+test('photo reshares never use a stale video URL', async () => {
+  const f = fixture();
+  f.records.get('posts/post').videoUrl = 'https://example.com/stale.mp4';
+  assert.equal((await f.resolve()).post.videoUrl, '');
+});
+

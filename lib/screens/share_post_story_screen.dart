@@ -64,14 +64,18 @@ class _SharePostStoryScreenState extends State<SharePostStoryScreen> {
           padding: const EdgeInsets.all(18),
           children: [
             const Text(
-              'Gönderi, sahibinin adıyla paylaşılır. Karta dokunanlar asıl gönderiyi açabilir.',
+              'Video ve Reels hikâyede oynatılır. İçeriğe dokunanlar asıl gönderiyi açabilir.',
               style: TextStyle(color: Colors.white70),
             ),
             const SizedBox(height: 16),
-            SharedPostCard(postId: widget.postId, compact: true),
+            AspectRatio(aspectRatio: 9 / 16, child: SharedPostCard(
+              postId: widget.postId, compact: true, storyPresentation: true,
+              active: !_saving,
+            )),
             const SizedBox(height: 16),
             TextField(
               controller: _note,
+              onTapOutside: (_) => FocusManager.instance.primaryFocus?.unfocus(),
               maxLength: 180,
               maxLines: 3,
               enabled: !_saving,
@@ -94,3 +98,4 @@ class _SharePostStoryScreenState extends State<SharePostStoryScreen> {
     ),
   );
 }
+

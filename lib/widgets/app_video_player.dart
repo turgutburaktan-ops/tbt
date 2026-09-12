@@ -56,6 +56,9 @@ class AppVideoPlayer extends StatefulWidget {
   final VoidCallback? onTap;
   final Duration start;
   final Duration? end;
+  final bool resumePosition;
+  final ValueChanged<Duration>? onReady;
+  final VoidCallback? onError;
   const AppVideoPlayer.network({
     super.key,
     required String this.url,
@@ -74,6 +77,9 @@ class AppVideoPlayer extends StatefulWidget {
     this.onTap,
     this.start = Duration.zero,
     this.end,
+    this.resumePosition = true,
+    this.onReady,
+    this.onError,
   }) : file = null;
   const AppVideoPlayer.file({
     super.key,
@@ -93,6 +99,9 @@ class AppVideoPlayer extends StatefulWidget {
     this.onTap,
     this.start = Duration.zero,
     this.end,
+    this.resumePosition = true,
+    this.onReady,
+    this.onError,
   }) : url = null;
   @override
   State<AppVideoPlayer> createState() => _AppVideoPlayerState();
@@ -203,7 +212,7 @@ class _AppVideoPlayerState extends State<AppVideoPlayer>
       c.addListener(_checkTrim);
       final position = widget.start > Duration.zero
           ? widget.start
-          : _PlaybackOwner.positions[_source];
+          : (widget.resumePosition ? _PlaybackOwner.positions[_source] : null);
       if (position != null && position < c.value.duration)
         await c.seekTo(position);
       if (!mounted || attempt != _attempt) return;
@@ -211,6 +220,7 @@ class _AppVideoPlayerState extends State<AppVideoPlayer>
         _ready = true;
         _initializing = false;
       });
+      widget.onReady?.call(c.value.duration);
       _PlaybackOwner.update();
     } catch (_) {
       if (!mounted || attempt != _attempt) return;
@@ -220,6 +230,7 @@ class _AppVideoPlayerState extends State<AppVideoPlayer>
         _failed = true;
         _initializing = false;
       });
+      widget.onError?.call();
     }
   }
 
@@ -238,7 +249,7 @@ class _AppVideoPlayerState extends State<AppVideoPlayer>
     if (!_ready || play == _playing) return;
     _playing = play;
     if (play) {
-      final saved = _PlaybackOwner.positions[_source];
+      final saved = widget.resumePosition ? _PlaybackOwner.positions[_source] : null;
       if (saved != null &&
           saved >= widget.start &&
           (widget.end == null || saved < widget.end!) &&
@@ -246,7 +257,7 @@ class _AppVideoPlayerState extends State<AppVideoPlayer>
         _controller!.seekTo(saved);
       _controller!.play();
     } else {
-      _PlaybackOwner.positions[_source] = _controller!.value.position;
+      if (widget.resumePosition) _PlaybackOwner.positions[_source] = _controller!.value.position;
       _controller!.pause();
     }
     if (mounted) setState(() {});
@@ -268,7 +279,7 @@ class _AppVideoPlayerState extends State<AppVideoPlayer>
     ++_attempt;
     WidgetsBinding.instance.removeObserver(this);
     _PlaybackOwner.unregister(this);
-    if (_ready) _PlaybackOwner.positions[_source] = _controller!.value.position;
+    if (_ready && widget.resumePosition) _PlaybackOwner.positions[_source] = _controller!.value.position;
     _controller?.dispose();
     super.dispose();
   }
@@ -378,3 +389,4 @@ class _AppVideoPlayerState extends State<AppVideoPlayer>
     );
   }
 }
+

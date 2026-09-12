@@ -1,3 +1,4 @@
+import 'shared_story_video.dart';
 import 'creator_view_tracker.dart';
 
 import 'dart:async';
@@ -20,11 +21,18 @@ class SharedPostCard extends StatefulWidget {
     this.storyId,
     this.compact = false,
     this.onOpen,
+    this.storyPresentation = false,
+    this.active = true,
+    this.note = '',
+    this.onStoryReady,
   });
   final String postId;
   final String? repostId;
   final String? storyId;
   final bool compact;
+  final bool storyPresentation, active;
+  final String note;
+  final ValueChanged<Duration>? onStoryReady;
   final Future<void> Function()? onOpen;
   @override
   State<SharedPostCard> createState() => _SharedPostCardState();
@@ -74,6 +82,10 @@ class _SharedPostCardState extends State<SharedPostCard> {
     );
   }
 
+  void _storyReady([Duration duration = const Duration(seconds: 7)]) {
+    if (widget.storyPresentation) widget.onStoryReady?.call(duration);
+  }
+
   void _unavailable() {
     _debounce?.cancel();
     if (mounted)
@@ -82,6 +94,7 @@ class _SharedPostCardState extends State<SharedPostCard> {
         _post = null;
         _loading = false;
       });
+    _storyReady();
   }
 
   void _invalidate() {
@@ -140,12 +153,14 @@ class _SharedPostCardState extends State<SharedPostCard> {
         _sharedBy = actor;
         _loading = false;
       });
+      if ((post['videoUrl'] ?? '').toString().isEmpty) _storyReady();
     } catch (_) {
       if (mounted && version == _version)
         setState(() {
           _post = null;
           _loading = false;
         });
+      if (mounted && version == _version) _storyReady();
     }
   }
 
@@ -196,7 +211,15 @@ class _SharedPostCardState extends State<SharedPostCard> {
                 ),
         ),
       );
-    return CreatorViewTracker(
+    final videoUrl = (post['videoUrl'] ?? '').toString();
+    if (widget.storyPresentation && videoUrl.isNotEmpty) {
+      return CreatorViewTracker(postId: widget.postId, child: SharedStoryVideo(
+        url: videoUrl, author: (post['userName'] ?? '').toString(),
+        note: widget.note, active: widget.active,
+        onReady: _storyReady, onError: () => _storyReady(),
+      ));
+    }
+    final card = CreatorViewTracker(
       postId: widget.postId,
       child: Card(
         color: const Color(0xFF142238),
@@ -307,5 +330,13 @@ class _SharedPostCardState extends State<SharedPostCard> {
         ),
       ),
     );
+    return widget.storyPresentation
+        ? Center(child: SingleChildScrollView(padding: const EdgeInsets.fromLTRB(22, 140, 22, 140),
+            child: Column(mainAxisSize: MainAxisSize.min, children: [card,
+              if (widget.note.isNotEmpty) Padding(padding: const EdgeInsets.only(top: 18),
+                child: Text(widget.note, textAlign: TextAlign.center)),
+            ])))
+        : card;
   }
 }
+
