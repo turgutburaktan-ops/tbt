@@ -460,16 +460,27 @@ service cloud.firestore {
     }
     match /photo_spots/{id} { allow read: if true; allow create, update, delete: if isAdmin(); }
     match /travel_plans/{planId} {
+      function validSharing() {
+        let d = request.resource.data;
+        return d.memberIds.size() <= d.get('participantLimit', 60) &&
+          d.get('participantLimit', 60) is int && d.get('participantLimit', 60) >= 1 && d.get('participantLimit', 60) <= 60 &&
+          (d.get('joinEnabled', false) == false ||
+            (d.get('isPublic', false) == true && d.startAt is timestamp &&
+             d.meetingPoint is map && d.meetingPoint.label is string &&
+             d.meetingPoint.label.size() > 0 && d.meetingPoint.label.size() <= 160 &&
+             d.meetingPoint.latitude is number && d.meetingPoint.latitude >= -90 && d.meetingPoint.latitude <= 90 &&
+             d.meetingPoint.longitude is number && d.meetingPoint.longitude >= -180 && d.meetingPoint.longitude <= 180));
+      }
       allow read: if resource.data.get('isPublic', false) == true ||
         (signedIn() && resource.data.memberIds.hasAny([request.auth.uid]));
-      allow create: if signedIn() && request.resource.data.ownerId == request.auth.uid &&
+      allow create: if signedIn() && validSharing() && request.resource.data.ownerId == request.auth.uid &&
         request.resource.data.memberIds is list && request.resource.data.memberIds.size() <= 60 &&
         request.resource.data.memberIds.hasAny([request.auth.uid]) &&
         request.resource.data.spotIds is list && request.resource.data.spotIds.size() >= 1 &&
         request.resource.data.spotIds.size() <= 12 &&
         request.resource.data.title is string && request.resource.data.title.size() >= 1 &&
         request.resource.data.title.size() <= 80;
-      allow update: if signedIn() && (
+      allow update: if signedIn() && validSharing() && (
         (resource.data.ownerId == request.auth.uid &&
           request.resource.data.ownerId == resource.data.ownerId &&
           request.resource.data.memberIds is list && request.resource.data.memberIds.size() <= 60 &&
@@ -489,6 +500,24 @@ service cloud.firestore {
           request.resource.data.meetingPoint.selectedBy == request.auth.uid)
       );
       allow delete: if signedIn() && resource.data.ownerId == request.auth.uid;
+      match /join_requests/{uid} {
+        function route() { return get(/databases/$(database)/documents/travel_plans/$(planId)).data; }
+        allow read: if signedIn() && (request.auth.uid == uid || route().ownerId == request.auth.uid);
+        allow create, update: if signedIn() && request.auth.uid == uid &&
+          route().get('isPublic', false) && route().get('joinEnabled', false) &&
+          route().startAt > request.time && !route().memberIds.hasAny([uid]) &&
+          route().memberIds.size() < route().get('participantLimit', 60) &&
+          request.resource.data.keys().hasOnly(['userId','name','status','updatedAt']) &&
+          request.resource.data.userId == uid && request.resource.data.name is string &&
+          request.resource.data.name.size() <= 160 && request.resource.data.status == 'pending' &&
+          request.resource.data.updatedAt == request.time;
+        allow update: if signedIn() && route().ownerId == request.auth.uid &&
+          resource.data.status == 'pending' &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','updatedAt']) &&
+          request.resource.data.status in ['accepted','rejected'] &&
+          (request.resource.data.status == 'rejected' ||
+            getAfter(/databases/$(database)/documents/travel_plans/$(planId)).data.memberIds.hasAny([uid]));
+      }
       match /ratings/{uid} {
         allow read: if get(/databases/$(database)/documents/travel_plans/$(planId)).data.get('isPublic', false) == true;
         allow create, update: if isSelf(uid) &&

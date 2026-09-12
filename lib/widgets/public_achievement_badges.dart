@@ -20,7 +20,9 @@ class PublicAchievementBadges extends StatelessWidget {
   ];
 
   List<_BadgeDefinition> _earned() {
-    final rawRoles = profile['accountTypes'];
+    final reputation = profile['reputation'];
+    final rawRoles = profile['accountTypes'] ??
+        (reputation is Map ? reputation['roles'] : null);
     final roles = rawRoles is Map
         ? Map<String, dynamic>.from(rawRoles)
         : const <String, dynamic>{};

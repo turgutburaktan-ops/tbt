@@ -1,3 +1,11 @@
+import 'package:image_picker/image_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+import '../services/route_itinerary_service.dart';
+import '../services/travel_plan_service.dart';
+import 'route_sharing_screen.dart';
+import 'event_location_picker_screen.dart';
 import '../widgets/tbt_dialog.dart';
 
 import 'dart:math' as math;
@@ -5,7 +13,6 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../models/photo_spot.dart';
@@ -35,6 +42,14 @@ extension RouteTravelModeX on RouteTravelMode {
 }
 
 class RoutePlannerScreen extends StatefulWidget {
+  final List<List<PhotoSpot>> alternatives;
+  final String? routeId;
+  final String initialTitle;
+  final String city;
+  final int durationHours;
+  final String budget;
+  final List<String> interests;
+  final bool inviteFriends;
   final PhotoSpot? initialSpot;
   final List<PhotoSpot> initialSpots;
   final bool initialUseCurrentLocation;
@@ -42,6 +57,14 @@ class RoutePlannerScreen extends StatefulWidget {
 
   const RoutePlannerScreen({
     super.key,
+    this.routeId,
+    this.initialTitle = '',
+    this.alternatives = const [],
+    this.city = '',
+    this.durationHours = 3,
+    this.budget = 'Orta',
+    this.interests = const [],
+    this.inviteFriends = false,
     this.initialSpot,
     this.initialSpots = const <PhotoSpot>[],
     this.initialUseCurrentLocation = true,
@@ -59,10 +82,15 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
   static const _border = Color(0xFF2A2E33);
   static const _accent = Color(0xFFB7BCC2);
 
+  RouteItinerary? _road;
+  bool _routing = false, _saving = false;
+  int _routeGeneration = 0;
+  String? _savedId;
   GoogleMapController? _mapController;
   List<PhotoSpot> _allSpots = const [];
   final List<PhotoSpot> _stops = [];
   Position? _currentPosition;
+  LatLng? _fixedOrigin;
   bool _loading = true;
   bool _gettingLocation = false;
   bool _useCurrentLocation = true;
@@ -82,10 +110,19 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
   @override
   void initState() {
     super.initState();
+    _savedId = widget.routeId;
+    _routeNameController.text = widget.initialTitle;
     _useCurrentLocation = widget.initialUseCurrentLocation;
-    _travelMode = RouteTravelMode.values.firstWhere((v) => v.label == widget.initialTransport, orElse: () => RouteTravelMode.driving);
+    _travelMode = RouteTravelMode.values.firstWhere(
+      (v) => v.label == widget.initialTransport,
+      orElse: () => RouteTravelMode.driving,
+    );
     final initialIds = <String>{};
     for (final spot in widget.initialSpots) {
+      if (spot.id == 'route_origin') {
+        _fixedOrigin = LatLng(spot.latitude, spot.longitude);
+        continue;
+      }
       if (initialIds.add(spot.id)) _stops.add(spot);
     }
     if (widget.initialSpot != null) {
@@ -103,7 +140,8 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
         _allSpots = spots;
         _loading = false;
       });
-      if (widget.initialUseCurrentLocation) await _readCurrentLocation(requestIfNeeded: false);
+      if (widget.initialUseCurrentLocation)
+        await _readCurrentLocation(requestIfNeeded: false);
       await _fitRoute();
     } catch (_) {
       if (mounted) setState(() => _loading = false);
@@ -137,15 +175,10 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
       );
       if (!mounted) return;
       setState(() {
+        _fixedOrigin = null;
         _currentPosition = position;
         _useCurrentLocation = true;
         _allSpots = _sortedFromCurrentPosition(_allSpots, position);
-        _stops..sort(
-          (a, b) => _distanceFromPosition(
-            position,
-            a,
-          ).compareTo(_distanceFromPosition(position, b)),
-        );
       });
     } catch (_) {
       if (requestIfNeeded) _message('Konum alınamadı.');
@@ -176,11 +209,7 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
     return sorted;
   }
 
-  double? _distanceToMeKm(PhotoSpot spot) {
-    final current = _currentPosition;
-    if (current == null) return null;
-    return _distanceFromPosition(current, spot) / 1000;
-  }
+  double? _distanceToMeKm(PhotoSpot spot) => null;
 
   List<PhotoSpot> get _nearbyMapSpots {
     final selectedIds = _stops.map((spot) => spot.id).toSet();
@@ -201,17 +230,12 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
 
   Future<void> _addSpotFromMap(PhotoSpot spot) async {
     if (_stops.any((item) => item.id == spot.id)) return;
+    if (_stops.length >= 12) {
+      _message('En fazla 12 durak ekleyebilirsin.');
+      return;
+    }
     setState(() {
       _stops.add(spot);
-      final current = _currentPosition;
-      if (current != null) {
-        _stops.sort(
-          (a, b) => _distanceFromPosition(
-            current,
-            a,
-          ).compareTo(_distanceFromPosition(current, b)),
-        );
-      }
     });
     await Future<void>.delayed(const Duration(milliseconds: 70));
     await _fitRoute();
@@ -219,51 +243,111 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
   }
 
   Future<void> _addCustomStop(LatLng point) async {
+    if (_stops.length >= 12) {
+      _message('En fazla 12 durak ekleyebilirsin.');
+      return;
+    }
     final nameController = TextEditingController();
+    final descriptionController = TextEditingController();
+    XFile? photo;
     final name = await showTbtDialog<String>(
       context: context,
-      builder: (dialogContext) => TbtDialog(
-        title: const Text('Haritadan durak ekle'),
-        content: TextField(
-          controller: nameController,
-          autofocus: true,
-          textCapitalization: TextCapitalization.words,
-          decoration: const InputDecoration(
-            labelText: 'Durak adı',
-            hintText: 'Örn. Buluşma noktası',
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setDialog) => TbtDialog(
+          title: const Text('Haritadan durak ekle'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameController,
+                  autofocus: true,
+                  maxLength: 80,
+                  decoration: const InputDecoration(labelText: 'Durak adı'),
+                ),
+                TextField(
+                  controller: descriptionController,
+                  maxLength: 300,
+                  decoration: const InputDecoration(
+                    labelText: 'Açıklama (isteğe bağlı)',
+                  ),
+                ),
+                TextButton.icon(
+                  onPressed: () async {
+                    try {
+                      final picked = await ImagePicker().pickImage(
+                        source: ImageSource.gallery,
+                        maxWidth: 1600,
+                        imageQuality: 85,
+                      );
+                      if (picked != null && dialogContext.mounted)
+                        setDialog(() => photo = picked);
+                    } catch (_) {
+                      _message('Fotoğraf seçilemedi.');
+                    }
+                  },
+                  icon: const Icon(Icons.add_photo_alternate_outlined),
+                  label: Text(
+                    photo == null
+                        ? 'Fotoğraf ekle (isteğe bağlı)'
+                        : 'Fotoğraf seçildi',
+                  ),
+                ),
+              ],
+            ),
           ),
-          onSubmitted: (value) {
-            if (value.trim().isNotEmpty) Navigator.pop(dialogContext, value);
-          },
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Vazgeç'),
+            ),
+            FilledButton(
+              onPressed: () {
+                if (nameController.text.trim().isNotEmpty) {
+                  Navigator.pop(dialogContext, nameController.text.trim());
+                }
+              },
+              child: const Text('Ekle'),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Vazgeç'),
-          ),
-          FilledButton(
-            onPressed: () {
-              if (nameController.text.trim().isNotEmpty) {
-                Navigator.pop(dialogContext, nameController.text.trim());
-              }
-            },
-            child: const Text('Ekle'),
-          ),
-        ],
       ),
     );
+    final description = descriptionController.text.trim();
+    descriptionController.dispose();
     nameController.dispose();
     if (name == null || !mounted) return;
+    String imageUrl = '';
+    if (photo != null) {
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid == null) {
+        _message('Fotoğraf eklemek için giriş yapmalısın.');
+        return;
+      }
+      try {
+        final bytes = await photo!.readAsBytes();
+        final ref = FirebaseStorage.instance.ref(
+          'users/$uid/route_stops/${DateTime.now().microsecondsSinceEpoch}.jpg',
+        );
+        await ref.putData(bytes, SettableMetadata(contentType: 'image/jpeg'));
+        imageUrl = await ref.getDownloadURL();
+      } catch (_) {
+        _message('Fotoğraf yüklenemedi. Durağı yeniden eklemeyi dene.');
+        return;
+      }
+      if (!mounted) return;
+    }
     final stop = PhotoSpot(
       id: 'custom_${DateTime.now().microsecondsSinceEpoch}',
       name: name,
-      city: 'Haritadan seçildi',
+      city: widget.city.isEmpty ? 'Haritadan seçildi' : widget.city,
       latitude: point.latitude,
       longitude: point.longitude,
       rating: 0,
       bestTime: 'Serbest zaman',
       angle: '',
-      imageUrl: '',
+      imageUrl: imageUrl,
+      description: description,
       category: 'Özel durak',
       tags: const ['Özel durak'],
     );
@@ -327,7 +411,14 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
   }
 
   Set<Marker> get _markers {
-    final markers = <Marker>{};
+    final markers = <Marker>{
+      if (_fixedOrigin != null)
+        Marker(
+          markerId: const MarkerId('saved_origin'),
+          position: _fixedOrigin!,
+          infoWindow: const InfoWindow(title: 'Başlangıç'),
+        ),
+    };
     final current = _currentPosition;
     if (_useCurrentLocation && current != null) {
       markers.add(
@@ -383,12 +474,13 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
     if (_useCurrentLocation && current != null) {
       points.add(LatLng(current.latitude, current.longitude));
     }
+    if (!_useCurrentLocation && _fixedOrigin != null) points.add(_fixedOrigin!);
     points.addAll(_stops.map((s) => LatLng(s.latitude, s.longitude)));
     return points;
   }
 
   Set<Polyline> get _polylines {
-    final points = _routePoints;
+    final points = _road?.points ?? <LatLng>[];
     if (points.length < 2) return const <Polyline>{};
     return {
       Polyline(
@@ -396,27 +488,179 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
         points: points,
         width: 4,
         color: _accent,
-        geodesic: true,
+        geodesic: false,
       ),
     };
   }
 
-  double get _distanceKm {
+  Future<void> _refreshRoad() async {
+    if (!mounted) return;
+    final generation = ++_routeGeneration;
     final points = _routePoints;
-    if (points.length < 2) return 0;
-    var meters = 0.0;
-    for (var i = 1; i < points.length; i++) {
-      meters += Geolocator.distanceBetween(
-        points[i - 1].latitude,
-        points[i - 1].longitude,
-        points[i].latitude,
-        points[i].longitude,
-      );
+    setState(() {
+      _road = null;
+      _routing = points.length >= 2;
+    });
+    if (points.length < 2) return;
+    final result = await RouteItineraryService.instance.calculate(
+      points,
+      _travelMode.label,
+    );
+    if (!mounted || generation != _routeGeneration) return;
+    setState(() {
+      _road = result;
+      _routing = false;
+    });
+  }
+
+  String _legLabel(int index) {
+    final legIndex =
+        index -
+        ((_useCurrentLocation && _currentPosition != null) ||
+                _fixedOrigin != null
+            ? 0
+            : 1);
+    if (legIndex < 0) return 'Başlangıç';
+    if (_routing) return 'Yol hesaplanıyor…';
+    if (_road == null || legIndex >= _road!.legs.length)
+      return 'Uygun güzergâh bulunamadı';
+    return _road!.legs[legIndex].label;
+  }
+
+  Future<void> _chooseStop() async {
+    final choice = await showModalBottomSheet<int>(
+      context: context,
+      backgroundColor: _surface,
+      builder: (c) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.search),
+              title: const Text('Yer ara'),
+              onTap: () => Navigator.pop(c, 0),
+            ),
+            ListTile(
+              leading: const Icon(Icons.add_location_alt_outlined),
+              title: const Text('Haritadan seç'),
+              onTap: () => Navigator.pop(c, 1),
+            ),
+            ListTile(
+              leading: const Icon(Icons.my_location),
+              title: const Text('Mevcut konumumu ekle'),
+              onTap: () => Navigator.pop(c, 2),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (!mounted) return;
+    if (choice == 0) {
+      await _pickSpot();
+      return;
     }
-    return meters / 1000;
+    if (choice == 1) {
+      final p = await Navigator.push<EventLocationSelection>(
+        context,
+        MaterialPageRoute(
+          builder: (_) => EventLocationPickerScreen(
+            city: widget.city,
+            addressLabel: 'Yeni durak',
+            title: 'Durak ekle',
+            instruction: 'Eklemek istediğin noktayı haritadan seç.',
+          ),
+        ),
+      );
+      if (p != null && mounted)
+        await _addCustomStop(LatLng(p.latitude, p.longitude));
+    }
+    if (choice == 2) {
+      await _readCurrentLocation(requestIfNeeded: true);
+      if (_currentPosition != null && mounted)
+        await _addCustomStop(
+          LatLng(_currentPosition!.latitude, _currentPosition!.longitude),
+        );
+    }
+  }
+
+  Future<void> _saveRoute() async {
+    if (_saving || _stops.isEmpty) return;
+    if (_routeNameController.text.trim().isEmpty) {
+      _message('Rotana bir ad ver.');
+      return;
+    }
+    setState(() => _saving = true);
+    try {
+      final details = _stops
+          .map(
+            (s) => <String, dynamic>{
+              'id': s.id,
+              'name': s.name,
+              'city': s.city,
+              'latitude': s.latitude,
+              'longitude': s.longitude,
+              'category': s.category,
+              'description': s.description,
+              'imageUrl': s.imageUrl,
+            },
+          )
+          .toList();
+      if (_savedId == null) {
+        _savedId = await TravelPlanService.instance.create(
+          title: _routeNameController.text.trim(),
+          city: widget.city.isEmpty ? _stops.first.city : widget.city,
+          durationHours: widget.durationHours,
+          budget: widget.budget,
+          transport: _travelMode.label,
+          interests: widget.interests,
+          spots: _stops,
+          stopDetails: details,
+        );
+      } else {
+        await TravelPlanService.instance.updateStops(_savedId!, details);
+        await TravelPlanService.instance.updateTitle(
+          _savedId!,
+          _routeNameController.text.trim(),
+        );
+      }
+      await TravelPlanService.instance.updateRoutePreferences(
+        _savedId!,
+        _travelMode.label,
+        _routeNoteController.text.trim(),
+        origin: _useCurrentLocation && _currentPosition != null
+            ? {
+                'latitude': _currentPosition!.latitude,
+                'longitude': _currentPosition!.longitude,
+              }
+            : _fixedOrigin == null
+            ? null
+            : {
+                'latitude': _fixedOrigin!.latitude,
+                'longitude': _fixedOrigin!.longitude,
+              },
+      );
+      if (!mounted) return;
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => RouteSharingScreen(
+            routeId: _savedId!,
+            title: _routeNameController.text.trim(),
+            inviteFriends: widget.inviteFriends,
+          ),
+        ),
+      );
+      _message('Rota, Rotalarım bölümüne kaydedildi.');
+    } catch (e) {
+      _message(e.toString().replaceFirst('Exception: ', ''));
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
   }
 
   Future<void> _fitRoute() async {
+    await _refreshRoad();
+    if (!mounted) return;
     final controller = _mapController;
     var points = _routePoints;
     if (controller == null) return;
@@ -615,18 +859,11 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
       queryController.dispose,
     );
     if (selected == null || !mounted) return;
-    setState(() {
-      _stops.add(selected);
-      final current = _currentPosition;
-      if (current != null) {
-        _stops.sort(
-          (a, b) => _distanceFromPosition(
-            current,
-            a,
-          ).compareTo(_distanceFromPosition(current, b)),
-        );
-      }
-    });
+    if (_stops.length >= 12) {
+      _message('En fazla 12 durak ekleyebilirsin.');
+      return;
+    }
+    setState(() => _stops.add(selected));
     await Future<void>.delayed(const Duration(milliseconds: 80));
     await _fitRoute();
   }
@@ -704,6 +941,9 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
       waypointSpots = _stops.length > 1
           ? _stops.sublist(0, _stops.length - 1)
           : const <PhotoSpot>[];
+    } else if (_fixedOrigin != null) {
+      params['origin'] = '${_fixedOrigin!.latitude},${_fixedOrigin!.longitude}';
+      waypointSpots = _stops.sublist(0, _stops.length - 1);
     } else if (_stops.length > 1) {
       final origin = _stops.first;
       params['origin'] = '${origin.latitude},${origin.longitude}';
@@ -726,26 +966,6 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
     if (!launched) _message('Google Maps açılamadı.');
   }
 
-  Future<void> _shareRoute() async {
-    if (_stops.isEmpty) {
-      _message('Paylaşmak için rotaya en az bir durak ekle.');
-      return;
-    }
-    final title = _routeNameController.text.trim().isEmpty
-        ? 'Manuel gezi rotam'
-        : _routeNameController.text.trim();
-    final note = _routeNoteController.text.trim();
-    final stopLines = _stops
-        .asMap()
-        .entries
-        .map((entry) => '${entry.key + 1}. ${entry.value.name}')
-        .join('\n');
-    await Share.share(
-      '$title\n${note.isEmpty ? '' : '$note\n'}\n$stopLines\n\nTBT ile oluşturuldu.',
-      subject: title,
-    );
-  }
-
   static String _normalize(String value) => value
       .trim()
       .toLowerCase()
@@ -758,7 +978,6 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final distance = _distanceKm;
     return Scaffold(
       backgroundColor: _background,
       appBar: AppBar(
@@ -768,7 +987,7 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
         actions: [
           IconButton(
             tooltip: 'Rotayı paylaş',
-            onPressed: _stops.isEmpty ? null : _shareRoute,
+            onPressed: _stops.isEmpty || _saving ? null : _saveRoute,
             icon: const Icon(Icons.ios_share_rounded),
           ),
           IconButton(
@@ -778,8 +997,26 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
           ),
         ],
       ),
-      body: Column(
+      body: ListView(
         children: [
+          if (widget.alternatives.isNotEmpty)
+            ExpansionTile(
+              title: const Text('Alternatif rotalar'),
+              children: [
+                for (final alternative in widget.alternatives)
+                  ListTile(
+                    title: Text(alternative.map((s) => s.name).join(' → ')),
+                    onTap: () {
+                      setState(() {
+                        _stops
+                          ..clear()
+                          ..addAll(alternative);
+                      });
+                      _fitRoute();
+                    },
+                  ),
+              ],
+            ),
           Container(
             height: MediaQuery.sizeOf(context).height < 720 ? 180 : 220,
             margin: const EdgeInsets.fromLTRB(12, 6, 12, 0),
@@ -834,20 +1071,37 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
                       Expanded(
                         child: _SummaryItem(
                           value: '${_stops.length}',
-                          label: 'çekim noktası',
+                          label: 'durak',
                         ),
                       ),
                       Container(width: 1, height: 34, color: _border),
                       Expanded(
                         child: _SummaryItem(
-                          value: distance < 10
-                              ? '${distance.toStringAsFixed(1)} km'
-                              : '${distance.toStringAsFixed(0)} km',
-                          label: 'kuş uçuşu',
+                          value: _routing
+                              ? 'Hesaplanıyor…'
+                              : _road == null
+                              ? '—'
+                              : '${(_road!.meters / 1000).toStringAsFixed(1)} km',
+                          label: _road == null
+                              ? 'Yol mesafesi'
+                              : '${(_road!.seconds / 60).ceil()} dk yol',
                         ),
                       ),
                     ],
                   ),
+                  if (!_routing && _road == null && _routePoints.length >= 2)
+                    TextButton(
+                      onPressed: _refreshRoad,
+                      child: const Text(
+                        'Uygun güzergâh bulunamadı. Yeniden dene',
+                      ),
+                    ),
+                  if (_road != null &&
+                      _road!.seconds + _stops.length * 45 * 60 >
+                          widget.durationHours * 3600)
+                    const Text(
+                      'Yol ve duraklarda geçirilecek süre, ayırdığın süreyi aşabilir. Durak sayısını azaltabilirsin.',
+                    ),
                   const SizedBox(height: 10),
                   SegmentedButton<RouteTravelMode>(
                     showSelectedIcon: false,
@@ -861,8 +1115,10 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
                         )
                         .toList(),
                     selected: {_travelMode},
-                    onSelectionChanged: (value) =>
-                        setState(() => _travelMode = value.first),
+                    onSelectionChanged: (value) {
+                      setState(() => _travelMode = value.first);
+                      _refreshRoad();
+                    },
                   ),
                   const SizedBox(height: 8),
                   Row(
@@ -871,7 +1127,9 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
                         child: Text(
                           _useCurrentLocation && _currentPosition != null
                               ? 'Başlangıç: Konumum'
-                              : 'Başlangıç: İlk çekim noktası',
+                              : _fixedOrigin != null
+                              ? 'Başlangıç: Kaydedilen konum'
+                              : 'Başlangıç: İlk durak',
                           style: const TextStyle(
                             color: Colors.white70,
                             fontWeight: FontWeight.w700,
@@ -966,19 +1224,21 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
                   ),
                 ),
                 TextButton.icon(
-                  onPressed: _pickSpot,
+                  onPressed: _chooseStop,
                   icon: const Icon(Icons.add_rounded),
-                  label: const Text('Nokta ekle'),
+                  label: const Text('Durak ekle'),
                 ),
               ],
             ),
           ),
-          Expanded(
+          SizedBox(
             child: _loading
                 ? const Center(child: CircularProgressIndicator())
                 : _stops.isEmpty
-                ? _EmptyRoute(onAdd: _pickSpot)
+                ? _EmptyRoute(onAdd: _chooseStop)
                 : ReorderableListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
                     padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
                     itemCount: _stops.length,
                     onReorder: (oldIndex, newIndex) async {
@@ -1028,12 +1288,8 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
                           ),
                           subtitle: Builder(
                             builder: (_) {
-                              final km = _distanceToMeKm(spot);
-                              final distanceLabel = km == null
-                                  ? ''
-                                  : ' • ${km < 10 ? km.toStringAsFixed(1) : km.toStringAsFixed(0)} km';
                               return Text(
-                                '${spot.city}$distanceLabel • ${spot.bestTime}',
+                                '${spot.city} • ${_legLabel(index)}',
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(color: Colors.white54),
@@ -1106,6 +1362,18 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
                         ),
                       ),
                     ],
+                  ),
+                  FilledButton(
+                    onPressed: _stops.isEmpty || _saving ? null : _saveRoute,
+                    child: Text(_saving ? 'Kaydediliyor…' : 'Kaydet ve paylaş'),
+                  ),
+                  TextButton(
+                    onPressed: () => launchUrl(
+                      Uri.parse('https://www.openstreetmap.org/fixthemap'),
+                    ),
+                    child: const Text(
+                      'Yol verisi: © OpenStreetMap · FOSSGIS · Haritayı düzelt',
+                    ),
                   ),
                   if (_stops.length < 3)
                     Padding(

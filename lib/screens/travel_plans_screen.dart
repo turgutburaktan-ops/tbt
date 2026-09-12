@@ -1,3 +1,4 @@
+import 'route_create_screen.dart';
 import '../widgets/tbt_dialog.dart';
 
 import 'package:firebase_auth/firebase_auth.dart';
@@ -9,7 +10,6 @@ import '../services/travel_plan_service.dart';
 import '../theme/app_theme.dart';
 import 'route_planner_screen.dart';
 import 'offline_travel_plans_screen.dart';
-import 'today_plan_screen.dart';
 import 'travel_plan_detail_screen.dart';
 import 'travel_plan_invite_screen.dart';
 
@@ -46,7 +46,19 @@ class TravelPlansScreen extends StatelessWidget {
       await Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => RoutePlannerScreen(initialSpots: spots, initialUseCurrentLocation: plan.dayPlan.isEmpty, initialTransport: plan.transport),
+          builder: (_) => RoutePlannerScreen(
+            routeId: plan.ownerId == FirebaseAuth.instance.currentUser?.uid
+                ? plan.id
+                : null,
+            initialTitle: plan.title,
+            city: plan.city,
+            durationHours: plan.durationHours,
+            budget: plan.budget,
+            interests: plan.interests,
+            initialSpots: spots,
+            initialUseCurrentLocation: false,
+            initialTransport: plan.transport,
+          ),
         ),
       );
     } catch (_) {
@@ -62,7 +74,7 @@ class TravelPlansScreen extends StatelessWidget {
     final approved = await showTbtDialog<bool>(
       context: context,
       builder: (_) => TbtDialog(
-        title: const Text('Plan silinsin mi?'),
+        title: const Text('Rota silinsin mi?'),
         content: Text('${plan.title} kalıcı olarak silinecek.'),
         actions: [
           TextButton(
@@ -82,7 +94,7 @@ class TravelPlansScreen extends StatelessWidget {
     } catch (_) {
       if (context.mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text('Plan silinemedi.')));
+            .showSnackBar(const SnackBar(content: Text('Rota silinemedi.')));
       }
     }
   }
@@ -93,7 +105,7 @@ class TravelPlansScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Planlarım'),
+        title: const Text('Rotalarım'),
         actions: [
           IconButton(
             tooltip: 'Çevrimdışı rotalar',
@@ -110,7 +122,7 @@ class TravelPlansScreen extends StatelessWidget {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => const TodayPlanScreen()),
+          MaterialPageRoute(builder: (_) => const RouteCreateScreen()),
         ),
         icon: const Icon(Icons.add_rounded),
         label: const Text('Yeni plan'),
@@ -124,7 +136,7 @@ class TravelPlansScreen extends StatelessWidget {
           if (snapshot.hasError) {
             return const _PlansMessage(
               icon: Icons.cloud_off_rounded,
-              title: 'Planlar yüklenemedi',
+              title: 'Rotalar yüklenemedi',
               body: 'Bağlantını kontrol edip tekrar dene.',
             );
           }
@@ -189,13 +201,13 @@ class TravelPlansScreen extends StatelessWidget {
                           ),
                         ),
                         IconButton(
-                          tooltip: 'Planı paylaş',
+                          tooltip: 'Rotayı paylaş',
                           onPressed: () => _sharePlan(plan),
                           icon: const Icon(Icons.share_outlined),
                         ),
                         if (owned)
                           IconButton(
-                            tooltip: 'Planı sil',
+                            tooltip: 'Rotayı sil',
                             onPressed: () => _delete(context, plan),
                             icon: const Icon(Icons.delete_outline_rounded),
                           ),
@@ -224,7 +236,7 @@ class TravelPlansScreen extends StatelessWidget {
                         Text(
                           owned
                               ? '${plan.memberIds.length - 1} davetli'
-                              : 'Davet edildiğin plan',
+                              : 'Katıldığın rota',
                           style: const TextStyle(
                             color: AppColors.textMuted,
                             fontSize: 11.5,
@@ -271,7 +283,7 @@ class TravelPlansScreen extends StatelessWidget {
                                     TravelPlanDetailScreen(plan: plan),
                               ),
                             ),
-                            child: const Text('Planı Aç'),
+                            child: const Text('Rotayı aç'),
                           ),
                         ],
                       ),

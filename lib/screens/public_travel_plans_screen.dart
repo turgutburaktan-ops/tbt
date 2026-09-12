@@ -1,3 +1,7 @@
+import 'route_sharing_screen.dart';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 import '../widgets/tbt_dialog.dart';
 
 import 'package:firebase_auth/firebase_auth.dart';
@@ -18,6 +22,7 @@ class PublicTravelPlansScreen extends StatefulWidget {
 
 class _PublicTravelPlansScreenState extends State<PublicTravelPlansScreen> {
   String _query = '';
+  String _filter = 'Tümü';
 
   Future<void> _rate(TravelPlan plan) async {
     final rating = await showTbtDialog<int>(
@@ -58,7 +63,12 @@ class _PublicTravelPlansScreenState extends State<PublicTravelPlansScreen> {
   }
 
   Future<void> _copy(TravelPlan plan) async {
-    if (FirebaseAuth.instance.currentUser == null) return;
+    if (FirebaseAuth.instance.currentUser == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Kaydetmek için giriş yapmalısın.')),
+      );
+      return;
+    }
     try {
       final spots = await TravelPlanService.instance.resolveSpots(plan);
       await TravelPlanService.instance.create(
@@ -74,12 +84,13 @@ class _PublicTravelPlansScreenState extends State<PublicTravelPlansScreen> {
         travelMinutes: plan.travelMinutes,
         estimatedBudget: plan.estimatedBudget,
         dayPlan: plan.dayPlan,
+        routeOrigin: plan.routeOrigin,
         stopDetails: plan.stopSnapshots,
         weatherSummary: plan.weatherSummary,
       );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Rota Planlarım bölümüne kaydedildi.')),
+          const SnackBar(content: Text('Rota Rotalarım bölümüne kaydedildi.')),
         );
       }
     } catch (_) {
@@ -94,7 +105,7 @@ class _PublicTravelPlansScreenState extends State<PublicTravelPlansScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('Hazır Rotalar')),
+      appBar: AppBar(title: const Text('Rotaları keşfet')),
       body: Column(
         children: [
           Padding(
@@ -108,6 +119,18 @@ class _PublicTravelPlansScreenState extends State<PublicTravelPlansScreen> {
                   setState(() => _query = value.toLowerCase()),
             ),
           ),
+          Wrap(
+            spacing: 8,
+            children: ['Tümü', 'Hazır rotalar', 'Birlikte gidelim']
+                .map(
+                  (v) => ChoiceChip(
+                    label: Text(v),
+                    selected: _filter == v,
+                    onSelected: (_) => setState(() => _filter = v),
+                  ),
+                )
+                .toList(),
+          ),
           Expanded(
             child: StreamBuilder<List<TravelPlan>>(
               stream: TravelPlanService.instance.watchPublic(),
@@ -115,7 +138,20 @@ class _PublicTravelPlansScreenState extends State<PublicTravelPlansScreen> {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
                 }
+                if (snapshot.hasError)
+                  return const Center(
+                    child: Text(
+                      'Rotalar yüklenemedi. İnternet bağlantını kontrol et.',
+                    ),
+                  );
                 final plans = (snapshot.data ?? const <TravelPlan>[])
+                    .where(
+                      (plan) =>
+                          _filter == 'Tümü' ||
+                          (_filter == 'Birlikte gidelim'
+                              ? plan.joinEnabled
+                              : !plan.joinEnabled),
+                    )
                     .where(
                       (plan) =>
                           _query.isEmpty ||
@@ -159,6 +195,35 @@ class _PublicTravelPlansScreenState extends State<PublicTravelPlansScreen> {
                               plan.spotNames.join(' → '),
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
+                            ),
+                            StreamBuilder<
+                              DocumentSnapshot<Map<String, dynamic>>
+                            >(
+                              stream: FirebaseFirestore.instance
+                                  .collection('travel_plans')
+                                  .doc(plan.id)
+                                  .snapshots(),
+                              builder: (_, s) {
+                                final d = s.data?.data();
+                                if (d == null || d['joinEnabled'] != true)
+                                  return const SizedBox.shrink();
+                                final start = (d['startAt'] as Timestamp?)
+                                    ?.toDate();
+                                final p = d['meetingPoint'] as Map?;
+                                return Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Birlikte gidelim · ${start == null ? '' : '${start.day}.${start.month} ${TimeOfDay.fromDateTime(start).format(context)}'}',
+                                    ),
+                                    Text(p?['label']?.toString() ?? ''),
+                                    RouteParticipation(
+                                      routeId: plan.id,
+                                      data: d,
+                                    ),
+                                  ],
+                                );
+                              },
                             ),
                             const SizedBox(height: 10),
                             Wrap(

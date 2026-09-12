@@ -23,43 +23,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   bool _loading = false;
   bool _hidePassword = true;
-  String _profileType = 'personal';
-
-  static const _profileTypes =
-      <({String value, String title, String subtitle, IconData icon})>[
-        (
-          value: 'personal',
-          title: 'Kişisel',
-          subtitle:
-              'Gez, paylaş, arkadaşlarını takip et ve etkinliklere katıl.',
-          icon: Icons.person_outline_rounded,
-        ),
-        (
-          value: 'creator',
-          title: 'İçerik Üreticisi',
-          subtitle: 'İçeriklerini büyüt, takipçi kitleni ve iş birliklerini geliştir.',
-          icon: Icons.auto_awesome_outlined,
-        ),
-        (
-          value: 'business',
-          title: 'İşletme Sahibi',
-          subtitle: 'Kişisel hesabınla işletme ve marka profillerini yönet.',
-          icon: Icons.business_center_outlined,
-        ),
-        (
-          value: 'venue_manager',
-          title: 'Mekan Yöneticisi',
-          subtitle: 'Kafe, Lezzet veya otel profilini doğrula ve yönet.',
-          icon: Icons.storefront_outlined,
-        ),
-        (
-          value: 'organizer',
-          title: 'Organizatör',
-          subtitle: 'Etkinlik oluştur, topluluk kur ve katılımcılara ulaş.',
-          icon: Icons.event_available_outlined,
-        ),
-      ];
-
   bool get _hasLength => _passwordController.text.length >= 10;
   bool get _hasUpper =>
       RegExp(r'[A-ZÇĞİÖŞÜ]').hasMatch(_passwordController.text);
@@ -134,7 +97,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           'firstName': nameParts.first,
           'lastName': nameParts.skip(1).join(' '),
           'email': email,
-          'profileType': _profileType,
+          'profileType': 'personal',
           'onboardingRequired': true,
           'onboardingCompleted': false,
           'createdAt': FieldValue.serverTimestamp(),
@@ -221,108 +184,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 7),
               const Text(
-                'Hesabını oluştur, TBT’de nasıl yer almak istediğini seç.',
+                'Kişisel hesabını oluştur, paylaş ve keşfet.',
                 textAlign: TextAlign.center,
                 style: TextStyle(color: Colors.white54),
               ),
               const SizedBox(height: 26),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'Profil türün',
-                  style: Theme.of(context).textTheme.titleMedium
-                      ?.copyWith(fontWeight: FontWeight.w900),
-                ),
-              ),
-              const SizedBox(height: 5),
-              const Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'Bu seçim yalnızca profil deneyimini kişiselleştirir; doğrulanmış rozet veya özel yetki vermez.',
-                  style: TextStyle(
-                    color: Colors.white54,
-                    fontSize: 11.5,
-                    height: 1.35,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 10),
-              ..._profileTypes.map(
-                (type) => Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: InkWell(
-                    onTap: _loading
-                        ? null
-                        : () => setState(() => _profileType = type.value),
-                    borderRadius: BorderRadius.circular(16),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 160),
-                      padding: const EdgeInsets.all(13),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF121416),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: _profileType == type.value
-                              ? accent
-                              : Colors.white10,
-                          width: _profileType == type.value ? 1.4 : 1,
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 42,
-                            height: 42,
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: .05),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Icon(
-                              type.icon,
-                              color: _profileType == type.value
-                                  ? accent
-                                  : Colors.white54,
-                            ),
-                          ),
-                          const SizedBox(width: 11),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  type.title,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w900,
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  type.subtitle,
-                                  style: const TextStyle(
-                                    color: Colors.white54,
-                                    fontSize: 11.5,
-                                    height: 1.3,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Icon(
-                            _profileType == type.value
-                                ? Icons.check_circle_rounded
-                                : Icons.radio_button_unchecked_rounded,
-                            color: _profileType == type.value
-                                ? accent
-                                : Colors.white24,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 18),
               TextField(
                 controller: _fullNameController,
                 keyboardType: TextInputType.name,

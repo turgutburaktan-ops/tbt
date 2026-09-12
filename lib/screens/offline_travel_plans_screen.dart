@@ -72,9 +72,9 @@ class _OfflineTravelPlansScreenState extends State<OfflineTravelPlansScreen> {
                 return Card(
                   child: ExpansionTile(
                     leading: const Icon(Icons.offline_pin_rounded),
-                    title: Text((plan['title'] ?? 'Gezi planı').toString()),
+                    title: Text((plan['title'] ?? 'Rota').toString()),
                     subtitle: Text(
-                      '${plan['city'] ?? ''} • ${(plan['distanceKm'] as num?)?.toStringAsFixed(1) ?? '0'} km • ${(plan['dayPlan'] as Map? ?? {}).isNotEmpty ? 'Fiyat teyidi gerekli' : '≈ ${plan['estimatedBudget'] ?? 0} TL'}',
+                      '${plan['city'] ?? ''} • ${(plan['dayPlan'] as Map? ?? {}).isNotEmpty ? 'Fiyat teyidi gerekli' : '≈ ${plan['estimatedBudget'] ?? 0} TL'}',
                     ),
                     trailing: IconButton(
                       tooltip: 'İndirilen rotayı sil',

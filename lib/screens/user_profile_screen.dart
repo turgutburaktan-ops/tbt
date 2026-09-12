@@ -1,3 +1,4 @@
+import '../models/profile_identity.dart';
 import '../widgets/profile_sharing_section.dart';
 import 'post_deep_link_screen.dart';
 
@@ -283,6 +284,11 @@ class UserProfileScreen extends StatelessWidget {
                               ),
                             ],
                             const SizedBox(height: 10),
+                            Text(
+                              ProfileIdentity.label(data),
+                              style: const TextStyle(color: Colors.white70),
+                            ),
+                            const SizedBox(height: 8),
                             PublicAchievementBadges(profile: data),
                             if (!isOwnProfile) ...[
                               const SizedBox(height: 16),
