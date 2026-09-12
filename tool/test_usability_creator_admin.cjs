@@ -16,7 +16,8 @@ const reject=(p,code)=>assert.rejects(p,e=>e.code===code);
   await db.doc('users/ux-a/notifications/origin').set({type:'message',sourceId:'ux-direct',actorId:'ux-b',read:false});
   await reject(call(null),'unauthenticated');await reject(call('ux-c'),'permission-denied');
   await reject(call('ux-a',{notificationId:'missing'}),'permission-denied');await reject(call('ux-a',{threadId:'../x'}),'invalid-argument');
-  await thread.update({requestStatus:'pending'});await reject(call('ux-a'),'permission-denied');await thread.update({requestStatus:'accepted'});
+  for (const status of ['pending','rejected']) { await thread.update({requestStatus:status}); assert.ok((await call('ux-a')).id, 'legacy request flags permit direct replies'); }
+  await thread.update({requestStatus:'accepted'});
   for(const path of ['users/ux-a/blocked/ux-b','users/ux-b/blocked/ux-a']){await db.doc(path).set({});await reject(call('ux-a'),'permission-denied');await db.doc(path).delete();}
   await db.doc('users/ux-b').update({accountStatus:'frozen'});await reject(call('ux-a'),'permission-denied');await db.doc('users/ux-b').update({accountStatus:'active'});
   await db.doc('users/ux-a/notifications/forged').set({type:'message',sourceId:'ux-direct',actorId:'ux-c'});
