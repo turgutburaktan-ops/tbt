@@ -1,3 +1,7 @@
+import 'dart:typed_data';
+
+import 'package:flutter/services.dart';
+
 import 'dart:io';
 import 'dart:ui' as ui;
 
@@ -9,6 +13,26 @@ import '../lib/screens/home_shell_v3.dart';
 import '../lib/theme/app_theme.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  setUpAll(() async {
+    final sdk = Platform.environment['FLUTTER_ROOT'];
+    if (sdk == null) return;
+    final fontRoot = '$sdk/bin/cache/artifacts/material_fonts';
+    for (final entry in {
+      'Roboto': ['Roboto-Regular.ttf', 'Roboto-Bold.ttf'],
+      'MaterialIcons': ['MaterialIcons-Regular.otf'],
+    }.entries) {
+      final loader = FontLoader(entry.key);
+      for (final name in entry.value) {
+        loader.addFont(
+          File('$fontRoot/$name')
+              .readAsBytes()
+              .then((bytes) => ByteData.sublistView(bytes)),
+        );
+      }
+      await loader.load();
+    }
+  });
   testWidgets(
     'planning offers three clear actions and retains advanced tools',
     (tester) async {
@@ -21,7 +45,10 @@ void main() {
         RepaintBoundary(
           key: capture,
           child: MaterialApp(
-            theme: AppTheme.dark,
+            debugShowCheckedModeBanner: false,
+            theme: AppTheme.dark.copyWith(
+              textTheme: AppTheme.dark.textTheme.apply(fontFamily: 'Roboto'),
+            ),
             home: Scaffold(body: PlanningHub(onOpenNearby: () {})),
           ),
         ),
