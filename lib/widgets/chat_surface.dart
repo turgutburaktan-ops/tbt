@@ -94,8 +94,6 @@ class ChatBackdrop extends StatelessWidget {
   final Widget child;
 
   @override
-  Widget build(BuildContext context) => ColoredBox(
-    color: Theme.of(context).scaffoldBackgroundColor,
-    child: child,
-  );
+  Widget build(BuildContext context) =>
+      Material(color: Theme.of(context).scaffoldBackgroundColor, child: child);
 }

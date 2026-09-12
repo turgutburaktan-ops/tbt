@@ -599,7 +599,7 @@ class _PlacesHubState extends State<_PlacesHub> {
       );
     }
 
-    return ColoredBox(
+    return Material(
       color: AppColors.background,
       child: SafeArea(
         bottom: false,
@@ -689,7 +689,7 @@ class PlanningHub extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ColoredBox(
+    return Material(
       color: AppColors.background,
       child: SafeArea(
         bottom: false,
@@ -937,7 +937,7 @@ class _NearbyUnifiedHubState extends State<_NearbyUnifiedHub> {
         ? const ['Çevrende', 'Kampüs']
         : const ['Çevrende'];
     final index = _section >= labels.length ? 0 : _section;
-    return ColoredBox(
+    return Material(
       color: AppColors.background,
       child: SafeArea(
         bottom: false,
