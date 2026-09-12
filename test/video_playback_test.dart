@@ -1,3 +1,4 @@
+import 'package:best_photo_spot/widgets/shared_story_video.dart';
 import 'package:best_photo_spot/services/video_audio_session.dart';
 import 'package:flutter/material.dart';
 import 'package:best_photo_spot/widgets/expandable_caption.dart';
@@ -63,6 +64,45 @@ class _VideoPlatform extends VideoPlayerPlatform {
 }
 
 void main() {
+  testWidgets('shared story fills the surface, plays sound and pauses with story controls', (tester) async {
+    final platform = _VideoPlatform();
+    VideoPlayerPlatform.instance = platform;
+    var active = true;
+    Duration? readyDuration;
+    late StateSetter update;
+    await tester.pumpWidget(MaterialApp(home: StatefulBuilder(builder: (context, setState) {
+      update = setState;
+      return Scaffold(body: SharedStoryVideo(
+        url: 'https://example.com/story-video.mp4', author: 'Original author',
+        active: active, onReady: (duration) => readyDuration = duration,
+      ));
+    })));
+    Future<void> tick() async {
+      for (var i = 0; i < 8; i++) { await tester.pump(const Duration(milliseconds: 100)); }
+    }
+    await tick();
+    expect(find.byType(Card), findsNothing);
+    expect(find.text('↗ Original author'), findsOneWidget);
+    final player = tester.widget<AppVideoPlayer>(find.byType(AppVideoPlayer));
+    expect(player.fit, BoxFit.cover);
+    expect(player.resumePosition, false);
+    expect(readyDuration, const Duration(seconds: 15));
+    expect(platform.volumes.values.single, 1);
+    expect(platform.playing.values.single, true);
+    update(() => active = false);
+    await tick();
+    expect(platform.playing.values.single, false);
+    update(() => active = true);
+    await tick();
+    expect(platform.playing.values.single, true);
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(milliseconds: 300));
+  });
+  test('story duration respects short clips and the existing 15 second limit', () {
+    expect(SharedStoryVideo.storyDuration(const Duration(seconds: 5)), const Duration(seconds: 5));
+    expect(SharedStoryVideo.storyDuration(const Duration(seconds: 60)), const Duration(seconds: 15));
+  });
+
   testWidgets(
     'mute and reset update existing and subsequently created video controllers',
     (tester) async {
@@ -309,3 +349,4 @@ void main() {
     },
   );
 }
+

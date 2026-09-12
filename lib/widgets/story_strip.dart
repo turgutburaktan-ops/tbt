@@ -367,6 +367,8 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
   final _replyFocusNode = FocusNode();
   int _index = 0;
   bool _sending = false;
+  bool _storyPaused = false;
+  final Map<String, Duration> _sharedDurations = {};
   bool _musicReady = false;
   int _musicGeneration = 0;
 
@@ -425,8 +427,12 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
 
   void _restartProgress() {
     _progress.stop();
-    _progress.duration = _duration;
-    _progress.forward(from: 0);
+    _storyPaused = false;
+    _progress.duration = _sharedDurations[_current.id] ?? _duration;
+    _progress.value = 0;
+    if (_current.sharedPostId.isEmpty || _sharedDurations.containsKey(_current.id)) {
+      _progress.forward();
+    }
     unawaited(_startCurrentMusic());
   }
 
@@ -500,12 +506,15 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
   }
 
   void _pause() {
+    if (mounted) setState(() => _storyPaused = true);
     _progress.stop();
     unawaited(_musicPlayer.pause());
   }
 
   void _resume() {
-    if (!_progress.isCompleted) _progress.forward();
+    if (mounted) setState(() => _storyPaused = false);
+    if (!_progress.isCompleted &&
+        (_current.sharedPostId.isEmpty || _sharedDurations.containsKey(_current.id))) _progress.forward();
     if (_musicReady && !_musicPlayer.playing) {
       unawaited(_musicPlayer.play());
     }
@@ -854,33 +863,19 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
 
   Widget _media(AppStory s, double width, double height) {
     if (s.sharedPostId.isNotEmpty) {
-      return ColoredBox(
-        color: const Color(0xFF0B1426),
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(22, 140, 22, 140),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SharedPostCard(
-                  postId: s.sharedPostId,
-                  storyId: s.id,
-                  compact: true,
-                  onOpen: _openSharedPost,
-                ),
-                if (s.caption.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 18),
-                    child: Text(
-                      s.caption,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(color: Colors.white, fontSize: 17),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ),
+      return SharedPostCard(
+        key: ValueKey('shared-${s.id}'), postId: s.sharedPostId,
+        storyId: s.id, compact: true, storyPresentation: true,
+        active: s.id == _current.id && !_storyPaused,
+        note: s.caption, onOpen: _openSharedPost,
+        onStoryReady: (duration) {
+          _sharedDurations[s.id] = duration;
+          if (!mounted || s.id != _current.id) return;
+          _progress.duration = duration;
+          if (!_storyPaused && !_progress.isAnimating && !_progress.isCompleted) {
+            _progress.forward();
+          }
+        },
       );
     }
     if (s.isVideo && s.videoUrl.isNotEmpty) {
@@ -893,6 +888,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
             AppVideoPlayer.network(
               key: ValueKey(s.id),
               url: s.videoUrl,
+              active: s.id == _current.id && !_storyPaused,
               autoplay: true,
               muted: s.hasMusic && s.originalAudioVolume <= 0,
               volume: s.hasMusic ? s.originalAudioVolume : 1,
@@ -1317,3 +1313,4 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
     );
   }
 }
+
