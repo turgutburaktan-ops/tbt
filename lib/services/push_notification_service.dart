@@ -2,6 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 
 import '../firebase_options.dart';
 import 'notification_reply_service.dart';
+import 'push_registration_retry.dart';
 import 'app_notification_service.dart';
 import '../screens/broadcast_detail_screen.dart';
 import '../screens/reservation_inbox_screen.dart';
@@ -49,6 +50,9 @@ class PushNotificationService with WidgetsBindingObserver {
   StreamSubscription<RemoteMessage>? _openedSub;
   GlobalKey<NavigatorState>? _navigatorKey;
   String? _lastSavedToken;
+  String? _registrationUser;
+  Future<void>? _tokenRegistration;
+  int _registrationGeneration = 0;
   DateTime? _lastActivityWrite;
   Future<void>? _initializing;
   bool _initialized = false;
@@ -79,13 +83,9 @@ class PushNotificationService with WidgetsBindingObserver {
     await _messaging
         .setAutoInitEnabled(true)
         .timeout(const Duration(seconds: 4));
-    final settings = await _messaging
+    await _messaging
         .requestPermission(alert: true, badge: true, sound: true)
         .timeout(const Duration(seconds: 8));
-    if (settings.authorizationStatus == AuthorizationStatus.denied) {
-      _initialized = true;
-      return;
-    }
 
     try {
       await NotificationReplyService.initialize(
@@ -94,6 +94,12 @@ class PushNotificationService with WidgetsBindingObserver {
     } catch (_) {}
     await _authSub?.cancel();
     _authSub = _auth.authStateChanges().listen((user) {
+      if (_registrationUser != user?.uid) {
+        _registrationGeneration++;
+        _tokenRegistration = null;
+        _registrationUser = user?.uid;
+        _lastSavedToken = null;
+      }
       if (user == null) {
         _lastSavedToken = null;
         _lastActivityWrite = null;
@@ -174,7 +180,12 @@ class PushNotificationService with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      unawaited(_markActive());
+      final key = _navigatorKey;
+      if (!_initialized && key != null) {
+        unawaited(initialize(key).catchError((_) {}));
+      } else {
+        unawaited(_refreshRegistration());
+      }
     }
   }
 
@@ -202,13 +213,35 @@ class PushNotificationService with WidgetsBindingObserver {
     }
   }
 
-  Future<void> _saveCurrentToken() async {
-    try {
-      final token = await _messaging.getToken().timeout(
-        const Duration(seconds: 5),
-      );
-      if (token != null && token.isNotEmpty) await _saveToken(token);
-    } catch (_) {}
+  Future<void> _saveCurrentToken() {
+    final running = _tokenRegistration;
+    if (running != null) return running;
+    final uid = _auth.currentUser?.uid;
+    if (uid == null) return Future.value();
+    final generation = _registrationGeneration;
+    bool active() => _observerAdded && generation == _registrationGeneration && _auth.currentUser?.uid == uid;
+    final request = retryPushRegistration(
+      active: active,
+      attempt: () async {
+        final settings = await _messaging.getNotificationSettings().timeout(const Duration(seconds: 4));
+        if (settings.authorizationStatus == AuthorizationStatus.denied ||
+            settings.authorizationStatus == AuthorizationStatus.notDetermined) return true;
+        if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
+          final apns = await _messaging.getAPNSToken().timeout(const Duration(seconds: 4));
+          if (apns == null || apns.isEmpty) return false;
+        }
+        if (!active()) return true;
+        final token = await _messaging.getToken().timeout(const Duration(seconds: 5));
+        if (!active()) return true;
+        if (token == null || token.isEmpty) return false;
+        await _saveToken(token);
+        return _lastSavedToken == token;
+      },
+    );
+    _tokenRegistration = request;
+    return request.whenComplete(() {
+      if (identical(_tokenRegistration, request)) _tokenRegistration = null;
+    });
   }
 
   String get _platformName {
@@ -238,6 +271,7 @@ class PushNotificationService with WidgetsBindingObserver {
             'updatedAt': FieldValue.serverTimestamp(),
           }, SetOptions(merge: true))
           .timeout(const Duration(seconds: 5));
+      if (_auth.currentUser?.uid != user.uid) return;
       _lastSavedToken = token;
       await _markActive(force: true);
     } catch (_) {
@@ -395,6 +429,10 @@ class PushNotificationService with WidgetsBindingObserver {
   }
 
   void dispose() {
+    _registrationGeneration++;
+    _tokenRegistration = null;
+    _registrationUser = null;
+    _lastSavedToken = null;
     if (_observerAdded) {
       WidgetsBinding.instance.removeObserver(this);
       _observerAdded = false;
@@ -413,3 +451,4 @@ class PushNotificationService with WidgetsBindingObserver {
     _recentOpenedMessages.clear();
   }
 }
+
