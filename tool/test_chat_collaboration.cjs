@@ -109,11 +109,18 @@ const call = (uid, actionName, data = {}) => action({auth: {uid, token: {name: u
     assert.equal((await send('sender', 'text')).status, 200);
     assert.equal((await send('recipient', 'audio')).status, 200);
   }
+  const {_reply: notificationReply} = require('../functions/notification_reply');
+  await db.doc('users/sender/notifications/reply-test').set({type:'message', sourceId:dm.threadId, actorId:'recipient'});
+  const replyRequest = {auth:{uid:'sender'}, data:{threadId:dm.threadId, notificationId:'reply-test', text:'Direct reply'}};
+  const replyResult = await notificationReply(replyRequest, db);
+  assert.ok((await dmRef.collection('messages').doc(replyResult.id).get()).exists,
+    'notification reply works despite a legacy rejected flag');
   for (const [blocker, blocked] of [['sender', 'recipient'], ['recipient', 'sender']]) {
     const block = db.doc(`users/${blocker}/blocked/${blocked}`);
     await block.set({});
     assert.equal((await send('sender', 'text')).status, 403);
     assert.equal((await send('recipient', 'text')).status, 403);
+    await assert.rejects(notificationReply(replyRequest, db), 'block also applies to notification replies');
     await assert.rejects(call('sender', 'direct', {otherUserId: 'recipient'}));
     // Deleting one's own history remains available even when blocked.
     await call('sender', 'deleteConversation', dm);

@@ -22,7 +22,7 @@ jobs:
         with:
           channel: stable
           cache: true
-      - run: npm ci --prefix functions
+      - run: npm install --prefix functions --no-package-lock --ignore-scripts
       - run: npm install -g firebase-tools
       - run: firebase emulators:exec --only firestore --project demo-tbt "node tool/test_chat_collaboration.cjs" --non-interactive
       - run: node --check functions/index.js && node --check functions/notification_reply.js
