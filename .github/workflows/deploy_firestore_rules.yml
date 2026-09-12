@@ -2,7 +2,7 @@ name: Deploy Firebase Rules
 
 on:
   push:
-    branches: [main, feature/video-v1, codex/release-1.0.18-build26]
+    branches: [main, feature/video-v1, codex/release-1.0.18-build26, codex/store29-backend-fixes]
     paths:
       - 'firestore.rules'
       - 'firestore.indexes.json'
