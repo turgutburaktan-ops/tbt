@@ -12,6 +12,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../models/chat_message.dart';
 import '../widgets/chat_surface.dart';
+import '../widgets/chat_request_banner.dart';
 import '../widgets/swipe_to_reply.dart';
 import '../services/chat_service.dart';
 import '../widgets/chat_voice_message.dart';
@@ -1393,60 +1394,32 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   }
 
   Widget _requestBanner(ChatThread thread, String myId) {
-    final incoming = thread.requestRecipientId == myId;
-    return Container(
-      padding: const EdgeInsets.all(12),
-      color: _panel,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            incoming
-                ? 'Mesaj isteği · Kabul edene kadar okundu bilgin paylaşılmaz.'
-                : 'Mesaj isteğin gönderildi. Kabul edilene kadar yalnızca metin gönderebilirsin.',
-            style: const TextStyle(fontSize: 12),
-          ),
-          if (incoming)
-            Wrap(
-              spacing: 8,
-              children: [
-                FilledButton(
-                  onPressed: () async {
-                    try {
-                      await ChatService.instance.action('acceptRequest', {
-                        'threadId': thread.id,
-                      });
-                      await ChatService.instance.markThreadRead(thread.id);
-                    } catch (e) {
-                      _showError(e);
-                    }
-                  },
-                  child: const Text('Kabul et'),
-                ),
-                TextButton(
-                  onPressed: () => runChatAction(context, 'rejectRequest', {
-                    'threadId': thread.id,
-                  }),
-                  child: const Text('Reddet'),
-                ),
-                TextButton(
-                  onPressed: () async {
-                    try {
-                      await ChatService.instance.action('rejectRequest', {
-                        'threadId': thread.id,
-                      });
-                      await ChatService.instance.blockUser(widget.otherUserId);
-                      if (mounted) Navigator.pop(context);
-                    } catch (e) {
-                      _showError(e);
-                    }
-                  },
-                  child: const Text('Engelle'),
-                ),
-              ],
-            ),
-        ],
-      ),
+    return ChatRequestBanner(
+      incoming: thread.requestRecipientId == myId,
+      onAccept: () async {
+        try {
+          await ChatService.instance.action('acceptRequest', {
+            'threadId': thread.id,
+          });
+          await ChatService.instance.markThreadRead(thread.id);
+        } catch (e) {
+          _showError(e);
+        }
+      },
+      onReject: () => runChatAction(context, 'rejectRequest', {
+        'threadId': thread.id,
+      }),
+      onBlock: () async {
+        try {
+          await ChatService.instance.action('rejectRequest', {
+            'threadId': thread.id,
+          });
+          await ChatService.instance.blockUser(widget.otherUserId);
+          if (mounted) Navigator.pop(context);
+        } catch (e) {
+          _showError(e);
+        }
+      },
     );
   }
 
