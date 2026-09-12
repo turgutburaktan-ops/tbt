@@ -132,10 +132,10 @@ jobs:
         run: |
           flutter pub get
           flutter analyze --no-fatal-warnings --no-fatal-infos
-          flutter test test/profile_identity_test.dart test/profile_content_navigation_test.dart test/route_itinerary_test.dart test/route_create_test.dart
+          flutter test test/chat_layout_test.dart test/chat_appearance_test.dart test/profile_identity_test.dart test/profile_content_navigation_test.dart test/route_itinerary_test.dart test/route_create_test.dart
           flutter build appbundle --release --no-pub \
             --build-name=1.0.18 \
-            --build-number=26 \
+            --build-number=27 \
             --dart-define=ADMOB_NATIVE_ANDROID="$ADMOB_NATIVE_ANDROID"
       - name: Verify Play bundle
         shell: bash
@@ -147,12 +147,12 @@ jobs:
           {
             echo 'applicationId=com.tbt.social'
             echo 'versionName=1.0.18'
-            echo 'versionCode=26'
+            echo 'versionCode=27'
             sha256sum "$AAB"
           } > build/app/outputs/bundle/release/release-info.txt
       - uses: actions/upload-artifact@v4
         with:
-          name: tbt-play-release-1.0.18-code26
+          name: tbt-play-release-1.0.18-code27
           path: |
             build/app/outputs/bundle/release/app-release.aab
             build/app/outputs/bundle/release/release-info.txt

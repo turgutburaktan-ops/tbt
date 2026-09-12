@@ -3,7 +3,7 @@ name: iOS TestFlight Release
 on:
   workflow_dispatch:
   push:
-    branches: [codex/release-1.0.18-build26]
+    branches: [codex/release-1.0.18-build27]
 
 permissions:
   contents: read
@@ -57,6 +57,9 @@ jobs:
 
       - name: Install dependencies
         run: flutter pub get
+
+      - name: Verify chat and route regressions
+        run: flutter test test/chat_layout_test.dart test/chat_appearance_test.dart test/route_itinerary_test.dart test/profile_identity_test.dart test/profile_content_navigation_test.dart
 
       - name: Generate clean iOS host
         shell: bash
@@ -365,7 +368,7 @@ jobs:
           flutter build ipa \
             --release \
             --build-name=1.0.18 \
-            --build-number=26 \
+            --build-number=27 \
             --export-options-plist=ios/ExportOptions.plist \
             --dart-define="FIREBASE_IOS_API_KEY=$FIREBASE_IOS_API_KEY" \
             --dart-define="FIREBASE_IOS_APP_ID=$FIREBASE_IOS_APP_ID" \
@@ -375,7 +378,7 @@ jobs:
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
         with:
-          name: tbt-ios-ipa-1.0.18-build26
+          name: tbt-ios-ipa-1.0.18-build27
           path: build/ios/ipa/*.ipa
           if-no-files-found: error
           retention-days: 14
