@@ -1,4 +1,5 @@
 import '../widgets/chat_surface.dart';
+import '../widgets/chat_delete_action.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -21,7 +22,6 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocus = FocusNode();
   String _query = '';
-  bool _showRequests = false;
   int _threadsRevision = 0;
 
   @override
@@ -41,6 +41,22 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
             ChatScreen(otherUserId: userId, otherDisplayName: displayName),
       ),
     );
+  }
+
+  Future<void> _deleteConversation(ChatThread thread) async {
+    if (!await confirmChatDeletion(context) || !mounted) return;
+    try {
+      await ChatService.instance.deleteConversation(thread.id);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Sohbet senin ekranından silindi.')),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Sohbet silinemedi. Tekrar dene.')),
+      );
+    }
   }
 
   Widget _searchResults(String myId) {
@@ -216,12 +232,7 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
           );
         }
 
-        final threads = (snapshot.data ?? const <ChatThread>[]).where((t) {
-          final incoming = t.requestRecipientId == myId;
-          if (incoming && t.requestStatus == 'rejected') return false;
-          final request = incoming && t.requestStatus == 'pending';
-          return _showRequests ? request && t.lastMessageAt != null : !request;
-        }).toList();
+        final threads = snapshot.data ?? const <ChatThread>[];
         if (threads.isEmpty) {
           return Center(
             child: Padding(
@@ -236,12 +247,12 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
                   ),
                   const SizedBox(height: 14),
                   Text(
-                    _showRequests ? 'Bekleyen mesaj isteğin yok.' : 'Henüz mesajın yok.',
+                    'Henüz mesajın yok.',
                     style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    _showRequests ? 'Takip etmediğin kişilerden gelen yeni mesajlar burada görünür.' : 'Yukarıdan bir kullanıcı ara ve doğrudan mesaj gönder.',
+                    'Yukarıdan bir kullanıcı ara ve doğrudan mesaj gönder.',
                     textAlign: TextAlign.center,
                     style: TextStyle(color: Colors.white54, height: 1.4),
                   ),
@@ -268,6 +279,8 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
                 .where((id) => id != myId)
                 .toList(growable: false);
             if (thread.isGroup) return ListTile(
+              trailing: ChatDeleteAction(onDelete: () => _deleteConversation(thread)),
+              onLongPress: () => _deleteConversation(thread),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
               tileColor: const Color(0xA6142238),
               leading: const CircleAvatar(child: Icon(Icons.groups_outlined)),
@@ -283,7 +296,7 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
               thread: thread,
               otherUserId: otherIds.first,
               unread: unread,
-            );
+              onDelete: () => _deleteConversation(thread),            );
           },
         );
       },
@@ -364,14 +377,6 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
                     ),
                   ),
                 ),
-                if (_query.trim().isEmpty) Padding(padding: const EdgeInsets.symmetric(horizontal: 16), child: Row(children: [
-                  ChoiceChip(label: const Text('Sohbetler'), selected: !_showRequests, onSelected: (_) => setState(() => _showRequests = false)),
-                  const SizedBox(width: 8),
-                  StreamBuilder<List<ChatThread>>(stream: ChatService.instance.myThreads(), builder: (context, snap) {
-                    final count = (snap.data ?? <ChatThread>[]).where((t) => t.requestRecipientId == myId && t.requestStatus == 'pending' && t.lastMessageAt != null).length;
-                    return ChoiceChip(label: Text('İstekler${count > 0 ? ' ($count)' : ''}'), selected: _showRequests, onSelected: (_) => setState(() => _showRequests = true));
-                  }),
-                ])),
                 Expanded(
                   child: _query.trim().isEmpty
                       ? _threads(myId)
@@ -403,11 +408,13 @@ class _ThreadTile extends StatelessWidget {
   final ChatThread thread;
   final String otherUserId;
   final bool unread;
+  final VoidCallback onDelete;
 
   const _ThreadTile({
     required this.thread,
     required this.otherUserId,
     required this.unread,
+    required this.onDelete,
   });
 
   @override
@@ -474,13 +481,12 @@ class _ThreadTile extends StatelessWidget {
               fontWeight: unread ? FontWeight.w700 : FontWeight.w400,
             ),
           ),
-          trailing: unread
-              ? const Badge(
-                  backgroundColor: Color(0xFF9FC7FF),
-                  smallSize: 9,
-                  child: Icon(Icons.chevron_right, color: Colors.white54),
-                )
-              : const Icon(Icons.chevron_right, color: Colors.white38),
+          trailing: Badge(
+            isLabelVisible: unread,
+            backgroundColor: const Color(0xFF9FC7FF),
+            child: ChatDeleteAction(onDelete: onDelete),
+          ),
+          onLongPress: onDelete,
           onTap: () {
             Navigator.push(
               context,
@@ -577,5 +583,6 @@ class _CachedThreadUser {
   bool get isExpired =>
       DateTime.now().difference(savedAt) > _ThreadUserCache._lifetime;
 }
+
 
 

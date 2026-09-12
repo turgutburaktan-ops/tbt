@@ -31,18 +31,21 @@ async function chatActionHandler(request, db = getFirestore()) {
     const threadId = `dm_${[uid, other].sort().join('_')}`;
     const ref = db.doc(`chat_threads/${threadId}`);
     return db.runTransaction(async tx => {
-      const [existing, target, blockedA, blockedB, follows] = await Promise.all([
+      const [existing, target, blockedA, blockedB] = await Promise.all([
         tx.get(ref), tx.get(db.doc(`users/${other}`)), tx.get(db.doc(`users/${uid}/blocked/${other}`)),
-        tx.get(db.doc(`users/${other}/blocked/${uid}`)), tx.get(db.doc(`users/${other}/following/${uid}`)),
+        tx.get(db.doc(`users/${other}/blocked/${uid}`)),
       ]);
       if (blockedA.exists || blockedB.exists) fail('Bu kullanıcıyla mesajlaşma kullanılamıyor.');
       if (!target.exists) fail('Kullanıcı bulunamadı.');
       if (existing.exists) {
         if (existing.data().type !== 'direct' || !existing.data().memberIds.includes(uid) || !existing.data().memberIds.includes(other)) fail('Geçersiz sohbet.');
+        if (existing.data().requestStatus && existing.data().requestStatus !== 'accepted') {
+          tx.update(ref, {requestStatus: 'accepted', updatedAt: FieldValue.serverTimestamp()});
+        }
         return {threadId};
       }
       tx.set(ref, {type: 'direct', memberIds: [uid, other], requestSenderId: uid, requestRecipientId: other,
-        requestStatus: follows.exists ? 'accepted' : 'pending', createdAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp()});
+        requestStatus: 'accepted', createdAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp()});
       return {threadId};
     });
   }
@@ -86,7 +89,7 @@ async function chatActionHandler(request, db = getFirestore()) {
     if (!t || !t.memberIds.includes(uid)) throw new HttpsError('permission-denied', 'Bu sohbete erişimin yok.');
     const admin = t.type === 'group' && t.adminIds.includes(uid);
     const requireAdmin = () => { if (!admin) throw new HttpsError('permission-denied', 'Yönetici yetkisi gerekli.'); };
-    if (t.type === 'direct' && !['preferences','hide','accept'].includes(action)) {
+    if (t.type === 'direct' && !['preferences','hide','deleteConversation','accept'].includes(action)) {
       const other = t.memberIds.find(x => x !== uid);
       const blocks = await Promise.all([tx.get(db.doc(`users/${uid}/blocked/${other}`)), tx.get(db.doc(`users/${other}/blocked/${uid}`))]);
       if (blocks.some(s => s.exists)) fail('Bu kullanıcıyla mesajlaşma kullanılamıyor.');
@@ -98,6 +101,10 @@ async function chatActionHandler(request, db = getFirestore()) {
       if (typeof d.muted !== 'boolean' || typeof d.readReceipts !== 'boolean') fail('Geçersiz tercih.');
       tx.set(db.doc(`users/${uid}/chat_preferences/${threadId}`), {muted: d.muted, readReceipts: d.readReceipts}, {merge: true});
       if (!d.readReceipts) tx.update(ref, {[`lastReadAt.${uid}`]: FieldValue.delete()});
+    } else if (action === 'deleteConversation') {
+      // Private cutoff: never delete shared messages or reset a recipient's refusal.
+      tx.set(db.doc(`users/${uid}/chat_preferences/${threadId}`),
+        {deletedAt: FieldValue.serverTimestamp()}, {merge: true});
     } else if (action === 'hide') {
       tx.set(db.doc(`users/${uid}/chat_preferences/${threadId}/hidden/${id(d.messageId)}`), {hidden: true});
     } else if (action === 'rename') {
@@ -207,4 +214,5 @@ exports.chatGroupMessageNotification = onDocumentCreated('chat_threads/{threadId
   }));
 });
 exports._chatActionHandler = chatActionHandler;
+
 

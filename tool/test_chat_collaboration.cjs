@@ -86,23 +86,48 @@ const call = (uid, actionName, data = {}) => action({auth: {uid, token: {name: u
   await db.doc('users/sender').set({displayName: 'Sender'});
   const dm = await call('sender', 'direct', {otherUserId: 'recipient'});
   const dmRef = db.doc(`chat_threads/${dm.threadId}`);
-  assert.equal((await dmRef.get()).data().requestStatus, 'pending');
+  assert.equal((await dmRef.get()).data().requestStatus, 'accepted');
   await assert.rejects(call('sender', 'acceptRequest', dm));
   await assert.rejects(call('outsider', 'rejectRequest', dm));
   const dmUrl = base.replace(threadId, dm.threadId);
-  assert.equal((await fetch(`${dmUrl}?updateMask.fieldPaths=requestStatus`, {method:'PATCH',headers:{Authorization:`Bearer ${token('sender')}`,'Content-Type':'application/json'},body:JSON.stringify({fields:{requestStatus:{stringValue:'accepted'}}})})).status,403, 'sender cannot self-accept');
-  const send = (who, kind) => fetch(`${dmUrl}/messages?documentId=${who}-${kind}`, {method:'POST',headers:{Authorization:`Bearer ${token(who)}`,'Content-Type':'application/json'},body:JSON.stringify({fields:{senderId:{stringValue:who},text:{stringValue:'Hi'},type:{stringValue:kind},deleted:{booleanValue:false}}})});
+  assert.equal((await fetch(`${dmUrl}?updateMask.fieldPaths=requestStatus`, {method:'PATCH',headers:{Authorization:`Bearer ${token('sender')}`,'Content-Type':'application/json'},body:JSON.stringify({fields:{requestStatus:{stringValue:'rejected'}}})})).status,403, 'client cannot forge request state');
+  let sendId = 0;
+  const send = (who, kind) => fetch(`${dmUrl}/messages?documentId=${who}-${kind}-${sendId++}`, {method:'POST',headers:{Authorization:`Bearer ${token(who)}`,'Content-Type':'application/json'},body:JSON.stringify({fields:{senderId:{stringValue:who},text:{stringValue:'Hi'},type:{stringValue:kind},deleted:{booleanValue:false}}})});
   assert.equal((await send('sender','text')).status,200);
-  assert.equal((await send('sender','image')).status,403,'media requires acceptance');
-  assert.equal((await send('recipient','text')).status,403,'recipient must accept before replying');
-  await call('recipient','acceptRequest',dm);
+  assert.equal((await send('sender','image')).status,200,'media does not require acceptance');
+  assert.equal((await send('recipient','text')).status,200,'recipient can reply immediately');
   assert.equal((await send('recipient','text')).status,200);
   await db.doc('users/second').set({displayName:'Second'});
   const declined=await call('sender','direct',{otherUserId:'second'});
-  await call('second','rejectRequest',declined);
+  await db.doc(`chat_threads/${declined.threadId}`).update({requestStatus:'rejected'});
   assert.equal((await db.doc(`chat_threads/${declined.threadId}`).get()).data().requestStatus,'rejected');
   await call('sender','direct',{otherUserId:'second'});
-  assert.equal((await db.doc(`chat_threads/${declined.threadId}`).get()).data().requestStatus,'rejected','opening again cannot reset refusal');
+  assert.equal((await db.doc(`chat_threads/${declined.threadId}`).get()).data().requestStatus,'accepted','legacy rejection migrates to direct messaging');
+  // Legacy request flags no longer prevent messages; explicit blocks still do.
+  for (const state of ['pending', 'rejected']) {
+    await dmRef.update({requestStatus: state});
+    assert.equal((await send('sender', 'text')).status, 200);
+    assert.equal((await send('recipient', 'audio')).status, 200);
+  }
+  for (const [blocker, blocked] of [['sender', 'recipient'], ['recipient', 'sender']]) {
+    const block = db.doc(`users/${blocker}/blocked/${blocked}`);
+    await block.set({});
+    assert.equal((await send('sender', 'text')).status, 403);
+    assert.equal((await send('recipient', 'text')).status, 403);
+    await assert.rejects(call('sender', 'direct', {otherUserId: 'recipient'}));
+    // Deleting one's own history remains available even when blocked.
+    await call('sender', 'deleteConversation', dm);
+    await block.delete();
+  }
+  const senderPrefs = db.doc(`users/sender/chat_preferences/${dm.threadId}`);
+  assert.ok((await senderPrefs.get()).data().deletedAt.toMillis());
+  assert.equal((await db.doc(`users/recipient/chat_preferences/${dm.threadId}`).get()).exists, false);
+  assert.ok((await dmRef.collection('messages').get()).size > 0, 'shared messages are retained');
+  assert.equal((await dmRef.get()).data().requestStatus, 'rejected', 'delete does not change messaging state');
+  await assert.rejects(call('outsider', 'deleteConversation', dm));
+  await call('owner', 'deleteConversation', {threadId});
+  assert.ok((await db.doc(`users/owner/chat_preferences/${threadId}`).get()).data().deletedAt);
+  assert.ok((await ref.get()).data().memberIds.includes('owner'), 'delete does not leave group');
   await db.doc('users/known').set({displayName:'Known'});
   await db.doc('users/known/following/sender').set({userId:'sender'});
   const trusted=await call('sender','direct',{otherUserId:'known'});
@@ -134,4 +159,5 @@ const call = (uid, actionName, data = {}) => action({auth: {uid, token: {name: u
   assert.equal((await patch(`${documents}/users/privacy?updateMask.fieldPaths=isOnline`,'privacy',{isOnline:{booleanValue:true}})).status,200);
   console.log('Chat tests passed: membership, invite rotation, role escalation, sender ownership, pin deletion, voting, preferences and access revocation.');
 })().catch(e=>{console.error(e);process.exitCode=1;}).finally(()=>db.terminate());
+
 

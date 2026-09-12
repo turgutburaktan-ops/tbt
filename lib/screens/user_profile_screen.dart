@@ -33,15 +33,18 @@ class UserProfileScreen extends StatelessWidget {
     );
   }
 
-  Future<void> _openChat(BuildContext context, String displayName) async {
+  Future<void> _openChat(BuildContext context, String? displayName) async {
     try {
+      final name = displayName ??
+          (await SocialService.instance.userProfile(userId).first)
+              .data()?['displayName']?.toString() ?? 'Kullanıcı';
       await ChatService.instance.ensureDirectThread(userId);
       if (!context.mounted) return;
       Navigator.push(
         context,
         MaterialPageRoute(
           builder: (_) =>
-              ChatScreen(otherUserId: userId, otherDisplayName: displayName),
+              ChatScreen(otherUserId: userId, otherDisplayName: name),
         ),
       );
     } catch (e) {
@@ -73,6 +76,12 @@ class UserProfileScreen extends StatelessWidget {
         elevation: 0,
         title: const Text('Profil'),
         actions: [
+          if (!isOwnProfile && currentUser != null)
+            IconButton(
+              tooltip: 'Mesaj at',
+              onPressed: () => _openChat(context, null),
+              icon: const Icon(Icons.chat_bubble_outline_rounded),
+            ),
           IconButton(
             tooltip: 'Profili paylaş',
             onPressed: () => _shareProfile('TBT kullanıcısı'),
@@ -558,4 +567,5 @@ class _Stat extends StatelessWidget {
     );
   }
 }
+
 

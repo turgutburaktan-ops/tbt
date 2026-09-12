@@ -9,6 +9,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import '../models/chat_message.dart';
 import 'app_notification_service.dart';
 import 'auth_switch_stream.dart';
+import 'chat_history_filter.dart';
 import 'content_moderation_service.dart';
 
 class ChatService {
@@ -116,7 +117,7 @@ class ChatService {
           members.contains(user.uid) &&
           members.contains(otherUserId);
       if (!valid) throw Exception('Bu sohbete erişimin yok.');
-      return id;
+      if (data['requestStatus'] != 'pending' && data['requestStatus'] != 'rejected') return id;
     }
 
     final result = await action('direct', {'otherUserId': otherUserId});
@@ -145,14 +146,23 @@ class ChatService {
     return switchAuthStream<List<ChatThread>>(
       auth: _auth,
       signedOutValue: const <ChatThread>[],
-      signedIn: (user) => _firestore
+      signedIn: (user) => combineChatSnapshots(
+        _firestore
           .collection('chat_threads')
           .where('memberIds', arrayContains: user.uid)
           .snapshots()
           .map((snapshot) {
-            final items = snapshot.docs.map(ChatThread.fromDocument).toList();
+            return snapshot.docs.map(ChatThread.fromDocument).toList();
+          }),
+        _firestore.collection('users').doc(user.uid)
+            .collection('chat_preferences').snapshots(),
+        (threads, preferences) {
+            final cutoffs = {for (final doc in preferences.docs)
+              doc.id: (doc.data()['deletedAt'] as Timestamp?)?.toDate()};
+            final items = threads.where((thread) => visibleAfterChatDeletion(
+              thread.lastMessageAt, cutoffs[thread.id])).toList();
             for (final t in items) {
-              if (t.requestStatus != 'pending' && t.requestStatus != 'rejected' && t.lastSenderId != user.uid && t.lastMessageAt != null && _delivered[t.id] != t.lastMessageAt) {
+              if (t.lastSenderId != user.uid && t.lastMessageAt != null && _delivered[t.id] != t.lastMessageAt) {
                 _delivered[t.id] = t.lastMessageAt!;
                 unawaited(_firestore.collection('chat_threads').doc(t.id).update({'lastDeliveredAt.${user.uid}': FieldValue.serverTimestamp()}).catchError((Object e) { _delivered.remove(t.id); }));
               }
@@ -165,7 +175,8 @@ class ChatService {
               return bd.compareTo(ad);
             });
             return items;
-          }),
+        },
+      ),
     );
   }
 
@@ -175,7 +186,6 @@ class ChatService {
       signedOutValue: 0,
       signedIn: (user) => myThreads().map((threads) {
         return threads.where((thread) {
-          if (thread.requestStatus == 'pending' || thread.requestStatus == 'rejected') return false;
           if (thread.lastSenderId == user.uid || thread.lastMessageAt == null) {
             return false;
           }
@@ -202,19 +212,25 @@ class ChatService {
     return switchAuthStream<List<ChatMessage>>(
       auth: _auth,
       signedOutValue: const <ChatMessage>[],
-      signedIn: (_) => _firestore
-          .collection('chat_threads')
-          .doc(threadId)
-          .collection('messages')
-          .orderBy('createdAt', descending: true)
-          .limit(150)
-          .snapshots(includeMetadataChanges: true)
-          .map(
-            (snapshot) => snapshot.docs
-                .map(ChatMessage.fromDocument)
-                .toList(growable: false),
-          ),
+      signedIn: (user) => combineChatSnapshots(
+        _firestore.collection('chat_threads').doc(threadId)
+            .collection('messages').orderBy('createdAt', descending: true)
+            .limit(150).snapshots(includeMetadataChanges: true),
+        _firestore.collection('users').doc(user.uid)
+            .collection('chat_preferences').doc(threadId).snapshots(),
+        (snapshot, preferences) {
+          final cutoff = (preferences.data()?['deletedAt'] as Timestamp?)?.toDate();
+          return snapshot.docs.where((doc) => visibleAfterChatDeletion(
+            (doc.data()['createdAt'] as Timestamp?)?.toDate(), cutoff,
+            pending: doc.metadata.hasPendingWrites,
+          )).map(ChatMessage.fromDocument).toList(growable: false);
+        },
+      ),
     );
+  }
+
+  Future<void> deleteConversation(String threadId) async {
+    await action('deleteConversation', {'threadId': threadId});
   }
 
   Future<Map<String, dynamic>> action(String action, Map<String, dynamic> data) async {
@@ -227,8 +243,6 @@ class ChatService {
     try {
       final profile = await _firestore.collection('users').doc(user.uid).get();
       if (profile.data()?['showReadReceipts'] == false) return;
-      final thread = await _firestore.collection('chat_threads').doc(threadId).get();
-      if (thread.data()?['requestStatus'] == 'pending' || thread.data()?['requestStatus'] == 'rejected') return;
       final prefs = await _firestore.doc('users/${user.uid}/chat_preferences/$threadId').get();
       if (prefs.data()?['readReceipts'] == false) return;
       await _firestore.collection('chat_threads').doc(threadId).update({
@@ -509,8 +523,6 @@ class ChatService {
             .toList() ??
         const <String>[];
     final isGroup = thread.data()?['type'] == 'group';
-    if (thread.data()?['requestStatus'] == 'rejected') throw Exception('Bu mesaj isteği kabul edilmedi.');
-    if (thread.data()?['requestStatus'] == 'pending' && (thread.data()?['requestRecipientId'] == user.uid || type != 'text')) throw Exception('İstek kabul edilene kadar yalnızca gönderen metin yazabilir.');
     if (!members.contains(user.uid) || (!isGroup && (members.length != 2 || !members.contains(otherUserId)))) {
       throw Exception('Bu sohbete erişimin yok.');
     }
@@ -654,3 +666,4 @@ class ChatService {
     }).timeout(const Duration(seconds: 8));
   }
 }
+
