@@ -57,7 +57,8 @@ test('private invitation validity enforces active, expiry and usage limits', () 
   assert.equal(invites._inviteState({active: true, expiresAt: future, maxUses: 1, usesCount: 1}, now).reason, 'used');
 });
 
-test('public preview exposes no recipient email', () => {
+test('public preview exposes no recipient email', (t) => {
+  t.mock.method(Date, 'now', () => now);
   const preview = invites._publicInvite({
     active: true,
     role: 'gourmet',

@@ -2,7 +2,7 @@ name: Deploy Firebase Rules
 
 on:
   push:
-    branches: [main, feature/video-v1]
+    branches: [main, feature/video-v1, codex/release-1.0.18-build26]
     paths:
       - 'firestore.rules'
       - 'firestore.indexes.json'
@@ -57,8 +57,11 @@ jobs:
       - name: Install chat test dependencies
         run: npm install --prefix functions
 
+      - name: Backend regression tests
+        run: node --test functions/test/*.test.js
+
       - name: Check coupon access rules
-        run: firebase emulators:exec --only firestore --project demo-tbt "node tool/test_coupon_rules.cjs && node tool/test_event_hub_rules.cjs && node tool/test_chat_collaboration.cjs" --non-interactive
+        run: firebase emulators:exec --only firestore --project demo-tbt "node tool/test_coupon_rules.cjs && node tool/test_event_hub_rules.cjs && node tool/test_chat_collaboration.cjs && node tool/test_route_participation.cjs" --non-interactive
 
       - name: Prepare event discovery index
         run: |
