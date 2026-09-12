@@ -978,6 +978,7 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final distance = (_road?.meters ?? 0) / 1000;
     return Scaffold(
       backgroundColor: _background,
       appBar: AppBar(
@@ -997,26 +998,8 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
           ),
         ],
       ),
-      body: ListView(
+      body: Column(
         children: [
-          if (widget.alternatives.isNotEmpty)
-            ExpansionTile(
-              title: const Text('Alternatif rotalar'),
-              children: [
-                for (final alternative in widget.alternatives)
-                  ListTile(
-                    title: Text(alternative.map((s) => s.name).join(' → ')),
-                    onTap: () {
-                      setState(() {
-                        _stops
-                          ..clear()
-                          ..addAll(alternative);
-                      });
-                      _fitRoute();
-                    },
-                  ),
-              ],
-            ),
           Container(
             height: MediaQuery.sizeOf(context).height < 720 ? 180 : 220,
             margin: const EdgeInsets.fromLTRB(12, 6, 12, 0),
@@ -1071,37 +1054,20 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
                       Expanded(
                         child: _SummaryItem(
                           value: '${_stops.length}',
-                          label: 'durak',
+                          label: 'çekim noktası',
                         ),
                       ),
                       Container(width: 1, height: 34, color: _border),
                       Expanded(
                         child: _SummaryItem(
-                          value: _routing
-                              ? 'Hesaplanıyor…'
-                              : _road == null
-                              ? '—'
-                              : '${(_road!.meters / 1000).toStringAsFixed(1)} km',
-                          label: _road == null
-                              ? 'Yol mesafesi'
-                              : '${(_road!.seconds / 60).ceil()} dk yol',
+                          value: _routing ? 'Hesaplanıyor…' : _road == null ? '—' : distance < 10
+                              ? '${distance.toStringAsFixed(1)} km'
+                              : '${distance.toStringAsFixed(0)} km',
+                          label: 'Yol mesafesi',
                         ),
                       ),
                     ],
                   ),
-                  if (!_routing && _road == null && _routePoints.length >= 2)
-                    TextButton(
-                      onPressed: _refreshRoad,
-                      child: const Text(
-                        'Uygun güzergâh bulunamadı. Yeniden dene',
-                      ),
-                    ),
-                  if (_road != null &&
-                      _road!.seconds + _stops.length * 45 * 60 >
-                          widget.durationHours * 3600)
-                    const Text(
-                      'Yol ve duraklarda geçirilecek süre, ayırdığın süreyi aşabilir. Durak sayısını azaltabilirsin.',
-                    ),
                   const SizedBox(height: 10),
                   SegmentedButton<RouteTravelMode>(
                     showSelectedIcon: false,
@@ -1127,9 +1093,7 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
                         child: Text(
                           _useCurrentLocation && _currentPosition != null
                               ? 'Başlangıç: Konumum'
-                              : _fixedOrigin != null
-                              ? 'Başlangıç: Kaydedilen konum'
-                              : 'Başlangıç: İlk durak',
+                              : _fixedOrigin != null ? 'Başlangıç: Kaydedilen konum' : 'Başlangıç: İlk çekim noktası',
                           style: const TextStyle(
                             color: Colors.white70,
                             fontWeight: FontWeight.w700,
@@ -1224,21 +1188,19 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
                   ),
                 ),
                 TextButton.icon(
-                  onPressed: _chooseStop,
+                  onPressed: _pickSpot,
                   icon: const Icon(Icons.add_rounded),
-                  label: const Text('Durak ekle'),
+                  label: const Text('Nokta ekle'),
                 ),
               ],
             ),
           ),
-          SizedBox(
+          Expanded(
             child: _loading
                 ? const Center(child: CircularProgressIndicator())
                 : _stops.isEmpty
-                ? _EmptyRoute(onAdd: _chooseStop)
+                ? _EmptyRoute(onAdd: _pickSpot)
                 : ReorderableListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
                     padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
                     itemCount: _stops.length,
                     onReorder: (oldIndex, newIndex) async {
@@ -1288,8 +1250,12 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
                           ),
                           subtitle: Builder(
                             builder: (_) {
+                              final km = _distanceToMeKm(spot);
+                              final distanceLabel = km == null
+                                  ? ''
+                                  : ' • ${km < 10 ? km.toStringAsFixed(1) : km.toStringAsFixed(0)} km';
                               return Text(
-                                '${spot.city} • ${_legLabel(index)}',
+                                '${spot.city}$distanceLabel • ${spot.bestTime}',
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(color: Colors.white54),
@@ -1362,18 +1328,6 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
                         ),
                       ),
                     ],
-                  ),
-                  FilledButton(
-                    onPressed: _stops.isEmpty || _saving ? null : _saveRoute,
-                    child: Text(_saving ? 'Kaydediliyor…' : 'Kaydet ve paylaş'),
-                  ),
-                  TextButton(
-                    onPressed: () => launchUrl(
-                      Uri.parse('https://www.openstreetmap.org/fixthemap'),
-                    ),
-                    child: const Text(
-                      'Yol verisi: © OpenStreetMap · FOSSGIS · Haritayı düzelt',
-                    ),
                   ),
                   if (_stops.length < 3)
                     Padding(

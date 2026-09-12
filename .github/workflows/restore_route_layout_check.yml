@@ -1,0 +1,21 @@
+name: Verify restored route layout
+on:
+  push:
+    branches: [codex/restore-route-layout]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: dart format lib/screens/home_shell_v3.dart lib/screens/route_planner_screen.dart
+      - run: flutter analyze --no-fatal-infos --no-fatal-warnings lib/screens/home_shell_v3.dart lib/screens/route_planner_screen.dart lib/screens/today_plan_screen.dart lib/screens/smart_plan_screen.dart lib/screens/collaborative_plans_screen.dart lib/screens/travel_plan_detail_screen.dart
+      - run: flutter test test/route_itinerary_test.dart test/profile_identity_test.dart test/profile_content_navigation_test.dart
