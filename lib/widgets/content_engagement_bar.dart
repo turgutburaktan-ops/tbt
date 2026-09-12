@@ -444,7 +444,7 @@ class ContentEngagementBar extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             IconButton(
-              tooltip: docs == null ? 'Yorumlar' : '${docs.length} yorum',
+              tooltip: docs == null || docs.isEmpty ? 'Yorumlar' : '${docs.length} yorum',
               visualDensity: VisualDensity.compact,
               onPressed: contentId.trim().isEmpty ? null : () => _comments(context),
               icon: docs != null && docs.isNotEmpty
@@ -452,7 +452,7 @@ class ContentEngagementBar extends StatelessWidget {
                   : const Icon(Icons.chat_bubble_outline_rounded,
                       size: 25, color: Colors.white),
             ),
-            if (docs != null)
+            if (docs != null && docs.isNotEmpty)
               Text('${docs.length}', style: const TextStyle(
                 color: Colors.white, fontSize: 12, fontWeight: FontWeight.w800)),
           ],
