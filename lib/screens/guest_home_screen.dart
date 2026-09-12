@@ -518,10 +518,9 @@ class _GuestPostCard extends StatelessWidget {
               child: Text.rich(
                 TextSpan(
                   children: [
-                    TextSpan(
-                      text: '$userName ',
-                      style: const TextStyle(fontWeight: FontWeight.w900),
-                    ),
+                    WidgetSpan(alignment: PlaceholderAlignment.middle,
+                      child: ProfileNameLink(userId: (data['userId'] ?? '').toString(), compact: true,
+                        child: Text('$userName ', style: const TextStyle(fontWeight: FontWeight.w900)))),
                     TextSpan(
                       text: caption,
                       style: const TextStyle(

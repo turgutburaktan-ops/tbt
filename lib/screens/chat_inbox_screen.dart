@@ -471,7 +471,7 @@ class _ThreadTile extends StatelessWidget {
               ],
             ],
           ),
-          subtitle: Text(
+          subtitle: ProfileNameLink(userId: thread.lastMessage.isEmpty && username.isNotEmpty ? otherUserId : '', compact: true, child: Text(
             thread.lastMessage.isEmpty
                 ? (username.isEmpty ? 'Sohbeti aç' : '@$username')
                 : thread.lastMessage,
@@ -481,7 +481,7 @@ class _ThreadTile extends StatelessWidget {
               color: unread ? Colors.white : Colors.white54,
               fontWeight: unread ? FontWeight.w700 : FontWeight.w400,
             ),
-          ),
+          )),
           trailing: Badge(
             isLabelVisible: unread,
             backgroundColor: const Color(0xFF9FC7FF),

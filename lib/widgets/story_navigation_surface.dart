@@ -25,7 +25,6 @@ class StoryNavigationSurface extends StatelessWidget {
       },
       onLongPressStart: (_) => onPause(),
       onLongPressEnd: (_) => onResume(),
-      onLongPressCancel: onResume,
       child: child,
     ),
   );

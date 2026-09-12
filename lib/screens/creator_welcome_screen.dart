@@ -1,3 +1,4 @@
+import '../widgets/profile_name_link.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -106,12 +107,12 @@ class _CreatorWelcomeScreenState extends State<CreatorWelcomeScreen> {
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-          Text(
+          ProfileNameLink(userId: widget.enrollment ? '' : widget.id, compact: true, child: Text(
             widget.enrollment
                 ? 'Creator davetin'
                 : (_data?['name'] ?? 'Creator ile keşfet').toString(),
             style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-          ),
+          )),
           const SizedBox(height: 12),
           Text(
             widget.enrollment
@@ -201,3 +202,4 @@ class _CreatorWelcomeScreenState extends State<CreatorWelcomeScreen> {
     );
   }
 }
+

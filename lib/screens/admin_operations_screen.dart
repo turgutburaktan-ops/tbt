@@ -138,10 +138,10 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                                 style: const TextStyle(color: Colors.white54),
                               ),
                               const SizedBox(height: 16),
-                              _InfoRow(
+                              ProfileNameLink(userId: doc.id, compact: true, child: _InfoRow(
                                 'Kullanıcı adı',
                                 username.isEmpty ? '-' : '@$username',
-                              ),
+                              )),
                               _InfoRow(
                                 'E-posta',
                                 (d['email'] ?? '-').toString(),

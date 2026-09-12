@@ -696,7 +696,7 @@ class _CreatorAdminDetailScreenState extends State<CreatorAdminDetailScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFF0B172A),
       appBar: AppBar(
-        title: Text('${p['name'] ?? 'Creator istatistikleri'}'),
+        title: ProfileNameLink(userId: widget.uid, compact: true, child: Text('${p['name'] ?? 'Creator istatistikleri'}')),
         actions: [
           IconButton(
             onPressed: _busy ? null : () => _load(),

@@ -781,7 +781,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
                                     ),
                                   ),
                                 ),
-                                title: ProfileNameLink(userId: (x['userId'] ?? '').toString(), compact: true, child: Text(
+                                title: ProfileNameLink(userId: (x['userId'] ?? x['id'] ?? '').toString(), compact: true, child: Text(
                                   (x['userName'] ?? 'Kullanıcı').toString(),
                                   style: const TextStyle(
                                     fontWeight: FontWeight.w800,
