@@ -1,0 +1,20 @@
+name: Profile and iOS interaction check
+on:
+  push:
+    branches: [codex/profile-ios-interactions]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter analyze --no-fatal-infos --no-fatal-warnings lib/widgets/description_field.dart lib/widgets/profile_photo_card.dart lib/widgets/profile_name_link.dart lib/widgets/content_engagement_bar.dart lib/screens/profile_page_v2.dart lib/screens/user_profile_screen.dart lib/screens/create_post_screen.dart lib/screens/camera_video_post_screen.dart test/profile_ios_interaction_test.dart
+      - run: flutter test test/profile_ios_interaction_test.dart test/profile_identity_test.dart test/profile_content_navigation_test.dart

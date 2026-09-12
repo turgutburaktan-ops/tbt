@@ -1,3 +1,4 @@
+import '../widgets/description_field.dart';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -144,6 +145,7 @@ class _CameraVideoPostScreenState extends State<CameraVideoPostScreen> {
         title: Text(widget.isReel ? 'Reels Paylaş' : 'Video Paylaş'),
       ),
       body: ListView(
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
         padding: const EdgeInsets.fromLTRB(18, 16, 18, 36),
         children: [
           ClipRRect(
@@ -194,7 +196,7 @@ class _CameraVideoPostScreenState extends State<CameraVideoPostScreen> {
             ),
           ),
           const SizedBox(height: 14),
-          TextField(
+          DescriptionField(
             controller: _captionController,
             maxLength: 500,
             minLines: 3,
@@ -255,3 +257,4 @@ class _CameraVideoPostScreenState extends State<CameraVideoPostScreen> {
     );
   }
 }
+

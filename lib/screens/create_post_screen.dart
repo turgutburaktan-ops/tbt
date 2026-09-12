@@ -1,3 +1,4 @@
+import '../widgets/description_field.dart';
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -294,7 +295,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
         const SizedBox(height: 12),
         OutlinedButton.icon(onPressed: _gettingLocation ? null : _getLocation, icon: _gettingLocation ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.my_location), label: Text(_latitude == null ? 'Konum ekle' : 'Konum eklendi')),
         const SizedBox(height: 16),
-        TextField(controller: _captionController, minLines: 3, maxLines: 7, maxLength: 500, style: const TextStyle(color: Colors.white), decoration: InputDecoration(labelText: 'Açıklama', alignLabelWithHint: true, border: OutlineInputBorder(borderRadius: BorderRadius.circular(18)))),
+        DescriptionField(controller: _captionController, minLines: 3, maxLines: 7, maxLength: 500, style: const TextStyle(color: Colors.white), decoration: InputDecoration(labelText: 'Açıklama', alignLabelWithHint: true, border: OutlineInputBorder(borderRadius: BorderRadius.circular(18)))),
         Row(children: [TextButton.icon(onPressed: _addTag, icon: const Icon(Icons.alternate_email), label: const Text('Kişi etiketle')), const Spacer(), Text('${_captionController.text.length}/500', style: const TextStyle(color: Colors.white38, fontSize: 12))]),
         if (_taggedUsers.isNotEmpty) Wrap(spacing: 8, runSpacing: 8, children: _taggedUsers.map((u) => InputChip(label: Text(u['name'] ?? 'Kullanıcı'), onDeleted: () => _removeTag(u))).toList()),
         const SizedBox(height: 22),
@@ -303,4 +304,5 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     );
   }
 }
+
 
