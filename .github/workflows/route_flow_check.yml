@@ -1,0 +1,32 @@
+name: Route flow checks
+on:
+  push:
+    branches: [codex/personal-profile-default]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: route-flow-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  route:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter analyze --no-fatal-infos --no-fatal-warnings lib/screens/route_create_screen.dart lib/screens/route_sharing_screen.dart lib/screens/route_planner_screen.dart lib/screens/home_shell_v3.dart lib/screens/travel_plan_detail_screen.dart lib/screens/public_travel_plans_screen.dart lib/screens/travel_plans_screen.dart lib/services/route_itinerary_service.dart lib/services/travel_plan_service.dart lib/widgets/route_road_summary.dart
+      - run: flutter test test/route_itinerary_test.dart test/route_create_test.dart test/profile_identity_test.dart
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm --prefix functions install --ignore-scripts --no-package-lock && npm install -g firebase-tools
+      - run: firebase emulators:exec --only firestore --project demo-tbt "node tool/test_route_participation.cjs" --non-interactive

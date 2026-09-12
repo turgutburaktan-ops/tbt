@@ -1,3 +1,5 @@
+import 'route_sharing_screen.dart';
+import '../widgets/route_road_summary.dart';
 import '../models/nearby_venue.dart';
 import 'business_profile_screen.dart';
 import '../widgets/tbt_dialog.dart';
@@ -40,21 +42,53 @@ class _TravelPlanDetailScreenState extends State<TravelPlanDetailScreen> {
 
   Future<void> _changeStart(DateTime current) async {
     final now = DateTime.now();
-    final date = await showDatePicker(context: context, initialDate: current.isBefore(now) ? now : current,
-      firstDate: DateTime(now.year, now.month, now.day), lastDate: now.add(const Duration(days:365)));
+    final date = await showDatePicker(
+      context: context,
+      initialDate: current.isBefore(now) ? now : current,
+      firstDate: DateTime(now.year, now.month, now.day),
+      lastDate: now.add(const Duration(days: 365)),
+    );
     if (date == null || !mounted) return;
-    final time = await showTimePicker(context: context, initialTime: TimeOfDay.fromDateTime(current));
+    final time = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(current),
+    );
     if (time == null || !mounted) return;
-    final start = DateTime(date.year, date.month, date.day, time.hour, time.minute);
+    final start = DateTime(
+      date.year,
+      date.month,
+      date.day,
+      time.hour,
+      time.minute,
+    );
     if (start.isBefore(DateTime.now())) return;
     try {
-      await FirebaseFirestore.instance.collection('travel_plans').doc(plan.id).update({'startAt': Timestamp.fromDate(start), 'updatedAt': FieldValue.serverTimestamp()});
-    } catch (_) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Başlangıç saati güncellenemedi.'))); }
+      await FirebaseFirestore.instance
+          .collection('travel_plans')
+          .doc(plan.id)
+          .update({
+            'startAt': Timestamp.fromDate(start),
+            'updatedAt': FieldValue.serverTimestamp(),
+          });
+    } catch (_) {
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Başlangıç saati güncellenemedi.')),
+        );
+    }
   }
 
   void _openVenueStop(Map<String, dynamic> stop) {
     final venue = stop['venue'];
-    if (venue is Map) Navigator.push(context, MaterialPageRoute(builder: (_) => BusinessProfileScreen(venue: NearbyVenue.fromJson(Map<String, dynamic>.from(venue)))));
+    if (venue is Map)
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => BusinessProfileScreen(
+            venue: NearbyVenue.fromJson(Map<String, dynamic>.from(venue)),
+          ),
+        ),
+      );
   }
 
   Future<void> _renamePlan() async {
@@ -160,7 +194,10 @@ class _TravelPlanDetailScreenState extends State<TravelPlanDetailScreen> {
   }
 
   Future<void> _openRoute() async {
-    final latest = await FirebaseFirestore.instance.collection('travel_plans').doc(plan.id).get();
+    final latest = await FirebaseFirestore.instance
+        .collection('travel_plans')
+        .doc(plan.id)
+        .get();
     final current = TravelPlan.fromDoc(latest);
     final spots = await TravelPlanService.instance.resolveRouteSpots(current);
     if (!mounted) return;
@@ -173,7 +210,19 @@ class _TravelPlanDetailScreenState extends State<TravelPlanDetailScreen> {
     await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => RoutePlannerScreen(initialSpots: spots, initialUseCurrentLocation: current.dayPlan.isEmpty, initialTransport: current.transport),
+        builder: (_) => RoutePlannerScreen(
+          routeId: current.ownerId == FirebaseAuth.instance.currentUser?.uid
+              ? current.id
+              : null,
+          initialTitle: current.title,
+          city: current.city,
+          durationHours: current.durationHours,
+          budget: current.budget,
+          interests: current.interests,
+          initialSpots: spots,
+          initialUseCurrentLocation: false,
+          initialTransport: current.transport,
+        ),
       ),
     );
   }
@@ -242,7 +291,7 @@ class _TravelPlanDetailScreenState extends State<TravelPlanDetailScreen> {
           ],
           bottom: TabBar(
             tabs: [
-              const Tab(text: 'Plan'),
+              const Tab(text: 'Rota'),
               if (member) const Tab(text: 'Grup'),
               const Tab(text: 'Anılar'),
             ],
@@ -293,8 +342,12 @@ class _TravelPlanDetailScreenState extends State<TravelPlanDetailScreen> {
           data['meetingPoint'] as Map? ?? const {},
         );
         final hasPoint = point['latitude'] is num && point['longitude'] is num;
-        final start = ((data['startAt'] as Timestamp?)?.toDate() ?? plan.startAt).toLocal();
-        final dayPlan = Map<String, dynamic>.from(data['dayPlan'] as Map? ?? {});
+        final start =
+            ((data['startAt'] as Timestamp?)?.toDate() ?? plan.startAt)
+                .toLocal();
+        final dayPlan = Map<String, dynamic>.from(
+          data['dayPlan'] as Map? ?? {},
+        );
         return ListView(
           padding: const EdgeInsets.fromLTRB(14, 14, 14, 28),
           children: [
@@ -344,26 +397,33 @@ class _TravelPlanDetailScreenState extends State<TravelPlanDetailScreen> {
                     style: const TextStyle(color: AppColors.textMuted),
                   ),
                   const SizedBox(height: 14),
-                  if (dayPlan.isNotEmpty) Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: Text('${dayPlan['people']} kişi · kişi başı hedef ${dayPlan['budgetPerPerson']} TL. Süre ve mesafe tahminidir; rota düzenlendiyse yeniden kontrol et.'),
+                  if (dayPlan.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Text(
+                        '${dayPlan['people']} kişi · kişi başı hedef ${dayPlan['budgetPerPerson']} TL. Süre ve mesafe tahminidir; rota düzenlendiyse yeniden kontrol et.',
+                      ),
+                    ),
+                  if (_owned)
+                    TextButton.icon(
+                      onPressed: () => _changeStart(start),
+                      icon: const Icon(Icons.edit_calendar_outlined),
+                      label: const Text('Ortak başlangıç saatini değiştir'),
+                    ),
+                  RouteRoadSummary(
+                    stops: stops,
+                    transport: (data['transport'] ?? plan.transport).toString(),
                   ),
-                  if (_owned) TextButton.icon(onPressed: () => _changeStart(start), icon: const Icon(Icons.edit_calendar_outlined), label: const Text('Ortak başlangıç saatini değiştir')),
+                  RouteParticipation(routeId: plan.id, data: data),
                   Wrap(
                     spacing: 16,
                     runSpacing: 10,
                     children: [
                       _Metric(
-                        Icons.route_rounded,
-                        dayPlan['routeChanged'] == true ? 'Rotayı yeniden hesapla' : '${plan.distanceKm.toStringAsFixed(1)} km',
-                      ),
-                      _Metric(
-                        Icons.schedule_rounded,
-                        dayPlan['routeChanged'] == true ? 'Süre güncellenmeli' : '${plan.travelMinutes} dk yol',
-                      ),
-                      _Metric(
                         Icons.payments_outlined,
-                        dayPlan.isNotEmpty ? 'Fiyat teyidi gerekli' : '≈ ${plan.estimatedBudget} TL',
+                        dayPlan.isNotEmpty
+                            ? 'Fiyat teyidi gerekli'
+                            : '≈ ${plan.estimatedBudget} TL',
                       ),
                       if (plan.weatherSummary.isNotEmpty)
                         _Metric(Icons.cloud_outlined, plan.weatherSummary),
@@ -385,7 +445,7 @@ class _TravelPlanDetailScreenState extends State<TravelPlanDetailScreen> {
                 subtitle: Text(
                   hasPoint
                       ? 'Haritada görmek için karta dokun'
-                      : 'Plan başlamadan önce buluşacağınız yeri seçin',
+                      : 'Rota başlamadan önce buluşacağınız yeri seçin',
                 ),
                 onTap: hasPoint
                     ? () => _openMeetingPoint(point)
@@ -449,7 +509,9 @@ class _TravelPlanDetailScreenState extends State<TravelPlanDetailScreen> {
                   child: ListTile(
                     leading: CircleAvatar(child: Text('${index + 1}')),
                     title: Text(stops[index]['name'].toString()),
-                    onTap: stops[index]['venue'] is Map ? () => _openVenueStop(stops[index]) : null,
+                    onTap: stops[index]['venue'] is Map
+                        ? () => _openVenueStop(stops[index])
+                        : null,
                     subtitle: Text(
                       index == 0 ? 'Başlangıç durağı' : 'Sonraki durak',
                     ),
@@ -495,10 +557,15 @@ class _TravelPlanDetailScreenState extends State<TravelPlanDetailScreen> {
                 ),
               ),
             const SizedBox(height: 12),
-            ...stops.where((stop) => stop['venue'] is Map).map((stop) => OutlinedButton.icon(
-              onPressed: () => _openVenueStop(stop), icon: const Icon(Icons.storefront_outlined),
-              label: Text('${stop['name']} · Menü ve rezervasyon'),
-            )),
+            ...stops
+                .where((stop) => stop['venue'] is Map)
+                .map(
+                  (stop) => OutlinedButton.icon(
+                    onPressed: () => _openVenueStop(stop),
+                    icon: const Icon(Icons.storefront_outlined),
+                    label: Text('${stop['name']} · Menü ve rezervasyon'),
+                  ),
+                ),
             FilledButton.icon(
               onPressed: _openRoute,
               icon: const Icon(Icons.map_rounded),
@@ -519,16 +586,6 @@ class _TravelPlanDetailScreenState extends State<TravelPlanDetailScreen> {
               icon: const Icon(Icons.offline_pin_outlined),
               label: const Text('Çevrimdışı Kullanmak İçin İndir'),
             ),
-            if (_owned)
-              SwitchListTile(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 4),
-                value: _public,
-                onChanged: _setPublic,
-                title: const Text('Hazır rotalarda yayınla'),
-                subtitle: const Text(
-                  'Diğer kullanıcılar rotanı bulup puanlayabilir.',
-                ),
-              ),
           ],
         );
       },
@@ -649,8 +706,19 @@ class _PlanGroupTabState extends State<_PlanGroupTab> {
     Map<String, dynamic> proposal,
   ) async {
     if (proposal['stopSnapshot'] is Map) {
-      try { await TravelPlanCollaborationService.instance.acceptDayStopProposal(widget.plan.id, proposalId); }
-      catch (error) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error.toString().replaceFirst('Exception: ', '')))); }
+      try {
+        await TravelPlanCollaborationService.instance.acceptDayStopProposal(
+          widget.plan.id,
+          proposalId,
+        );
+      } catch (error) {
+        if (mounted)
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(error.toString().replaceFirst('Exception: ', '')),
+            ),
+          );
+      }
       return;
     }
     final spotId = (proposal['spotId'] ?? '').toString();
@@ -765,10 +833,23 @@ class _PlanGroupTabState extends State<_PlanGroupTab> {
                   child: ListTile(
                     title: Text((data['text'] ?? '').toString()),
                     subtitle: accepted ? const Text('Rotaya eklendi') : null,
-                    onTap: data['stopSnapshot'] is Map && (data['stopSnapshot'] as Map)['venue'] is Map ? () {
-                      final venue = Map<String, dynamic>.from((data['stopSnapshot'] as Map)['venue'] as Map);
-                      Navigator.push(context, MaterialPageRoute(builder: (_) => BusinessProfileScreen(venue: NearbyVenue.fromJson(venue))));
-                    } : null,
+                    onTap:
+                        data['stopSnapshot'] is Map &&
+                            (data['stopSnapshot'] as Map)['venue'] is Map
+                        ? () {
+                            final venue = Map<String, dynamic>.from(
+                              (data['stopSnapshot'] as Map)['venue'] as Map,
+                            );
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => BusinessProfileScreen(
+                                  venue: NearbyVenue.fromJson(venue),
+                                ),
+                              ),
+                            );
+                          }
+                        : null,
                     trailing: Wrap(
                       spacing: 2,
                       children: [
@@ -803,7 +884,7 @@ class _PlanGroupTabState extends State<_PlanGroupTab> {
           },
         ),
         const SizedBox(height: 20),
-        const Text('Plan sohbeti', style: _titleStyle),
+        const Text('Rota sohbeti', style: _titleStyle),
         const SizedBox(height: 8),
         SizedBox(
           height: 300,

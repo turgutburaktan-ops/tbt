@@ -18,7 +18,7 @@ class TravelPlanService {
 
   User _requireUser() {
     final user = _auth.currentUser;
-    if (user == null) throw Exception('Plan kaydetmek için giriş yapmalısın.');
+    if (user == null) throw Exception('Rota kaydetmek için giriş yapmalısın.');
     return user;
   }
 
@@ -62,7 +62,7 @@ class TravelPlanService {
       'ownerName': (user.displayName ?? '').trim().isEmpty
           ? 'TBT kullanıcısı'
           : user.displayName!.trim(),
-      'title': title.trim().isEmpty ? '$city gezi planı' : title.trim(),
+      'title': title.trim().isEmpty ? '$city rotası' : title.trim(),
       'city': city,
       'area': area,
       'mealPreferences': mealPreferences,
@@ -82,8 +82,15 @@ class TravelPlanService {
               'latitude': spot.latitude,
               'longitude': spot.longitude,
               'category': spot.category,
+              'description': spot.description,
+              'imageUrl': spot.imageUrl,
               'bestTime': spot.bestTime,
-              ...{for (final detail in stopDetails.where((d) => d['id'] == spot.id)) ...detail},
+              ...{
+                for (final detail in stopDetails.where(
+                  (d) => d['id'] == spot.id,
+                ))
+                  ...detail,
+              },
             },
           )
           .toList(growable: false),
@@ -102,6 +109,109 @@ class TravelPlanService {
     return reference.id;
   }
 
+  Future<void> updateRoutePreferences(
+    String id,
+    String transport,
+    String note,
+  ) async {
+    _requireUser();
+    await _firestore.collection('travel_plans').doc(id).update({
+      'transport': transport,
+      'routeNote': note,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  Future<void> configureSharing(
+    String id, {
+    required bool isPublic,
+    required bool together,
+    bool privateOnly = false,
+    DateTime? start,
+    Map<String, dynamic>? meetingPoint,
+    int? limit,
+  }) async {
+    final uid = _requireUser().uid;
+    final ref = _firestore.collection('travel_plans').doc(id);
+    await _firestore.runTransaction((tx) async {
+      final data = (await tx.get(ref)).data();
+      if (data == null || data['ownerId'] != uid)
+        throw Exception('Rota sahibi gerekli.');
+      if (together &&
+          (!isPublic ||
+              start == null ||
+              !start.isAfter(DateTime.now()) ||
+              meetingPoint == null))
+        throw Exception('Tarih, saat ve buluşma noktası gerekli.');
+      if (limit != null &&
+          (limit < 2 ||
+              limit > 60 ||
+              limit < (data['memberIds'] as List).length))
+        throw Exception('Kişi sınırı mevcut katılımcı sayısından az olamaz.');
+      tx.update(ref, {
+        'isPublic': isPublic,
+        'joinEnabled': together,
+        'participantLimit': limit ?? 60,
+        if (privateOnly) 'memberIds': [uid],
+        if (together) 'startAt': Timestamp.fromDate(start!),
+        if (together) 'meetingPoint': meetingPoint,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    });
+  }
+
+  Future<void> requestJoin(String id) async {
+    final user = _requireUser();
+    final ref = _firestore.collection('travel_plans').doc(id);
+    await _firestore.runTransaction((tx) async {
+      final d = (await tx.get(ref)).data();
+      if (d == null ||
+          d['isPublic'] != true ||
+          d['joinEnabled'] != true ||
+          !(d['startAt'] as Timestamp).toDate().isAfter(DateTime.now()))
+        throw Exception('Bu rota katılıma açık değil.');
+      if ((d['memberIds'] as List).length >=
+          (d['participantLimit'] as num? ?? 60))
+        throw Exception('Rota dolu.');
+      tx.set(ref.collection('join_requests').doc(user.uid), {
+        'userId': user.uid,
+        'name': user.displayName ?? 'TBT kullanıcısı',
+        'status': 'pending',
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    });
+  }
+
+  Future<void> reviewJoin(String id, String applicant, bool accept) async {
+    final uid = _requireUser().uid;
+    final ref = _firestore.collection('travel_plans').doc(id);
+    final request = ref.collection('join_requests').doc(applicant);
+    await _firestore.runTransaction((tx) async {
+      final d = (await tx.get(ref)).data();
+      final r = (await tx.get(request)).data();
+      if (d == null || d['ownerId'] != uid || r?['status'] != 'pending')
+        throw Exception('Katılım isteği artık geçerli değil.');
+      final members = List<String>.from(d['memberIds']);
+      if (accept && !members.contains(applicant)) {
+        if (d['joinEnabled'] != true ||
+            d['isPublic'] != true ||
+            !(d['startAt'] as Timestamp).toDate().isAfter(DateTime.now()))
+          throw Exception('Rota katılıma kapalı.');
+        if (members.length >= (d['participantLimit'] as num? ?? 60))
+          throw Exception('Rota dolu.');
+        members.add(applicant);
+        tx.update(ref, {
+          'memberIds': members,
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+      }
+      tx.update(request, {
+        'status': accept ? 'accepted' : 'rejected',
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    });
+  }
+
   Future<void> invite({
     required String planId,
     required String planTitle,
@@ -112,9 +222,17 @@ class TravelPlanService {
     if (ids.isEmpty) return;
     final batch = _firestore.batch();
     final plan = _firestore.collection('travel_plans').doc(planId);
-    batch.update(plan, {
-      'memberIds': FieldValue.arrayUnion(ids.toList()),
-      'updatedAt': FieldValue.serverTimestamp(),
+    await _firestore.runTransaction((tx) async {
+      final d = (await tx.get(plan)).data();
+      if (d == null || d['ownerId'] != user.uid)
+        throw Exception('Arkadaşları yalnızca rota sahibi davet edebilir.');
+      final members = {...List<String>.from(d['memberIds']), ...ids};
+      if (members.length > (d['participantLimit'] as num? ?? 60))
+        throw Exception('Rota kişi sınırı aşılıyor.');
+      tx.update(plan, {
+        'memberIds': members.toList(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
     });
     for (final id in ids) {
       final notification = _firestore
@@ -124,8 +242,8 @@ class TravelPlanService {
           .doc();
       batch.set(notification, {
         'type': 'travel_plan_invite',
-        'title': 'Gezi planına davet edildin',
-        'body': '$planTitle planını Planla bölümünde görebilirsin.',
+        'title': 'Rotaya davet edildin',
+        'body': '$planTitle rotasını Rota bölümünde görebilirsin.',
         'actorId': user.uid,
         'planId': planId,
         'read': false,
@@ -211,6 +329,8 @@ class TravelPlanService {
           'latitude': spot.latitude,
           'longitude': spot.longitude,
           'category': spot.category,
+          'description': spot.description,
+          'imageUrl': spot.imageUrl,
           'bestTime': spot.bestTime,
         },
       ]),
@@ -281,12 +401,15 @@ class TravelPlanService {
     final stops = await resolveSpots(plan);
     final lat = (plan.dayPlan['originLatitude'] as num?)?.toDouble();
     final lon = (plan.dayPlan['originLongitude'] as num?)?.toDouble();
-    if (lat == null || lon == null || plan.dayPlan['returnIncluded'] != true) return stops;
+    if (lat == null || lon == null || plan.dayPlan['returnIncluded'] != true)
+      return stops;
     return dayPlanRouteStops(stops, lat, lon, plan.city);
   }
 
   Future<List<PhotoSpot>> resolveSpots(TravelPlan plan) async {
-    final all = await SpotRepository.instance.loadSpots();
+    final all = plan.stopSnapshots.isNotEmpty
+        ? <PhotoSpot>[]
+        : await SpotRepository.instance.loadSpots();
     final byId = {for (final spot in all) spot.id: spot};
     final snapshots = {
       for (final item in plan.stopSnapshots)
@@ -307,7 +430,8 @@ class TravelPlanService {
             rating: 0,
             bestTime: (item['bestTime'] ?? '').toString(),
             angle: '',
-            imageUrl: '',
+            imageUrl: (item['imageUrl'] ?? '').toString(),
+            description: (item['description'] ?? '').toString(),
             category: (item['category'] ?? 'Mekan').toString(),
           );
         })
