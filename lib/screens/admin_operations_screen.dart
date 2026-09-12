@@ -1,3 +1,4 @@
+import '../widgets/profile_name_link.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -105,17 +106,17 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                                 : name.characters.first.toUpperCase(),
                           ),
                         ),
-                        title: Text(
+                        title: ProfileNameLink(userId: doc.id, compact: true, child: Text(
                           name,
                           style: const TextStyle(fontWeight: FontWeight.w900),
-                        ),
-                        subtitle: Text(
+                        )),
+                        subtitle: ProfileNameLink(userId: doc.id, compact: true, child: Text(
                           [
                             if (username.isNotEmpty) '@$username',
                             if (trust.isNotEmpty) 'Güven: $trust',
                             if (banned) 'BANLI',
                           ].join(' • '),
-                        ),
+                        )),
                         trailing: const Icon(Icons.chevron_right_rounded),
                         onTap: () => showModalBottomSheet<void>(
                           context: context,
@@ -124,13 +125,13 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                           builder: (_) => ListView(
                             padding: const EdgeInsets.all(18),
                             children: [
-                              Text(
+                              ProfileNameLink(userId: doc.id, compact: true, child: Text(
                                 name,
                                 style: const TextStyle(
                                   fontSize: 22,
                                   fontWeight: FontWeight.w900,
                                 ),
-                              ),
+                              )),
                               const SizedBox(height: 8),
                               Text(
                                 'UID: ${doc.id}',

@@ -1,3 +1,4 @@
+import '../widgets/profile_name_link.dart';
 import 'broadcast_detail_screen.dart';
 import 'reservation_inbox_screen.dart';
 import 'business_web_portal_screen.dart';
@@ -354,7 +355,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  ProfileNameLink(userId: item.type == 'tbt_broadcast' ? '' : item.actorId, compact: true, child: Text(
                     item.title.isEmpty ? 'Bildirim' : item.title,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
@@ -364,7 +365,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                       height: 1.28,
                       fontWeight: FontWeight.w800,
                     ),
-                  ),
+                  )),
                   if (item.type == 'tbt_broadcast' && item.imageUrl.isNotEmpty)
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 8),

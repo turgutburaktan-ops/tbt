@@ -1,3 +1,4 @@
+import 'profile_name_link.dart';
 import 'tbt_dialog.dart';
 
 import 'package:firebase_auth/firebase_auth.dart';
@@ -493,13 +494,13 @@ class _MeetupCardState extends State<_MeetupCard> {
                       style: const TextStyle(fontWeight: FontWeight.w900),
                     ),
                     const SizedBox(height: 3),
-                    Text(
+                    ProfileNameLink(userId: meetup.hostId, compact: true, child: Text(
                       '${meetup.hostName} • ${_dateTimeText(meetup.startsAt)}',
                       style: const TextStyle(
                         color: Colors.white60,
                         fontSize: 12.5,
                       ),
-                    ),
+                    )),
                   ],
                 ),
               ),

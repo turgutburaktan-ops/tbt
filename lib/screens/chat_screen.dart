@@ -1,3 +1,4 @@
+import '../widgets/profile_name_link.dart';
 import 'user_profile_screen.dart';
 
 import 'dart:async';
@@ -1658,13 +1659,13 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                                                 left: 8,
                                                 top: 6,
                                               ),
-                                              child: Text(
+                                              child: ProfileNameLink(userId: message.senderId, compact: true, child: Text(
                                                 message.senderName,
                                                 style: const TextStyle(
                                                   color: _accent,
                                                   fontSize: 11,
                                                 ),
-                                              ),
+                                              )),
                                             ),
                                           _messageBubble(
                                             message: message,

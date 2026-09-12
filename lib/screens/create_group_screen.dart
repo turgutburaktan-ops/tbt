@@ -1,3 +1,4 @@
+import '../widgets/profile_name_link.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -105,7 +106,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                   final selected = _selected.containsKey(doc.id);
                   return ListTile(
                     leading: const CircleAvatar(backgroundColor: const Color(0xFF0D1B30), child: Icon(Icons.person_outline, color: _accent)),
-                    title: Text(name), subtitle: Text((u['username'] ?? '').toString()),
+                    title: ProfileNameLink(userId: doc.id, compact: true, child: Text(name)), subtitle: ProfileNameLink(userId: doc.id, compact: true, child: Text((u['username'] ?? '').toString())),
                     trailing: Icon(selected ? Icons.check_circle : Icons.radio_button_unchecked, color: selected ? _accent : Colors.white38),
                     onTap: () {
                       if (!selected && _selected.length >= 49) {

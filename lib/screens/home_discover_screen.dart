@@ -1,3 +1,4 @@
+import '../widgets/profile_name_link.dart';
 import 'reels_screen.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -618,7 +619,7 @@ class _HomeDiscoverScreenState extends State<HomeDiscoverScreen> {
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(fontWeight: FontWeight.w800),
             ),
-            subtitle: Text(user, maxLines: 1, overflow: TextOverflow.ellipsis),
+            subtitle: ProfileNameLink(userId: (data['userId'] ?? '').toString(), compact: true, child: Text(user, maxLines: 1, overflow: TextOverflow.ellipsis)),
             trailing: const Icon(Icons.chevron_right_rounded),
             onTap: () => _openPostFeed(docs, docs.indexOf(doc)),
           );
