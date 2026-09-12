@@ -84,6 +84,7 @@ class _PublicTravelPlansScreenState extends State<PublicTravelPlansScreen> {
         travelMinutes: plan.travelMinutes,
         estimatedBudget: plan.estimatedBudget,
         dayPlan: plan.dayPlan,
+        routeOrigin: plan.routeOrigin,
         stopDetails: plan.stopSnapshots,
         weatherSummary: plan.weatherSummary,
       );

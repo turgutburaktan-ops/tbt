@@ -90,6 +90,7 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
   List<PhotoSpot> _allSpots = const [];
   final List<PhotoSpot> _stops = [];
   Position? _currentPosition;
+  LatLng? _fixedOrigin;
   bool _loading = true;
   bool _gettingLocation = false;
   bool _useCurrentLocation = true;
@@ -118,6 +119,10 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
     );
     final initialIds = <String>{};
     for (final spot in widget.initialSpots) {
+      if (spot.id == 'route_origin') {
+        _fixedOrigin = LatLng(spot.latitude, spot.longitude);
+        continue;
+      }
       if (initialIds.add(spot.id)) _stops.add(spot);
     }
     if (widget.initialSpot != null) {
@@ -170,6 +175,7 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
       );
       if (!mounted) return;
       setState(() {
+        _fixedOrigin = null;
         _currentPosition = position;
         _useCurrentLocation = true;
         _allSpots = _sortedFromCurrentPosition(_allSpots, position);
@@ -405,7 +411,14 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
   }
 
   Set<Marker> get _markers {
-    final markers = <Marker>{};
+    final markers = <Marker>{
+      if (_fixedOrigin != null)
+        Marker(
+          markerId: const MarkerId('saved_origin'),
+          position: _fixedOrigin!,
+          infoWindow: const InfoWindow(title: 'Başlangıç'),
+        ),
+    };
     final current = _currentPosition;
     if (_useCurrentLocation && current != null) {
       markers.add(
@@ -461,6 +474,7 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
     if (_useCurrentLocation && current != null) {
       points.add(LatLng(current.latitude, current.longitude));
     }
+    if (!_useCurrentLocation && _fixedOrigin != null) points.add(_fixedOrigin!);
     points.addAll(_stops.map((s) => LatLng(s.latitude, s.longitude)));
     return points;
   }
@@ -501,7 +515,11 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
 
   String _legLabel(int index) {
     final legIndex =
-        index - (_useCurrentLocation && _currentPosition != null ? 0 : 1);
+        index -
+        ((_useCurrentLocation && _currentPosition != null) ||
+                _fixedOrigin != null
+            ? 0
+            : 1);
     if (legIndex < 0) return 'Başlangıç';
     if (_routing) return 'Yol hesaplanıyor…';
     if (_road == null || legIndex >= _road!.legs.length)
@@ -614,7 +632,12 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
                 'latitude': _currentPosition!.latitude,
                 'longitude': _currentPosition!.longitude,
               }
-            : null,
+            : _fixedOrigin == null
+            ? null
+            : {
+                'latitude': _fixedOrigin!.latitude,
+                'longitude': _fixedOrigin!.longitude,
+              },
       );
       if (!mounted) return;
       await Navigator.push(
@@ -918,6 +941,9 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
       waypointSpots = _stops.length > 1
           ? _stops.sublist(0, _stops.length - 1)
           : const <PhotoSpot>[];
+    } else if (_fixedOrigin != null) {
+      params['origin'] = '${_fixedOrigin!.latitude},${_fixedOrigin!.longitude}';
+      waypointSpots = _stops.sublist(0, _stops.length - 1);
     } else if (_stops.length > 1) {
       final origin = _stops.first;
       params['origin'] = '${origin.latitude},${origin.longitude}';
@@ -1101,7 +1127,9 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
                         child: Text(
                           _useCurrentLocation && _currentPosition != null
                               ? 'Başlangıç: Konumum'
-                              : 'Başlangıç: İlk çekim noktası',
+                              : _fixedOrigin != null
+                              ? 'Başlangıç: Kaydedilen konum'
+                              : 'Başlangıç: İlk durak',
                           style: const TextStyle(
                             color: Colors.white70,
                             fontWeight: FontWeight.w700,

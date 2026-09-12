@@ -53,6 +53,7 @@ class TravelPlanService {
     String weatherSummary = '',
     bool isPublic = false,
     Map<String, dynamic> dayPlan = const {},
+    Map<String, dynamic> routeOrigin = const {},
     List<Map<String, dynamic>> stopDetails = const [],
   }) async {
     final user = _requireUser();
@@ -65,6 +66,7 @@ class TravelPlanService {
       'title': title.trim().isEmpty ? '$city rotası' : title.trim(),
       'city': city,
       'area': area,
+      'routeOrigin': routeOrigin,
       'mealPreferences': mealPreferences,
       'durationHours': durationHours,
       if (dayPlan.isNotEmpty) 'dayPlan': dayPlan,
