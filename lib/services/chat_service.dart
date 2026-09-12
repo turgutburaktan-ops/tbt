@@ -229,6 +229,24 @@ class ChatService {
     );
   }
 
+  Stream<ChatMessage?> visibleMessage(String threadId, String messageId) {
+    return switchAuthStream<ChatMessage?>(
+      auth: _auth,
+      signedOutValue: null,
+      signedIn: (user) => combineChatSnapshots(
+        _firestore.doc('chat_threads/$threadId/messages/$messageId').snapshots(),
+        _firestore.doc('users/${user.uid}/chat_preferences/$threadId').snapshots(),
+        (message, preferences) {
+          if (!message.exists) return null;
+          final cutoff = (preferences.data()?['deletedAt'] as Timestamp?)?.toDate();
+          if (!visibleAfterChatDeletion(
+              (message.data()?['createdAt'] as Timestamp?)?.toDate(), cutoff)) return null;
+          return ChatMessage.fromDocument(message);
+        },
+      ),
+    );
+  }
+
   Future<void> deleteConversation(String threadId) async {
     await action('deleteConversation', {'threadId': threadId});
   }

@@ -1514,25 +1514,22 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                         children: [
                           _searchBar(),
                           if (thread?.pinnedMessageId != null)
-                            StreamBuilder<
-                              DocumentSnapshot<Map<String, dynamic>>
-                            >(
-                              stream: FirebaseFirestore.instance
-                                  .doc(
-                                    'chat_threads/$_threadId/messages/${thread!.pinnedMessageId}',
-                                  )
-                                  .snapshots(),
-                              builder: (context, snap) => ListTile(
-                                dense: true,
-                                leading: const Icon(Icons.push_pin_outlined),
-                                title: Text(
-                                  (snap.data?.data()?['text'] ??
-                                          'Sabitlenmiş mesaj')
-                                      .toString(),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
+                            StreamBuilder<ChatMessage?>(
+                              stream: ChatService.instance.visibleMessage(
+                                _threadId!, thread!.pinnedMessageId!),
+                              builder: (context, snap) {
+                                final message = snap.data;
+                                if (message == null || _hiddenIds.contains(message.id) ||
+                                    _blockedIds.contains(message.senderId)) {
+                                  return const SizedBox.shrink();
+                                }
+                                return ListTile(
+                                  dense: true,
+                                  leading: const Icon(Icons.push_pin_outlined),
+                                  title: Text(message.text, maxLines: 2,
+                                    overflow: TextOverflow.ellipsis),
+                                );
+                              },
                             ),
                           Expanded(
                             child: StreamBuilder<List<ChatMessage>>(
