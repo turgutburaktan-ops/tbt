@@ -14,3 +14,15 @@ test('event routing and announcement photo remain in standard pushes',()=>{
  const result=payload({type:'tbt_broadcast',imageUrl:'https://example.com/image.jpg'},{...target,modernAndroid:true});
  assert.equal(result.notification.imageUrl,'https://example.com/image.jpg');assert.equal(result.apns.payload.aps.category,undefined);
 });
+
+test('iOS gets an alert push and background reply identifiers for direct and group messages',()=>{
+ for(const type of ['message','group_message']) {
+   const result=payload({type,sourceId:'chat',actorId:'sender'},target);
+   assert.equal(result.apns.headers['apns-push-type'],'alert');
+   assert.equal(result.apns.headers['apns-priority'],'10');
+   assert.ok(result.notification);
+   assert.equal(result.apns.payload.aps.category,'TBT_CHAT');
+   assert.equal(result.data.recipientId,'u');
+   assert.equal(result.data.notificationId,'n');
+ }
+});

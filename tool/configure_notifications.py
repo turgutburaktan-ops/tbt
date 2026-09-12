@@ -36,5 +36,28 @@ elif sys.argv[1] == 'ios':
         end = source.rfind('}')
         source = source[:end] + Path('tool/native_notifications/AppDelegateReply.swift').read_text() + '\n' + source[end:]
         path.write_text(source)
+    # Register actions and Firebase before Flutter starts, including a cold reply launch.
+    source = path.read_text()
+    if '// TBT push setup v2' not in source:
+        marker = '    return super.application(application, didFinishLaunchingWithOptions: launchOptions)'
+        if marker not in source: raise RuntimeError('iOS AppDelegate launch hook not found')
+        setup = '''    // TBT push setup v2
+    if FirebaseApp.app() == nil,
+       Bundle.main.path(forResource: "GoogleService-Info", ofType: "plist") != nil {
+      FirebaseApp.configure()
+    }
+    let replyAction = UNTextInputNotificationAction(identifier: "tbt_reply", title: "Yanıtla",
+      options: [.authenticationRequired], textInputButtonTitle: "Gönder", textInputPlaceholder: "Mesaj")
+    let chatCategory = UNNotificationCategory(identifier: "TBT_CHAT", actions: [replyAction],
+      intentIdentifiers: [], options: [])
+    UNUserNotificationCenter.current().getNotificationCategories { existing in
+      var categories = Set(existing.filter { $0.identifier != "TBT_CHAT" })
+      categories.insert(chatCategory)
+      UNUserNotificationCenter.current().setNotificationCategories(categories)
+    }
+    application.registerForRemoteNotifications()
+'''
+        path.write_text(source.replace(marker, setup + marker, 1))
 else:
     raise RuntimeError('Expected android or ios')
+

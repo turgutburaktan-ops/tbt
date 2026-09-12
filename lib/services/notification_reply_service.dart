@@ -68,6 +68,7 @@ class NotificationReplyService {
                   'Yanıtla',
                   buttonTitle: 'Gönder',
                   placeholder: 'Mesaj',
+                  options: {DarwinNotificationActionOption.authenticationRequired},
                 ),
               ],
             ),
@@ -180,3 +181,4 @@ class NotificationReplyService {
     }
   }
 }
+
