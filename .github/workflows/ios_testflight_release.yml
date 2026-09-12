@@ -3,7 +3,7 @@ name: iOS TestFlight Release
 on:
   workflow_dispatch:
   push:
-    branches: [codex/release-1.0.18-build27]
+    branches: [codex/release-1.0.18-build28]
 
 permissions:
   contents: read
@@ -372,7 +372,7 @@ jobs:
           flutter build ipa \
             --release \
             --build-name=1.0.18 \
-            --build-number=27 \
+            --build-number=28 \
             --export-options-plist=ios/ExportOptions.plist \
             --dart-define="FIREBASE_IOS_API_KEY=$FIREBASE_IOS_API_KEY" \
             --dart-define="FIREBASE_IOS_APP_ID=$FIREBASE_IOS_APP_ID" \
@@ -382,7 +382,7 @@ jobs:
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
         with:
-          name: tbt-ios-ipa-1.0.18-build27
+          name: tbt-ios-ipa-1.0.18-build28
           path: build/ios/ipa/*.ipa
           if-no-files-found: error
           retention-days: 14
