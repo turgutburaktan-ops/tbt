@@ -1,6 +1,6 @@
 const fs=require('node:fs');
 const {initializeTestEnvironment,assertSucceeds,assertFails}=require('@firebase/rules-unit-testing');
-const {doc,setDoc,getDoc,updateDoc,serverTimestamp,Timestamp,collection,query,where,getDocs}=require('firebase/firestore');
+const {doc,setDoc,getDoc,updateDoc,serverTimestamp,Timestamp,collection,query,where,getDocs,deleteDoc}=require('firebase/firestore');
 const {ref,uploadBytes,getBytes}=require('firebase/storage');
 (async()=>{
  const env=await initializeTestEnvironment({projectId:'demo-tbt',firestore:{host:'127.0.0.1',port:8080},storage:{host:'127.0.0.1',port:9199}});
@@ -34,6 +34,10 @@ const {ref,uploadBytes,getBytes}=require('firebase/storage');
   await assertFails(setDoc(doc(db('member'),'travel_plans/social/polls/time/votes/member'),{choice:2,updatedAt:serverTimestamp()}));
   await assertSucceeds(updateDoc(poll,{closed:true}));
   await assertFails(setDoc(doc(db('owner'),'travel_plans/social/polls/time/votes/owner'),{choice:1,updatedAt:serverTimestamp()}));
+  for (const key of ['self','owner','other']) await assertSucceeds(setDoc(doc(db('member'),'travel_plans/social/proposals/'+key),{authorId:'member',text:'Harput',voterIds:[],createdAt:serverTimestamp()}));
+  await assertSucceeds(deleteDoc(doc(db('member'),'travel_plans/social/proposals/self')));
+  await assertSucceeds(deleteDoc(doc(db('owner'),'travel_plans/social/proposals/owner')));
+  await assertFails(deleteDoc(doc(db('outside'),'travel_plans/social/proposals/other')));
   await assertSucceeds(updateDoc(doc(db('owner'),'travel_plans/social'),{memberIds:['owner']}));
   await assertFails(getDoc(doc(db('member'),'travel_plans/social/album/photo')));
   await assertFails(getBytes(ref(st('member'),path)));

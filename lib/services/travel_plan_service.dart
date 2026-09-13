@@ -52,11 +52,16 @@ class TravelPlanService {
     int estimatedBudget = 0,
     String weatherSummary = '',
     bool isPublic = false,
+    String? visibility,
+    Map<String, dynamic> meetingPoint = const {},
     Map<String, dynamic> dayPlan = const {},
     Map<String, dynamic> routeOrigin = const {},
     List<Map<String, dynamic>> stopDetails = const [],
   }) async {
     final user = _requireUser();
+    final audience = visibility ?? (isPublic ? 'public' : 'private');
+    if (!['private', 'followers', 'public'].contains(audience))
+      throw ArgumentError('Invalid visibility');
     final reference = _firestore.collection('travel_plans').doc();
     await reference.set({
       'ownerId': user.uid,
@@ -97,6 +102,8 @@ class TravelPlanService {
           )
           .toList(growable: false),
       'memberIds': [user.uid],
+      if (meetingPoint.isNotEmpty) 'meetingPoint': meetingPoint,
+      'joinEnabled': audience != 'private' && startAt != null,
       'startAt': Timestamp.fromDate(startAt ?? DateTime.now()),
       'hasSchedule': startAt != null,
       'status': 'planned',
@@ -104,8 +111,8 @@ class TravelPlanService {
       'travelMinutes': travelMinutes,
       'estimatedBudget': estimatedBudget,
       'weatherSummary': weatherSummary,
-      'isPublic': isPublic,
-      'visibility': isPublic ? 'public' : 'private',
+      'isPublic': audience == 'public',
+      'visibility': audience,
       'ratingTotal': 0,
       'ratingCount': 0,
       'createdAt': FieldValue.serverTimestamp(),
@@ -114,9 +121,16 @@ class TravelPlanService {
     return reference.id;
   }
 
-  Future<TravelPlan> read(String id) async => TravelPlan.fromDoc(
-    await _firestore.collection('travel_plans').doc(id).get(),
-  );
+  Future<TravelPlan> read(String id, {bool preferCache = false}) async {
+    final ref = _firestore.collection('travel_plans').doc(id);
+    if (preferCache) {
+      try {
+        final cached = await ref.get(const GetOptions(source: Source.cache));
+        if (cached.exists) return TravelPlan.fromDoc(cached);
+      } catch (_) {}
+    }
+    return TravelPlan.fromDoc(await ref.get());
+  }
 
   Future<void> setOptions(
     String id, {

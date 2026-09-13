@@ -593,7 +593,9 @@ service cloud.firestore {
             request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','updatedAt']) &&
             request.resource.data.status == 'accepted')
         );
-        allow delete: if signedIn() && resource.data.authorId == request.auth.uid;
+        allow delete: if signedIn() &&
+          (resource.data.authorId == request.auth.uid ||
+           get(/databases/$(database)/documents/travel_plans/$(planId)).data.ownerId == request.auth.uid);
       }
       match /live_states/{uid} {
         allow read: if signedIn() && get(/databases/$(database)/documents/travel_plans/$(planId)).data.memberIds.hasAny([request.auth.uid]);

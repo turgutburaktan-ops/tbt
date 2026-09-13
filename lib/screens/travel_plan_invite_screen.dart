@@ -1,10 +1,12 @@
 import '../widgets/profile_name_link.dart';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../services/travel_plan_service.dart';
 import '../theme/app_theme.dart';
+import '../services/user_facing_error.dart';
 
 class TravelPlanInviteScreen extends StatefulWidget {
   final String planId;
@@ -17,8 +19,7 @@ class TravelPlanInviteScreen extends StatefulWidget {
   });
 
   @override
-  State<TravelPlanInviteScreen> createState() =>
-      _TravelPlanInviteScreenState();
+  State<TravelPlanInviteScreen> createState() => _TravelPlanInviteScreenState();
 }
 
 class _TravelPlanInviteScreenState extends State<TravelPlanInviteScreen> {
@@ -26,6 +27,8 @@ class _TravelPlanInviteScreenState extends State<TravelPlanInviteScreen> {
   List<_InviteUser> _users = const [];
   Set<String> _existingMembers = {};
   bool _loading = true;
+  String _query = '';
+  String? _error;
   bool _sending = false;
 
   @override
@@ -53,8 +56,7 @@ class _TravelPlanInviteScreenState extends State<TravelPlanInviteScreen> {
             .doc(widget.planId)
             .get(),
       ]);
-      final following =
-          results[0] as QuerySnapshot<Map<String, dynamic>>;
+      final following = results[0] as QuerySnapshot<Map<String, dynamic>>;
       final plan = results[1] as DocumentSnapshot<Map<String, dynamic>>;
       final ids = following.docs.map((doc) => doc.id).toList();
       final profiles = await Future.wait(
@@ -62,18 +64,20 @@ class _TravelPlanInviteScreenState extends State<TravelPlanInviteScreen> {
           (id) => FirebaseFirestore.instance.collection('users').doc(id).get(),
         ),
       );
-      final users = profiles
-          .where((doc) => doc.exists)
-          .map(
-            (doc) => _InviteUser(
-              id: doc.id,
-              name: (doc.data()?['displayName'] ?? 'TBT kullanıcısı').toString(),
-              username: (doc.data()?['username'] ?? '').toString(),
-              photoUrl: (doc.data()?['photoUrl'] ?? '').toString(),
-            ),
-          )
-          .toList()
-        ..sort((a, b) => a.name.compareTo(b.name));
+      final users =
+          profiles
+              .where((doc) => doc.exists)
+              .map(
+                (doc) => _InviteUser(
+                  id: doc.id,
+                  name: (doc.data()?['displayName'] ?? 'TBT kullanıcısı')
+                      .toString(),
+                  username: (doc.data()?['username'] ?? '').toString(),
+                  photoUrl: (doc.data()?['photoUrl'] ?? '').toString(),
+                ),
+              )
+              .toList()
+            ..sort((a, b) => a.name.compareTo(b.name));
       final members = (plan.data()?['memberIds'] as List<dynamic>? ?? const [])
           .map((id) => id.toString())
           .toSet();
@@ -83,8 +87,12 @@ class _TravelPlanInviteScreenState extends State<TravelPlanInviteScreen> {
         _existingMembers = members;
         _loading = false;
       });
-    } catch (_) {
-      if (mounted) setState(() => _loading = false);
+    } catch (e) {
+      if (mounted)
+        setState(() {
+          _loading = false;
+          _error = userFacingError(e);
+        });
     }
   }
 
@@ -115,15 +123,56 @@ class _TravelPlanInviteScreenState extends State<TravelPlanInviteScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final users = _users
+        .where(
+          (u) => '${u.name} ${u.username}'.toLowerCase().contains(
+            _query.toLowerCase(),
+          ),
+        )
+        .toList();
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(title: const Text('Arkadaşlarını Davet Et')),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
+          : _error != null
+          ? Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(_error!),
+                  TextButton(
+                    onPressed: () {
+                      setState(() {
+                        _error = null;
+                        _loading = true;
+                      });
+                      _load();
+                    },
+                    child: const Text('Tekrar dene'),
+                  ),
+                ],
+              ),
+            )
           : _users.isEmpty
           ? const _EmptyInvites()
           : Column(
               children: [
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: TextField(
+                    decoration: const InputDecoration(
+                      hintText: 'İsim veya kullanıcı adı ara',
+                      prefixIcon: Icon(Icons.search),
+                    ),
+                    onChanged: (v) => setState(() => _query = v),
+                  ),
+                ),
+                if (users.isEmpty)
+                  const Padding(
+                    padding: EdgeInsets.all(16),
+                    child: Text('Aramana uygun kişi bulunamadı.'),
+                  ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
                   child: Align(
@@ -139,9 +188,9 @@ class _TravelPlanInviteScreenState extends State<TravelPlanInviteScreen> {
                 ),
                 Expanded(
                   child: ListView.builder(
-                    itemCount: _users.length,
+                    itemCount: users.length,
                     itemBuilder: (_, index) {
-                      final user = _users[index];
+                      final user = users[index];
                       final invited = _existingMembers.contains(user.id);
                       final selected = _selected.contains(user.id);
                       return CheckboxListTile(
@@ -166,14 +215,22 @@ class _TravelPlanInviteScreenState extends State<TravelPlanInviteScreen> {
                                 )
                               : null,
                         ),
-                        title: ProfileNameLink(userId: user.id, compact: true, child: Text(user.name)),
-                        subtitle: ProfileNameLink(userId: user.id, compact: true, child: Text(
-                          invited
-                              ? 'Zaten planda'
-                              : user.username.isEmpty
-                              ? 'Takip ediyorsun'
-                              : '@${user.username}',
-                        )),
+                        title: ProfileNameLink(
+                          userId: user.id,
+                          compact: true,
+                          child: Text(user.name),
+                        ),
+                        subtitle: ProfileNameLink(
+                          userId: user.id,
+                          compact: true,
+                          child: Text(
+                            invited
+                                ? 'Zaten planda'
+                                : user.username.isEmpty
+                                ? 'Takip ediyorsun'
+                                : '@${user.username}',
+                          ),
+                        ),
                       );
                     },
                   ),

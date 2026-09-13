@@ -389,7 +389,7 @@ class _TravelPlanDetailScreenState extends State<TravelPlanDetailScreen> {
                 },
               ),
               const Text(
-                'Kimler görebilir?',
+                'Kimler katılabilir?',
                 style: TextStyle(color: AppColors.textMuted),
               ),
               for (final v in [
@@ -455,19 +455,15 @@ class _TravelPlanDetailScreenState extends State<TravelPlanDetailScreen> {
             ),
           ),
         );
-      if (!snapshot.hasData)
-        return Scaffold(
-          appBar: AppBar(),
-          body: const Center(child: CircularProgressIndicator()),
-        );
-      if (!snapshot.data!.exists)
+      if (snapshot.hasData && !snapshot.data!.exists) {
         return Scaffold(
           appBar: AppBar(),
           body: const Center(child: Text('Bu rota kaldırılmış.')),
         );
-      _current = TravelPlan.fromDoc(snapshot.data!);
+      }
+      if (snapshot.hasData) _current = TravelPlan.fromDoc(snapshot.data!);
       _title = plan.title;
-      final data = snapshot.data!.data()!;
+      final data = snapshot.data?.data() ?? <String, dynamic>{};
       final member = plan.memberIds.contains(
         FirebaseAuth.instance.currentUser?.uid,
       );
@@ -533,301 +529,336 @@ class _TravelPlanDetailScreenState extends State<TravelPlanDetailScreen> {
               ),
             ],
           ),
-          body: NestedScrollView(
-            headerSliverBuilder: (_, inner) => [
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Text(
-                        plan.title,
-                        style: const TextStyle(
-                          fontSize: 23,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      InkWell(
-                        onTap: _owned
-                            ? () => _act(() => _changeStart(plan.startAt))
-                            : null,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 6),
-                          child: Text(
-                            '${routeDate(plan)} · ${plan.city}',
-                            style: const TextStyle(color: AppColors.textMuted),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Wrap(
-                        spacing: 8,
-                        children: [
-                          for (final mode in ['Araç', 'Yürüyüş', 'Bisiklet'])
-                            ChoiceChip(
-                              avatar: Icon(routeTransportIcon(mode), size: 18),
-                              label: Text(mode),
-                              selected: plan.transport == mode,
-                              onSelected: _owned
-                                  ? (_) => _act(
-                                      () => TravelPlanService.instance
-                                          .setOptions(plan.id, transport: mode),
-                                    )
-                                  : null,
-                            ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      RouteMapPreview(
-                        stops: stops,
-                        transport: plan.transport,
-                        onOpen: () => _act(_openRoute),
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          Expanded(child: RouteMemberRow(ids: plan.memberIds)),
-                          if (_owned)
-                            OutlinedButton.icon(
-                              onPressed: () => Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => TravelPlanInviteScreen(
-                                    planId: plan.id,
-                                    planTitle: plan.title,
-                                  ),
-                                ),
-                              ),
-                              icon: const Icon(Icons.add, size: 18),
-                              label: const Text('Davet et'),
-                            ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      InkWell(
-                        onTap: _owned ? _options : null,
-                        child: Row(
-                          children: [
-                            Icon(
-                              plan.isPublic ? Icons.public : Icons.lock_outline,
-                              size: 16,
-                              color: AppColors.textMuted,
-                            ),
-                            const SizedBox(width: 6),
-                            Expanded(
-                              child: Text(
-                                plan.isPublic
-                                    ? (plan.hasSchedule
-                                          ? 'Herkese açık · Etkinliklerde görünür'
-                                          : 'Herkese açık')
-                                    : plan.visibility == 'followers'
-                                    ? 'Takipçilerime açık'
-                                    : 'Davetlilere özel',
-                                style: const TextStyle(
-                                  color: AppColors.textMuted,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              SliverPersistentHeader(pinned: true, delegate: _RouteTabs()),
-            ],
-            body: TabBarView(
-              children: [
-                ListView(
-                  padding: const EdgeInsets.all(16),
+          body: Column(
+            children: [
+              const _RouteTabBar(),
+              Expanded(
+                child: TabBarView(
                   children: [
-                    if (plan.stopSnapshots.isEmpty && _legacyStops == null)
-                      _legacyError == null
-                          ? const LinearProgressIndicator()
-                          : TextButton(
-                              onPressed: () => setState(() => _legacyKey = ''),
-                              child: Text(_legacyError!),
-                            ),
-                    RouteParticipation(
-                      routeId: plan.id,
-                      data: data,
-                      showSettings: false,
-                    ),
-                    ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      leading: const Icon(Icons.place_outlined),
-                      title: Text(
-                        (point['label'] ?? 'Buluşma noktası ekle').toString(),
-                      ),
-                      onTap: member
-                          ? () => _act(() => _pickMeetingPoint(point))
-                          : point.isNotEmpty
-                          ? () => _act(() => _openMeetingPoint(point))
-                          : null,
-                      trailing: point.isNotEmpty
-                          ? IconButton(
-                              icon: const Icon(Icons.directions_outlined),
-                              onPressed: () =>
-                                  _act(() => _openMeetingPoint(point)),
-                            )
-                          : null,
-                    ),
-                    ReorderableListView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      buildDefaultDragHandles: false,
-                      itemCount: stops.length,
-                      onReorder: (a, b) {
-                        if (!member || (!_owned && !plan.allowMemberEdits))
-                          return;
-                        if (b > a) b--;
-                        final next = [...stops];
-                        next.insert(b, next.removeAt(a));
-                        _act(
-                          () => TravelPlanService.instance.updateStops(
-                            plan.id,
-                            next,
-                          ),
-                        );
-                      },
-                      itemBuilder: (_, i) => Card(
-                        key: ValueKey('${stops[i]['id']}_$i'),
-                        color: AppColors.surface,
-                        child: ListTile(
-                          leading: Row(
-                            mainAxisSize: MainAxisSize.min,
+                    ListView(
+                      padding: const EdgeInsets.all(16),
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              CircleAvatar(
-                                radius: 12,
-                                backgroundColor: AppColors.cyan,
-                                foregroundColor: Colors.black,
-                                child: Text(
-                                  '${i + 1}',
-                                  style: const TextStyle(fontSize: 11),
+                              Text(
+                                plan.title,
+                                style: const TextStyle(
+                                  fontSize: 23,
+                                  fontWeight: FontWeight.w800,
                                 ),
                               ),
-                              const SizedBox(width: 8),
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(8),
-                                child: SizedBox(
-                                  width: 44,
-                                  height: 48,
-                                  child: FirebaseMediaImage(
-                                    imageUrl: (stops[i]['imageUrl'] ?? '')
-                                        .toString(),
-                                    fit: BoxFit.cover,
+                              const SizedBox(height: 6),
+                              InkWell(
+                                onTap: _owned
+                                    ? () =>
+                                          _act(() => _changeStart(plan.startAt))
+                                    : null,
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 6,
                                   ),
+                                  child: Text(
+                                    '${plan.hasSchedule ? routeDate(plan) : 'Tarih ve saat ekle'} · ${plan.city}',
+                                    style: const TextStyle(
+                                      color: AppColors.textMuted,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              ListTile(
+                                contentPadding: EdgeInsets.zero,
+                                leading: const Icon(Icons.place_outlined),
+                                title: Text(
+                                  (point['label'] ?? 'Buluşma noktası ekle')
+                                      .toString(),
+                                ),
+                                onTap: _owned
+                                    ? () => _act(() => _pickMeetingPoint(point))
+                                    : point.isNotEmpty
+                                    ? () => _act(() => _openMeetingPoint(point))
+                                    : null,
+                                trailing: point.isNotEmpty
+                                    ? IconButton(
+                                        icon: const Icon(
+                                          Icons.directions_outlined,
+                                        ),
+                                        onPressed: () => _act(
+                                          () => _openMeetingPoint(point),
+                                        ),
+                                      )
+                                    : null,
+                              ),
+                              const SizedBox(height: 8),
+                              Wrap(
+                                spacing: 8,
+                                children: [
+                                  for (final mode in [
+                                    'Araç',
+                                    'Yürüyüş',
+                                    'Bisiklet',
+                                  ])
+                                    ChoiceChip(
+                                      avatar: Icon(
+                                        routeTransportIcon(mode),
+                                        size: 18,
+                                      ),
+                                      label: Text(mode),
+                                      selected: plan.transport == mode,
+                                      onSelected: _owned
+                                          ? (_) => _act(
+                                              () => TravelPlanService.instance
+                                                  .setOptions(
+                                                    plan.id,
+                                                    transport: mode,
+                                                  ),
+                                            )
+                                          : null,
+                                    ),
+                                ],
+                              ),
+                              const SizedBox(height: 12),
+                              RouteMapPreview(
+                                stops: stops,
+                                transport: plan.transport,
+                                onOpen: () => _act(_openRoute),
+                              ),
+                              const SizedBox(height: 12),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: RouteMemberRow(ids: plan.memberIds),
+                                  ),
+                                  if (_owned)
+                                    OutlinedButton.icon(
+                                      onPressed: () => Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) =>
+                                              TravelPlanInviteScreen(
+                                                planId: plan.id,
+                                                planTitle: plan.title,
+                                              ),
+                                        ),
+                                      ),
+                                      icon: const Icon(Icons.add, size: 18),
+                                      label: const Text('Davet et'),
+                                    ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              InkWell(
+                                onTap: _owned ? _options : null,
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      plan.isPublic
+                                          ? Icons.public
+                                          : Icons.lock_outline,
+                                      size: 16,
+                                      color: AppColors.textMuted,
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Expanded(
+                                      child: Text(
+                                        plan.isPublic
+                                            ? (plan.hasSchedule
+                                                  ? 'Herkese açık · Etkinliklerde görünür'
+                                                  : 'Herkese açık')
+                                            : plan.visibility == 'followers'
+                                            ? 'Takipçilerime açık'
+                                            : 'Davetlilere özel',
+                                        style: const TextStyle(
+                                          color: AppColors.textMuted,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ],
                           ),
-                          title: Text('${stops[i]['name']}'),
-                          subtitle: Text('${stops[i]['category'] ?? 'Durak'}'),
-                          onTap: () => stops[i]['venue'] is Map
-                              ? _openVenueStop(stops[i])
-                              : _showStop(stops[i]),
-                          trailing: member && (_owned || plan.allowMemberEdits)
-                              ? Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    IconButton(
-                                      tooltip: 'Durağı kaldır',
-                                      onPressed: stops.length > 1
-                                          ? () => _act(
-                                              () => TravelPlanService.instance
-                                                  .updateStops(
-                                                    plan.id,
-                                                    [...stops]..removeAt(i),
-                                                  ),
-                                            )
-                                          : null,
-                                      icon: const Icon(Icons.close, size: 18),
+                        ),
+                        if (plan.stopSnapshots.isEmpty && _legacyStops == null)
+                          _legacyError == null
+                              ? const LinearProgressIndicator()
+                              : TextButton(
+                                  onPressed: () =>
+                                      setState(() => _legacyKey = ''),
+                                  child: Text(_legacyError!),
+                                ),
+                        RouteParticipation(
+                          routeId: plan.id,
+                          data: data,
+                          showSettings: false,
+                        ),
+
+                        ReorderableListView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          buildDefaultDragHandles: false,
+                          itemCount: stops.length,
+                          onReorder: (a, b) {
+                            if (!member || (!_owned && !plan.allowMemberEdits))
+                              return;
+                            if (b > a) b--;
+                            final next = [...stops];
+                            next.insert(b, next.removeAt(a));
+                            _act(
+                              () => TravelPlanService.instance.updateStops(
+                                plan.id,
+                                next,
+                              ),
+                            );
+                          },
+                          itemBuilder: (_, i) => Card(
+                            key: ValueKey('${stops[i]['id']}_$i'),
+                            color: AppColors.surface,
+                            child: ListTile(
+                              leading: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  CircleAvatar(
+                                    radius: 12,
+                                    backgroundColor: AppColors.cyan,
+                                    foregroundColor: Colors.black,
+                                    child: Text(
+                                      '${i + 1}',
+                                      style: const TextStyle(fontSize: 11),
                                     ),
-                                    ReorderableDragStartListener(
-                                      index: i,
-                                      child: const Padding(
-                                        padding: EdgeInsets.all(8),
-                                        child: Icon(Icons.drag_handle),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: SizedBox(
+                                      width: 44,
+                                      height: 48,
+                                      child: FirebaseMediaImage(
+                                        imageUrl: (stops[i]['imageUrl'] ?? '')
+                                            .toString(),
+                                        fit: BoxFit.cover,
                                       ),
                                     ),
-                                  ],
-                                )
-                              : null,
-                        ),
-                      ),
-                    ),
-                    if (member)
-                      OutlinedButton.icon(
-                        onPressed: stops.length < 12 ? _addStop : null,
-                        icon: const Icon(Icons.add),
-                        label: Text(
-                          _owned || plan.allowMemberEdits
-                              ? 'Durak ekle'
-                              : 'Durak öner',
-                        ),
-                      ),
-                    const SizedBox(height: 14),
-                    if (_owned && plan.status != 'completed')
-                      FilledButton.icon(
-                        style: FilledButton.styleFrom(
-                          backgroundColor: AppColors.cyan,
-                          foregroundColor: Colors.black,
-                        ),
-                        onPressed: () => _act(
-                          () => TravelPlanService.instance.setOptions(
-                            plan.id,
-                            status: plan.status == 'active'
-                                ? 'completed'
-                                : 'active',
+                                  ),
+                                ],
+                              ),
+                              title: Text('${stops[i]['name']}'),
+                              subtitle: Text(
+                                '${stops[i]['category'] ?? 'Durak'}',
+                              ),
+                              onTap: () => stops[i]['venue'] is Map
+                                  ? _openVenueStop(stops[i])
+                                  : _showStop(stops[i]),
+                              trailing:
+                                  member && (_owned || plan.allowMemberEdits)
+                                  ? Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        IconButton(
+                                          tooltip: 'Durağı kaldır',
+                                          onPressed: stops.length > 1
+                                              ? () => _act(
+                                                  () => TravelPlanService
+                                                      .instance
+                                                      .updateStops(
+                                                        plan.id,
+                                                        [...stops]..removeAt(i),
+                                                      ),
+                                                )
+                                              : null,
+                                          icon: const Icon(
+                                            Icons.close,
+                                            size: 18,
+                                          ),
+                                        ),
+                                        ReorderableDragStartListener(
+                                          index: i,
+                                          child: const Padding(
+                                            padding: EdgeInsets.all(8),
+                                            child: Icon(Icons.drag_handle),
+                                          ),
+                                        ),
+                                      ],
+                                    )
+                                  : null,
+                            ),
                           ),
                         ),
-                        icon: Icon(
-                          plan.status == 'active'
-                              ? Icons.check
-                              : Icons.play_arrow,
-                        ),
-                        label: Text(
-                          plan.status == 'active'
-                              ? 'Geziyi bitir'
-                              : 'Geziyi başlat',
-                        ),
-                      ),
-                    if (plan.status == 'completed')
-                      const ListTile(
-                        leading: Icon(
-                          Icons.check_circle_outline,
-                          color: AppColors.cyan,
-                        ),
-                        title: Text('Gezi tamamlandı'),
-                        subtitle: Text('Anılarınız Albüm sekmesinde.'),
-                      ),
-                    OutlinedButton.icon(
-                      onPressed: () => _act(_openRoute),
-                      icon: const Icon(Icons.directions_outlined),
-                      label: const Text('Yol tarifi'),
-                    ),
-                    if (member)
-                      TextButton(
-                        onPressed: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => _LiveTripScreen(plan: plan),
+                        if (member)
+                          OutlinedButton.icon(
+                            onPressed: stops.length < 12 ? _addStop : null,
+                            icon: const Icon(Icons.add),
+                            label: Text(
+                              _owned || plan.allowMemberEdits
+                                  ? 'Durak ekle'
+                                  : 'Durak öner',
+                            ),
                           ),
+                        const SizedBox(height: 14),
+                        if (_owned && plan.status != 'completed')
+                          FilledButton.icon(
+                            style: FilledButton.styleFrom(
+                              backgroundColor: AppColors.cyan,
+                              foregroundColor: Colors.black,
+                            ),
+                            onPressed: () => _act(
+                              () => TravelPlanService.instance.setOptions(
+                                plan.id,
+                                status: plan.status == 'active'
+                                    ? 'completed'
+                                    : 'active',
+                              ),
+                            ),
+                            icon: Icon(
+                              plan.status == 'active'
+                                  ? Icons.check
+                                  : Icons.play_arrow,
+                            ),
+                            label: Text(
+                              plan.status == 'active'
+                                  ? 'Geziyi bitir'
+                                  : 'Geziyi başlat',
+                            ),
+                          ),
+                        if (plan.status == 'completed')
+                          const ListTile(
+                            leading: Icon(
+                              Icons.check_circle_outline,
+                              color: AppColors.cyan,
+                            ),
+                            title: Text('Gezi tamamlandı'),
+                            subtitle: Text('Anılarınız Albüm sekmesinde.'),
+                          ),
+                        OutlinedButton.icon(
+                          onPressed: () => _act(_openRoute),
+                          icon: const Icon(Icons.directions_outlined),
+                          label: const Text('Yol tarifi'),
                         ),
-                        child: const Text('Gezi durumunu paylaş'),
-                      ),
+                        if (member)
+                          TextButton(
+                            onPressed: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => _LiveTripScreen(plan: plan),
+                              ),
+                            ),
+                            child: const Text('Gezi durumunu paylaş'),
+                          ),
+                      ],
+                    ),
+                    member
+                        ? _PlanGroupTab(plan: plan)
+                        : const _PrivateRouteTab(),
+                    member
+                        ? RouteAlbumScreen(plan: plan)
+                        : const _PrivateRouteTab(),
                   ],
                 ),
-                member ? _PlanGroupTab(plan: plan) : const _PrivateRouteTab(),
-                member
-                    ? RouteAlbumScreen(plan: plan)
-                    : const _PrivateRouteTab(),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       );
@@ -856,38 +887,20 @@ class _PrivateRouteTab extends StatelessWidget {
   );
 }
 
-class _RouteTabs extends SliverPersistentHeaderDelegate {
+class _RouteTabBar extends StatelessWidget {
+  const _RouteTabBar();
   @override
-  double get minExtent => 49;
-  @override
-  double get maxExtent => 49;
-  @override
-  Widget build(
-    BuildContext context,
-    double shrinkOffset,
-    bool overlapsContent,
-  ) => const ColoredBox(
+  Widget build(BuildContext context) => Material(
     color: AppColors.background,
     child: TabBar(
-      indicatorColor: AppColors.cyan,
-      tabs: [
+      onTap: (_) => FocusScope.of(context).unfocus(),
+      tabs: const [
         Tab(text: 'Plan'),
         Tab(text: 'Sohbet'),
-        Tab(
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('Albüm'),
-              SizedBox(width: 5),
-              Icon(Icons.lock_outline, size: 13),
-            ],
-          ),
-        ),
+        Tab(text: 'Albüm'),
       ],
     ),
   );
-  @override
-  bool shouldRebuild(covariant _RouteTabs oldDelegate) => false;
 }
 
 class _PlanGroupTab extends StatefulWidget {
@@ -912,7 +925,9 @@ class _PlanGroupTabState extends State<_PlanGroupTab> {
     super.dispose();
   }
 
+  bool _proposing = false;
   Future<void> _addProposal() async {
+    if (_proposing) return;
     final selected = _selectedProposalSpot;
     if (selected == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -922,19 +937,30 @@ class _PlanGroupTabState extends State<_PlanGroupTab> {
       );
       return;
     }
-    await TravelPlanCollaborationService.instance.propose(
-      widget.plan.id,
-      _proposal.text,
-      spotId: selected.id,
-      latitude: selected.latitude,
-      longitude: selected.longitude,
-      city: selected.city,
-    );
-    _proposal.clear();
-    setState(() {
-      _selectedProposalSpot = null;
-      _suggestions = const [];
-    });
+    _proposing = true;
+    try {
+      await TravelPlanCollaborationService.instance.proposeStopIfAbsent(
+        widget.plan.id,
+        _proposal.text,
+        spotId: selected.id,
+        latitude: selected.latitude,
+        longitude: selected.longitude,
+        city: selected.city,
+      );
+      if (!mounted) return;
+      _proposal.clear();
+      FocusScope.of(context).unfocus();
+      setState(() {
+        _selectedProposalSpot = null;
+        _suggestions = const [];
+      });
+    } catch (e) {
+      if (mounted)
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(userFacingError(e))));
+    } finally {
+      _proposing = false;
+    }
   }
 
   Future<void> _searchProposal(String value) async {
@@ -1178,6 +1204,52 @@ class _PlanGroupTabState extends State<_PlanGroupTab> {
                               ),
                               label: Text('${voters.length}'),
                             ),
+                            if (owned ||
+                                data['authorId'] ==
+                                    FirebaseAuth.instance.currentUser?.uid)
+                              IconButton(
+                                tooltip: 'Öneriyi sil',
+                                icon: const Icon(Icons.delete_outline),
+                                onPressed: () async {
+                                  final confirmed = await showDialog<bool>(
+                                    context: context,
+                                    builder: (c) => AlertDialog(
+                                      title: const Text('Öneri silinsin mi?'),
+                                      content: Text(
+                                        accepted
+                                            ? 'Öneri silinir. Rotaya eklenmiş durak değişmez.'
+                                            : 'Bu durak önerisi ve oyları kaldırılacak.',
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () =>
+                                              Navigator.pop(c, false),
+                                          child: const Text('Vazgeç'),
+                                        ),
+                                        FilledButton(
+                                          onPressed: () =>
+                                              Navigator.pop(c, true),
+                                          child: const Text('Sil'),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                  if (confirmed != true) return;
+                                  try {
+                                    await TravelPlanCollaborationService
+                                        .instance
+                                        .deleteProposal(widget.plan.id, doc.id);
+                                  } catch (e) {
+                                    if (context.mounted)
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                            SnackBar(
+                                              content: Text(userFacingError(e)),
+                                            ),
+                                          );
+                                  }
+                                },
+                              ),
                             if (owned && !accepted)
                               IconButton(
                                 tooltip: 'Rotaya ekle',

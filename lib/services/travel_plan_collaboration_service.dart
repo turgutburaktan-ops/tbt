@@ -83,14 +83,35 @@ class TravelPlanCollaborationService {
         });
   }
 
-  Future<void> proposeStopIfAbsent(String planId, String text, {required String spotId, required double latitude, required double longitude, required String city, Map<String, dynamic>? stopSnapshot}) async {
+  Future<void> proposeStopIfAbsent(
+    String planId,
+    String text, {
+    required String spotId,
+    required double latitude,
+    required double longitude,
+    required String city,
+    Map<String, dynamic>? stopSnapshot,
+  }) async {
     final uid = _uid();
-    final proposal = _firestore.collection('travel_plans').doc(planId).collection('proposals').doc('today_${Uri.encodeComponent(spotId)}');
+    final proposal = _firestore
+        .collection('travel_plans')
+        .doc(planId)
+        .collection('proposals')
+        .doc('today_${Uri.encodeComponent(spotId)}');
     await _firestore.runTransaction((tx) async {
       if ((await tx.get(proposal)).exists) return;
-      tx.set(proposal, {'authorId':uid,'text':text.length > 180 ? text.substring(0,180) : text,'spotId':spotId,
-        'latitude':latitude,'longitude':longitude,'city':city,if(stopSnapshot!=null)'stopSnapshot':stopSnapshot,'voterIds':<String>[],
-        'createdAt':FieldValue.serverTimestamp(),'updatedAt':FieldValue.serverTimestamp()});
+      tx.set(proposal, {
+        'authorId': uid,
+        'text': text.length > 180 ? text.substring(0, 180) : text,
+        'spotId': spotId,
+        'latitude': latitude,
+        'longitude': longitude,
+        'city': city,
+        if (stopSnapshot != null) 'stopSnapshot': stopSnapshot,
+        'voterIds': <String>[],
+        'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
     });
   }
 
@@ -101,18 +122,40 @@ class TravelPlanCollaborationService {
     await _firestore.runTransaction((tx) async {
       final plan = (await tx.get(planRef)).data();
       final proposal = (await tx.get(proposalRef)).data();
-      if (plan == null || proposal == null || plan['ownerId'] != uid) throw Exception('Plan sahibi gerekli.');
+      if (plan == null || proposal == null || plan['ownerId'] != uid)
+        throw Exception('Plan sahibi gerekli.');
       if (proposal['status'] == 'accepted') return;
-      final stop = Map<String, dynamic>.from(proposal['stopSnapshot'] as Map? ?? {});
-      if (stop['id'] is! String || stop['name'] is! String || stop['latitude'] is! num || stop['longitude'] is! num) throw Exception('Durak bilgisi eksik.');
-      final stops = (plan['stopSnapshots'] as List? ?? []).map((s) => Map<String, dynamic>.from(s as Map)).toList();
+      final stop = Map<String, dynamic>.from(
+        proposal['stopSnapshot'] as Map? ?? {},
+      );
+      if (stop['id'] is! String ||
+          stop['name'] is! String ||
+          stop['latitude'] is! num ||
+          stop['longitude'] is! num)
+        throw Exception('Durak bilgisi eksik.');
+      final stops = (plan['stopSnapshots'] as List? ?? [])
+          .map((s) => Map<String, dynamic>.from(s as Map))
+          .toList();
       if (!stops.any((s) => s['id'] == stop['id'])) {
-        if (stops.length >= 12) throw Exception('Rotada en fazla 12 durak olabilir.');
+        if (stops.length >= 12)
+          throw Exception('Rotada en fazla 12 durak olabilir.');
         stops.add(stop);
-        tx.update(planRef, {'spotIds':stops.map((s)=>s['id']).toList(),'spotNames':stops.map((s)=>s['name']).toList(),
-          'stopSnapshots':stops,if(plan['dayPlan'] is Map)'dayPlan':{...Map<String,dynamic>.from(plan['dayPlan'] as Map),'routeChanged':true},'updatedAt':FieldValue.serverTimestamp()});
+        tx.update(planRef, {
+          'spotIds': stops.map((s) => s['id']).toList(),
+          'spotNames': stops.map((s) => s['name']).toList(),
+          'stopSnapshots': stops,
+          if (plan['dayPlan'] is Map)
+            'dayPlan': {
+              ...Map<String, dynamic>.from(plan['dayPlan'] as Map),
+              'routeChanged': true,
+            },
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
       }
-      tx.update(proposalRef, {'status':'accepted','updatedAt':FieldValue.serverTimestamp()});
+      tx.update(proposalRef, {
+        'status': 'accepted',
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
     });
   }
 
@@ -141,6 +184,16 @@ class TravelPlanCollaborationService {
       'meetingPoint': FieldValue.delete(),
       'updatedAt': FieldValue.serverTimestamp(),
     });
+  }
+
+  Future<void> deleteProposal(String planId, String proposalId) async {
+    _uid();
+    await _firestore
+        .collection('travel_plans')
+        .doc(planId)
+        .collection('proposals')
+        .doc(proposalId)
+        .delete();
   }
 
   Future<void> vote(String planId, String proposalId) async {
@@ -221,10 +274,16 @@ class TravelPlanCollaborationService {
       'stopSnapshots': plan.stopSnapshots,
       'savedAt': DateTime.now().toIso8601String(),
     };
-    await preferences.setString('offline_travel_plan_${plan.id}', jsonEncode(data));
+    await preferences.setString(
+      'offline_travel_plan_${plan.id}',
+      jsonEncode(data),
+    );
     final ids = preferences.getStringList('offline_travel_plan_ids') ?? [];
     if (!ids.contains(plan.id)) {
-      await preferences.setStringList('offline_travel_plan_ids', [...ids, plan.id]);
+      await preferences.setStringList('offline_travel_plan_ids', [
+        ...ids,
+        plan.id,
+      ]);
     }
   }
 

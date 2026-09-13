@@ -89,6 +89,12 @@ void main() {
         image.dispose();
       });
       expect(find.text('Nereye gidiyoruz?'), findsOneWidget);
+      await tester.enterText(find.byType(TextField).first, 'ela');
+      await tester.pumpAndSettle();
+      expect(find.text('Elazığ'), findsOneWidget);
+      await tester.tap(find.text('Elazığ'));
+      await tester.pumpAndSettle();
+
       expect(find.text('Araç'), findsOneWidget);
       expect(find.text('Yürüyüş'), findsOneWidget);
       expect(find.text('Bisiklet'), findsOneWidget);
@@ -106,6 +112,10 @@ void main() {
             .selected,
         isTrue,
       );
+      await tester.scrollUntilVisible(find.text('Tarih ve saat'), 200);
+      expect(find.text('Kimler katılabilir?'), findsOneWidget);
+      await tester.scrollUntilVisible(find.text('Buluşma noktası'), 150);
+      expect(find.text('Buluşma noktası'), findsOneWidget);
       expect(tester.takeException(), isNull);
     },
   );

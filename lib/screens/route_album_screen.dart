@@ -173,7 +173,7 @@ class _RouteAlbumScreenState extends State<RouteAlbumScreen> {
             FilledButton.icon(
               onPressed: _uploading ? null : _upload,
               icon: const Icon(Icons.add, size: 18),
-              label: const Text('Yükle'),
+              label: const Text('Fotoğraf / video ekle'),
             ),
           ],
         ),

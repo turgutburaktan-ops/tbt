@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../data/turkey_selection_data.dart';
+import '../widgets/searchable_selection_field.dart';
+import 'event_location_picker_screen.dart';
+
 import '../models/photo_spot.dart';
 import '../services/spot_repository.dart';
 import '../services/travel_plan_service.dart';
@@ -20,7 +24,11 @@ class _RouteCreateScreenState extends State<RouteCreateScreen> {
   final _city = TextEditingController();
   late final List<PhotoSpot> _stops = [...widget.initialStops];
   String _transport = 'Araç';
+  String _visibility = 'private';
   bool _busy = false;
+  DateTime? _startAt;
+  EventLocationSelection? _meeting;
+  final _meetingNote = TextEditingController();
   @override
   void initState() {
     super.initState();
@@ -30,7 +38,75 @@ class _RouteCreateScreenState extends State<RouteCreateScreen> {
   @override
   void dispose() {
     _city.dispose();
+    _meetingNote.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickDate() async {
+    FocusScope.of(context).unfocus();
+    final now = DateTime.now();
+    final date = await showDatePicker(
+      context: context,
+      initialDate: _startAt ?? now,
+      firstDate: now,
+      lastDate: now.add(const Duration(days: 730)),
+    );
+    if (!mounted || date == null) return;
+    final time = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(
+        _startAt ?? now.add(const Duration(hours: 1)),
+      ),
+    );
+    if (!mounted || time == null) return;
+    final selected = DateTime(
+      date.year,
+      date.month,
+      date.day,
+      time.hour,
+      time.minute,
+    );
+    if (!selected.isAfter(DateTime.now())) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('İleri bir tarih ve saat seç.')),
+      );
+      return;
+    }
+    setState(() => _startAt = selected);
+  }
+
+  Future<void> _pickMeeting() async {
+    final spot = await showModalBottomSheet<PhotoSpot>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (_) => RouteStopPicker(city: _city.text.trim(), stops: const []),
+    );
+    if (!mounted || spot == null) return;
+    setState(
+      () => _meeting = EventLocationSelection(
+        latitude: spot.latitude,
+        longitude: spot.longitude,
+        label: spot.name,
+      ),
+    );
+  }
+
+  Future<void> _meetingMap() async {
+    FocusScope.of(context).unfocus();
+    final point = await Navigator.push<EventLocationSelection>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => EventLocationPickerScreen(
+          city: _city.text.trim(),
+          addressLabel: 'Buluşma noktası',
+          initialLatitude: _meeting?.latitude,
+          initialLongitude: _meeting?.longitude,
+          title: 'Buluşma noktası seç',
+        ),
+      ),
+    );
+    if (mounted && point != null) setState(() => _meeting = point);
   }
 
   Future<void> _act(Future<void> Function() task) async {
@@ -58,6 +134,44 @@ class _RouteCreateScreenState extends State<RouteCreateScreen> {
         if (!_stops.any((s) => s.id == spot.id)) _stops.add(spot);
         if (_city.text.trim().isEmpty) _city.text = spot.city;
       });
+  }
+
+  Future<void> _fromMap() async {
+    FocusScope.of(context).unfocus();
+    final point = await Navigator.push<EventLocationSelection>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => EventLocationPickerScreen(
+          city: _city.text.trim(),
+          addressLabel: '',
+          title: 'Haritadan durak seç',
+          instruction: 'Eklemek istediğin noktaya dokun ve onayla.',
+        ),
+      ),
+    );
+    if (!mounted || point == null) return;
+    final id =
+        'map:${point.latitude.toStringAsFixed(6)},${point.longitude.toStringAsFixed(6)}';
+    if (_stops.any((s) => s.id == id)) return;
+    setState(
+      () => _stops.add(
+        PhotoSpot(
+          id: id,
+          name: point.label.trim().isEmpty
+              ? 'Haritadan seçilen durak'
+              : point.label,
+          city: _city.text.trim(),
+          latitude: point.latitude,
+          longitude: point.longitude,
+          rating: 0,
+          bestTime: '',
+          angle: '',
+          imageUrl: '',
+          category: 'Konum',
+          description: '',
+        ),
+      ),
+    );
   }
 
   Future<void> _suggest() => _act(() async {
@@ -92,10 +206,20 @@ class _RouteCreateScreenState extends State<RouteCreateScreen> {
       transport: _transport,
       interests: [],
       spots: _stops,
+      visibility: _visibility,
+      startAt: _startAt,
+      meetingPoint: _meeting == null
+          ? const {}
+          : {
+              'label': _meeting!.label,
+              'latitude': _meeting!.latitude,
+              'longitude': _meeting!.longitude,
+              'note': _meetingNote.text.trim(),
+            },
     );
-    final plan = await TravelPlanService.instance.read(id);
+    final plan = await TravelPlanService.instance.read(id, preferCache: true);
     if (mounted)
-      await Navigator.pushReplacement(
+      Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => TravelPlanDetailScreen(plan: plan)),
       );
@@ -126,14 +250,15 @@ class _RouteCreateScreenState extends State<RouteCreateScreen> {
           style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800),
         ),
         const SizedBox(height: 16),
-        if (widget.initialStops.isEmpty)
-          TextField(
-            controller: _city,
-            decoration: const InputDecoration(
-              hintText: 'Şehir veya bölge ara',
-              prefixIcon: Icon(Icons.search),
-            ),
-          ),
+        SearchableSelectionField(
+          controller: _city,
+          options: turkeyCities,
+          labelText: 'İl seç',
+          hintText: 'Örn. Elazığ',
+          prefixIcon: Icons.location_city_outlined,
+          enabled: !_busy,
+          onSelected: (_) => FocusScope.of(context).unfocus(),
+        ),
         const SizedBox(height: 16),
         Wrap(
           spacing: 8,
@@ -159,7 +284,7 @@ class _RouteCreateScreenState extends State<RouteCreateScreen> {
               ),
             ),
             TextButton(
-              onPressed: _busy ? _noAction : _suggest,
+              onPressed: _busy ? null : _suggest,
               child: const Text('Bana rota öner'),
             ),
           ],
@@ -223,14 +348,115 @@ class _RouteCreateScreenState extends State<RouteCreateScreen> {
           icon: const Icon(Icons.add),
           label: const Text('Durak ekle'),
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 8),
+        OutlinedButton.icon(
+          onPressed: _busy || _stops.length >= 12 ? null : _fromMap,
+          icon: const Icon(Icons.map_outlined),
+          label: const Text('Haritadan seç'),
+        ),
+        const SizedBox(height: 24),
         const Text(
-          'Tarih ve arkadaşlarını rotayı oluşturduktan sonra ekleyebilirsin.',
+          'Kimler katılabilir?',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (final option in const [
+              ('private', 'Davetliler'),
+              ('followers', 'Takipçilerim'),
+              ('public', 'Herkes'),
+            ])
+              ChoiceChip(
+                label: Text(option.$2),
+                selected: _visibility == option.$1,
+                onSelected: _busy
+                    ? null
+                    : (_) => setState(() => _visibility = option.$1),
+              ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Text(
+          _visibility == 'public'
+              ? 'Herkes katılım isteği gönderebilir. Tarih eklediğinde Etkinlikler’de de görünür.'
+              : _visibility == 'followers'
+              ? 'Takipçilerin katılım isteği gönderebilir. Arkadaşlarını ayrıca davet edebilirsin.'
+              : 'Yalnızca davet ettiğin kişiler katılabilir.',
+          style: const TextStyle(color: AppColors.textMuted),
+        ),
+        const SizedBox(height: 20),
+        Card(
+          child: ListTile(
+            leading: const Icon(
+              Icons.calendar_month_outlined,
+              color: AppColors.cyan,
+            ),
+            title: const Text('Tarih ve saat'),
+            subtitle: Text(
+              _startAt == null
+                  ? 'Henüz belirlenmedi · Ekle'
+                  : '${_startAt!.day}.${_startAt!.month}.${_startAt!.year} · ${TimeOfDay.fromDateTime(_startAt!).format(context)}',
+            ),
+            trailing: const Icon(Icons.edit_outlined),
+            onTap: _busy ? null : _pickDate,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Text(
+                  'Buluşma noktası',
+                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 18),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  _meeting?.label ?? 'Henüz seçilmedi',
+                  style: const TextStyle(color: AppColors.textMuted),
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  children: [
+                    TextButton.icon(
+                      onPressed: _busy ? null : _pickMeeting,
+                      icon: const Icon(Icons.search),
+                      label: const Text('Mekân ara'),
+                    ),
+                    TextButton.icon(
+                      onPressed: _busy ? null : _meetingMap,
+                      icon: const Icon(Icons.map_outlined),
+                      label: const Text('Haritadan seç'),
+                    ),
+                  ],
+                ),
+                if (_meeting != null)
+                  TextField(
+                    controller: _meetingNote,
+                    enabled: !_busy,
+                    maxLength: 160,
+                    decoration: const InputDecoration(
+                      labelText: 'Buluşma notu (isteğe bağlı)',
+                      hintText: 'Örn. ana girişte',
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+        const Text(
+          'Arkadaşlarını rotayı oluşturduktan sonra davet edebilirsin.',
           style: TextStyle(color: AppColors.textMuted),
           textAlign: TextAlign.center,
         ),
       ],
     ),
   );
-  void _noAction() {}
 }
