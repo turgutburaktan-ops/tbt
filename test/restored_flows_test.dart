@@ -97,7 +97,7 @@ void main() {
       expect(find.text('Şehir veya bölge ara'), findsNothing);
       expect(find.text('Harput'), findsOneWidget);
       expect(find.text('Keban'), findsOneWidget);
-      expect(find.text('Durak ekle'), findsOneWidget);
+      expect(find.text('Yer ara'), findsOneWidget);
       expect(find.byType(ReorderableDragStartListener), findsNWidgets(2));
       await tester.tap(find.byTooltip('Durağı kaldır').first);
       await tester.pumpAndSettle();

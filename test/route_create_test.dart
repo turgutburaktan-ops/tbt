@@ -108,9 +108,9 @@ void main() {
       await tester.pumpAndSettle();
       expect(
         tester
-            .widget<ChoiceChip>(find.widgetWithText(ChoiceChip, 'Bisiklet'))
+            .widget<SegmentedButton<String>>(find.byType(SegmentedButton<String>))
             .selected,
-        isTrue,
+        {'Bisiklet'},
       );
       await tester.scrollUntilVisible(
         find.text('Tarih ve saat'),
