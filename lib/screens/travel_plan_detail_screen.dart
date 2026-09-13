@@ -1147,17 +1147,15 @@ class _PlanGroupTabState extends State<_PlanGroupTab> {
                       ),
                   ],
                 ),
-              )
-            else if (_proposal.text.trim().length >= 2 &&
-                _selectedProposalSpot == null)
-              Align(
-                alignment: Alignment.centerLeft,
-                child: TextButton.icon(
-                  onPressed: _pickProposalFromMap,
-                  icon: const Icon(Icons.add_location_alt_outlined),
-                  label: const Text('Yer yoksa haritadan konum seç'),
-                ),
               ),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: _pickProposalFromMap,
+                icon: const Icon(Icons.add_location_alt_outlined),
+                label: const Text('Haritadan seç'),
+              ),
+            ),
             StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
               stream: TravelPlanCollaborationService.instance.proposals(
                 widget.plan.id,
