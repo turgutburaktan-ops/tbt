@@ -372,7 +372,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                             .where('status', isEqualTo: 'pending_review')
                             .snapshots(),
                         builder: (_, snapshot) => Badge(
-                          label: Text('${snapshot.data?.docs.length ?? 0}'),
+                          label: Text(
+                            snapshot.hasError
+                                ? '!'
+                                : snapshot.hasData
+                                ? '${snapshot.data!.docs.length}'
+                                : '…',
+                          ),
                           child: const Icon(Icons.verified_user_outlined),
                         ),
                       ),
@@ -385,6 +391,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                         .where('status', isEqualTo: 'pending_review')
                         .snapshots(),
                     builder: (context, snapshot) {
+                      if (snapshot.hasError)
+                        return Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Text(userFacingError(snapshot.error!)),
+                        );
                       if (!snapshot.hasData) {
                         return const Center(child: CircularProgressIndicator());
                       }

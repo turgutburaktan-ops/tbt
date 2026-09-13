@@ -431,45 +431,6 @@ class _AdminBusinessSandboxScreenState
           '${_posts.length} demo paylaşım',
           () => _openList('post'),
         ),
-        _tile(
-          Icons.workspace_premium_outlined,
-          'TBT Business Pro',
-          'Rezervasyon, Boost ve istatistik ekranını simüle et',
-          () => showModalBottomSheet<void>(
-            context: context,
-            useSafeArea: true,
-            backgroundColor: AppColors.background,
-            builder: (_) => const Padding(
-              padding: EdgeInsets.all(22),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Business Pro • Demo',
-                    style: TextStyle(fontSize: 21, fontWeight: FontWeight.w900),
-                  ),
-                  SizedBox(height: 12),
-                  ListTile(
-                    leading: Icon(Icons.insights_rounded),
-                    title: Text('İstatistikler'),
-                    subtitle: Text('1.284 profil görüntülenmesi • demo veri'),
-                  ),
-                  ListTile(
-                    leading: Icon(Icons.event_seat_outlined),
-                    title: Text('Rezervasyonlar'),
-                    subtitle: Text('12 bekleyen • demo veri'),
-                  ),
-                  ListTile(
-                    leading: Icon(Icons.rocket_launch_outlined),
-                    title: Text('Boost'),
-                    subtitle: Text('Kampanya görünürlüğünü artır • demo'),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
       ],
     ),
   );
