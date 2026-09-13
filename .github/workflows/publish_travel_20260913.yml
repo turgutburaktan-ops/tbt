@@ -1,4 +1,4 @@
-name: Publish TBT Rehber travel Reels 20260913
+name: Publish TBT Eğlence relaxing Reels 20260913
 on:
   workflow_dispatch:
   push:
@@ -6,7 +6,7 @@ on:
     paths:
       - '.github/workflows/publish_travel_20260913.yml'
       - 'tool/publish_travel_20260913.cjs'
-      - 'tool/editorial/travel-videos-20260913.json'
+      - 'tool/editorial/relaxing-videos-20260913.json'
 permissions:
   contents: read
 concurrency:
@@ -23,7 +23,7 @@ jobs:
           node-version: '20'
       - run: npm install --prefix functions --ignore-scripts --no-audit --no-fund
       - run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
-      - name: Publish licensed Turkey travel videos
-        run: node tool/publish_travel_20260913.cjs --audit
+      - name: Publish licensed relaxing aquarium videos
+        run: node tool/publish_travel_20260913.cjs --publish
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}

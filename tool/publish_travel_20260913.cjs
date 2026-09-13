@@ -3,26 +3,26 @@ const fs=require('node:fs/promises'),path=require('node:path'),crypto=require('n
 const {execFileSync}=require('node:child_process');
 const {createRequire}=require('node:module');
 const root=path.resolve(__dirname,'..');
-const uid='tbt-editorial-rehber', project='en-iyi-cekim-noktasi';
+const uid='tbt-editorial-eglence', project='en-iyi-cekim-noktasi';
 const bucketName=`${project}.firebasestorage.app`;
 const check=(ok,message)=>{if(!ok)throw Error(message);};
 const hash=b=>crypto.createHash('sha256').update(b).digest('hex');
 async function main(){
- const data=JSON.parse(await fs.readFile(path.join(__dirname,'editorial/travel-videos-20260913.json'),'utf8'));
- check(data.batch==='travel-videos-20260913'&&data.posts.length===2,'Unexpected batch');
+ const data=JSON.parse(await fs.readFile(path.join(__dirname,'editorial/relaxing-videos-20260913.json'),'utf8'));
+ check(data.batch==='relaxing-videos-20260913'&&data.posts.length===2,'Unexpected batch');
  check(new Set(data.posts.map(p=>p.id)).size===2,'Duplicate IDs');
  if(process.argv.includes('--audit')){
   const admin=createRequire(path.join(root,'functions/package.json'))('firebase-admin');
   const sa=JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT||'{}');check(sa.project_id===project,'Wrong project');
   admin.initializeApp({credential:admin.credential.cert(sa),projectId:project});
-  const db=admin.firestore(); const users=await db.collection('users').where('isEditorial','==',true).get(); console.log(JSON.stringify({publishers:users.docs.map(d=>({id:d.id,uid:d.data().uid,name:d.data().displayName,username:d.data().username,batch:d.data().editorialBatch}))})); const q=await db.collection('posts').where('userName','==','TBT Eğlence').get();
+  const q=await admin.firestore().collection('posts').where('userId','==',uid).get();
   console.log(JSON.stringify({existingEditorialVideos:q.docs.filter(d=>d.data().mediaType==='video').map(d=>({id:d.id,source:d.data().videoSourcePage||'',title:(d.data().caption||'').split('\n')[0]}))}));return;
  }
 
  const dir=await fs.mkdtemp('/tmp/tbt-videos-');
  const prepared=[];
  for(const p of data.posts){
-  check(/^tbt-rehber-travel-20260913-0[1-2]$/.test(p.id)&&/^[a-z]+$/.test(p.key),'Unexpected ID');
+  check(/^tbt-eglence-relaxing-20260913-0[1-2]$/.test(p.id)&&/^[a-z]+$/.test(p.key),'Unexpected ID');
   check(new URL(p.src).hostname==='upload.wikimedia.org'&&p.author&&p.licenseUrl&&p.caption,'Unreviewed source');
   const original=path.join(dir,p.key+'-original.mp4');
   if(process.env.EDITORIAL_LOCAL_VIDEO_DIR)await fs.copyFile(path.join(process.env.EDITORIAL_LOCAL_VIDEO_DIR,p.key+'.ogv'),original);
@@ -47,11 +47,11 @@ async function main(){
  const sa=JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT||'{}');check(sa.project_id===project,'Wrong project');
  admin.initializeApp({credential:admin.credential.cert(sa),projectId:project,storageBucket:bucketName});
  const db=admin.firestore(),bucket=admin.storage().bucket();
- const user=db.collection('users').doc(uid),name=db.collection('usernames').doc('tbt.rehber');
+ const user=db.collection('users').doc(uid),name=db.collection('usernames').doc('tbt.eglence');
  const refs=data.posts.map(p=>db.collection('posts').doc(p.id));
  function guard(snaps){
   const [u,n,...posts]=snaps;
-  check(u.exists&&u.data().uid===uid&&u.data().isEditorial===true&&u.data().editorialBatch==='elazig-first-five-20260908','Publisher mismatch');
+  check(u.exists&&u.data().uid===uid&&u.data().isEditorial===true&&u.data().editorialBatch==='tbt-eglence-20260909','Publisher mismatch');
   check(n.exists&&n.data().uid===uid,'Username mismatch');
   posts.forEach(s=>check(!s.exists||(s.data().userId===uid&&s.data().editorialBatch===data.batch),'Post collision'));
  }
@@ -78,7 +78,7 @@ async function main(){
   prepared.forEach((e,i)=>{
    if(snaps[i+2].exists)return;
    const p=e.p;
-   tx.create(refs[i],{id:p.id,userId:uid,userName:'TBT Rehber',userPhotoUrl:snaps[0].data().photoURL,userEmail:'',caption:`${p.title}\n\n${p.caption}\n\nVideo: ${p.author} / Wikimedia Commons\n${p.sourcePage}\nLisans: ${p.license} — ${p.licenseUrl}\nÇekim: ${p.sourceDate}. Arşiv videosu. MP4/AAC biçimine dönüştürüldü; 1080p çözünürlük ve kaynak ses korundu. Bu uyarlama CC BY-SA 4.0 lisansıyla paylaşılmıştır.`,spotName:p.place,city:p.city,latitude:null,longitude:null,taggedUserIds:[],taggedUserNames:[],likesCount:0,commentsCount:0,sourceType:'post',businessVenueKey:'',businessVenueName:'',businessOfficial:false,venueKey:'',mediaType:'video',imageUrl:e.thumb.url,storagePath:'',videoUrl:e.video.url,videoStoragePath:e.video.path,thumbnailUrl:e.thumb.url,thumbnailStoragePath:e.thumb.path,durationMs:e.durationMs,visibility:'public',status:'published',isEditorial:true,editorialBatch:data.batch,editorialKind:'Video',mediaSha256:p.sha256,videoAuthor:p.author,videoLicense:p.license,videoSourcePage:p.sourcePage,createdAt:timestamp,updatedAt:timestamp});
+   tx.create(refs[i],{id:p.id,userId:uid,userName:'TBT Eğlence',userPhotoUrl:(snaps[0].data().photoURL||snaps[0].data().photoUrl||''),userEmail:'',caption:`${p.title}\n\n${p.caption}\n\nVideo: ${p.author} / Wikimedia Commons\n${p.sourcePage}\nLisans: ${p.license} — ${p.licenseUrl}\nÇekim: ${p.sourceDate}. Arşiv videosu. MP4/AAC biçimine dönüştürüldü; 1080p çözünürlük ve kaynak ses korundu. Bu uyarlama CC BY-SA 4.0 lisansıyla paylaşılmıştır.`,spotName:p.place,city:p.city,latitude:null,longitude:null,taggedUserIds:[],taggedUserNames:[],likesCount:0,commentsCount:0,sourceType:'post',businessVenueKey:'',businessVenueName:'',businessOfficial:false,venueKey:'',mediaType:'video',imageUrl:e.thumb.url,storagePath:'',videoUrl:e.video.url,videoStoragePath:e.video.path,thumbnailUrl:e.thumb.url,thumbnailStoragePath:e.thumb.path,durationMs:e.durationMs,visibility:'public',status:'published',isEditorial:true,editorialBatch:data.batch,editorialKind:'Video',mediaSha256:p.sha256,videoAuthor:p.author,videoLicense:p.license,videoSourcePage:p.sourcePage,createdAt:timestamp,updatedAt:timestamp});
   });
  });
  const saved=await db.getAll(...refs);
