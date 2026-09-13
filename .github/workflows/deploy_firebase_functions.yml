@@ -35,6 +35,8 @@ jobs:
         run: node --test functions/test/social_publishing.test.js functions/test/push_payload.test.js functions/test/broadcast_photo.test.js functions/test/notification_policy.test.js functions/test/event_reminders.test.js functions/test/retention.test.js
       - name: Test free business growth
         run: node --test functions/test/business_customer_growth.test.js
+      - name: Test bulk menu imports
+        run: node --test functions/test/business_menu_bulk.test.js
       - name: Test reservations
         run: node --test functions/test/reservation*.test.js
       - name: Install Firebase CLI
@@ -83,6 +85,7 @@ jobs:
         run: node functions/scripts/repair_business_publication.js dining:user_4xFEQcn0tjLktR5Cq85n
       - name: Deploy Firebase Functions
         env:
+          BULK_MENU_UPDATE: ${{ contains(github.event.head_commit.message, '[bulk-menu]') }}
           BUSINESS_GROWTH_UPDATE: ${{ contains(github.event.head_commit.message, '[business-growth]') }}
           USABILITY_CREATOR_UPDATE: ${{ inputs.scope == 'usability-creator' || contains(github.event.head_commit.message, '[usability-creator]') }}
           ACCOUNT_CLEANUP_UPDATE: ${{ contains(github.event.head_commit.message, '[account-cleanup]') }}
@@ -97,7 +100,9 @@ jobs:
           VERIFICATION_EMAIL_UPDATE: ${{ contains(github.event.head_commit.message, '[verification-email]') }}
           NOTIFICATION_UPDATE: ${{ contains(github.event.head_commit.message, '[notification-update]') }}
         run: |
-          if [ "$BUSINESS_GROWTH_UPDATE" = "true" ]; then
+          if [ "$BULK_MENU_UPDATE" = "true" ]; then
+            firebase deploy --only functions:addBusinessMenuItemsBulk --project en-iyi-cekim-noktasi --non-interactive
+          elif [ "$BUSINESS_GROWTH_UPDATE" = "true" ]; then
             firebase deploy --only functions:createBusinessGrowthCampaign,functions:setBusinessGrowthCampaignActive,functions:listBusinessGrowthOffers,functions:getBusinessGrowthOffer,functions:recordBusinessGrowthMetric,functions:getBusinessGrowthDashboard,functions:claimBusinessCoupon,functions:validateBusinessCoupon,functions:recordBusinessMetric,functions:getBusinessEntitlement,functions:getBusinessPublicFeatures,functions:startBusinessPremiumTrial,functions:createBusinessBoost,functions:adminSetBusinessPremium --project en-iyi-cekim-noktasi --non-interactive
           elif [ "$USABILITY_CREATOR_UPDATE" = "true" ]; then
             node tool/ensure_creator_indexes.cjs
@@ -129,7 +134,7 @@ jobs:
             exit 1
           fi
       - name: Restore callable invoker access
-        if: "!contains(github.event.head_commit.message, '[business-growth]') && inputs.scope != 'usability-creator' && !contains(github.event.head_commit.message, '[usability-creator]') && !contains(github.event.head_commit.message, '[creator-restore]') && !contains(github.event.head_commit.message, '[account-cleanup]') && !contains(github.event.head_commit.message, '[restore-update]') && !contains(github.event.head_commit.message, '[music-update]') && !contains(github.event.head_commit.message, '[chat-update]') && !contains(github.event.head_commit.message, '[repair-burak-publication]') && !contains(github.event.head_commit.message, '[reservation-update]') && !contains(github.event.head_commit.message, '[reservation-index]') && !contains(github.event.head_commit.message, '[preparation-update]') && !contains(github.event.head_commit.message, '[verification-email]') && !contains(github.event.head_commit.message, '[notification-update]')"
+        if: "!contains(github.event.head_commit.message, '[bulk-menu]') && !contains(github.event.head_commit.message, '[business-growth]') && inputs.scope != 'usability-creator' && !contains(github.event.head_commit.message, '[usability-creator]') && !contains(github.event.head_commit.message, '[creator-restore]') && !contains(github.event.head_commit.message, '[account-cleanup]') && !contains(github.event.head_commit.message, '[restore-update]') && !contains(github.event.head_commit.message, '[music-update]') && !contains(github.event.head_commit.message, '[chat-update]') && !contains(github.event.head_commit.message, '[repair-burak-publication]') && !contains(github.event.head_commit.message, '[reservation-update]') && !contains(github.event.head_commit.message, '[reservation-index]') && !contains(github.event.head_commit.message, '[preparation-update]') && !contains(github.event.head_commit.message, '[verification-email]') && !contains(github.event.head_commit.message, '[notification-update]')"
         run: |
           set -euo pipefail
           gcloud auth activate-service-account --key-file="$GOOGLE_APPLICATION_CREDENTIALS"
