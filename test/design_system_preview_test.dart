@@ -220,8 +220,9 @@ class _PreviewPage extends StatelessWidget {
                       title: Text('TBT Rehber'),
                       subtitle: Text('Nevşehir'),
                     ),
-                    Image.asset(
-                      'assets/spots/auto-route-goreme.jpg',
+                    Image.memory(
+                      File('assets/spots/auto-route-goreme.jpg')
+                          .readAsBytesSync(),
                       height: 190,
                       fit: BoxFit.cover,
                     ),
@@ -351,8 +352,9 @@ class _PreviewPage extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Image.asset(
-                      'assets/spots/auto-route-goreme.jpg',
+                    Image.memory(
+                      File('assets/spots/auto-route-goreme.jpg')
+                          .readAsBytesSync(),
                       height: 160,
                       fit: BoxFit.cover,
                     ),
