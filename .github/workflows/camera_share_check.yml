@@ -1,0 +1,26 @@
+name: Camera sharing and iOS mirror regression checks
+on:
+  push:
+    branches: [codex/camera-sharing-clarity]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  camera:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: python3 -m unittest tool.tests.test_ios_camera_mirroring
+      - run: flutter pub get
+      - name: Verify mirror correction against the actual iOS camera plugin
+        run: |
+          python3 tool/patch_ios_camera_mirroring.py
+          python3 tool/patch_ios_camera_mirroring.py
+      - run: flutter analyze --no-fatal-infos --no-fatal-warnings lib/screens/main_camera_screen.dart lib/widgets/camera_share_controls.dart
+      - run: flutter test test/camera_share_controls_test.dart test/restored_flows_test.dart
+      - run: flutter build bundle --debug

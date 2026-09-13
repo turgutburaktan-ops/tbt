@@ -7,6 +7,8 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../theme/app_theme.dart';
+import '../services/user_facing_error.dart';
+import '../widgets/camera_share_controls.dart';
 import 'camera_video_post_screen.dart';
 import 'story_music_picker.dart';
 import 'create_post_screen.dart';
@@ -69,7 +71,11 @@ class _MainCameraScreenState extends State<MainCameraScreen> {
   }
 
   void _selectMode(CameraShareMode mode, CameraState cameraState) {
-    if (_recordingState != null || _handlingCapture || mode == _mode) return;
+    if (_recordingState != null ||
+        _handlingCapture ||
+        _openingGallery ||
+        mode == _mode)
+      return;
     setState(() {
       _mode = mode;
       if (mode == CameraShareMode.story) _storyVideo = false;
@@ -83,14 +89,24 @@ class _MainCameraScreenState extends State<MainCameraScreen> {
   }
 
   void _selectStoryMedia(bool video, CameraState cameraState) {
-    if (_mode != CameraShareMode.story ||
+    if ((_mode != CameraShareMode.story &&
+            _mode != CameraShareMode.photo &&
+            _mode != CameraShareMode.video) ||
+        _openingGallery ||
         _recordingState != null ||
         _handlingCapture ||
-        _storyVideo == video) {
+        (_mode == CameraShareMode.story
+                ? _storyVideo
+                : _mode == CameraShareMode.video) ==
+            video) {
       return;
     }
     setState(() {
-      _storyVideo = video;
+      if (_mode == CameraShareMode.story) {
+        _storyVideo = video;
+      } else {
+        _mode = video ? CameraShareMode.video : CameraShareMode.photo;
+      }
       _recordedSeconds = 0;
     });
     cameraState.setState(video ? CaptureMode.video : CaptureMode.photo);
@@ -139,7 +155,9 @@ class _MainCameraScreenState extends State<MainCameraScreen> {
     if (event.status == MediaCaptureStatus.failure) {
       _stopRecordingClock();
       _recordingState = null;
-      _message('Çekim tamamlanamadı. Kamera izinlerini kontrol edip tekrar dene.');
+      _message(
+        'Çekim tamamlanamadı. Kamera izinlerini kontrol edip tekrar dene.',
+      );
       return;
     }
     if (event.status != MediaCaptureStatus.success || _handlingCapture) return;
@@ -182,67 +200,40 @@ class _MainCameraScreenState extends State<MainCameraScreen> {
     if (_openingGallery || _handlingCapture || _recordingState != null) return;
     setState(() => _openingGallery = true);
     try {
+      final selectedMode = _mode;
       final wantsVideo = _isVideoMode;
-      if (_mode == CameraShareMode.story) {
-        final type = await showModalBottomSheet<String>(
-          context: context,
-          useSafeArea: true,
-          backgroundColor: AppColors.surface,
-          shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-          ),
-          builder: (sheet) => Padding(
-            padding: const EdgeInsets.fromLTRB(16, 10, 16, 18),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 38,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Colors.white24,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                const Text(
-                  'Story için galeriden seç',
-                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.w900),
-                ),
-                const SizedBox(height: 8),
-                ListTile(
-                  leading: const Icon(Icons.photo_library_outlined),
-                  title: const Text('Fotoğraf seç'),
-                  onTap: () => Navigator.pop(sheet, 'photo'),
-                ),
-                ListTile(
-                  leading: const Icon(Icons.video_library_outlined),
-                  title: const Text('Video seç'),
-                  subtitle: const Text('En fazla 15 saniye'),
-                  onTap: () => Navigator.pop(sheet, 'video'),
-                ),
-              ],
+      if (selectedMode == CameraShareMode.story) {
+        // One native picker shows both photos and videos, without an extra menu.
+        final picked = await _picker.pickMedia(requestFullMetadata: false);
+        if (picked == null || !mounted) return;
+        final path = picked.path.toLowerCase();
+        final isVideo =
+            picked.mimeType?.startsWith('video/') == true ||
+            RegExp(r'\.(mp4|mov|m4v|3gp|webm|avi|mkv)$').hasMatch(path);
+        await _routeCapturedFile(
+          File(picked.path),
+          mode: selectedMode,
+          isVideo: isVideo,
+        );
+        return;
+      }
+      if (selectedMode == CameraShareMode.photo) {
+        final photos = await _picker.pickMultiImage(
+          limit: 10,
+          requestFullMetadata: false,
+        );
+        if (photos.isEmpty || !mounted) return;
+        if (photos.length > 10) {
+          _message('Bir gönderide en fazla 10 fotoğraf seçebilirsin.');
+          return;
+        }
+        await Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (_) => CreatePostScreen(
+              initialImagePaths: photos.map((photo) => photo.path).toList(),
             ),
           ),
         );
-        if (type == null || !mounted) return;
-        final picked = type == 'video'
-            ? await _picker.pickVideo(
-                source: ImageSource.gallery,
-                maxDuration: const Duration(seconds: 15),
-              )
-            : await _picker.pickImage(
-                source: ImageSource.gallery,
-                imageQuality: 100,
-                requestFullMetadata: false,
-              );
-        if (picked != null && mounted) {
-          await _routeCapturedFile(
-            File(picked.path),
-            mode: _mode,
-            isVideo: type == 'video',
-          );
-        }
         return;
       }
 
@@ -259,11 +250,11 @@ class _MainCameraScreenState extends State<MainCameraScreen> {
       if (picked == null || !mounted) return;
       await _routeCapturedFile(
         File(picked.path),
-        mode: _mode,
+        mode: selectedMode,
         isVideo: wantsVideo,
       );
     } catch (error) {
-      _message('Galeri açılamadı: ${error.toString().replaceFirst('Exception: ', '')}');
+      _message(userFacingError(error));
     } finally {
       // Android photo picker dismissal can dispatch the same tap once more to
       // the underlying camera surface. Keep a short cooldown before rearming.
@@ -288,7 +279,10 @@ class _MainCameraScreenState extends State<MainCameraScreen> {
           context,
           MaterialPageRoute(
             fullscreenDialog: true,
-            builder: (_) => StoryVideoEditorScreen(video: file, initialMusic: widget.initialMusic),
+            builder: (_) => StoryVideoEditorScreen(
+              video: file,
+              initialMusic: widget.initialMusic,
+            ),
           ),
         );
         if (mounted && shared == true) Navigator.pop(context, true);
@@ -298,7 +292,10 @@ class _MainCameraScreenState extends State<MainCameraScreen> {
         context,
         MaterialPageRoute(
           fullscreenDialog: true,
-          builder: (_) => StoryPhotoEditorScreen(photo: file, initialMusic: widget.initialMusic),
+          builder: (_) => StoryPhotoEditorScreen(
+            photo: file,
+            initialMusic: widget.initialMusic,
+          ),
         ),
       );
       if (mounted && shared == true) Navigator.pop(context, true);
@@ -330,8 +327,9 @@ class _MainCameraScreenState extends State<MainCameraScreen> {
       backgroundColor: Colors.black,
       body: CameraAwesomeBuilder.custom(
         saveConfig: SaveConfig.photoAndVideo(
-          initialCaptureMode: _mode == CameraShareMode.photo
-                  || (_mode == CameraShareMode.story && !_storyVideo)
+          initialCaptureMode:
+              _mode == CameraShareMode.photo ||
+                  (_mode == CameraShareMode.story && !_storyVideo)
               ? CaptureMode.photo
               : CaptureMode.video,
           videoOptions: VideoOptions(enableAudio: true),
@@ -385,7 +383,10 @@ class _MainCameraScreenState extends State<MainCameraScreen> {
             showGrid: _showGrid,
             busy: _handlingCapture || _openingGallery,
             onClose: () => Navigator.pop(context),
-            onImport: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ImportShareScreen())),
+            onImport: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const ImportShareScreen()),
+            ),
             onGallery: _openGallery,
             onCapture: () => _capture(cameraState),
             onStoryMediaSelected: (video) =>
@@ -435,8 +436,8 @@ class _CameraOverlay extends StatelessWidget {
   String get _modeLabel => switch (mode) {
     CameraShareMode.story => 'STORY',
     CameraShareMode.reels => 'REELS',
-    CameraShareMode.photo => 'FOTOĞRAF',
-    CameraShareMode.video => 'VİDEO',
+    CameraShareMode.photo => 'GÖNDERİ',
+    CameraShareMode.video => 'GÖNDERİ',
   };
 
   String get _durationLabel => switch (mode) {
@@ -489,10 +490,24 @@ class _CameraOverlay extends StatelessWidget {
                 Row(
                   children: [
                     _GlassButton(icon: Icons.close_rounded, onTap: onClose),
-                    if (!recording && !busy) IconButton(tooltip: 'Diğer uygulamalardan aktar', icon: const Icon(Icons.move_to_inbox_outlined), onPressed: onImport),
+                    if (!recording && !busy)
+                      PopupMenuButton<String>(
+                        tooltip: 'Diğer seçenekler',
+                        icon: const Icon(Icons.more_horiz, color: Colors.white),
+                        onSelected: (_) => onImport(),
+                        itemBuilder: (_) => const [
+                          PopupMenuItem(
+                            value: 'import',
+                            child: Text('Diğer uygulamalardan aktar'),
+                          ),
+                        ],
+                      ),
                     const Spacer(),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 13,
+                        vertical: 8,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.black45,
                         borderRadius: BorderRadius.circular(999),
@@ -522,7 +537,10 @@ class _CameraOverlay extends StatelessWidget {
                   alignment: Alignment.centerRight,
                   child: Column(
                     children: [
-                      _SideInfo(icon: Icons.timer_outlined, label: _durationLabel),
+                      _SideInfo(
+                        icon: Icons.timer_outlined,
+                        label: _durationLabel,
+                      ),
                       if (mode == CameraShareMode.photo) ...[
                         const SizedBox(height: 9),
                         _SideTool(
@@ -535,9 +553,9 @@ class _CameraOverlay extends StatelessWidget {
                   ),
                 ),
                 const Spacer(),
-                if (mode == CameraShareMode.story) ...[
+                if (mode != CameraShareMode.reels) ...[
                   _StoryMediaSelector(
-                    video: storyVideo,
+                    video: _videoMode,
                     enabled: !recording && !busy,
                     onChanged: onStoryMediaSelected,
                   ),
@@ -545,11 +563,14 @@ class _CameraOverlay extends StatelessWidget {
                 ],
                 Text(
                   switch (mode) {
-                    CameraShareMode.story => storyVideo
-                        ? '15 saniyeye kadar videonu çek'
-                        : 'Fotoğrafını çek ve düzenlemeye devam et',
-                    CameraShareMode.reels => 'Dikey videonu Reels olarak paylaş',
-                    CameraShareMode.photo => 'Fotoğrafını çek, konumunu ekle ve paylaş',
+                    CameraShareMode.story =>
+                      storyVideo
+                          ? '15 saniyeye kadar videonu çek'
+                          : 'Fotoğraf çek veya galeriden seç',
+                    CameraShareMode.reels =>
+                      'Dikey videonu Reels olarak paylaş',
+                    CameraShareMode.photo =>
+                      'Fotoğraf çek veya galeriden en fazla 10 fotoğraf seç',
                     CameraShareMode.video => 'Videonu çek ve ana akışta paylaş',
                   },
                   textAlign: TextAlign.center,
@@ -565,9 +586,8 @@ class _CameraOverlay extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Center(
-                        child: _GlassButton(
-                          icon: Icons.photo_library_outlined,
-                          onTap: busy || recording ? null : onGallery,
+                        child: CameraGalleryButton(
+                          onPressed: busy || recording ? null : onGallery,
                         ),
                       ),
                     ),
@@ -581,12 +601,18 @@ class _CameraOverlay extends StatelessWidget {
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           border: Border.all(color: Colors.white, width: 4),
-                          boxShadow: const [BoxShadow(color: Colors.black38, blurRadius: 18)],
+                          boxShadow: const [
+                            BoxShadow(color: Colors.black38, blurRadius: 18),
+                          ],
                         ),
                         child: DecoratedBox(
                           decoration: BoxDecoration(
-                            shape: recording ? BoxShape.rectangle : BoxShape.circle,
-                            borderRadius: recording ? BorderRadius.circular(8) : null,
+                            shape: recording
+                                ? BoxShape.rectangle
+                                : BoxShape.circle,
+                            borderRadius: recording
+                                ? BorderRadius.circular(8)
+                                : null,
                             color: _videoMode ? Colors.redAccent : Colors.white,
                           ),
                         ),
@@ -596,27 +622,28 @@ class _CameraOverlay extends StatelessWidget {
                       child: Center(
                         child: _GlassButton(
                           icon: Icons.cameraswitch_rounded,
-                          onTap: recording ? null : () => state.switchCameraSensor(),
+                          onTap: recording || busy
+                              ? null
+                              : () => state.switchCameraSensor(),
                         ),
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 13),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: CameraShareMode.values
-                        .map(
-                          (item) => _ModeButton(
-                            mode: item,
-                            selected: item == mode,
-                            enabled: !recording && !busy,
-                            onTap: () => onModeSelected(item),
-                          ),
-                        )
-                        .toList(growable: false),
+                CameraShareModeSelector(
+                  selectedIndex: mode == CameraShareMode.story
+                      ? 0
+                      : mode == CameraShareMode.reels
+                      ? 2
+                      : 1,
+                  enabled: !recording && !busy,
+                  onChanged: (index) => onModeSelected(
+                    [
+                      CameraShareMode.story,
+                      CameraShareMode.photo,
+                      CameraShareMode.reels,
+                    ][index],
                   ),
                 ),
               ],
@@ -626,64 +653,11 @@ class _CameraOverlay extends StatelessWidget {
         if (busy)
           const ColoredBox(
             color: Color(0x55000000),
-            child: Center(child: CircularProgressIndicator(color: AppColors.cyan)),
+            child: Center(
+              child: CircularProgressIndicator(color: AppColors.cyan),
+            ),
           ),
       ],
-    );
-  }
-}
-
-class _ModeButton extends StatelessWidget {
-  final CameraShareMode mode;
-  final bool selected;
-  final bool enabled;
-  final VoidCallback onTap;
-
-  const _ModeButton({
-    required this.mode,
-    required this.selected,
-    required this.enabled,
-    required this.onTap,
-  });
-
-  String get _label => switch (mode) {
-    CameraShareMode.story => 'Story',
-    CameraShareMode.reels => 'Reels',
-    CameraShareMode.photo => 'Fotoğraf',
-    CameraShareMode.video => 'Video',
-  };
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: enabled ? onTap : null,
-      borderRadius: BorderRadius.circular(12),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 8),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              _label,
-              style: TextStyle(
-                color: selected ? Colors.white : Colors.white54,
-                fontSize: 12.5,
-                fontWeight: selected ? FontWeight.w900 : FontWeight.w700,
-              ),
-            ),
-            const SizedBox(height: 5),
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 160),
-              width: selected ? 24 : 0,
-              height: 3,
-              decoration: BoxDecoration(
-                gradient: selected ? AppColors.accentGradient : null,
-                borderRadius: BorderRadius.circular(3),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
@@ -893,13 +867,28 @@ class _CameraGridPainter extends CustomPainter {
     final paint = Paint()
       ..color = Colors.white.withValues(alpha: .38)
       ..strokeWidth = .8;
-    canvas.drawLine(Offset(size.width / 3, 0), Offset(size.width / 3, size.height), paint);
-    canvas.drawLine(Offset(size.width * 2 / 3, 0), Offset(size.width * 2 / 3, size.height), paint);
-    canvas.drawLine(Offset(0, size.height / 3), Offset(size.width, size.height / 3), paint);
-    canvas.drawLine(Offset(0, size.height * 2 / 3), Offset(size.width, size.height * 2 / 3), paint);
+    canvas.drawLine(
+      Offset(size.width / 3, 0),
+      Offset(size.width / 3, size.height),
+      paint,
+    );
+    canvas.drawLine(
+      Offset(size.width * 2 / 3, 0),
+      Offset(size.width * 2 / 3, size.height),
+      paint,
+    );
+    canvas.drawLine(
+      Offset(0, size.height / 3),
+      Offset(size.width, size.height / 3),
+      paint,
+    );
+    canvas.drawLine(
+      Offset(0, size.height * 2 / 3),
+      Offset(size.width, size.height * 2 / 3),
+      paint,
+    );
   }
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
-
