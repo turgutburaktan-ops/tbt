@@ -1,0 +1,26 @@
+name: Upload verified Play build 33
+on:
+  push:
+    branches: [codex/upload-play-build33]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: tbt-play-release-1.0.18-code33
+          run-id: 34771047391
+          github-token: ${{ github.token }}
+          path: build/app/outputs/bundle/release
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Upload verified artifact to closed test
+        env:
+          PLAY_CREDENTIAL: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: node tool/upload_play_build33.cjs
