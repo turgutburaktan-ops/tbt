@@ -2,38 +2,13 @@ name: Publish TBT 1.0.18 build 31
 on:
   push:
     branches: [codex/publish-1.0.18-build31]
-  workflow_dispatch:
 permissions:
   contents: read
 concurrency:
   group: tbt-publish-build31
-  cancel-in-progress: false
+  cancel-in-progress: true
 jobs:
-  backend:
-    uses: ./.github/workflows/deploy_firestore_rules.yml
-    secrets: inherit
-  android:
-    needs: backend
-    uses: ./.github/workflows/android_play_release.yml
-    secrets: inherit
-  ios:
-    needs: backend
-    uses: ./.github/workflows/ios_testflight_release.yml
-    secrets: inherit
-  submit-ios:
-    needs: ios
+  paused:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-      - name: Verify guarded review replacement scenarios
-        run: node tool/checks/ios_submission31_check.cjs
-      - name: Submit verified build 31 to App Review
-        env:
-          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
-          APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
-          APP_STORE_CONNECT_API_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
-        run: node tool/submit_ios_build31.cjs
+      - run: echo 'Publication stopped at user request. No store uploads or submissions.'
