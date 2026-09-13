@@ -1,5 +1,7 @@
+import '../theme/app_theme.dart';
 import '../widgets/profile_name_link.dart';
 import '../widgets/description_field.dart';
+
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -57,12 +59,19 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   @override
   void initState() {
     super.initState();
-    if (widget.initialImagePath != null) _images.add(File(widget.initialImagePath!));
-    _images.addAll(widget.initialImagePaths.take(10 - _images.length).map(File.new));
-    if (widget.initialVideoPath != null) { _video = File(widget.initialVideoPath!); _images.clear(); }
+    if (widget.initialImagePath != null)
+      _images.add(File(widget.initialImagePath!));
+    _images.addAll(
+      widget.initialImagePaths.take(10 - _images.length).map(File.new),
+    );
+    if (widget.initialVideoPath != null) {
+      _video = File(widget.initialVideoPath!);
+      _images.clear();
+    }
     _captionController.text = widget.initialCaption;
     _captionController.addListener(_refreshCaptionCounter);
-    if (widget.businessVenueName.isNotEmpty) _spotController.text = widget.businessVenueName;
+    if (widget.businessVenueName.isNotEmpty)
+      _spotController.text = widget.businessVenueName;
   }
 
   void _refreshCaptionCounter() {
@@ -83,28 +92,65 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     if (_loading) return;
     final choice = await showModalBottomSheet<String>(
       context: context,
-      backgroundColor: const Color(0xFF121416),
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
       builder: (sheetContext) => SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(18),
-          child: Column(mainAxisSize: MainAxisSize.min, children: [
-            const Text('Fotoğraf veya video ekle', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
-            const SizedBox(height: 10),
-            ListTile(leading: const Icon(Icons.camera_alt_outlined), title: const Text('Fotoğraf çek'), onTap: () => Navigator.pop(sheetContext, 'photo_camera')),
-            ListTile(leading: const Icon(Icons.photo_library_outlined), title: const Text('Galeriden fotoğraf seç'), subtitle: const Text('Tek gönderide en fazla 10 fotoğraf'), onTap: () => Navigator.pop(sheetContext, 'photo_gallery')),
-            ListTile(leading: const Icon(Icons.move_to_inbox_outlined), title: const Text('Diğer uygulamalardan aktar'), onTap: () => Navigator.pop(sheetContext, 'import')),
-            const Divider(),
-            ListTile(leading: const Icon(Icons.videocam_outlined), title: const Text('30 sn video çek'), onTap: () => Navigator.pop(sheetContext, 'video_camera')),
-            ListTile(leading: const Icon(Icons.video_library_outlined), title: const Text('Galeriden video seç'), onTap: () => Navigator.pop(sheetContext, 'video_gallery')),
-          ]),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Fotoğraf veya video ekle',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
+              ),
+              const SizedBox(height: 10),
+              ListTile(
+                leading: const Icon(Icons.camera_alt_outlined),
+                title: const Text('Fotoğraf çek'),
+                onTap: () => Navigator.pop(sheetContext, 'photo_camera'),
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library_outlined),
+                title: const Text('Galeriden fotoğraf seç'),
+                subtitle: const Text('Tek gönderide en fazla 10 fotoğraf'),
+                onTap: () => Navigator.pop(sheetContext, 'photo_gallery'),
+              ),
+              ListTile(
+                leading: const Icon(Icons.move_to_inbox_outlined),
+                title: const Text('Diğer uygulamalardan aktar'),
+                onTap: () => Navigator.pop(sheetContext, 'import'),
+              ),
+              const Divider(),
+              ListTile(
+                leading: const Icon(Icons.videocam_outlined),
+                title: const Text('30 sn video çek'),
+                onTap: () => Navigator.pop(sheetContext, 'video_camera'),
+              ),
+              ListTile(
+                leading: const Icon(Icons.video_library_outlined),
+                title: const Text('Galeriden video seç'),
+                onTap: () => Navigator.pop(sheetContext, 'video_gallery'),
+              ),
+            ],
+          ),
         ),
       ),
     );
     if (choice == null || !mounted) return;
-    if (choice == 'import') { await Navigator.push(context, MaterialPageRoute(builder: (_) => const ImportShareScreen())); return; }
+    if (choice == 'import') {
+      await Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const ImportShareScreen()),
+      );
+      return;
+    }
     if (choice.startsWith('video')) {
-      await _pickVideo(choice == 'video_camera' ? ImageSource.camera : ImageSource.gallery);
+      await _pickVideo(
+        choice == 'video_camera' ? ImageSource.camera : ImageSource.gallery,
+      );
     } else if (choice == 'photo_gallery') {
       await _pickMultipleImages();
     } else {
@@ -114,7 +160,10 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
 
   Future<void> _pickMultipleImages() async {
     try {
-      final selected = await _picker.pickMultiImage(imageQuality: 92, limit: 10);
+      final selected = await _picker.pickMultiImage(
+        imageQuality: 92,
+        limit: 10,
+      );
       if (selected.isEmpty || !mounted) return;
       setState(() {
         _images
@@ -147,9 +196,16 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   Future<void> _addMorePhotos() async {
     if (_images.length >= 10) return;
     try {
-      final selected = await _picker.pickMultiImage(imageQuality: 92, limit: 10 - _images.length);
+      final selected = await _picker.pickMultiImage(
+        imageQuality: 92,
+        limit: 10 - _images.length,
+      );
       if (selected.isEmpty || !mounted) return;
-      setState(() => _images.addAll(selected.take(10 - _images.length).map((x) => File(x.path))));
+      setState(
+        () => _images.addAll(
+          selected.take(10 - _images.length).map((x) => File(x.path)),
+        ),
+      );
     } catch (e) {
       if (mounted) _message('Fotoğraflar eklenemedi: $e');
     }
@@ -165,7 +221,10 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
 
   Future<void> _pickVideo(ImageSource source) async {
     try {
-      final selected = await _picker.pickVideo(source: source, maxDuration: const Duration(seconds: 30));
+      final selected = await _picker.pickVideo(
+        source: source,
+        maxDuration: const Duration(seconds: 30),
+      );
       if (selected == null || !mounted) return;
       setState(() {
         _video = File(selected.path);
@@ -180,11 +239,17 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     if (_gettingLocation) return;
     setState(() => _gettingLocation = true);
     try {
-      if (!await Geolocator.isLocationServiceEnabled()) throw Exception('Telefonun konum servisini aç.');
+      if (!await Geolocator.isLocationServiceEnabled())
+        throw Exception('Telefonun konum servisini aç.');
       var permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) throw Exception('Konum izni verilmedi.');
-      final position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+      if (permission == LocationPermission.denied)
+        permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever)
+        throw Exception('Konum izni verilmedi.');
+      final position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
       if (!mounted) return;
       setState(() {
         _latitude = position.latitude;
@@ -203,25 +268,73 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     final selected = await showModalBottomSheet<Map<String, String>>(
       context: context,
       useSafeArea: true,
-      backgroundColor: const Color(0xFF0E1012),
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
+      backgroundColor: AppColors.background,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
       builder: (sheetContext) => SizedBox(
         height: MediaQuery.of(sheetContext).size.height * .64,
-        child: Column(children: [ const Padding(padding: EdgeInsets.all(18), child: Text('Açıklamaya kişi etiketle', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900))), const Divider(color: Colors.white12), Expanded(child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-          stream: ContentEngagementService.instance.users(),
-          builder: (_, snapshot) {
-            if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
-            final users = snapshot.data!.docs.where((d) => d.id != me).toList();
-            return ListView.builder(itemCount: users.length, itemBuilder: (_, index) {
-              final doc = users[index];
-              final data = doc.data();
-              final name = (data['displayName'] ?? data['email'] ?? 'Kullanıcı').toString().trim();
-              final username = (data['username'] ?? data['usernameNormalized'] ?? '').toString().trim();
-              final mention = username.isNotEmpty ? username : name.replaceAll(' ', '');
-              return ListTile(title: ProfileNameLink(userId: doc.id, compact: true, child: Text(name)), subtitle: username.isEmpty ? null : ProfileNameLink(userId: doc.id, compact: true, child: Text('@$username')), onTap: () => Navigator.pop(sheetContext, {'id': doc.id, 'name': name, 'mention': mention}));
-            });
-          },
-        ))]),
+        child: Column(
+          children: [
+            const Padding(
+              padding: EdgeInsets.all(18),
+              child: Text(
+                'Açıklamaya kişi etiketle',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
+              ),
+            ),
+            const Divider(color: Colors.white12),
+            Expanded(
+              child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                stream: ContentEngagementService.instance.users(),
+                builder: (_, snapshot) {
+                  if (!snapshot.hasData)
+                    return const Center(child: CircularProgressIndicator());
+                  final users = snapshot.data!.docs
+                      .where((d) => d.id != me)
+                      .toList();
+                  return ListView.builder(
+                    itemCount: users.length,
+                    itemBuilder: (_, index) {
+                      final doc = users[index];
+                      final data = doc.data();
+                      final name =
+                          (data['displayName'] ?? data['email'] ?? 'Kullanıcı')
+                              .toString()
+                              .trim();
+                      final username =
+                          (data['username'] ?? data['usernameNormalized'] ?? '')
+                              .toString()
+                              .trim();
+                      final mention = username.isNotEmpty
+                          ? username
+                          : name.replaceAll(' ', '');
+                      return ListTile(
+                        title: ProfileNameLink(
+                          userId: doc.id,
+                          compact: true,
+                          child: Text(name),
+                        ),
+                        subtitle: username.isEmpty
+                            ? null
+                            : ProfileNameLink(
+                                userId: doc.id,
+                                compact: true,
+                                child: Text('@$username'),
+                              ),
+                        onTap: () => Navigator.pop(sheetContext, {
+                          'id': doc.id,
+                          'name': name,
+                          'mention': mention,
+                        }),
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
     if (selected == null || !mounted) return;
@@ -229,10 +342,13 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     if (id.isEmpty || _taggedUsers.any((u) => u['id'] == id)) return;
     setState(() {
       _taggedUsers.add(selected);
-      final mention = '@${selected['mention'] ?? selected['name'] ?? 'kullanici'}';
+      final mention =
+          '@${selected['mention'] ?? selected['name'] ?? 'kullanici'}';
       final current = _captionController.text.trimRight();
       _captionController.text = current.isEmpty ? mention : '$current $mention';
-      _captionController.selection = TextSelection.collapsed(offset: _captionController.text.length);
+      _captionController.selection = TextSelection.collapsed(
+        offset: _captionController.text.length,
+      );
     });
   }
 
@@ -240,70 +356,319 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     setState(() {
       _taggedUsers.removeWhere((u) => u['id'] == user['id']);
       final mention = user['mention'] ?? user['name'] ?? '';
-      if (mention.isNotEmpty) _captionController.text = _captionController.text.replaceAll('@$mention', '').replaceAll(RegExp(r'\s{2,}'), ' ').trim();
+      if (mention.isNotEmpty)
+        _captionController.text = _captionController.text
+            .replaceAll('@$mention', '')
+            .replaceAll(RegExp(r'\s{2,}'), ' ')
+            .trim();
     });
   }
 
   Future<void> _share() async {
     if (!_hasMedia) return _message('Önce bir fotoğraf veya video seç.');
-    if (_captionController.text.length > 500) return _message('Açıklama en fazla 500 karakter olabilir.');
-    if (PostService.instance.currentUser == null) return _message('Paylaşım yapmak için giriş yapmalısın.');
+    if (_captionController.text.length > 500)
+      return _message('Açıklama en fazla 500 karakter olabilir.');
+    if (PostService.instance.currentUser == null)
+      return _message('Paylaşım yapmak için giriş yapmalısın.');
     setState(() => _loading = true);
     try {
-      final ids = _taggedUsers.map((u) => u['id'] ?? '').where((e) => e.isNotEmpty).toList();
-      final names = _taggedUsers.map((u) => u['name'] ?? '').where((e) => e.isNotEmpty).toList();
+      final ids = _taggedUsers
+          .map((u) => u['id'] ?? '')
+          .where((e) => e.isNotEmpty)
+          .toList();
+      final names = _taggedUsers
+          .map((u) => u['name'] ?? '')
+          .where((e) => e.isNotEmpty)
+          .toList();
       if (_isVideo) {
-        await PostService.instance.createVideoPost(video: _video!, caption: _captionController.text, spotName: _spotController.text, latitude: _latitude, longitude: _longitude, taggedUserIds: ids, taggedUserNames: names, businessVenueKey: widget.businessVenueKey, businessVenueName: widget.businessVenueName);
+        await PostService.instance.createVideoPost(
+          video: _video!,
+          caption: _captionController.text,
+          spotName: _spotController.text,
+          latitude: _latitude,
+          longitude: _longitude,
+          taggedUserIds: ids,
+          taggedUserNames: names,
+          businessVenueKey: widget.businessVenueKey,
+          businessVenueName: widget.businessVenueName,
+        );
       } else {
-        await MultiPhotoPostService.instance.createPost(images: _images, caption: _captionController.text, spotName: _spotController.text, latitude: _latitude, longitude: _longitude, taggedUserIds: ids, taggedUserNames: names, businessVenueKey: widget.businessVenueKey, businessVenueName: widget.businessVenueName);
+        await MultiPhotoPostService.instance.createPost(
+          images: _images,
+          caption: _captionController.text,
+          spotName: _spotController.text,
+          latitude: _latitude,
+          longitude: _longitude,
+          taggedUserIds: ids,
+          taggedUserNames: names,
+          businessVenueKey: widget.businessVenueKey,
+          businessVenueName: widget.businessVenueName,
+        );
       }
       if (!mounted) return;
-      _message(_isVideo ? 'Video başarıyla paylaşıldı! 🎬' : '${_images.length} fotoğraf başarıyla paylaşıldı! 📸');
+      _message(
+        _isVideo
+            ? 'Video başarıyla paylaşıldı! 🎬'
+            : '${_images.length} fotoğraf başarıyla paylaşıldı! 📸',
+      );
       Navigator.pop(context, true);
     } catch (e) {
-      if (mounted) _message('Paylaşım başarısız: ${e.toString().replaceFirst('Exception: ', '')}');
+      if (mounted)
+        _message(
+          'Paylaşım başarısız: ${e.toString().replaceFirst('Exception: ', '')}',
+        );
     } finally {
       if (mounted) setState(() => _loading = false);
     }
   }
 
   void _message(String message) {
-    ScaffoldMessenger.of(context)..hideCurrentSnackBar()..showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
   }
 
   Widget _mediaPreview() {
-    if (_video != null) return AppVideoPlayer.file(file: _video!, autoplay: true, muted: true, loop: true, fit: BoxFit.cover);
-    if (_images.isEmpty) return const Center(child: Column(mainAxisSize: MainAxisSize.min, children: [Icon(Icons.add_to_photos_outlined, color: Color(0xFFB7BCC2), size: 68), SizedBox(height: 14), Text('Fotoğraf veya video ekle', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)), SizedBox(height: 6), Text('Tek gönderide 10 fotoğrafa kadar', style: TextStyle(color: Colors.white54))]));
-    return Stack(children: [
-      PageView.builder(controller: _pageController, itemCount: _images.length, onPageChanged: (i) => setState(() => _page = i), itemBuilder: (_, i) => Image.file(_images[i], width: double.infinity, height: double.infinity, fit: BoxFit.cover, gaplessPlayback: true, filterQuality: FilterQuality.low)),
-      if (_images.length > 1) Positioned(top: 12, right: 12, child: DecoratedBox(decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(18)), child: Padding(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6), child: Text('${_page + 1}/${_images.length}', style: const TextStyle(fontWeight: FontWeight.w800))))),
-      Positioned(top: 8, left: 8, child: IconButton.filledTonal(onPressed: () => _removePhoto(_page), icon: const Icon(Icons.delete_outline))),
-    ]);
+    if (_video != null)
+      return AppVideoPlayer.file(
+        file: _video!,
+        autoplay: true,
+        muted: true,
+        loop: true,
+        fit: BoxFit.cover,
+      );
+    if (_images.isEmpty)
+      return const Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.add_to_photos_outlined, color: AppColors.cyan, size: 68),
+            SizedBox(height: 14),
+            Text(
+              'Fotoğraf veya video ekle',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 6),
+            Text(
+              'Tek gönderide 10 fotoğrafa kadar',
+              style: TextStyle(color: Colors.white54),
+            ),
+          ],
+        ),
+      );
+    return Stack(
+      children: [
+        PageView.builder(
+          controller: _pageController,
+          itemCount: _images.length,
+          onPageChanged: (i) => setState(() => _page = i),
+          itemBuilder: (_, i) => Image.file(
+            _images[i],
+            width: double.infinity,
+            height: double.infinity,
+            fit: BoxFit.cover,
+            gaplessPlayback: true,
+            filterQuality: FilterQuality.low,
+          ),
+        ),
+        if (_images.length > 1)
+          Positioned(
+            top: 12,
+            right: 12,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: Colors.black54,
+                borderRadius: BorderRadius.circular(AppRadii.large),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
+                child: Text(
+                  '${_page + 1}/${_images.length}',
+                  style: const TextStyle(fontWeight: FontWeight.w800),
+                ),
+              ),
+            ),
+          ),
+        Positioned(
+          top: 8,
+          left: 8,
+          child: IconButton.filledTonal(
+            onPressed: () => _removePhoto(_page),
+            icon: const Icon(Icons.delete_outline),
+          ),
+        ),
+      ],
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    const accent = Color(0xFFB7BCC2);
+    const accent = AppColors.cyan;
     return Scaffold(
-      backgroundColor: const Color(0xFF090A0C),
-      appBar: AppBar(backgroundColor: const Color(0xFF090A0C), foregroundColor: Colors.white, title: Text(widget.businessVenueName.isEmpty ? 'Paylaş' : '${widget.businessVenueName} • Paylaş')),
-      body: ListView(keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag, padding: const EdgeInsets.fromLTRB(18, 16, 18, 40), children: [
-        GestureDetector(onTap: _chooseSource, child: Container(height: 300, decoration: BoxDecoration(color: const Color(0xFF121416), borderRadius: BorderRadius.circular(24), border: Border.all(color: const Color(0x334B5158))), clipBehavior: Clip.antiAlias, child: _mediaPreview())),
-        if (_images.isNotEmpty) Padding(padding: const EdgeInsets.only(top: 10), child: Row(children: [Text('${_images.length}/10 fotoğraf', style: const TextStyle(color: Colors.white60)), const Spacer(), if (_images.length < 10) TextButton.icon(onPressed: _loading ? null : _addMorePhotos, icon: const Icon(Icons.add_photo_alternate_outlined), label: const Text('Fotoğraf ekle')), TextButton.icon(onPressed: _loading ? null : _chooseSource, icon: const Icon(Icons.edit), label: const Text('Değiştir'))])),
-        if (_isVideo) Align(alignment: Alignment.centerRight, child: TextButton.icon(onPressed: _loading ? null : _chooseSource, icon: const Icon(Icons.edit), label: const Text('Videoyu değiştir'))),
-        const SizedBox(height: 16),
-        TextField(controller: _spotController, maxLength: 120, style: const TextStyle(color: Colors.white), decoration: InputDecoration(labelText: 'Çekim noktası adı (isteğe bağlı)', hintText: 'Örn. Harput Kalesi', prefixIcon: const Icon(Icons.place_outlined), border: OutlineInputBorder(borderRadius: BorderRadius.circular(18)))),
-        const SizedBox(height: 12),
-        OutlinedButton.icon(onPressed: _gettingLocation ? null : _getLocation, icon: _gettingLocation ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.my_location), label: Text(_latitude == null ? 'Konum ekle (isteğe bağlı)' : 'Konum eklendi')),
-        const SizedBox(height: 16),
-        DescriptionField(controller: _captionController, minLines: 3, maxLines: 7, maxLength: 500, style: const TextStyle(color: Colors.white), decoration: InputDecoration(labelText: 'Açıklama (isteğe bağlı)', alignLabelWithHint: true, border: OutlineInputBorder(borderRadius: BorderRadius.circular(18)))),
-        Row(children: [TextButton.icon(onPressed: _addTag, icon: const Icon(Icons.alternate_email), label: const Text('Kişi etiketle')), const Spacer(), Text('${_captionController.text.length}/500', style: const TextStyle(color: Colors.white38, fontSize: 12))]),
-        if (_taggedUsers.isNotEmpty) Wrap(spacing: 8, runSpacing: 8, children: _taggedUsers.map((u) => InputChip(label: Text(u['name'] ?? 'Kullanıcı'), onDeleted: () => _removeTag(u))).toList()),
-        const SizedBox(height: 22),
-        SizedBox(height: 54, child: FilledButton(style: FilledButton.styleFrom(backgroundColor: accent, foregroundColor: Colors.black, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18))), onPressed: _loading ? null : _share, child: _loading ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2)) : Text(_images.length > 1 ? '${_images.length} fotoğrafı paylaş' : 'Paylaş', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16)))),
-      ]),
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        backgroundColor: AppColors.background,
+        foregroundColor: Colors.white,
+        title: Text(
+          widget.businessVenueName.isEmpty
+              ? 'Paylaş'
+              : '${widget.businessVenueName} • Paylaş',
+        ),
+      ),
+      body: ListView(
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+        padding: const EdgeInsets.fromLTRB(18, 16, 18, 40),
+        children: [
+          GestureDetector(
+            onTap: _chooseSource,
+            child: Container(
+              height: 300,
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: AppColors.border),
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: _mediaPreview(),
+            ),
+          ),
+          if (_images.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 10),
+              child: Row(
+                children: [
+                  Text(
+                    '${_images.length}/10 fotoğraf',
+                    style: const TextStyle(color: Colors.white60),
+                  ),
+                  const Spacer(),
+                  if (_images.length < 10)
+                    TextButton.icon(
+                      onPressed: _loading ? null : _addMorePhotos,
+                      icon: const Icon(Icons.add_photo_alternate_outlined),
+                      label: const Text('Fotoğraf ekle'),
+                    ),
+                  TextButton.icon(
+                    onPressed: _loading ? null : _chooseSource,
+                    icon: const Icon(Icons.edit),
+                    label: const Text('Değiştir'),
+                  ),
+                ],
+              ),
+            ),
+          if (_isVideo)
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton.icon(
+                onPressed: _loading ? null : _chooseSource,
+                icon: const Icon(Icons.edit),
+                label: const Text('Videoyu değiştir'),
+              ),
+            ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _spotController,
+            maxLength: 120,
+            style: const TextStyle(color: Colors.white),
+            decoration: InputDecoration(
+              labelText: 'Çekim noktası adı (isteğe bağlı)',
+              hintText: 'Örn. Harput Kalesi',
+              prefixIcon: const Icon(Icons.place_outlined),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppRadii.large),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          OutlinedButton.icon(
+            onPressed: _gettingLocation ? null : _getLocation,
+            icon: _gettingLocation
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.my_location),
+            label: Text(
+              _latitude == null ? 'Konum ekle (isteğe bağlı)' : 'Konum eklendi',
+            ),
+          ),
+          const SizedBox(height: 16),
+          DescriptionField(
+            controller: _captionController,
+            minLines: 3,
+            maxLines: 7,
+            maxLength: 500,
+            style: const TextStyle(color: Colors.white),
+            decoration: InputDecoration(
+              labelText: 'Açıklama (isteğe bağlı)',
+              alignLabelWithHint: true,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppRadii.large),
+              ),
+            ),
+          ),
+          Row(
+            children: [
+              TextButton.icon(
+                onPressed: _addTag,
+                icon: const Icon(Icons.alternate_email),
+                label: const Text('Kişi etiketle'),
+              ),
+              const Spacer(),
+              Text(
+                '${_captionController.text.length}/500',
+                style: const TextStyle(color: Colors.white38, fontSize: 12),
+              ),
+            ],
+          ),
+          if (_taggedUsers.isNotEmpty)
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: _taggedUsers
+                  .map(
+                    (u) => InputChip(
+                      label: Text(u['name'] ?? 'Kullanıcı'),
+                      onDeleted: () => _removeTag(u),
+                    ),
+                  )
+                  .toList(),
+            ),
+          const SizedBox(height: 22),
+          SizedBox(
+            height: 54,
+            child: FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: accent,
+                foregroundColor: Colors.black,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppRadii.large),
+                ),
+              ),
+              onPressed: _loading ? null : _share,
+              child: _loading
+                  ? const SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Text(
+                      _images.length > 1
+                          ? '${_images.length} fotoğrafı paylaş'
+                          : 'Paylaş',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w900,
+                        fontSize: 16,
+                      ),
+                    ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
-
-

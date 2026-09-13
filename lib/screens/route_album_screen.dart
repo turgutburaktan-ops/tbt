@@ -273,7 +273,7 @@ class _PrivateThumbnailState extends State<_PrivateThumbnail> {
     builder: (_, s) => s.data != null
         ? Image.memory(s.data!, fit: BoxFit.cover)
         : const ColoredBox(
-            color: Color(0xFF20242B),
+            color: AppColors.surfaceAlt,
             child: Center(
               child: Icon(Icons.photo_library_outlined, color: Colors.white38),
             ),

@@ -102,7 +102,7 @@ class _RouteCreateScreenState extends State<RouteCreateScreen> {
   });
   @override
   Widget build(BuildContext context) => Scaffold(
-    backgroundColor: const Color(0xFF07080B),
+    backgroundColor: AppColors.background,
     appBar: AppBar(title: const Text('Rota oluştur')),
     bottomNavigationBar: SafeArea(
       child: Padding(

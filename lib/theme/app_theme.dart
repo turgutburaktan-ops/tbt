@@ -10,6 +10,7 @@ class AppColors {
   static const surfaceAlt = Color(0xFF131722);
   static const surfaceStrong = Color(0xFF1A1F2C);
   static const surfaceElevated = Color(0xFF202636);
+  static const messageOutgoing = Color(0xFF19373B);
   static const navigation = Color(0xFF090B11);
 
   static const cyan = Color(0xFF45E7F2);
@@ -342,6 +343,17 @@ class AppTheme {
         elevation: 0,
         focusElevation: 0,
         hoverElevation: 0,
+      ),
+      tabBarTheme: const TabBarThemeData(
+        indicatorColor: AppColors.cyan,
+        labelColor: Colors.white,
+        unselectedLabelColor: AppColors.textMuted,
+        dividerColor: AppColors.border,
+        labelStyle: TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
+        unselectedLabelStyle: TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w700,
+        ),
       ),
       dividerTheme: const DividerThemeData(
         color: AppColors.border,

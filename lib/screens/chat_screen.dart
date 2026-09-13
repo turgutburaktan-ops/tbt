@@ -1,3 +1,4 @@
+import '../theme/app_theme.dart';
 import '../services/user_facing_error.dart';
 import '../widgets/profile_name_link.dart';
 import 'user_profile_screen.dart';
@@ -72,11 +73,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _blockedSubscription;
   ChatThread? _currentThread;
 
-  static const _bg = Color(0xFF0B1426);
-  static const _panel = Color(0xFF142238);
-  static const _mine = Color(0xFF294D7A);
-  static const _other = Color(0xFF1B2D47);
-  static const _accent = Color(0xFF9FC7FF);
+  static const _bg = AppColors.background;
+  static const _panel = AppColors.surface;
+  static const _mine = AppColors.messageOutgoing;
+  static const _other = AppColors.surfaceAlt;
+  static const _accent = AppColors.cyan;
 
   @override
   void initState() {
@@ -289,7 +290,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     await showModalBottomSheet<void>(
       context: context,
       useSafeArea: true,
-      backgroundColor: const Color(0xFF142238),
+      backgroundColor: AppColors.surface,
       showDragHandle: true,
       builder: (sheetContext) => Padding(
         padding: const EdgeInsets.fromLTRB(22, 4, 22, 26),
@@ -327,7 +328,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     final action = await showModalBottomSheet<String>(
       context: context,
       useSafeArea: true,
-      backgroundColor: const Color(0xFF142238),
+      backgroundColor: AppColors.surface,
       showDragHandle: true,
       builder: (sheetContext) => Padding(
         padding: const EdgeInsets.fromLTRB(16, 2, 16, 24),
@@ -388,13 +389,13 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     required String label,
     required VoidCallback onTap,
   }) => InkWell(
-    borderRadius: BorderRadius.circular(18),
+    borderRadius: BorderRadius.circular(AppRadii.large),
     onTap: onTap,
     child: Container(
       padding: const EdgeInsets.symmetric(vertical: 17, horizontal: 4),
       decoration: BoxDecoration(
-        color: const Color(0xFF203C62),
-        borderRadius: BorderRadius.circular(18),
+        color: AppColors.surfaceStrong,
+        borderRadius: BorderRadius.circular(AppRadii.large),
         border: Border.all(color: Colors.white10),
       ),
       child: Column(
@@ -425,7 +426,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   Future<void> _showMessageActions(ChatMessage message, bool mine) async {
     final action = await showModalBottomSheet<String>(
       context: context,
-      backgroundColor: const Color(0xFF142238),
+      backgroundColor: AppColors.surface,
       showDragHandle: true,
       builder: (sheetContext) => SafeArea(
         child: Column(
@@ -757,13 +758,13 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         : 'Gönderi';
 
     return InkWell(
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(AppRadii.large),
       onTap: canOpen ? () => _openSharedContent(message) : null,
       child: Container(
         width: 248,
         decoration: BoxDecoration(
-          color: const Color(0xFF142238),
-          borderRadius: BorderRadius.circular(16),
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(AppRadii.large),
           border: Border.all(color: Colors.white12),
         ),
         clipBehavior: Clip.antiAlias,
@@ -777,7 +778,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                 child: FirebaseMediaImage(
                   imageUrl: imageUrl,
                   fit: BoxFit.cover,
-                  errorWidget: const ColoredBox(color: Color(0xFF203C62)),
+                  errorWidget: const ColoredBox(color: AppColors.surfaceStrong),
                 ),
               )
             else
@@ -785,7 +786,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                 height: 82,
                 width: double.infinity,
                 alignment: Alignment.center,
-                color: const Color(0xFF203C62),
+                color: AppColors.surfaceStrong,
                 child: Icon(icon, size: 34, color: _accent),
               ),
             Padding(
@@ -840,7 +841,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
             (entry) => Container(
               padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
               decoration: BoxDecoration(
-                color: const Color(0xFF203C62),
+                color: AppColors.surfaceStrong,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: Colors.white10),
               ),
@@ -879,8 +880,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           margin: const EdgeInsets.only(bottom: 8),
           padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 9),
           decoration: BoxDecoration(
-            color: const Color(0xFF14181D),
-            borderRadius: BorderRadius.circular(16),
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(AppRadii.large),
             border: Border.all(color: Colors.white10),
           ),
           child: const Text(
@@ -945,7 +946,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                         GestureDetector(
                           onTap: () => _openImage(message.mediaUrl!),
                           child: ClipRRect(
-                            borderRadius: BorderRadius.circular(14),
+                            borderRadius: BorderRadius.circular(
+                              AppRadii.medium,
+                            ),
                             child: SizedBox(
                               width: 238,
                               height: 246,
@@ -953,7 +956,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                                 imageUrl: message.mediaUrl!,
                                 fit: BoxFit.cover,
                                 errorWidget: const ColoredBox(
-                                  color: Color(0xFF15191E),
+                                  color: AppColors.surface,
                                   child: Center(
                                     child: Icon(
                                       Icons.broken_image_outlined,
@@ -1083,7 +1086,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                       ),
                       fit: BoxFit.cover,
                       errorWidget: const ColoredBox(
-                        color: Color(0xFF0D1B30),
+                        color: AppColors.surface,
                         child: Center(
                           child: Icon(Icons.person_rounded, size: 21),
                         ),
@@ -1099,7 +1102,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                       width: 11,
                       height: 11,
                       decoration: BoxDecoration(
-                        color: const Color(0xFF55D68B),
+                        color: AppColors.success,
                         shape: BoxShape.circle,
                         border: Border.all(color: _bg, width: 2),
                       ),
@@ -1127,7 +1130,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      color: online ? const Color(0xFF55D68B) : Colors.white38,
+                      color: online ? AppColors.success : Colors.white38,
                       fontSize: 11.2,
                     ),
                   ),
@@ -1160,7 +1163,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
             icon: const Icon(Icons.close_rounded),
           ),
           filled: true,
-          fillColor: const Color(0xFF1B2D47),
+          fillColor: AppColors.surfaceAlt,
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(20),
             borderSide: BorderSide.none,
@@ -1230,7 +1233,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                 margin: const EdgeInsets.fromLTRB(4, 0, 4, 7),
                 padding: const EdgeInsets.fromLTRB(11, 8, 4, 8),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF203C62),
+                  color: AppColors.surfaceStrong,
                   borderRadius: BorderRadius.circular(13),
                   border: Border.all(color: Colors.white10),
                 ),
@@ -1282,7 +1285,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                   tooltip: 'Fotoğraf veya ses gönder',
                   style: IconButton.styleFrom(
                     foregroundColor: _accent,
-                    backgroundColor: const Color(0xFF203C62),
+                    backgroundColor: AppColors.surfaceStrong,
                   ),
                   onPressed: _sendingMedia || _editing != null
                       ? null
@@ -1310,7 +1313,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                       hintText: 'Mesaj yaz…',
                       hintStyle: const TextStyle(color: Colors.white38),
                       filled: true,
-                      fillColor: const Color(0xFF1B2D47),
+                      fillColor: AppColors.surfaceAlt,
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: 16,
                         vertical: 11,
@@ -1381,7 +1384,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     }
     final action = await showModalBottomSheet<String>(
       context: context,
-      backgroundColor: const Color(0xFF142238),
+      backgroundColor: AppColors.surface,
       builder: (sheetContext) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,

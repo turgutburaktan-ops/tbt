@@ -124,7 +124,7 @@ class _EventsHubScreenState extends State<EventsHubScreen> {
                           Icon(
                             Icons.bolt_rounded,
                             size: 18,
-                            color: Color(0xFFFFD166),
+                            color: AppColors.warning,
                           ),
                           SizedBox(width: 7),
                           Expanded(
@@ -173,7 +173,7 @@ class _XpBadge extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
     decoration: BoxDecoration(
-      color: const Color(0xFFFFD166),
+      color: AppColors.warning,
       borderRadius: BorderRadius.circular(999),
     ),
     child: Text(

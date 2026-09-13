@@ -1,3 +1,5 @@
+import '../theme/app_theme.dart';
+
 import 'package:flutter/material.dart';
 
 /// Keeps incoming request actions above Android navigation and iOS home areas.
@@ -17,7 +19,7 @@ class ChatRequestBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ColoredBox(
-    color: const Color(0xFF142238),
+    color: AppColors.surface,
     child: SafeArea(
       top: false,
       // Outgoing requests already have a safe-area-aware composer below them.

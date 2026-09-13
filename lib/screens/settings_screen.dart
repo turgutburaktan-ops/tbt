@@ -706,7 +706,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         children: [
           CircleAvatar(
             radius: 27,
-            backgroundColor: const Color(0xFF0D1B30),
+            backgroundColor: AppColors.surface,
             backgroundImage: photo.isEmpty ? null : NetworkImage(photo),
             child: photo.isEmpty
                 ? const Icon(Icons.person_outline_rounded)
@@ -717,18 +717,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                ProfileNameLink(userId: user.uid, compact: true, child: Text(
-                  name,
-                  style: const TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w900,
+                ProfileNameLink(
+                  userId: user.uid,
+                  compact: true,
+                  child: Text(
+                    name,
+                    style: const TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w900,
+                    ),
                   ),
-                )),
+                ),
                 if (username.isNotEmpty)
-                  ProfileNameLink(userId: user.uid, compact: true, child: Text(
-                    username.startsWith('@') ? username : '@$username',
-                    style: const TextStyle(color: Colors.white60),
-                  )),
+                  ProfileNameLink(
+                    userId: user.uid,
+                    compact: true,
+                    child: Text(
+                      username.startsWith('@') ? username : '@$username',
+                      style: const TextStyle(color: Colors.white60),
+                    ),
+                  ),
                 const SizedBox(height: 3),
                 Text(
                   _profileTypeLabel(type),

@@ -1,44 +1,37 @@
+import '../theme/app_theme.dart';
+
 import 'package:flutter/material.dart';
 
-const tbtDialogBackground = Color(0xFF0D1B30);
-const tbtDialogAccent = Color(0xFF8ACDFF);
+const tbtDialogBackground = AppColors.surface;
+const tbtDialogAccent = AppColors.cyan;
 
 ThemeData tbtDialogTheme(ThemeData base) => base.copyWith(
   colorScheme: base.colorScheme.copyWith(
     primary: tbtDialogAccent,
     secondary: tbtDialogAccent,
-    primaryContainer: const Color(0xFF203C62),
+    primaryContainer: AppColors.surfaceStrong,
     onPrimaryContainer: Colors.white,
     onSurface: const Color(0xFFF0F5FF),
     onPrimary: const Color(0xFF071322),
     surface: tbtDialogBackground,
     surfaceContainerHigh: tbtDialogBackground,
-    surfaceContainerHighest: const Color(0xFF162A43),
+    surfaceContainerHighest: AppColors.surfaceAlt,
   ),
   textSelectionTheme: const TextSelectionThemeData(
     cursorColor: tbtDialogAccent,
-    selectionColor: Color(0x448ACDFF),
+    selectionColor: AppColors.cyanSoft,
     selectionHandleColor: tbtDialogAccent,
   ),
   inputDecorationTheme: base.inputDecorationTheme.copyWith(
-    fillColor: const Color(0xFF081426),
+    fillColor: AppColors.surfaceAlt,
     floatingLabelStyle: const TextStyle(color: tbtDialogAccent),
     focusedBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(AppRadii.medium),
       borderSide: const BorderSide(color: tbtDialogAccent),
     ),
   ),
-  textButtonTheme: TextButtonThemeData(
-    style: TextButton.styleFrom(foregroundColor: const Color(0xFFB5C9DF)),
-  ),
-  filledButtonTheme: FilledButtonThemeData(
-    style: FilledButton.styleFrom(
-      backgroundColor: const Color(0xFF285F8C),
-      foregroundColor: Colors.white,
-      minimumSize: const Size(90, 46),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-    ),
-  ),
+  textButtonTheme: TextButtonThemeData(style: base.textButtonTheme.style),
+  filledButtonTheme: base.filledButtonTheme,
 );
 
 Future<T?> showTbtDialog<T>({
@@ -112,7 +105,7 @@ class TbtDialog extends StatelessWidget {
               height: 4,
               margin: const EdgeInsets.only(bottom: 18),
               decoration: BoxDecoration(
-                color: const Color(0xFF3B526E),
+                color: AppColors.border,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),

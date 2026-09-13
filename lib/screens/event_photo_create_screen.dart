@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/social_event.dart';
 import '../theme/app_theme.dart';
+import '../widgets/app_page_chrome.dart';
 import 'event_create_screen_v2.dart';
 
 class EventPhotoCreateScreen extends StatelessWidget {
@@ -81,14 +82,9 @@ class EventPhotoCreateScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 14, 16, 32),
         children: [
-          const Text(
-            'Bugün ne yapmak istersin?',
-            style: TextStyle(fontSize: 23, fontWeight: FontWeight.w900),
-          ),
-          const SizedBox(height: 6),
-          const Text(
-            'Bir şablon seç. Başlık, tür, saat ve kişi sayısını hazırlayalım; sen sadece konumu ve kapak fotoğrafını tamamla.',
-            style: TextStyle(color: Colors.white60, height: 1.4),
+          const AppPageHeading(
+            title: 'Bugün ne yapmak istersin?',
+            subtitle: 'Bir şablon seç; etkinliğinin detaylarını sonraki adımda tamamla.',
           ),
           const SizedBox(height: 16),
           GridView.builder(
@@ -104,13 +100,13 @@ class EventPhotoCreateScreen extends StatelessWidget {
             itemBuilder: (context, index) {
               final template = _templates[index];
               return InkWell(
-                borderRadius: BorderRadius.circular(18),
+                borderRadius: BorderRadius.circular(AppRadii.large),
                 onTap: () => _open(context, template),
                 child: Container(
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
                     color: AppColors.surface,
-                    borderRadius: BorderRadius.circular(18),
+                    borderRadius: BorderRadius.circular(AppRadii.large),
                     border: Border.all(color: AppColors.border),
                   ),
                   child: Column(

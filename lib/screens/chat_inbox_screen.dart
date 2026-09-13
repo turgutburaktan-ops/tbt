@@ -1,6 +1,8 @@
+import '../theme/app_theme.dart';
 import '../widgets/profile_name_link.dart';
 import '../widgets/chat_surface.dart';
 import '../widgets/chat_delete_action.dart';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -84,7 +86,7 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
         if (snapshot.connectionState == ConnectionState.waiting &&
             !snapshot.hasData) {
           return const Center(
-            child: CircularProgressIndicator(color: Color(0xFFB7BCC2)),
+            child: CircularProgressIndicator(color: AppColors.cyan),
           );
         }
         if (snapshot.hasError && !snapshot.hasData) {
@@ -134,8 +136,7 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
         return ListView.separated(
           padding: const EdgeInsets.fromLTRB(8, 6, 8, 24),
           itemCount: docs.length,
-          separatorBuilder: (_, __) =>
-              const SizedBox(height: 6),
+          separatorBuilder: (_, __) => const SizedBox(height: 6),
           itemBuilder: (context, index) {
             final doc = docs[index];
             final data = doc.data();
@@ -154,7 +155,7 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
             return ListTile(
               leading: CircleAvatar(
                 radius: 24,
-                backgroundColor: const Color(0xFF0D1B30),
+                backgroundColor: AppColors.surface,
                 backgroundImage: photoUrl.isEmpty
                     ? null
                     : NetworkImage(photoUrl),
@@ -162,21 +163,29 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
                     ? const Icon(Icons.person_outline, color: Colors.white54)
                     : null,
               ),
-              title: ProfileNameLink(userId: doc.id, compact: true, child: Text(
-                displayName.isEmpty ? 'Kullanıcı' : displayName,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontWeight: FontWeight.w800),
-              )),
+              title: ProfileNameLink(
+                userId: doc.id,
+                compact: true,
+                child: Text(
+                  displayName.isEmpty ? 'Kullanıcı' : displayName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontWeight: FontWeight.w800),
+                ),
+              ),
               subtitle: username.isEmpty
                   ? const Text(
                       'Mesaj gönder',
                       style: TextStyle(color: Colors.white54),
                     )
-                  : ProfileNameLink(userId: doc.id, compact: true, child: Text(
-                      '@$username',
-                      style: const TextStyle(color: Colors.white54),
-                    )),
+                  : ProfileNameLink(
+                      userId: doc.id,
+                      compact: true,
+                      child: Text(
+                        '@$username',
+                        style: const TextStyle(color: Colors.white54),
+                      ),
+                    ),
               trailing: const Icon(
                 Icons.chat_bubble_outline_rounded,
                 color: Colors.white54,
@@ -201,7 +210,7 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
         if (snapshot.connectionState == ConnectionState.waiting &&
             !snapshot.hasData) {
           return const Center(
-            child: CircularProgressIndicator(color: Color(0xFFB7BCC2)),
+            child: CircularProgressIndicator(color: AppColors.cyan),
           );
         }
         if (snapshot.hasError && !snapshot.hasData) {
@@ -272,32 +281,49 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
         return ListView.separated(
           padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
           itemCount: threads.length,
-          separatorBuilder: (_, __) =>
-              const SizedBox(height: 6),
+          separatorBuilder: (_, __) => const SizedBox(height: 6),
           itemBuilder: (context, index) {
             final thread = threads[index];
             final otherIds = thread.memberIds
                 .where((id) => id != myId)
                 .toList(growable: false);
-            if (thread.isGroup) return ListTile(
-              trailing: ChatDeleteAction(onDelete: () => _deleteConversation(thread)),
-              onLongPress: () => _deleteConversation(thread),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
-              tileColor: const Color(0xA6142238),
-              leading: const CircleAvatar(child: Icon(Icons.groups_outlined)),
-              title: Text(thread.name), subtitle: Text(thread.lastMessage, maxLines: 1, overflow: TextOverflow.ellipsis),
-              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ChatScreen(otherUserId: '', groupThreadId: thread.id))),
-            );
+            if (thread.isGroup)
+              return ListTile(
+                trailing: ChatDeleteAction(
+                  onDelete: () => _deleteConversation(thread),
+                ),
+                onLongPress: () => _deleteConversation(thread),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppRadii.xLarge),
+                ),
+                tileColor: AppColors.surface,
+                leading: const CircleAvatar(child: Icon(Icons.groups_outlined)),
+                title: Text(thread.name),
+                subtitle: Text(
+                  thread.lastMessage,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        ChatScreen(otherUserId: '', groupThreadId: thread.id),
+                  ),
+                ),
+              );
             if (otherIds.isEmpty) return const SizedBox.shrink();
             final lastRead = thread.lastReadAt[myId];
-            final unread = thread.lastSenderId != myId &&
+            final unread =
+                thread.lastSenderId != myId &&
                 thread.lastMessageAt != null &&
                 (lastRead == null || thread.lastMessageAt!.isAfter(lastRead));
             return _ThreadTile(
               thread: thread,
               otherUserId: otherIds.first,
               unread: unread,
-              onDelete: () => _deleteConversation(thread),            );
+              onDelete: () => _deleteConversation(thread),
+            );
           },
         );
       },
@@ -308,84 +334,112 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
   Widget build(BuildContext context) {
     final myId = FirebaseAuth.instance.currentUser?.uid;
 
-    return ChatSurface(child: Builder(builder: (context) => Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        foregroundColor: Colors.white,
-        title: const Text('Mesajlar'),
-        titleSpacing: 0,
-        actions: [
-          IconButton(constraints: const BoxConstraints.tightFor(width: 40), padding: EdgeInsets.zero, tooltip: 'Mesaj ayarları', icon: const Icon(Icons.settings_outlined), onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MessagePrivacySettingsScreen()))),
-          PopupMenuButton<String>(padding: EdgeInsets.zero, constraints: const BoxConstraints(minWidth: 160), tooltip: 'Grup sohbeti', icon: const Icon(Icons.group_add_outlined), onSelected: (v) => startGroupChat(context, join: v == 'join'), itemBuilder: (_) => const [PopupMenuItem(value: 'create', child: Text('Yeni grup')), PopupMenuItem(value: 'join', child: Text('Davetle katıl'))]),
-          IconButton(
-            constraints: const BoxConstraints.tightFor(width: 40),
-            padding: EdgeInsets.zero,
-            tooltip: 'Yeni mesaj',
-            onPressed: () => _searchFocus.requestFocus(),
-            icon: const Icon(Icons.edit_square),
-          ),
-          StreamBuilder<int>(
-            stream: AppNotificationService.instance.unreadCount(),
-            builder: (context, snapshot) {
-              final count = snapshot.data ?? 0;
-              return IconButton(
+    return ChatSurface(
+      child: Builder(
+        builder: (context) => Scaffold(
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+          appBar: AppBar(
+            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+            foregroundColor: Colors.white,
+            title: const Text('Mesajlar'),
+            titleSpacing: 0,
+            actions: [
+              IconButton(
                 constraints: const BoxConstraints.tightFor(width: 40),
                 padding: EdgeInsets.zero,
-                tooltip: 'Bildirimler',
-                onPressed: () => Navigator.pushNamed(context, '/notifications'),
-                icon: Badge(
-                  isLabelVisible: count > 0,
-                  label: Text(count > 99 ? '99+' : '$count'),
-                  child: const Icon(Icons.notifications_none_rounded),
-                ),
-              );
-            },
-          ),
-          const SizedBox(width: 6),
-        ],
-      ),
-      body: ChatBackdrop(child: myId == null
-          ? const Center(
-              child: Text(
-                'Mesajlarını görmek için giriş yapmalısın.',
-                style: TextStyle(color: Colors.white70),
-              ),
-            )
-          : Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(14, 8, 14, 8),
-                  child: TextField(
-                    controller: _searchController,
-                    focusNode: _searchFocus,
-                    onChanged: (value) => setState(() => _query = value),
-                    textInputAction: TextInputAction.search,
-                    decoration: InputDecoration(
-                      hintText: 'Kullanıcı ara…',
-                      prefixIcon: const Icon(Icons.search_rounded),
-                      suffixIcon: _query.isEmpty
-                          ? null
-                          : IconButton(
-                              tooltip: 'Temizle',
-                              onPressed: () {
-                                _searchController.clear();
-                                setState(() => _query = '');
-                                _searchFocus.unfocus();
-                              },
-                              icon: const Icon(Icons.close_rounded),
-                            ),
-                    ),
+                tooltip: 'Mesaj ayarları',
+                icon: const Icon(Icons.settings_outlined),
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const MessagePrivacySettingsScreen(),
                   ),
                 ),
-                Expanded(
-                  child: _query.trim().isEmpty
-                      ? _threads(myId)
-                      : _searchResults(myId),
-                ),
-              ],
-            )),
-    )));
+              ),
+              PopupMenuButton<String>(
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 160),
+                tooltip: 'Grup sohbeti',
+                icon: const Icon(Icons.group_add_outlined),
+                onSelected: (v) => startGroupChat(context, join: v == 'join'),
+                itemBuilder: (_) => const [
+                  PopupMenuItem(value: 'create', child: Text('Yeni grup')),
+                  PopupMenuItem(value: 'join', child: Text('Davetle katıl')),
+                ],
+              ),
+              IconButton(
+                constraints: const BoxConstraints.tightFor(width: 40),
+                padding: EdgeInsets.zero,
+                tooltip: 'Yeni mesaj',
+                onPressed: () => _searchFocus.requestFocus(),
+                icon: const Icon(Icons.edit_square),
+              ),
+              StreamBuilder<int>(
+                stream: AppNotificationService.instance.unreadCount(),
+                builder: (context, snapshot) {
+                  final count = snapshot.data ?? 0;
+                  return IconButton(
+                    constraints: const BoxConstraints.tightFor(width: 40),
+                    padding: EdgeInsets.zero,
+                    tooltip: 'Bildirimler',
+                    onPressed: () =>
+                        Navigator.pushNamed(context, '/notifications'),
+                    icon: Badge(
+                      isLabelVisible: count > 0,
+                      label: Text(count > 99 ? '99+' : '$count'),
+                      child: const Icon(Icons.notifications_none_rounded),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(width: 6),
+            ],
+          ),
+          body: ChatBackdrop(
+            child: myId == null
+                ? const Center(
+                    child: Text(
+                      'Mesajlarını görmek için giriş yapmalısın.',
+                      style: TextStyle(color: Colors.white70),
+                    ),
+                  )
+                : Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(14, 8, 14, 8),
+                        child: TextField(
+                          controller: _searchController,
+                          focusNode: _searchFocus,
+                          onChanged: (value) => setState(() => _query = value),
+                          textInputAction: TextInputAction.search,
+                          decoration: InputDecoration(
+                            hintText: 'Kullanıcı ara…',
+                            prefixIcon: const Icon(Icons.search_rounded),
+                            suffixIcon: _query.isEmpty
+                                ? null
+                                : IconButton(
+                                    tooltip: 'Temizle',
+                                    onPressed: () {
+                                      _searchController.clear();
+                                      setState(() => _query = '');
+                                      _searchFocus.unfocus();
+                                    },
+                                    icon: const Icon(Icons.close_rounded),
+                                  ),
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: _query.trim().isEmpty
+                            ? _threads(myId)
+                            : _searchResults(myId),
+                      ),
+                    ],
+                  ),
+          ),
+        ),
+      ),
+    );
   }
 }
 
@@ -429,15 +483,17 @@ class _ThreadTile extends StatelessWidget {
         final photoUrl = preview.photoUrl;
 
         return ListTile(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
-          tileColor: unread ? const Color(0xFF203654) : const Color(0xA6142238),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadii.xLarge),
+          ),
+          tileColor: unread ? AppColors.surfaceStrong : AppColors.surface,
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 16,
             vertical: 5,
           ),
           leading: CircleAvatar(
             radius: 25,
-            backgroundColor: const Color(0xFF0D1B30),
+            backgroundColor: AppColors.surface,
             backgroundImage: photoUrl.isNotEmpty
                 ? NetworkImage(photoUrl)
                 : null,
@@ -448,22 +504,26 @@ class _ThreadTile extends StatelessWidget {
           title: Row(
             children: [
               Expanded(
-                child: ProfileNameLink(userId: otherUserId, compact: true, child: Text(
-                  name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: unread ? FontWeight.w900 : FontWeight.w700,
+                child: ProfileNameLink(
+                  userId: otherUserId,
+                  compact: true,
+                  child: Text(
+                    name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: unread ? FontWeight.w900 : FontWeight.w700,
+                    ),
                   ),
-                )),
+                ),
               ),
               if (thread.lastMessageAt != null) ...[
                 const SizedBox(width: 8),
                 Text(
                   _threadTime(thread.lastMessageAt),
                   style: TextStyle(
-                    color: unread ? const Color(0xFF9FC7FF) : Colors.white38,
+                    color: unread ? AppColors.cyan : Colors.white38,
                     fontSize: 11,
                     fontWeight: unread ? FontWeight.w800 : FontWeight.w500,
                   ),
@@ -471,20 +531,26 @@ class _ThreadTile extends StatelessWidget {
               ],
             ],
           ),
-          subtitle: ProfileNameLink(userId: thread.lastMessage.isEmpty && username.isNotEmpty ? otherUserId : '', compact: true, child: Text(
-            thread.lastMessage.isEmpty
-                ? (username.isEmpty ? 'Sohbeti aç' : '@$username')
-                : thread.lastMessage,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              color: unread ? Colors.white : Colors.white54,
-              fontWeight: unread ? FontWeight.w700 : FontWeight.w400,
+          subtitle: ProfileNameLink(
+            userId: thread.lastMessage.isEmpty && username.isNotEmpty
+                ? otherUserId
+                : '',
+            compact: true,
+            child: Text(
+              thread.lastMessage.isEmpty
+                  ? (username.isEmpty ? 'Sohbeti aç' : '@$username')
+                  : thread.lastMessage,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: unread ? Colors.white : Colors.white54,
+                fontWeight: unread ? FontWeight.w700 : FontWeight.w400,
+              ),
             ),
-          )),
+          ),
           trailing: Badge(
             isLabelVisible: unread,
-            backgroundColor: const Color(0xFF9FC7FF),
+            backgroundColor: AppColors.cyan,
             child: ChatDeleteAction(onDelete: onDelete),
           ),
           onLongPress: onDelete,
@@ -554,10 +620,9 @@ class _ThreadUserCache {
           .get()
           .timeout(const Duration(seconds: 4));
       final data = doc.data() ?? const <String, dynamic>{};
-      final name =
-          (data['displayName'] ?? data['username'] ?? 'Topluluk üyesi')
-              .toString()
-              .trim();
+      final name = (data['displayName'] ?? data['username'] ?? 'Topluluk üyesi')
+          .toString()
+          .trim();
       final username = (data['username'] ?? data['handle'] ?? '')
           .toString()
           .trim()
@@ -584,6 +649,3 @@ class _CachedThreadUser {
   bool get isExpired =>
       DateTime.now().difference(savedAt) > _ThreadUserCache._lifetime;
 }
-
-
-

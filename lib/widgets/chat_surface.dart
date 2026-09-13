@@ -3,14 +3,15 @@ import 'package:flutter/material.dart';
 export 'chat_backdrop.dart';
 
 import '../services/chat_appearance_service.dart';
+import '../theme/app_theme.dart';
 
-/// Shared by the inbox and conversations, without affecting the rest of TBT.
+/// Keep account-specific wallpaper while inheriting the shared TBT controls.
 class ChatSurface extends StatefulWidget {
   const ChatSurface({super.key, required this.child});
   final Widget child;
-  static const background = Color(0xFF0B1426);
-  static const panel = Color(0xFF142238);
-  static const accent = Color(0xFF9FC7FF);
+  static const background = AppColors.background;
+  static const panel = AppColors.surface;
+  static const accent = AppColors.cyan;
 
   @override
   State<ChatSurface> createState() => _ChatSurfaceState();
@@ -32,55 +33,10 @@ class _ChatSurfaceState extends State<ChatSurface> {
       final background = ChatAppearanceService.instance.background.color;
       return Theme(
         data: base.copyWith(
-          colorScheme: base.colorScheme.copyWith(
-            primary: ChatSurface.accent,
-            onPrimary: ChatSurface.background,
-            secondary: ChatSurface.accent,
-            onSecondary: ChatSurface.background,
-            primaryContainer: const Color(0xFF203C62),
-            onPrimaryContainer: const Color(0xFFE8F1FF),
-            surface: ChatSurface.panel,
-            onSurface: const Color(0xFFF0F5FF),
-          ),
-          textSelectionTheme: const TextSelectionThemeData(
-            cursorColor: ChatSurface.accent,
-            selectionColor: Color(0x449FC7FF),
-            selectionHandleColor: ChatSurface.accent,
-          ),
           scaffoldBackgroundColor: background,
           appBarTheme: base.appBarTheme.copyWith(
             backgroundColor: background,
             surfaceTintColor: Colors.transparent,
-            foregroundColor: Colors.white,
-            titleTextStyle: const TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFFF0F5FF),
-            ),
-          ),
-          inputDecorationTheme: base.inputDecorationTheme.copyWith(
-            filled: true,
-            fillColor: ChatSurface.panel,
-            prefixIconColor: ChatSurface.accent,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(24),
-              borderSide: BorderSide.none,
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(24),
-              borderSide: BorderSide.none,
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(24),
-              borderSide: const BorderSide(color: ChatSurface.accent),
-            ),
-          ),
-          chipTheme: base.chipTheme.copyWith(
-            backgroundColor: ChatSurface.panel,
-            selectedColor: const Color(0xFF203C62),
-            side: BorderSide.none,
-            shape: const StadiumBorder(),
-            labelStyle: const TextStyle(color: Color(0xFFF0F5FF)),
           ),
         ),
         child: child!,

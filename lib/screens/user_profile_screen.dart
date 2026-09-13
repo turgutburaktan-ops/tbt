@@ -1,3 +1,4 @@
+import '../theme/app_theme.dart';
 import 'follow_list_screen.dart';
 import '../services/user_facing_error.dart';
 import '../widgets/profile_photo_card.dart';
@@ -80,9 +81,9 @@ class UserProfileScreen extends StatelessWidget {
     final isOwnProfile = currentUser?.uid == userId;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF090A0C),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF090A0C),
+        backgroundColor: AppColors.background,
         foregroundColor: Colors.white,
         elevation: 0,
         title: const Text('Profil'),
@@ -213,7 +214,7 @@ class UserProfileScreen extends StatelessWidget {
                                           ),
                                           decoration: const BoxDecoration(
                                             shape: BoxShape.circle,
-                                            color: Color(0xFF090A0C),
+                                            color: AppColors.background,
                                           ),
                                           child: SizedBox(
                                             width: 86,
@@ -226,7 +227,7 @@ class UserProfileScreen extends StatelessWidget {
                                                       userId,
                                                     ),
                                                 errorWidget: const ColoredBox(
-                                                  color: Color(0xFF0D1B30),
+                                                  color: AppColors.surface,
                                                   child: Center(
                                                     child: Icon(
                                                       Icons.person,
@@ -357,14 +358,14 @@ class UserProfileScreen extends StatelessWidget {
                                           child: FilledButton(
                                             style: FilledButton.styleFrom(
                                               backgroundColor: following
-                                                  ? const Color(0xFF1A1D20)
-                                                  : const Color(0xFF34383D),
+                                                  ? AppColors.surfaceStrong
+                                                  : AppColors.border,
                                               foregroundColor: Colors.white,
                                               shape: RoundedRectangleBorder(
                                                 borderRadius:
                                                     BorderRadius.circular(12),
                                                 side: const BorderSide(
-                                                  color: Color(0xFF353A40),
+                                                  color: AppColors.border,
                                                 ),
                                               ),
                                             ),
@@ -435,7 +436,7 @@ class UserProfileScreen extends StatelessWidget {
                     child: _PublicProfileEvents(userId: userId),
                   ),
                   const SliverToBoxAdapter(
-                    child: Divider(height: 1, color: Color(0xFF2A2E33)),
+                    child: Divider(height: 1, color: AppColors.border),
                   ),
                   if (postsSnapshot.connectionState == ConnectionState.waiting)
                     const SliverFillRemaining(
@@ -477,7 +478,7 @@ class UserProfileScreen extends StatelessWidget {
                               ),
                             ),
                             child: Container(
-                              color: const Color(0xFF121416),
+                              color: AppColors.surface,
                               child: imageUrl.isEmpty && storagePath.isEmpty
                                   ? const Icon(
                                       Icons.image_outlined,

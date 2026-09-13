@@ -1,3 +1,6 @@
+import '../theme/app_theme.dart';
+import 'app_page_chrome.dart';
+
 import 'package:flutter/material.dart';
 
 /// Text labels stay visible on narrow screens without squeezing the tabs.
@@ -10,18 +13,18 @@ class ProfileContentNavigation extends StatelessWidget {
     required this.onChanged,
   });
   @override
-  Widget build(BuildContext context) => SingleChildScrollView(
-    scrollDirection: Axis.horizontal,
-    padding: const EdgeInsets.fromLTRB(14, 0, 14, 8),
-    child: SegmentedButton<String>(
-      showSelectedIcon: false,
-      segments: const [
-        ButtonSegment(value: 'all', label: Text('Tümü')),
-        ButtonSegment(value: 'routes', label: Text('Rotalarım')),
-        ButtonSegment(value: 'favorites', label: Text('Favoriler')),
-      ],
-      selected: {selected},
-      onSelectionChanged: (values) => onChanged(values.first),
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.fromLTRB(
+      AppSpacing.page,
+      0,
+      AppSpacing.page,
+      AppSpacing.small,
+    ),
+    child: AppSectionTabs(
+      labels: const ['Tümü', 'Rotalarım', 'Favoriler'],
+      selected: const ['all', 'routes', 'favorites'].indexOf(selected),
+      onChanged: (index) =>
+          onChanged(const ['all', 'routes', 'favorites'][index]),
     ),
   );
 }
@@ -38,17 +41,17 @@ class ProfileJourneyRow extends StatelessWidget {
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.fromLTRB(16, 6, 16, 14),
     child: Material(
-      color: const Color(0xFF13161C),
+      color: AppColors.surface,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(15),
-        side: const BorderSide(color: Color(0xFF2C3240)),
+        borderRadius: BorderRadius.circular(AppRadii.large),
+        side: const BorderSide(color: AppColors.border),
       ),
       clipBehavior: Clip.antiAlias,
       child: ListTile(
         dense: true,
         leading: const Icon(
           Icons.workspace_premium_rounded,
-          color: Color(0xFFB8A1FF),
+          color: AppColors.violetBright,
         ),
         title: const Text(
           'TBT Yolculuğu',

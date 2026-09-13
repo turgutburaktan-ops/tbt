@@ -142,7 +142,7 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
-      backgroundColor: const Color(0xFF0D0F11),
+      backgroundColor: AppColors.background,
       builder: (sheetContext) => StatefulBuilder(
         builder: (context, setSheetState) => SizedBox(
           height: MediaQuery.of(context).size.height * .72,
@@ -201,7 +201,9 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
                               selected.remove(doc.id);
                             }
                           }),
-                          secondary: CircleAvatar(backgroundColor: const Color(0xFF0D1B30), foregroundColor: Colors.white70,
+                          secondary: CircleAvatar(
+                            backgroundColor: AppColors.surface,
+                            foregroundColor: Colors.white70,
                             backgroundImage: photo.isEmpty
                                 ? null
                                 : NetworkImage(photo),
@@ -280,7 +282,7 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
     final choice = await showModalBottomSheet<EventAttendanceChoice?>(
       context: context,
       useSafeArea: true,
-      backgroundColor: const Color(0xFF111315),
+      backgroundColor: AppColors.background,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -655,7 +657,7 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
                       ? 'Dolu'
                       : 'Katıl';
                   return Card(
-                    color: const Color(0xFF121416),
+                    color: AppColors.surface,
                     child: Padding(
                       padding: const EdgeInsets.all(14),
                       child: Column(
@@ -679,7 +681,7 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
                                     Text(
                                       '${event.typeLabel} • ${_priceLabel(event)}',
                                       style: const TextStyle(
-                                        color: Color(0xFFB7BCC2),
+                                        color: AppColors.cyan,
                                         fontSize: 12,
                                         fontWeight: FontWeight.w700,
                                       ),
@@ -815,13 +817,17 @@ class _SocialEventsScreenState extends State<SocialEventsScreen> {
                           Row(
                             children: [
                               Expanded(
-                                child: ProfileNameLink(userId: event.hostId, compact: true, child: Text(
-                                  'Düzenleyen: ${event.hostName}',
-                                  style: const TextStyle(
-                                    color: Colors.white54,
-                                    fontSize: 12,
+                                child: ProfileNameLink(
+                                  userId: event.hostId,
+                                  compact: true,
+                                  child: Text(
+                                    'Düzenleyen: ${event.hostName}',
+                                    style: const TextStyle(
+                                      color: Colors.white54,
+                                      fontSize: 12,
+                                    ),
                                   ),
-                                )),
+                                ),
                               ),
                               if (attending && !hidden && !isHost)
                                 StreamBuilder<EventTicket?>(
@@ -915,11 +921,11 @@ class _CreateEventDiscoveryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Material(
-    color: const Color(0xFF171A1D),
-    borderRadius: BorderRadius.circular(18),
+    color: AppColors.surface,
+    borderRadius: BorderRadius.circular(AppRadii.large),
     child: InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(AppRadii.large),
       child: Padding(
         padding: const EdgeInsets.all(14),
         child: Row(
@@ -928,8 +934,8 @@ class _CreateEventDiscoveryCard extends StatelessWidget {
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                color: const Color(0xFF25292E),
-                borderRadius: BorderRadius.circular(14),
+                color: AppColors.surfaceStrong,
+                borderRadius: BorderRadius.circular(AppRadii.medium),
               ),
               child: const Icon(Icons.add_circle_outline_rounded),
             ),
@@ -1012,11 +1018,13 @@ class _AttendanceTile extends StatelessWidget {
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.only(bottom: 8),
     child: Material(
-      color: selected ? const Color(0xFF20262A) : const Color(0xFF171A1D),
-      borderRadius: BorderRadius.circular(16),
+      color: selected ? AppColors.surfaceAlt : AppColors.surface,
+      borderRadius: BorderRadius.circular(AppRadii.large),
       child: ListTile(
         onTap: onTap,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadii.large),
+        ),
         leading: Icon(icon),
         title: Text(title, style: const TextStyle(fontWeight: FontWeight.w900)),
         subtitle: Text(

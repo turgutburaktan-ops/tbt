@@ -1,3 +1,5 @@
+import '../theme/app_theme.dart';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -92,114 +94,118 @@ class ProfileFavoritePlacesSection extends StatelessWidget {
                 const SizedBox(height: 10),
                 Container(
                   decoration: BoxDecoration(
-                    color: const Color(0xFF11141A),
-                    borderRadius: BorderRadius.circular(18),
-                    border: Border.all(color: const Color(0xFF292E38)),
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(AppRadii.large),
+                    border: Border.all(color: AppColors.border),
                   ),
                   child: Column(
                     children: _types.asMap().entries.map((entry) {
-                    final type = entry.value;
-                    final value = favorites[type.key];
-                    final data = value is Map
-                        ? Map<String, dynamic>.from(value)
-                        : null;
-                    final name = (data?['name'] ?? '').toString().trim();
-                    final subtitle = (data?['subtitle'] ?? '').toString().trim();
-                    if (!editable && data == null)
-                      return const SizedBox.shrink();
-                    return Column(
-                      children: [
-                        InkWell(
-                          borderRadius: BorderRadius.circular(18),
-                          onTap: editable ? () => _pick(context, type) : null,
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 12,
-                            ),
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 44,
-                                  height: 44,
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFB8A1FF)
-                                        .withValues(alpha: .12),
-                                    borderRadius: BorderRadius.circular(13),
-                                  ),
-                                  child: Icon(
-                                    type.icon,
-                                    size: 23,
-                                    color: const Color(0xFFB8A1FF),
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        type.label,
-                                        style: const TextStyle(
-                                          color: Colors.white54,
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.w700,
-                                        ),
+                      final type = entry.value;
+                      final value = favorites[type.key];
+                      final data = value is Map
+                          ? Map<String, dynamic>.from(value)
+                          : null;
+                      final name = (data?['name'] ?? '').toString().trim();
+                      final subtitle = (data?['subtitle'] ?? '')
+                          .toString()
+                          .trim();
+                      if (!editable && data == null)
+                        return const SizedBox.shrink();
+                      return Column(
+                        children: [
+                          InkWell(
+                            borderRadius: BorderRadius.circular(AppRadii.large),
+                            onTap: editable ? () => _pick(context, type) : null,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 12,
+                              ),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 44,
+                                    height: 44,
+                                    decoration: BoxDecoration(
+                                      color: AppColors.violetBright.withValues(
+                                        alpha: .12,
                                       ),
-                                      const SizedBox(height: 3),
-                                      Text(
-                                        name.isEmpty ? 'Mekan seç' : name,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w900,
-                                          color: name.isEmpty
-                                              ? Colors.white38
-                                              : Colors.white,
-                                        ),
-                                      ),
-                                      if (subtitle.isNotEmpty) ...[
-                                        const SizedBox(height: 2),
+                                      borderRadius: BorderRadius.circular(13),
+                                    ),
+                                    child: Icon(
+                                      type.icon,
+                                      size: 23,
+                                      color: AppColors.violetBright,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
                                         Text(
-                                          subtitle,
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
+                                          type.label,
                                           style: const TextStyle(
-                                            color: Colors.white38,
-                                            fontSize: 10.5,
+                                            color: Colors.white54,
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w700,
                                           ),
                                         ),
+                                        const SizedBox(height: 3),
+                                        Text(
+                                          name.isEmpty ? 'Mekan seç' : name,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w900,
+                                            color: name.isEmpty
+                                                ? Colors.white38
+                                                : Colors.white,
+                                          ),
+                                        ),
+                                        if (subtitle.isNotEmpty) ...[
+                                          const SizedBox(height: 2),
+                                          Text(
+                                            subtitle,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: const TextStyle(
+                                              color: Colors.white38,
+                                              fontSize: 10.5,
+                                            ),
+                                          ),
+                                        ],
                                       ],
-                                    ],
+                                    ),
                                   ),
-                                ),
-                                if (editable)
-                                  Icon(
-                                    name.isEmpty
-                                        ? Icons.add_circle_outline_rounded
-                                        : Icons.edit_outlined,
-                                    size: 21,
-                                    color: const Color(0xFFB8A1FF),
-                                  )
-                                else
-                                  const Icon(
-                                    Icons.chevron_right_rounded,
-                                    color: Colors.white38,
-                                  ),
-                              ],
+                                  if (editable)
+                                    Icon(
+                                      name.isEmpty
+                                          ? Icons.add_circle_outline_rounded
+                                          : Icons.edit_outlined,
+                                      size: 21,
+                                      color: AppColors.violetBright,
+                                    )
+                                  else
+                                    const Icon(
+                                      Icons.chevron_right_rounded,
+                                      color: Colors.white38,
+                                    ),
+                                ],
+                              ),
                             ),
                           ),
-                        ),
-                        if (entry.key < _types.length - 1)
-                          const Divider(
-                            height: 1,
-                            indent: 70,
-                            color: Color(0xFF292E38),
-                          ),
-                      ],
-                    );
-                  }).toList(),
+                          if (entry.key < _types.length - 1)
+                            const Divider(
+                              height: 1,
+                              indent: 70,
+                              color: AppColors.border,
+                            ),
+                        ],
+                      );
+                    }).toList(),
                   ),
                 ),
               ],
@@ -280,9 +286,9 @@ class _ProgressCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(11, 10, 11, 9),
       decoration: BoxDecoration(
-        color: const Color(0xFF13161C),
-        borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: const Color(0xFF2C3240)),
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppRadii.large),
+        border: Border.all(color: AppColors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -293,12 +299,12 @@ class _ProgressCard extends StatelessWidget {
                 width: 36,
                 height: 36,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFB8A1FF).withValues(alpha: .12),
+                  color: AppColors.violetBright.withValues(alpha: .12),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
                   Icons.workspace_premium_rounded,
-                  color: Color(0xFFB8A1FF),
+                  color: AppColors.violetBright,
                   size: 20,
                 ),
               ),
@@ -471,7 +477,7 @@ class _FavoritePlacePickerState extends State<_FavoritePlacePicker> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF090A0C),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: Text('Favori ${widget.type.label}'),
         actions: [
@@ -559,13 +565,13 @@ class _FavoritePlacePickerState extends State<_FavoritePlacePicker> {
                   padding: const EdgeInsets.fromLTRB(12, 0, 12, 24),
                   itemCount: items.length,
                   separatorBuilder: (_, __) =>
-                      const Divider(height: 1, color: Color(0xFF242831)),
+                      const Divider(height: 1, color: AppColors.border),
                   itemBuilder: (context, index) {
                     final item = items[index];
                     return ListTile(
                       leading: Icon(
                         widget.type.icon,
-                        color: const Color(0xFFB8A1FF),
+                        color: AppColors.violetBright,
                       ),
                       title: Text(
                         item.name,

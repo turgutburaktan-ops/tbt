@@ -1,3 +1,5 @@
+import '../theme/app_theme.dart';
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -57,7 +59,7 @@ class _SharePostStoryScreenState extends State<SharePostStoryScreen> {
   Widget build(BuildContext context) => PopScope(
     canPop: !_saving,
     child: Scaffold(
-      backgroundColor: const Color(0xFF0B1426),
+      backgroundColor: AppColors.background,
       appBar: AppBar(title: const Text('Hikâyende paylaş')),
       body: SafeArea(
         child: ListView(
@@ -68,14 +70,20 @@ class _SharePostStoryScreenState extends State<SharePostStoryScreen> {
               style: TextStyle(color: Colors.white70),
             ),
             const SizedBox(height: 16),
-            AspectRatio(aspectRatio: 9 / 16, child: SharedPostCard(
-              postId: widget.postId, compact: true, storyPresentation: true,
-              active: !_saving,
-            )),
+            AspectRatio(
+              aspectRatio: 9 / 16,
+              child: SharedPostCard(
+                postId: widget.postId,
+                compact: true,
+                storyPresentation: true,
+                active: !_saving,
+              ),
+            ),
             const SizedBox(height: 16),
             TextField(
               controller: _note,
-              onTapOutside: (_) => FocusManager.instance.primaryFocus?.unfocus(),
+              onTapOutside: (_) =>
+                  FocusManager.instance.primaryFocus?.unfocus(),
               maxLength: 180,
               maxLines: 3,
               enabled: !_saving,
@@ -98,4 +106,3 @@ class _SharePostStoryScreenState extends State<SharePostStoryScreen> {
     ),
   );
 }
-

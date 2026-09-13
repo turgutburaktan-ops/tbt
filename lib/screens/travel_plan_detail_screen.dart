@@ -482,7 +482,7 @@ class _TravelPlanDetailScreenState extends State<TravelPlanDetailScreen> {
       return DefaultTabController(
         length: 3,
         child: Scaffold(
-          backgroundColor: const Color(0xFF07080B),
+          backgroundColor: AppColors.background,
           appBar: AppBar(
             title: Text(
               plan.title,
@@ -696,7 +696,7 @@ class _TravelPlanDetailScreenState extends State<TravelPlanDetailScreen> {
                       },
                       itemBuilder: (_, i) => Card(
                         key: ValueKey('${stops[i]['id']}_$i'),
-                        color: const Color(0xFF12151C),
+                        color: AppColors.surface,
                         child: ListTile(
                           leading: Row(
                             mainAxisSize: MainAxisSize.min,
@@ -867,7 +867,7 @@ class _RouteTabs extends SliverPersistentHeaderDelegate {
     double shrinkOffset,
     bool overlapsContent,
   ) => const ColoredBox(
-    color: Color(0xFF07080B),
+    color: AppColors.background,
     child: TabBar(
       indicatorColor: AppColors.cyan,
       tabs: [

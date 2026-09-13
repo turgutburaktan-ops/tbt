@@ -429,7 +429,7 @@ class _ProfileBodyState extends State<_ProfileBody> {
                     ),
                     child: CircleAvatar(
                       radius: 43,
-                      backgroundColor: const Color(0xFF0D1B30),
+                      backgroundColor: AppColors.surface,
                       child: ClipOval(
                         child: SizedBox(
                           width: 82,
@@ -440,7 +440,7 @@ class _ProfileBodyState extends State<_ProfileBody> {
                                 FirebaseMediaImage.avatarPaths(widget.user.uid),
                             fit: BoxFit.cover,
                             errorWidget: const ColoredBox(
-                              color: Color(0xFF0D1B30),
+                              color: AppColors.surface,
                               child: Center(
                                 child: Icon(
                                   Icons.person,
@@ -798,7 +798,7 @@ class _ProfileBodyState extends State<_ProfileBody> {
                       onTap: pick,
                       child: CircleAvatar(
                         radius: 42,
-                        backgroundColor: const Color(0xFF0D1B30),
+                        backgroundColor: AppColors.surface,
                         backgroundImage: photo == null
                             ? null
                             : FileImage(photo!),

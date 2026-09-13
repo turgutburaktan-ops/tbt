@@ -474,7 +474,7 @@ class _EventCreateScreenV2State extends State<EventCreateScreenV2> {
               padding: const EdgeInsets.all(13),
               decoration: BoxDecoration(
                 color: AppColors.cyan.withValues(alpha: .08),
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(AppRadii.large),
                 border: Border.all(color: AppColors.cyan.withValues(alpha: .2)),
               ),
               child: const Row(
@@ -599,7 +599,7 @@ class _EventCreateScreenV2State extends State<EventCreateScreenV2> {
           Container(
             decoration: BoxDecoration(
               color: AppColors.surface,
-              borderRadius: BorderRadius.circular(15),
+              borderRadius: BorderRadius.circular(AppRadii.large),
               border: Border.all(color: AppColors.border),
             ),
             child: ListTile(
@@ -630,7 +630,7 @@ class _EventCreateScreenV2State extends State<EventCreateScreenV2> {
           Container(
             decoration: BoxDecoration(
               color: AppColors.surface,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppRadii.large),
               border: Border.all(color: AppColors.border),
             ),
             child: ExpansionTile(
