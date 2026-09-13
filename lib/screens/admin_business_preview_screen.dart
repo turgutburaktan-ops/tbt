@@ -110,9 +110,7 @@ class _AdminBusinessPreviewScreenState
             margin: const EdgeInsets.fromLTRB(14, 12, 14, 8),
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF112229), Color(0xFF1A1428)],
-              ),
+              gradient: AppColors.subtleGradient,
               borderRadius: BorderRadius.circular(18),
               border: Border.all(color: AppColors.cyan.withValues(alpha: .35)),
             ),

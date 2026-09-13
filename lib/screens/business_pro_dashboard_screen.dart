@@ -458,9 +458,7 @@ class _OutcomeSummaryCard extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.all(17),
     decoration: BoxDecoration(
-      gradient: const LinearGradient(
-        colors: [Color(0xFF13252B), Color(0xFF171B2B)],
-      ),
+      gradient: AppColors.subtleGradient,
       borderRadius: BorderRadius.circular(20),
       border: Border.all(color: AppColors.cyan.withValues(alpha: .42)),
     ),

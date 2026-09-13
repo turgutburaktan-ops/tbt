@@ -461,9 +461,7 @@ class _RadarScreenState extends State<RadarScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF142129), Color(0xFF1D1529)],
-        ),
+        gradient: AppColors.subtleGradient,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: AppColors.border),
       ),

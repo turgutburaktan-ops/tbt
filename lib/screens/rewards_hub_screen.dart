@@ -133,7 +133,7 @@ class _JourneyHeader extends StatelessWidget {
   Widget build(BuildContext context) => Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          gradient: const LinearGradient(colors: [Color(0xFF112C4C), Color(0xFF0C2038)]),
+          gradient: AppColors.subtleGradient,
           borderRadius: BorderRadius.circular(24),
           border: Border.all(color: const Color(0xFF2B4C70)),
         ),
