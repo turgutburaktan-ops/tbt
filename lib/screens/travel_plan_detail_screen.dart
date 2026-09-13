@@ -539,18 +539,10 @@ class _TravelPlanDetailScreenState extends State<TravelPlanDetailScreen> {
                       padding: const EdgeInsets.all(16),
                       children: [
                         Padding(
-                          padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+                          padding: const EdgeInsets.only(bottom: 12),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              Text(
-                                plan.title,
-                                style: const TextStyle(
-                                  fontSize: 23,
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
-                              const SizedBox(height: 6),
                               InkWell(
                                 onTap: _owned
                                     ? () =>
@@ -575,6 +567,11 @@ class _TravelPlanDetailScreenState extends State<TravelPlanDetailScreen> {
                                   (point['label'] ?? 'Buluşma noktası ekle')
                                       .toString(),
                                 ),
+                                subtitle:
+                                    point['note'] == null ||
+                                        point['note'].toString().isEmpty
+                                    ? null
+                                    : Text(point['note'].toString()),
                                 onTap: _owned
                                     ? () => _act(() => _pickMeetingPoint(point))
                                     : point.isNotEmpty
