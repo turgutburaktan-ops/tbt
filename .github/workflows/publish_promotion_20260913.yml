@@ -1,0 +1,33 @@
+name: Publish TBT feature promotion 20260913
+on:
+  workflow_dispatch:
+  push:
+    branches: [codex/publish-tbt-promotion-20260913]
+    paths:
+      - '.github/workflows/publish_promotion_20260913.yml'
+      - 'tool/publish_promotion_20260913.cjs'
+      - 'tool/editorial/promotion-20260913/**'
+permissions:
+  contents: read
+concurrency:
+  group: tbt-promotion-20260913
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm ci --prefix functions --ignore-scripts --no-audit --no-fund
+      - run: node tool/publish_promotion_20260913.cjs --validate
+      - name: Publish authorized TBT feature images
+        run: node tool/publish_promotion_20260913.cjs --publish
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tbt-promotion-publication-result
+          path: promotion-publication-result.json
