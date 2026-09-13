@@ -45,3 +45,5 @@ exports.replyToNotification=require('./notification_reply').replyToNotification;
 exports.creatorAdmin = require('./creator_admin').creatorAdmin;
 
 Object.assign(exports, require('./business_customer_growth'));
+
+Object.assign(exports, require('./business_menu_bulk'));
