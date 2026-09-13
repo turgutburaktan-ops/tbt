@@ -1,3 +1,4 @@
+if (!process.env.FIREBASE_AUTH_EMULATOR_HOST || !process.env.FIRESTORE_EMULATOR_HOST) throw Error('Both local emulators are required; refusing cloud access');
 const sdk=require('node:module').createRequire(require('node:path').resolve(__dirname,'../functions/package.json'));
 const assert=require('node:assert/strict');
 const {initializeApp}=sdk('firebase-admin/app');

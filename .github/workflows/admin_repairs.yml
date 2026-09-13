@@ -46,5 +46,5 @@ jobs:
           with open(os.environ['GITHUB_ENV'],'a') as f:f.write('GOOGLE_APPLICATION_CREDENTIALS='+str(p)+'\n')
           PYCODE
       - run: node --check functions/admin_operations.js
-      - run: /tmp/route-tests/node_modules/.bin/firebase emulators:exec --only firestore,auth --project demo-tbt "node tool/test_admin_operations.cjs" --non-interactive
+      - run: /tmp/route-tests/node_modules/.bin/firebase emulators:exec --config firebase.admin-tests.json --only firestore,auth --project demo-tbt "node tool/test_admin_operations.cjs" --non-interactive
       - run: /tmp/route-tests/node_modules/.bin/firebase deploy --only functions:adminModerationPage,functions:adminDirectoryPage,functions:adminReviewReport,functions:adminGrowthSummary,functions:getAdminInsights --project en-iyi-cekim-noktasi --non-interactive
