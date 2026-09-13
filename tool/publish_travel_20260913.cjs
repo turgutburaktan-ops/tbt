@@ -57,7 +57,6 @@ async function main(){
  }
  const before=await db.getAll(user,name,...refs);guard(before);
  const previous=await db.collection('posts').where('userId','==',uid).get();
- console.log(JSON.stringify({existingEditorialVideos:previous.docs.filter(d=>d.data().mediaType==='video').map(d=>({id:d.id,source:d.data().videoSourcePage||'',title:(d.data().caption||'').split('\n')[0]}))}));
  for(const p of data.posts){
   check(!previous.docs.some(d=>d.id!==p.id && (d.data().videoSourcePage===p.sourcePage || (d.data().caption||'').includes(p.sourcePage))), 'Source already published: '+p.sourcePage);
  }
