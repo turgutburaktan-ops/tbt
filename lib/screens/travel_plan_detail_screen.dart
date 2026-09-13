@@ -1365,3 +1365,5 @@ class _LiveTripScreenState extends State<_LiveTripScreen> {
     );
   }
 }
+
+const _titleStyle = TextStyle(fontSize: 15, fontWeight: FontWeight.w900);
