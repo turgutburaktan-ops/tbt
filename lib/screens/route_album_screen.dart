@@ -39,6 +39,7 @@ class _RouteAlbumScreenState extends State<RouteAlbumScreen> {
       .snapshots();
   Future<void> _upload() async {
     if (_uploading) return;
+    var stage = 'Fotoğraf ve video seçimi';
     try {
       final picked = await ImagePicker().pickMultipleMedia();
       if (picked.isEmpty || !mounted) return;
@@ -99,6 +100,7 @@ class _RouteAlbumScreenState extends State<RouteAlbumScreen> {
         final thumb = FirebaseStorage.instance.ref('$base/thumb.jpg');
         bool mediaDone = false, thumbDone = false;
         try {
+          stage = 'Albüm dosyasının yüklenmesi';
           await ref.putFile(
             File(file.path),
             SettableMetadata(contentType: mime),
@@ -120,12 +122,14 @@ class _RouteAlbumScreenState extends State<RouteAlbumScreen> {
               );
           }
           if (thumbnail != null) {
+            stage = 'Albüm önizlemesinin yüklenmesi';
             await thumb.putData(
               thumbnail,
               SettableMetadata(contentType: 'image/jpeg'),
             );
             thumbDone = true;
           }
+          stage = 'İçeriğin albüme eklenmesi';
           await doc.set({
             'ownerId': uid,
             'ownerName':
@@ -150,8 +154,11 @@ class _RouteAlbumScreenState extends State<RouteAlbumScreen> {
       }
     } catch (e) {
       if (mounted)
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(userFacingError(e))));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('$stage tamamlanamadı. ${userFacingError(e)}'),
+          ),
+        );
     } finally {
       if (mounted) setState(() => _uploading = false);
     }
