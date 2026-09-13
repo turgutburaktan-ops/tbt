@@ -1,0 +1,29 @@
+name: Check album Storage access
+on:
+  push:
+    branches: [codex/check-album-access-33]
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --prefix functions --ignore-scripts --no-audit --no-fund
+      - name: Prepare credentials
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          python3 - <<'PYCODE'
+          import os,json,pathlib
+          data=json.loads(os.environ['FIREBASE_SERVICE_ACCOUNT'])
+          if data['project_id']!='en-iyi-cekim-noktasi': raise Exception('Unexpected project')
+          p=pathlib.Path(os.environ['RUNNER_TEMP'])/'firebase.json'
+          p.write_text(json.dumps(data));p.chmod(0o600)
+          with open(os.environ['GITHUB_ENV'],'a') as f:f.write('GOOGLE_APPLICATION_CREDENTIALS='+str(p)+'\n')
+          PYCODE
+      - run: node tool/check_album_iam.cjs
