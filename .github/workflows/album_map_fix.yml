@@ -47,4 +47,4 @@ jobs:
           PYCODE
       - run: node tool/prepare_album_storage_rules.cjs
       - run: NODE_PATH=/tmp/route-tests/node_modules /tmp/route-tests/node_modules/.bin/firebase emulators:exec --only firestore,storage --project demo-tbt "node tool/test_social_routes.cjs && node tool/test_route_participation.cjs" --non-interactive
-      - run: /tmp/route-tests/node_modules/.bin/firebase deploy --only storage --project en-iyi-cekim-noktasi --non-interactive
+      - run: node tool/inspect_album_access.cjs
