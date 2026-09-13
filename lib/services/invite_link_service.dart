@@ -5,7 +5,11 @@ class InviteLinkTarget {
   final String id;
   final String role;
 
-  const InviteLinkTarget({required this.type, required this.id, this.role = ''});
+  const InviteLinkTarget({
+    required this.type,
+    required this.id,
+    this.role = '',
+  });
 }
 
 class InviteLinkService {
@@ -75,6 +79,21 @@ class InviteLinkService {
     final isWebInvite =
         incomingScheme == 'https' && _acceptedWebHosts.contains(incomingHost);
     if (!isWebInvite) return null;
+    // Preserve old website/hash invitation entries without trusting another host.
+    if ((uri.path == '/' || uri.path.isEmpty || uri.path == '/invite.html') &&
+        uri.fragment.isNotEmpty) {
+      String path;
+      try {
+        path = Uri.decodeComponent(uri.fragment);
+      } catch (_) {
+        return null;
+      }
+      if (!path.startsWith('/') || path.startsWith('//') || path.contains('#'))
+        return null;
+      final nested = Uri.tryParse('https://$incomingHost$path');
+      if (nested == null || nested.host != incomingHost) return null;
+      return parse(nested);
+    }
     if (uri.pathSegments.length == 3 &&
         uri.pathSegments[0].toLowerCase() == 'davet') {
       final role = uri.pathSegments[1].trim().toLowerCase();

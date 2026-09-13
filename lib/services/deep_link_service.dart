@@ -76,7 +76,7 @@ class DeepLinkService {
     _recent.add(key);
     Future<void>.delayed(const Duration(seconds: 2), () => _recent.remove(key));
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.endOfFrame.then((_) {
       final navigator = navigatorKey.currentState;
       if (navigator == null) return;
 
@@ -84,10 +84,8 @@ class DeepLinkService {
         case 'role-invite':
           navigator.push(
             MaterialPageRoute(
-              builder: (_) => RoleInviteScreen(
-                role: target.role,
-                code: target.id,
-              ),
+              builder: (_) =>
+                  RoleInviteScreen(role: target.role, code: target.id),
             ),
           );
           break;
