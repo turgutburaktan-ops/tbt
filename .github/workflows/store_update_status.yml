@@ -1,0 +1,22 @@
+name: Check store update versions
+on:
+  push:
+    branches: [codex/store-update-status-33]
+permissions:
+  contents: read
+jobs:
+  status:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Read current App Store and Play versions
+        env:
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+          PLAY_CREDENTIAL: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: node tool/store_update_status.cjs
