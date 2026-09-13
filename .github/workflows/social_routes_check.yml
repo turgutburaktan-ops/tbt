@@ -69,4 +69,16 @@ jobs:
       - run: flutter create --platforms=android --org com.tbt --project-name best_photo_spot .
       - run: python3 tool/patch_native_photo_pipeline.py && python3 tool/configure_route_album.py android && python3 tool/configure_notifications.py android
       - run: python3 tool/patch_receive_sharing_intent.py
+      - name: Supply existing Maps configuration
+        env:
+          MAPS_API_KEY: ${{ secrets.MAPS_API_KEY }}
+        run: |
+          python3 - <<'PYCODE'
+          import os
+          from pathlib import Path
+          key = os.environ['MAPS_API_KEY']
+          if not key: raise SystemExit('Maps configuration missing')
+          p = Path('android/app/src/main/AndroidManifest.xml')
+          p.write_text(p.read_text().replace('$' + '{MAPS_API_KEY}', key))
+          PYCODE
       - run: flutter build apk --debug
