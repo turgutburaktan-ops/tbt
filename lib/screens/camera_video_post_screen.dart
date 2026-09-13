@@ -94,10 +94,6 @@ class _CameraVideoPostScreenState extends State<CameraVideoPostScreen> {
     if (_sharing) return;
     final spotName = _spotController.text.trim();
     final caption = _captionController.text.trim();
-    if (spotName.isEmpty) {
-      _message('Çekim noktası adını yaz.');
-      return;
-    }
     if (spotName.length > 120) {
       _message('Çekim noktası adı en fazla 120 karakter olabilir.');
       return;
@@ -190,7 +186,7 @@ class _CameraVideoPostScreenState extends State<CameraVideoPostScreen> {
             controller: _spotController,
             maxLength: 120,
             decoration: const InputDecoration(
-              labelText: 'Çekim noktası adı',
+              labelText: 'Çekim noktası adı (isteğe bağlı)',
               hintText: 'Örn. Galata Köprüsü',
               prefixIcon: Icon(Icons.place_outlined),
             ),
@@ -202,7 +198,7 @@ class _CameraVideoPostScreenState extends State<CameraVideoPostScreen> {
             minLines: 3,
             maxLines: 5,
             decoration: const InputDecoration(
-              labelText: 'Açıklama',
+              labelText: 'Açıklama (isteğe bağlı)',
               hintText: 'Videoyu anlat, istersen @kullanici etiketle…',
               prefixIcon: Padding(
                 padding: EdgeInsets.only(bottom: 70),
@@ -227,7 +223,7 @@ class _CameraVideoPostScreenState extends State<CameraVideoPostScreen> {
                           : Icons.location_on_rounded,
                     ),
               label: Text(
-                _latitude == null ? 'Konumumu Ekle' : 'Konum Eklendi ✓',
+                _latitude == null ? 'Konum ekle (isteğe bağlı)' : 'Konum Eklendi ✓',
               ),
             ),
           ),
