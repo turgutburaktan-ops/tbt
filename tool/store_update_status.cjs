@@ -22,6 +22,12 @@ async function request(url, token, method='GET', data) {
  console.log('APPLE_APP',JSON.stringify({id:app.id,name:app.attributes.name}));
  console.log('APPLE_VERSIONS',JSON.stringify(versions.data.map(x=>({id:x.id,version:x.attributes.versionString,state:x.attributes.appStoreState}))));
  console.log('APPLE_BUILDS',JSON.stringify(builds.data.map(x=>({id:x.id,build:x.attributes.version,state:x.attributes.processingState,version:builds.included?.find(p=>p.id===x.relationships?.preReleaseVersion?.data?.id)?.attributes?.version}))));
+ const reviews=await request(root+'/reviewSubmissions?filter[app]='+app.id+'&limit=50',appleToken);
+ for(const review of reviews.data){
+  if(['COMPLETE','CANCELED'].includes(review.attributes.state))continue;
+  const items=await request(root+'/reviewSubmissions/'+review.id+'/items?include=appStoreVersion',appleToken);
+  console.log('APPLE_REVIEW',JSON.stringify({id:review.id,state:review.attributes.state,items:items.data.map(x=>({id:x.id,version:x.relationships?.appStoreVersion?.data?.id}))}));
+ }
  const sa=JSON.parse(process.env.PLAY_CREDENTIAL);
  if(sa.project_id!=='en-iyi-cekim-noktasi')throw Error('Unexpected Google project');
  const unsigned=encode({alg:'RS256',typ:'JWT'})+'.'+encode({iss:sa.client_email,scope:'https://www.googleapis.com/auth/androidpublisher',aud:'https://oauth2.googleapis.com/token',iat:now,exp:now+1800});
