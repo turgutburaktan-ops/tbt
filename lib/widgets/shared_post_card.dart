@@ -1,3 +1,5 @@
+import '../theme/app_theme.dart';
+import 'content_engagement_bar.dart';
 import 'profile_name_link.dart';
 import 'shared_story_video.dart';
 import 'creator_view_tracker.dart';
@@ -26,7 +28,8 @@ class SharedPostCard extends StatefulWidget {
     this.active = true,
     this.note = '',
     this.onStoryReady,
-    this.onProfileOpening, this.onProfileReturned,
+    this.onProfileOpening,
+    this.onProfileReturned,
   });
   final String postId;
   final String? repostId;
@@ -127,6 +130,15 @@ class _SharedPostCardState extends State<SharedPostCard> {
       final actor = result['sharedBy'] is Map
           ? Map<String, dynamic>.from(result['sharedBy'] as Map)
           : null;
+      if (actor != null) {
+        try {
+          final profile = await FirebaseFirestore.instance
+              .doc('users/${actor['userId']}')
+              .get();
+          actor['photoUrl'] = profile.data()?['photoUrl'] ?? '';
+        } catch (_) {}
+        if (!mounted || version != _version) return;
+      }
       final me = FirebaseAuth.instance.currentUser?.uid;
       final owners = <String>{
         post['userId'].toString(),
@@ -195,6 +207,165 @@ class _SharedPostCardState extends State<SharedPostCard> {
     super.dispose();
   }
 
+  Widget _avatar(String url, double size) => ClipOval(
+    child: SizedBox(
+      width: size,
+      height: size,
+      child: url.isEmpty
+          ? const ColoredBox(
+              color: AppColors.surfaceAlt,
+              child: Icon(
+                Icons.person_outline,
+                color: AppColors.textMuted,
+                size: 18,
+              ),
+            )
+          : FirebaseMediaImage(imageUrl: url, fit: BoxFit.cover),
+    ),
+  );
+
+  Widget _repost(Map<String, dynamic> post) {
+    final actor = _sharedBy;
+    final caption = (post['caption'] ?? '').toString().trim();
+    final image = (post['imageUrl'] ?? '').toString();
+    final video = (post['videoUrl'] ?? '').toString().isNotEmpty;
+    return CreatorViewTracker(
+      postId: widget.postId,
+      child: Material(
+        color: AppColors.background,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (actor != null)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                child: ProfileNameLink(
+                  userId: (actor['userId'] ?? '').toString(),
+                  compact: true,
+                  onOpening: widget.onProfileOpening,
+                  onReturned: widget.onProfileReturned,
+                  child: Row(
+                    children: [
+                      _avatar((actor['photoUrl'] ?? '').toString(), 22),
+                      const SizedBox(width: 8),
+                      const Icon(
+                        Icons.repeat_rounded,
+                        size: 17,
+                        color: AppColors.blue,
+                      ),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          '${actor['name']} yeniden paylaştı',
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: AppColors.textMuted,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            if (widget.note.trim().isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+                child: Text(widget.note.trim()),
+              ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: ProfileNameLink(
+                userId: (post['userId'] ?? '').toString(),
+                compact: true,
+                onOpening: widget.onProfileOpening,
+                onReturned: widget.onProfileReturned,
+                child: Row(
+                  children: [
+                    _avatar((post['userPhotoUrl'] ?? '').toString(), 36),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        (post['userName'] ?? '').toString(),
+                        style: const TextStyle(fontWeight: FontWeight.w700),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            InkWell(
+              onTap: _open,
+              child: image.isNotEmpty
+                  ? ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxHeight: MediaQuery.sizeOf(context).height * .65,
+                      ),
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          FirebaseMediaImage(
+                            imageUrl: image,
+                            width: double.infinity,
+                            fit: BoxFit.contain,
+                          ),
+                          if (video)
+                            const Icon(
+                              Icons.play_circle_fill_rounded,
+                              size: 56,
+                              color: Colors.white,
+                            ),
+                        ],
+                      ),
+                    )
+                  : Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        children: [
+                          Icon(
+                            video
+                                ? Icons.play_circle_outline
+                                : Icons.route_rounded,
+                            color: AppColors.blue,
+                            size: 42,
+                          ),
+                          const SizedBox(height: 8),
+                          Text((post['title'] ?? 'Gönderiyi aç').toString()),
+                        ],
+                      ),
+                    ),
+            ),
+            if (caption.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                child: Text(
+                  caption,
+                  maxLines: widget.compact ? 3 : 8,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            if ((post['guideNote'] ?? '').toString().trim().isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                child: Text(post['guideNote'].toString()),
+              ),
+            ContentEngagementBar(
+              collection: 'posts',
+              contentId: widget.postId,
+              ownerId: (post['userId'] ?? '').toString(),
+              title: (post['title'] ?? '').toString(),
+              sourceType: 'post',
+            ),
+            const Divider(height: 1, color: AppColors.border),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final post = _post;
@@ -214,15 +385,24 @@ class _SharedPostCardState extends State<SharedPostCard> {
                 ),
         ),
       );
+    if (widget.repostId != null && !widget.storyPresentation)
+      return _repost(post);
     final videoUrl = (post['videoUrl'] ?? '').toString();
     if (widget.storyPresentation && videoUrl.isNotEmpty) {
-      return CreatorViewTracker(postId: widget.postId, child: SharedStoryVideo(
-        url: videoUrl, author: (post['userName'] ?? '').toString(),
-        authorId: (post['userId'] ?? '').toString(),
-        onProfileOpening: widget.onProfileOpening, onProfileReturned: widget.onProfileReturned,
-        note: widget.note, active: widget.active,
-        onReady: _storyReady, onError: () => _storyReady(),
-      ));
+      return CreatorViewTracker(
+        postId: widget.postId,
+        child: SharedStoryVideo(
+          url: videoUrl,
+          author: (post['userName'] ?? '').toString(),
+          authorId: (post['userId'] ?? '').toString(),
+          onProfileOpening: widget.onProfileOpening,
+          onProfileReturned: widget.onProfileReturned,
+          note: widget.note,
+          active: widget.active,
+          onReady: _storyReady,
+          onError: () => _storyReady(),
+        ),
+      );
     }
     final card = CreatorViewTracker(
       postId: widget.postId,
@@ -238,13 +418,19 @@ class _SharedPostCardState extends State<SharedPostCard> {
               if (widget.repostId != null && _sharedBy != null)
                 Padding(
                   padding: const EdgeInsets.fromLTRB(14, 12, 14, 0),
-                  child: ProfileNameLink(userId: (_sharedBy!['userId'] ?? '').toString(), compact: true, onOpening: widget.onProfileOpening, onReturned: widget.onProfileReturned, child: Text(
-                    '${_sharedBy!['name']} yeniden paylaştı',
-                    style: const TextStyle(
-                      color: Color(0xFF9FC7FF),
-                      fontSize: 12,
+                  child: ProfileNameLink(
+                    userId: (_sharedBy!['userId'] ?? '').toString(),
+                    compact: true,
+                    onOpening: widget.onProfileOpening,
+                    onReturned: widget.onProfileReturned,
+                    child: Text(
+                      '${_sharedBy!['name']} yeniden paylaştı',
+                      style: const TextStyle(
+                        color: Color(0xFF9FC7FF),
+                        fontSize: 12,
+                      ),
                     ),
-                  )),
+                  ),
                 ),
               ListTile(
                 dense: true,
@@ -258,19 +444,22 @@ class _SharedPostCardState extends State<SharedPostCard> {
                 onTap: () async {
                   widget.onProfileOpening?.call();
                   try {
-                  unawaited(
-                    CreatorService.instance
-                        .publishing('profileVisit', widget.postId)
-                        .catchError((_) => <String, dynamic>{}),
-                  );
-                  await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) =>
-                          UserProfileScreen(userId: post['userId'].toString()),
-                    ),
-                  );
-                  } finally { if (mounted) widget.onProfileReturned?.call(); }
+                    unawaited(
+                      CreatorService.instance
+                          .publishing('profileVisit', widget.postId)
+                          .catchError((_) => <String, dynamic>{}),
+                    );
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => UserProfileScreen(
+                          userId: post['userId'].toString(),
+                        ),
+                      ),
+                    );
+                  } finally {
+                    if (mounted) widget.onProfileReturned?.call();
+                  }
                 },
               ),
               if ((post['imageUrl'] ?? '').toString().isNotEmpty)
@@ -317,11 +506,17 @@ class _SharedPostCardState extends State<SharedPostCard> {
                     horizontal: 14,
                     vertical: 8,
                   ),
-                  child: ProfileNameLink(userId: (post['userId'] ?? '').toString(), compact: true, onOpening: widget.onProfileOpening, onReturned: widget.onProfileReturned, child: Text(
-                    '“${post['guideNote']}” — ${post['userName']}',
-                    maxLines: widget.compact ? 3 : 8,
-                    overflow: TextOverflow.ellipsis,
-                  )),
+                  child: ProfileNameLink(
+                    userId: (post['userId'] ?? '').toString(),
+                    compact: true,
+                    onOpening: widget.onProfileOpening,
+                    onReturned: widget.onProfileReturned,
+                    child: Text(
+                      '“${post['guideNote']}” — ${post['userName']}',
+                      maxLines: widget.compact ? 3 : 8,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
                 ),
               const Padding(
                 padding: EdgeInsets.fromLTRB(14, 0, 14, 14),
@@ -339,12 +534,22 @@ class _SharedPostCardState extends State<SharedPostCard> {
       ),
     );
     return widget.storyPresentation
-        ? Center(child: SingleChildScrollView(padding: const EdgeInsets.fromLTRB(22, 140, 22, 140),
-            child: Column(mainAxisSize: MainAxisSize.min, children: [card,
-              if (widget.note.isNotEmpty) Padding(padding: const EdgeInsets.only(top: 18),
-                child: Text(widget.note, textAlign: TextAlign.center)),
-            ])))
+        ? Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(22, 140, 22, 140),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  card,
+                  if (widget.note.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 18),
+                      child: Text(widget.note, textAlign: TextAlign.center),
+                    ),
+                ],
+              ),
+            ),
+          )
         : card;
   }
 }
-
