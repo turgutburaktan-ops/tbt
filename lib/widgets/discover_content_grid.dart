@@ -39,6 +39,7 @@ class DiscoverContentGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => CustomScrollView(
+    physics: const AlwaysScrollableScrollPhysics(),
     slivers: [
       _group(0, itemCount < _firstGroupSize ? itemCount : _firstGroupSize),
       if (itemCount >= _firstGroupSize)

@@ -516,11 +516,14 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
         ),
     ];
     if (widget.embedded)
-      return Padding(
-        padding: const EdgeInsets.only(bottom: 24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: content,
+      return CreatorViewTracker(
+        postId: _post['id'].toString(),
+        child: Padding(
+          padding: const EdgeInsets.only(bottom: 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: content,
+          ),
         ),
       );
     return Scaffold(

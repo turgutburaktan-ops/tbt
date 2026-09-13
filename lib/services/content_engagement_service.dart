@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import 'app_notification_service.dart';
+import 'discover_preferences.dart';
 import 'chat_service.dart';
 import 'content_moderation_service.dart';
 
@@ -92,6 +93,9 @@ class ContentEngagementService {
           return true;
         })
         .timeout(const Duration(seconds: 8));
+
+    if (liked && collection == 'posts')
+      DiscoverPreferences.instance.signal(id, 'like', 3);
 
     if (liked && ownerId.isNotEmpty && ownerId != user.uid) {
       unawaited(

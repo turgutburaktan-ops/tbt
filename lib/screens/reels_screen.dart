@@ -22,8 +22,14 @@ import 'user_profile_screen.dart';
 class ReelsScreen extends StatefulWidget {
   final bool embedded;
   final Map<String, dynamic>? initialPost;
+  final List<Map<String, dynamic>>? discoverPosts;
 
-  const ReelsScreen({super.key, this.embedded = false, this.initialPost});
+  const ReelsScreen({
+    super.key,
+    this.embedded = false,
+    this.initialPost,
+    this.discoverPosts,
+  });
 
   @override
   State<ReelsScreen> createState() => _ReelsScreenState();
@@ -68,6 +74,16 @@ class _ReelsScreenState extends State<ReelsScreen> {
         })
         .map((d) => {...d.data(), 'id': d.id})
         .toList();
+    final discover = widget.discoverPosts;
+    if (discover != null && _section == 0) {
+      final order = {
+        for (var i = 0; i < discover.length; i++) discover[i]['id']: i,
+      };
+      result.sort(
+        (a, b) =>
+            (order[a['id']] ?? 100000).compareTo(order[b['id']] ?? 100000),
+      );
+    }
     final initial = widget.initialPost;
     if (initial != null && _section == 0) {
       result.removeWhere((p) => p['id'] == initial['id']);

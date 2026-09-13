@@ -1,5 +1,7 @@
 import 'package:cloud_functions/cloud_functions.dart';
 
+import 'discover_preferences.dart';
+
 class CreatorService {
   CreatorService._();
   static final instance = CreatorService._();
@@ -30,6 +32,13 @@ class CreatorService {
       'postId': postId,
       ...data,
     });
+    if (data['enabled'] == true && (action == 'save' || action == 'repost')) {
+      DiscoverPreferences.instance.signal(
+        postId,
+        action,
+        action == 'save' ? 4 : 5,
+      );
+    }
     return Map<String, dynamic>.from(result.data as Map);
   }
 }

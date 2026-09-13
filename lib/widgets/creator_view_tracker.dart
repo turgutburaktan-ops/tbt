@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 
 import '../services/creator_service.dart';
+import '../services/discover_preferences.dart';
 
 /// Counts only a sustained, foreground view; the server deduplicates per day.
 class CreatorViewTracker extends StatefulWidget {
@@ -49,6 +50,7 @@ class _CreatorViewTrackerState extends State<CreatorViewTracker>
     _timer = Timer(const Duration(seconds: 1), () async {
       if (!mounted || !(ModalRoute.of(context)?.isCurrent ?? true)) return;
       _sent = true;
+      DiscoverPreferences.instance.viewed(widget.postId);
       try {
         await CreatorService.instance.publishing('view', widget.postId);
       } catch (_) {

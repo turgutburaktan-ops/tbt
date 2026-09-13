@@ -1,3 +1,7 @@
+import 'dart:async';
+
+import '../services/discover_ranker.dart';
+import '../services/discover_preferences.dart';
 import '../widgets/profile_name_link.dart';
 import 'reels_screen.dart';
 
@@ -28,6 +32,73 @@ class HomeDiscoverScreen extends StatefulWidget {
 }
 
 class _HomeDiscoverScreenState extends State<HomeDiscoverScreen> {
+  final _preferences = DiscoverPreferences.instance;
+  late Future<void> _preferencesReady;
+  StreamSubscription<User?>? _authSubscription;
+  String? _accountId;
+
+  @override
+  void initState() {
+    super.initState();
+    _accountId = FirebaseAuth.instance.currentUser?.uid;
+    _preferencesReady = _preferences.load();
+    _authSubscription = FirebaseAuth.instance.authStateChanges().listen((user) {
+      if (!mounted || user?.uid == _accountId) return;
+      setState(() {
+        _accountId = user?.uid;
+        _preferencesReady = _preferences.load();
+        _order = null;
+        _seed++;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _authSubscription?.cancel();
+    super.dispose();
+  }
+
+  late final _posts = FirebaseFirestore.instance
+      .collection('posts')
+      .orderBy('createdAt', descending: true)
+      .limit(300)
+      .snapshots();
+  int _seed = DateTime.now().microsecondsSinceEpoch;
+  List<String>? _order;
+
+  List<QueryDocumentSnapshot<Map<String, dynamic>>> _rankPosts(
+    List<QueryDocumentSnapshot<Map<String, dynamic>>> docs,
+  ) {
+    final byId = {for (final doc in docs) doc.id: doc};
+    for (final doc in docs) {
+      _preferences.register(doc.id, doc.data());
+    }
+    _order ??= rankDiscover(
+      docs.map((doc) {
+        final d = doc.data();
+        final created = d['createdAt'];
+        return DiscoverCandidate(
+          id: doc.id,
+          author: (d['userId'] ?? d['ownerId'] ?? 'unknown').toString(),
+          topic: discoverTopic(d),
+          video:
+              d['mediaType'] == 'video' ||
+              (d['videoUrl'] ?? '').toString().isNotEmpty,
+          createdAt: created is Timestamp ? created.toDate() : DateTime(2000),
+          likes: d['likesCount'] is num ? (d['likesCount'] as num).toInt() : 0,
+        );
+      }).toList(),
+      now: DateTime.now(),
+      seed: _seed,
+      interests: _preferences.interests,
+      seen: _preferences.seen,
+    ).map((c) => c.id).toList();
+    // Keep visible content still during likes and background uploads.
+    // New arrivals join the next explicit refresh rather than jumping to the top.
+    return _order!.where(byId.containsKey).map((id) => byId[id]!).toList();
+  }
+
   String? _userQuery, _spotQuery, _venueQuery;
   Future<List<QueryDocumentSnapshot<Map<String, dynamic>>>>? _userSearchFuture;
   Future<List<PhotoSpot>>? _spotSearchFuture;
@@ -314,13 +385,15 @@ class _HomeDiscoverScreenState extends State<HomeDiscoverScreen> {
     // not replace the post currently being read.
     final posts = docs.map((doc) => {...doc.data(), 'id': doc.id}).toList();
     final selected = posts[selectedIndex];
+    _preferences.viewed(selected['id'].toString());
     if ((selected['videoUrl'] ?? '').toString().isNotEmpty ||
         selected['mediaType'] == 'video' ||
         (selected['videoStoragePath'] ?? '').toString().isNotEmpty) {
       Navigator.push(
         context,
         MaterialPageRoute<void>(
-          builder: (_) => ReelsScreen(initialPost: selected),
+          builder: (_) =>
+              ReelsScreen(initialPost: selected, discoverPosts: posts),
         ),
       );
       return;
@@ -341,12 +414,16 @@ class _HomeDiscoverScreenState extends State<HomeDiscoverScreen> {
     );
   }
 
-  Widget _buildExploreGrid() =>
+  Widget _buildExploreGrid() => FutureBuilder<void>(
+    future: _preferencesReady,
+    builder: (context, ready) => ready.connectionState != ConnectionState.done
+        ? const Center(child: CircularProgressIndicator())
+        : _exploreContent(),
+  );
+
+  Widget _exploreContent() =>
       StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-        stream: FirebaseFirestore.instance
-            .collection('posts')
-            .limit(120)
-            .snapshots(),
+        stream: _posts,
         builder: (context, snapshot) {
           if (snapshot.hasError) {
             return const Center(
@@ -371,21 +448,15 @@ class _HomeDiscoverScreenState extends State<HomeDiscoverScreen> {
                   const ColoredBox(color: Color(0xFF171A1F)),
             );
           }
-          final docs =
-              snapshot.data!.docs
-                  .where(
-                    (doc) =>
-                        doc.data()['accountFrozen'] != true &&
-                        _hasMediaCandidate(doc.data()),
-                  )
-                  .toList()
-                ..sort((a, b) {
-                  final av = a.data()['createdAt'];
-                  final bv = b.data()['createdAt'];
-                  final at = av is Timestamp ? av.millisecondsSinceEpoch : 0;
-                  final bt = bv is Timestamp ? bv.millisecondsSinceEpoch : 0;
-                  return bt.compareTo(at);
-                });
+          final docs = _rankPosts(
+            snapshot.data!.docs
+                .where(
+                  (doc) =>
+                      doc.data()['accountFrozen'] != true &&
+                      _hasMediaCandidate(doc.data()),
+                )
+                .toList(),
+          );
           if (docs.isEmpty) {
             return const Center(
               child: Text(
@@ -394,37 +465,47 @@ class _HomeDiscoverScreenState extends State<HomeDiscoverScreen> {
               ),
             );
           }
-          return DiscoverContentGrid(
-            itemCount: docs.length,
-            itemBuilder: (context, index) {
-              final doc = docs[index];
-              final data = doc.data();
-              final videoUrl = (data['videoUrl'] ?? '').toString().trim();
-              final isVideo =
-                  videoUrl.isNotEmpty ||
-                  (data['mediaType'] ?? '').toString() == 'video';
-              return GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onDoubleTap: () => _likeOnDoubleTap(context, doc),
-                onTap: () => _openPostFeed(docs, index),
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    _explorePreview(doc, data, isVideo),
-                    if (isVideo)
-                      const Positioned(
-                        left: 7,
-                        bottom: 7,
-                        child: Icon(
-                          Icons.play_arrow_rounded,
-                          color: Colors.white,
-                          size: 21,
-                        ),
-                      ),
-                  ],
-                ),
-              );
+          return RefreshIndicator(
+            onRefresh: () async {
+              await _preferences.load();
+              if (mounted)
+                setState(() {
+                  _seed++;
+                  _order = null;
+                });
             },
+            child: DiscoverContentGrid(
+              itemCount: docs.length,
+              itemBuilder: (context, index) {
+                final doc = docs[index];
+                final data = doc.data();
+                final videoUrl = (data['videoUrl'] ?? '').toString().trim();
+                final isVideo =
+                    videoUrl.isNotEmpty ||
+                    (data['mediaType'] ?? '').toString() == 'video';
+                return GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onDoubleTap: () => _likeOnDoubleTap(context, doc),
+                  onTap: () => _openPostFeed(docs, index),
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      _explorePreview(doc, data, isVideo),
+                      if (isVideo)
+                        const Positioned(
+                          left: 7,
+                          bottom: 7,
+                          child: Icon(
+                            Icons.play_arrow_rounded,
+                            color: Colors.white,
+                            size: 21,
+                          ),
+                        ),
+                    ],
+                  ),
+                );
+              },
+            ),
           );
         },
       );
