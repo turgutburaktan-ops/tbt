@@ -9,6 +9,9 @@ import 'package:flutter_test/flutter_test.dart';
 import '../lib/theme/app_theme.dart';
 import '../lib/widgets/app_page_chrome.dart';
 
+final previewBytes = File('assets/spots/auto-route-goreme.jpg')
+    .readAsBytesSync();
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   setUpAll(() async {
@@ -100,6 +103,35 @@ void main() {
         debugShowCheckedModeBanner: false,
         theme: AppTheme.dark.copyWith(
           textTheme: AppTheme.dark.textTheme.apply(fontFamily: 'Roboto'),
+          filledButtonTheme: FilledButtonThemeData(
+            style: AppTheme.dark.filledButtonTheme.style?.copyWith(
+              textStyle: const WidgetStatePropertyAll(
+                TextStyle(
+                  fontFamily: 'Roboto',
+                  fontWeight: FontWeight.w800,
+                  fontSize: 13,
+                ),
+              ),
+            ),
+          ),
+          outlinedButtonTheme: OutlinedButtonThemeData(
+            style: AppTheme.dark.outlinedButtonTheme.style?.copyWith(
+              textStyle: const WidgetStatePropertyAll(
+                TextStyle(
+                  fontFamily: 'Roboto',
+                  fontWeight: FontWeight.w800,
+                  fontSize: 13,
+                ),
+              ),
+            ),
+          ),
+          chipTheme: AppTheme.dark.chipTheme.copyWith(
+            labelStyle: AppTheme.dark.chipTheme.labelStyle?.copyWith(
+              fontFamily: 'Roboto',
+            ),
+            secondaryLabelStyle: AppTheme.dark.chipTheme.secondaryLabelStyle
+                ?.copyWith(fontFamily: 'Roboto'),
+          ),
         ),
         home: RepaintBoundary(
           key: boundary,
@@ -123,6 +155,9 @@ void main() {
           ),
         ),
       ),
+    );
+    await tester.runAsync(
+      () => precacheImage(MemoryImage(previewBytes), boundary.currentContext!),
     );
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
@@ -220,12 +255,7 @@ class _PreviewPage extends StatelessWidget {
                       title: Text('TBT Rehber'),
                       subtitle: Text('Nevşehir'),
                     ),
-                    Image.memory(
-                      File('assets/spots/auto-route-goreme.jpg')
-                          .readAsBytesSync(),
-                      height: 190,
-                      fit: BoxFit.cover,
-                    ),
+                    Image.memory(previewBytes, height: 190, fit: BoxFit.cover),
                     const Padding(
                       padding: EdgeInsets.all(16),
                       child: Column(
@@ -352,12 +382,7 @@ class _PreviewPage extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Image.memory(
-                      File('assets/spots/auto-route-goreme.jpg')
-                          .readAsBytesSync(),
-                      height: 160,
-                      fit: BoxFit.cover,
-                    ),
+                    Image.memory(previewBytes, height: 160, fit: BoxFit.cover),
                     Padding(
                       padding: const EdgeInsets.all(16),
                       child: Column(
