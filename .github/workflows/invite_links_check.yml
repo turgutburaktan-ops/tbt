@@ -1,0 +1,19 @@
+name: Check TBT invitation domains
+on:
+  push:
+    branches: [codex/invite-app-links]
+permissions:
+  contents: read
+jobs:
+  domains:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --prefix functions --ignore-scripts --no-audit --no-fund
+      - run: node tool/check_app_link_domains.cjs
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
