@@ -11,6 +11,14 @@ async function main(){
  const data=JSON.parse(await fs.readFile(path.join(__dirname,'editorial/travel-videos-20260913.json'),'utf8'));
  check(data.batch==='travel-videos-20260913'&&data.posts.length===2,'Unexpected batch');
  check(new Set(data.posts.map(p=>p.id)).size===2,'Duplicate IDs');
+ if(process.argv.includes('--audit')){
+  const admin=createRequire(path.join(root,'functions/package.json'))('firebase-admin');
+  const sa=JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT||'{}');check(sa.project_id===project,'Wrong project');
+  admin.initializeApp({credential:admin.credential.cert(sa),projectId:project});
+  const q=await admin.firestore().collection('posts').where('userId','==',uid).get();
+  console.log(JSON.stringify({existingEditorialVideos:q.docs.filter(d=>d.data().mediaType==='video').map(d=>({id:d.id,source:d.data().videoSourcePage||'',title:(d.data().caption||'').split('\n')[0]}))}));return;
+ }
+
  const dir=await fs.mkdtemp('/tmp/tbt-videos-');
  const prepared=[];
  for(const p of data.posts){
@@ -49,8 +57,9 @@ async function main(){
  }
  const before=await db.getAll(user,name,...refs);guard(before);
  const previous=await db.collection('posts').where('userId','==',uid).get();
+ console.log(JSON.stringify({existingEditorialVideos:previous.docs.filter(d=>d.data().mediaType==='video').map(d=>({id:d.id,source:d.data().videoSourcePage||'',title:(d.data().caption||'').split('\n')[0]}))}));
  for(const p of data.posts){
-  check(!previous.docs.some(d=>d.id!==p.id && (d.data().videoSourcePage===p.sourcePage || (d.data().caption||'').includes(p.sourcePage))), 'Source already published; inspect to avoid duplicate');
+  check(!previous.docs.some(d=>d.id!==p.id && (d.data().videoSourcePage===p.sourcePage || (d.data().caption||'').includes(p.sourcePage))), 'Source already published: '+p.sourcePage);
  }
 
  async function upload(bytes,key,contentType){
