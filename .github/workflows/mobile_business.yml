@@ -1,0 +1,20 @@
+name: Mobile business panel
+on:
+  push:
+    branches: [codex/mobile-business]
+permissions:
+  contents: read
+jobs:
+  app:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter analyze --no-fatal-infos --no-fatal-warnings lib/screens/business_management_screen.dart lib/screens/managed_venues_screen.dart lib/screens/business_web_portal_screen.dart
+      - run: flutter test test/route_create_test.dart test/route_itinerary_test.dart test/restored_flows_test.dart
+      - run: flutter build bundle --debug

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
 import 'business_hub_screen.dart';
+import 'business_management_screen.dart';
 import 'business_profile_editor_screen.dart';
 
 class ManagedVenuesScreen extends StatelessWidget {
@@ -114,8 +115,14 @@ class ManagedVenuesScreen extends StatelessWidget {
               final data = doc.data();
               final venueName = (data['venueName'] ?? data['name'] ?? 'Mekan')
                   .toString();
-              final category = (data['category'] ?? '').toString();
-              final venueId = (data['venueId'] ?? '').toString();
+              final category = (data['category'] ?? doc.id.split(':').first)
+                  .toString();
+              final venueId =
+                  (data['venueId'] ??
+                          (doc.id.contains(':')
+                              ? doc.id.substring(doc.id.indexOf(':') + 1)
+                              : ''))
+                      .toString();
               final logoUrl = (data['logoUrl'] ?? '').toString().trim();
 
               void openManager() {
@@ -123,10 +130,10 @@ class ManagedVenuesScreen extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => BusinessHubScreen(
-                      initialCategory: category,
-                      initialVenueId: venueId,
-                      initialVenueName: venueName,
+                    builder: (_) => BusinessManagementScreen(
+                      category: category,
+                      venueId: venueId,
+                      venueName: venueName,
                     ),
                   ),
                 );
