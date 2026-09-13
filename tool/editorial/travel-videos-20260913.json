@@ -1,0 +1,35 @@
+{
+  "batch": "travel-videos-20260913",
+  "posts": [
+    {
+      "id": "tbt-rehber-travel-20260913-01",
+      "key": "istanbul",
+      "src": "https://upload.wikimedia.org/wikipedia/commons/3/3c/Istanbul_01.ogv",
+      "sha256": "ac5834c93408d9614244bbe6ce16b47e9660aaff15be59966f0d797f70303d62",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Istanbul_01.ogv",
+      "author": "Mostafameraji",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "title": "İstanbul’u bir de denizden izle 🌊",
+      "caption": "Mavi sular, kıyı boyunca uzanan şehir ve gelip geçen tekneler… İstanbul keşfine kısa bir deniz molası.\n\nSenin İstanbul’da en sevdiğin manzara neresi?\n\n#TBTRehber #İstanbul #Gezi #Keşfet",
+      "city": "İstanbul",
+      "place": "İstanbul",
+      "sourceDate": "28 Ekim 2018"
+    },
+    {
+      "id": "tbt-rehber-travel-20260913-02",
+      "key": "istanbulvapur",
+      "src": "https://upload.wikimedia.org/wikipedia/commons/1/13/Istanbul_03.ogv",
+      "sha256": "20f94f30e8e454c5c099444c64dc25e1b8ed7e842e6d78b01e83b369a75f2705",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Istanbul_03.ogv",
+      "author": "Mostafameraji",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "title": "İstanbul’da vapur manzarasına kısa bir mola ⛴️",
+      "caption": "Şehrin ritmini biraz da denizden izle. Vapur, kıyı manzarası ve İstanbul’dan sakin bir an.\n\nBu manzarayı kiminle izlemek isterdin?\n\n#TBTRehber #İstanbul #Vapur #Gezi",
+      "city": "İstanbul",
+      "place": "İstanbul",
+      "sourceDate": "28 Ekim 2018"
+    }
+  ]
+}
