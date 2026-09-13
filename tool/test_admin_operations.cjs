@@ -1,7 +1,8 @@
+const sdk=require('node:module').createRequire(require('node:path').resolve(__dirname,'../functions/package.json'));
 const assert=require('node:assert/strict');
-const {initializeApp}=require('../functions/node_modules/firebase-admin/app');
-const {getFirestore}=require('../functions/node_modules/firebase-admin/firestore');
-const {getAuth}=require('../functions/node_modules/firebase-admin/auth');
+const {initializeApp}=sdk('firebase-admin/app');
+const {getFirestore}=sdk('firebase-admin/firestore');
+const {getAuth}=sdk('firebase-admin/auth');
 initializeApp({projectId:'demo-tbt'});
 const api=require('../functions/admin_operations');
 const auth={uid:'admin',token:{admin:true,email_verified:true,email:'turgutburaktan@gmail.com'}};
