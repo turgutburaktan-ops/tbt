@@ -112,9 +112,17 @@ void main() {
             .selected,
         isTrue,
       );
-      await tester.scrollUntilVisible(find.text('Tarih ve saat'), 200);
+      await tester.scrollUntilVisible(
+        find.text('Tarih ve saat'),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
       expect(find.text('Kimler katılabilir?'), findsOneWidget);
-      await tester.scrollUntilVisible(find.text('Buluşma noktası'), 150);
+      await tester.scrollUntilVisible(
+        find.text('Buluşma noktası'),
+        150,
+        scrollable: find.byType(Scrollable).first,
+      );
       expect(find.text('Buluşma noktası'), findsOneWidget);
       expect(tester.takeException(), isNull);
     },

@@ -164,6 +164,7 @@ class TravelPlanCollaborationService {
     required String label,
     required double latitude,
     required double longitude,
+    String note = '',
   }) async {
     final uid = _uid();
     await _firestore.collection('travel_plans').doc(planId).update({
@@ -171,6 +172,7 @@ class TravelPlanCollaborationService {
         'label': label.trim().isEmpty ? 'Buluşma noktası' : label.trim(),
         'latitude': latitude,
         'longitude': longitude,
+        'note': note.trim(),
         'selectedBy': uid,
         'updatedAt': FieldValue.serverTimestamp(),
       },

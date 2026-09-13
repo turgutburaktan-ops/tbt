@@ -212,6 +212,7 @@ class _TravelPlanDetailScreenState extends State<TravelPlanDetailScreen> {
       label: label.isEmpty ? selection.label : label,
       latitude: selection.latitude,
       longitude: selection.longitude,
+      note: (current['note'] ?? '').toString(),
     );
   }
 
@@ -998,18 +999,33 @@ class _PlanGroupTabState extends State<_PlanGroupTab> {
     final label = _proposal.text.trim().isEmpty
         ? 'Haritadan seçilen durak'
         : _proposal.text.trim();
-    await TravelPlanCollaborationService.instance.propose(
-      widget.plan.id,
-      label,
-      latitude: selection.latitude,
-      longitude: selection.longitude,
-      city: widget.plan.city,
-    );
-    _proposal.clear();
-    setState(() {
-      _selectedProposalSpot = null;
-      _suggestions = const [];
-    });
+    if (_proposing) return;
+    _proposing = true;
+    try {
+      await TravelPlanCollaborationService.instance.proposeStopIfAbsent(
+        widget.plan.id,
+        label,
+        spotId:
+            'map:${selection.latitude.toStringAsFixed(6)},${selection.longitude.toStringAsFixed(6)}',
+        latitude: selection.latitude,
+        longitude: selection.longitude,
+        city: widget.plan.city,
+      );
+      if (!mounted) return;
+      _proposal.clear();
+      FocusScope.of(context).unfocus();
+      setState(() {
+        _selectedProposalSpot = null;
+        _suggestions = const [];
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(userFacingError(e))));
+      }
+    } finally {
+      _proposing = false;
+    }
   }
 
   bool _sending = false;
