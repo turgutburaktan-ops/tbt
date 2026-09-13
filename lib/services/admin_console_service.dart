@@ -65,6 +65,15 @@ class AdminConsoleService {
     return token;
   }
 
+  Future<Map<String, dynamic>> operation(
+    String name,
+    Map<String, dynamic> data,
+  ) async {
+    await _ensureFreshAdminAuth();
+    final result = await _functions.httpsCallable(name).call(data);
+    return Map<String, dynamic>.from(result.data as Map);
+  }
+
   Future<Map<String, dynamic>> overview() async {
     await _ensureFreshAdminAuth();
     final result = await _functions.httpsCallable('adminGetOverview').call();
@@ -202,5 +211,6 @@ class AdminInsightsData {
     required this.verificationEmails,
   });
 
-  int value(String key) => (counts[key] as num?)?.toInt() ?? 0;
+  String value(String key) =>
+      counts[key] is num ? (counts[key] as num).toInt().toString() : 'Veri yok';
 }

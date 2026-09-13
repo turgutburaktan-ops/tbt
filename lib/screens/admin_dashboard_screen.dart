@@ -1,3 +1,4 @@
+import '../services/user_facing_error.dart';
 import '../widgets/tbt_dialog.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -21,6 +22,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   bool _checking = true;
   bool _isAdmin = false;
   bool _loadingStats = false;
+  String? _statsError;
   Map<String, int> _stats = const {};
   Map<String, int> _gender = const {};
   String _range = '7d';
@@ -63,7 +65,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   Future<void> _loadStats() async {
     if (_loadingStats) return;
-    setState(() => _loadingStats = true);
+    setState(() {
+      _loadingStats = true;
+      _statsError = null;
+    });
     try {
       final from = Timestamp.fromDate(_fromDate());
       final results = await Future.wait<int>([
@@ -132,6 +137,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         };
         _gender = genderCounts;
       });
+    } catch (e) {
+      if (mounted) setState(() => _statsError = userFacingError(e));
     } finally {
       if (mounted) setState(() => _loadingStats = false);
     }
@@ -267,179 +274,205 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           ),
         ],
       ),
-      body: RefreshIndicator(
-        onRefresh: _loadStats,
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
-          children: [
-            SegmentedButton<String>(
-              segments: const [
-                ButtonSegment(value: '1d', label: Text('Bugün')),
-                ButtonSegment(value: '7d', label: Text('7 Gün')),
-                ButtonSegment(value: '30d', label: Text('30 Gün')),
-              ],
-              selected: {_range},
-              onSelectionChanged: (values) {
-                setState(() => _range = values.first);
-                _loadStats();
-              },
-            ),
-            const SizedBox(height: 16),
-            if (_loadingStats && _stats.isEmpty)
-              const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(24),
-                  child: CircularProgressIndicator(),
-                ),
-              )
-            else
-              GridView.count(
-                crossAxisCount: 2,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                mainAxisSpacing: 10,
-                crossAxisSpacing: 10,
-                childAspectRatio: 1.65,
-                children: _stats.entries
-                    .map(
-                      (entry) =>
-                          _MetricCard(label: entry.key, value: entry.value),
-                    )
-                    .toList(),
-              ),
-            const SizedBox(height: 22),
-            const Text(
-              'Eşitlik görünümü',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
-            ),
-            const SizedBox(height: 6),
-            const Text(
-              'Cinsiyet bilgisi yalnız toplu istatistik olarak gösterilir. 10 kişiden küçük gruplar gizlenir.',
-              style: TextStyle(color: Colors.white60, height: 1.35),
-            ),
-            const SizedBox(height: 10),
-            ..._gender.entries.map((entry) {
-              final visible = entry.value >= 10;
-              return ListTile(
-                contentPadding: EdgeInsets.zero,
-                title: Text(entry.key),
-                trailing: Text(
-                  visible ? '${entry.value}' : '<10',
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
+      body: _statsError != null
+          ? Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(_statsError!),
+                  TextButton(
+                    onPressed: _loadStats,
+                    child: const Text('Yeniden dene'),
                   ),
-                ),
-              );
-            }),
-            const Divider(height: 34),
-            Row(
-              children: [
-                const Expanded(
-                  child: Text(
-                    'İşletme doğrulama kuyruğu',
+                ],
+              ),
+            )
+          : RefreshIndicator(
+              onRefresh: _loadStats,
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+                children: [
+                  SegmentedButton<String>(
+                    segments: const [
+                      ButtonSegment(value: '1d', label: Text('Bugün')),
+                      ButtonSegment(value: '7d', label: Text('7 Gün')),
+                      ButtonSegment(value: '30d', label: Text('30 Gün')),
+                    ],
+                    selected: {_range},
+                    onSelectionChanged: (values) {
+                      setState(() => _range = values.first);
+                      _loadStats();
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  if (_loadingStats && _stats.isEmpty)
+                    const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(24),
+                        child: CircularProgressIndicator(),
+                      ),
+                    )
+                  else
+                    GridView.count(
+                      crossAxisCount: 2,
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      mainAxisSpacing: 10,
+                      crossAxisSpacing: 10,
+                      childAspectRatio: 1.65,
+                      children: _stats.entries
+                          .map(
+                            (entry) => _MetricCard(
+                              label: entry.key,
+                              value: entry.value,
+                            ),
+                          )
+                          .toList(),
+                    ),
+                  const SizedBox(height: 22),
+                  const Text(
+                    'Eşitlik görünümü',
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
                   ),
-                ),
-                StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-                  stream: _db
-                      .collection('business_claims')
-                      .where('status', isEqualTo: 'pending_review')
-                      .snapshots(),
-                  builder: (_, snapshot) => Badge(
-                    label: Text('${snapshot.data?.docs.length ?? 0}'),
-                    child: const Icon(Icons.verified_user_outlined),
+                  const SizedBox(height: 6),
+                  const Text(
+                    'Cinsiyet bilgisi yalnız toplu istatistik olarak gösterilir. 10 kişiden küçük gruplar gizlenir.',
+                    style: TextStyle(color: Colors.white60, height: 1.35),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-              stream: _db
-                  .collection('business_claims')
-                  .where('status', isEqualTo: 'pending_review')
-                  .snapshots(),
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                final docs = snapshot.data!.docs;
-                if (docs.isEmpty) {
-                  return const Card(
-                    child: Padding(
-                      padding: EdgeInsets.all(18),
-                      child: Text('Bekleyen işletme başvurusu yok.'),
-                    ),
-                  );
-                }
-                return Column(
-                  children: docs.map((doc) {
-                    final d = doc.data();
-                    final legalName =
-                        (d['legalName'] ?? d['venueName'] ?? 'İşletme')
-                            .toString();
-                    final proofUrl = (d['proofUrl'] ?? '').toString();
-                    return Card(
-                      margin: const EdgeInsets.only(bottom: 10),
-                      child: Padding(
-                        padding: const EdgeInsets.all(14),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              legalName,
-                              style: const TextStyle(
-                                fontSize: 17,
-                                fontWeight: FontWeight.w900,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text('E-posta: ${d['businessEmail'] ?? '-'}'),
-                            Text('Telefon: ${d['businessPhone'] ?? '-'}'),
-                            Text('Vergi dairesi: ${d['taxOffice'] ?? '-'}'),
-                            Text(
-                              'Vergi no son 4: ${d['taxNumberLast4'] ?? '-'}',
-                            ),
-                            const SizedBox(height: 8),
-                            if (proofUrl.isNotEmpty)
-                              OutlinedButton.icon(
-                                onPressed: () => launchUrl(
-                                  Uri.parse(proofUrl),
-                                  mode: LaunchMode.externalApplication,
-                                ),
-                                icon: const Icon(Icons.description_outlined),
-                                label: const Text('Yetki kanıtını aç'),
-                              ),
-                            const SizedBox(height: 8),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: OutlinedButton(
-                                    onPressed: () => _reviewClaim(doc, false),
-                                    child: const Text('Reddet'),
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: FilledButton.icon(
-                                    onPressed: () => _reviewClaim(doc, true),
-                                    icon: const Icon(Icons.verified_rounded),
-                                    label: const Text('Doğrula'),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
+                  const SizedBox(height: 10),
+                  ..._gender.entries.map((entry) {
+                    final visible = entry.value >= 10;
+                    return ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(entry.key),
+                      trailing: Text(
+                        visible ? '${entry.value}' : '<10',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
                         ),
                       ),
                     );
-                  }).toList(),
-                );
-              },
+                  }),
+                  const Divider(height: 34),
+                  Row(
+                    children: [
+                      const Expanded(
+                        child: Text(
+                          'İşletme doğrulama kuyruğu',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                      ),
+                      StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                        stream: _db
+                            .collection('business_claims')
+                            .where('status', isEqualTo: 'pending_review')
+                            .snapshots(),
+                        builder: (_, snapshot) => Badge(
+                          label: Text('${snapshot.data?.docs.length ?? 0}'),
+                          child: const Icon(Icons.verified_user_outlined),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                    stream: _db
+                        .collection('business_claims')
+                        .where('status', isEqualTo: 'pending_review')
+                        .snapshots(),
+                    builder: (context, snapshot) {
+                      if (!snapshot.hasData) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+                      final docs = snapshot.data!.docs;
+                      if (docs.isEmpty) {
+                        return const Card(
+                          child: Padding(
+                            padding: EdgeInsets.all(18),
+                            child: Text('Bekleyen işletme başvurusu yok.'),
+                          ),
+                        );
+                      }
+                      return Column(
+                        children: docs.map((doc) {
+                          final d = doc.data();
+                          final legalName =
+                              (d['legalName'] ?? d['venueName'] ?? 'İşletme')
+                                  .toString();
+                          final proofUrl = (d['proofUrl'] ?? '').toString();
+                          return Card(
+                            margin: const EdgeInsets.only(bottom: 10),
+                            child: Padding(
+                              padding: const EdgeInsets.all(14),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    legalName,
+                                    style: const TextStyle(
+                                      fontSize: 17,
+                                      fontWeight: FontWeight.w900,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text('E-posta: ${d['businessEmail'] ?? '-'}'),
+                                  Text('Telefon: ${d['businessPhone'] ?? '-'}'),
+                                  Text(
+                                    'Vergi dairesi: ${d['taxOffice'] ?? '-'}',
+                                  ),
+                                  Text(
+                                    'Vergi no son 4: ${d['taxNumberLast4'] ?? '-'}',
+                                  ),
+                                  const SizedBox(height: 8),
+                                  if (proofUrl.isNotEmpty)
+                                    OutlinedButton.icon(
+                                      onPressed: () => launchUrl(
+                                        Uri.parse(proofUrl),
+                                        mode: LaunchMode.externalApplication,
+                                      ),
+                                      icon: const Icon(
+                                        Icons.description_outlined,
+                                      ),
+                                      label: const Text('Yetki kanıtını aç'),
+                                    ),
+                                  const SizedBox(height: 8),
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: OutlinedButton(
+                                          onPressed: () =>
+                                              _reviewClaim(doc, false),
+                                          child: const Text('Reddet'),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: FilledButton.icon(
+                                          onPressed: () =>
+                                              _reviewClaim(doc, true),
+                                          icon: const Icon(
+                                            Icons.verified_rounded,
+                                          ),
+                                          label: const Text('Doğrula'),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      );
+                    },
+                  ),
+                ],
+              ),
             ),
-          ],
-        ),
-      ),
     );
   }
 }

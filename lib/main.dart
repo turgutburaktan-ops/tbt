@@ -1,3 +1,4 @@
+import 'screens/admin_records_screen.dart';
 import 'services/video_audio_session.dart';
 
 import 'dart:async';
@@ -350,16 +351,17 @@ class _BestPhotoSpotAppState extends State<BestPhotoSpotApp> {
         '/business-claim': (_) => const BusinessWebPortalScreen(),
         '/admin': (_) => const AdminPortalScreen(),
         '/admin-dashboard': (_) => const AdminDashboardScreen(),
-        '/admin-users': (_) => const AdminUsersScreen(),
+        '/admin-users': (_) => const AdminRecordsScreen(kind: 'users'),
         '/admin-businesses': (_) => const AdminBusinessesV2Screen(),
-        '/admin-business-premium': (_) => const AdminBusinessPremiumScreen(),
+        '/admin-business-premium': (_) => const AdminBusinessesV2Screen(),
         '/admin-business-preview': (_) => const AdminBusinessPreviewScreen(),
         '/admin-growth': (_) => const AdminGrowthScreen(),
         '/admin-preview': (_) => const AdminRolePreviewScreen(),
         '/admin-insights': (_) => const AdminInsightsScreen(),
         '/admin-spot-submissions': (_) => const AdminSpotSubmissionsScreen(),
-        '/admin-published-spots': (_) => const AdminPublishedSpotsScreen(),
-        '/moderation': (_) => const ModerationCenterScreen(),
+        '/admin-published-spots': (_) =>
+            const AdminRecordsScreen(kind: 'photo_spots'),
+        '/moderation': (_) => const AdminRecordsScreen(kind: 'reports'),
         '/safety-privacy': (_) => const SafetyPrivacyCenterScreen(),
         '/search': (_) => const GlobalSearchScreen(),
         '/campus': (_) => const CampusHomeScreen(),

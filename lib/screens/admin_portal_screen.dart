@@ -169,14 +169,6 @@ class _AdminPortalScreenState extends State<AdminPortalScreen> {
             onTap: () => _open(const AdminBusinessesV2Screen()),
           ),
           const SizedBox(height: 10),
-          const _RouteTile(
-            Icons.workspace_premium_rounded,
-            'Business Pro',
-            'İşletmeye Premium/Pro ver veya geri al.',
-            '/admin-business-premium',
-            accent: true,
-          ),
-          const SizedBox(height: 10),
           _HeroAction(
             icon: Icons.stars_rounded,
             title: 'TBT Mekân Unvanları',

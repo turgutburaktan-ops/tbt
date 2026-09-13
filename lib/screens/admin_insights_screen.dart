@@ -32,9 +32,7 @@ class _AdminInsightsScreenState extends State<AdminInsightsScreen> {
       });
     try {
       final user = FirebaseAuth.instance.currentUser;
-      final token = await user?.getIdTokenResult(
-        true,
-      );
+      final token = await user?.getIdTokenResult(true);
       if (!AdminAccess.tokenMatches(user, token)) {
         if (mounted)
           setState(() {
@@ -189,10 +187,22 @@ class _VerificationEmailPanel extends StatelessWidget {
             spacing: 8,
             runSpacing: 8,
             children: [
-              _EmailMetric(label: 'Son kayıtlar', value: data.value('verificationEmails')),
-              _EmailMetric(label: 'Son 24 saat', value: data.value('verificationEmails24h')),
-              _EmailMetric(label: 'Teslim', value: data.value('verificationEmailsDelivered')),
-              _EmailMetric(label: 'Sorun', value: data.value('verificationEmailProblems')),
+              _EmailMetric(
+                label: 'Son kayıtlar',
+                value: data.value('verificationEmails'),
+              ),
+              _EmailMetric(
+                label: 'Son 24 saat',
+                value: data.value('verificationEmails24h'),
+              ),
+              _EmailMetric(
+                label: 'Teslim',
+                value: data.value('verificationEmailsDelivered'),
+              ),
+              _EmailMetric(
+                label: 'Sorun',
+                value: data.value('verificationEmailProblems'),
+              ),
             ],
           ),
           const SizedBox(height: 14),
@@ -229,14 +239,20 @@ class _VerificationEmailPanel extends StatelessWidget {
                           ),
                           Text(
                             _statusLabel(status),
-                            style: TextStyle(color: _statusColor(status), fontSize: 12),
+                            style: TextStyle(
+                              color: _statusColor(status),
+                              fontSize: 12,
+                            ),
                           ),
                         ],
                       ),
                     ),
                     Text(
                       _time(item['createdAtMs']),
-                      style: const TextStyle(color: Colors.white38, fontSize: 11),
+                      style: const TextStyle(
+                        color: Colors.white38,
+                        fontSize: 11,
+                      ),
                     ),
                   ],
                 ),
@@ -250,7 +266,7 @@ class _VerificationEmailPanel extends StatelessWidget {
 
 class _EmailMetric extends StatelessWidget {
   final String label;
-  final int value;
+  final String value;
   const _EmailMetric({required this.label, required this.value});
 
   @override
@@ -261,7 +277,10 @@ class _EmailMetric extends StatelessWidget {
       borderRadius: BorderRadius.circular(13),
       border: Border.all(color: AppColors.border),
     ),
-    child: Text('$label: $value', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+    child: Text(
+      '$label: $value',
+      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+    ),
   );
 }
 

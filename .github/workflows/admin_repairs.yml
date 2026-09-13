@@ -1,0 +1,50 @@
+name: Admin panel repairs
+on:
+  push:
+    branches: [codex/admin-repairs]
+permissions:
+  contents: read
+jobs:
+  app:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter analyze --no-fatal-infos --no-fatal-warnings lib/screens/admin_records_screen.dart lib/screens/admin_operations_screen.dart lib/screens/admin_dashboard_screen.dart lib/screens/admin_portal_screen.dart lib/services/admin_console_service.dart lib/main.dart
+      - run: flutter test test/route_create_test.dart test/route_itinerary_test.dart test/restored_flows_test.dart
+      - run: flutter build bundle --debug
+  backend:
+    needs: app
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - run: npm install --prefix functions --ignore-scripts --no-audit --no-fund
+      - run: npm install --prefix /tmp/route-tests @firebase/rules-unit-testing firebase firebase-tools
+      - name: Prepare credentials
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          python3 - <<'PYCODE'
+          import os,json,pathlib
+          data=json.loads(os.environ['FIREBASE_SERVICE_ACCOUNT'])
+          if data['project_id']!='en-iyi-cekim-noktasi': raise Exception('Unexpected project')
+          p=pathlib.Path(os.environ['RUNNER_TEMP'])/'firebase.json'
+          p.write_text(json.dumps(data));p.chmod(0o600)
+          with open(os.environ['GITHUB_ENV'],'a') as f:f.write('GOOGLE_APPLICATION_CREDENTIALS='+str(p)+'\n')
+          PYCODE
+      - run: node --check functions/admin_operations.js
+      - run: /tmp/route-tests/node_modules/.bin/firebase emulators:exec --only firestore,auth --project demo-tbt "node tool/test_admin_operations.cjs" --non-interactive
+      - run: /tmp/route-tests/node_modules/.bin/firebase deploy --only functions:adminModerationPage,functions:adminDirectoryPage,functions:adminReviewReport,functions:adminGrowthSummary,functions:getAdminInsights --project en-iyi-cekim-noktasi --non-interactive

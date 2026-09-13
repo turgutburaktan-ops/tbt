@@ -1,4 +1,7 @@
+import '../services/admin_console_service.dart';
+import '../services/user_facing_error.dart';
 import '../widgets/profile_name_link.dart';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -25,10 +28,9 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
 
   Future<void> _check() async {
     final user = FirebaseAuth.instance.currentUser;
-    final token = await user?.getIdTokenResult(
-      true,
-    );
-    if (mounted) setState(() => _allowed = AdminAccess.tokenMatches(user, token));
+    final token = await user?.getIdTokenResult(true);
+    if (mounted)
+      setState(() => _allowed = AdminAccess.tokenMatches(user, token));
   }
 
   @override
@@ -106,17 +108,25 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                                 : name.characters.first.toUpperCase(),
                           ),
                         ),
-                        title: ProfileNameLink(userId: doc.id, compact: true, child: Text(
-                          name,
-                          style: const TextStyle(fontWeight: FontWeight.w900),
-                        )),
-                        subtitle: ProfileNameLink(userId: doc.id, compact: true, child: Text(
-                          [
-                            if (username.isNotEmpty) '@$username',
-                            if (trust.isNotEmpty) 'Güven: $trust',
-                            if (banned) 'BANLI',
-                          ].join(' • '),
-                        )),
+                        title: ProfileNameLink(
+                          userId: doc.id,
+                          compact: true,
+                          child: Text(
+                            name,
+                            style: const TextStyle(fontWeight: FontWeight.w900),
+                          ),
+                        ),
+                        subtitle: ProfileNameLink(
+                          userId: doc.id,
+                          compact: true,
+                          child: Text(
+                            [
+                              if (username.isNotEmpty) '@$username',
+                              if (trust.isNotEmpty) 'Güven: $trust',
+                              if (banned) 'BANLI',
+                            ].join(' • '),
+                          ),
+                        ),
                         trailing: const Icon(Icons.chevron_right_rounded),
                         onTap: () => showModalBottomSheet<void>(
                           context: context,
@@ -125,23 +135,31 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                           builder: (_) => ListView(
                             padding: const EdgeInsets.all(18),
                             children: [
-                              ProfileNameLink(userId: doc.id, compact: true, child: Text(
-                                name,
-                                style: const TextStyle(
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.w900,
+                              ProfileNameLink(
+                                userId: doc.id,
+                                compact: true,
+                                child: Text(
+                                  name,
+                                  style: const TextStyle(
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.w900,
+                                  ),
                                 ),
-                              )),
+                              ),
                               const SizedBox(height: 8),
                               Text(
                                 'UID: ${doc.id}',
                                 style: const TextStyle(color: Colors.white54),
                               ),
                               const SizedBox(height: 16),
-                              ProfileNameLink(userId: doc.id, compact: true, child: _InfoRow(
-                                'Kullanıcı adı',
-                                username.isEmpty ? '-' : '@$username',
-                              )),
+                              ProfileNameLink(
+                                userId: doc.id,
+                                compact: true,
+                                child: _InfoRow(
+                                  'Kullanıcı adı',
+                                  username.isEmpty ? '-' : '@$username',
+                                ),
+                              ),
                               _InfoRow(
                                 'E-posta',
                                 (d['email'] ?? '-').toString(),
@@ -189,10 +207,9 @@ class _AdminBusinessesScreenState extends State<AdminBusinessesScreen> {
 
   Future<void> _check() async {
     final user = FirebaseAuth.instance.currentUser;
-    final token = await user?.getIdTokenResult(
-      true,
-    );
-    if (mounted) setState(() => _allowed = AdminAccess.tokenMatches(user, token));
+    final token = await user?.getIdTokenResult(true);
+    if (mounted)
+      setState(() => _allowed = AdminAccess.tokenMatches(user, token));
   }
 
   @override
@@ -353,61 +370,60 @@ class _AdminGrowthScreenState extends State<AdminGrowthScreen> {
   Future<int> _count(Query<Map<String, dynamic>> q) async =>
       (await q.count().get()).count ?? 0;
 
+  String? _error;
   Future<void> _load() async {
-    final user = FirebaseAuth.instance.currentUser;
-    final token = await user?.getIdTokenResult(
-      true,
-    );
-    final allowed = AdminAccess.tokenMatches(user, token);
-    if (!allowed) {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final result = await AdminConsoleService.instance.operation(
+        'adminGrowthSummary',
+        {},
+      );
+      final counts = (result['counts'] as List)
+          .map((e) => (e as num).toInt())
+          .toList();
+      final cities =
+          Map<String, dynamic>.from(result['cities'] as Map).entries
+              .map((e) => MapEntry(e.key, (e.value as num).toInt()))
+              .toList()
+            ..sort((a, b) => b.value.compareTo(a.value));
       if (mounted)
         setState(() {
-          _allowed = false;
-          _loading = false;
+          _allowed = true;
+          _metrics = {
+            'Toplam kullanıcı': counts[0],
+            'Toplam paylaşım': counts[1],
+            'Toplam etkinlik': counts[2],
+            'Doğrulanmış işletme': counts[3],
+            'İşletme adayı': counts[4],
+          };
+          _cities = cities;
         });
-      return;
-    }
-    final db = FirebaseFirestore.instance;
-    final counts = await Future.wait<int>([
-      _count(db.collection('users')),
-      _count(db.collection('posts')),
-      _count(db.collection('social_events')),
-      _count(
-        db.collection('business_claims').where('status', isEqualTo: 'verified'),
-      ),
-      _count(
-        db
-            .collection('business_claims')
-            .where('status', isEqualTo: 'pending_review'),
-      ),
-    ]);
-    final users = await db.collection('users').limit(1000).get();
-    final cityCounts = <String, int>{};
-    for (final doc in users.docs) {
-      final city = (doc.data()['city'] ?? '').toString().trim();
-      if (city.isEmpty) continue;
-      cityCounts[city] = (cityCounts[city] ?? 0) + 1;
-    }
-    final cities = cityCounts.entries.toList()
-      ..sort((a, b) => b.value.compareTo(a.value));
-    if (mounted) {
-      setState(() {
-        _allowed = true;
-        _loading = false;
-        _metrics = {
-          'Toplam kullanıcı': counts[0],
-          'Toplam paylaşım': counts[1],
-          'Toplam etkinlik': counts[2],
-          'Doğrulanmış işletme': counts[3],
-          'İşletme adayı': counts[4],
-        };
-        _cities = cities.take(15).toList();
-      });
+    } catch (e) {
+      if (mounted) setState(() => _error = userFacingError(e));
+    } finally {
+      if (mounted) setState(() => _loading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_error != null)
+      return Scaffold(
+        appBar: AppBar(title: const Text('Büyüme')),
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(_error!),
+              TextButton(onPressed: _load, child: const Text('Yeniden dene')),
+            ],
+          ),
+        ),
+      );
+
     if (_loading)
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     if (_allowed != true)
@@ -505,10 +521,9 @@ class _AdminRolePreviewScreenState extends State<AdminRolePreviewScreen> {
 
   Future<void> _check() async {
     final user = FirebaseAuth.instance.currentUser;
-    final token = await user?.getIdTokenResult(
-      true,
-    );
-    if (mounted) setState(() => _allowed = AdminAccess.tokenMatches(user, token));
+    final token = await user?.getIdTokenResult(true);
+    if (mounted)
+      setState(() => _allowed = AdminAccess.tokenMatches(user, token));
   }
 
   @override

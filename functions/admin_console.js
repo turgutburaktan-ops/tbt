@@ -91,7 +91,7 @@ exports.getAdminInsights = onCall({region: 'europe-west1'}, async (request) => {
   const since7d = Timestamp.fromMillis(now - 7 * 24 * 60 * 60 * 1000);
   const since30d = Timestamp.fromMillis(now - 30 * 24 * 60 * 60 * 1000);
   const count = async (query) => (await query.count().get()).data().count || 0;
-  const safeCount = (query) => count(query).catch(() => 0);
+  const safeCount = (query) => count(query);
 
   const countEntries = {
     totalUsers: db.collection('users'),
@@ -115,12 +115,19 @@ exports.getAdminInsights = onCall({region: 'europe-west1'}, async (request) => {
   const entries = Object.entries(countEntries);
   const values = await Promise.all(entries.map(([, query]) => safeCount(query)));
   const counts = Object.fromEntries(entries.map(([key], index) => [key, values[index]]));
+  const additionalReports = await Promise.all([
+    count(db.collectionGroup('reports').where('status', '==', 'open')),
+    count(db.collection('user_reports').where('status', '==', 'pending')),
+    count(db.collection('review_reports').where('status', '==', 'pending')),
+  ]);
+  counts.openReports += additionalReports.reduce((a,b)=>a+b,0) + counts.trustReports;
+
 
   const [recentUsersSnap, topPostsSnap, errorSnap, verificationEmailSnap] = await Promise.all([
-    db.collection('users').orderBy('createdAt', 'desc').limit(12).get().catch(() => ({docs: []})),
-    db.collection('posts').orderBy('likesCount', 'desc').limit(8).get().catch(() => ({docs: []})),
-    db.collection('app_errors').orderBy('createdAt', 'desc').limit(20).get().catch(() => ({docs: []})),
-    db.collection('verification_email_deliveries').orderBy('createdAt', 'desc').limit(40).get().catch(() => ({docs: []})),
+    db.collection('users').orderBy('createdAt', 'desc').limit(12).get(),
+    db.collection('posts').orderBy('likesCount', 'desc').limit(8).get(),
+    db.collection('app_errors').orderBy('createdAt', 'desc').limit(20).get(),
+    db.collection('verification_email_deliveries').orderBy('createdAt', 'desc').limit(40).get(),
   ]);
 
   const recentUsers = recentUsersSnap.docs.map((doc) => {
