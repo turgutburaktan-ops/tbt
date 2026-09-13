@@ -211,14 +211,12 @@ class _BusinessManagementScreenState extends State<BusinessManagementScreen> {
                       () => _content('campaign'),
                     ),
                   ]),
-                  _list([
-                    _tile(
-                      'Menü ve ürünler',
-                      'Bölümlere göre ürün, fiyat, açıklama ve fotoğraf yönetimi',
-                      Icons.restaurant_menu,
-                      () => _content('menu'),
-                    ),
-                  ]),
+                  BusinessContentManagerScreen(
+                    category: widget.category,
+                    venueId: widget.venueId,
+                    type: 'menu',
+                    embedded: true,
+                  ),
                   _list([
                     const Text(
                       'Rezervasyonlar ve siparişler',

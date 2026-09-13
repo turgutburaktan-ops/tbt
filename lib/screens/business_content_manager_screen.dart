@@ -16,11 +16,13 @@ class BusinessContentManagerScreen extends StatelessWidget {
   final String category;
   final String venueId;
   final String type;
+  final bool embedded;
   const BusinessContentManagerScreen({
     super.key,
     required this.category,
     required this.venueId,
     required this.type,
+    this.embedded = false,
   });
 
   String get _venueKey => BusinessService.instance.venueKey(category, venueId);
@@ -53,7 +55,7 @@ class BusinessContentManagerScreen extends StatelessWidget {
         .snapshots();
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: Text(_title)),
+      appBar: embedded ? null : AppBar(title: Text(_title)),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _edit(context),
         icon: const Icon(Icons.add_rounded),
