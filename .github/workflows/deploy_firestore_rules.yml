@@ -10,6 +10,7 @@ on:
       - 'storage.rules'
       - 'firebase.json'
       - '.github/workflows/deploy_firestore_rules.yml'
+  workflow_call:
   workflow_dispatch:
 
 # Keep this workflow as the production gate for runtime Firestore rule changes.
@@ -62,6 +63,12 @@ jobs:
 
       - name: Check coupon access rules
         run: firebase emulators:exec --only firestore --project demo-tbt "node tool/test_coupon_rules.cjs && node tool/test_event_hub_rules.cjs && node tool/test_chat_collaboration.cjs && node tool/test_route_participation.cjs" --non-interactive
+
+      - name: Install participant album rule test dependencies
+        run: npm install --prefix /tmp/route-tests @firebase/rules-unit-testing firebase
+
+      - name: Check participant albums, route visibility and voting privacy
+        run: NODE_PATH=/tmp/route-tests/node_modules firebase emulators:exec --only firestore,storage --project demo-tbt "node tool/test_social_routes.cjs" --non-interactive
 
       - name: Prepare event discovery index
         run: |
