@@ -15,7 +15,7 @@ async function main(){
   const admin=createRequire(path.join(root,'functions/package.json'))('firebase-admin');
   const sa=JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT||'{}');check(sa.project_id===project,'Wrong project');
   admin.initializeApp({credential:admin.credential.cert(sa),projectId:project});
-  const q=await admin.firestore().collection('posts').where('userId','==',uid).get();
+  const db=admin.firestore(); const users=await db.collection('users').where('isEditorial','==',true).get(); console.log(JSON.stringify({publishers:users.docs.map(d=>({id:d.id,uid:d.data().uid,name:d.data().displayName,username:d.data().username,batch:d.data().editorialBatch}))})); const q=await db.collection('posts').where('userName','==','TBT Eğlence').get();
   console.log(JSON.stringify({existingEditorialVideos:q.docs.filter(d=>d.data().mediaType==='video').map(d=>({id:d.id,source:d.data().videoSourcePage||'',title:(d.data().caption||'').split('\n')[0]}))}));return;
  }
 
