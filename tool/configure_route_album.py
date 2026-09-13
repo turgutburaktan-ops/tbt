@@ -12,6 +12,12 @@ if platform == 'android':
             raise RuntimeError('Configure photo pipeline before album export')
         s = s.replace(marker, marker+'\n'+Path('tool/native_album/android.txt').read_text(),1)
         p.write_text(s)
+    manifest = Path('android/app/src/main/AndroidManifest.xml')
+    if manifest.exists():
+        xml = manifest.read_text()
+        if 'android.permission.WRITE_EXTERNAL_STORAGE' not in xml:
+            xml = xml.replace('<application', '<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28" />\n    <application', 1)
+            manifest.write_text(xml)
 elif platform == 'ios':
     p = Path('ios/Runner/AppDelegate.swift')
     s = p.read_text()

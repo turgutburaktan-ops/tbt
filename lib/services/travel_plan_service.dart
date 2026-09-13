@@ -337,6 +337,8 @@ class TravelPlanService {
     _requireUser();
     await _firestore.collection('travel_plans').doc(planId).update({
       'isPublic': value,
+      'visibility': value ? 'public' : 'private',
+      if (!value) 'joinEnabled': false,
       'updatedAt': FieldValue.serverTimestamp(),
     });
   }
@@ -393,23 +395,34 @@ class TravelPlanService {
 
   Future<void> addStop(String planId, PhotoSpot spot) async {
     _requireUser();
-    await _firestore.collection('travel_plans').doc(planId).update({
-      'spotIds': FieldValue.arrayUnion([spot.id]),
-      'spotNames': FieldValue.arrayUnion([spot.name]),
-      'stopSnapshots': FieldValue.arrayUnion([
-        {
-          'id': spot.id,
-          'name': spot.name,
-          'city': spot.city,
-          'latitude': spot.latitude,
-          'longitude': spot.longitude,
-          'category': spot.category,
-          'description': spot.description,
-          'imageUrl': spot.imageUrl,
-          'bestTime': spot.bestTime,
-        },
-      ]),
-      'updatedAt': FieldValue.serverTimestamp(),
+    final ref = _firestore.collection('travel_plans').doc(planId);
+    await _firestore.runTransaction((tx) async {
+      final data = (await tx.get(ref)).data();
+      if (data == null) throw Exception('Rota bulunamadı.');
+      final stops = (data['stopSnapshots'] as List? ?? [])
+          .whereType<Map>()
+          .map((s) => Map<String, dynamic>.from(s))
+          .toList();
+      if (stops.any((s) => s['id'] == spot.id)) return;
+      if (stops.length >= 12)
+        throw Exception('Rotaya en fazla 12 durak eklenebilir.');
+      stops.add({
+        'id': spot.id,
+        'name': spot.name,
+        'city': spot.city,
+        'latitude': spot.latitude,
+        'longitude': spot.longitude,
+        'category': spot.category,
+        'description': spot.description,
+        'imageUrl': spot.imageUrl,
+        'bestTime': spot.bestTime,
+      });
+      tx.update(ref, {
+        'spotIds': stops.map((s) => s['id']).toList(),
+        'spotNames': stops.map((s) => s['name']).toList(),
+        'stopSnapshots': stops,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
     });
   }
 

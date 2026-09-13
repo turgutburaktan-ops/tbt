@@ -4,7 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 import '../services/route_itinerary_service.dart';
 import '../services/travel_plan_service.dart';
-import 'route_sharing_screen.dart';
+import 'travel_plan_detail_screen.dart';
 import 'event_location_picker_screen.dart';
 import '../widgets/tbt_dialog.dart';
 
@@ -659,16 +659,11 @@ class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
                 'longitude': _fixedOrigin!.longitude,
               },
       );
+      final saved = await TravelPlanService.instance.read(_savedId!);
       if (!mounted) return;
       await Navigator.push(
         context,
-        MaterialPageRoute(
-          builder: (_) => RouteSharingScreen(
-            routeId: _savedId!,
-            title: _routeNameController.text.trim(),
-            inviteFriends: widget.inviteFriends,
-          ),
-        ),
+        MaterialPageRoute(builder: (_) => TravelPlanDetailScreen(plan: saved)),
       );
       _message('Rota, Rotalarım bölümüne kaydedildi.');
     } catch (e) {

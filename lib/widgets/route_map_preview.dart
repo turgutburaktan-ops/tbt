@@ -68,6 +68,7 @@ class _RouteMapPreviewState extends State<RouteMapPreview> {
                   target: points.first,
                   zoom: 11,
                 ),
+                style: '[{"elementType":"geometry","stylers":[{"color":"#17212b"}]},{"elementType":"labels.text.fill","stylers":[{"color":"#bac8d4"}]},{"elementType":"labels.text.stroke","stylers":[{"color":"#17212b"}]},{"featureType":"water","elementType":"geometry","stylers":[{"color":"#0c151f"}]}]',
                 zoomControlsEnabled: false,
                 myLocationButtonEnabled: false,
                 mapToolbarEnabled: false,

@@ -6,7 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import '../lib/models/photo_spot.dart';
 import '../lib/models/route_place.dart';
-import '../lib/screens/smart_plan_screen.dart';
+import '../lib/screens/route_create_screen.dart';
 import '../lib/services/route_selection_service.dart';
 import '../lib/services/user_facing_error.dart';
 import '../lib/widgets/route_selection_button.dart';
@@ -71,7 +71,7 @@ void main() {
   });
 
   testWidgets(
-    'selected places open smart result with intact stops and no city form',
+    'selected places open unified route draft with intact stops and no repeated city question',
     (tester) async {
       final selection = RouteSelectionService.instance;
       selection.clear();
@@ -93,23 +93,16 @@ void main() {
       );
       await tester.tap(find.text('Rotaya Git  •  2'));
       await tester.pumpAndSettle();
-      expect(find.byType(SmartPlanScreen), findsOneWidget);
-      expect(find.text('Şehir ara ve seç'), findsNothing);
-      expect(find.text('1. Harput'), findsOneWidget);
-      expect(find.text('2. Keban'), findsOneWidget);
-      expect(find.text('Yer / Mekân Ekle'), findsOneWidget);
-      await tester.tap(find.byTooltip('Durağı düzenle').last);
+      expect(find.byType(RouteCreateScreen), findsOneWidget);
+      expect(find.text('Şehir veya bölge ara'), findsNothing);
+      expect(find.text('Harput'), findsOneWidget);
+      expect(find.text('Keban'), findsOneWidget);
+      expect(find.text('Durak ekle'), findsOneWidget);
+      expect(find.byType(ReorderableDragStartListener), findsNWidgets(2));
+      await tester.tap(find.byTooltip('Durağı kaldır').first);
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Yukarı taşı'));
-      await tester.pumpAndSettle();
-      expect(find.text('1. Keban'), findsOneWidget);
-      expect(find.text('2. Harput'), findsOneWidget);
-      await tester.tap(find.byTooltip('Durağı düzenle').first);
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Rotadan çıkar'));
-      await tester.pumpAndSettle();
-      expect(find.text('1. Harput'), findsOneWidget);
-      expect(find.text('1. Keban'), findsNothing);
+      expect(find.text('Harput'), findsNothing);
+      expect(find.text('Keban'), findsOneWidget);
       expect(tester.takeException(), isNull);
     },
   );

@@ -340,6 +340,33 @@ class _AlbumViewerState extends State<_AlbumViewer> {
       final d = (await widget.reference.get()).data();
       if (d == null) throw Exception('Bu içerik kaldırılmış.');
       final owned = d['ownerId'] == FirebaseAuth.instance.currentUser?.uid;
+      if (action == 'delete' && owned) {
+        final yes = await showDialog<bool>(
+          context: context,
+          builder: (c) => AlertDialog(
+            title: const Text('Albümden kaldır?'),
+            content: const Text('Bu içerik ortak albümden kaldırılacak.'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(c, false),
+                child: const Text('Vazgeç'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(c, true),
+                child: const Text('Kaldır'),
+              ),
+            ],
+          ),
+        );
+        if (yes != true) return;
+        await FirebaseStorage.instance.ref(d['storagePath'] as String).delete();
+        final thumb = (d['thumbnailPath'] ?? '').toString();
+        if (thumb.isNotEmpty)
+          await FirebaseStorage.instance.ref(thumb).delete();
+        await widget.reference.delete();
+        if (mounted) Navigator.pop(context);
+        return;
+      }
       if (action == 'permission') {
         await widget.reference.update({
           'allowExport': d['allowExport'] != true,

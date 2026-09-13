@@ -1,6 +1,6 @@
 const fs=require('node:fs');
 const {initializeTestEnvironment,assertSucceeds,assertFails}=require('@firebase/rules-unit-testing');
-const {doc,setDoc,getDoc,updateDoc,serverTimestamp,Timestamp}=require('firebase/firestore');
+const {doc,setDoc,getDoc,updateDoc,serverTimestamp,Timestamp,collection,query,where,getDocs}=require('firebase/firestore');
 const {ref,uploadBytes,getBytes}=require('firebase/storage');
 (async()=>{
  const env=await initializeTestEnvironment({projectId:'demo-tbt',firestore:{host:'127.0.0.1',port:8080},storage:{host:'127.0.0.1',port:9199}});
@@ -41,6 +41,7 @@ const {ref,uploadBytes,getBytes}=require('firebase/storage');
   await assertFails(getDoc(doc(db('outside'),'travel_plans/social')));
   await env.withSecurityRulesDisabled(c=>setDoc(doc(c.firestore(),'users/owner/followers/follower'),{userId:'follower'}));
   await assertSucceeds(getDoc(doc(db('follower'),'travel_plans/social')));
+  await assertSucceeds(getDocs(query(collection(db('follower'),'travel_plans'),where('ownerId','==','owner'),where('visibility','==','followers'))));
   await assertFails(getDoc(doc(db('follower'),'travel_plans/social/album/photo')));
   console.log('PASS social routes: public vs member privacy, private Storage, revoked membership, sharing permission ownership, edit opt-in, private polls and votes, followers');
  }finally{await env.cleanup();}

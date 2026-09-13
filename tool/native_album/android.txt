@@ -4,17 +4,27 @@
             val path = call.argument<String>("path")
             val video = call.argument<Boolean>("video") == true
             if (path == null) { result.error("invalid", "Dosya bulunamadı.", null); return@setMethodCallHandler }
-            if (android.os.Build.VERSION.SDK_INT < 29) {
-                result.error("unsupported", "Galeriye kaydetmek için Android 10 veya üzeri gerekli.", null)
+            if (android.os.Build.VERSION.SDK_INT < 29 && checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(arrayOf(android.Manifest.permission.WRITE_EXTERNAL_STORAGE), 713)
+                result.error("permission", "Kaydetme iznini verdikten sonra İndir’e tekrar dokun.", null)
                 return@setMethodCallHandler
             }
             Thread {
                 var uri: android.net.Uri? = null
                 try {
                     val file = java.io.File(path)
+                    if (android.os.Build.VERSION.SDK_INT < 29) {
+                        val folder = java.io.File(android.os.Environment.getExternalStoragePublicDirectory(if(video) android.os.Environment.DIRECTORY_MOVIES else android.os.Environment.DIRECTORY_PICTURES), "TBT")
+                        if (!folder.exists() && !folder.mkdirs()) throw Exception("Klasör oluşturulamadı.")
+                        val target = java.io.File(folder, "TBT_${System.currentTimeMillis()}.${file.extension}")
+                        file.copyTo(target)
+                        android.media.MediaScannerConnection.scanFile(this, arrayOf(target.absolutePath), null, null)
+                        runOnUiThread { result.success(null) }
+                        return@Thread
+                    }
                     val values = android.content.ContentValues().apply {
                         put(android.provider.MediaStore.MediaColumns.DISPLAY_NAME, "TBT_${System.currentTimeMillis()}.${file.extension}")
-                        put(android.provider.MediaStore.MediaColumns.MIME_TYPE, if(video) "video/mp4" else "image/${if(file.extension == "jpg") "jpeg" else file.extension}")
+                        put(android.provider.MediaStore.MediaColumns.MIME_TYPE, if(video) (if(file.extension == "mov") "video/quicktime" else "video/mp4") else "image/${if(file.extension == "jpg") "jpeg" else file.extension}")
                         put(android.provider.MediaStore.MediaColumns.RELATIVE_PATH, if(video) "Movies/TBT" else "Pictures/TBT")
                         put(android.provider.MediaStore.MediaColumns.IS_PENDING, 1)
                     }

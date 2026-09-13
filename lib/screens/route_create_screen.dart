@@ -121,18 +121,19 @@ class _RouteCreateScreenState extends State<RouteCreateScreen> {
     body: ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        const Text(
-          'Nereye gidiyoruz?',
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800),
+        Text(
+          widget.initialStops.isEmpty ? 'Nereye gidiyoruz?' : 'Rotanı düzenle',
+          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800),
         ),
         const SizedBox(height: 16),
-        TextField(
-          controller: _city,
-          decoration: const InputDecoration(
-            hintText: 'Şehir veya bölge ara',
-            prefixIcon: Icon(Icons.search),
+        if (widget.initialStops.isEmpty)
+          TextField(
+            controller: _city,
+            decoration: const InputDecoration(
+              hintText: 'Şehir veya bölge ara',
+              prefixIcon: Icon(Icons.search),
+            ),
           ),
-        ),
         const SizedBox(height: 16),
         Wrap(
           spacing: 8,
@@ -198,6 +199,7 @@ class _RouteCreateScreenState extends State<RouteCreateScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   IconButton(
+                    tooltip: 'Durağı kaldır',
                     onPressed: _busy
                         ? null
                         : () => setState(() => _stops.removeAt(i)),

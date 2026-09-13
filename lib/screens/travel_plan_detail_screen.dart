@@ -1,3 +1,4 @@
+import '../widgets/firebase_media_image.dart';
 import '../widgets/route_polls.dart';
 import '../widgets/route_map_preview.dart';
 import '../widgets/route_stop_picker.dart';
@@ -37,7 +38,6 @@ class TravelPlanDetailScreen extends StatefulWidget {
 }
 
 class _TravelPlanDetailScreenState extends State<TravelPlanDetailScreen> {
-  late bool _public = widget.plan.isPublic;
   late String _title = widget.plan.title;
   bool _savingOffline = false;
 
@@ -72,14 +72,7 @@ class _TravelPlanDetailScreenState extends State<TravelPlanDetailScreen> {
     );
     if (start.isBefore(DateTime.now())) return;
     try {
-      await FirebaseFirestore.instance
-          .collection('travel_plans')
-          .doc(plan.id)
-          .update({
-            'startAt': Timestamp.fromDate(start),
-            'hasSchedule': true,
-            'updatedAt': FieldValue.serverTimestamp(),
-          });
+      await TravelPlanService.instance.setOptions(plan.id, startAt: start);
     } catch (_) {
       if (mounted)
         ScaffoldMessenger.of(context).showSnackBar(
@@ -439,7 +432,6 @@ class _TravelPlanDetailScreenState extends State<TravelPlanDetailScreen> {
         );
       _current = TravelPlan.fromDoc(snapshot.data!);
       _title = plan.title;
-      _public = plan.isPublic;
       final data = snapshot.data!.data()!;
       final member = plan.memberIds.contains(
         FirebaseAuth.instance.currentUser?.uid,
@@ -660,10 +652,32 @@ class _TravelPlanDetailScreenState extends State<TravelPlanDetailScreen> {
                         key: ValueKey('${stops[i]['id']}_$i'),
                         color: const Color(0xFF12151C),
                         child: ListTile(
-                          leading: CircleAvatar(
-                            backgroundColor: AppColors.cyan,
-                            foregroundColor: Colors.black,
-                            child: Text('${i + 1}'),
+                          leading: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              CircleAvatar(
+                                radius: 12,
+                                backgroundColor: AppColors.cyan,
+                                foregroundColor: Colors.black,
+                                child: Text(
+                                  '${i + 1}',
+                                  style: const TextStyle(fontSize: 11),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: SizedBox(
+                                  width: 44,
+                                  height: 48,
+                                  child: FirebaseMediaImage(
+                                    imageUrl: (stops[i]['imageUrl'] ?? '')
+                                        .toString(),
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                           title: Text('${stops[i]['name']}'),
                           subtitle: Text('${stops[i]['category'] ?? 'Durak'}'),
@@ -929,12 +943,24 @@ class _PlanGroupTabState extends State<_PlanGroupTab> {
     });
   }
 
+  bool _sending = false;
   Future<void> _send() async {
-    await TravelPlanCollaborationService.instance.sendMessage(
-      widget.plan.id,
-      _message.text,
-    );
-    _message.clear();
+    if (_sending || _message.text.trim().isEmpty) return;
+    setState(() => _sending = true);
+    final text = _message.text;
+    try {
+      await TravelPlanCollaborationService.instance.sendMessage(
+        widget.plan.id,
+        text,
+      );
+      if (mounted && _message.text == text) _message.clear();
+    } catch (e) {
+      if (mounted)
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(userFacingError(e))));
+    } finally {
+      if (mounted) setState(() => _sending = false);
+    }
   }
 
   Future<void> _accept(
@@ -950,11 +976,8 @@ class _PlanGroupTabState extends State<_PlanGroupTab> {
         );
       } catch (error) {
         if (mounted)
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(error.toString().replaceFirst('Exception: ', '')),
-            ),
-          );
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(userFacingError(error))));
       }
       return;
     }
@@ -1199,7 +1222,10 @@ class _PlanGroupTabState extends State<_PlanGroupTab> {
                 decoration: const InputDecoration(hintText: 'Mesaj yaz'),
               ),
             ),
-            IconButton(onPressed: _send, icon: const Icon(Icons.send_rounded)),
+            IconButton(
+              onPressed: _sending ? null : _send,
+              icon: const Icon(Icons.send_rounded),
+            ),
           ],
         ),
       ],
@@ -1339,21 +1365,3 @@ class _LiveTripScreenState extends State<_LiveTripScreen> {
     );
   }
 }
-
-class _Metric extends StatelessWidget {
-  final IconData icon;
-  final String text;
-  const _Metric(this.icon, this.text);
-
-  @override
-  Widget build(BuildContext context) => Row(
-    mainAxisSize: MainAxisSize.min,
-    children: [
-      Icon(icon, size: 17, color: AppColors.cyan),
-      const SizedBox(width: 5),
-      Text(text, style: const TextStyle(fontWeight: FontWeight.w800)),
-    ],
-  );
-}
-
-const _titleStyle = TextStyle(fontSize: 15, fontWeight: FontWeight.w900);

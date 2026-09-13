@@ -1,3 +1,4 @@
+import 'travel_plan_detail_screen.dart';
 import '../widgets/route_stop_picker.dart';
 import '../data/turkey_selection_data.dart';
 import '../widgets/tbt_dialog.dart';
@@ -17,7 +18,6 @@ import '../services/travel_plan_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/spot_image.dart';
 import 'route_planner_screen.dart';
-import 'travel_plan_invite_screen.dart';
 
 class SmartPlanScreen extends StatefulWidget {
   final bool inviteAfterSave;
@@ -506,20 +506,12 @@ class _SmartPlanScreenState extends State<SmartPlanScreen> {
         estimatedBudget: _estimatedBudget,
         weatherSummary: _intelligence?.weatherSummary ?? '',
       );
+      final saved = await TravelPlanService.instance.read(id);
       if (!mounted) return;
-      if (widget.inviteAfterSave) {
-        await Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (_) => TravelPlanInviteScreen(
-              planId: id,
-              planTitle: _title.text.trim(),
-            ),
-          ),
-        );
-      } else {
-        _message('Planın kaydedildi.');
-      }
+      await Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => TravelPlanDetailScreen(plan: saved)),
+      );
     } catch (error) {
       if (mounted) _message('Plan kaydedilemedi. Tekrar dene.');
     } finally {
