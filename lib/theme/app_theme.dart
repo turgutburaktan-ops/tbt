@@ -13,14 +13,15 @@ class AppColors {
   static const messageOutgoing = Color(0xFF19373B);
   static const navigation = Color(0xFF090B11);
 
-  static const cyan = Color(0xFF45E7F2);
-  static const violet = Color(0xFF9B67F6);
-  static const violetBright = Color(0xFFB482FF);
-  static const cyanSoft = Color(0x2245E7F2);
-  static const violetSoft = Color(0x229B67F6);
+  static const cyan = Color(0xFF09D7F2);
+  static const violet = Color(0xFF9828FF);
+  static const violetBright = Color(0xFF9828FF);
+  static const cyanSoft = Color(0x2209D7F2);
+  static const violetSoft = Color(0x229828FF);
 
-  static const primary = cyan;
-  static const primaryBright = Color(0xFFF5F4FA);
+  static const blue = Color(0xFF267CFF);
+  static const primary = blue;
+  static const primaryBright = blue;
   static const secondary = cyan;
   static const accent = violet;
 
@@ -34,19 +35,21 @@ class AppColors {
   static const warning = Color(0xFFF4BE6A);
 
   static const accentGradient = LinearGradient(
-    colors: [cyan, violet],
+    colors: [cyan, blue, violet],
+    stops: [0, .52, 1],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   static const accentGradientHorizontal = LinearGradient(
-    colors: [cyan, violet],
+    colors: [cyan, blue, violet],
+    stops: [0, .52, 1],
     begin: Alignment.centerLeft,
     end: Alignment.centerRight,
   );
 
   static const subtleGradient = LinearGradient(
-    colors: [Color(0x2245E7F2), Color(0x229B67F6)],
+    colors: [Color(0x2209D7F2), Color(0x229828FF)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
@@ -79,15 +82,21 @@ class AppTheme {
           seedColor: AppColors.violet,
           brightness: Brightness.dark,
         ).copyWith(
-          primary: AppColors.cyan,
-          secondary: AppColors.cyan,
-          tertiary: AppColors.violetBright,
+          primary: AppColors.blue,
+          secondary: AppColors.violet,
+          tertiary: AppColors.cyan,
+          primaryContainer: AppColors.surfaceStrong,
+          secondaryContainer: AppColors.surfaceStrong,
+          tertiaryContainer: AppColors.surfaceStrong,
+          onPrimaryContainer: Colors.white,
+          onSecondaryContainer: Colors.white,
+          onTertiaryContainer: Colors.white,
           surface: AppColors.surface,
           surfaceContainerHighest: AppColors.surfaceAlt,
           outline: AppColors.border,
           outlineVariant: AppColors.borderStrong,
           onPrimary: const Color(0xFF031113),
-          onSecondary: const Color(0xFF031113),
+          onSecondary: Colors.white,
           error: AppColors.liked,
         );
 
@@ -240,7 +249,7 @@ class AppTheme {
         style: FilledButton.styleFrom(
           minimumSize: const Size(0, AppSpacing.controlHeight),
           padding: const EdgeInsets.symmetric(horizontal: 17, vertical: 12),
-          backgroundColor: AppColors.cyan,
+          backgroundColor: AppColors.blue,
           foregroundColor: const Color(0xFF031113),
           disabledBackgroundColor: AppColors.surfaceAlt,
           disabledForegroundColor: AppColors.textSubtle,

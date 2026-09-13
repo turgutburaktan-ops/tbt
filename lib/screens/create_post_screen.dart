@@ -466,9 +466,9 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
             _images[i],
             width: double.infinity,
             height: double.infinity,
-            fit: BoxFit.cover,
+            fit: BoxFit.contain,
             gaplessPlayback: true,
-            filterQuality: FilterQuality.low,
+            filterQuality: FilterQuality.medium,
           ),
         ),
         if (_images.length > 1)
@@ -525,7 +525,10 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
           GestureDetector(
             onTap: _chooseSource,
             child: Container(
-              height: 300,
+              height: (MediaQuery.sizeOf(context).height * .5).clamp(
+                300.0,
+                460.0,
+              ),
               decoration: BoxDecoration(
                 color: AppColors.surface,
                 borderRadius: BorderRadius.circular(24),

@@ -633,10 +633,14 @@ class _FeedRouteCard extends StatelessWidget {
                     const CircleAvatar(child: Icon(Icons.route_rounded)),
                     const SizedBox(width: 10),
                     Expanded(
-                      child: ProfileNameLink(userId: (data['userId'] ?? '').toString(), compact: true, child: Text(
-                        (data['userName'] ?? 'TBT kullanıcısı').toString(),
-                        style: const TextStyle(fontWeight: FontWeight.w900),
-                      )),
+                      child: ProfileNameLink(
+                        userId: (data['userId'] ?? '').toString(),
+                        compact: true,
+                        child: Text(
+                          (data['userName'] ?? 'TBT kullanıcısı').toString(),
+                          style: const TextStyle(fontWeight: FontWeight.w900),
+                        ),
+                      ),
                     ),
                     const Icon(Icons.chevron_right_rounded),
                   ],
@@ -668,9 +672,13 @@ class _FeedRouteCard extends StatelessWidget {
                 if ((data['guideNote'] ?? '').toString().isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 12),
-                    child: ProfileNameLink(userId: (data['userId'] ?? '').toString(), compact: true, child: Text(
-                      '“${data['guideNote']}” — ${data['userName'] ?? ''}',
-                    )),
+                    child: ProfileNameLink(
+                      userId: (data['userId'] ?? '').toString(),
+                      compact: true,
+                      child: Text(
+                        '“${data['guideNote']}” — ${data['userName'] ?? ''}',
+                      ),
+                    ),
                   ),
                 ContentEngagementBar(
                   collection: 'posts',
@@ -807,7 +815,7 @@ class _FeedPostCardState extends State<_FeedPostCard> {
         widget.userId,
         widget.postId,
       ),
-      fit: BoxFit.cover,
+      fit: BoxFit.contain,
       onDoubleTap: null,
     );
   }

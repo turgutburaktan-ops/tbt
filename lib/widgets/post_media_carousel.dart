@@ -15,7 +15,7 @@ class PostMediaCarousel extends StatefulWidget {
     required this.imageUrls,
     this.storagePaths = const [],
     this.fallbackStoragePaths = const [],
-    this.fit = BoxFit.cover,
+    this.fit = BoxFit.contain,
     this.zoomEnabled = false,
     this.onDoubleTap,
   });
@@ -46,7 +46,11 @@ class _PostMediaCarouselState extends State<PostMediaCarousel> {
       errorWidget: const ColoredBox(
         color: Color(0xFF1A1D20),
         child: Center(
-          child: Icon(Icons.broken_image_outlined, color: Colors.white30, size: 58),
+          child: Icon(
+            Icons.broken_image_outlined,
+            color: Colors.white30,
+            size: 58,
+          ),
         ),
       ),
     );
@@ -83,7 +87,10 @@ class _PostMediaCarouselState extends State<PostMediaCarousel> {
                   borderRadius: BorderRadius.circular(18),
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 9,
+                    vertical: 5,
+                  ),
                   child: Text(
                     '${_page + 1}/$_count',
                     style: const TextStyle(
