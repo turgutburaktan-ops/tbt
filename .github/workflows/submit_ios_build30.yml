@@ -1,0 +1,26 @@
+name: Submit verified iOS build 30 for review
+on:
+  push:
+    branches: [codex/submit-ios-build30]
+permissions:
+  contents: read
+concurrency:
+  group: ios-review-build30
+  cancel-in-progress: false
+jobs:
+  submit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check safe replacement scenarios
+        run: node tool/checks/ios_submission_check.cjs
+      - name: Replace pending build with verified update and submit
+        env:
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+        run: node tool/submit_ios_build30.cjs
