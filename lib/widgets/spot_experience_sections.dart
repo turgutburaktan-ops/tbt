@@ -1,3 +1,4 @@
+import '../theme/app_theme.dart';
 import 'profile_name_link.dart';
 import 'tbt_dialog.dart';
 
@@ -102,7 +103,7 @@ class ShootingGuideSection extends StatelessWidget {
                     Icon(
                       rows[i].icon,
                       size: 20,
-                      color: const Color(0xFFB7BCC2),
+                      color: AppColors.textMuted,
                     ),
                     const SizedBox(width: 10),
                     Expanded(
@@ -330,7 +331,7 @@ class TogetherGoSection extends StatelessWidget {
                       contentPadding: EdgeInsets.zero,
                       leading: const Icon(
                         Icons.event_outlined,
-                        color: Color(0xFFB7BCC2),
+                        color: AppColors.textMuted,
                       ),
                       title: const Text('Tarih ve saat'),
                       subtitle: Text(_dateTimeText(selected)),
@@ -409,7 +410,7 @@ class TogetherGoSection extends StatelessWidget {
                       child: FilledButton.icon(
                         onPressed: saving ? null : save,
                         style: FilledButton.styleFrom(
-                          backgroundColor: const Color(0xFFB7BCC2),
+                          backgroundColor: AppColors.textMuted,
                           foregroundColor: Colors.black,
                         ),
                         icon: saving
@@ -481,7 +482,7 @@ class _MeetupCardState extends State<_MeetupCard> {
                 ),
                 child: const Icon(
                   Icons.people_alt_outlined,
-                  color: Color(0xFFB7BCC2),
+                  color: AppColors.textMuted,
                 ),
               ),
               const SizedBox(width: 11),
@@ -537,7 +538,7 @@ class _MeetupCardState extends State<_MeetupCard> {
                           ? null
                           : () => openMeetupHostChat(context, meetup),
                       style: FilledButton.styleFrom(
-                        backgroundColor: const Color(0xFFB7BCC2),
+                        backgroundColor: AppColors.textMuted,
                         foregroundColor: Colors.black,
                       ),
                       icon: const Icon(Icons.chat_bubble_outline, size: 17),
@@ -554,7 +555,7 @@ class _MeetupCardState extends State<_MeetupCard> {
                 FilledButton(
                   onPressed: busy || meetup.isFull ? null : _join,
                   style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFFB7BCC2),
+                    backgroundColor: AppColors.textMuted,
                     foregroundColor: Colors.black,
                   ),
                   child: Text(meetup.isFull ? 'Dolu' : 'Katıl'),
@@ -637,7 +638,7 @@ class _Shell extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF121416),
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: Colors.white10),
       ),
@@ -654,7 +655,7 @@ class _Shell extends StatelessWidget {
                   color: const Color(0x228B5CF6),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(icon, color: const Color(0xFFB7BCC2)),
+                child: Icon(icon, color: AppColors.textMuted),
               ),
               const SizedBox(width: 11),
               Expanded(

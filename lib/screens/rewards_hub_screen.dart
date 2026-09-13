@@ -1,3 +1,4 @@
+import '../theme/app_theme.dart';
 import 'retention_hub_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
@@ -43,9 +44,9 @@ class _RewardsHubScreenState extends State<RewardsHubScreen> {
       );
     }
     return Scaffold(
-      backgroundColor: const Color(0xFF071426),
+      backgroundColor: AppColors.surface,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF071426),
+        backgroundColor: AppColors.surface,
         title: const Text('TBT Yolculuğum'),
         actions: [
           IconButton(onPressed: _refreshing ? null : _refresh, icon: const Icon(Icons.refresh_rounded)),
@@ -189,7 +190,7 @@ class _RoleCard extends StatelessWidget {
     final invited = state['source'] == 'invite';
     final progress = (score / threshold).clamp(0.0, 1.0).toDouble();
     return Card(
-      color: const Color(0xFF102139),
+      color: AppColors.surfaceAlt,
       margin: const EdgeInsets.only(bottom: 10),
       child: Padding(
         padding: const EdgeInsets.all(15),
@@ -233,7 +234,7 @@ class _TrustCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Card(
-        color: const Color(0xFF102139),
+        color: AppColors.surfaceAlt,
         child: ListTile(
           leading: Icon(Icons.verified_user_rounded, color: verified ? const Color(0xFF52D8FF) : Colors.white54),
           title: Text(verified ? 'Doğrulanmış hesap' : 'Doğrulanmış hesap ilerlemesi', style: const TextStyle(fontWeight: FontWeight.w900)),

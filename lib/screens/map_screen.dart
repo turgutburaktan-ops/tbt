@@ -1,3 +1,4 @@
+import '../theme/app_theme.dart';
 import '../widgets/tbt_dialog.dart';
 
 import 'dart:async';
@@ -788,7 +789,7 @@ class _MapScreenState extends State<MapScreen> {
                             Container(
                               padding: const EdgeInsets.fromLTRB(14, 8, 8, 8),
                               decoration: BoxDecoration(
-                                color: const Color(0xFF0F1113)
+                                color: AppColors.surface
                                     .withValues(alpha: .95),
                                 borderRadius: BorderRadius.circular(18),
                               ),
@@ -796,7 +797,7 @@ class _MapScreenState extends State<MapScreen> {
                                 children: [
                                   const Icon(
                                     Icons.explore_outlined,
-                                    color: Color(0xFFB7BCC2),
+                                    color: AppColors.textMuted,
                                   ),
                                   const SizedBox(width: 9),
                                   const Expanded(
@@ -827,7 +828,7 @@ class _MapScreenState extends State<MapScreen> {
                                       height: 18,
                                       child: CircularProgressIndicator(
                                         strokeWidth: 2,
-                                        color: Color(0xFFB7BCC2),
+                                        color: AppColors.textMuted,
                                       ),
                                     ),
                                   IconButton(
@@ -881,7 +882,7 @@ class _MapScreenState extends State<MapScreen> {
                               Align(
                                 alignment: Alignment.centerLeft,
                                 child: Material(
-                                  color: const Color(0xFF0F1113)
+                                  color: AppColors.surface
                                       .withValues(alpha: .95),
                                   borderRadius: BorderRadius.circular(14),
                                   child: InkWell(
@@ -927,7 +928,7 @@ class _MapScreenState extends State<MapScreen> {
                             Container(
                               padding: const EdgeInsets.all(4),
                               decoration: BoxDecoration(
-                                color: const Color(0xFF0F1113)
+                                color: AppColors.surface
                                     .withValues(alpha: .95),
                                 borderRadius: BorderRadius.circular(16),
                               ),
@@ -982,8 +983,8 @@ class _MapScreenState extends State<MapScreen> {
                         bottom: bottomOffset + 68,
                         child: FloatingActionButton(
                           heroTag: 'myLocation',
-                          backgroundColor: const Color(0xFF0F1113),
-                          foregroundColor: const Color(0xFFB7BCC2),
+                          backgroundColor: AppColors.surface,
+                          foregroundColor: AppColors.textMuted,
                           onPressed: _gettingLocation ? null : _goToMyLocation,
                           child: _gettingLocation
                               ? const SizedBox(
@@ -991,7 +992,7 @@ class _MapScreenState extends State<MapScreen> {
                                   height: 22,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2.5,
-                                    color: Color(0xFFB7BCC2),
+                                    color: AppColors.textMuted,
                                   ),
                                 )
                               : const Icon(Icons.my_location_rounded),
@@ -1002,8 +1003,8 @@ class _MapScreenState extends State<MapScreen> {
                         bottom: bottomOffset,
                         child: FloatingActionButton(
                           heroTag: 'allMapContent',
-                          backgroundColor: const Color(0xFF0F1113),
-                          foregroundColor: const Color(0xFFB7BCC2),
+                          backgroundColor: AppColors.surface,
+                          foregroundColor: AppColors.textMuted,
                           onPressed: _showAll,
                           child: const Icon(Icons.fit_screen),
                         ),
@@ -1170,7 +1171,7 @@ class _FilterButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 2),
         decoration: BoxDecoration(
-          color: selected ? const Color(0xFFB7BCC2) : Colors.transparent,
+          color: selected ? AppColors.textMuted : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Text(
@@ -1297,7 +1298,7 @@ class _SpotCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Card(
-    color: const Color(0xFF0F1113),
+    color: AppColors.surface,
     clipBehavior: Clip.antiAlias,
     child: InkWell(
       onTap: onOpen,
@@ -1397,7 +1398,7 @@ class _VenueCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Card(
-    color: const Color(0xFF0F1113),
+    color: AppColors.surface,
     clipBehavior: Clip.antiAlias,
     child: Padding(
       padding: const EdgeInsets.all(13),
@@ -1497,7 +1498,7 @@ class _UserPointCard extends StatelessWidget {
         children: [
           const CircleAvatar(
             radius: 30,
-            backgroundColor: const Color(0xFF0D1B30),
+            backgroundColor: AppColors.surface,
             child: Icon(
               Icons.person_pin_circle_outlined,
               color: Color(0xFF62E6D2),

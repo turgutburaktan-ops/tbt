@@ -407,7 +407,7 @@ class _SharedPostCardState extends State<SharedPostCard> {
     final card = CreatorViewTracker(
       postId: widget.postId,
       child: Card(
-        color: const Color(0xFF142238),
+        color: AppColors.surfaceAlt,
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: _open,

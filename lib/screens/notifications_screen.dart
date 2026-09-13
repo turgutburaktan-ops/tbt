@@ -1,3 +1,4 @@
+import '../theme/app_theme.dart';
 import '../widgets/profile_name_link.dart';
 import 'broadcast_detail_screen.dart';
 import 'reservation_inbox_screen.dart';
@@ -95,7 +96,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       return const Color(0xFFFF8FA3);
     if (_opensEvent(type)) return const Color(0xFF45C9C5);
     if (_isSocial(type)) return const Color(0xFF8172FF);
-    return const Color(0xFFB7BCC2);
+    return AppColors.textMuted;
   }
 
   Future<Map<String, dynamic>> _loadActor(String actorId) async {
@@ -315,7 +316,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   fallbackStoragePaths: FirebaseMediaImage.avatarPaths(actorId),
                   fit: BoxFit.cover,
                   errorWidget: const ColoredBox(
-                    color: Color(0xFF0D1B30),
+                    color: AppColors.surface,
                     child: Icon(Icons.person_rounded, color: Colors.white54),
                   ),
                 ),
@@ -330,7 +331,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 decoration: BoxDecoration(
                   color: _accentFor(item.type),
                   shape: BoxShape.circle,
-                  border: Border.all(color: const Color(0xFF090A0C), width: 2),
+                  border: Border.all(color: AppColors.background, width: 2),
                 ),
                 child: Icon(_iconFor(item.type), size: 12, color: Colors.black),
               ),
@@ -427,9 +428,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    backgroundColor: const Color(0xFF090A0C),
+    backgroundColor: AppColors.background,
     appBar: AppBar(
-      backgroundColor: const Color(0xFF090A0C),
+      backgroundColor: AppColors.background,
       foregroundColor: Colors.white,
       elevation: 0,
       title: const Text(

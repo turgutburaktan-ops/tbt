@@ -1,3 +1,4 @@
+import '../theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -66,13 +67,13 @@ class SpotDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final verified = spot.tags.contains('Doğrulanmış');
     return Scaffold(
-      backgroundColor: const Color(0xFF090A0C),
+      backgroundColor: AppColors.background,
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
             expandedHeight: 320,
             pinned: true,
-            backgroundColor: const Color(0xFF090A0C),
+            backgroundColor: AppColors.background,
             foregroundColor: Colors.white,
             actions: [
               IconButton(
@@ -95,7 +96,7 @@ class SpotDetailScreen extends StatelessWidget {
                     onPressed: () => FavoritesService.toggle(spot),
                     icon: Icon(
                       saved ? Icons.favorite : Icons.favorite_border,
-                      color: saved ? const Color(0xFFB7BCC2) : Colors.white,
+                      color: saved ? AppColors.textMuted : Colors.white,
                     ),
                   );
                 },

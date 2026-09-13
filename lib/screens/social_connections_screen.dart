@@ -1,3 +1,4 @@
+import '../theme/app_theme.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
@@ -20,9 +21,9 @@ class SocialConnectionsScreen extends StatelessWidget {
         : SocialService.instance.following(userId);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF090A0C),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF090A0C),
+        backgroundColor: AppColors.background,
         foregroundColor: Colors.white,
         title: Text(followersMode ? 'Takipçiler' : 'Takip Edilenler'),
       ),
@@ -31,7 +32,7 @@ class SocialConnectionsScreen extends StatelessWidget {
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(
-              child: CircularProgressIndicator(color: Color(0xFFB7BCC2)),
+              child: CircularProgressIndicator(color: AppColors.textMuted),
             );
           }
 
@@ -87,7 +88,7 @@ class _UserTile extends StatelessWidget {
           ),
           leading: CircleAvatar(
             radius: 25,
-            backgroundColor: const Color(0xFF0D1B30),
+            backgroundColor: AppColors.surface,
             backgroundImage: photoUrl.isNotEmpty
                 ? NetworkImage(photoUrl)
                 : null,

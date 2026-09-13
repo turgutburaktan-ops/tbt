@@ -1,3 +1,4 @@
+import '../theme/app_theme.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -150,15 +151,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const accent = Color(0xFFB7BCC2);
+    const accent = AppColors.textMuted;
     final passwordMatch =
         _passwordAgainController.text.isEmpty ||
         _passwordController.text == _passwordAgainController.text;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF090A0C),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF090A0C),
+        backgroundColor: AppColors.background,
         foregroundColor: Colors.white,
         title: const Text('Hesap Oluştur'),
       ),
@@ -252,7 +253,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF121416),
+                  color: AppColors.surface,
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(color: Colors.white10),
                 ),
@@ -354,11 +355,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
     String? errorText,
   }) => InputDecoration(
     labelText: label,
-    prefixIcon: Icon(icon, color: const Color(0xFFB7BCC2)),
+    prefixIcon: Icon(icon, color: AppColors.textMuted),
     suffixIcon: suffix,
     errorText: errorText,
     filled: true,
-    fillColor: const Color(0xFF121416),
+    fillColor: AppColors.surface,
     border: OutlineInputBorder(
       borderRadius: BorderRadius.circular(18),
       borderSide: BorderSide.none,
@@ -369,7 +370,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     ),
     focusedBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(18),
-      borderSide: const BorderSide(color: Color(0xFFB7BCC2)),
+      borderSide: const BorderSide(color: AppColors.textMuted),
     ),
   );
 }

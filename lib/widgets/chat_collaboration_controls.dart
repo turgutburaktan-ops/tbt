@@ -1,3 +1,4 @@
+import '../theme/app_theme.dart';
 import 'profile_name_link.dart';
 import 'tbt_dialog.dart';
 
@@ -190,7 +191,7 @@ class ChatGroupInfo extends StatelessWidget {
         return ListView(
           children: [
             ListTile(
-              leading: CircleAvatar(backgroundColor: const Color(0xFF0D1B30), foregroundColor: Colors.white70,
+              leading: CircleAvatar(backgroundColor: AppColors.surface, foregroundColor: Colors.white70,
                 backgroundImage: t.photoUrl == null
                     ? null
                     : NetworkImage(t.photoUrl!),

@@ -1,3 +1,4 @@
+import '../theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../l10n/app_strings.dart';
@@ -60,7 +61,7 @@ class _InstallIntroState extends State<_InstallIntro> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    backgroundColor: const Color(0xFF090A0C),
+    backgroundColor: AppColors.background,
     body: SafeArea(
       child: Column(
         children: [

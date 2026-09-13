@@ -874,13 +874,13 @@ class _PreviewBanner extends StatelessWidget {
     ),
     child: const Row(
       children: [
-        Icon(Icons.visibility_rounded, color: Color(0xFF07080C)),
+        Icon(Icons.visibility_rounded, color: AppColors.background),
         SizedBox(width: 9),
         Expanded(
           child: Text(
             'ADMIN ÖNİZLEME • Gerçek veriyi değiştirmez.',
             style: TextStyle(
-              color: Color(0xFF07080C),
+              color: AppColors.background,
               fontWeight: FontWeight.w900,
             ),
           ),

@@ -1,3 +1,4 @@
+import '../theme/app_theme.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -185,7 +186,7 @@ class _StoryMusicPickerState extends State<StoryMusicPicker> {
                   hintText: 'Şarkı veya sanatçı ara',
                   prefixIcon: const Icon(Icons.search_rounded),
                   filled: true,
-                  fillColor: const Color(0xFF15181E),
+                  fillColor: AppColors.surface,
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(18), borderSide: BorderSide.none),
                 ),
               ),
@@ -205,7 +206,7 @@ class _StoryMusicPickerState extends State<StoryMusicPicker> {
                     label: Text(item),
                     onSelected: (_) => setState(() => _category = item),
                     selectedColor: const Color(0xFF6947F5),
-                    backgroundColor: const Color(0xFF15181E),
+                    backgroundColor: AppColors.surface,
                     side: BorderSide.none,
                   );
                 },
@@ -258,7 +259,7 @@ class _StoryMusicPickerState extends State<StoryMusicPicker> {
       context: context,
       useSafeArea: true,
       isScrollControlled: true,
-      backgroundColor: const Color(0xFF0B0D12),
+      backgroundColor: AppColors.background,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
       builder: (_) => SizedBox(height: MediaQuery.sizeOf(context).height * .85, child: SingleChildScrollView(child: _ClipSheet(track: track, maxClipDurationMs: widget.maxClipDurationMs))),
     );
@@ -401,7 +402,7 @@ class _ClipSheetState extends State<_ClipSheet> {
         Container(
           height: 54,
           padding: const EdgeInsets.symmetric(horizontal: 6),
-          decoration: BoxDecoration(color: const Color(0xFF15181E), borderRadius: BorderRadius.circular(18)),
+          decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(18)),
           child: Row(children: List<Widget>.generate(24, (i) => Expanded(child: Center(child: Container(width: 3, height: 10 + ((i * 7) % 30).toDouble(), decoration: BoxDecoration(color: i.isEven ? const Color(0xFF38E8FF) : const Color(0xFF9B4DFF), borderRadius: BorderRadius.circular(4))))))),
         ),
         Slider(

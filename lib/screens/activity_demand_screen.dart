@@ -1,3 +1,4 @@
+import '../theme/app_theme.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -163,9 +164,9 @@ class _ActivityDemandScreenState extends State<ActivityDemandScreen> {
   Widget build(BuildContext context) {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     return Scaffold(
-      backgroundColor: const Color(0xFF090A0C),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF090A0C),
+        backgroundColor: AppColors.background,
         title: const Text('Bugün ne yapmak istiyorsun?'),
       ),
       body: StreamBuilder<List<ActivityDemand>>(
@@ -230,9 +231,9 @@ class _ActivityDemandScreenState extends State<ActivityDemandScreen> {
               Container(
                 padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF15181B),
+                  color: AppColors.surface,
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: const Color(0xFF292D32)),
+                  border: Border.all(color: AppColors.border),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,

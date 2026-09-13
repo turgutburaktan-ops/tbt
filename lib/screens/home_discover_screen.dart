@@ -599,7 +599,7 @@ class _HomeDiscoverScreenState extends State<HomeDiscoverScreen> {
             return ListTile(
               contentPadding: EdgeInsets.zero,
               leading: CircleAvatar(
-                backgroundColor: const Color(0xFF0D1B30),
+                backgroundColor: AppColors.surface,
                 backgroundImage: photo.trim().isEmpty
                     ? null
                     : NetworkImage(photo),

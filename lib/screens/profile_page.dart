@@ -1,3 +1,4 @@
+import '../theme/app_theme.dart';
 import '../services/user_facing_error.dart';
 import '../widgets/profile_reservations.dart';
 
@@ -32,7 +33,7 @@ class ProfilePage extends StatelessWidget {
         if (auth.connectionState == ConnectionState.waiting) {
           return const SafeArea(
             child: Center(
-              child: CircularProgressIndicator(color: Color(0xFFB7BCC2)),
+              child: CircularProgressIndicator(color: AppColors.textMuted),
             ),
           );
         }
@@ -169,7 +170,7 @@ class _ProfileBodyState extends State<_ProfileBody> {
                             onPressed: () => _editProfile(displayName, bio),
                             icon: const Icon(
                               Icons.edit_outlined,
-                              color: Color(0xFFB7BCC2),
+                              color: AppColors.textMuted,
                             ),
                           ),
                           IconButton(
@@ -201,7 +202,7 @@ class _ProfileBodyState extends State<_ProfileBody> {
                                     ),
                                     child: CircleAvatar(
                                       radius: 47,
-                                      backgroundColor: const Color(0xFF0D1B30),
+                                      backgroundColor: AppColors.surface,
                                       child: CircleAvatar(
                                         radius: 43,
                                         backgroundColor: const Color(
@@ -230,7 +231,7 @@ class _ProfileBodyState extends State<_ProfileBody> {
                                         width: 29,
                                         height: 29,
                                         decoration: const BoxDecoration(
-                                          color: Color(0xFFB7BCC2),
+                                          color: AppColors.textMuted,
                                           shape: BoxShape.circle,
                                         ),
                                         child: const Icon(
@@ -317,7 +318,7 @@ class _ProfileBodyState extends State<_ProfileBody> {
                       hasScrollBody: false,
                       child: Center(
                         child: CircularProgressIndicator(
-                          color: Color(0xFFB7BCC2),
+                          color: AppColors.textMuted,
                         ),
                       ),
                     )
@@ -327,7 +328,7 @@ class _ProfileBodyState extends State<_ProfileBody> {
                       child: Center(
                         child: FilledButton.icon(
                           style: FilledButton.styleFrom(
-                            backgroundColor: const Color(0xFFB7BCC2),
+                            backgroundColor: AppColors.textMuted,
                             foregroundColor: Colors.black,
                           ),
                           onPressed: () => Navigator.push(
@@ -385,7 +386,7 @@ class _ProfileBodyState extends State<_ProfileBody> {
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
-      backgroundColor: const Color(0xFF090A0C),
+      backgroundColor: AppColors.background,
       builder: (sheetContext) => StatefulBuilder(
         builder: (context, setSheetState) {
           Future<void> pick() async {
@@ -429,13 +430,13 @@ class _ProfileBodyState extends State<_ProfileBody> {
                     onTap: pick,
                     child: CircleAvatar(
                       radius: 48,
-                      backgroundColor: const Color(0xFF0D1B30),
+                      backgroundColor: AppColors.surface,
                       backgroundImage: photo != null ? FileImage(photo!) : null,
                       child: photo == null
                           ? const Icon(
                               Icons.add_a_photo_outlined,
                               size: 34,
-                              color: Color(0xFFB7BCC2),
+                              color: AppColors.textMuted,
                             )
                           : null,
                     ),
@@ -465,7 +466,7 @@ class _ProfileBodyState extends State<_ProfileBody> {
                     height: 52,
                     child: FilledButton(
                       style: FilledButton.styleFrom(
-                        backgroundColor: const Color(0xFFB7BCC2),
+                        backgroundColor: AppColors.textMuted,
                         foregroundColor: Colors.black,
                       ),
                       onPressed: saving
@@ -664,7 +665,7 @@ class _ProfilePostTileState extends State<_ProfilePostTile> {
                   alignment: Alignment.center,
                   child: Material(
                     elevation: 18,
-                    color: const Color(0xFF0F1113),
+                    color: AppColors.surface,
                     borderRadius: BorderRadius.circular(4),
                     clipBehavior: Clip.antiAlias,
                     child: Image.network(
@@ -715,7 +716,7 @@ class _ProfilePostTileState extends State<_ProfilePostTile> {
       onPointerCancel: _onPointerUp,
       child: Container(
         decoration: BoxDecoration(
-          color: const Color(0xFF0F1113),
+          color: AppColors.surface,
           border: Border.all(color: Colors.white12, width: .7),
         ),
         child: Column(
@@ -725,7 +726,7 @@ class _ProfilePostTileState extends State<_ProfilePostTile> {
               child: SizedBox.expand(
                 child: _imageUrl.isEmpty
                     ? const ColoredBox(
-                        color: Color(0xFF121416),
+                        color: AppColors.surface,
                         child: Icon(
                           Icons.image_outlined,
                           color: Colors.white30,
@@ -736,7 +737,7 @@ class _ProfilePostTileState extends State<_ProfilePostTile> {
                         fit: BoxFit.cover,
                         filterQuality: FilterQuality.low,
                         errorBuilder: (_, __, ___) => const ColoredBox(
-                          color: Color(0xFF121416),
+                          color: AppColors.surface,
                           child: Icon(
                             Icons.broken_image_outlined,
                             color: Colors.white30,

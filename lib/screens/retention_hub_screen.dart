@@ -1,3 +1,4 @@
+import '../theme/app_theme.dart';
 import '../widgets/profile_name_link.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -35,9 +36,9 @@ class _RetentionHubScreenState extends State<RetentionHubScreen>
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    backgroundColor: const Color(0xFF090A0C),
+    backgroundColor: AppColors.background,
     appBar: AppBar(
-      backgroundColor: const Color(0xFF090A0C),
+      backgroundColor: AppColors.background,
       title: const Text('TBT Keşif'),
       bottom: PreferredSize(
         preferredSize: const Size.fromHeight(47),
@@ -357,8 +358,8 @@ class _DiscoveryCard extends StatelessWidget {
           imageUrl: image,
           storagePath: path,
           fit: BoxFit.cover,
-          placeholder: const ColoredBox(color: Color(0xFF151922)),
-          errorWidget: const ColoredBox(color: Color(0xFF151922), child: Icon(Icons.image_not_supported_outlined, color: Colors.white24)),
+          placeholder: const ColoredBox(color: AppColors.surfaceAlt),
+          errorWidget: const ColoredBox(color: AppColors.surfaceAlt, child: Icon(Icons.image_not_supported_outlined, color: Colors.white24)),
         ),
         const DecoratedBox(decoration: BoxDecoration(gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Colors.transparent, Color(0xCC05060A)]))),
         if (video) const Center(child: CircleAvatar(radius: 21, backgroundColor: Color(0xAA090A0C), child: Icon(Icons.play_arrow_rounded, color: Colors.white, size: 26))),
@@ -432,7 +433,7 @@ class _CityProgressTab extends StatelessWidget {
                   return Container(
                     margin: const EdgeInsets.only(bottom: 9),
                     padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(color: const Color(0xFF151922), borderRadius: BorderRadius.circular(17)),
+                    decoration: BoxDecoration(color: AppColors.surfaceAlt, borderRadius: BorderRadius.circular(17)),
                     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                       Row(children: [
                         Expanded(child: Text(city, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15))),
@@ -466,7 +467,7 @@ class _RichEmpty extends StatelessWidget {
       margin: EdgeInsets.all(compact ? 0 : 24),
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
-        color: const Color(0xFF151922),
+        color: AppColors.surfaceAlt,
         borderRadius: BorderRadius.circular(22),
         border: Border.all(color: Colors.white10),
       ),
@@ -497,7 +498,7 @@ class _MetricCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.all(13),
-    decoration: BoxDecoration(color: const Color(0xFF151922), borderRadius: BorderRadius.circular(18)),
+    decoration: BoxDecoration(color: AppColors.surfaceAlt, borderRadius: BorderRadius.circular(18)),
     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Icon(icon, color: const Color(0xFF45E7F2), size: 20),
       const SizedBox(height: 9),
@@ -521,7 +522,7 @@ class _Empty extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.all(14),
-    decoration: BoxDecoration(color: const Color(0xFF151922), borderRadius: BorderRadius.circular(16)),
+    decoration: BoxDecoration(color: AppColors.surfaceAlt, borderRadius: BorderRadius.circular(16)),
     child: Text(text, style: const TextStyle(color: Color(0x80FFFFFF))),
   );
 }
@@ -534,9 +535,9 @@ class _SimpleTile extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     margin: const EdgeInsets.only(bottom: 8),
     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
-    decoration: BoxDecoration(color: const Color(0xFF151922), borderRadius: BorderRadius.circular(15)),
+    decoration: BoxDecoration(color: AppColors.surfaceAlt, borderRadius: BorderRadius.circular(15)),
     child: Row(children: [
-      Icon(icon, color: const Color(0xFFB7BCC2), size: 20),
+      Icon(icon, color: AppColors.textMuted, size: 20),
       const SizedBox(width: 10),
       Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 13)),

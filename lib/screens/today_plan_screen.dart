@@ -1,3 +1,4 @@
+import '../theme/app_theme.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -160,7 +161,7 @@ class _TodayPlanScreenState extends State<TodayPlanScreen> {
   ]);
   @override
   Widget build(BuildContext context)=>Scaffold(
-    backgroundColor:const Color(0xFF081426),
+    backgroundColor:AppColors.surface,
     appBar:AppBar(title:const Text('Bugün ne yapalım?'),actions:[IconButton(tooltip:'Seyahat planlarım',onPressed:()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>const TravelPlansScreen())),icon:const Icon(Icons.bookmarks_outlined))]),
     body:_loading?const Center(child:CircularProgressIndicator()):ListView(padding:const EdgeInsets.fromLTRB(16,8,16,32),children:[
       const Text('Birlikte güzel bir gün planlayalım.',style:TextStyle(fontSize:24,fontWeight:FontWeight.bold)),
@@ -205,7 +206,7 @@ class _TodayPlanScreenState extends State<TodayPlanScreen> {
   );
   Widget _option(int index,DayPlanAlternative option){
     final r=_request!;
-    return Card(color:const Color(0xFF0D1B30),margin:const EdgeInsets.only(top:16),child:Padding(padding:const EdgeInsets.all(16),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+    return Card(color:AppColors.surface,margin:const EdgeInsets.only(top:16),child:Padding(padding:const EdgeInsets.all(16),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
       Text(option.title,style:const TextStyle(fontSize:19,fontWeight:FontWeight.bold)),
       Text('${option.stops.length} durak · yaklaşık ${option.totalMinutes} dk · ${option.distanceKm.toStringAsFixed(1)} km'),
       Text('${option.travelMinutes} dk yol · ${r.people} kişi · dönüş ${_clock(r.startAt.add(Duration(minutes:option.totalMinutes)))}',style:const TextStyle(color:Colors.white70,fontSize:12)),

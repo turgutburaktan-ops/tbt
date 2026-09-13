@@ -1,3 +1,4 @@
+import '../theme/app_theme.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -102,7 +103,7 @@ class _RoleInviteScreenState extends State<RoleInviteScreen> {
   Widget build(BuildContext context) {
     final label = (_invite?['roleLabel'] ?? 'TBT özel daveti').toString();
     return Scaffold(
-      backgroundColor: const Color(0xFF071426),
+      backgroundColor: AppColors.surface,
       appBar: AppBar(backgroundColor: Colors.transparent, title: const Text('TBT özel daveti')),
       body: SafeArea(
         child: Center(

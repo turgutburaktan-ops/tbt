@@ -1,3 +1,4 @@
+import '../theme/app_theme.dart';
 import 'profile_name_link.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -301,7 +302,7 @@ class _StatsCard extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.symmetric(vertical: 13),
     decoration: BoxDecoration(
-      color: const Color(0xFF111620),
+      color: AppColors.surface,
       borderRadius: BorderRadius.circular(18),
       border: Border.all(color: Colors.white.withValues(alpha: .06)),
     ),
@@ -356,7 +357,7 @@ class _Empty extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.all(14),
-    decoration: BoxDecoration(color: const Color(0xFF111620), borderRadius: BorderRadius.circular(16)),
+    decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(16)),
     child: Text(text, style: TextStyle(color: Colors.white.withValues(alpha: .50), height: 1.35)),
   );
 }
@@ -407,7 +408,7 @@ class _InfoTile extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     margin: const EdgeInsets.only(bottom: 7),
     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
-    decoration: BoxDecoration(color: const Color(0xFF111620), borderRadius: BorderRadius.circular(15)),
+    decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(15)),
     child: Row(
       children: [
         Container(

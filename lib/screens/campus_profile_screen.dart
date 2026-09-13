@@ -1,3 +1,4 @@
+import '../theme/app_theme.dart';
 import 'package:flutter/material.dart';
 
 import '../data/turkey_selection_data.dart';
@@ -137,9 +138,9 @@ class _CampusProfileScreenState extends State<CampusProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF090A0C),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF090A0C),
+        backgroundColor: AppColors.background,
         title: const Text('Öğrenci / Kampüs Bilgileri'),
         actions: [
           IconButton(
@@ -233,7 +234,7 @@ class _CampusProfileScreenState extends State<CampusProfileScreen> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF121416),
+                  color: AppColors.surface,
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(color: Colors.white10),
                 ),

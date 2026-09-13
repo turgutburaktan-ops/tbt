@@ -1,3 +1,4 @@
+import '../theme/app_theme.dart';
 import 'profile_name_link.dart';
 // Shared engagement controls for posts and social events.
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -63,7 +64,7 @@ class ContentEngagementBar extends StatelessWidget {
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
-      backgroundColor: const Color(0xFF0E1012),
+      backgroundColor: AppColors.background,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
@@ -172,7 +173,7 @@ class ContentEngagementBar extends StatelessWidget {
                             return ListTile(
                               contentPadding: EdgeInsets.zero,
                               leading: const CircleAvatar(
-                                backgroundColor: const Color(0xFF0D1B30),
+                                backgroundColor: AppColors.surface,
                                 child: Icon(Icons.person_outline),
                               ),
                               title: ProfileNameLink(
@@ -186,7 +187,7 @@ class ContentEngagementBar extends StatelessWidget {
                                 text: (data['text'] ?? '').toString(),
                                 style: const TextStyle(color: Colors.white70),
                                 mentionStyle: const TextStyle(
-                                  color: Color(0xFFD7DADF),
+                                  color: AppColors.textMuted,
                                   fontWeight: FontWeight.w800,
                                 ),
                               ),
@@ -200,7 +201,7 @@ class ContentEngagementBar extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.fromLTRB(12, 4, 6, 4),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF15181B),
+                      color: AppColors.surface,
                       borderRadius: BorderRadius.circular(22),
                       border: Border.all(color: const Color(0x334B5158)),
                     ),
@@ -222,7 +223,7 @@ class ContentEngagementBar extends StatelessWidget {
                         ),
                         IconButton.filled(
                           style: IconButton.styleFrom(
-                            backgroundColor: const Color(0xFFB7BCC2),
+                            backgroundColor: AppColors.textMuted,
                             foregroundColor: Colors.white,
                           ),
                           onPressed: sending ? null : sendComment,
@@ -262,7 +263,7 @@ class ContentEngagementBar extends StatelessWidget {
       context: context,
       useSafeArea: true,
       isScrollControlled: true,
-      backgroundColor: const Color(0xFF0E1012),
+      backgroundColor: AppColors.background,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
@@ -332,7 +333,7 @@ class ContentEngagementBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const accent = Color(0xFFB7BCC2);
+    const accent = AppColors.textMuted;
     return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
       stream: contentId.trim().isEmpty ? null :
           ContentEngagementService.instance.comments(collection, contentId),

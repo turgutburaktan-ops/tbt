@@ -1,3 +1,4 @@
+import '../theme/app_theme.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -10,9 +11,9 @@ import 'community_profile_screen.dart';
 class CampusHomeScreen extends StatelessWidget {
   const CampusHomeScreen({super.key});
 
-  static const bg = Color(0xFF090A0C);
-  static const card = Color(0xFF121416);
-  static const border = Color(0xFF292D32);
+  static const bg = AppColors.background;
+  static const card = AppColors.surface;
+  static const border = AppColors.border;
 
   @override
   Widget build(BuildContext context) {
@@ -226,7 +227,7 @@ class _WelcomeCard extends StatelessWidget {
       children: [
         const CircleAvatar(
           radius: 25,
-          backgroundColor: Color(0xFF25292E),
+          backgroundColor: AppColors.border,
           child: Icon(Icons.school_outlined),
         ),
         const SizedBox(width: 12),

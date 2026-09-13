@@ -1,3 +1,4 @@
+import '../theme/app_theme.dart';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -81,9 +82,9 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
     final analysis = result;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF090D13),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF090D13),
+        backgroundColor: AppColors.background,
         foregroundColor: Colors.white,
         title: const Text('Fotoğraf Analizi'),
       ),
@@ -102,12 +103,12 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
           const SizedBox(height: 22),
           if (analyzing)
             const Card(
-              color: Color(0xFF121416),
+              color: AppColors.surface,
               child: Padding(
                 padding: EdgeInsets.all(24),
                 child: Column(
                   children: [
-                    CircularProgressIndicator(color: Color(0xFFB7BCC2)),
+                    CircularProgressIndicator(color: AppColors.textMuted),
                     SizedBox(height: 18),
                     Text(
                       'Fotoğraf AI tarafından analiz ediliyor...',
@@ -119,7 +120,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
             ),
           if (errorMessage != null && !analyzing)
             Card(
-              color: const Color(0xFF121416),
+              color: AppColors.surface,
               child: Padding(
                 padding: const EdgeInsets.all(20),
                 child: Column(
@@ -145,7 +146,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
             ),
           if (analysis != null && !analyzing) ...[
             Card(
-              color: const Color(0xFF121416),
+              color: AppColors.surface,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
               ),
@@ -156,7 +157,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                     Text(
                       '${analysis.score}/100',
                       style: const TextStyle(
-                        color: Color(0xFFB7BCC2),
+                        color: AppColors.textMuted,
                         fontSize: 48,
                         fontWeight: FontWeight.bold,
                       ),
@@ -182,7 +183,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
             ),
             const SizedBox(height: 12),
             Card(
-              color: const Color(0xFF121416),
+              color: AppColors.surface,
               child: Padding(
                 padding: const EdgeInsets.all(18),
                 child: Text(
@@ -199,7 +200,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
             const SizedBox(height: 12),
             ...analysis.suggestions.map(
               (suggestion) => Card(
-                color: const Color(0xFF121416),
+                color: AppColors.surface,
                 child: ListTile(
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 18,
@@ -207,7 +208,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                   ),
                   leading: const Icon(
                     Icons.auto_awesome,
-                    color: Color(0xFFB7BCC2),
+                    color: AppColors.textMuted,
                   ),
                   title: Text(suggestion, style: const TextStyle(height: 1.4)),
                 ),
@@ -217,7 +218,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
           const SizedBox(height: 24),
           FilledButton.icon(
             style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFFB7BCC2),
+              backgroundColor: AppColors.textMuted,
               foregroundColor: Colors.black,
               padding: const EdgeInsets.all(17),
             ),

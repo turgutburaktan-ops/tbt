@@ -3,7 +3,7 @@ import '../theme/app_theme.dart';
 import 'package:flutter/material.dart';
 
 const tbtDialogBackground = AppColors.surface;
-const tbtDialogAccent = AppColors.cyan;
+const tbtDialogAccent = AppColors.blue;
 
 ThemeData tbtDialogTheme(ThemeData base) => base.copyWith(
   colorScheme: base.colorScheme.copyWith(
@@ -12,7 +12,7 @@ ThemeData tbtDialogTheme(ThemeData base) => base.copyWith(
     primaryContainer: AppColors.surfaceStrong,
     onPrimaryContainer: Colors.white,
     onSurface: const Color(0xFFF0F5FF),
-    onPrimary: const Color(0xFF071322),
+    onPrimary: Colors.white,
     surface: tbtDialogBackground,
     surfaceContainerHigh: tbtDialogBackground,
     surfaceContainerHighest: AppColors.surfaceAlt,
@@ -91,7 +91,7 @@ class TbtDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Material(
     color: tbtDialogBackground,
-    borderRadius: BorderRadius.circular(24),
+    borderRadius: BorderRadius.circular(AppRadii.large),
     clipBehavior: Clip.antiAlias,
     child: Padding(
       padding: const EdgeInsets.all(20),

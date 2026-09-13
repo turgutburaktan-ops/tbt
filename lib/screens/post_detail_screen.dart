@@ -1,3 +1,4 @@
+import '../theme/app_theme.dart';
 import '../widgets/tbt_dialog.dart';
 import '../services/creator_service.dart';
 import '../widgets/creator_view_tracker.dart';
@@ -137,7 +138,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
-      backgroundColor: const Color(0xFF0E1012),
+      backgroundColor: AppColors.background,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
@@ -215,7 +216,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     final confirmed = await showTbtDialog<bool>(
       context: context,
       builder: (c) => TbtDialog(
-        backgroundColor: const Color(0xFF121416),
+        backgroundColor: AppColors.surface,
         title: const Text('Gönderiyi sil'),
         content: const Text('Bu paylaşım kalıcı olarak silinecek.'),
         actions: [
@@ -250,7 +251,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   void _showMenu() {
     showModalBottomSheet<void>(
       context: context,
-      backgroundColor: const Color(0xFF121416),
+      backgroundColor: AppColors.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
@@ -346,7 +347,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
       Container(
         margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
         decoration: BoxDecoration(
-          color: const Color(0xFF0F1113),
+          color: AppColors.surface,
           borderRadius: BorderRadius.circular(22),
           border: Border.all(color: const Color(0xFF34383D)),
         ),
@@ -370,7 +371,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                           ),
                           fit: BoxFit.cover,
                           errorWidget: const ColoredBox(
-                            color: Color(0xFF0D1B30),
+                            color: AppColors.surface,
                             child: Center(
                               child: Icon(
                                 Icons.person_outline_rounded,
@@ -498,7 +499,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                     fontSize: 14.5,
                   ),
                   mentionStyle: const TextStyle(
-                    color: Color(0xFFD7DADF),
+                    color: AppColors.textMuted,
                     height: 1.5,
                     fontSize: 14.5,
                     fontWeight: FontWeight.w900,
@@ -527,9 +528,9 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
         ),
       );
     return Scaffold(
-      backgroundColor: const Color(0xFF090A0C),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF090A0C),
+        backgroundColor: AppColors.background,
         foregroundColor: Colors.white,
         title: Text(_isVideo ? 'Video' : 'Paylaşım'),
         actions: [

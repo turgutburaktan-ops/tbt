@@ -1,3 +1,4 @@
+import '../theme/app_theme.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -39,7 +40,7 @@ class _CommunitiesScreenState extends State<CommunitiesScreen> {
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
-      backgroundColor: const Color(0xFF090A0C),
+      backgroundColor: AppColors.background,
       builder: (sheet) => Padding(
         padding: EdgeInsets.fromLTRB(
           18,
@@ -116,9 +117,9 @@ class _CommunitiesScreenState extends State<CommunitiesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF090A0C),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF090A0C),
+        backgroundColor: AppColors.background,
         title: const Text('Topluluklar'),
         actions: [
           IconButton(
@@ -173,7 +174,7 @@ class _CommunitiesScreenState extends State<CommunitiesScreen> {
                     final name = (d['name'] ?? 'Topluluk').toString();
                     final university = (d['university'] ?? '').toString();
                     return Card(
-                      color: const Color(0xFF121416),
+                      color: AppColors.surface,
                       clipBehavior: Clip.antiAlias,
                       child: InkWell(
                         onTap: () => Navigator.push(
@@ -189,7 +190,7 @@ class _CommunitiesScreenState extends State<CommunitiesScreen> {
                             children: [
                               const CircleAvatar(
                                 radius: 27,
-                                backgroundColor: Color(0xFF25292E),
+                                backgroundColor: AppColors.border,
                                 child: Icon(Icons.groups_2_outlined),
                               ),
                               const SizedBox(width: 12),
@@ -212,7 +213,7 @@ class _CommunitiesScreenState extends State<CommunitiesScreen> {
                                           const Icon(
                                             Icons.verified,
                                             size: 18,
-                                            color: Color(0xFFB7BCC2),
+                                            color: AppColors.textMuted,
                                           ),
                                       ],
                                     ),

@@ -1,3 +1,4 @@
+import '../theme/app_theme.dart';
 import '../widgets/profile_name_link.dart';
 import '../widgets/event_hub_panel.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -25,9 +26,9 @@ class EventDeepLinkScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF090A0C),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF090A0C),
+        backgroundColor: AppColors.background,
         title: const Text('Etkinlik'),
       ),
       body: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
@@ -94,9 +95,9 @@ class EventDeepLinkScreen extends StatelessWidget {
               Container(
                 clipBehavior: Clip.antiAlias,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF121416),
+                  color: AppColors.surface,
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: const Color(0xFF292D32)),
+                  border: Border.all(color: AppColors.border),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -129,7 +130,7 @@ class EventDeepLinkScreen extends StatelessWidget {
                             children: [
                               const CircleAvatar(
                                 radius: 26,
-                                backgroundColor: Color(0xFF25292E),
+                                backgroundColor: AppColors.border,
                                 child: Icon(Icons.event_outlined),
                               ),
                               const SizedBox(width: 12),

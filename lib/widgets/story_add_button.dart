@@ -1,3 +1,4 @@
+import '../theme/app_theme.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -17,7 +18,7 @@ class StoryAddButton extends StatelessWidget {
           await showModalBottomSheet<void>(
             context: context,
             useSafeArea: true,
-            backgroundColor: const Color(0xFF111318),
+            backgroundColor: AppColors.surface,
             shape: const RoundedRectangleBorder(
               borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
             ),

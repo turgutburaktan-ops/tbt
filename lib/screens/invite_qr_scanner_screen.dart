@@ -1,3 +1,4 @@
+import '../theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
@@ -72,7 +73,7 @@ class _InviteQrScannerScreenState extends State<InviteQrScannerScreen> {
               width: 270,
               height: 270,
               decoration: BoxDecoration(
-                border: Border.all(color: const Color(0xFFB7BCC2), width: 3),
+                border: Border.all(color: AppColors.textMuted, width: 3),
                 borderRadius: BorderRadius.circular(24),
               ),
             ),

@@ -547,7 +547,7 @@ class _AdminRolePreviewScreenState extends State<AdminRolePreviewScreen> {
               'ÖNİZLEME MODU • ${_roles[_role]!.label} • Gerçek veriye yazılmaz',
               textAlign: TextAlign.center,
               style: const TextStyle(
-                color: Color(0xFF07080C),
+                color: AppColors.background,
                 fontWeight: FontWeight.w900,
               ),
             ),

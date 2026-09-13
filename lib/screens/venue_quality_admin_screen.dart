@@ -1,3 +1,4 @@
+import '../theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import '../services/venue_quality_service.dart';
 
@@ -29,7 +30,7 @@ class _VenueQualityAdminScreenState extends State<VenueQualityAdminScreen> {
   }
   @override
   Widget build(BuildContext context) => Scaffold(
-    backgroundColor: const Color(0xFF081426),
+    backgroundColor: AppColors.surface,
     appBar: AppBar(title: const Text('TBT Mekân Unvanları'), actions: [IconButton(onPressed: _busy ? null : _load, icon: const Icon(Icons.refresh))]),
     body: ListView(padding: const EdgeInsets.all(16), children: [
       const Text('Koşulları sağlayan mekânları incele. Puanı, kişi sayısını ve süreyi atlayarak unvan verilemez.'),
@@ -37,7 +38,7 @@ class _VenueQualityAdminScreenState extends State<VenueQualityAdminScreen> {
       if (_busy) const LinearProgressIndicator(),
       if (_error != null) Text(_error!),
       if (!_busy && _error == null && _items.isEmpty) const Padding(padding: EdgeInsets.all(24), child: Text('Bu grupta mekân yok.')),
-      ..._items.map((item) => Card(color: const Color(0xFF0D1B30), child: ListTile(
+      ..._items.map((item) => Card(color: AppColors.surface, child: ListTile(
         title: Text('${item['venueName'] ?? item['id']}'),
         subtitle: Text('${(item['score'] as num? ?? 0).toStringAsFixed(1)}/100 · ${item['count'] ?? 0} kişi · ${item['spanDays'] ?? 0} gün${item['hasReports'] == true ? '\nŞikâyet kaydı var' : ''}${item['needsReview'] == true ? '\n30 gündür koşulların altında' : ''}'),
         trailing: const Icon(Icons.chevron_right),
@@ -102,7 +103,7 @@ class _VenueQualityDetailState extends State<_VenueQualityDetail> {
   Widget build(BuildContext context) {
     final item = _data['item'] as Map? ?? {}, criteria = item['criteria'] as Map? ?? {};
     final candidate = (item['candidate'] as num? ?? 0).toInt().clamp(0, 3), award = (item['award'] as num? ?? 0).toInt().clamp(0, 3);
-    return Scaffold(backgroundColor: const Color(0xFF081426), appBar: AppBar(title: const Text('Mekân incelemesi'), actions: [IconButton(onPressed: _busy ? null : _load, icon: const Icon(Icons.refresh))]), body: ListView(padding: const EdgeInsets.all(16), children: [
+    return Scaffold(backgroundColor: AppColors.surface, appBar: AppBar(title: const Text('Mekân incelemesi'), actions: [IconButton(onPressed: _busy ? null : _load, icon: const Icon(Icons.refresh))]), body: ListView(padding: const EdgeInsets.all(16), children: [
       if (_busy) const LinearProgressIndicator(),
       if (_error != null) Text(_error!, style: const TextStyle(color: Colors.orangeAccent)),
       Text('${item['venueName'] ?? widget.venueKey}', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),

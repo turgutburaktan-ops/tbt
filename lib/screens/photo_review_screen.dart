@@ -1,3 +1,4 @@
+import '../theme/app_theme.dart';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -33,7 +34,7 @@ class PhotoReviewScreen extends StatelessWidget {
                     vertical: 5,
                   ),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF1A1D20),
+                    color: AppColors.surfaceAlt,
                     borderRadius: BorderRadius.circular(14),
                     border: Border.all(color: Colors.white12),
                   ),
@@ -74,7 +75,7 @@ class PhotoReviewScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.fromLTRB(18, 14, 18, 18),
               decoration: const BoxDecoration(
-                color: Color(0xFF090A0C),
+                color: AppColors.background,
                 border: Border(top: BorderSide(color: Colors.white10)),
               ),
               child: Row(

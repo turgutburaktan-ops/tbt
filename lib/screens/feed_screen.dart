@@ -1,3 +1,4 @@
+import '../theme/app_theme.dart';
 import '../widgets/profile_name_link.dart';
 import '../services/video_audio_session.dart';
 import '../widgets/tbt_dialog.dart';
@@ -354,9 +355,9 @@ class _FeedScreenState extends State<FeedScreen> with RouteAware {
           );
     if (widget.embedded) return body;
     return Scaffold(
-      backgroundColor: const Color(0xFF090A0C),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF090A0C),
+        backgroundColor: AppColors.background,
         title: Text(widget.mode == FeedMode.following ? 'Takip' : 'Sana Özel'),
       ),
       body: body,
@@ -429,7 +430,7 @@ class _CompactEventCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFF15181B),
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -914,7 +915,7 @@ class _FeedPostCardState extends State<_FeedPostCard> {
     final reason = await showModalBottomSheet<String>(
       context: context,
       useSafeArea: true,
-      backgroundColor: const Color(0xFF111315),
+      backgroundColor: AppColors.surface,
       showDragHandle: true,
       builder: (c) => SafeArea(
         child: Column(
@@ -962,7 +963,7 @@ class _FeedPostCardState extends State<_FeedPostCard> {
     final action = await showModalBottomSheet<String>(
       context: context,
       useSafeArea: true,
-      backgroundColor: const Color(0xFF111315),
+      backgroundColor: AppColors.surface,
       showDragHandle: true,
       builder: (c) => SafeArea(
         child: Column(
@@ -1018,7 +1019,7 @@ class _FeedPostCardState extends State<_FeedPostCard> {
                         widget.userId,
                       ),
                       errorWidget: const ColoredBox(
-                        color: Color(0xFF0D1B30),
+                        color: AppColors.surface,
                         child: Icon(Icons.person_outline),
                       ),
                     ),
@@ -1116,7 +1117,7 @@ class _FeedLoading extends StatelessWidget {
     itemCount: 3,
     itemBuilder: (_, __) => const SizedBox(
       height: 420,
-      child: ColoredBox(color: Color(0xFF111315)),
+      child: ColoredBox(color: AppColors.surface),
     ),
   );
 }

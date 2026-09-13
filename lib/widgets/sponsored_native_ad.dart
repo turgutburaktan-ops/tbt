@@ -1,3 +1,4 @@
+import '../theme/app_theme.dart';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -53,7 +54,7 @@ class _SponsoredNativeAdState extends State<SponsoredNativeAd> {
         ),
         nativeTemplateStyle: NativeTemplateStyle(
           templateType: widget.compact ? TemplateType.small : TemplateType.medium,
-          mainBackgroundColor: const Color(0xFF12161B),
+          mainBackgroundColor: AppColors.surface,
           cornerRadius: 18,
           callToActionTextStyle: NativeTemplateTextStyle(
             textColor: Colors.black,
@@ -63,19 +64,19 @@ class _SponsoredNativeAdState extends State<SponsoredNativeAd> {
           ),
           primaryTextStyle: NativeTemplateTextStyle(
             textColor: Colors.white,
-            backgroundColor: const Color(0xFF12161B),
+            backgroundColor: AppColors.surface,
             style: NativeTemplateFontStyle.bold,
             size: 16,
           ),
           secondaryTextStyle: NativeTemplateTextStyle(
             textColor: Colors.white70,
-            backgroundColor: const Color(0xFF12161B),
+            backgroundColor: AppColors.surface,
             style: NativeTemplateFontStyle.normal,
             size: 12,
           ),
           tertiaryTextStyle: NativeTemplateTextStyle(
             textColor: Colors.white60,
-            backgroundColor: const Color(0xFF12161B),
+            backgroundColor: AppColors.surface,
             style: NativeTemplateFontStyle.normal,
             size: 11,
           ),
@@ -101,7 +102,7 @@ class _SponsoredNativeAdState extends State<SponsoredNativeAd> {
         margin: widget.margin,
         clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
-          color: const Color(0xFF12161B),
+          color: AppColors.surface,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(color: const Color(0x3355E0D2)),
         ),

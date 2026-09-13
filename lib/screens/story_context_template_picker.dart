@@ -1,3 +1,4 @@
+import '../theme/app_theme.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
@@ -44,7 +45,7 @@ class _StoryContextTemplatePickerState
   Widget build(BuildContext context) {
     final spec = _tabs[_tab];
     return Scaffold(
-      backgroundColor: const Color(0xFF090A0D),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         title: const Text(

@@ -1,3 +1,4 @@
+import '../theme/app_theme.dart';
 import '../widgets/tbt_dialog.dart';
 
 import 'package:firebase_auth/firebase_auth.dart';
@@ -143,7 +144,7 @@ class _CreatorCenterScreenState extends State<CreatorCenterScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    backgroundColor: const Color(0xFF0B1629),
+    backgroundColor: AppColors.surface,
     appBar: AppBar(title: const Text('Creator Merkezi')),
     body: RefreshIndicator(
       onRefresh: _load,
@@ -197,7 +198,7 @@ class _CreatorCenterScreenState extends State<CreatorCenterScreen> {
             ),
           for (final post in _posts)
             Card(
-              color: const Color(0xFF142238),
+              color: AppColors.surfaceAlt,
               child: Padding(
                 padding: const EdgeInsets.all(14),
                 child: Column(

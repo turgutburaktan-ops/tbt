@@ -1,3 +1,4 @@
+import '../theme/app_theme.dart';
 import '../widgets/playback_indexed_stack.dart';
 import 'package:flutter/material.dart';
 
@@ -30,10 +31,10 @@ class _HomeScreenState extends State<HomeScreen> {
     ];
 
     return Scaffold(
-      backgroundColor: const Color(0xFF090A0C),
+      backgroundColor: AppColors.background,
       body: PlaybackIndexedStack(index: _selectedIndex, children: pages),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: const Color(0xFFB7BCC2),
+        backgroundColor: AppColors.textMuted,
         foregroundColor: Colors.black,
         onPressed: () {
           Navigator.push(
@@ -46,7 +47,7 @@ class _HomeScreenState extends State<HomeScreen> {
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       bottomNavigationBar: NavigationBar(
         height: 72,
-        backgroundColor: const Color(0xFF0F1113),
+        backgroundColor: AppColors.surface,
         selectedIndex: _selectedIndex,
         onDestinationSelected: (value) {
           setState(() {
@@ -108,7 +109,7 @@ class _DiscoverHubPageState extends State<_DiscoverHubPage> {
             child: Container(
               padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
-                color: const Color(0xFF121416),
+                color: AppColors.surface,
                 borderRadius: BorderRadius.circular(18),
               ),
               child: Row(
@@ -165,7 +166,7 @@ class _HomeSectionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: selected ? const Color(0xFFB7BCC2) : Colors.transparent,
+      color: selected ? AppColors.textMuted : Colors.transparent,
       borderRadius: BorderRadius.circular(14),
       child: InkWell(
         borderRadius: BorderRadius.circular(14),
@@ -355,7 +356,7 @@ class _ExplorePageState extends State<_ExplorePage> {
                         )
                       : null,
                   filled: true,
-                  fillColor: const Color(0xFF121416),
+                  fillColor: AppColors.surface,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
                     borderSide: BorderSide.none,
@@ -386,8 +387,8 @@ class _ExplorePageState extends State<_ExplorePage> {
                         _selectedFilter = filter;
                       });
                     },
-                    selectedColor: const Color(0xFFB7BCC2),
-                    backgroundColor: const Color(0xFF121416),
+                    selectedColor: AppColors.textMuted,
+                    backgroundColor: AppColors.surface,
                     side: BorderSide.none,
                     labelStyle: TextStyle(
                       color: selected ? Colors.black : Colors.white,
@@ -480,7 +481,7 @@ class _ExploreSpotCard extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
       child: Card(
-        color: const Color(0xFF121416),
+        color: AppColors.surface,
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: () {
@@ -504,7 +505,7 @@ class _ExploreSpotCard extends StatelessWidget {
                       return Container(
                         width: 88,
                         height: 88,
-                        color: const Color(0xFF1A1D20),
+                        color: AppColors.surfaceAlt,
                         child: const Icon(Icons.photo, color: Colors.white38),
                       );
                     },
@@ -545,7 +546,7 @@ class _ExploreSpotCard extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
-                          color: Color(0xFFB7BCC2),
+                          color: AppColors.textMuted,
                           fontSize: 12,
                         ),
                       ),
@@ -566,7 +567,7 @@ class _ExploreSpotCard extends StatelessWidget {
                       icon: Icon(
                         isSaved ? Icons.favorite : Icons.favorite_border,
                         color: isSaved
-                            ? const Color(0xFFB7BCC2)
+                            ? AppColors.textMuted
                             : Colors.white54,
                       ),
                     );
@@ -641,7 +642,7 @@ class _SavedPage extends StatelessWidget {
               const SizedBox(height: 18),
               ...spots.map(
                 (spot) => Card(
-                  color: const Color(0xFF121416),
+                  color: AppColors.surface,
                   margin: const EdgeInsets.only(bottom: 12),
                   child: ListTile(
                     contentPadding: const EdgeInsets.all(10),
@@ -656,7 +657,7 @@ class _SavedPage extends StatelessWidget {
                           return Container(
                             width: 70,
                             height: 70,
-                            color: const Color(0xFF1A1D20),
+                            color: AppColors.surfaceAlt,
                             child: const Icon(
                               Icons.photo,
                               color: Colors.white38,
@@ -679,7 +680,7 @@ class _SavedPage extends StatelessWidget {
                       tooltip: 'Kaydı kaldır',
                       icon: const Icon(
                         Icons.favorite,
-                        color: Color(0xFFB7BCC2),
+                        color: AppColors.textMuted,
                       ),
                       onPressed: () {
                         FavoritesService.remove(spot);
@@ -723,7 +724,7 @@ class _ProfileStat extends StatelessWidget {
           style: const TextStyle(
             fontSize: 23,
             fontWeight: FontWeight.bold,
-            color: Color(0xFFB7BCC2),
+            color: AppColors.textMuted,
           ),
         ),
         const SizedBox(height: 4),
@@ -753,17 +754,17 @@ class _ProfileMenuItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       margin: const EdgeInsets.only(bottom: 10),
-      color: const Color(0xFF121416),
+      color: AppColors.surface,
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
         leading: Container(
           width: 44,
           height: 44,
           decoration: BoxDecoration(
-            color: const Color(0xFFB7BCC2).withOpacity(.12),
+            color: AppColors.textMuted.withOpacity(.12),
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Icon(icon, color: const Color(0xFFB7BCC2)),
+          child: Icon(icon, color: AppColors.textMuted),
         ),
         title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
         subtitle: Text(

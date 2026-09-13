@@ -138,7 +138,7 @@ class _GuestNavigationBar extends StatelessWidget {
       child: BottomAppBar(
         height: 64,
         padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 4),
-        color: const Color(0xFF0B0D12),
+        color: AppColors.background,
         elevation: 0,
         shape: const CircularNotchedRectangle(),
         notchMargin: 7,
@@ -276,9 +276,9 @@ class _GuestFeed extends StatelessWidget {
             margin: const EdgeInsets.fromLTRB(12, 4, 12, 10),
             padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
             decoration: BoxDecoration(
-              color: const Color(0xFF15181B),
+              color: AppColors.surface,
               borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: const Color(0xFF2A2E33)),
+              border: Border.all(color: AppColors.border),
             ),
             child: Row(
               children: [
@@ -398,7 +398,7 @@ class _GuestPostCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 13),
       decoration: BoxDecoration(
-        color: const Color(0xFF111315),
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: const Color(0xFF24282D)),
       ),
@@ -420,7 +420,7 @@ class _GuestPostCard extends StatelessWidget {
                         userId,
                       ),
                       errorWidget: const ColoredBox(
-                        color: Color(0xFF0D1B30),
+                        color: AppColors.surface,
                         child: Center(child: Icon(Icons.person_outline)),
                       ),
                     ),
@@ -478,7 +478,7 @@ class _GuestPostCard extends StatelessWidget {
                     ),
                     fit: BoxFit.cover,
                     errorWidget: const ColoredBox(
-                      color: Color(0xFF1A1D20),
+                      color: AppColors.surfaceAlt,
                       child: Center(
                         child: Icon(
                           Icons.broken_image_outlined,

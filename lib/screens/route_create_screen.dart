@@ -231,14 +231,32 @@ class _RouteCreateScreenState extends State<RouteCreateScreen> {
     bottomNavigationBar: SafeArea(
       child: Padding(
         padding: const EdgeInsets.all(16),
-        child: FilledButton(
-          onPressed: _busy || _stops.isEmpty ? null : _save,
-          style: FilledButton.styleFrom(
-            backgroundColor: AppColors.cyan,
-            foregroundColor: Colors.black,
-            padding: const EdgeInsets.all(17),
-          ),
-          child: Text(_busy ? 'Hazırlanıyor…' : 'Rotayı oluştur'),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (_stops.isEmpty)
+              const Padding(
+                padding: EdgeInsets.only(bottom: 8),
+                child: Text(
+                  'Başlamak için bir durak ekle',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: AppColors.textMuted, fontSize: 12),
+                ),
+              ),
+            FilledButton(
+              onPressed: _busy || _stops.isEmpty ? null : _save,
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.blue,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+              ),
+              child: Text(_busy ? 'Hazırlanıyor…' : 'Rotayı oluştur'),
+            ),
+          ],
         ),
       ),
     ),
@@ -260,19 +278,20 @@ class _RouteCreateScreenState extends State<RouteCreateScreen> {
           onSelected: (_) => FocusScope.of(context).unfocus(),
         ),
         const SizedBox(height: 16),
-        Wrap(
-          spacing: 8,
-          children: [
+        SegmentedButton<String>(
+          showSelectedIcon: false,
+          segments: [
             for (final mode in ['Araç', 'Yürüyüş', 'Bisiklet'])
-              ChoiceChip(
-                avatar: Icon(routeTransportIcon(mode), size: 18),
+              ButtonSegment(
+                value: mode,
                 label: Text(mode),
-                selected: _transport == mode,
-                onSelected: _busy
-                    ? null
-                    : (_) => setState(() => _transport = mode),
+                icon: Icon(routeTransportIcon(mode), size: 18),
               ),
           ],
+          selected: {_transport},
+          onSelectionChanged: _busy
+              ? null
+              : (value) => setState(() => _transport = value.first),
         ),
         const SizedBox(height: 20),
         Row(
@@ -291,7 +310,7 @@ class _RouteCreateScreenState extends State<RouteCreateScreen> {
         ),
         if (_stops.isEmpty)
           const Padding(
-            padding: EdgeInsets.symmetric(vertical: 30),
+            padding: EdgeInsets.symmetric(vertical: 12),
             child: Text(
               'Gezilecek yer veya mekân ekleyerek başla.',
               textAlign: TextAlign.center,
@@ -314,8 +333,8 @@ class _RouteCreateScreenState extends State<RouteCreateScreen> {
             key: ValueKey(_stops[i].id),
             child: ListTile(
               leading: CircleAvatar(
-                backgroundColor: AppColors.cyan,
-                foregroundColor: Colors.black,
+                backgroundColor: AppColors.surfaceStrong,
+                foregroundColor: Colors.white,
                 child: Text('${i + 1}'),
               ),
               title: Text(_stops[i].name),
@@ -343,16 +362,34 @@ class _RouteCreateScreenState extends State<RouteCreateScreen> {
           ),
         ),
         const SizedBox(height: 10),
-        OutlinedButton.icon(
-          onPressed: _busy || _stops.length >= 12 ? null : _add,
-          icon: const Icon(Icons.add),
-          label: const Text('Durak ekle'),
-        ),
-        const SizedBox(height: 8),
-        OutlinedButton.icon(
-          onPressed: _busy || _stops.length >= 12 ? null : _fromMap,
-          icon: const Icon(Icons.map_outlined),
-          label: const Text('Haritadan seç'),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final actions = [
+              OutlinedButton.icon(
+                onPressed: _busy || _stops.length >= 12 ? null : _add,
+                icon: const Icon(Icons.search, size: 18),
+                label: const Text('Yer ara'),
+              ),
+              OutlinedButton.icon(
+                onPressed: _busy || _stops.length >= 12 ? null : _fromMap,
+                icon: const Icon(Icons.map_outlined, size: 18),
+                label: const Text('Haritadan seç'),
+              ),
+            ];
+            if (constraints.maxWidth < 340 ||
+                MediaQuery.textScalerOf(context).scale(14) > 18)
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [actions[0], const SizedBox(height: 8), actions[1]],
+              );
+            return Row(
+              children: [
+                Expanded(child: actions[0]),
+                const SizedBox(width: 8),
+                Expanded(child: actions[1]),
+              ],
+            );
+          },
         ),
         const SizedBox(height: 24),
         const Text(

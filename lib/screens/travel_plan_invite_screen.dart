@@ -203,7 +203,7 @@ class _TravelPlanInviteScreenState extends State<TravelPlanInviteScreen> {
                                     : _selected.remove(user.id);
                               }),
                         secondary: CircleAvatar(
-                          backgroundColor: const Color(0xFF0D1B30),
+                          backgroundColor: AppColors.surface,
                           backgroundImage: user.photoUrl.isEmpty
                               ? null
                               : NetworkImage(user.photoUrl),

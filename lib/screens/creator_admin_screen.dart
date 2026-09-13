@@ -1,3 +1,4 @@
+import '../theme/app_theme.dart';
 import '../widgets/profile_name_link.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/material.dart';
@@ -184,7 +185,7 @@ class _CreatorAdminScreenState extends State<CreatorAdminScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    backgroundColor: const Color(0xFF0B172A),
+    backgroundColor: AppColors.surface,
     appBar: AppBar(
       title: const Text('Hesap türleri'),
       actions: [
@@ -694,7 +695,7 @@ class _CreatorAdminDetailScreenState extends State<CreatorAdminDetailScreen> {
     final p = Map<String, dynamic>.from(_data?['profile'] as Map? ?? {}),
         totals = Map<String, dynamic>.from(_data?['totals'] as Map? ?? {});
     return Scaffold(
-      backgroundColor: const Color(0xFF0B172A),
+      backgroundColor: AppColors.surface,
       appBar: AppBar(
         title: ProfileNameLink(userId: widget.uid, compact: true, child: Text('${p['name'] ?? 'Creator istatistikleri'}')),
         actions: [

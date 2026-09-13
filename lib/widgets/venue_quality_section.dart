@@ -1,3 +1,4 @@
+import '../theme/app_theme.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -93,7 +94,7 @@ class _VenueQualitySectionState extends State<VenueQualitySection> {
     final labels = VenueQualityService.criteria(widget.category);
     return Container(
       margin: const EdgeInsets.only(bottom: 20), padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: const Color(0xFF0D1B30), borderRadius: BorderRadius.circular(18), border: Border.all(color: const Color(0xFF284763))),
+      decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(18), border: Border.all(color: const Color(0xFF284763))),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         const Text('TBT Mekân Değerlendirmesi', style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold)),
         const SizedBox(height: 10),

@@ -1,3 +1,4 @@
+import '../theme/app_theme.dart';
 import '../widgets/profile_name_link.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -102,7 +103,7 @@ class _CreatorWelcomeScreenState extends State<CreatorWelcomeScreen> {
   Widget build(BuildContext context) {
     final signedIn = FirebaseAuth.instance.currentUser != null;
     return Scaffold(
-      backgroundColor: const Color(0xFF0B1629),
+      backgroundColor: AppColors.surface,
       appBar: AppBar(title: const Text('TBT Creator')),
       body: ListView(
         padding: const EdgeInsets.all(20),

@@ -1,3 +1,4 @@
+import '../theme/app_theme.dart';
 import '../widgets/tbt_dialog.dart';
 
 import 'package:flutter/material.dart';
@@ -108,7 +109,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const accent = Color(0xFFB7BCC2);
+    const accent = AppColors.textMuted;
     final strings = AppStrings.of(context);
 
     final body = SafeArea(
@@ -126,7 +127,7 @@ class _LoginScreenState extends State<LoginScreen> {
               width: 72,
               height: 72,
               decoration: BoxDecoration(
-                color: const Color(0xFF121416),
+                color: AppColors.surface,
                 borderRadius: BorderRadius.circular(22),
                 border: Border.all(color: Colors.white12),
               ),
@@ -251,11 +252,11 @@ class _LoginScreenState extends State<LoginScreen> {
     );
 
     if (widget.embedded)
-      return ColoredBox(color: const Color(0xFF090A0C), child: body);
+      return ColoredBox(color: AppColors.background, child: body);
     return Scaffold(
-      backgroundColor: const Color(0xFF090A0C),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF090A0C),
+        backgroundColor: AppColors.background,
         foregroundColor: Colors.white,
         title: Text(strings.text('login')),
       ),
@@ -269,10 +270,10 @@ class _LoginScreenState extends State<LoginScreen> {
     Widget? suffix,
   }) => InputDecoration(
     labelText: label,
-    prefixIcon: Icon(icon, color: const Color(0xFFB7BCC2)),
+    prefixIcon: Icon(icon, color: AppColors.textMuted),
     suffixIcon: suffix,
     filled: true,
-    fillColor: const Color(0xFF121416),
+    fillColor: AppColors.surface,
     border: OutlineInputBorder(
       borderRadius: BorderRadius.circular(18),
       borderSide: BorderSide.none,
@@ -283,7 +284,7 @@ class _LoginScreenState extends State<LoginScreen> {
     ),
     focusedBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(18),
-      borderSide: const BorderSide(color: Color(0xFFB7BCC2)),
+      borderSide: const BorderSide(color: AppColors.textMuted),
     ),
   );
 }

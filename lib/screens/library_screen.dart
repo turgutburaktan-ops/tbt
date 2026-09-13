@@ -1,3 +1,4 @@
+import '../theme/app_theme.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
@@ -19,9 +20,9 @@ class LibraryScreen extends StatefulWidget {
 class _LibraryScreenState extends State<LibraryScreen> {
   int _tab = 0;
 
-  static const _surface = Color(0xFF121416);
-  static const _surfaceAlt = Color(0xFF1A1D20);
-  static const _border = Color(0xFF2A2E33);
+  static const _surface = AppColors.surface;
+  static const _surfaceAlt = AppColors.surfaceAlt;
+  static const _border = AppColors.border;
 
   @override
   Widget build(BuildContext context) {

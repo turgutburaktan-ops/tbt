@@ -1,3 +1,4 @@
+import '../theme/app_theme.dart';
 import 'package:flutter/material.dart';
 
 import 'firebase_media_image.dart';
@@ -44,7 +45,7 @@ class _PostMediaCarouselState extends State<PostMediaCarousel> {
       height: double.infinity,
       fit: widget.fit,
       errorWidget: const ColoredBox(
-        color: Color(0xFF1A1D20),
+        color: AppColors.surfaceAlt,
         child: Center(
           child: Icon(
             Icons.broken_image_outlined,

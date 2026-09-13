@@ -1,3 +1,4 @@
+import '../theme/app_theme.dart';
 import '../widgets/tbt_dialog.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -49,7 +50,7 @@ class CommunityProfileScreen extends StatelessWidget {
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
-      backgroundColor: const Color(0xFF090A0C),
+      backgroundColor: AppColors.background,
       builder: (sheet) => StatefulBuilder(
         builder: (context, setState) {
           Future<void> pickDateTime() async {
@@ -287,9 +288,9 @@ class CommunityProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF090A0C),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF090A0C),
+        backgroundColor: AppColors.background,
         title: const Text('Topluluk'),
       ),
       body: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
@@ -342,7 +343,7 @@ class CommunityProfileScreen extends StatelessWidget {
                             if (verified)
                               const Icon(
                                 Icons.verified,
-                                color: Color(0xFFB7BCC2),
+                                color: AppColors.textMuted,
                               ),
                           ],
                         ),
@@ -477,7 +478,7 @@ class _Stat extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.symmetric(vertical: 12),
     decoration: BoxDecoration(
-      color: const Color(0xFF121416),
+      color: AppColors.surface,
       borderRadius: BorderRadius.circular(14),
       border: Border.all(color: const Color(0xFF272B30)),
     ),
@@ -505,7 +506,7 @@ class _EventCard extends StatelessWidget {
     final date =
         '${d.day.toString().padLeft(2, '0')}.${d.month.toString().padLeft(2, '0')} • ${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
     return Card(
-      color: const Color(0xFF121416),
+      color: AppColors.surface,
       child: ListTile(
         onTap: () => Navigator.push(
           context,
@@ -514,7 +515,7 @@ class _EventCard extends StatelessWidget {
           ),
         ),
         leading: const CircleAvatar(
-          backgroundColor: Color(0xFF25292E),
+          backgroundColor: AppColors.border,
           child: Icon(Icons.event_outlined),
         ),
         title: Text(
@@ -549,7 +550,7 @@ class _EmptyEvents extends StatelessWidget {
     width: double.infinity,
     padding: const EdgeInsets.all(22),
     decoration: BoxDecoration(
-      color: const Color(0xFF121416),
+      color: AppColors.surface,
       borderRadius: BorderRadius.circular(16),
     ),
     child: const Column(

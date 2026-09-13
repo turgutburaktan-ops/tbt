@@ -1,3 +1,4 @@
+import '../theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -26,7 +27,7 @@ class EventTicketsScreen extends StatelessWidget {
           if (snapshot.connectionState == ConnectionState.waiting &&
               !snapshot.hasData) {
             return const Center(
-              child: CircularProgressIndicator(color: Color(0xFFB7BCC2)),
+              child: CircularProgressIndicator(color: AppColors.textMuted),
             );
           }
           final tickets = snapshot.data ?? const <EventTicket>[];
@@ -65,12 +66,12 @@ class EventTicketsScreen extends StatelessWidget {
             itemBuilder: (context, index) {
               final ticket = tickets[index];
               return Card(
-                color: const Color(0xFF121416),
+                color: AppColors.surface,
                 child: ListTile(
                   contentPadding: const EdgeInsets.all(14),
                   leading: CircleAvatar(
                     backgroundColor: const Color(0x228B5CF6),
-                    foregroundColor: const Color(0xFFB7BCC2),
+                    foregroundColor: AppColors.textMuted,
                     child: const Icon(Icons.confirmation_number_outlined),
                   ),
                   title: Text(
@@ -85,7 +86,7 @@ class EventTicketsScreen extends StatelessWidget {
                   trailing: ticket.isActive
                       ? const Icon(
                           Icons.qr_code_2_rounded,
-                          color: Color(0xFFB7BCC2),
+                          color: AppColors.textMuted,
                         )
                       : null,
                   onTap: ticket.isActive
@@ -134,7 +135,7 @@ class TicketQrScreen extends StatelessWidget {
                     ? '${(ticket.priceMinor / 100).toStringAsFixed(2)} ${ticket.currency}'
                     : 'Ücretsiz Bilet',
                 style: const TextStyle(
-                  color: Color(0xFFB7BCC2),
+                  color: AppColors.textMuted,
                   fontWeight: FontWeight.w800,
                 ),
               ),
@@ -217,7 +218,7 @@ class _TicketScannerScreenState extends State<TicketScannerScreen> {
               width: 260,
               height: 260,
               decoration: BoxDecoration(
-                border: Border.all(color: const Color(0xFFB7BCC2), width: 3),
+                border: Border.all(color: AppColors.textMuted, width: 3),
                 borderRadius: BorderRadius.circular(22),
               ),
             ),
@@ -227,7 +228,7 @@ class _TicketScannerScreenState extends State<TicketScannerScreen> {
               child: ColoredBox(
                 color: Colors.black45,
                 child: Center(
-                  child: CircularProgressIndicator(color: Color(0xFFB7BCC2)),
+                  child: CircularProgressIndicator(color: AppColors.textMuted),
                 ),
               ),
             ),

@@ -100,7 +100,7 @@ class _StoryArchiveScreenState extends State<StoryArchiveScreen> {
 
   Widget _preview(AppStory story) => story.sharedPostId.isNotEmpty
       ? const ColoredBox(
-          color: Color(0xFF142238),
+          color: AppColors.surfaceAlt,
           child: Center(child: Icon(Icons.link_rounded, color: Colors.white)),
         )
       : FirebaseMediaImage(

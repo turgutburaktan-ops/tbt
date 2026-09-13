@@ -152,7 +152,7 @@ class _BottomNav extends StatelessWidget {
           children: List.generate(items.length, (index) {
             final item = items[index];
             final selected = selectedIndex == index;
-            final isPlanning = index == 2;
+            final isPlanning = false;
             return Expanded(
               child: InkWell(
                 onTap: () => onSelected(index),
@@ -867,7 +867,7 @@ class _GradientIcon extends StatelessWidget {
     blendMode: BlendMode.srcIn,
     shaderCallback: (bounds) => LinearGradient(
       colors: active
-          ? const [AppColors.cyan, AppColors.violet]
+          ? const [AppColors.blue, AppColors.blue]
           : const [Color(0x75FFFFFF), Color(0x75FFFFFF)],
     ).createShader(bounds),
     child: Icon(icon, size: size),

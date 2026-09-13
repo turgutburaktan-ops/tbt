@@ -1,3 +1,4 @@
+import '../theme/app_theme.dart';
 import 'profile_name_link.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -30,7 +31,7 @@ class _SpotPresenceSectionState extends State<SpotPresenceSection> {
           width: double.infinity,
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: const Color(0xFF121416),
+            color: AppColors.surface,
             borderRadius: BorderRadius.circular(18),
             border: Border.all(color: Colors.white10),
           ),
@@ -51,7 +52,7 @@ class _SpotPresenceSectionState extends State<SpotPresenceSection> {
                     children: [
                       const Icon(
                         Icons.people_outline,
-                        color: Color(0xFFB7BCC2),
+                        color: AppColors.textMuted,
                       ),
                       const SizedBox(width: 8),
                       const Expanded(
@@ -88,7 +89,7 @@ class _SpotPresenceSectionState extends State<SpotPresenceSection> {
                         child: Text(
                           '${items.length}',
                           style: const TextStyle(
-                            color: Color(0xFFB7BCC2),
+                            color: AppColors.textMuted,
                             fontWeight: FontWeight.w900,
                           ),
                         ),
@@ -171,7 +172,7 @@ class _SpotPresenceSectionState extends State<SpotPresenceSection> {
                               ? null
                               : _checkIn,
                           style: FilledButton.styleFrom(
-                            backgroundColor: const Color(0xFFB7BCC2),
+                            backgroundColor: AppColors.textMuted,
                             foregroundColor: Colors.black,
                           ),
                           icon: _busy
@@ -304,7 +305,7 @@ class _PresenceAvatar extends StatelessWidget {
         children: [
           CircleAvatar(
             radius: 23,
-            backgroundColor: const Color(0xFF0D1B30),
+            backgroundColor: AppColors.surface,
             backgroundImage: item.photoUrl.isNotEmpty
                 ? NetworkImage(item.photoUrl)
                 : null,

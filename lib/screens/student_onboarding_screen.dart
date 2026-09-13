@@ -1,3 +1,4 @@
+import '../theme/app_theme.dart';
 import 'package:flutter/material.dart';
 
 import '../data/turkey_selection_data.dart';
@@ -117,7 +118,7 @@ class _StudentOnboardingScreenState extends State<StudentOnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF090A0C),
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: Column(
           children: [
@@ -134,8 +135,8 @@ class _StudentOnboardingScreenState extends State<StudentOnboardingScreen> {
                             margin: EdgeInsets.only(right: index == 2 ? 0 : 6),
                             decoration: BoxDecoration(
                               color: index <= _page
-                                  ? const Color(0xFFB7BCC2)
-                                  : const Color(0xFF292D32),
+                                  ? AppColors.textMuted
+                                  : AppColors.border,
                               borderRadius: BorderRadius.circular(20),
                             ),
                           ),
@@ -241,7 +242,7 @@ class _SchoolStep extends StatelessWidget {
   Widget build(BuildContext context) => ListView(
     padding: const EdgeInsets.fromLTRB(22, 34, 22, 24),
     children: [
-      const Icon(Icons.school_outlined, size: 58, color: Color(0xFFB7BCC2)),
+      const Icon(Icons.school_outlined, size: 58, color: AppColors.textMuted),
       const SizedBox(height: 20),
       const Text(
         'Kampüsünü bulalım',
@@ -306,7 +307,7 @@ class _InterestStep extends StatelessWidget {
   Widget build(BuildContext context) => ListView(
     padding: const EdgeInsets.fromLTRB(22, 34, 22, 24),
     children: [
-      const Icon(Icons.interests_outlined, size: 58, color: Color(0xFFB7BCC2)),
+      const Icon(Icons.interests_outlined, size: 58, color: AppColors.textMuted),
       const SizedBox(height: 20),
       const Text(
         'Neler ilgini çekiyor?',
@@ -354,7 +355,7 @@ class _ReadyStep extends StatelessWidget {
       const Icon(
         Icons.rocket_launch_outlined,
         size: 64,
-        color: Color(0xFFB7BCC2),
+        color: AppColors.textMuted,
       ),
       const SizedBox(height: 22),
       const Text(
@@ -380,9 +381,9 @@ class _ReadyStep extends StatelessWidget {
       Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
         decoration: BoxDecoration(
-          color: const Color(0xFF121416),
+          color: AppColors.surface,
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: const Color(0xFF292D32)),
+          border: Border.all(color: AppColors.border),
         ),
         child: SwitchListTile.adaptive(
           contentPadding: EdgeInsets.zero,

@@ -146,7 +146,7 @@ class _SimpleNavigationBar extends StatelessWidget {
       child: BottomAppBar(
         height: 64,
         padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 4),
-        color: const Color(0xFF0B0D12),
+        color: AppColors.background,
         elevation: 0,
         shape: const CircularNotchedRectangle(),
         notchMargin: 7,

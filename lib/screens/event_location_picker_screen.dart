@@ -1,3 +1,4 @@
+import '../theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
@@ -98,7 +99,7 @@ class _EventLocationPickerScreenState extends State<EventLocationPickerScreen> {
         : '${widget.city.trim()}, Türkiye';
     final address = widget.addressLabel.trim();
     return Scaffold(
-      backgroundColor: const Color(0xFF090A0C),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: Text(widget.title),
         actions: [
@@ -154,9 +155,9 @@ class _EventLocationPickerScreenState extends State<EventLocationPickerScreen> {
             child: Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: const Color(0xFF121416).withOpacity(.96),
+                color: AppColors.surface.withOpacity(.96),
                 borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: const Color(0xFF2A2E33)),
+                border: Border.all(color: AppColors.border),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -165,7 +166,7 @@ class _EventLocationPickerScreenState extends State<EventLocationPickerScreen> {
                     children: [
                       const Icon(
                         Icons.location_city_outlined,
-                        color: Color(0xFFD7DADF),
+                        color: AppColors.textMuted,
                       ),
                       const SizedBox(width: 8),
                       Expanded(

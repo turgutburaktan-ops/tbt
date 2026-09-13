@@ -1,3 +1,4 @@
+import '../theme/app_theme.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -108,7 +109,7 @@ class _MentionTextState extends State<MentionText> {
     final mention =
         widget.mentionStyle ??
         base.copyWith(
-          color: const Color(0xFFD7DADF),
+          color: AppColors.textMuted,
           fontWeight: FontWeight.w800,
         );
 

@@ -1,3 +1,4 @@
+import '../theme/app_theme.dart';
 import 'dart:math' as math;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -28,7 +29,7 @@ class SpotUserPostsGallery extends StatelessWidget {
                   child: Center(
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      color: Color(0xFFB7BCC2),
+                      color: AppColors.textMuted,
                     ),
                   ),
                 ),
@@ -51,12 +52,12 @@ class SpotUserPostsGallery extends StatelessWidget {
                       width: 48,
                       height: 48,
                       decoration: BoxDecoration(
-                        color: const Color(0xFFB7BCC2).withValues(alpha: .12),
+                        color: AppColors.textMuted.withValues(alpha: .12),
                         borderRadius: BorderRadius.circular(14),
                       ),
                       child: const Icon(
                         Icons.add_photo_alternate_outlined,
-                        color: Color(0xFFB7BCC2),
+                        color: AppColors.textMuted,
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -93,7 +94,7 @@ class SpotUserPostsGallery extends StatelessWidget {
                     Icon(
                       Icons.photo_library_outlined,
                       size: 21,
-                      color: Color(0xFFB7BCC2),
+                      color: AppColors.textMuted,
                     ),
                     SizedBox(width: 8),
                     Expanded(
@@ -131,7 +132,7 @@ class SpotUserPostsGallery extends StatelessWidget {
                       child: Hero(
                         tag: 'spot-post-${top[index].id}',
                         child: Container(
-                          color: const Color(0xFF121416),
+                          color: AppColors.surface,
                           child: url.isEmpty && storagePath.isEmpty
                               ? const Icon(
                                   Icons.image_outlined,
@@ -164,7 +165,7 @@ class SpotUserPostsGallery extends StatelessWidget {
             Icon(
               Icons.rate_review_outlined,
               size: 21,
-              color: Color(0xFFB7BCC2),
+              color: AppColors.textMuted,
             ),
             SizedBox(width: 8),
             Expanded(
@@ -294,7 +295,7 @@ class _Shell extends StatelessWidget {
     width: double.infinity,
     padding: const EdgeInsets.all(15),
     decoration: BoxDecoration(
-      color: const Color(0xFF121416),
+      color: AppColors.surface,
       borderRadius: BorderRadius.circular(16),
       border: Border.all(color: Colors.white10),
     ),

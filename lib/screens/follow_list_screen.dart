@@ -1,3 +1,4 @@
+import '../theme/app_theme.dart';
 import '../widgets/profile_name_link.dart';
 import '../services/user_facing_error.dart';
 
@@ -23,9 +24,9 @@ class FollowListScreen extends StatelessWidget {
         : SocialService.instance.following(userId);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF090A0C),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF090A0C),
+        backgroundColor: AppColors.background,
         foregroundColor: Colors.white,
         title: Text(followers ? 'Takipçiler' : 'Takip'),
       ),
@@ -34,7 +35,7 @@ class FollowListScreen extends StatelessWidget {
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(
-              child: CircularProgressIndicator(color: Color(0xFFB7BCC2)),
+              child: CircularProgressIndicator(color: AppColors.textMuted),
             );
           }
 
@@ -86,7 +87,7 @@ class FollowListScreen extends StatelessWidget {
                     ),
                     leading: CircleAvatar(
                       radius: 25,
-                      backgroundColor: const Color(0xFF0D1B30),
+                      backgroundColor: AppColors.surface,
                       backgroundImage: photoUrl.isNotEmpty
                           ? NetworkImage(photoUrl)
                           : null,

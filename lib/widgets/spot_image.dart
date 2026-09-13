@@ -1,3 +1,4 @@
+import '../theme/app_theme.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
@@ -234,7 +235,7 @@ class SpotImage extends StatelessWidget {
   Widget _fallback() => Container(
     width: width,
     height: height,
-    color: const Color(0xFF1A1D20),
+    color: AppColors.surfaceAlt,
     alignment: Alignment.center,
     child: const Icon(Icons.photo_camera_back_outlined, color: Colors.white38),
   );

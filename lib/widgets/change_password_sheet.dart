@@ -1,3 +1,4 @@
+import '../theme/app_theme.dart';
 import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
@@ -12,7 +13,7 @@ class ChangePasswordSheet extends StatefulWidget {
         context: context,
         isScrollControlled: true,
         useSafeArea: true,
-        backgroundColor: const Color(0xFF090A0C),
+        backgroundColor: AppColors.background,
         builder: (_) => ChangePasswordSheet(email: email),
       );
 

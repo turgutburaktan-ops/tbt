@@ -1,3 +1,4 @@
+import '../theme/app_theme.dart';
 import '../widgets/description_field.dart';
 import 'dart:io';
 
@@ -134,9 +135,9 @@ class _CameraVideoPostScreenState extends State<CameraVideoPostScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF090A0C),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF090A0C),
+        backgroundColor: AppColors.background,
         foregroundColor: Colors.white,
         title: Text(widget.isReel ? 'Reels Paylaş' : 'Video Paylaş'),
       ),

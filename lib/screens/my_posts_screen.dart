@@ -1,3 +1,4 @@
+import '../theme/app_theme.dart';
 import '../widgets/tbt_dialog.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -14,9 +15,9 @@ class MyPostsScreen extends StatelessWidget {
     final user = FirebaseAuth.instance.currentUser;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF090A0C),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF090A0C),
+        backgroundColor: AppColors.background,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
         title: const Text(
@@ -39,7 +40,7 @@ class MyPostsScreen extends StatelessWidget {
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(
-                    child: CircularProgressIndicator(color: Color(0xFFB7BCC2)),
+                    child: CircularProgressIndicator(color: AppColors.textMuted),
                   );
                 }
 
@@ -66,7 +67,7 @@ class MyPostsScreen extends StatelessWidget {
                         Icon(
                           Icons.photo_camera_outlined,
                           size: 70,
-                          color: Color(0xFFB7BCC2),
+                          color: AppColors.textMuted,
                         ),
                         SizedBox(height: 20),
                         Text(
@@ -182,7 +183,7 @@ class MyPostsScreen extends StatelessWidget {
                                 children: [
                                   const Icon(
                                     Icons.location_on_outlined,
-                                    color: Color(0xFFB7BCC2),
+                                    color: AppColors.textMuted,
                                     size: 15,
                                   ),
                                   const SizedBox(width: 4),

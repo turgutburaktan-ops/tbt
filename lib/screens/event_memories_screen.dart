@@ -1,3 +1,4 @@
+import '../theme/app_theme.dart';
 import '../widgets/profile_name_link.dart';
 import 'dart:io';
 
@@ -54,7 +55,7 @@ class _EventMemoriesScreenState extends State<EventMemoriesScreen> {
 
     final choice = await showModalBottomSheet<String>(
       context: context,
-      backgroundColor: const Color(0xFF111315),
+      backgroundColor: AppColors.surface,
       builder: (sheetContext) => SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -248,9 +249,9 @@ class _EventMemoriesScreenState extends State<EventMemoriesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF090A0C),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF090A0C),
+        backgroundColor: AppColors.background,
         title: const Text('Etkinlik Anıları'),
       ),
       floatingActionButton: _canAdd
@@ -298,9 +299,9 @@ class _EventMemoriesScreenState extends State<EventMemoriesScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF121416),
+                  color: AppColors.surface,
                   borderRadius: BorderRadius.circular(18),
-                  border: Border.all(color: const Color(0xFF292D32)),
+                  border: Border.all(color: AppColors.border),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -337,7 +338,7 @@ class _EventMemoriesScreenState extends State<EventMemoriesScreen> {
                 Container(
                   padding: const EdgeInsets.all(28),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF121416),
+                    color: AppColors.surface,
                     borderRadius: BorderRadius.circular(18),
                   ),
                   child: Column(
@@ -369,9 +370,9 @@ class _EventMemoriesScreenState extends State<EventMemoriesScreen> {
                     margin: const EdgeInsets.only(bottom: 14),
                     clipBehavior: Clip.antiAlias,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF111315),
+                      color: AppColors.surface,
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: const Color(0xFF25292E)),
+                      border: Border.all(color: AppColors.border),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -382,7 +383,7 @@ class _EventMemoriesScreenState extends State<EventMemoriesScreen> {
                             children: [
                               const CircleAvatar(
                                 radius: 18,
-                                backgroundColor: const Color(0xFF0D1B30),
+                                backgroundColor: AppColors.surface,
                                 child: Icon(Icons.person_outline, size: 19),
                               ),
                               const SizedBox(width: 9),

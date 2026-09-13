@@ -1,3 +1,4 @@
+import '../theme/app_theme.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -80,11 +81,11 @@ class RoutePlannerScreen extends StatefulWidget {
 }
 
 class _RoutePlannerScreenState extends State<RoutePlannerScreen> {
-  static const _background = Color(0xFF090A0C);
-  static const _surface = Color(0xFF121416);
-  static const _surfaceAlt = Color(0xFF1A1D20);
-  static const _border = Color(0xFF2A2E33);
-  static const _accent = Color(0xFFB7BCC2);
+  static const _background = AppColors.background;
+  static const _surface = AppColors.surface;
+  static const _surfaceAlt = AppColors.surfaceAlt;
+  static const _border = AppColors.border;
+  static const _accent = AppColors.textMuted;
 
   RouteItinerary? _road;
   bool _routing = false, _saving = false;

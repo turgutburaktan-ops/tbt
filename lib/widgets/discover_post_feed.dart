@@ -1,3 +1,4 @@
+import '../theme/app_theme.dart';
 import 'package:flutter/material.dart';
 
 /// Opens at the tapped tile and continues through every loaded Explore post.
@@ -17,9 +18,9 @@ class DiscoverPostFeed extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    backgroundColor: const Color(0xFF090A0C),
+    backgroundColor: AppColors.background,
     appBar: AppBar(
-      backgroundColor: const Color(0xFF090A0C),
+      backgroundColor: AppColors.background,
       foregroundColor: Colors.white,
       title: const Text('Keşfet'),
     ),

@@ -1,3 +1,4 @@
+import '../theme/app_theme.dart';
 import 'package:flutter/material.dart';
 
 import '../services/app_notification_service.dart';
@@ -8,7 +9,7 @@ class BroadcastDetailScreen extends StatelessWidget {
   final AppNotificationItem item;
   @override
   Widget build(BuildContext context) => Scaffold(
-    backgroundColor: const Color(0xFF0B172A),
+    backgroundColor: AppColors.surface,
     appBar: AppBar(title: const Text('TBT Duyurusu')),
     body: ListView(
       padding: const EdgeInsets.all(20),

@@ -1,3 +1,4 @@
+import '../theme/app_theme.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -36,7 +37,7 @@ class AppEntryGate extends StatelessWidget {
             if (gateSnapshot.connectionState == ConnectionState.waiting &&
                 !gateSnapshot.hasData) {
               return const Scaffold(
-                backgroundColor: Color(0xFF090A0C),
+                backgroundColor: AppColors.background,
                 body: Center(child: CircularProgressIndicator()),
               );
             }

@@ -164,7 +164,7 @@ class ManagedVenuesScreen extends StatelessWidget {
                       ),
                       leading: CircleAvatar(
                         radius: 24,
-                        backgroundColor: const Color(0xFF0D1B30),
+                        backgroundColor: AppColors.surface,
                         backgroundImage: logoUrl.isEmpty
                             ? null
                             : NetworkImage(logoUrl),

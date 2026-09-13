@@ -1,3 +1,4 @@
+import '../theme/app_theme.dart';
 import '../services/video_audio_session.dart';
 import '../services/creator_service.dart';
 import '../widgets/creator_view_tracker.dart';
@@ -314,7 +315,7 @@ class _ReelPage extends StatelessWidget {
       context: context,
       useSafeArea: true,
       isScrollControlled: true,
-      backgroundColor: const Color(0xFF111315),
+      backgroundColor: AppColors.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),

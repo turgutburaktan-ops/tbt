@@ -1,3 +1,4 @@
+import '../theme/app_theme.dart';
 import 'package:flutter/material.dart';
 
 import '../services/auth_service.dart';
@@ -86,9 +87,9 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
   Widget build(BuildContext context) {
     final waitingForCode = _verificationId != null;
     return Scaffold(
-      backgroundColor: const Color(0xFF090A0C),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF090A0C),
+        backgroundColor: AppColors.background,
         foregroundColor: Colors.white,
         title: const Text('Telefon ile giriş'),
       ),
@@ -106,7 +107,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
               const Icon(
                 Icons.phone_android_rounded,
                 size: 64,
-                color: Color(0xFFB7BCC2),
+                color: AppColors.textMuted,
               ),
               const SizedBox(height: 18),
               Text(
@@ -151,7 +152,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
                 height: 54,
                 child: FilledButton(
                   style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFFB7BCC2),
+                    backgroundColor: AppColors.textMuted,
                     foregroundColor: Colors.black,
                   ),
                   onPressed: _loading
@@ -197,9 +198,9 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
 
   InputDecoration _decoration(String label, IconData icon) => InputDecoration(
     labelText: label,
-    prefixIcon: Icon(icon, color: const Color(0xFFB7BCC2)),
+    prefixIcon: Icon(icon, color: AppColors.textMuted),
     filled: true,
-    fillColor: const Color(0xFF121416),
+    fillColor: AppColors.surface,
     border: OutlineInputBorder(
       borderRadius: BorderRadius.circular(18),
       borderSide: BorderSide.none,
@@ -210,7 +211,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
     ),
     focusedBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(18),
-      borderSide: const BorderSide(color: Color(0xFFB7BCC2)),
+      borderSide: const BorderSide(color: AppColors.textMuted),
     ),
   );
 }

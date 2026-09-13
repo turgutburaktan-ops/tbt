@@ -1,3 +1,4 @@
+import '../theme/app_theme.dart';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -148,7 +149,7 @@ class _AiEditScreenState extends State<AiEditScreen> {
     final prompt = await showModalBottomSheet<String>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: const Color(0xFF0F1113),
+      backgroundColor: AppColors.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -205,7 +206,7 @@ class _AiEditScreenState extends State<AiEditScreen> {
                     if (text.isNotEmpty) Navigator.pop(context, text);
                   },
                   style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFFB7BCC2),
+                    backgroundColor: AppColors.textMuted,
                     foregroundColor: Colors.black,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(15),
@@ -266,7 +267,7 @@ class _AiEditScreenState extends State<AiEditScreen> {
             onPressed: _processing ? null : _resetOriginal,
             child: const Text(
               'Orijinal',
-              style: TextStyle(color: Color(0xFFB7BCC2)),
+              style: TextStyle(color: AppColors.textMuted),
             ),
           ),
         ],
@@ -334,7 +335,7 @@ class _AiEditScreenState extends State<AiEditScreen> {
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
                                         const CircularProgressIndicator(
-                                          color: Color(0xFFB7BCC2),
+                                          color: AppColors.textMuted,
                                         ),
                                         const SizedBox(height: 14),
                                         Text(
@@ -363,14 +364,14 @@ class _AiEditScreenState extends State<AiEditScreen> {
                 child: Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF121416),
+                    color: AppColors.surface,
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Row(
                     children: [
                       const Icon(
                         Icons.touch_app_outlined,
-                        color: Color(0xFFB7BCC2),
+                        color: AppColors.textMuted,
                       ),
                       const SizedBox(width: 10),
                       const Expanded(
@@ -439,7 +440,7 @@ class _AiEditScreenState extends State<AiEditScreen> {
                 child: FilledButton.icon(
                   onPressed: _processing ? null : _continueToShare,
                   style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFFB7BCC2),
+                    backgroundColor: AppColors.textMuted,
                     foregroundColor: Colors.black,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
@@ -498,14 +499,14 @@ class _EditTool extends StatelessWidget {
           width: 92,
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
           decoration: BoxDecoration(
-            color: const Color(0xFF121416),
+            color: AppColors.surface,
             borderRadius: BorderRadius.circular(18),
             border: Border.all(color: Colors.white10),
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, color: const Color(0xFFB7BCC2), size: 26),
+              Icon(icon, color: AppColors.textMuted, size: 26),
               const SizedBox(height: 7),
               Text(
                 label,
@@ -534,10 +535,10 @@ class _TargetMarker extends StatelessWidget {
       height: 52,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        border: Border.all(color: const Color(0xFFB7BCC2), width: 3),
+        border: Border.all(color: AppColors.textMuted, width: 3),
         color: Colors.black.withOpacity(.25),
       ),
-      child: const Icon(Icons.close_rounded, color: Color(0xFFB7BCC2)),
+      child: const Icon(Icons.close_rounded, color: AppColors.textMuted),
     );
   }
 }

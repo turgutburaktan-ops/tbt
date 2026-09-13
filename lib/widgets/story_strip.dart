@@ -1,3 +1,4 @@
+import '../theme/app_theme.dart';
 import 'story_navigation_surface.dart';
 import 'profile_name_link.dart';
 import 'tbt_dialog.dart';
@@ -205,7 +206,7 @@ class _AddStoryCircle extends StatelessWidget {
                   padding: EdgeInsets.all(hasStory ? 2 : 0),
                   decoration: const BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Color(0xFF090A0D),
+                    color: AppColors.background,
                   ),
                   child: ClipOval(
                     child: FirebaseMediaImage(
@@ -214,7 +215,7 @@ class _AddStoryCircle extends StatelessWidget {
                         userId,
                       ),
                       errorWidget: const ColoredBox(
-                        color: Color(0xFF0D1B30),
+                        color: AppColors.surface,
                         child: Icon(Icons.person_outline_rounded),
                       ),
                     ),
@@ -233,7 +234,7 @@ class _AddStoryCircle extends StatelessWidget {
                       shape: BoxShape.circle,
                       color: Colors.white,
                       border: Border.all(
-                        color: const Color(0xFF090A0D),
+                        color: AppColors.background,
                         width: 2,
                       ),
                     ),
@@ -308,7 +309,7 @@ class _StoryCircle extends StatelessWidget {
                 padding: const EdgeInsets.all(2),
                 decoration: const BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Color(0xFF090A0D),
+                  color: AppColors.background,
                 ),
                 child: ClipOval(
                   child: FirebaseMediaImage(
@@ -614,7 +615,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
     final action = await showModalBottomSheet<String>(
       context: context,
       useSafeArea: true,
-      backgroundColor: const Color(0xFF111318),
+      backgroundColor: AppColors.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
       ),
@@ -709,7 +710,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: const Color(0xFF111318),
+      backgroundColor: AppColors.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -765,7 +766,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
                               final x = items[i];
                               return ListTile(
                                 leading: CircleAvatar(
-                                  backgroundColor: const Color(0xFF0D1B30),
+                                  backgroundColor: AppColors.surface,
                                   child: ClipOval(
                                     child: FirebaseMediaImage(
                                       imageUrl: (x['userPhotoUrl'] ?? '')
@@ -1039,7 +1040,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
                                         current.userId,
                                       ),
                                   errorWidget: const ColoredBox(
-                                    color: Color(0xFF0D1B30),
+                                    color: AppColors.surface,
                                     child: Icon(Icons.person_outline, size: 20),
                                   ),
                                 ),

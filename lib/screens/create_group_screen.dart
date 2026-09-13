@@ -1,3 +1,4 @@
+import '../theme/app_theme.dart';
 import '../widgets/profile_name_link.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -16,7 +17,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
   final Map<String, String> _selected = {};
   late final _users = FirebaseFirestore.instance.collection('users').limit(300).snapshots();
   bool _details = false, _saving = false;
-  static const _background = Color(0xFF090A0C);
+  static const _background = AppColors.background;
   static const _accent = Color(0xFF55D6D0);
 
   @override
@@ -83,7 +84,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
             )),
           if (_details)
             Expanded(child: ListView(children: _selected.entries.map((e) => ListTile(
-              leading: const CircleAvatar(backgroundColor: const Color(0xFF0D1B30), child: Icon(Icons.person_outline, color: _accent)),
+              leading: const CircleAvatar(backgroundColor: AppColors.surface, child: Icon(Icons.person_outline, color: _accent)),
               title: Text(e.value),
               trailing: IconButton(tooltip: 'Seçimden çıkar', icon: const Icon(Icons.close), onPressed: _saving ? null : () => setState(() => _selected.remove(e.key))),
             )).toList()))
@@ -105,7 +106,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                   final name = (u['displayName'] ?? u['name'] ?? u['username'] ?? 'Kullanıcı').toString();
                   final selected = _selected.containsKey(doc.id);
                   return ListTile(
-                    leading: const CircleAvatar(backgroundColor: const Color(0xFF0D1B30), child: Icon(Icons.person_outline, color: _accent)),
+                    leading: const CircleAvatar(backgroundColor: AppColors.surface, child: Icon(Icons.person_outline, color: _accent)),
                     title: ProfileNameLink(userId: doc.id, compact: true, child: Text(name)), subtitle: ProfileNameLink(userId: doc.id, compact: true, child: Text((u['username'] ?? '').toString())),
                     trailing: Icon(selected ? Icons.check_circle : Icons.radio_button_unchecked, color: selected ? _accent : Colors.white38),
                     onTap: () {

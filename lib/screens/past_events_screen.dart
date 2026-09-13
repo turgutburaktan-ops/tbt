@@ -1,3 +1,4 @@
+import '../theme/app_theme.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -87,12 +88,12 @@ class PastEventsScreen extends StatelessWidget {
               builder: (_, memories) {
                 final memoryCount = memories.data?.docs.length ?? 0;
                 return Card(
-                  color: const Color(0xFF121416),
+                  color: AppColors.surface,
                   child: ListTile(
                     contentPadding: const EdgeInsets.all(14),
                     leading: const CircleAvatar(
                       radius: 25,
-                      backgroundColor: Color(0xFF25292E),
+                      backgroundColor: AppColors.border,
                       child: Icon(Icons.photo_library_outlined),
                     ),
                     title: Text(
@@ -124,11 +125,11 @@ class PastEventsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final body = _body(context);
     if (embedded)
-      return ColoredBox(color: const Color(0xFF090A0C), child: body);
+      return ColoredBox(color: AppColors.background, child: body);
     return Scaffold(
-      backgroundColor: const Color(0xFF090A0C),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF090A0C),
+        backgroundColor: AppColors.background,
         title: const Text('Etkinlik Anılarım'),
       ),
       body: body,

@@ -1,3 +1,4 @@
+import '../theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 
@@ -162,7 +163,7 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
 
     return RefreshIndicator(
       onRefresh: _reload,
-      color: const Color(0xFFB7BCC2),
+      color: AppColors.textMuted,
       child: CustomScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
@@ -200,7 +201,7 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
               child: Container(
                 padding: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF121416),
+                  color: AppColors.surface,
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: Colors.white10),
                 ),
@@ -253,7 +254,7 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
                           icon: const Icon(Icons.close_rounded),
                         ),
                   filled: true,
-                  fillColor: const Color(0xFF121416),
+                  fillColor: AppColors.surface,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
                     borderSide: BorderSide.none,
@@ -266,7 +267,7 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
             const SliverFillRemaining(
               hasScrollBody: false,
               child: Center(
-                child: CircularProgressIndicator(color: Color(0xFFB7BCC2)),
+                child: CircularProgressIndicator(color: AppColors.textMuted),
               ),
             )
           else if (_error != null && _visible.isEmpty)
@@ -385,7 +386,7 @@ class _SpotCard extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
       child: Card(
-        color: const Color(0xFF121416),
+        color: AppColors.surface,
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: () => Navigator.push(
@@ -449,7 +450,7 @@ class _SpotCard extends StatelessWidget {
                           const Icon(
                             Icons.star_rounded,
                             size: 16,
-                            color: Color(0xFFB7BCC2),
+                            color: AppColors.textMuted,
                           ),
                           const SizedBox(width: 3),
                           Text(spot.rating.toStringAsFixed(1)),
