@@ -1,6 +1,7 @@
-    // TBT private route album export
-    if let controller = window?.rootViewController as? FlutterViewController {
-      let channel = FlutterMethodChannel(name: "tbt/album_export", binaryMessenger: controller.binaryMessenger)
+// TBT private route album export
+private func registerTBTAlbum(_ registry: FlutterPluginRegistry) {
+      guard let registrar = registry.registrar(forPlugin: "TBTAlbumExport") else { return }
+      let channel = FlutterMethodChannel(name: "tbt/album_export", binaryMessenger: registrar.messenger())
       channel.setMethodCallHandler { call, result in
         guard call.method == "saveMedia" else { result(FlutterMethodNotImplemented); return }
         guard let args = call.arguments as? [String: Any], let path = args["path"] as? String else {

@@ -42,6 +42,41 @@ class _TravelPlanDetailScreenState extends State<TravelPlanDetailScreen> {
   bool _savingOffline = false;
 
   TravelPlan? _current;
+  String _legacyKey = '';
+  List<Map<String, dynamic>>? _legacyStops;
+  String? _legacyError;
+  void _resolveLegacy() {
+    final key = plan.spotIds.join('|');
+    if (key == _legacyKey) return;
+    _legacyKey = key;
+    _legacyStops = null;
+    _legacyError = null;
+    TravelPlanService.instance
+        .resolveSpots(plan)
+        .then((spots) {
+          if (!mounted || _legacyKey != key) return;
+          setState(
+            () => _legacyStops = spots
+                .map(
+                  (s) => <String, dynamic>{
+                    'id': s.id,
+                    'name': s.name,
+                    'city': s.city,
+                    'latitude': s.latitude,
+                    'longitude': s.longitude,
+                    'imageUrl': s.imageUrl,
+                    'category': s.category,
+                  },
+                )
+                .toList(),
+          );
+        })
+        .catchError((Object e) {
+          if (mounted && _legacyKey == key)
+            setState(() => _legacyError = userFacingError(e));
+        });
+  }
+
   TravelPlan get plan => _current ?? widget.plan;
   late final _stream = FirebaseFirestore.instance
       .collection('travel_plans')
@@ -436,7 +471,11 @@ class _TravelPlanDetailScreenState extends State<TravelPlanDetailScreen> {
       final member = plan.memberIds.contains(
         FirebaseAuth.instance.currentUser?.uid,
       );
-      final stops = plan.stopSnapshots;
+      if (plan.stopSnapshots.isEmpty && plan.spotIds.isNotEmpty)
+        _resolveLegacy();
+      final stops = plan.stopSnapshots.isNotEmpty
+          ? plan.stopSnapshots
+          : _legacyStops ?? <Map<String, dynamic>>[];
       final point = Map<String, dynamic>.from(
         data['meetingPoint'] as Map? ?? {},
       );
@@ -606,6 +645,13 @@ class _TravelPlanDetailScreenState extends State<TravelPlanDetailScreen> {
                 ListView(
                   padding: const EdgeInsets.all(16),
                   children: [
+                    if (plan.stopSnapshots.isEmpty && _legacyStops == null)
+                      _legacyError == null
+                          ? const LinearProgressIndicator()
+                          : TextButton(
+                              onPressed: () => setState(() => _legacyKey = ''),
+                              child: Text(_legacyError!),
+                            ),
                     RouteParticipation(
                       routeId: plan.id,
                       data: data,

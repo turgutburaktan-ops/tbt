@@ -395,6 +395,10 @@ class TravelPlanService {
 
   Future<void> addStop(String planId, PhotoSpot spot) async {
     _requireUser();
+    final initial = await read(planId);
+    final legacy = initial.stopSnapshots.isEmpty
+        ? await resolveSpots(initial)
+        : <PhotoSpot>[];
     final ref = _firestore.collection('travel_plans').doc(planId);
     await _firestore.runTransaction((tx) async {
       final data = (await tx.get(ref)).data();
@@ -403,6 +407,24 @@ class TravelPlanService {
           .whereType<Map>()
           .map((s) => Map<String, dynamic>.from(s))
           .toList();
+      if (stops.isEmpty) {
+        for (final id in List<String>.from(data['spotIds'] ?? [])) {
+          final old = legacy.where((s) => s.id == id).firstOrNull;
+          if (old == null)
+            throw Exception(
+              'Eski rota durağı bulunamadı. Rotayı yeniden açıp tekrar dene.',
+            );
+          stops.add({
+            'id': old.id,
+            'name': old.name,
+            'city': old.city,
+            'latitude': old.latitude,
+            'longitude': old.longitude,
+            'imageUrl': old.imageUrl,
+            'category': old.category,
+          });
+        }
+      }
       if (stops.any((s) => s['id'] == spot.id)) return;
       if (stops.length >= 12)
         throw Exception('Rotaya en fazla 12 durak eklenebilir.');

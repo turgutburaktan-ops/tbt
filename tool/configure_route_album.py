@@ -1,5 +1,6 @@
 from pathlib import Path
 import sys
+import re
 platform = sys.argv[1]
 if platform == 'android':
     paths = list(Path('android/app/src/main').rglob('MainActivity.kt'))
@@ -22,8 +23,9 @@ elif platform == 'ios':
     p = Path('ios/Runner/AppDelegate.swift')
     s = p.read_text()
     if '// TBT private route album export' not in s:
-        marker = '    return super.application(application, didFinishLaunchingWithOptions: launchOptions)'
-        if marker not in s: raise RuntimeError('iOS launch hook not found')
-        s = 'import Photos\n'+s.replace(marker,Path('tool/native_album/ios.txt').read_text()+marker,1)
+        pattern = r'GeneratedPluginRegistrant\.register\(with: (self|engineBridge\.pluginRegistry)\)'
+        if not re.search(pattern, s): raise RuntimeError('iOS plugin registry hook not found')
+        s = re.sub(pattern, lambda m: m.group(0)+'\n    registerTBTAlbum('+m.group(1)+')', s)
+        s = 'import Photos\n'+s+'\n'+Path('tool/native_album/ios.txt').read_text()
         p.write_text(s)
 else: raise RuntimeError('Expected android or ios')

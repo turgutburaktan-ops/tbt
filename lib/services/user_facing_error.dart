@@ -2,9 +2,20 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/services.dart';
 
 /// Keep backend diagnostics out of user-facing messages.
 String userFacingError(Object error) {
+  if (error is PlatformException) {
+    if ([
+      'permission',
+      'photo_access_denied',
+      'camera_access_denied',
+    ].contains(error.code))
+      return 'Fotoğraf erişim iznini Ayarlar’dan açıp tekrar dene.';
+    if (error.code == 'save_failed')
+      return 'Galeriye kaydedilemedi. Depolama alanını ve fotoğraf izinlerini kontrol et.';
+  }
   final raw = error.toString();
   final code = error is FirebaseException ? error.code : '';
   if (error is SocketException ||
