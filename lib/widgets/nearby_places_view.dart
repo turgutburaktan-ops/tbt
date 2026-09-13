@@ -1,4 +1,6 @@
+import '../models/photo_spot.dart';
 import 'venue_quality_badge.dart';
+
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -110,7 +112,10 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
         longitude: lon,
         forceRefresh: forceRefresh,
         onUpdate: (items) {
-          if (!mounted || generation != _loadGeneration || category != widget.category) return;
+          if (!mounted ||
+              generation != _loadGeneration ||
+              category != widget.category)
+            return;
           setState(() {
             _userPosition = position;
             _venues = items;
@@ -120,7 +125,9 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
           });
         },
       );
-      if (!mounted || generation != _loadGeneration || category != widget.category) {
+      if (!mounted ||
+          generation != _loadGeneration ||
+          category != widget.category) {
         return;
       }
 
@@ -222,7 +229,9 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
         )
         .toList();
     out.sort((a, b) {
-      final sponsoredOrder = (b.sponsored ? 1 : 0).compareTo(a.sponsored ? 1 : 0);
+      final sponsoredOrder = (b.sponsored ? 1 : 0).compareTo(
+        a.sponsored ? 1 : 0,
+      );
       if (sponsoredOrder != 0) return sponsoredOrder;
       final ar = _ratings[_key(a)] ?? VenueRatingSummary.empty;
       final br = _ratings[_key(b)] ?? VenueRatingSummary.empty;
@@ -376,6 +385,19 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
     RouteSelectionService.instance.toggle(
       RoutePlace(
         id: 'venue:${venue.category.name}:${venue.id}',
+        spot: PhotoSpot(
+          id: 'venue:${venue.category.name}:${venue.id}',
+          name: venue.name,
+          city: NearbyVenueService.instance.selectedCityName ?? '',
+          latitude: venue.latitude,
+          longitude: venue.longitude,
+          rating: 0,
+          bestTime: venue.openingHours,
+          angle: '',
+          imageUrl: venue.imageUrl,
+          category: venue.category.label,
+          description: venue.description,
+        ),
         name: venue.name,
         category: venue.category.label,
         latitude: venue.latitude,
@@ -414,7 +436,10 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
                   onTap: _chooseCity,
                   borderRadius: BorderRadius.circular(14),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 13,
+                      vertical: 11,
+                    ),
                     decoration: BoxDecoration(
                       color: AppColors.surface,
                       borderRadius: BorderRadius.circular(14),
@@ -422,7 +447,11 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.location_city_outlined, color: AppColors.cyan, size: 19),
+                        const Icon(
+                          Icons.location_city_outlined,
+                          color: AppColors.cyan,
+                          size: 19,
+                        ),
                         const SizedBox(width: 9),
                         Expanded(
                           child: Column(
@@ -432,18 +461,26 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
                                 city ?? 'Bulunduğun şehir',
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(fontWeight: FontWeight.w900),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w900,
+                                ),
                               ),
                               Text(
                                 city == null
                                     ? 'Şehir değiştirmek için dokun'
                                     : '$city içindeki ${widget.category.label.toLowerCase()}',
-                                style: const TextStyle(color: Colors.white54, fontSize: 10.5),
+                                style: const TextStyle(
+                                  color: Colors.white54,
+                                  fontSize: 10.5,
+                                ),
                               ),
                             ],
                           ),
                         ),
-                        const Icon(Icons.keyboard_arrow_down_rounded, color: Colors.white54),
+                        const Icon(
+                          Icons.keyboard_arrow_down_rounded,
+                          color: Colors.white54,
+                        ),
                       ],
                     ),
                   ),
@@ -546,7 +583,9 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
       onRefresh: () => _load(forceRefresh: true),
       child: ListView.builder(
         padding: const EdgeInsets.fromLTRB(14, 2, 14, 110),
-        itemCount: items.length + (items.length <= 6 ? 0 : 1 + ((items.length - 7) ~/ 10)),
+        itemCount:
+            items.length +
+            (items.length <= 6 ? 0 : 1 + ((items.length - 7) ~/ 10)),
         itemBuilder: (_, index) {
           final isAd = index >= 6 && (index - 6) % 11 == 0;
           if (isAd) return const SponsoredNativeAd();
@@ -604,9 +643,14 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
                       venue.name,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w900),
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w900,
+                      ),
                     ),
-                    VenueQualityBadge(venueKey: '${venue.category.name}:${venue.id}'),
+                    VenueQualityBadge(
+                      venueKey: '${venue.category.name}:${venue.id}',
+                    ),
                     const SizedBox(height: 5),
                     Wrap(
                       spacing: 7,
@@ -622,10 +666,14 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
                             label: 'Akıllı Rota önerisi',
                             color: AppColors.cyan,
                           ),
-                        _MetaPill(label: venue.category.label, color: AppColors.cyan),
+                        _MetaPill(
+                          label: venue.category.label,
+                          color: AppColors.cyan,
+                        ),
                         if (rating.count > 0)
                           _MetaPill(
-                            label: '★ ${rating.average.toStringAsFixed(1)} · ${rating.count}',
+                            label:
+                                '★ ${rating.average.toStringAsFixed(1)} · ${rating.count}',
                             color: Colors.amber,
                           ),
                         if (distance.isNotEmpty)
@@ -640,7 +688,10 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
                         venue.address,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(color: Colors.white54, fontSize: 11.5),
+                        style: const TextStyle(
+                          color: Colors.white54,
+                          fontSize: 11.5,
+                        ),
                       ),
                     ],
                     if (venue.description.trim().isNotEmpty) ...[
@@ -649,7 +700,11 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
                         venue.description.trim(),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(color: Colors.white60, fontSize: 11.5, height: 1.25),
+                        style: const TextStyle(
+                          color: Colors.white60,
+                          fontSize: 11.5,
+                          height: 1.25,
+                        ),
                       ),
                     ],
                   ],
@@ -661,7 +716,9 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
                     tooltip: selected ? 'Rotadan çıkar' : 'Rotaya ekle',
                     onPressed: () => _toggleRoute(venue),
                     icon: Icon(
-                      selected ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
+                      selected
+                          ? Icons.bookmark_rounded
+                          : Icons.bookmark_border_rounded,
                       color: selected ? AppColors.cyan : Colors.white54,
                     ),
                   ),
@@ -673,12 +730,18 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
                       sharedId: '${venue.latitude},${venue.longitude}',
                       title: venue.name,
                     ),
-                    icon: const Icon(Icons.send_outlined, color: Colors.white54),
+                    icon: const Icon(
+                      Icons.send_outlined,
+                      color: Colors.white54,
+                    ),
                   ),
                   IconButton(
                     tooltip: 'Yol tarifi',
                     onPressed: () => _directions(venue),
-                    icon: const Icon(Icons.directions_outlined, color: Colors.white54),
+                    icon: const Icon(
+                      Icons.directions_outlined,
+                      color: Colors.white54,
+                    ),
                   ),
                 ],
               ),
@@ -715,7 +778,11 @@ class _MetaPill extends StatelessWidget {
     ),
     child: Text(
       label,
-      style: TextStyle(color: color, fontSize: 10.5, fontWeight: FontWeight.w800),
+      style: TextStyle(
+        color: color,
+        fontSize: 10.5,
+        fontWeight: FontWeight.w800,
+      ),
     ),
   );
 }
@@ -752,11 +819,23 @@ class _VenueSkeletonList extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(height: 13, width: 170, color: AppColors.surfaceStrong),
+                Container(
+                  height: 13,
+                  width: 170,
+                  color: AppColors.surfaceStrong,
+                ),
                 const SizedBox(height: 10),
-                Container(height: 10, width: 120, color: AppColors.surfaceStrong),
+                Container(
+                  height: 10,
+                  width: 120,
+                  color: AppColors.surfaceStrong,
+                ),
                 const SizedBox(height: 8),
-                Container(height: 10, width: 200, color: AppColors.surfaceStrong),
+                Container(
+                  height: 10,
+                  width: 200,
+                  color: AppColors.surfaceStrong,
+                ),
               ],
             ),
           ),
@@ -785,7 +864,9 @@ class _SortChip extends StatelessWidget {
         color: selected ? AppColors.surfaceStrong : AppColors.surface,
         borderRadius: BorderRadius.circular(99),
         border: Border.all(
-          color: selected ? AppColors.cyan.withValues(alpha: .55) : AppColors.border,
+          color: selected
+              ? AppColors.cyan.withValues(alpha: .55)
+              : AppColors.border,
         ),
       ),
       child: Text(

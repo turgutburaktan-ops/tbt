@@ -1,3 +1,6 @@
+import '../widgets/profile_name_link.dart';
+import '../services/user_facing_error.dart';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
@@ -34,6 +37,9 @@ class FollowListScreen extends StatelessWidget {
               child: CircularProgressIndicator(color: Color(0xFFB7BCC2)),
             );
           }
+
+          if (snapshot.hasError)
+            return Center(child: Text(userFacingError(snapshot.error!)));
 
           final docs = snapshot.data?.docs ?? const [];
           if (docs.isEmpty) {
@@ -73,6 +79,7 @@ class FollowListScreen extends StatelessWidget {
                   final bio = (profile['bio'] ?? '').toString().trim();
 
                   return ListTile(
+                    onTap: () => ProfileNameLink.open(context, targetId),
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 16,
                       vertical: 6,

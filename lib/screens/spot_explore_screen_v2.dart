@@ -1,3 +1,13 @@
+import '../services/spot_browsing.dart';
+
+import 'dart:convert';
+
+import 'package:http/http.dart' as http;
+
+import '../data/turkey_selection_data.dart';
+import '../services/nearby_venue_service.dart';
+import '../widgets/searchable_selection_field.dart';
+
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -29,12 +39,17 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
   bool _loading = true;
   Position? _position;
   String _search = '';
+  String? _city;
+  String? _detectedCity;
+  String _sort = 'nearest';
+  final _cityController = TextEditingController();
 
   String _routeId(PhotoSpot spot) => 'spot:${spot.id}';
 
   @override
   void initState() {
     super.initState();
+    _city = NearbyVenueService.instance.selectedCityName;
     _refreshRemote();
     _prepareLocation();
   }
@@ -42,6 +57,7 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
   @override
   void dispose() {
     _searchController.dispose();
+    _cityController.dispose();
     super.dispose();
   }
 
@@ -56,9 +72,13 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
       setState(() {});
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Gezilecek yerler alınamadı. Yeniden deneyebilirsin.'),
-        ));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Gezilecek yerler alınamadı. Yeniden deneyebilirsin.',
+            ),
+          ),
+        );
       }
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -83,28 +103,22 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
       ).timeout(const Duration(seconds: 4));
       if (!mounted) return;
       _position = position;
+      await _detectCity(position);
+      if (!mounted) return;
       _applyFilter();
       setState(() {});
     } catch (_) {}
   }
 
   void _applyFilter() {
-    final key = _search.trim().toLowerCase();
-    final next = _all.where((spot) {
-      if (key.isEmpty) return true;
-      return '${spot.name} ${spot.city} ${spot.category} ${spot.description} ${spot.tags.join(' ')}'
-          .toLowerCase()
-          .contains(key);
-    }).toList();
-    next.sort((a, b) {
-      if (_position != null) {
-        final distanceOrder = _distance(a).compareTo(_distance(b));
-        if (distanceOrder != 0) return distanceOrder;
-      }
-      final ratingOrder = b.rating.compareTo(a.rating);
-      return ratingOrder != 0 ? ratingOrder : a.name.compareTo(b.name);
-    });
-    _visible = next;
+    _visible = browseCitySpots(
+      _all,
+      city: _city ?? _detectedCity,
+      query: _search,
+      nearest: _sort == 'nearest',
+      latitude: _position?.latitude,
+      longitude: _position?.longitude,
+    );
   }
 
   double _distance(PhotoSpot spot) {
@@ -126,6 +140,152 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
     return km < 10 ? '${km.toStringAsFixed(1)} km' : '${km.round()} km';
   }
 
+  String _fold(String value) => value
+      .trim()
+      .toLowerCase()
+      .replaceAll('ı', 'i')
+      .replaceAll('ş', 's')
+      .replaceAll('ğ', 'g')
+      .replaceAll('ü', 'u')
+      .replaceAll('ö', 'o')
+      .replaceAll('ç', 'c');
+
+  Future<void> _detectCity(Position position) async {
+    try {
+      final response = await http
+          .get(
+            Uri.https('nominatim.openstreetmap.org', '/reverse', {
+              'lat': '${position.latitude}',
+              'lon': '${position.longitude}',
+              'format': 'jsonv2',
+              'zoom': '5',
+              'accept-language': 'tr',
+            }),
+            headers: {'User-Agent': 'TBT-mobile/0.1 (city places)'},
+          )
+          .timeout(const Duration(seconds: 5));
+      if (response.statusCode != 200) return;
+      final address = (jsonDecode(response.body) as Map)['address'] as Map?;
+      final candidates = [
+        address?['province'],
+        address?['state'],
+        address?['city'],
+      ];
+      for (final city in turkeyCities) {
+        if (candidates.any((v) => _fold('$v') == _fold(city))) {
+          _detectedCity = city;
+          return;
+        }
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _chooseCity() async {
+    _cityController.text = _city ?? '';
+    final picked = await showModalBottomSheet<String>(
+      context: context,
+      useSafeArea: true,
+      isScrollControlled: true,
+      backgroundColor: AppColors.background,
+      builder: (sheetContext) => Padding(
+        padding: EdgeInsets.fromLTRB(
+          18,
+          16,
+          18,
+          18 + MediaQuery.viewInsetsOf(sheetContext).bottom,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Text(
+              'Şehir seç',
+              style: TextStyle(fontSize: 21, fontWeight: FontWeight.w900),
+            ),
+            const SizedBox(height: 5),
+            const Text(
+              'Seçtiğin şehirdeki gezilecek yerler gösterilir.',
+              style: TextStyle(color: Colors.white60),
+            ),
+            const SizedBox(height: 14),
+            SearchableSelectionField(
+              controller: _cityController,
+              options: turkeyCities,
+              labelText: 'Şehir',
+              hintText: 'Örn. Elazığ, İzmir, İstanbul',
+              prefixIcon: Icons.location_city_outlined,
+              maxSuggestions: 7,
+              onSelected: (city) => Navigator.pop(sheetContext, city),
+            ),
+            const SizedBox(height: 8),
+            OutlinedButton.icon(
+              onPressed: () => Navigator.pop(sheetContext, ''),
+              icon: const Icon(Icons.my_location_rounded),
+              label: const Text('Konumumdaki şehre dön'),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (!mounted || picked == null) return;
+    setState(() {
+      _city = picked.isEmpty ? null : picked;
+      _search = '';
+      _searchController.clear();
+      _applyFilter();
+    });
+    if (picked.isEmpty) await _prepareLocation();
+  }
+
+  Widget _cityAndSort() => Column(
+    children: [
+      Padding(
+        padding: const EdgeInsets.fromLTRB(14, 0, 14, 10),
+        child: InkWell(
+          onTap: _chooseCity,
+          borderRadius: BorderRadius.circular(14),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.location_city_outlined,
+                  color: AppColors.cyan,
+                  size: 19,
+                ),
+                const SizedBox(width: 9),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _city ?? _detectedCity ?? 'Bulunduğun şehir',
+                        style: const TextStyle(fontWeight: FontWeight.w900),
+                      ),
+                      const Text(
+                        'Şehir değiştirmek için dokun',
+                        style: TextStyle(color: Colors.white54, fontSize: 10.5),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                  color: Colors.white54,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    ],
+  );
+
   Future<void> _reload() async {
     setState(() => _loading = true);
     SpotRepository.instance.invalidateCache();
@@ -137,6 +297,7 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
     RouteSelectionService.instance.toggle(
       RoutePlace(
         id: _routeId(spot),
+        spot: spot,
         name: spot.name,
         category: 'Gezilecek Yerler',
         latitude: spot.latitude,
@@ -196,6 +357,7 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
             ),
           ),
         ),
+        SliverToBoxAdapter(child: _cityAndSort()),
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(14, 0, 14, 8),
@@ -207,9 +369,43 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
                 setState(() {});
               },
               decoration: const InputDecoration(
-                hintText: 'Yer, şehir veya kategori ara',
+                hintText: 'Gezilecek yerlerde ara',
                 prefixIcon: Icon(Icons.search_rounded, size: 20),
               ),
+            ),
+          ),
+        ),
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(14, 0, 14, 8),
+            child: Wrap(
+              spacing: 7,
+              children: [
+                for (final item in [
+                  ('popular', 'Popüler'),
+                  ('nearest', 'En yakın'),
+                ])
+                  ChoiceChip(
+                    label: Text(item.$2),
+                    selected: _sort == item.$1,
+                    onSelected: (_) {
+                      if (item.$1 == 'nearest' && _position == null) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              'Mesafeye göre sıralamak için konumunu aç.',
+                            ),
+                          ),
+                        );
+                        _prepareLocation();
+                      }
+                      setState(() {
+                        _sort = item.$1;
+                        _applyFilter();
+                      });
+                    },
+                  ),
+              ],
             ),
           ),
         ),
@@ -224,9 +420,15 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
             child: Center(child: CircularProgressIndicator()),
           )
         else if (_visible.isEmpty)
-          const SliverFillRemaining(
+          SliverFillRemaining(
             hasScrollBody: false,
-            child: Center(child: Text('Gezilecek yer bulunamadı.')),
+            child: Center(
+              child: Text(
+                _city == null && _detectedCity == null
+                    ? 'Gezilecek yerleri görmek için bir şehir seç veya konumunu aç.'
+                    : 'Bu şehirde aramana uygun gezilecek yer bulunamadı.',
+              ),
+            ),
           )
         else ...[
           SliverToBoxAdapter(
@@ -243,7 +445,9 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
             ),
           ),
           SliverList.builder(
-            itemCount: _visible.length + (_visible.length <= 6 ? 0 : 1 + ((_visible.length - 7) ~/ 10)),
+            itemCount:
+                _visible.length +
+                (_visible.length <= 6 ? 0 : 1 + ((_visible.length - 7) ~/ 10)),
             itemBuilder: (context, index) {
               final isAd = index >= 6 && (index - 6) % 11 == 0;
               if (isAd) {

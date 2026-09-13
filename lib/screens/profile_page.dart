@@ -1,4 +1,6 @@
+import '../services/user_facing_error.dart';
 import '../widgets/profile_reservations.dart';
+
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
@@ -6,7 +8,9 @@ import 'dart:math' as math;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+
 import '../widgets/profile_business_coupons.dart';
+
 import 'package:image_picker/image_picker.dart';
 
 import '../services/auth_service.dart';
@@ -136,7 +140,12 @@ class _ProfileBodyState extends State<_ProfileBody> {
               return CustomScrollView(
                 clipBehavior: Clip.none,
                 slivers: [
-                  SliverToBoxAdapter(child: ProfileReservations(key: ValueKey(widget.user.uid), userId: widget.user.uid)),
+                  SliverToBoxAdapter(
+                    child: ProfileReservations(
+                      key: ValueKey(widget.user.uid),
+                      userId: widget.user.uid,
+                    ),
+                  ),
                   SliverToBoxAdapter(
                     child: ProfileBusinessCoupons(userId: widget.user.uid),
                   ),
@@ -474,17 +483,11 @@ class _ProfileBodyState extends State<_ProfileBody> {
                               } catch (e) {
                                 setSheetState(() => saving = false);
                                 if (sheetContext.mounted) {
-                                  ScaffoldMessenger.of(sheetContext)
-                                      .showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                            e.toString().replaceFirst(
-                                              'Exception: ',
-                                              '',
-                                            ),
-                                          ),
-                                        ),
-                                      );
+                                  ScaffoldMessenger.of(
+                                    sheetContext,
+                                  ).showSnackBar(
+                                    SnackBar(content: Text(userFacingError(e))),
+                                  );
                                 }
                               }
                             },

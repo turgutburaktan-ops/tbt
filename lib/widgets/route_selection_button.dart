@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/route_place.dart';
-import '../screens/selected_route_map_screen.dart';
+import '../screens/smart_plan_screen.dart';
 import '../services/route_selection_service.dart';
 import '../theme/app_theme.dart';
 
@@ -43,8 +43,11 @@ class RouteSelectionButton extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => SelectedRouteMapScreen(
-                            places: selected.values.toList(growable: false),
+                          builder: (_) => SmartPlanScreen(
+                            initialSpots: selected.values
+                                .map((place) => place.toPhotoSpot())
+                                .toList(growable: false),
+                            resultsOnly: true,
                           ),
                         ),
                       );

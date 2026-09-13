@@ -1,3 +1,4 @@
+import '../widgets/route_stop_picker.dart';
 import '../data/turkey_selection_data.dart';
 import '../widgets/tbt_dialog.dart';
 
@@ -20,8 +21,15 @@ import 'travel_plan_invite_screen.dart';
 
 class SmartPlanScreen extends StatefulWidget {
   final bool inviteAfterSave;
+  final List<PhotoSpot> initialSpots;
+  final bool resultsOnly;
 
-  const SmartPlanScreen({super.key, this.inviteAfterSave = false});
+  const SmartPlanScreen({
+    super.key,
+    this.inviteAfterSave = false,
+    this.initialSpots = const [],
+    this.resultsOnly = false,
+  });
 
   @override
   State<SmartPlanScreen> createState() => _SmartPlanScreenState();
@@ -63,7 +71,16 @@ class _SmartPlanScreenState extends State<SmartPlanScreen> {
   @override
   void initState() {
     super.initState();
-    _load();
+    _generated = List<PhotoSpot>.of(widget.initialSpots);
+    if (_generated.isNotEmpty) {
+      _city = _generated.first.city;
+      _title.text = 'Gezi rotam';
+    }
+    if (widget.resultsOnly) {
+      _loading = false;
+    } else {
+      _load();
+    }
   }
 
   @override
@@ -510,6 +527,38 @@ class _SmartPlanScreenState extends State<SmartPlanScreen> {
     }
   }
 
+  Future<void> _addStop() async {
+    final spot = await showModalBottomSheet<PhotoSpot>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: AppColors.background,
+      builder: (_) => RouteStopPicker(city: _city ?? '', stops: _generated),
+    );
+    if (!mounted || spot == null) return;
+    if (_generated.any((s) => s.id == spot.id)) {
+      _message('Bu durak zaten rotada.');
+      return;
+    }
+    setState(() {
+      _generated = [..._generated, spot];
+      _intelligence = null;
+      if ((_city ?? '').isEmpty) _city = spot.city;
+    });
+  }
+
+  void _changeStop(int index, String action) {
+    setState(() {
+      final stops = List<PhotoSpot>.of(_generated);
+      final spot = stops.removeAt(index);
+      if (action != 'remove') {
+        stops.insert(action == 'up' ? index - 1 : index + 1, spot);
+      }
+      _generated = stops;
+      _intelligence = null;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -520,296 +569,319 @@ class _SmartPlanScreenState extends State<SmartPlanScreen> {
           : ListView(
               padding: const EdgeInsets.fromLTRB(14, 8, 14, 28),
               children: [
-                const Text(
-                  'İlini seç, duraklarını listeden veya haritadan ekle. İstersen TBT’den rota önerisi al.',
-                  style: TextStyle(color: AppColors.textMuted, height: 1.4),
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  key: ValueKey(_city),
-                  initialValue: _city ?? '',
-                  readOnly: true,
-                  onTap: _pickCity,
-                  decoration: const InputDecoration(
-                    labelText: 'Şehir ara ve seç',
-                    prefixIcon: Icon(Icons.location_city_rounded),
-                    suffixIcon: Icon(Icons.search_rounded),
+                if (!widget.resultsOnly) ...[
+                  const Text(
+                    'İlini seç, duraklarını listeden veya haritadan ekle. İstersen TBT’den rota önerisi al.',
+                    style: TextStyle(color: AppColors.textMuted, height: 1.4),
                   ),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: _title,
-                  maxLength: 80,
-                  decoration: const InputDecoration(
-                    labelText: 'Rotanın adı',
-                    hintText: 'Örn. Harput tarih ve lezzet rotası',
-                    prefixIcon: Icon(Icons.edit_road_rounded),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    key: ValueKey(_city),
+                    initialValue: _city ?? '',
+                    readOnly: true,
+                    onTap: _pickCity,
+                    decoration: const InputDecoration(
+                      labelText: 'Şehir ara ve seç',
+                      prefixIcon: Icon(Icons.location_city_rounded),
+                      suffixIcon: Icon(Icons.search_rounded),
+                    ),
                   ),
-                ),
-                Wrap(
-                  spacing: 10,
-                  runSpacing: 10,
-                  children: [
-                    OutlinedButton.icon(
-                      onPressed: _city == null
-                          ? null
-                          : () => _openRouteEditor(RouteStopSelection.catalog),
-                      icon: const Icon(Icons.add_location_alt_outlined),
-                      label: const Text('Noktalardan seç'),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: _title,
+                    maxLength: 80,
+                    decoration: const InputDecoration(
+                      labelText: 'Rotanın adı',
+                      hintText: 'Örn. Harput tarih ve lezzet rotası',
+                      prefixIcon: Icon(Icons.edit_road_rounded),
                     ),
-                    OutlinedButton.icon(
-                      onPressed: _city == null
-                          ? null
-                          : () => _openRouteEditor(RouteStopSelection.map),
-                      icon: const Icon(Icons.map_outlined),
-                      label: const Text('Haritadan seç'),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                ExpansionTile(
-                  tilePadding: EdgeInsets.zero,
-                  childrenPadding: const EdgeInsets.only(top: 12, bottom: 12),
-                  title: const Text('Diğer tercihler ve rota önerisi'),
-                  children: [
-                    TextField(
-                      controller: _prompt,
-                      minLines: 2,
-                      maxLines: 4,
-                      decoration: InputDecoration(
-                        labelText: 'Nasıl bir plan istiyorsun?',
-                        hintText: 'Örn: Elazığ’da arabayla 6 saat, tarih, yemek ve kahve ağırlıklı ekonomik rota',
-                        prefixIcon: const Icon(Icons.auto_awesome_rounded),
-                        suffixIcon: IconButton(
-                          tooltip: 'İsteği uygula',
-                          onPressed: _applyPrompt,
-                          icon: const Icon(Icons.arrow_forward_rounded),
-                        ),
+                  ),
+                  Wrap(
+                    spacing: 10,
+                    runSpacing: 10,
+                    children: [
+                      OutlinedButton.icon(
+                        onPressed: _city == null
+                            ? null
+                            : () =>
+                                  _openRouteEditor(RouteStopSelection.catalog),
+                        icon: const Icon(Icons.add_location_alt_outlined),
+                        label: const Text('Noktalardan seç'),
                       ),
-                      onSubmitted: (_) => _applyPrompt(),
-                    ),
-                    const SizedBox(height: 14),
-                    if (_availableAreas.length > 1) ...[
-                      const SizedBox(height: 4),
-                      DropdownButtonFormField<String>(
-                        key: ValueKey('${_city}_$_area'),
-                        initialValue: _availableAreas.contains(_area)
-                            ? _area
-                            : 'Tüm şehir',
-                        decoration: const InputDecoration(
-                          labelText: 'Hangi bölgede gezeceksin?',
-                          prefixIcon: Icon(Icons.near_me_outlined),
+                      OutlinedButton.icon(
+                        onPressed: _city == null
+                            ? null
+                            : () => _openRouteEditor(RouteStopSelection.map),
+                        icon: const Icon(Icons.map_outlined),
+                        label: const Text('Haritadan seç'),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  ExpansionTile(
+                    tilePadding: EdgeInsets.zero,
+                    childrenPadding: const EdgeInsets.only(top: 12, bottom: 12),
+                    title: const Text('Diğer tercihler ve rota önerisi'),
+                    children: [
+                      TextField(
+                        controller: _prompt,
+                        minLines: 2,
+                        maxLines: 4,
+                        decoration: InputDecoration(
+                          labelText: 'Nasıl bir plan istiyorsun?',
+                          hintText: 'Örn: Elazığ’da arabayla 6 saat, tarih, yemek ve kahve ağırlıklı ekonomik rota',
+                          prefixIcon: const Icon(Icons.auto_awesome_rounded),
+                          suffixIcon: IconButton(
+                            tooltip: 'İsteği uygula',
+                            onPressed: _applyPrompt,
+                            icon: const Icon(Icons.arrow_forward_rounded),
+                          ),
                         ),
-                        items: _availableAreas
+                        onSubmitted: (_) => _applyPrompt(),
+                      ),
+                      const SizedBox(height: 14),
+                      if (_availableAreas.length > 1) ...[
+                        const SizedBox(height: 4),
+                        DropdownButtonFormField<String>(
+                          key: ValueKey('${_city}_$_area'),
+                          initialValue: _availableAreas.contains(_area)
+                              ? _area
+                              : 'Tüm şehir',
+                          decoration: const InputDecoration(
+                            labelText: 'Hangi bölgede gezeceksin?',
+                            prefixIcon: Icon(Icons.near_me_outlined),
+                          ),
+                          items: _availableAreas
+                              .map(
+                                (area) => DropdownMenuItem(
+                                  value: area,
+                                  child: Text(area),
+                                ),
+                              )
+                              .toList(),
+                          onChanged: (value) => setState(() {
+                            _area = value ?? 'Tüm şehir';
+                            _generated = const [];
+                          }),
+                        ),
+                      ],
+                      const SizedBox(height: 12),
+                      ListTile(
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 4,
+                        ),
+                        leading: const Icon(Icons.schedule_rounded),
+                        title: const Text('Başlangıç: Konumum'),
+                        subtitle: Text(
+                          '${_startAt.day.toString().padLeft(2, '0')}.${_startAt.month.toString().padLeft(2, '0')}.${_startAt.year} • ${_startAt.hour.toString().padLeft(2, '0')}:${_startAt.minute.toString().padLeft(2, '0')}',
+                        ),
+                        trailing: const Icon(Icons.edit_calendar_outlined),
+                        onTap: () async {
+                          final date = await showDatePicker(
+                            context: context,
+                            builder: (context, child) => Theme(
+                              data: tbtDialogTheme(Theme.of(context)),
+                              child: child!,
+                            ),
+                            firstDate: DateTime.now(),
+                            lastDate: DateTime.now().add(
+                              const Duration(days: 365),
+                            ),
+                            initialDate: _startAt.isBefore(DateTime.now())
+                                ? DateTime.now()
+                                : _startAt,
+                          );
+                          if (date == null || !mounted) return;
+                          final time = await showTimePicker(
+                            context: context,
+                            builder: (context, child) => Theme(
+                              data: tbtDialogTheme(Theme.of(context)),
+                              child: child!,
+                            ),
+                            initialTime: TimeOfDay.fromDateTime(_startAt),
+                          );
+                          if (time == null || !mounted) return;
+                          setState(() {
+                            _startAt = DateTime(
+                              date.year,
+                              date.month,
+                              date.day,
+                              time.hour,
+                              time.minute,
+                            );
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 18),
+                      const Text('Ne kadar zamanın var?', style: _sectionStyle),
+                      const SizedBox(height: 8),
+                      SegmentedButton<int>(
+                        segments: const [
+                          ButtonSegment(value: 3, label: Text('3 saat')),
+                          ButtonSegment(value: 5, label: Text('5 saat')),
+                          ButtonSegment(value: 8, label: Text('Tam gün')),
+                        ],
+                        selected: {_duration},
+                        onSelectionChanged: (value) =>
+                            setState(() => _duration = value.first),
+                      ),
+                      const SizedBox(height: 18),
+                      const Text('İlgi alanların', style: _sectionStyle),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 7,
+                        runSpacing: 7,
+                        children: _interests
                             .map(
-                              (area) => DropdownMenuItem(
-                                value: area,
-                                child: Text(area),
+                              (interest) => FilterChip(
+                                label: Text(interest),
+                                selected: _selectedInterests.contains(interest),
+                                onSelected: (selected) => setState(() {
+                                  selected
+                                      ? _selectedInterests.add(interest)
+                                      : _selectedInterests.remove(interest);
+                                }),
                               ),
                             )
                             .toList(),
-                        onChanged: (value) => setState(() {
-                          _area = value ?? 'Tüm şehir';
-                          _generated = const [];
-                        }),
+                      ),
+                      const SizedBox(height: 18),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: DropdownButtonFormField<String>(
+                              initialValue: _budget,
+                              decoration: const InputDecoration(
+                                labelText: 'Bütçe',
+                              ),
+                              items: const ['Ekonomik', 'Orta', 'Rahat']
+                                  .map(
+                                    (value) => DropdownMenuItem(
+                                      value: value,
+                                      child: Text(value),
+                                    ),
+                                  )
+                                  .toList(),
+                              onChanged: (value) =>
+                                  setState(() => _budget = value ?? _budget),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: DropdownButtonFormField<String>(
+                              initialValue: _transport,
+                              decoration: const InputDecoration(
+                                labelText: 'Ulaşım',
+                              ),
+                              items: const ['Araç', 'Yürüyüş', 'Bisiklet']
+                                  .map(
+                                    (value) => DropdownMenuItem(
+                                      value: value,
+                                      child: Text(value),
+                                    ),
+                                  )
+                                  .toList(),
+                              onChanged: (value) => setState(
+                                () => _transport = value ?? _transport,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 14),
+                      const Text('Molalar', style: _sectionStyle),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 7,
+                        children: [
+                          FilterChip(
+                            avatar: const Icon(
+                              Icons.restaurant_rounded,
+                              size: 17,
+                            ),
+                            label: const Text('Yerel lezzet'),
+                            selected: _addFood,
+                            onSelected: (value) =>
+                                setState(() => _addFood = value),
+                          ),
+                          FilterChip(
+                            avatar: const Icon(
+                              Icons.local_cafe_rounded,
+                              size: 17,
+                            ),
+                            label: const Text('Kahve'),
+                            selected: _addCafe,
+                            onSelected: (value) =>
+                                setState(() => _addCafe = value),
+                          ),
+                          FilterChip(
+                            avatar: const Icon(
+                              Icons.breakfast_dining_rounded,
+                              size: 17,
+                            ),
+                            label: const Text('Kahvaltı'),
+                            selected: _addBreakfast,
+                            onSelected: (value) =>
+                                setState(() => _addBreakfast = value),
+                          ),
+                          FilterChip(
+                            avatar: const Icon(Icons.cake_outlined, size: 17),
+                            label: const Text('Tatlı'),
+                            selected: _addDessert,
+                            onSelected: (value) =>
+                                setState(() => _addDessert = value),
+                          ),
+                          FilterChip(
+                            avatar: const Icon(Icons.hotel_rounded, size: 17),
+                            label: const Text('Konaklama'),
+                            selected: _addHotel,
+                            onSelected: (value) =>
+                                setState(() => _addHotel = value),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 14),
+                      SizedBox(
+                        height: 50,
+                        child: FilledButton.icon(
+                          onPressed: _city == null || _generating
+                              ? null
+                              : _generate,
+                          icon: _generating
+                              ? const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Icon(Icons.auto_awesome_rounded),
+                          label: Text(
+                            _generating ? 'Rota hesaplanıyor…' : 'Rota öner',
+                          ),
+                        ),
                       ),
                     ],
-                    const SizedBox(height: 12),
-                    ListTile(
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 4),
-                      leading: const Icon(Icons.schedule_rounded),
-                      title: const Text('Başlangıç: Konumum'),
-                      subtitle: Text(
-                        '${_startAt.day.toString().padLeft(2, '0')}.${_startAt.month.toString().padLeft(2, '0')}.${_startAt.year} • ${_startAt.hour.toString().padLeft(2, '0')}:${_startAt.minute.toString().padLeft(2, '0')}',
-                      ),
-                      trailing: const Icon(Icons.edit_calendar_outlined),
-                      onTap: () async {
-                        final date = await showDatePicker(
-                          context: context,
-                          builder: (context, child) => Theme(
-                            data: tbtDialogTheme(Theme.of(context)),
-                            child: child!,
-                          ),
-                          firstDate: DateTime.now(),
-                          lastDate: DateTime.now().add(
-                            const Duration(days: 365),
-                          ),
-                          initialDate: _startAt.isBefore(DateTime.now())
-                              ? DateTime.now()
-                              : _startAt,
-                        );
-                        if (date == null || !mounted) return;
-                        final time = await showTimePicker(
-                          context: context,
-                          builder: (context, child) => Theme(
-                            data: tbtDialogTheme(Theme.of(context)),
-                            child: child!,
-                          ),
-                          initialTime: TimeOfDay.fromDateTime(_startAt),
-                        );
-                        if (time == null || !mounted) return;
-                        setState(() {
-                          _startAt = DateTime(
-                            date.year,
-                            date.month,
-                            date.day,
-                            time.hour,
-                            time.minute,
-                          );
-                        });
-                      },
+                  ),
+                ],
+                if (widget.resultsOnly) ...[
+                  TextField(
+                    controller: _title,
+                    maxLength: 80,
+                    decoration: const InputDecoration(labelText: 'Rotanın adı'),
+                  ),
+                  if (_generated.isEmpty)
+                    const Padding(
+                      padding: EdgeInsets.all(16),
+                      child: Text('Rotana bir yer veya mekân ekle.'),
                     ),
-                    const SizedBox(height: 18),
-                    const Text('Ne kadar zamanın var?', style: _sectionStyle),
-                    const SizedBox(height: 8),
-                    SegmentedButton<int>(
-                      segments: const [
-                        ButtonSegment(value: 3, label: Text('3 saat')),
-                        ButtonSegment(value: 5, label: Text('5 saat')),
-                        ButtonSegment(value: 8, label: Text('Tam gün')),
-                      ],
-                      selected: {_duration},
-                      onSelectionChanged: (value) =>
-                          setState(() => _duration = value.first),
-                    ),
-                    const SizedBox(height: 18),
-                    const Text('İlgi alanların', style: _sectionStyle),
-                    const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 7,
-                      runSpacing: 7,
-                      children: _interests
-                          .map(
-                            (interest) => FilterChip(
-                              label: Text(interest),
-                              selected: _selectedInterests.contains(interest),
-                              onSelected: (selected) => setState(() {
-                                selected
-                                    ? _selectedInterests.add(interest)
-                                    : _selectedInterests.remove(interest);
-                              }),
-                            ),
-                          )
-                          .toList(),
-                    ),
-                    const SizedBox(height: 18),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: DropdownButtonFormField<String>(
-                            initialValue: _budget,
-                            decoration: const InputDecoration(
-                              labelText: 'Bütçe',
-                            ),
-                            items: const ['Ekonomik', 'Orta', 'Rahat']
-                                .map(
-                                  (value) => DropdownMenuItem(
-                                    value: value,
-                                    child: Text(value),
-                                  ),
-                                )
-                                .toList(),
-                            onChanged: (value) =>
-                                setState(() => _budget = value ?? _budget),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: DropdownButtonFormField<String>(
-                            initialValue: _transport,
-                            decoration: const InputDecoration(
-                              labelText: 'Ulaşım',
-                            ),
-                            items: const ['Araç', 'Yürüyüş', 'Bisiklet']
-                                .map(
-                                  (value) => DropdownMenuItem(
-                                    value: value,
-                                    child: Text(value),
-                                  ),
-                                )
-                                .toList(),
-                            onChanged: (value) => setState(
-                              () => _transport = value ?? _transport,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 14),
-                    const Text('Molalar', style: _sectionStyle),
-                    const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 7,
-                      children: [
-                        FilterChip(
-                          avatar: const Icon(
-                            Icons.restaurant_rounded,
-                            size: 17,
-                          ),
-                          label: const Text('Yerel lezzet'),
-                          selected: _addFood,
-                          onSelected: (value) =>
-                              setState(() => _addFood = value),
-                        ),
-                        FilterChip(
-                          avatar: const Icon(
-                            Icons.local_cafe_rounded,
-                            size: 17,
-                          ),
-                          label: const Text('Kahve'),
-                          selected: _addCafe,
-                          onSelected: (value) =>
-                              setState(() => _addCafe = value),
-                        ),
-                        FilterChip(
-                          avatar: const Icon(
-                            Icons.breakfast_dining_rounded,
-                            size: 17,
-                          ),
-                          label: const Text('Kahvaltı'),
-                          selected: _addBreakfast,
-                          onSelected: (value) =>
-                              setState(() => _addBreakfast = value),
-                        ),
-                        FilterChip(
-                          avatar: const Icon(Icons.cake_outlined, size: 17),
-                          label: const Text('Tatlı'),
-                          selected: _addDessert,
-                          onSelected: (value) =>
-                              setState(() => _addDessert = value),
-                        ),
-                        FilterChip(
-                          avatar: const Icon(Icons.hotel_rounded, size: 17),
-                          label: const Text('Konaklama'),
-                          selected: _addHotel,
-                          onSelected: (value) =>
-                              setState(() => _addHotel = value),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 14),
-                    SizedBox(
-                      height: 50,
-                      child: FilledButton.icon(
-                        onPressed: _city == null || _generating
-                            ? null
-                            : _generate,
-                        icon: _generating
-                            ? const SizedBox(
-                                width: 18,
-                                height: 18,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : const Icon(Icons.auto_awesome_rounded),
-                        label: Text(
-                          _generating ? 'Rota hesaplanıyor…' : 'Rota öner',
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+                ],
+                if (_generated.isNotEmpty || widget.resultsOnly)
+                  OutlinedButton.icon(
+                    onPressed: _addStop,
+                    icon: const Icon(Icons.add_location_alt_outlined),
+                    label: const Text('Yer / Mekân Ekle'),
+                  ),
                 if (_generated.isNotEmpty) ...[
                   const SizedBox(height: 24),
                   if (_intelligence != null)
@@ -846,7 +918,10 @@ class _SmartPlanScreenState extends State<SmartPlanScreen> {
                         ],
                       ),
                     ),
-                  const Text('Önerilen rota', style: _sectionStyle),
+                  Text(
+                    widget.resultsOnly ? 'Rotan' : 'Önerilen rota',
+                    style: _sectionStyle,
+                  ),
                   const SizedBox(height: 8),
                   ...List.generate(_generated.length, (index) {
                     final spot = _generated[index];
@@ -866,6 +941,26 @@ class _SmartPlanScreenState extends State<SmartPlanScreen> {
                           overflow: TextOverflow.ellipsis,
                         ),
                         subtitle: Text('${spot.category} • ${spot.bestTime}'),
+                        trailing: PopupMenuButton<String>(
+                          tooltip: 'Durağı düzenle',
+                          onSelected: (action) => _changeStop(index, action),
+                          itemBuilder: (_) => [
+                            if (index > 0)
+                              const PopupMenuItem(
+                                value: 'up',
+                                child: Text('Yukarı taşı'),
+                              ),
+                            if (index < _generated.length - 1)
+                              const PopupMenuItem(
+                                value: 'down',
+                                child: Text('Aşağı taşı'),
+                              ),
+                            const PopupMenuItem(
+                              value: 'remove',
+                              child: Text('Rotadan çıkar'),
+                            ),
+                          ],
+                        ),
                       ),
                     );
                   }),

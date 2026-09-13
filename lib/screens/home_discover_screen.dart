@@ -1,5 +1,17 @@
+import '../widgets/profile_name_link.dart';
+import 'reels_screen.dart';
+
+import 'package:firebase_auth/firebase_auth.dart';
+
+import '../services/content_engagement_service.dart';
+import '../widgets/firebase_media_image.dart';
+import '../widgets/discover_content_grid.dart';
+import 'post_detail_screen.dart';
+import '../widgets/discover_post_feed.dart';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+
 import '../services/spot_repository.dart';
 import '../models/photo_spot.dart';
 import '../models/nearby_venue.dart';
@@ -23,6 +35,7 @@ class _HomeDiscoverScreenState extends State<HomeDiscoverScreen> {
 
   @override
   Widget build(BuildContext context) => CategorizedSearch(
+    emptyBuilder: (_) => _buildExploreGrid(),
     resultsBuilder: (context, category, query) => switch (category) {
       SearchCategory.people => _userResults(query),
       SearchCategory.places => _spotResults(query),
@@ -30,25 +43,41 @@ class _HomeDiscoverScreenState extends State<HomeDiscoverScreen> {
     },
   );
 
-  Widget _empty(String text) => Center(child: Padding(
-    padding: const EdgeInsets.all(24),
-    child: Text(text, textAlign: TextAlign.center,
-      style: const TextStyle(color: Colors.white60)),
-  ));
+  Widget _empty(String text) => Center(
+    child: Padding(
+      padding: const EdgeInsets.all(24),
+      child: Text(
+        text,
+        textAlign: TextAlign.center,
+        style: const TextStyle(color: Colors.white60),
+      ),
+    ),
+  );
 
-  Widget _failure(SearchCategory category) => Center(child: Column(
-    mainAxisSize: MainAxisSize.min,
-    children: [
-      Text('${category.label} yüklenemedi.', style: const TextStyle(color: Colors.white60)),
-      TextButton(onPressed: () => setState(() {
-        switch (category) {
-          case SearchCategory.people: _userQuery = null;
-          case SearchCategory.places: _spotQuery = null;
-          case SearchCategory.venues: _venueQuery = null;
-        }
-      }), child: const Text('Tekrar dene')),
-    ],
-  ));
+  Widget _failure(SearchCategory category) => Center(
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          '${category.label} yüklenemedi.',
+          style: const TextStyle(color: Colors.white60),
+        ),
+        TextButton(
+          onPressed: () => setState(() {
+            switch (category) {
+              case SearchCategory.people:
+                _userQuery = null;
+              case SearchCategory.places:
+                _spotQuery = null;
+              case SearchCategory.venues:
+                _venueQuery = null;
+            }
+          }),
+          child: const Text('Tekrar dene'),
+        ),
+      ],
+    ),
+  );
 
   String _normalize(Object? value) =>
       (value ?? '').toString().trim().toLowerCase().replaceAll('ı', 'i');
@@ -165,6 +194,241 @@ class _HomeDiscoverScreenState extends State<HomeDiscoverScreen> {
     return ranked.take(12).map((item) => item.doc).toList();
   }
 
+  String _firstMediaValue(Map<String, dynamic> data, List<String> keys) {
+    for (final key in keys) {
+      final value = (data[key] ?? '').toString().trim();
+      if (value.isNotEmpty) return value;
+    }
+    return '';
+  }
+
+  bool _hasMediaCandidate(Map<String, dynamic> data) {
+    const keys = <String>[
+      'thumbnailUrl',
+      'coverUrl',
+      'imageUrl',
+      'mediaUrl',
+      'storagePath',
+      'thumbnailStoragePath',
+      'videoUrl',
+      'videoStoragePath',
+    ];
+    return keys.any((key) => (data[key] ?? '').toString().trim().isNotEmpty);
+  }
+
+  Future<void> _likeOnDoubleTap(
+    BuildContext context,
+    QueryDocumentSnapshot<Map<String, dynamic>> doc,
+  ) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            const SnackBar(content: Text('Beğenmek için giriş yapmalısın.')),
+          );
+      }
+      return;
+    }
+
+    final data = doc.data();
+    try {
+      final likeRef = FirebaseFirestore.instance
+          .collection('posts')
+          .doc(doc.id)
+          .collection('likes')
+          .doc(user.uid);
+      final existing = await likeRef.get();
+      if (existing.exists) return;
+
+      final caption = (data['caption'] ?? '').toString().trim();
+      await ContentEngagementService.instance.toggleLike(
+        collection: 'posts',
+        id: doc.id,
+        ownerId: (data['userId'] ?? '').toString(),
+        title: caption.isEmpty ? 'Gönderi' : caption,
+        sourceType: 'post',
+      );
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            SnackBar(
+              content: Text(e.toString().replaceFirst('Exception: ', '')),
+            ),
+          );
+      }
+    }
+  }
+
+  Widget _explorePreview(
+    QueryDocumentSnapshot<Map<String, dynamic>> doc,
+    Map<String, dynamic> data,
+    bool isVideo,
+  ) {
+    final previewUrl = _firstMediaValue(
+      data,
+      isVideo
+          ? const ['thumbnailUrl', 'coverUrl', 'imageUrl', 'mediaUrl']
+          : const ['imageUrl', 'mediaUrl', 'thumbnailUrl', 'coverUrl'],
+    );
+    final storagePath = _firstMediaValue(
+      data,
+      isVideo
+          ? const ['thumbnailStoragePath', 'storagePath']
+          : const ['storagePath', 'thumbnailStoragePath'],
+    );
+    final userId = (data['userId'] ?? '').toString().trim();
+    final fallbackPaths = <String>[
+      if (isVideo && userId.isNotEmpty)
+        'users/$userId/posts/${doc.id}_thumb.jpg',
+      ...FirebaseMediaImage.postPaths(userId, doc.id),
+    ];
+
+    return FirebaseMediaImage(
+      imageUrl: previewUrl,
+      storagePath: storagePath,
+      fallbackStoragePaths: fallbackPaths,
+      fit: BoxFit.cover,
+      placeholder: const ColoredBox(color: Color(0xFF171A1F)),
+      errorWidget: ColoredBox(
+        color: AppColors.surface,
+        child: Center(
+          child: Icon(
+            isVideo ? Icons.play_circle_outline_rounded : Icons.image_outlined,
+            color: Colors.white24,
+            size: 30,
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _openPostFeed(
+    List<QueryDocumentSnapshot<Map<String, dynamic>>> docs,
+    int selectedIndex,
+  ) {
+    // Freeze the grid order while this route is open; live grid updates must
+    // not replace the post currently being read.
+    final posts = docs.map((doc) => {...doc.data(), 'id': doc.id}).toList();
+    final selected = posts[selectedIndex];
+    if ((selected['videoUrl'] ?? '').toString().isNotEmpty ||
+        selected['mediaType'] == 'video' ||
+        (selected['videoStoragePath'] ?? '').toString().isNotEmpty) {
+      Navigator.push(
+        context,
+        MaterialPageRoute<void>(
+          builder: (_) => ReelsScreen(initialPost: selected),
+        ),
+      );
+      return;
+    }
+    Navigator.push(
+      context,
+      MaterialPageRoute<void>(
+        builder: (_) => DiscoverPostFeed(
+          itemCount: posts.length,
+          initialIndex: selectedIndex,
+          itemBuilder: (_, index) => PostDetailScreen(
+            key: ValueKey(posts[index]['id']),
+            post: posts[index],
+            embedded: true,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildExploreGrid() =>
+      StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+        stream: FirebaseFirestore.instance
+            .collection('posts')
+            .limit(120)
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return const Center(
+              child: Text(
+                'Keşfet içerikleri yüklenemedi.',
+                style: TextStyle(color: Colors.white60),
+              ),
+            );
+          }
+          if (!snapshot.hasData) {
+            return GridView.builder(
+              physics: const NeverScrollableScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(2, 0, 2, 20),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                mainAxisSpacing: 2,
+                crossAxisSpacing: 2,
+                childAspectRatio: .78,
+              ),
+              itemCount: 12,
+              itemBuilder: (_, __) =>
+                  const ColoredBox(color: Color(0xFF171A1F)),
+            );
+          }
+          final docs =
+              snapshot.data!.docs
+                  .where(
+                    (doc) =>
+                        doc.data()['accountFrozen'] != true &&
+                        _hasMediaCandidate(doc.data()),
+                  )
+                  .toList()
+                ..sort((a, b) {
+                  final av = a.data()['createdAt'];
+                  final bv = b.data()['createdAt'];
+                  final at = av is Timestamp ? av.millisecondsSinceEpoch : 0;
+                  final bt = bv is Timestamp ? bv.millisecondsSinceEpoch : 0;
+                  return bt.compareTo(at);
+                });
+          if (docs.isEmpty) {
+            return const Center(
+              child: Text(
+                'Keşfet için henüz içerik yok.',
+                style: TextStyle(color: Colors.white60),
+              ),
+            );
+          }
+          return DiscoverContentGrid(
+            itemCount: docs.length,
+            itemBuilder: (context, index) {
+              final doc = docs[index];
+              final data = doc.data();
+              final videoUrl = (data['videoUrl'] ?? '').toString().trim();
+              final isVideo =
+                  videoUrl.isNotEmpty ||
+                  (data['mediaType'] ?? '').toString() == 'video';
+              return GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onDoubleTap: () => _likeOnDoubleTap(context, doc),
+                onTap: () => _openPostFeed(docs, index),
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    _explorePreview(doc, data, isVideo),
+                    if (isVideo)
+                      const Positioned(
+                        left: 7,
+                        bottom: 7,
+                        child: Icon(
+                          Icons.play_arrow_rounded,
+                          color: Colors.white,
+                          size: 21,
+                        ),
+                      ),
+                  ],
+                ),
+              );
+            },
+          );
+        },
+      );
+
   Widget _spotResults(String query) {
     if (_spotQuery != query) {
       _spotQuery = query;
@@ -175,7 +439,8 @@ class _HomeDiscoverScreenState extends State<HomeDiscoverScreen> {
       key: ValueKey('places:$query'),
       future: future,
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
+        if (snapshot.connectionState == ConnectionState.waiting)
+          return const Center(child: CircularProgressIndicator());
         if (snapshot.hasError) return _failure(SearchCategory.places);
         final spots = snapshot.data ?? const <PhotoSpot>[];
         if (spots.isEmpty) return _empty('Yer bulunamadı.');
@@ -291,50 +556,76 @@ class _HomeDiscoverScreenState extends State<HomeDiscoverScreen> {
   Widget _venueResults(String query) {
     if (_venueQuery != query) {
       _venueQuery = query;
-      _venueSearchFuture = FirebaseFirestore.instance.collection('business_venues').limit(80).get();
+      _venueSearchFuture = FirebaseFirestore.instance
+          .collection('business_venues')
+          .limit(80)
+          .get();
     }
     return FutureBuilder<QuerySnapshot<Map<String, dynamic>>>(
       key: ValueKey('venues:$query'),
       future: _venueSearchFuture,
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
+        if (snapshot.connectionState == ConnectionState.waiting)
+          return const Center(child: CircularProgressIndicator());
         if (snapshot.hasError) return _failure(SearchCategory.venues);
         final needle = _normalize(query);
-        final docs = (snapshot.data?.docs ?? []).where((doc) {
-          final data = doc.data();
-          return ['venueName', 'name', 'city', 'address'].any((field) => _normalize(data[field]).contains(needle));
-        }).take(12).toList();
+        final docs = (snapshot.data?.docs ?? [])
+            .where((doc) {
+              final data = doc.data();
+              return [
+                'venueName',
+                'name',
+                'city',
+                'address',
+              ].any((field) => _normalize(data[field]).contains(needle));
+            })
+            .take(12)
+            .toList();
         if (docs.isEmpty) return _empty('Mekân bulunamadı.');
-        return _ResultSection(title: 'Mekânlar', children: docs.map((doc) {
-          final data = doc.data();
-          final name = (data['venueName'] ?? data['name'] ?? 'Mekân').toString();
-          final address = (data['city'] ?? data['address'] ?? '').toString();
-          return ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: const Icon(Icons.storefront_outlined),
-            title: Text(name, maxLines: 1, overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontWeight: FontWeight.w800)),
-            subtitle: address.isEmpty ? null : Text(address, maxLines: 1, overflow: TextOverflow.ellipsis),
-            trailing: const Icon(Icons.chevron_right_rounded),
-            onTap: () {
-              final venue = NearbyVenue.fromJson({
-                'id': data['venueId'] ?? doc.id,
-                'category': data['category'] ?? 'dining',
-                'name': name,
-                'latitude': data['latitude'] ?? 0,
-                'longitude': data['longitude'] ?? 0,
-                'address': data['address'] ?? '',
-                'openingHours': data['openingHours'] ?? '',
-                'phone': data['phone'] ?? '',
-                'website': data['website'] ?? '',
-                'imageUrl': data['coverImageUrl'] ?? data['imageUrl'] ?? '',
-                'description': data['description'] ?? '',
-              });
-              Navigator.push(context, MaterialPageRoute(
-                builder: (_) => BusinessProfileScreen(venue: venue)));
-            },
-          );
-        }).toList());
+        return _ResultSection(
+          title: 'Mekânlar',
+          children: docs.map((doc) {
+            final data = doc.data();
+            final name = (data['venueName'] ?? data['name'] ?? 'Mekân')
+                .toString();
+            final address = (data['city'] ?? data['address'] ?? '').toString();
+            return ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.storefront_outlined),
+              title: Text(
+                name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontWeight: FontWeight.w800),
+              ),
+              subtitle: address.isEmpty
+                  ? null
+                  : Text(address, maxLines: 1, overflow: TextOverflow.ellipsis),
+              trailing: const Icon(Icons.chevron_right_rounded),
+              onTap: () {
+                final venue = NearbyVenue.fromJson({
+                  'id': data['venueId'] ?? doc.id,
+                  'category': data['category'] ?? 'dining',
+                  'name': name,
+                  'latitude': data['latitude'] ?? 0,
+                  'longitude': data['longitude'] ?? 0,
+                  'address': data['address'] ?? '',
+                  'openingHours': data['openingHours'] ?? '',
+                  'phone': data['phone'] ?? '',
+                  'website': data['website'] ?? '',
+                  'imageUrl': data['coverImageUrl'] ?? data['imageUrl'] ?? '',
+                  'description': data['description'] ?? '',
+                });
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => BusinessProfileScreen(venue: venue),
+                  ),
+                );
+              },
+            );
+          }).toList(),
+        );
       },
     );
   }

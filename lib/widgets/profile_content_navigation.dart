@@ -16,9 +16,9 @@ class ProfileContentNavigation extends StatelessWidget {
     child: SegmentedButton<String>(
       showSelectedIcon: false,
       segments: const [
-        ButtonSegment(value: 'all', label: Text('Paylaşımlar')),
-        ButtonSegment(value: 'reposts', label: Text('Yeniden paylaşımlar')),
-        ButtonSegment(value: 'saved', label: Text('Kaydedilenler')),
+        ButtonSegment(value: 'all', label: Text('Tümü')),
+        ButtonSegment(value: 'routes', label: Text('Rotalarım')),
+        ButtonSegment(value: 'favorites', label: Text('Favoriler')),
       ],
       selected: {selected},
       onSelectionChanged: (values) => onChanged(values.first),

@@ -1,3 +1,4 @@
+import '../services/user_facing_error.dart';
 import '../widgets/profile_name_link.dart';
 import 'user_profile_screen.dart';
 
@@ -134,7 +135,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _error = e.toString().replaceFirst('Exception: ', '');
+        _error = userFacingError(e);
         _loading = false;
       });
     }
@@ -280,11 +281,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     if (!mounted) return;
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(error.toString().replaceFirst('Exception: ', '')),
-        ),
-      );
+      ..showSnackBar(SnackBar(content: Text(userFacingError(error))));
   }
 
   Future<void> _showVoiceRecorderSheet() async {
@@ -1517,18 +1514,24 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                           if (thread?.pinnedMessageId != null)
                             StreamBuilder<ChatMessage?>(
                               stream: ChatService.instance.visibleMessage(
-                                _threadId!, thread!.pinnedMessageId!),
+                                _threadId!,
+                                thread!.pinnedMessageId!,
+                              ),
                               builder: (context, snap) {
                                 final message = snap.data;
-                                if (message == null || _hiddenIds.contains(message.id) ||
+                                if (message == null ||
+                                    _hiddenIds.contains(message.id) ||
                                     _blockedIds.contains(message.senderId)) {
                                   return const SizedBox.shrink();
                                 }
                                 return ListTile(
                                   dense: true,
                                   leading: const Icon(Icons.push_pin_outlined),
-                                  title: Text(message.text, maxLines: 2,
-                                    overflow: TextOverflow.ellipsis),
+                                  title: Text(
+                                    message.text,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 );
                               },
                             ),
@@ -1659,13 +1662,17 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                                                 left: 8,
                                                 top: 6,
                                               ),
-                                              child: ProfileNameLink(userId: message.senderId, compact: true, child: Text(
-                                                message.senderName,
-                                                style: const TextStyle(
-                                                  color: _accent,
-                                                  fontSize: 11,
+                                              child: ProfileNameLink(
+                                                userId: message.senderId,
+                                                compact: true,
+                                                child: Text(
+                                                  message.senderName,
+                                                  style: const TextStyle(
+                                                    color: _accent,
+                                                    fontSize: 11,
+                                                  ),
                                                 ),
-                                              )),
+                                              ),
                                             ),
                                           _messageBubble(
                                             message: message,
@@ -1715,4 +1722,3 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     );
   }
 }
-

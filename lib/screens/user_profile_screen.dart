@@ -1,3 +1,5 @@
+import 'follow_list_screen.dart';
+import '../services/user_facing_error.dart';
 import '../widgets/profile_photo_card.dart';
 import '../models/profile_identity.dart';
 import '../widgets/profile_sharing_section.dart';
@@ -35,9 +37,12 @@ class UserProfileScreen extends StatelessWidget {
 
   Future<void> _openChat(BuildContext context, String? displayName) async {
     try {
-      final name = displayName ??
+      final name =
+          displayName ??
           (await SocialService.instance.userProfile(userId).first)
-              .data()?['displayName']?.toString() ?? 'Kullanıcı';
+              .data()?['displayName']
+              ?.toString() ??
+          'Kullanıcı';
       await ChatService.instance.ensureDirectThread(userId);
       if (!context.mounted) return;
       Navigator.push(
@@ -50,7 +55,13 @@ class UserProfileScreen extends StatelessWidget {
     } catch (e) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
+        SnackBar(
+          content: Text(userFacingError(e)),
+          action: SnackBarAction(
+            label: 'Tekrar dene',
+            onPressed: () => _openChat(context, displayName),
+          ),
+        ),
       );
     }
   }
@@ -97,6 +108,9 @@ class UserProfileScreen extends StatelessWidget {
           if (profileSnapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
+
+          if (profileSnapshot.hasError)
+            return Center(child: Text(userFacingError(profileSnapshot.error!)));
 
           if (!profileSnapshot.hasData || !profileSnapshot.data!.exists) {
             return const Center(
@@ -160,12 +174,17 @@ class UserProfileScreen extends StatelessWidget {
                                     final hasStory = stories.isNotEmpty;
                                     return GestureDetector(
                                       behavior: HitTestBehavior.opaque,
-                                      onTap: () => showProfilePhotoCard(context,
-                                        userId: userId, photoUrl: photoUrl,
-                                        name: displayName, username: username,
+                                      onTap: () => showProfilePhotoCard(
+                                        context,
+                                        userId: userId,
+                                        photoUrl: photoUrl,
+                                        name: displayName,
+                                        username: username,
                                         onViewStory: hasStory
-                                            ? () => _openStories(context, stories)
-                                            : null),
+                                            ? () =>
+                                                  _openStories(context, stories)
+                                            : null,
+                                      ),
                                       child: Container(
                                         padding: EdgeInsets.all(
                                           hasStory ? 3 : 2,
@@ -240,6 +259,15 @@ class UserProfileScreen extends StatelessWidget {
                                         builder: (_, snapshot) => _Stat(
                                           value: '${snapshot.data ?? 0}',
                                           label: 'Takipçi',
+                                          onTap: () => Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (_) => FollowListScreen(
+                                                userId: userId,
+                                                followers: true,
+                                              ),
+                                            ),
+                                          ),
                                         ),
                                       ),
                                       StreamBuilder<int>(
@@ -248,6 +276,15 @@ class UserProfileScreen extends StatelessWidget {
                                         builder: (_, snapshot) => _Stat(
                                           value: '${snapshot.data ?? 0}',
                                           label: 'Takip',
+                                          onTap: () => Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (_) => FollowListScreen(
+                                                userId: userId,
+                                                followers: false,
+                                              ),
+                                            ),
+                                          ),
                                         ),
                                       ),
                                     ],
@@ -337,13 +374,14 @@ class UserProfileScreen extends StatelessWidget {
                                                     .toggleFollow(userId);
                                               } catch (e) {
                                                 if (!context.mounted) return;
-                                                ScaffoldMessenger.of(
-                                                  context,
-                                                ).showSnackBar(
-                                                  SnackBar(
-                                                    content: Text(e.toString()),
-                                                  ),
-                                                );
+                                                ScaffoldMessenger.of(context)
+                                                    .showSnackBar(
+                                                      SnackBar(
+                                                        content: Text(
+                                                          userFacingError(e),
+                                                        ),
+                                                      ),
+                                                    );
                                               }
                                             },
                                             child: Text(
@@ -384,6 +422,7 @@ class UserProfileScreen extends StatelessWidget {
                       userId: userId,
                       creator: data['isCreator'] == true,
                       own: isOwnProfile,
+                      showReferences: false,
                     ),
                   ),
                   SliverToBoxAdapter(
@@ -547,25 +586,27 @@ class _PublicProfileEvents extends StatelessWidget {
 class _Stat extends StatelessWidget {
   final String value;
   final String label;
+  final VoidCallback? onTap;
 
-  const _Stat({required this.value, required this.label});
+  const _Stat({required this.value, required this.label, this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Text(
-          value,
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
-        ),
-        const SizedBox(height: 3),
-        Text(
-          label,
-          style: const TextStyle(color: Colors.white54, fontSize: 12),
-        ),
-      ],
+    return InkWell(
+      onTap: onTap,
+      child: Column(
+        children: [
+          Text(
+            value,
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
+          ),
+          const SizedBox(height: 3),
+          Text(
+            label,
+            style: const TextStyle(color: Colors.white54, fontSize: 12),
+          ),
+        ],
+      ),
     );
   }
 }
-
-

@@ -1,0 +1,116 @@
+import 'dart:async';
+
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+import '../lib/models/photo_spot.dart';
+import '../lib/models/route_place.dart';
+import '../lib/screens/smart_plan_screen.dart';
+import '../lib/services/route_selection_service.dart';
+import '../lib/services/user_facing_error.dart';
+import '../lib/widgets/route_selection_button.dart';
+
+const first = PhotoSpot(
+  id: 'a',
+  name: 'Harput',
+  city: 'Elazığ',
+  latitude: 38.7,
+  longitude: 39.2,
+  rating: 4,
+  bestTime: '',
+  angle: '',
+  imageUrl: '',
+  tags: ['FirestoreDoğrulanmış'],
+);
+const second = PhotoSpot(
+  id: 'b',
+  name: 'Keban',
+  city: 'Elazığ',
+  latitude: 38.8,
+  longitude: 38.7,
+  rating: 4,
+  bestTime: '',
+  angle: '',
+  imageUrl: '',
+  tags: ['FirestoreDoğrulanmış'],
+);
+
+void main() {
+  test('offline, unavailable, permission and timeout have distinct Turkish messages', () {
+    expect(
+      userFacingError(
+        FirebaseException(
+          plugin: 'cloud_firestore',
+          code: 'unavailable',
+          message: 'Failed to get document because the client is offline.',
+        ),
+      ),
+      'İnternet bağlantısı yok. Bağlantını kontrol edip tekrar dene.',
+    );
+    expect(
+      userFacingError(
+        FirebaseException(plugin: 'cloud_firestore', code: 'unavailable'),
+      ),
+      contains('Hizmete şu an ulaşılamıyor'),
+    );
+    expect(
+      userFacingError(
+        FirebaseException(plugin: 'cloud_firestore', code: 'permission-denied'),
+      ),
+      contains('erişim iznin'),
+    );
+    expect(
+      userFacingError(TimeoutException('secret diagnostic')),
+      contains('zaman aşımına'),
+    );
+    expect(
+      userFacingError(Exception('Raw backend details')),
+      isNot(contains('Raw')),
+    );
+  });
+
+  testWidgets(
+    'selected places open smart result with intact stops and no city form',
+    (tester) async {
+      final selection = RouteSelectionService.instance;
+      selection.clear();
+      addTearDown(selection.clear);
+      for (final spot in [first, second]) {
+        selection.toggle(
+          RoutePlace(
+            id: 'spot:${spot.id}',
+            name: spot.name,
+            category: spot.category,
+            latitude: spot.latitude,
+            longitude: spot.longitude,
+            spot: spot,
+          ),
+        );
+      }
+      await tester.pumpWidget(
+        const MaterialApp(home: Scaffold(body: RouteSelectionButton())),
+      );
+      await tester.tap(find.text('Rotaya Git  •  2'));
+      await tester.pumpAndSettle();
+      expect(find.byType(SmartPlanScreen), findsOneWidget);
+      expect(find.text('Şehir ara ve seç'), findsNothing);
+      expect(find.text('1. Harput'), findsOneWidget);
+      expect(find.text('2. Keban'), findsOneWidget);
+      expect(find.text('Yer / Mekân Ekle'), findsOneWidget);
+      await tester.tap(find.byTooltip('Durağı düzenle').last);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Yukarı taşı'));
+      await tester.pumpAndSettle();
+      expect(find.text('1. Keban'), findsOneWidget);
+      expect(find.text('2. Harput'), findsOneWidget);
+      await tester.tap(find.byTooltip('Durağı düzenle').first);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Rotadan çıkar'));
+      await tester.pumpAndSettle();
+      expect(find.text('1. Harput'), findsOneWidget);
+      expect(find.text('1. Keban'), findsNothing);
+      expect(tester.takeException(), isNull);
+    },
+  );
+}

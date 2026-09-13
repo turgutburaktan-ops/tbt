@@ -1,3 +1,5 @@
+import 'profile_details_patch.dart';
+
 import 'dart:async';
 import 'dart:io';
 
@@ -19,7 +21,8 @@ class ProfileService {
   Stream<DocumentSnapshot<Map<String, dynamic>>> watchMine() {
     return switchAuthStreamOrEmpty<DocumentSnapshot<Map<String, dynamic>>>(
       auth: _auth,
-      signedIn: (user) => _firestore.collection('users').doc(user.uid).snapshots(),
+      signedIn: (user) =>
+          _firestore.collection('users').doc(user.uid).snapshots(),
     );
   }
 
@@ -83,24 +86,28 @@ class ProfileService {
             ),
           )
           .timeout(const Duration(seconds: 30));
-      photoUrl = await ref
-          .getDownloadURL()
-          .timeout(const Duration(seconds: 8));
+      photoUrl = await ref.getDownloadURL().timeout(const Duration(seconds: 8));
     }
 
-    await _firestore.collection('users').doc(user.uid).set({
-      'uid': user.uid,
-      'displayName': cleanName,
-      if (nameParts.length >= 2) ...{
-        'fullName': cleanName,
-        'firstName': nameParts.first,
-        'lastName': nameParts.skip(1).join(' '),
-        'fullNameRequired': false,
-      },
-      'bio': cleanBio,
-      'photoUrl': photoUrl,
-      'updatedAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true)).timeout(const Duration(seconds: 8));
+    await _firestore
+        .collection('users')
+        .doc(user.uid)
+        .set({
+          'uid': user.uid,
+          ...profileDetailsPatch(
+            displayName: cleanName,
+            bio: cleanBio,
+            uploadedPhotoUrl: photo != null ? photoUrl : null,
+          ),
+          if (nameParts.length >= 2) ...{
+            'fullName': cleanName,
+            'firstName': nameParts.first,
+            'lastName': nameParts.skip(1).join(' '),
+            'fullNameRequired': false,
+          },
+          'updatedAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true))
+        .timeout(const Duration(seconds: 8));
 
     unawaited(_syncAuthProfileQuietly(user, cleanName, photoUrl));
   }
@@ -131,16 +138,20 @@ class ProfileService {
       throw Exception('Geçersiz öğrenci durumu.');
     }
 
-    await _firestore.collection('users').doc(user.uid).set({
-      'studentStatus': status,
-      if (status == 'non_student') ...{
-        'campusEligible': false,
-        'campusProfileCompleted': false,
-        'newStudent2026': false,
-        'classYear': '',
-      },
-      'updatedAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true)).timeout(const Duration(seconds: 8));
+    await _firestore
+        .collection('users')
+        .doc(user.uid)
+        .set({
+          'studentStatus': status,
+          if (status == 'non_student') ...{
+            'campusEligible': false,
+            'campusProfileCompleted': false,
+            'newStudent2026': false,
+            'classYear': '',
+          },
+          'updatedAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true))
+        .timeout(const Duration(seconds: 8));
   }
 
   Future<void> updateCampusProfile({
@@ -177,35 +188,43 @@ class ProfileService {
         university.trim().isNotEmpty &&
         activeStudentYears.contains(cleanClassYear);
 
-    await _firestore.collection('users').doc(user.uid).set({
-      'university': university.trim(),
-      'faculty': faculty.trim(),
-      'department': department.trim(),
-      'classYear': cleanClassYear,
-      'interests': cleanInterests,
-      'newStudent2026': campusEligible ? newStudent2026 : false,
-      'showEducationOnProfile': showEducationOnProfile,
-      'campusProfileCompleted':
-          university.trim().isNotEmpty &&
-          department.trim().isNotEmpty &&
-          cleanInterests.length >= 3,
-      'campusEligible': campusEligible,
-      'studentStatus': campusEligible
-          ? 'student'
-          : (cleanClassYear == 'Mezun' ? 'graduate' : 'unknown'),
-      'updatedAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true)).timeout(const Duration(seconds: 8));
+    await _firestore
+        .collection('users')
+        .doc(user.uid)
+        .set({
+          'university': university.trim(),
+          'faculty': faculty.trim(),
+          'department': department.trim(),
+          'classYear': cleanClassYear,
+          'interests': cleanInterests,
+          'newStudent2026': campusEligible ? newStudent2026 : false,
+          'showEducationOnProfile': showEducationOnProfile,
+          'campusProfileCompleted':
+              university.trim().isNotEmpty &&
+              department.trim().isNotEmpty &&
+              cleanInterests.length >= 3,
+          'campusEligible': campusEligible,
+          'studentStatus': campusEligible
+              ? 'student'
+              : (cleanClassYear == 'Mezun' ? 'graduate' : 'unknown'),
+          'updatedAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true))
+        .timeout(const Duration(seconds: 8));
   }
 
   Future<void> completeOnboarding({required bool skipped}) async {
     final user = _auth.currentUser;
     if (user == null) throw Exception('Onboarding için giriş yapmalısın.');
-    await _firestore.collection('users').doc(user.uid).set({
-      'onboardingRequired': false,
-      'onboardingCompleted': true,
-      'onboardingSkipped': skipped,
-      'onboardingCompletedAt': FieldValue.serverTimestamp(),
-      'updatedAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true)).timeout(const Duration(seconds: 8));
+    await _firestore
+        .collection('users')
+        .doc(user.uid)
+        .set({
+          'onboardingRequired': false,
+          'onboardingCompleted': true,
+          'onboardingSkipped': skipped,
+          'onboardingCompletedAt': FieldValue.serverTimestamp(),
+          'updatedAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true))
+        .timeout(const Duration(seconds: 8));
   }
 }

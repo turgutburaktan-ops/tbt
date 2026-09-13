@@ -1,3 +1,5 @@
+import '../services/user_facing_error.dart';
+import '../services/user_facing_error.dart';
 import '../widgets/profile_photo_card.dart';
 import '../widgets/description_field.dart';
 import '../widgets/profile_content_navigation.dart';
@@ -250,13 +252,14 @@ class _ProfileBodyState extends State<_ProfileBody> {
                         showCreatorCenter: false,
                       ),
                     ),
-                  if (_tab == 'reposts' || _tab == 'saved')
+                  if (_tab == 'routes')
+                    const SliverToBoxAdapter(child: _ProfileRoutesSection())
+                  else if (_tab == 'favorites')
                     SliverToBoxAdapter(
-                      child: ProfileSharingSection(
-                        key: ValueKey(_tab),
+                      child: ProfileFavoritePlacesSection(
                         userId: widget.user.uid,
-                        own: true,
-                        referenceTab: _tab,
+                        editable: true,
+                        showProgress: false,
                       ),
                     )
                   else if (postSnapshot.connectionState ==
@@ -417,36 +420,39 @@ class _ProfileBodyState extends State<_ProfileBody> {
                 children: [
                   GestureDetector(
                     behavior: HitTestBehavior.opaque,
-                    onTap: () => showProfilePhotoCard(context,
-                      userId: widget.user.uid, photoUrl: photo,
-                      name: name, username: username),
+                    onTap: () => showProfilePhotoCard(
+                      context,
+                      userId: widget.user.uid,
+                      photoUrl: photo,
+                      name: name,
+                      username: username,
+                    ),
                     child: CircleAvatar(
-                    radius: 43,
-                    backgroundColor: const Color(0xFF0D1B30),
-                    child: ClipOval(
-                      child: SizedBox(
-                        width: 82,
-                        height: 82,
-                        child: FirebaseMediaImage(
-                          imageUrl: photo,
-                          fallbackStoragePaths: FirebaseMediaImage.avatarPaths(
-                            widget.user.uid,
-                          ),
-                          fit: BoxFit.cover,
-                          errorWidget: const ColoredBox(
-                            color: Color(0xFF0D1B30),
-                            child: Center(
-                              child: Icon(
-                                Icons.person,
-                                size: 42,
-                                color: Colors.white38,
+                      radius: 43,
+                      backgroundColor: const Color(0xFF0D1B30),
+                      child: ClipOval(
+                        child: SizedBox(
+                          width: 82,
+                          height: 82,
+                          child: FirebaseMediaImage(
+                            imageUrl: photo,
+                            fallbackStoragePaths:
+                                FirebaseMediaImage.avatarPaths(widget.user.uid),
+                            fit: BoxFit.cover,
+                            errorWidget: const ColoredBox(
+                              color: Color(0xFF0D1B30),
+                              child: Center(
+                                child: Icon(
+                                  Icons.person,
+                                  size: 42,
+                                  color: Colors.white38,
+                                ),
                               ),
                             ),
                           ),
                         ),
                       ),
                     ),
-                  ),
                   ),
                   Positioned(
                     right: -2,
@@ -837,8 +843,12 @@ class _ProfileBodyState extends State<_ProfileBody> {
                               );
                               if (sheetContext.mounted)
                                 Navigator.pop(sheetContext);
-                            } catch (_) {
+                            } catch (error) {
+                              if (!sheetContext.mounted) return;
                               setSheet(() => saving = false);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text(userFacingError(error))),
+                              );
                             }
                           },
                     child: Text(saving ? 'Kaydediliyor…' : 'Kaydet'),
@@ -1081,9 +1091,7 @@ class _ProfileRoutesSection extends StatelessWidget {
       if (!context.mounted) return;
       messenger.showSnackBar(
         SnackBar(
-          content: Text(
-            'Rota paylaşılamadı: ${error.toString().replaceFirst('Exception: ', '')}',
-          ),
+          content: Text('Rota paylaşılamadı: ${userFacingError(error)}'),
         ),
       );
     }
@@ -1269,4 +1277,3 @@ class _Stat extends StatelessWidget {
           );
   }
 }
-

@@ -36,10 +36,10 @@ void main() {
       expect(find.text('Yolculuğum'), findsNothing);
       await tester.tap(find.text('TBT Yolculuğu'));
       expect(opened, 1);
-      await tester.ensureVisible(find.text('Kaydedilenler'));
-      await tester.tap(find.text('Kaydedilenler'));
+      await tester.ensureVisible(find.text('Favoriler'));
+      await tester.tap(find.text('Favoriler'));
       await tester.pumpAndSettle();
-      expect(selected, 'saved');
+      expect(selected, 'favorites');
       expect(tester.takeException(), isNull);
     },
   );
