@@ -428,13 +428,18 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(14, 0, 14, 10),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.page,
+            0,
+            AppSpacing.page,
+            10,
+          ),
           child: Row(
             children: [
               Expanded(
                 child: InkWell(
                   onTap: _chooseCity,
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(AppRadii.medium),
                   child: Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 13,
@@ -442,7 +447,7 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
                     ),
                     decoration: BoxDecoration(
                       color: AppColors.surface,
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: BorderRadius.circular(AppRadii.medium),
                       border: Border.all(color: AppColors.border),
                     ),
                     child: Row(
@@ -496,7 +501,12 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
           ),
         ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(14, 0, 14, 8),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.page,
+            0,
+            AppSpacing.page,
+            8,
+          ),
           child: TextField(
             controller: _searchController,
             onChanged: (_) => setState(() {}),
@@ -516,7 +526,12 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
           ),
         ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(14, 0, 14, 8),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.page,
+            0,
+            AppSpacing.page,
+            8,
+          ),
           child: Row(
             children: [
               _SortChip(
@@ -582,7 +597,12 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
     return RefreshIndicator(
       onRefresh: () => _load(forceRefresh: true),
       child: ListView.builder(
-        padding: const EdgeInsets.fromLTRB(14, 2, 14, 110),
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.page,
+          2,
+          AppSpacing.page,
+          110,
+        ),
         itemCount:
             items.length +
             (items.length <= 6 ? 0 : 1 + ((items.length - 7) ~/ 10)),
@@ -613,7 +633,7 @@ class _NearbyPlacesViewState extends State<NearbyPlacesView> {
       margin: const EdgeInsets.only(bottom: 9),
       child: InkWell(
         onTap: () => _profile(venue),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppRadii.large),
         child: Padding(
           padding: const EdgeInsets.fromLTRB(10, 10, 6, 10),
           child: Row(
@@ -792,7 +812,12 @@ class _VenueSkeletonList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ListView.builder(
-    padding: const EdgeInsets.fromLTRB(14, 2, 14, 110),
+    padding: const EdgeInsets.fromLTRB(
+      AppSpacing.page,
+      2,
+      AppSpacing.page,
+      110,
+    ),
     itemCount: 4,
     itemBuilder: (_, __) => Container(
       height: 104,
@@ -800,7 +825,7 @@ class _VenueSkeletonList extends StatelessWidget {
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppRadii.large),
         border: Border.all(color: AppColors.border),
       ),
       child: Row(

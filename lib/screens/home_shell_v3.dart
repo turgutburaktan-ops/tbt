@@ -1,4 +1,5 @@
 import 'routes_hub_screen.dart';
+import '../widgets/app_page_chrome.dart';
 import '../services/video_audio_session.dart';
 import '../widgets/playback_indexed_stack.dart';
 
@@ -331,7 +332,12 @@ class _HomeFeedHubState extends State<_HomeFeedHub> {
       children: [
         const StoryStrip(),
         Padding(
-          padding: const EdgeInsets.fromLTRB(10, 0, 10, 2),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.page,
+            0,
+            AppSpacing.page,
+            2,
+          ),
           child: _SegmentTabs(
             labels: const ['Sana Özel', 'Takip'],
             selected: _photoMode,
@@ -373,7 +379,12 @@ class _HomeFeedHubState extends State<_HomeFeedHub> {
                 children: [
                   const _HomeHeader(showBrand: true),
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(10, 0, 10, 2),
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.page,
+                      0,
+                      AppSpacing.page,
+                      2,
+                    ),
                     child: _SegmentTabs(
                       labels: [
                         AppStrings.of(context).text('home'),
@@ -588,37 +599,32 @@ class _PlacesHubState extends State<_PlacesHub> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(14, 10, 8, 2),
-              child: Row(
-                children: [
-                  const Expanded(
-                    child: Text(
-                      'Mekanlar',
-                      style: TextStyle(
-                        fontSize: 23,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: -.4,
-                      ),
-                    ),
-                  ),
-                  if (_category == 'Gezilecek Yerler')
-                    OutlinedButton.icon(
-                      onPressed: _openMap,
-                      icon: const Icon(Icons.map_outlined, size: 18),
-                      label: const Text('Harita'),
-                    ),
-                ],
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.page,
+                16,
+                AppSpacing.page,
+                2,
+              ),
+              child: AppPageHeading(
+                title: 'Mekânlar',
+                subtitle: 'Lezzet, kahve, konaklama ve gezilecek yerler.',
+                action: _category == 'Gezilecek Yerler'
+                    ? OutlinedButton.icon(
+                        onPressed: _openMap,
+                        icon: const Icon(Icons.map_outlined, size: 18),
+                        label: const Text('Harita'),
+                      )
+                    : null,
               ),
             ),
-            const Padding(
-              padding: EdgeInsets.fromLTRB(14, 0, 14, 8),
-              child: Text(
-                'Lezzet, kahve, konaklama ve gezilecek yerler.',
-                style: TextStyle(color: Color(0x75FFFFFF), fontSize: 11.5),
-              ),
-            ),
+            const SizedBox(height: AppSpacing.gap),
             Padding(
-              padding: const EdgeInsets.fromLTRB(14, 0, 14, 8),
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.page,
+                0,
+                AppSpacing.page,
+                AppSpacing.small,
+              ),
               child: Wrap(
                 spacing: 7,
                 runSpacing: 7,
@@ -818,50 +824,8 @@ class _SegmentTabs extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) => SizedBox(
-    height: prominent ? 34 : 31,
-    child: Row(
-      children: List.generate(labels.length, (index) {
-        final active = selected == index;
-        return Expanded(
-          child: InkWell(
-            onTap: () => onChanged(index),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                Expanded(
-                  child: Center(
-                    child: Text(
-                      labels[index],
-                      textAlign: TextAlign.center,
-                      maxLines: 1,
-                      style: TextStyle(
-                        color: active
-                            ? Colors.white
-                            : Colors.white.withValues(alpha: .46),
-                        fontSize: prominent ? 12.5 : 11,
-                        fontWeight: active ? FontWeight.w900 : FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                ),
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 160),
-                  curve: Curves.easeOut,
-                  width: active ? (prominent ? 44 : 34) : 0,
-                  height: 2.5,
-                  decoration: BoxDecoration(
-                    gradient: active ? AppColors.accentGradient : null,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      }),
-    ),
-  );
+  Widget build(BuildContext context) =>
+      AppSectionTabs(labels: labels, selected: selected, onChanged: onChanged);
 }
 
 class _HeaderAction extends StatelessWidget {

@@ -8,6 +8,7 @@ import '../models/travel_plan.dart';
 import '../services/travel_plan_service.dart';
 import '../services/user_facing_error.dart';
 import '../theme/app_theme.dart';
+import '../widgets/app_page_chrome.dart';
 import '../widgets/firebase_media_image.dart';
 import 'route_create_screen.dart';
 import 'travel_plan_detail_screen.dart';
@@ -101,7 +102,7 @@ class _RoutesHubScreenState extends State<RoutesHubScreen> {
   );
   @override
   Widget build(BuildContext context) => ColoredBox(
-    color: const Color(0xFF07080B),
+    color: AppColors.background,
     child: SafeArea(
       bottom: false,
       child: StreamBuilder<List<TravelPlan>>(
@@ -128,27 +129,13 @@ class _RoutesHubScreenState extends State<RoutesHubScreen> {
           return ListView(
             padding: const EdgeInsets.fromLTRB(16, 18, 16, 28),
             children: [
-              Row(
-                children: [
-                  const Expanded(
-                    child: Text(
-                      'Rotalar',
-                      style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ),
-                  FilledButton.icon(
-                    style: FilledButton.styleFrom(
-                      backgroundColor: AppColors.cyan,
-                      foregroundColor: Colors.black,
-                    ),
-                    onPressed: _create,
-                    icon: const Icon(Icons.add, size: 19),
-                    label: const Text('Rota oluştur'),
-                  ),
-                ],
+              AppPageHeading(
+                title: 'Rotalar',
+                action: FilledButton.icon(
+                  onPressed: _create,
+                  icon: const Icon(Icons.add, size: 19),
+                  label: const Text('Rota oluştur'),
+                ),
               ),
               const SizedBox(height: 22),
               if (upcoming.isNotEmpty) ...[
@@ -166,38 +153,10 @@ class _RoutesHubScreenState extends State<RoutesHubScreen> {
                 RoutePreviewCard(plan: upcoming.first, featured: true),
                 const SizedBox(height: 20),
               ],
-              Row(
-                children: [
-                  for (var i = 0; i < 2; i++)
-                    Expanded(
-                      child: InkWell(
-                        onTap: () => setState(() => _tab = i),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          decoration: BoxDecoration(
-                            border: Border(
-                              bottom: BorderSide(
-                                color: _tab == i
-                                    ? AppColors.cyan
-                                    : AppColors.border,
-                                width: _tab == i ? 2 : 1,
-                              ),
-                            ),
-                          ),
-                          child: Text(
-                            i == 0 ? 'Rotalarım' : 'Keşfet',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontWeight: FontWeight.w700,
-                              color: _tab == i
-                                  ? Colors.white
-                                  : AppColors.textMuted,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
+              AppSectionTabs(
+                labels: const ['Rotalarım', 'Keşfet'],
+                selected: _tab,
+                onChanged: (i) => setState(() => _tab = i),
               ),
               const SizedBox(height: 14),
               if (_tab == 0) ...[
@@ -354,7 +313,7 @@ class RoutePreviewCard extends StatelessWidget {
         '';
     final thumbnail = image.isEmpty
         ? const ColoredBox(
-            color: Color(0xFF19232B),
+            color: AppColors.surfaceAlt,
             child: Center(
               child: Icon(
                 Icons.route_outlined,
@@ -406,15 +365,15 @@ class RoutePreviewCard extends StatelessWidget {
       ],
     );
     return Material(
-      color: const Color(0xFF12151C),
-      borderRadius: BorderRadius.circular(18),
+      color: AppColors.surface,
+      borderRadius: BorderRadius.circular(AppRadii.large),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: () => _open(context),
         child: Container(
           decoration: BoxDecoration(
             border: Border.all(color: AppColors.border),
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(AppRadii.large),
           ),
           child: featured
               ? Column(
@@ -490,7 +449,7 @@ class RouteMemberRow extends StatelessWidget {
                       .toString();
               return CircleAvatar(
                 radius: 13,
-                backgroundColor: const Color(0xFF28313C),
+                backgroundColor: AppColors.surfaceStrong,
                 backgroundImage: url.isEmpty ? null : NetworkImage(url),
                 child: url.isEmpty
                     ? const Icon(

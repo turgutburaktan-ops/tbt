@@ -240,15 +240,20 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
   Widget _cityAndSort() => Column(
     children: [
       Padding(
-        padding: const EdgeInsets.fromLTRB(14, 0, 14, 10),
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.page,
+          0,
+          AppSpacing.page,
+          10,
+        ),
         child: InkWell(
           onTap: _chooseCity,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(AppRadii.medium),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
             decoration: BoxDecoration(
               color: AppColors.surface,
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(AppRadii.medium),
               border: Border.all(color: AppColors.border),
             ),
             child: Row(
@@ -360,7 +365,12 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
         SliverToBoxAdapter(child: _cityAndSort()),
         SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(14, 0, 14, 8),
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.page,
+              0,
+              AppSpacing.page,
+              8,
+            ),
             child: TextField(
               controller: _searchController,
               onChanged: (value) {
@@ -377,7 +387,12 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
         ),
         SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(14, 0, 14, 8),
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.page,
+              0,
+              AppSpacing.page,
+              8,
+            ),
             child: Wrap(
               spacing: 7,
               children: [
@@ -411,7 +426,12 @@ class _SpotExploreScreenState extends State<SpotExploreScreen> {
         ),
         const SliverToBoxAdapter(
           child: RouteSelectionButton(
-            padding: EdgeInsets.fromLTRB(14, 0, 14, 7),
+            padding: EdgeInsets.fromLTRB(
+              AppSpacing.page,
+              0,
+              AppSpacing.page,
+              7,
+            ),
           ),
         ),
         if (_loading && _visible.isEmpty)
@@ -510,17 +530,17 @@ class _SpotVenueCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.fromLTRB(14, 0, 14, 8),
+    padding: const EdgeInsets.fromLTRB(AppSpacing.page, 0, AppSpacing.page, 8),
     child: Material(
       color: AppColors.surface,
-      borderRadius: BorderRadius.circular(15),
+      borderRadius: BorderRadius.circular(AppRadii.large),
       child: InkWell(
         onTap: onOpen,
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(AppRadii.large),
         child: Container(
           padding: const EdgeInsets.all(9),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(15),
+            borderRadius: BorderRadius.circular(AppRadii.large),
             border: Border.all(
               color: pinned || selected
                   ? AppColors.cyan.withValues(alpha: .38)

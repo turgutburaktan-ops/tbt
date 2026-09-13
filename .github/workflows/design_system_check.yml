@@ -1,0 +1,24 @@
+name: TBT visual consistency review
+on:
+  push:
+    branches: [codex/visual-consistency]
+permissions:
+  contents: read
+jobs:
+  app:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter analyze --no-fatal-infos --no-fatal-warnings lib/theme/app_theme.dart lib/widgets/app_page_chrome.dart lib/screens/home_shell_v3.dart lib/screens/routes_hub_screen.dart lib/screens/spot_explore_screen_v2.dart lib/widgets/nearby_places_view.dart test/design_system_preview_test.dart
+      - run: flutter test test/design_system_preview_test.dart test/route_create_test.dart test/camera_share_controls_test.dart
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tbt-visual-system
+          path: build/design-preview/
+      - run: flutter build bundle --debug

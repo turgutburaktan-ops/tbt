@@ -18,7 +18,7 @@ class AppColors {
   static const cyanSoft = Color(0x2245E7F2);
   static const violetSoft = Color(0x229B67F6);
 
-  static const primary = violet;
+  static const primary = cyan;
   static const primaryBright = Color(0xFFF5F4FA);
   static const secondary = cyan;
   static const accent = violet;
@@ -60,6 +60,15 @@ class AppRadii {
   static const pill = 999.0;
 }
 
+class AppSpacing {
+  AppSpacing._();
+  static const page = 16.0;
+  static const small = 8.0;
+  static const gap = 12.0;
+  static const section = 24.0;
+  static const controlHeight = 48.0;
+}
+
 class AppTheme {
   AppTheme._();
 
@@ -69,14 +78,14 @@ class AppTheme {
           seedColor: AppColors.violet,
           brightness: Brightness.dark,
         ).copyWith(
-          primary: AppColors.violet,
+          primary: AppColors.cyan,
           secondary: AppColors.cyan,
           tertiary: AppColors.violetBright,
           surface: AppColors.surface,
           surfaceContainerHighest: AppColors.surfaceAlt,
           outline: AppColors.border,
           outlineVariant: AppColors.borderStrong,
-          onPrimary: Colors.white,
+          onPrimary: const Color(0xFF031113),
           onSecondary: const Color(0xFF031113),
           error: AppColors.liked,
         );
@@ -152,16 +161,16 @@ class AppTheme {
         ),
       ),
       bottomSheetTheme: const BottomSheetThemeData(
-        backgroundColor: Color(0xFF0D1B30),
-        modalBackgroundColor: Color(0xFF0D1B30),
+        backgroundColor: AppColors.surface,
+        modalBackgroundColor: AppColors.surface,
         surfaceTintColor: Colors.transparent,
       ),
       popupMenuTheme: const PopupMenuThemeData(
-        color: Color(0xFF0D1B30),
+        color: AppColors.surface,
         surfaceTintColor: Colors.transparent,
       ),
       dialogTheme: const DialogThemeData(
-        backgroundColor: Color(0xFF0D1B30),
+        backgroundColor: AppColors.surface,
         surfaceTintColor: Colors.transparent,
         titleTextStyle: TextStyle(
           color: Colors.white,
@@ -170,16 +179,16 @@ class AppTheme {
         ),
       ),
       datePickerTheme: const DatePickerThemeData(
-        backgroundColor: Color(0xFF0D1B30),
+        backgroundColor: AppColors.surface,
         surfaceTintColor: Colors.transparent,
-        headerBackgroundColor: Color(0xFF162A43),
+        headerBackgroundColor: AppColors.surfaceAlt,
         headerForegroundColor: Colors.white,
       ),
       timePickerTheme: const TimePickerThemeData(
-        backgroundColor: Color(0xFF0D1B30),
-        dialBackgroundColor: Color(0xFF162A43),
-        dialHandColor: Color(0xFF8ACDFF),
-        entryModeIconColor: Color(0xFF8ACDFF),
+        backgroundColor: AppColors.surface,
+        dialBackgroundColor: AppColors.surfaceAlt,
+        dialHandColor: AppColors.cyan,
+        entryModeIconColor: AppColors.cyan,
       ),
       iconTheme: const IconThemeData(color: Color(0xFFD7DBE3), size: 22),
       cardTheme: CardThemeData(
@@ -202,7 +211,7 @@ class AppTheme {
         ),
         labelStyle: const TextStyle(color: AppColors.textMuted, fontSize: 13),
         floatingLabelStyle: const TextStyle(
-          color: AppColors.violetBright,
+          color: AppColors.cyan,
           fontSize: 13,
           fontWeight: FontWeight.w700,
         ),
@@ -215,7 +224,7 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadii.medium),
-          borderSide: const BorderSide(color: AppColors.violet, width: 1.35),
+          borderSide: const BorderSide(color: AppColors.cyan, width: 1.35),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadii.medium),
@@ -228,10 +237,10 @@ class AppTheme {
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          minimumSize: const Size(0, 46),
+          minimumSize: const Size(0, AppSpacing.controlHeight),
           padding: const EdgeInsets.symmetric(horizontal: 17, vertical: 12),
-          backgroundColor: AppColors.surfaceElevated,
-          foregroundColor: Colors.white,
+          backgroundColor: AppColors.cyan,
+          foregroundColor: const Color(0xFF031113),
           disabledBackgroundColor: AppColors.surfaceAlt,
           disabledForegroundColor: AppColors.textSubtle,
           textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
@@ -242,7 +251,7 @@ class AppTheme {
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          minimumSize: const Size(0, 44),
+          minimumSize: const Size(0, AppSpacing.controlHeight),
           padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 11),
           foregroundColor: const Color(0xFFF0F1F5),
           textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
@@ -254,7 +263,7 @@ class AppTheme {
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: AppColors.violetBright,
+          foregroundColor: AppColors.cyan,
           textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
         ),
       ),
