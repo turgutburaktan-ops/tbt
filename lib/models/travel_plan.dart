@@ -21,6 +21,10 @@ class TravelPlan {
   final int estimatedBudget;
   final String weatherSummary;
   final Map<String, dynamic> dayPlan;
+  final String visibility;
+  final String status;
+  final bool hasSchedule;
+  final bool allowMemberEdits;
   final bool isPublic;
   final bool joinEnabled;
   final Map<String, dynamic> routeOrigin;
@@ -48,6 +52,10 @@ class TravelPlan {
     this.estimatedBudget = 0,
     this.weatherSummary = '',
     this.dayPlan = const {},
+    this.visibility = 'private',
+    this.status = 'planned',
+    this.hasSchedule = false,
+    this.allowMemberEdits = false,
     this.isPublic = false,
     this.joinEnabled = false,
     this.routeOrigin = const {},
@@ -95,6 +103,13 @@ class TravelPlan {
       estimatedBudget: (data['estimatedBudget'] as num?)?.toInt() ?? 0,
       weatherSummary: (data['weatherSummary'] ?? '').toString(),
       dayPlan: Map<String, dynamic>.from(data['dayPlan'] as Map? ?? {}),
+      visibility:
+          (data['visibility'] ??
+                  (data['isPublic'] == true ? 'public' : 'private'))
+              .toString(),
+      status: (data['status'] ?? 'planned').toString(),
+      hasSchedule: data['hasSchedule'] == true || data['joinEnabled'] == true,
+      allowMemberEdits: data['allowMemberEdits'] == true,
       isPublic: data['isPublic'] == true,
       joinEnabled: data['joinEnabled'] == true,
       routeOrigin: Map<String, dynamic>.from(data['routeOrigin'] as Map? ?? {}),

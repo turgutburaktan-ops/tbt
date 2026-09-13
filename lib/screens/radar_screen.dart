@@ -1,3 +1,7 @@
+import '../models/travel_plan.dart';
+import '../services/travel_plan_service.dart';
+import 'routes_hub_screen.dart';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -308,6 +312,42 @@ class _RadarScreenState extends State<RadarScreen> {
                       _categoryStrip(),
                       const SizedBox(height: 12),
                       _hero(events, demands),
+                      if (_category == 'Tümü' || _category == 'Gezi')
+                        StreamBuilder<List<TravelPlan>>(
+                          stream: TravelPlanService.instance.watchPublic(),
+                          builder: (_, routes) {
+                            final plans =
+                                (routes.data ?? <TravelPlan>[])
+                                    .where(
+                                      (p) =>
+                                          p.hasSchedule &&
+                                          p.status != 'completed' &&
+                                          p.startAt.isAfter(DateTime.now()) &&
+                                          _sameCity(p.city),
+                                    )
+                                    .toList()
+                                  ..sort(
+                                    (a, b) => a.startAt.compareTo(b.startAt),
+                                  );
+                            if (plans.isEmpty) return const SizedBox.shrink();
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                const SizedBox(height: 18),
+                                _sectionTitle(
+                                  'Gezi Rotaları',
+                                  'Toplulukla birlikte yola çık',
+                                ),
+                                const SizedBox(height: 9),
+                                for (final p in plans.take(10))
+                                  Padding(
+                                    padding: const EdgeInsets.only(bottom: 10),
+                                    child: RoutePreviewCard(plan: p),
+                                  ),
+                              ],
+                            );
+                          },
+                        ),
                       const SizedBox(height: 18),
                       _sectionTitle(
                         '⚡ Şimdi Çık',

@@ -1,0 +1,25 @@
+    // TBT private route album export
+    if let controller = window?.rootViewController as? FlutterViewController {
+      let channel = FlutterMethodChannel(name: "tbt/album_export", binaryMessenger: controller.binaryMessenger)
+      channel.setMethodCallHandler { call, result in
+        guard call.method == "saveMedia" else { result(FlutterMethodNotImplemented); return }
+        guard let args = call.arguments as? [String: Any], let path = args["path"] as? String else {
+          result(FlutterError(code: "invalid", message: "Dosya bulunamadı.", details: nil)); return
+        }
+        let video = args["video"] as? Bool ?? false
+        PHPhotoLibrary.requestAuthorization(for: .addOnly) { status in
+          guard status == .authorized || status == .limited else {
+            DispatchQueue.main.async { result(FlutterError(code: "permission", message: "Fotoğraflara kaydetme iznini Ayarlar’dan aç.", details: nil)) }; return
+          }
+          PHPhotoLibrary.shared().performChanges({
+            if video { PHAssetChangeRequest.creationRequestForAssetFromVideo(atFileURL: URL(fileURLWithPath: path)) }
+            else { PHAssetChangeRequest.creationRequestForAssetFromImage(atFileURL: URL(fileURLWithPath: path)) }
+          }) { success, error in
+            DispatchQueue.main.async {
+              if success { result(nil) }
+              else { result(FlutterError(code: "save_failed", message: "Galeriye kaydedilemedi.", details: nil)) }
+            }
+          }
+        }
+      }
+    }

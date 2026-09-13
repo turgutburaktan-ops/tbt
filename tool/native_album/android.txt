@@ -1,0 +1,35 @@
+        // TBT private route album export
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "tbt/album_export").setMethodCallHandler { call, result ->
+            if (call.method != "saveMedia") { result.notImplemented(); return@setMethodCallHandler }
+            val path = call.argument<String>("path")
+            val video = call.argument<Boolean>("video") == true
+            if (path == null) { result.error("invalid", "Dosya bulunamadı.", null); return@setMethodCallHandler }
+            if (android.os.Build.VERSION.SDK_INT < 29) {
+                result.error("unsupported", "Galeriye kaydetmek için Android 10 veya üzeri gerekli.", null)
+                return@setMethodCallHandler
+            }
+            Thread {
+                var uri: android.net.Uri? = null
+                try {
+                    val file = java.io.File(path)
+                    val values = android.content.ContentValues().apply {
+                        put(android.provider.MediaStore.MediaColumns.DISPLAY_NAME, "TBT_${System.currentTimeMillis()}.${file.extension}")
+                        put(android.provider.MediaStore.MediaColumns.MIME_TYPE, if(video) "video/mp4" else "image/${if(file.extension == "jpg") "jpeg" else file.extension}")
+                        put(android.provider.MediaStore.MediaColumns.RELATIVE_PATH, if(video) "Movies/TBT" else "Pictures/TBT")
+                        put(android.provider.MediaStore.MediaColumns.IS_PENDING, 1)
+                    }
+                    val collection = if(video) android.provider.MediaStore.Video.Media.EXTERNAL_CONTENT_URI else android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+                    uri = contentResolver.insert(collection, values) ?: throw Exception("Galeri açılamadı.")
+                    contentResolver.openOutputStream(uri!!).use { output ->
+                        if(output == null) throw Exception("Dosya kaydedilemedi.")
+                        file.inputStream().use { input -> input.copyTo(output) }
+                    }
+                    values.clear(); values.put(android.provider.MediaStore.MediaColumns.IS_PENDING, 0)
+                    contentResolver.update(uri!!, values, null, null)
+                    runOnUiThread { result.success(null) }
+                } catch(e: Exception) {
+                    uri?.let { contentResolver.delete(it, null, null) }
+                    runOnUiThread { result.error("save_failed", "Galeriye kaydedilemedi. İzinleri kontrol et.", null) }
+                }
+            }.start()
+        }

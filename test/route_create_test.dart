@@ -44,7 +44,7 @@ void main() {
     }
   });
   testWidgets(
-    'route starts with destination duration and company; advanced fields are collapsed',
+    'route creation shows transport and stops without a questionnaire',
     (tester) async {
       tester.view.physicalSize = const Size(390, 844);
       tester.view.devicePixelRatio = 1;
@@ -88,13 +88,24 @@ void main() {
             .writeAsBytes(bytes!.buffer.asUint8List());
         image.dispose();
       });
-      expect(find.text('Nereye?'), findsOneWidget);
-      expect(find.text('Ne kadar süre?'), findsOneWidget);
-      expect(find.text('Kimlerle?'), findsOneWidget);
-      expect(find.text('Bütçe'), findsNothing);
-      await tester.tap(find.text('Diğer tercihler'));
+      expect(find.text('Nereye gidiyoruz?'), findsOneWidget);
+      expect(find.text('Araç'), findsOneWidget);
+      expect(find.text('Yürüyüş'), findsOneWidget);
+      expect(find.text('Bisiklet'), findsOneWidget);
+      expect(find.text('Kimlerle?'), findsNothing);
+      expect(find.text('Ne kadar süre?'), findsNothing);
+      final create = tester.widget<FilledButton>(
+        find.widgetWithText(FilledButton, 'Rotayı oluştur'),
+      );
+      expect(create.onPressed, isNull);
+      await tester.tap(find.text('Bisiklet'));
       await tester.pumpAndSettle();
-      expect(find.text('Bütçe'), findsOneWidget);
+      expect(
+        tester
+            .widget<ChoiceChip>(find.widgetWithText(ChoiceChip, 'Bisiklet'))
+            .selected,
+        isTrue,
+      );
       expect(tester.takeException(), isNull);
     },
   );

@@ -39,3 +39,5 @@ info = {'CFBundleDisplayName': 'TBT', 'CFBundleName': 'TBTShare', 'CFBundleIdent
 subprocess.run(['ruby', 'tool/configure_ios_share.rb'], check=True)
 
 subprocess.run(['python3', 'tool/configure_notifications.py', 'ios'], check=True)
+
+subprocess.run(['python3', 'tool/configure_route_album.py', 'ios'], check=True)

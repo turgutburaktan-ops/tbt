@@ -50,6 +50,16 @@ service firebase.storage {
       allow create: if signedIn() && request.auth.token.admin == true && request.auth.token.email_verified == true && request.auth.token.email == 'turgutburaktan@gmail.com' && safeImageWrite() && request.resource.contentType == 'image/jpeg' && request.resource.size <= 10 * 1024 * 1024;
       allow update, delete: if false;
     }
+    match /route_albums/{planId}/{uid}/{mediaId}/{fileName} {
+      function participant() {
+        return signedIn() && firestore.get(/databases/(default)/documents/travel_plans/$(planId)).data.memberIds.hasAny([request.auth.uid]);
+      }
+      allow read: if participant();
+      allow create: if participant() && isOwner(uid) && (safeImageWrite() || safeVideoWrite()) &&
+        (fileName == 'thumb.jpg' || fileName.matches('media\\.(jpg|png|webp|heic|heif|mp4|mov)'));
+      allow update: if false;
+      allow delete: if participant() && isOwner(uid);
+    }
     // No un-namespaced uploads are accepted.
     match /{allPaths=**} {
       allow read, write: if false;

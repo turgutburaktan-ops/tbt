@@ -1,222 +1,234 @@
-import '../models/photo_spot.dart';
-import '../services/spot_repository.dart';
-
-import 'package:geolocator/geolocator.dart';
 import 'package:flutter/material.dart';
 
+import '../models/photo_spot.dart';
+import '../services/spot_repository.dart';
+import '../services/travel_plan_service.dart';
+import '../services/user_facing_error.dart';
 import '../theme/app_theme.dart';
-import 'route_planner_screen.dart';
+import '../widgets/route_stop_picker.dart';
+import 'travel_plan_detail_screen.dart';
+import 'routes_hub_screen.dart';
 
 class RouteCreateScreen extends StatefulWidget {
-  const RouteCreateScreen({super.key});
+  const RouteCreateScreen({super.key, this.initialStops = const []});
+  final List<PhotoSpot> initialStops;
   @override
   State<RouteCreateScreen> createState() => _RouteCreateScreenState();
 }
 
 class _RouteCreateScreenState extends State<RouteCreateScreen> {
   final _city = TextEditingController();
-  bool _suggesting = false;
-  int _hours = 3;
-  String _company = 'Tek başıma';
+  late final List<PhotoSpot> _stops = [...widget.initialStops];
   String _transport = 'Araç';
-  String _budget = 'Orta';
-  final _interests = <String>{};
+  bool _busy = false;
+  @override
+  void initState() {
+    super.initState();
+    if (_stops.isNotEmpty) _city.text = _stops.first.city;
+  }
+
   @override
   void dispose() {
     _city.dispose();
     super.dispose();
   }
 
-  Future<void> _suggest() async {
-    if (_city.text.trim().isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Şehir veya bölgeyi yaz.')));
-      return;
-    }
-    setState(() => _suggesting = true);
+  Future<void> _act(Future<void> Function() task) async {
+    setState(() => _busy = true);
     try {
-      final spots = await SpotRepository.instance.search(
-        _city.text.trim(),
-        limit: 200,
-      );
-      if (spots.isEmpty)
-        throw Exception(
-          'Bu bölgede hazır nokta yok. Haritadan kendi duraklarını ekleyebilirsin.',
-        );
-      final candidates = spots.toList()
-        ..sort((a, b) => b.rating.compareTo(a.rating));
-      final alternatives = <List<PhotoSpot>>[];
-      for (final first in candidates.take(3)) {
-        final rest =
-            candidates
-                .where(
-                  (s) =>
-                      s.id != first.id &&
-                      Geolocator.distanceBetween(
-                            first.latitude,
-                            first.longitude,
-                            s.latitude,
-                            s.longitude,
-                          ) <
-                          8000,
-                )
-                .toList()
-              ..sort(
-                (a, b) =>
-                    Geolocator.distanceBetween(
-                      first.latitude,
-                      first.longitude,
-                      a.latitude,
-                      a.longitude,
-                    ).compareTo(
-                      Geolocator.distanceBetween(
-                        first.latitude,
-                        first.longitude,
-                        b.latitude,
-                        b.longitude,
-                      ),
-                    ),
-              );
-        alternatives.add([first, ...rest.take((_hours - 1).clamp(0, 3))]);
-      }
-      if (!mounted) return;
-      await Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => RoutePlannerScreen(
-            city: _city.text.trim(),
-            durationHours: _hours,
-            budget: _budget,
-            interests: _interests.toList(),
-            initialTransport: _transport,
-            initialUseCurrentLocation: false,
-            initialSpots: alternatives.first,
-            alternatives: alternatives.skip(1).toList(),
-            inviteFriends: _company == 'Arkadaşlarımla',
-          ),
-        ),
-      );
+      await task();
     } catch (e) {
       if (mounted)
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
-        );
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(userFacingError(e))));
     } finally {
-      if (mounted) setState(() => _suggesting = false);
+      if (mounted) setState(() => _busy = false);
     }
   }
 
+  Future<void> _add() async {
+    final spot = await showModalBottomSheet<PhotoSpot>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (_) => RouteStopPicker(city: _city.text.trim(), stops: _stops),
+    );
+    if (spot != null && mounted)
+      setState(() {
+        if (!_stops.any((s) => s.id == spot.id)) _stops.add(spot);
+        if (_city.text.trim().isEmpty) _city.text = spot.city;
+      });
+  }
+
+  Future<void> _suggest() => _act(() async {
+    if (_city.text.trim().isEmpty)
+      throw Exception('Önce şehir veya bölge yaz.');
+    final all = await SpotRepository.instance.search(
+      _city.text.trim(),
+      limit: 100,
+    );
+    if (all.isEmpty)
+      throw Exception(
+        'Burada önerilecek durak bulunamadı. Durak ekleyebilirsin.',
+      );
+    final sorted = all.toList()..sort((a, b) => b.rating.compareTo(a.rating));
+    if (mounted)
+      setState(() {
+        for (final s in sorted.take(4)) {
+          if (_stops.length < 12 && !_stops.any((p) => p.id == s.id))
+            _stops.add(s);
+        }
+      });
+  });
+  Future<void> _save() => _act(() async {
+    final city = _city.text.trim().isEmpty
+        ? _stops.first.city
+        : _city.text.trim();
+    final id = await TravelPlanService.instance.create(
+      title: '$city gezisi',
+      city: city,
+      durationHours: 3,
+      budget: 'Orta',
+      transport: _transport,
+      interests: [],
+      spots: _stops,
+    );
+    final plan = await TravelPlanService.instance.read(id);
+    if (mounted)
+      await Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => TravelPlanDetailScreen(plan: plan)),
+      );
+  });
   @override
   Widget build(BuildContext context) => Scaffold(
-    backgroundColor: AppColors.background,
+    backgroundColor: const Color(0xFF07080B),
     appBar: AppBar(title: const Text('Rota oluştur')),
+    bottomNavigationBar: SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: FilledButton(
+          onPressed: _busy || _stops.isEmpty ? null : _save,
+          style: FilledButton.styleFrom(
+            backgroundColor: AppColors.cyan,
+            foregroundColor: Colors.black,
+            padding: const EdgeInsets.all(17),
+          ),
+          child: Text(_busy ? 'Hazırlanıyor…' : 'Rotayı oluştur'),
+        ),
+      ),
+    ),
     body: ListView(
       padding: const EdgeInsets.all(16),
       children: [
+        const Text(
+          'Nereye gidiyoruz?',
+          style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800),
+        ),
+        const SizedBox(height: 16),
         TextField(
           controller: _city,
           decoration: const InputDecoration(
-            labelText: 'Nereye?',
-            hintText: 'Şehir veya bölge',
+            hintText: 'Şehir veya bölge ara',
+            prefixIcon: Icon(Icons.search),
           ),
         ),
         const SizedBox(height: 16),
-        DropdownButtonFormField<int>(
-          initialValue: _hours,
-          decoration: const InputDecoration(labelText: 'Ne kadar süre?'),
-          items: [1, 2, 3, 4, 6, 8, 12, 24]
-              .map((n) => DropdownMenuItem(value: n, child: Text('$n saat')))
-              .toList(),
-          onChanged: (v) => setState(() => _hours = v!),
-        ),
-        const SizedBox(height: 16),
-        DropdownButtonFormField<String>(
-          initialValue: _company,
-          decoration: const InputDecoration(labelText: 'Kimlerle?'),
-          items: [
-            'Tek başıma',
-            'Arkadaşlarımla',
-          ].map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(),
-          onChanged: (v) => setState(() => _company = v!),
-        ),
-        if (_company == 'Arkadaşlarımla')
-          const Padding(
-            padding: EdgeInsets.only(top: 8),
-            child: Text(
-              'Rotanı kaydettikten sonra arkadaşlarını seçip davet edebilirsin.',
-            ),
-          ),
-        ExpansionTile(
-          title: const Text('Diğer tercihler'),
+        Wrap(
+          spacing: 8,
           children: [
-            DropdownButtonFormField<String>(
-              initialValue: _transport,
-              decoration: const InputDecoration(labelText: 'Ulaşım'),
-              items: [
-                'Araç',
-                'Yürüyüş',
-                'Bisiklet',
-              ].map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(),
-              onChanged: (v) => setState(() => _transport = v!),
-            ),
-            DropdownButtonFormField<String>(
-              initialValue: _budget,
-              decoration: const InputDecoration(labelText: 'Bütçe'),
-              items: [
-                'Düşük',
-                'Orta',
-                'Yüksek',
-              ].map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(),
-              onChanged: (v) => setState(() => _budget = v!),
-            ),
-            Wrap(
-              spacing: 8,
-              children: ['Doğa', 'Tarih', 'Yeme içme', 'Fotoğraf']
-                  .map(
-                    (v) => FilterChip(
-                      label: Text(v),
-                      selected: _interests.contains(v),
-                      onSelected: (yes) => setState(
-                        () => yes ? _interests.add(v) : _interests.remove(v),
-                      ),
-                    ),
-                  )
-                  .toList(),
-            ),
+            for (final mode in ['Araç', 'Yürüyüş', 'Bisiklet'])
+              ChoiceChip(
+                avatar: Icon(routeTransportIcon(mode), size: 18),
+                label: Text(mode),
+                selected: _transport == mode,
+                onSelected: _busy
+                    ? null
+                    : (_) => setState(() => _transport = mode),
+              ),
           ],
         ),
         const SizedBox(height: 20),
-        FilledButton(
-          onPressed: _suggesting ? null : _suggest,
-          child: Text(_suggesting ? 'Rota hazırlanıyor…' : 'Bana rota öner'),
-        ),
-        FilledButton(
-          onPressed: () {
-            if (_city.text.trim().isEmpty) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Şehir veya bölgeyi yaz.')),
-              );
-              return;
-            }
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => RoutePlannerScreen(
-                  initialUseCurrentLocation: false,
-                  initialTransport: _transport,
-                  city: _city.text.trim(),
-                  durationHours: _hours,
-                  budget: _budget,
-                  interests: _interests.toList(),
-                  inviteFriends: _company == 'Arkadaşlarımla',
-                ),
+        Row(
+          children: [
+            const Expanded(
+              child: Text(
+                'Durakların',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
               ),
-            );
+            ),
+            TextButton(
+              onPressed: _busy ? _noAction : _suggest,
+              child: const Text('Bana rota öner'),
+            ),
+          ],
+        ),
+        if (_stops.isEmpty)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 30),
+            child: Text(
+              'Gezilecek yer veya mekân ekleyerek başla.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: AppColors.textMuted),
+            ),
+          ),
+        ReorderableListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          buildDefaultDragHandles: false,
+          itemCount: _stops.length,
+          onReorder: (a, b) {
+            if (_busy) return;
+            setState(() {
+              if (b > a) b--;
+              _stops.insert(b, _stops.removeAt(a));
+            });
           },
-          child: const Text('Durakları seç'),
+          itemBuilder: (_, i) => Card(
+            key: ValueKey(_stops[i].id),
+            child: ListTile(
+              leading: CircleAvatar(
+                backgroundColor: AppColors.cyan,
+                foregroundColor: Colors.black,
+                child: Text('${i + 1}'),
+              ),
+              title: Text(_stops[i].name),
+              subtitle: Text(_stops[i].category),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    onPressed: _busy
+                        ? null
+                        : () => setState(() => _stops.removeAt(i)),
+                    icon: const Icon(Icons.close),
+                  ),
+                  ReorderableDragStartListener(
+                    index: i,
+                    child: const Padding(
+                      padding: EdgeInsets.all(8),
+                      child: Icon(Icons.drag_handle),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 10),
+        OutlinedButton.icon(
+          onPressed: _busy || _stops.length >= 12 ? null : _add,
+          icon: const Icon(Icons.add),
+          label: const Text('Durak ekle'),
+        ),
+        const SizedBox(height: 20),
+        const Text(
+          'Tarih ve arkadaşlarını rotayı oluşturduktan sonra ekleyebilirsin.',
+          style: TextStyle(color: AppColors.textMuted),
+          textAlign: TextAlign.center,
         ),
       ],
     ),
   );
+  void _noAction() {}
 }

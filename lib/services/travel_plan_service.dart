@@ -98,17 +98,87 @@ class TravelPlanService {
           .toList(growable: false),
       'memberIds': [user.uid],
       'startAt': Timestamp.fromDate(startAt ?? DateTime.now()),
+      'hasSchedule': startAt != null,
+      'status': 'planned',
       'distanceKm': distanceKm,
       'travelMinutes': travelMinutes,
       'estimatedBudget': estimatedBudget,
       'weatherSummary': weatherSummary,
       'isPublic': isPublic,
+      'visibility': isPublic ? 'public' : 'private',
       'ratingTotal': 0,
       'ratingCount': 0,
       'createdAt': FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
     });
     return reference.id;
+  }
+
+  Future<TravelPlan> read(String id) async => TravelPlan.fromDoc(
+    await _firestore.collection('travel_plans').doc(id).get(),
+  );
+
+  Future<void> setOptions(
+    String id, {
+    String? visibility,
+    DateTime? startAt,
+    String? transport,
+    String? status,
+    bool? allowMemberEdits,
+  }) async {
+    final uid = _requireUser().uid;
+    final ref = _firestore.collection('travel_plans').doc(id);
+    await _firestore.runTransaction((tx) async {
+      final d = (await tx.get(ref)).data();
+      if (d == null || d['ownerId'] != uid)
+        throw Exception('Yalnızca rota sahibi düzenleyebilir.');
+      final v =
+          visibility ??
+          (d['visibility'] ?? (d['isPublic'] == true ? 'public' : 'private'))
+              .toString();
+      final scheduled =
+          startAt != null ||
+          d['hasSchedule'] == true ||
+          d['joinEnabled'] == true;
+      tx.update(ref, {
+        'visibility': v,
+        'isPublic': v == 'public',
+        'joinEnabled': v != 'private' && scheduled,
+        'hasSchedule': scheduled,
+        if (startAt != null) 'startAt': Timestamp.fromDate(startAt),
+        if (transport != null) 'transport': transport,
+        if (status != null) 'status': status,
+        if (allowMemberEdits != null) 'allowMemberEdits': allowMemberEdits,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    });
+  }
+
+  Future<String> copyPlan(TravelPlan plan) async {
+    final spots = await resolveRouteSpots(plan);
+    return create(
+      title: '${plan.title} kopyası',
+      city: plan.city,
+      durationHours: plan.durationHours,
+      budget: plan.budget,
+      transport: plan.transport,
+      interests: plan.interests,
+      spots: spots,
+      stopDetails: plan.stopSnapshots,
+    );
+  }
+
+  Future<void> bookmark(String id, bool saved) async {
+    final ref = _firestore
+        .collection('users')
+        .doc(_requireUser().uid)
+        .collection('saved_routes')
+        .doc(id);
+    if (saved) {
+      await ref.set({'routeId': id, 'createdAt': FieldValue.serverTimestamp()});
+    } else {
+      await ref.delete();
+    }
   }
 
   Future<void> updateRoutePreferences(
@@ -156,7 +226,8 @@ class TravelPlanService {
         'isPublic': isPublic,
         'joinEnabled': together,
         'participantLimit': limit ?? 60,
-        if (privateOnly) 'memberIds': [uid],
+        'visibility': isPublic ? 'public' : 'private',
+        if (together) 'hasSchedule': true,
         if (together) 'startAt': Timestamp.fromDate(start!),
         if (together) 'meetingPoint': meetingPoint,
         'updatedAt': FieldValue.serverTimestamp(),
@@ -170,7 +241,7 @@ class TravelPlanService {
     await _firestore.runTransaction((tx) async {
       final d = (await tx.get(ref)).data();
       if (d == null ||
-          d['isPublic'] != true ||
+          (d['isPublic'] != true && d['visibility'] != 'followers') ||
           d['joinEnabled'] != true ||
           !(d['startAt'] as Timestamp).toDate().isAfter(DateTime.now()))
         throw Exception('Bu rota katılıma açık değil.');
@@ -198,7 +269,7 @@ class TravelPlanService {
       final members = List<String>.from(d['memberIds']);
       if (accept && !members.contains(applicant)) {
         if (d['joinEnabled'] != true ||
-            d['isPublic'] != true ||
+            (d['isPublic'] != true && d['visibility'] != 'followers') ||
             !(d['startAt'] as Timestamp).toDate().isAfter(DateTime.now()))
           throw Exception('Rota katılıma kapalı.');
         if (members.length >= (d['participantLimit'] as num? ?? 60))

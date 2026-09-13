@@ -251,6 +251,11 @@ service cloud.firestore {
         allow read: if isSelf(uid);
         allow write: if false;
       }
+      match /saved_routes/{routeId} {
+        allow read, delete: if isSelf(uid);
+        allow create, update: if isSelf(uid) && request.resource.data.routeId == routeId &&
+          request.resource.data.keys().hasOnly(['routeId','createdAt']);
+      }
       match /following/{targetId} { allow read: if signedIn(); allow create, update: if isSelf(uid) && request.resource.data.userId == targetId; allow delete: if isSelf(uid); }
       match /followers/{followerId} { allow read: if signedIn(); allow create, update: if signedIn() && followerId == request.auth.uid && request.resource.data.userId == request.auth.uid; allow delete: if signedIn() && followerId == request.auth.uid; }
       match /blocked/{blockedId} { allow read: if signedIn() && (uid == request.auth.uid || blockedId == request.auth.uid); allow create, update, delete: if isSelf(uid); }
@@ -455,19 +460,23 @@ service cloud.firestore {
     }
     match /photo_spots/{id} { allow read: if true; allow create, update, delete: if isAdmin(); }
     match /travel_plans/{planId} {
+      function member() { return signedIn() && resource.data.memberIds.hasAny([request.auth.uid]); }
+      function routeVisible(d) {
+        return d.get('isPublic', false) == true || (signedIn() &&
+          (d.memberIds.hasAny([request.auth.uid]) ||
+           (d.get('visibility', 'private') == 'followers' &&
+            exists(/databases/$(database)/documents/users/$(d.ownerId)/followers/$(request.auth.uid)))));
+      }
       function validSharing() {
         let d = request.resource.data;
-        return d.memberIds.size() <= d.get('participantLimit', 60) &&
-          d.get('participantLimit', 60) is int && d.get('participantLimit', 60) >= 1 && d.get('participantLimit', 60) <= 60 &&
-          (d.get('joinEnabled', false) == false ||
-            (d.get('isPublic', false) == true && d.startAt is timestamp &&
-             d.meetingPoint is map && d.meetingPoint.label is string &&
-             d.meetingPoint.label.size() > 0 && d.meetingPoint.label.size() <= 160 &&
-             d.meetingPoint.latitude is number && d.meetingPoint.latitude >= -90 && d.meetingPoint.latitude <= 90 &&
-             d.meetingPoint.longitude is number && d.meetingPoint.longitude >= -180 && d.meetingPoint.longitude <= 180));
+        return d.memberIds is list && d.memberIds.size() <= d.get('participantLimit', 60) &&
+          d.get('participantLimit',60) is int && d.get('participantLimit',60) >= 1 && d.get('participantLimit',60) <= 60 &&
+          d.get('visibility', 'private') in ['private','followers','public'] &&
+          d.get('status','planned') in ['planned','active','completed'] &&
+          (d.get('joinEnabled',false) == false ||
+           ((d.get('isPublic',false) == true || d.get('visibility','private') == 'followers') && d.startAt is timestamp));
       }
-      allow read: if resource.data.get('isPublic', false) == true ||
-        (signedIn() && resource.data.memberIds.hasAny([request.auth.uid]));
+      allow read: if routeVisible(resource.data);
       allow create: if signedIn() && validSharing() && request.resource.data.ownerId == request.auth.uid &&
         request.resource.data.memberIds is list && request.resource.data.memberIds.size() <= 60 &&
         request.resource.data.memberIds.hasAny([request.auth.uid]) &&
@@ -476,6 +485,11 @@ service cloud.firestore {
         request.resource.data.title is string && request.resource.data.title.size() >= 1 &&
         request.resource.data.title.size() <= 80;
       allow update: if signedIn() && validSharing() && (
+        (member() && resource.data.get('allowMemberEdits', false) == true &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['spotIds','spotNames','stopSnapshots','updatedAt']) &&
+          request.resource.data.spotIds is list && request.resource.data.spotIds.size() >= 1 && request.resource.data.spotIds.size() <= 12 &&
+          request.resource.data.spotNames.size() == request.resource.data.spotIds.size() &&
+          request.resource.data.stopSnapshots.size() == request.resource.data.spotIds.size()) ||
         (resource.data.ownerId == request.auth.uid &&
           request.resource.data.ownerId == resource.data.ownerId &&
           request.resource.data.memberIds is list && request.resource.data.memberIds.size() <= 60 &&
@@ -495,11 +509,46 @@ service cloud.firestore {
           request.resource.data.meetingPoint.selectedBy == request.auth.uid)
       );
       allow delete: if signedIn() && resource.data.ownerId == request.auth.uid;
+      match /album/{mediaId} {
+        function albumMember() { return signedIn() && get(/databases/$(database)/documents/travel_plans/$(planId)).data.memberIds.hasAny([request.auth.uid]); }
+        allow read: if albumMember();
+        allow create: if albumMember() && request.resource.data.ownerId == request.auth.uid &&
+          request.resource.data.keys().hasOnly(['ownerId','ownerName','storagePath','thumbnailPath','kind','allowExport','createdAt']) &&
+          request.resource.data.kind in ['image','video'] && request.resource.data.allowExport is bool &&
+          request.resource.data.ownerName is string && request.resource.data.ownerName.size() <= 160 &&
+          request.resource.data.storagePath.matches('route_albums/' + planId + '/' + request.auth.uid + '/' + mediaId + '/media\\.(jpg|png|webp|heic|heif|mp4|mov)') &&
+          (request.resource.data.thumbnailPath == '' || request.resource.data.thumbnailPath == 'route_albums/' + planId + '/' + request.auth.uid + '/' + mediaId + '/thumb.jpg') &&
+          request.resource.data.createdAt == request.time;
+        allow update: if albumMember() && resource.data.ownerId == request.auth.uid &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['allowExport']) && request.resource.data.allowExport is bool;
+        allow delete: if albumMember() && resource.data.ownerId == request.auth.uid;
+      }
+      match /polls/{pollId} {
+        function pollMember() { return signedIn() && get(/databases/$(database)/documents/travel_plans/$(planId)).data.memberIds.hasAny([request.auth.uid]); }
+        allow read: if pollMember();
+        allow create: if pollMember() && request.resource.data.authorId == request.auth.uid &&
+          request.resource.data.keys().hasOnly(['authorId','question','options','closed','createdAt']) &&
+          request.resource.data.question is string && request.resource.data.question.size() > 0 && request.resource.data.question.size() <= 180 &&
+          request.resource.data.options is list && request.resource.data.options.size() >= 2 && request.resource.data.options.size() <= 4 &&
+          request.resource.data.closed == false && request.resource.data.createdAt == request.time;
+        allow update: if pollMember() && (resource.data.authorId == request.auth.uid || get(/databases/$(database)/documents/travel_plans/$(planId)).data.ownerId == request.auth.uid) &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['closed']) && request.resource.data.closed is bool;
+        allow delete: if false;
+        match /votes/{uid} {
+          allow read: if pollMember();
+          allow create, update: if pollMember() && request.auth.uid == uid &&
+            get(/databases/$(database)/documents/travel_plans/$(planId)/polls/$(pollId)).data.closed == false &&
+            request.resource.data.keys().hasOnly(['choice','updatedAt']) && request.resource.data.choice is int && request.resource.data.choice >= 0 &&
+            request.resource.data.choice < get(/databases/$(database)/documents/travel_plans/$(planId)/polls/$(pollId)).data.options.size() &&
+            request.resource.data.updatedAt == request.time;
+          allow delete: if false;
+        }
+      }
       match /join_requests/{uid} {
         function route() { return get(/databases/$(database)/documents/travel_plans/$(planId)).data; }
         allow read: if signedIn() && (request.auth.uid == uid || route().ownerId == request.auth.uid);
         allow create, update: if signedIn() && request.auth.uid == uid &&
-          route().get('isPublic', false) && route().get('joinEnabled', false) &&
+          routeVisible(route()) && route().get('joinEnabled', false) &&
           route().startAt > request.time && !route().memberIds.hasAny([uid]) &&
           route().memberIds.size() < route().get('participantLimit', 60) &&
           request.resource.data.keys().hasOnly(['userId','name','status','updatedAt']) &&

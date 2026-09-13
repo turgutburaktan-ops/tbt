@@ -275,10 +275,12 @@ class _RouteSharingScreenState extends State<RouteSharingScreen> {
 class RouteParticipation extends StatelessWidget {
   final String routeId;
   final Map<String, dynamic> data;
+  final bool showSettings;
   const RouteParticipation({
     super.key,
     required this.routeId,
     required this.data,
+    this.showSettings = true,
   });
   @override
   Widget build(BuildContext context) {
@@ -306,19 +308,20 @@ class RouteParticipation extends StatelessWidget {
     if (owner)
       return Column(
         children: [
-          TextButton.icon(
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => RouteSharingScreen(
-                  routeId: routeId,
-                  title: data['title'] ?? 'Rota',
+          if (showSettings)
+            TextButton.icon(
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => RouteSharingScreen(
+                    routeId: routeId,
+                    title: data['title'] ?? 'Rota',
+                  ),
                 ),
               ),
+              icon: const Icon(Icons.group_outlined),
+              label: const Text('Paylaşım ve katılım ayarları'),
             ),
-            icon: const Icon(Icons.group_outlined),
-            label: const Text('Paylaşım ve katılım ayarları'),
-          ),
           StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
             stream: ref.where('status', isEqualTo: 'pending').snapshots(),
             builder: (_, snapshot) => Column(
