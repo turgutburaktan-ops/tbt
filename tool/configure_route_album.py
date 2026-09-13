@@ -10,7 +10,17 @@ if platform == 'android':
     if '// TBT private route album export' not in s:
         marker = '        super.configureFlutterEngine(flutterEngine)'
         if marker not in s:
-            raise RuntimeError('Configure photo pipeline before album export')
+            if 'configureFlutterEngine' in s: raise RuntimeError('Unrecognized Android engine hook')
+            for imp in ['io.flutter.embedding.engine.FlutterEngine', 'io.flutter.plugin.common.MethodChannel']:
+                if 'import '+imp not in s:
+                    s = re.sub(r'^(package[^\n]+)', lambda m: m.group(0)+'\nimport '+imp, s, count=1, flags=re.M)
+            method = '\n    override fun configureFlutterEngine(flutterEngine: FlutterEngine) {\n'+marker+'\n    }\n'
+            if re.search(r'class MainActivity\s*:\s*Flutter(?:Fragment)?Activity\(\)\s*$', s):
+                s = s.rstrip()+' {'+method+'}\n'
+            else:
+                end=s.rfind('}')
+                if end < 0: raise RuntimeError('Android activity body not found')
+                s=s[:end]+method+s[end:]
         s = s.replace(marker, marker+'\n'+Path('tool/native_album/android.txt').read_text(),1)
         p.write_text(s)
     manifest = Path('android/app/src/main/AndroidManifest.xml')

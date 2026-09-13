@@ -68,4 +68,5 @@ jobs:
           cache: true
       - run: flutter create --platforms=android --org com.tbt --project-name best_photo_spot .
       - run: python3 tool/patch_native_photo_pipeline.py && python3 tool/configure_route_album.py android && python3 tool/configure_notifications.py android
+      - run: python3 tool/patch_receive_sharing_intent.py
       - run: flutter build apk --debug

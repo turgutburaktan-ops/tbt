@@ -145,7 +145,9 @@ jobs:
       - name: Align share plugin JVM targets
         run: python3 tool/patch_receive_sharing_intent.py
       - name: Configure notification replies
-        run: python3 tool/configure_notifications.py android
+        run: |
+          python3 tool/configure_notifications.py android
+          python3 tool/configure_route_album.py android
       - name: Build Android APK
         run: flutter build apk --debug --no-pub
       - name: Verify APK signing identity
