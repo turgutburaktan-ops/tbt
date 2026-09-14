@@ -5,6 +5,7 @@ import '../services/business_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/reservation_controls.dart';
 import 'business_content_manager_screen.dart';
+import 'business_campaigns_screen.dart';
 import 'business_profile_editor_screen.dart';
 import 'business_hours_screen.dart';
 
@@ -199,16 +200,27 @@ class _BusinessManagementScreenState extends State<BusinessManagementScreen> {
                       () => _content('menu'),
                     ),
                     _tile(
-                      'Kupon QR okut',
-                      'Müşterinin kuponunu kontrol et ve kullan',
+                      'Kuponlar',
+                      'Oluştur, kullanımını takip et ve doğrula',
                       Icons.qr_code_scanner,
-                      () => _open(BusinessCouponScannerScreen(venueKey: _key)),
+                      () => _open(
+                        BusinessCampaignsScreen(
+                          venueKey: _key,
+                          venueName: widget.venueName,
+                          coupons: true,
+                        ),
+                      ),
                     ),
                     _tile(
                       'Kampanyalar',
                       'Oluştur, düzenle veya yayından kaldır',
                       Icons.local_offer_outlined,
-                      () => _content('campaign'),
+                      () => _open(
+                        BusinessCampaignsScreen(
+                          venueKey: _key,
+                          venueName: widget.venueName,
+                        ),
+                      ),
                     ),
                   ]),
                   BusinessContentManagerScreen(
@@ -262,7 +274,12 @@ class _BusinessManagementScreenState extends State<BusinessManagementScreen> {
                       'Kampanyalar',
                       'Tekliflerini yönet',
                       Icons.local_offer_outlined,
-                      () => _content('campaign'),
+                      () => _open(
+                        BusinessCampaignsScreen(
+                          venueKey: _key,
+                          venueName: widget.venueName,
+                        ),
+                      ),
                     ),
                     _tile(
                       'Etkinlikler',
@@ -271,10 +288,16 @@ class _BusinessManagementScreenState extends State<BusinessManagementScreen> {
                       () => _content('program'),
                     ),
                     _tile(
-                      'Kupon QR okut',
-                      'Kamerayla okut veya kodu yaz',
+                      'Kuponlar',
+                      'Oluştur, takip et ve QR okut',
                       Icons.qr_code_scanner,
-                      () => _open(BusinessCouponScannerScreen(venueKey: _key)),
+                      () => _open(
+                        BusinessCampaignsScreen(
+                          venueKey: _key,
+                          venueName: widget.venueName,
+                          coupons: true,
+                        ),
+                      ),
                     ),
                   ]),
                 ],
