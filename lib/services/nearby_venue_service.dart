@@ -316,8 +316,12 @@ class NearbyVenueService {
           ? Map<String, dynamic>.from(chosen['address'] as Map)
           : const <String, dynamic>{};
       return CityVenueArea(
-        name: (address['province'] ?? address['city'] ?? address['town'] ?? q)
-            .toString(),
+        name: _provinceNames.firstWhere(
+          (name) => _fold(name) == f,
+          orElse: () =>
+              (address['province'] ?? address['city'] ?? address['town'] ?? q)
+                  .toString(),
+        ),
         latitude: lat,
         longitude: lon,
         south: bbox[0]!,

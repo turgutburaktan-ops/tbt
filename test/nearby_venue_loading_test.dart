@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:best_photo_spot/models/nearby_venue.dart';
+import 'package:best_photo_spot/data/turkey_selection_data.dart';
 import 'package:best_photo_spot/services/nearby_venue_service.dart';
 
 const venue = NearbyVenue(
@@ -335,4 +336,36 @@ void main() {
       throwsA(isA<VenueLoadException>()),
     );
   });
+  test(
+    'all 81 selectable provinces use distinct province boundaries',
+    () async {
+      SharedPreferences.setMockInitialValues({});
+      final codes = <String>{};
+      final service = NearbyVenueService.forTesting(
+        clientFactory: () => MockClient((request) async {
+          final query = request.bodyFields['data']!;
+          expect(query, contains('nwr(area.province)'));
+          final match = RegExp(r'TR-[0-9]{2}').firstMatch(query);
+          expect(match, isNotNull);
+          codes.add(match!.group(0)!);
+          return http.Response(
+            '{"elements":[{"type":"area","id":3600000001}]}',
+            200,
+          );
+        }),
+        businessLoader: (_, __, ___, ____) async => [],
+      );
+      for (final city in turkeyCities) {
+        service.selectCity(name: city, latitude: 39, longitude: 35);
+        await service.nearby(
+          category: NearbyVenueCategory.cafe,
+          latitude: 39,
+          longitude: 35,
+        );
+      }
+      expect(codes, {
+        for (var i = 1; i <= 81; i++) 'TR-${i.toString().padLeft(2, '0')}',
+      });
+    },
+  );
 }
