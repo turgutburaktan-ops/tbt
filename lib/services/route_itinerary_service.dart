@@ -50,11 +50,13 @@ class RouteItineraryService {
           : mode == 'Bisiklet'
           ? 'bike'
           : 'car';
+      // Landmark pins can sit inside a site (Harput is 103 m off-road).
+      // Snap within a bounded 250 m; never fabricate a route beyond it.
       try {
         final response = await _client
             .get(
               Uri.parse(
-                'https://routing.openstreetmap.de/routed-$graph/route/v1/driving/$coordinates?overview=full&geometries=geojson&steps=false&radiuses=${List.filled(stops.length, '100').join(';')}',
+                'https://routing.openstreetmap.de/routed-$graph/route/v1/driving/$coordinates?overview=full&geometries=geojson&steps=false&radiuses=${List.filled(stops.length, '250').join(';')}',
               ),
               headers: {'User-Agent': 'TBT/1.0 route-planner'},
             )

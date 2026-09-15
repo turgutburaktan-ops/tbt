@@ -55,7 +55,7 @@ void main() {
     expect(await service.calculate(points, 'Yürüyüş'), isNotNull);
     expect(url.path, contains('routed-foot'));
     expect(url.path, contains('29.0,41.0;29.01,41.01;29.02,41.02'));
-    expect(url.queryParameters['radiuses'], '100;100;100');
+    expect(url.queryParameters['radiuses'], '250;250;250');
   });
   test(
     'unsupported transport and network failures do not use driving estimates',
