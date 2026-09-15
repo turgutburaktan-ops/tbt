@@ -1,3 +1,5 @@
+import 'place_marker_card.dart';
+
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
@@ -36,6 +38,38 @@ class _RouteEditorMapState extends State<RouteEditorMap> {
   GoogleMapController? _controller;
   final _icons = <int, BitmapDescriptor>{};
   int _iconGeneration = 0;
+  int _cardGeneration = 0;
+  final _cardIcons = <String, BitmapDescriptor>{};
+  String _cardSignature = '';
+
+  Future<void> _makeCards() async {
+    final candidates = List<PhotoSpot>.of(widget.candidates);
+    final keys = candidates.map(PlaceMarkerCard.cacheKey).toSet();
+    final signature = keys.join('\u0001');
+    if (signature == _cardSignature) return;
+    _cardSignature = signature;
+    final generation = ++_cardGeneration;
+    _cardIcons.removeWhere((key, _) => !keys.contains(key));
+    var rendered = 0;
+    for (final spot in candidates) {
+      if (!mounted || generation != _cardGeneration) return;
+      final key = PlaceMarkerCard.cacheKey(spot);
+      if (_cardIcons.containsKey(key)) continue;
+      try {
+        final icon = await PlaceMarkerCard.render(spot);
+        if (!mounted || generation != _cardGeneration) return;
+        _cardIcons[key] = icon;
+      } catch (_) {
+        /* Keep a tappable marker if bitmap rendering fails. */
+      }
+      if (++rendered % 12 == 0 && mounted) {
+        setState(() {});
+        await Future<void>.delayed(Duration.zero);
+      }
+    }
+    if (mounted && generation == _cardGeneration) setState(() {});
+  }
+
   String _lastFit = '';
   String get _fitKey =>
       '${widget.center}:${_points.join(';')}:${widget.itinerary?.meters}';
@@ -46,11 +80,13 @@ class _RouteEditorMapState extends State<RouteEditorMap> {
   void initState() {
     super.initState();
     _makeIcons();
+    _makeCards();
   }
 
   @override
   void didUpdateWidget(RouteEditorMap oldWidget) {
     super.didUpdateWidget(oldWidget);
+    _makeCards();
     if (widget.stops.length > _icons.length) _makeIcons();
     // Parent lists are mutable; fit from current coordinates after every update.
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -174,14 +210,16 @@ class _RouteEditorMapState extends State<RouteEditorMap> {
         Marker(
           markerId: MarkerId('candidate:${spot.id}'),
           position: LatLng(spot.latitude, spot.longitude),
-          icon: BitmapDescriptor.defaultMarkerWithHue(
-            BitmapDescriptor.hueViolet,
-          ),
+          icon:
+              _cardIcons[PlaceMarkerCard.cacheKey(spot)] ??
+              BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueViolet),
+          anchor: const Offset(.5, 1),
           onTap: () => widget.onPlaceTap?.call(spot),
         ),
       for (var i = 0; i < widget.stops.length; i++)
         Marker(
           markerId: MarkerId(widget.stops[i].id),
+          zIndexInt: 10,
           position: _points[i],
           icon:
               _icons[i] ??
