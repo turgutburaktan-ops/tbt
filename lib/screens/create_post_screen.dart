@@ -1,3 +1,4 @@
+import '../utils/post_photo_frame.dart';
 import '../theme/app_theme.dart';
 import '../widgets/profile_name_link.dart';
 import '../widgets/description_field.dart';
@@ -525,10 +526,9 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
           GestureDetector(
             onTap: _chooseSource,
             child: Container(
-              height: (MediaQuery.sizeOf(context).height * .5).clamp(
-                300.0,
-                460.0,
-              ),
+              height: _isVideo
+                  ? (MediaQuery.sizeOf(context).height * .5).clamp(300.0, 460.0)
+                  : (MediaQuery.sizeOf(context).width - 36) / postPhotoAspectRatio,
               decoration: BoxDecoration(
                 color: AppColors.surface,
                 borderRadius: BorderRadius.circular(24),
