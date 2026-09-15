@@ -1,3 +1,4 @@
+import 'route_chat_service.dart';
 import 'creator_service.dart';
 import 'day_plan_engine.dart';
 
@@ -154,6 +155,20 @@ class TravelPlanService {
           startAt != null ||
           d['hasSchedule'] == true ||
           d['joinEnabled'] == true;
+      final changes = <String>[];
+      if (startAt != null &&
+          (d['startAt'] is! Timestamp ||
+              (d['startAt'] as Timestamp).toDate() != startAt)) {
+        changes.add('Gezi tarihi ve saati güncellendi.');
+      }
+      if (transport != null && transport != d['transport'])
+        changes.add('Ulaşım şekli güncellendi.');
+      if (changes.isNotEmpty && (d['memberIds'] as List? ?? []).contains(uid)) {
+        tx.set(
+          ref.collection('messages').doc(),
+          RouteChatService.instance.envelope(changes.join(' '), 'update', null),
+        );
+      }
       tx.update(ref, {
         'visibility': v,
         'isPublic': v == 'public',

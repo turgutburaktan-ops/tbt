@@ -1,3 +1,5 @@
+import 'route_chat_service.dart';
+
 import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -126,7 +128,16 @@ class TravelPlanCollaborationService {
         throw Exception('Plan sahibi gerekli.');
       if (proposal['status'] == 'accepted') return;
       final stop = Map<String, dynamic>.from(
-        proposal['stopSnapshot'] as Map? ?? {},
+        proposal['stopSnapshot'] as Map? ??
+            {
+              'id': proposal['spotId'],
+              'name': proposal['text'],
+              'latitude': proposal['latitude'],
+              'longitude': proposal['longitude'],
+              'city': proposal['city'] ?? '',
+              'imageUrl': '',
+              'category': 'Konum',
+            },
       );
       if (stop['id'] is! String ||
           stop['name'] is! String ||
@@ -136,14 +147,19 @@ class TravelPlanCollaborationService {
       final stops = (plan['stopSnapshots'] as List? ?? [])
           .map((s) => Map<String, dynamic>.from(s as Map))
           .toList();
-      if (!stops.any((s) => s['id'] == stop['id'])) {
-        if (stops.length >= 12)
+      final ids = List<String>.from(plan['spotIds'] as List? ?? []);
+      final names = List<String>.from(plan['spotNames'] as List? ?? []);
+      if (!ids.contains(stop['id'])) {
+        if (ids.length >= 12)
           throw Exception('Rotada en fazla 12 durak olabilir.');
+        final completeSnapshots =
+            stops.length == ids.length &&
+            ids.every((id) => stops.any((s) => s['id'] == id));
         stops.add(stop);
         tx.update(planRef, {
-          'spotIds': stops.map((s) => s['id']).toList(),
-          'spotNames': stops.map((s) => s['name']).toList(),
-          'stopSnapshots': stops,
+          'spotIds': [...ids, stop['id']],
+          'spotNames': [...names, stop['name']],
+          if (completeSnapshots) 'stopSnapshots': stops,
           if (plan['dayPlan'] is Map)
             'dayPlan': {
               ...Map<String, dynamic>.from(plan['dayPlan'] as Map),
@@ -167,7 +183,9 @@ class TravelPlanCollaborationService {
     String note = '',
   }) async {
     final uid = _uid();
-    await _firestore.collection('travel_plans').doc(planId).update({
+    final ref = _firestore.collection('travel_plans').doc(planId);
+    final batch = _firestore.batch();
+    batch.update(ref, {
       'meetingPoint': {
         'label': label.trim().isEmpty ? 'Buluşma noktası' : label.trim(),
         'latitude': latitude,
@@ -178,14 +196,34 @@ class TravelPlanCollaborationService {
       },
       'updatedAt': FieldValue.serverTimestamp(),
     });
+    batch.set(
+      ref.collection('messages').doc(),
+      RouteChatService.instance.envelope(
+        'Buluşma noktası güncellendi.',
+        'update',
+        null,
+      ),
+    );
+    await batch.commit();
   }
 
   Future<void> clearMeetingPoint(String planId) async {
     _uid();
-    await _firestore.collection('travel_plans').doc(planId).update({
+    final ref = _firestore.collection('travel_plans').doc(planId);
+    final batch = _firestore.batch();
+    batch.update(ref, {
       'meetingPoint': FieldValue.delete(),
       'updatedAt': FieldValue.serverTimestamp(),
     });
+    batch.set(
+      ref.collection('messages').doc(),
+      RouteChatService.instance.envelope(
+        'Buluşma noktası kaldırıldı.',
+        'update',
+        null,
+      ),
+    );
+    await batch.commit();
   }
 
   Future<void> deleteProposal(String planId, String proposalId) async {

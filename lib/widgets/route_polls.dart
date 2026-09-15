@@ -6,8 +6,16 @@ import '../services/user_facing_error.dart';
 import '../theme/app_theme.dart';
 
 class RoutePolls extends StatelessWidget {
-  const RoutePolls({super.key, required this.planId, required this.ownerId});
+  const RoutePolls({
+    super.key,
+    required this.planId,
+    required this.ownerId,
+    this.onlyPollId,
+    this.showCreateButton = true,
+  });
   final String planId, ownerId;
+  final String? onlyPollId;
+  final bool showCreateButton;
   CollectionReference<Map<String, dynamic>> get _polls => FirebaseFirestore
       .instance
       .collection('travel_plans')
@@ -23,7 +31,7 @@ class RoutePolls extends StatelessWidget {
     }
   }
 
-  Future<void> _create(BuildContext context) async {
+  Future<void> create(BuildContext context) async {
     final question = TextEditingController();
     final options = List.generate(4, (_) => TextEditingController());
     final result = await showDialog<bool>(
@@ -97,19 +105,21 @@ class RoutePolls extends StatelessWidget {
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
-      Align(
-        alignment: Alignment.centerRight,
-        child: TextButton.icon(
-          onPressed: () => _create(context),
-          icon: const Icon(Icons.poll_outlined),
-          label: const Text('Oylama oluştur'),
+      if (showCreateButton)
+        Align(
+          alignment: Alignment.centerRight,
+          child: TextButton.icon(
+            onPressed: () => create(context),
+            icon: const Icon(Icons.poll_outlined),
+            label: const Text('Oylama oluştur'),
+          ),
         ),
-      ),
       StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-        stream: _polls
-            .orderBy('createdAt', descending: true)
-            .limit(20)
-            .snapshots(),
+        stream:
+            (onlyPollId == null
+                    ? _polls.orderBy('createdAt', descending: true).limit(20)
+                    : _polls.where(FieldPath.documentId, isEqualTo: onlyPollId))
+                .snapshots(),
         builder: (_, s) {
           if (s.hasError) return Text(userFacingError(s.error!));
           return Column(

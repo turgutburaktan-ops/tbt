@@ -1,0 +1,9 @@
+    match /route_chat/{planId}/{uid}/{messageId}/audio.m4a {
+      function chatParticipant() {
+        return request.auth != null && firestore.get(/databases/(default)/documents/travel_plans/$(planId)).data.memberIds.hasAny([request.auth.uid]);
+      }
+      allow read: if chatParticipant();
+      allow create: if chatParticipant() && request.auth.uid == uid && request.resource.size > 0 && request.resource.size <= 20 * 1024 * 1024 && request.resource.contentType == 'audio/mp4';
+      allow update: if false;
+      allow delete: if chatParticipant() && request.auth.uid == uid;
+    }
