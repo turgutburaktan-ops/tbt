@@ -25,7 +25,7 @@ async function seedRows(db, input) {
     const keys=[...metaKeys], metas=keys.length?await tx.getAll(...keys.map(k=>db.doc(`place_catalog/${k}`))):[];
     const metadata=new Map(keys.map((k,i)=>[k,{...(metas[i].data()||{})}]));
     for(const c of changes){
-      if(!c.hasExternal)tx.set(db.doc(`catalog_external_venues/${c.key}`),{...c.incoming,seenAt:FieldValue.serverTimestamp(),seedSource:'geofabrik'});
+      if(!c.hasExternal)tx.set(db.doc(`catalog_external_venues/${c.key}`),{...c.incoming,seenAt:FieldValue.serverTimestamp(),seedSource:c.incoming.source === 'overture' ? 'overture' : 'geofabrik'});
       if(c.revoked)tx.set(db.doc(`catalog_exclusions/${c.id}`),{reason:'business_unpublished',at:FieldValue.serverTimestamp()});
       const serialized=c.row?JSON.stringify(c.row):null;
       if(c.link?.serialized===serialized && c.old===c.next)continue;

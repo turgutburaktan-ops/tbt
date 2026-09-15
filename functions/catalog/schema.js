@@ -44,8 +44,8 @@ function venueRow(key, external, business, excluded = false) {
     imageUrl: publicUrl(d.coverImageUrl || d.imageUrl || d.photoUrl || d.logoUrl),
     description: text(d.shortDescription || d.description), address: text(d.address),
     openingHours: text(d.openingHours), phone: text(d.phone), website: publicUrl(d.website),
-    managed: approved, source: approved ? 'approved_business' : 'openstreetmap',
-    sourceUrl: publicUrl(d.sourceUrl), attribution: approved ? '' : '© OpenStreetMap contributors · ODbL',
+    managed: approved, source: approved ? 'approved_business' : (d.source === 'overture' ? 'overture' : 'openstreetmap'),
+    sourceUrl: publicUrl(d.sourceUrl), attribution: approved ? '' : (d.source === 'overture' ? 'Overture Maps Foundation · CDLA Permissive 2.0 / Apache 2.0 · https://docs.overturemaps.org/attribution/' : '© OpenStreetMap contributors · ODbL'),
     rating: Math.min(5, Math.max(0, Number(d.rating) || 0)),
     routeRecommended: d.routeSettings?.enabled === true};
 }
