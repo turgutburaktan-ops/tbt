@@ -1,0 +1,27 @@
+name: Venue live source diagnostic
+on:
+  push:
+    branches: [codex/venue-live-diagnostic]
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Probe exact province query
+        shell: python
+        run: |
+          import urllib.request, urllib.parse, json, time, concurrent.futures
+          q='[out:json][timeout:20];area["ISO3166-2"="TR-23"]["admin_level"="4"]->.province;.province out ids;(nwr(area.province)["amenity"~"^(cafe|ice_cream|juice_bar)$"]["name"];nwr(area.province)["shop"~"^(coffee|pastry|confectionery|tea|chocolate)$"]["name"];);out center tags;'
+          def check(host):
+            started=time.monotonic()
+            try:
+              request=urllib.request.Request(host,data=urllib.parse.urlencode({'data':q}).encode(),headers={'User-Agent':'TBT-mobile/0.1 (city places)','Accept':'application/json'})
+              with urllib.request.urlopen(request, timeout=30) as r: data=json.load(r)
+              elements=data.get('elements',[])
+              print(json.dumps({'endpoint':host,'seconds':round(time.monotonic()-started,1),'remark':data.get('remark'),'types':sorted(set(e.get('type','') for e in elements)),'count':len(elements),'names':[e.get('tags',{}).get('name') for e in elements if e.get('tags',{}).get('name')]},ensure_ascii=False),flush=True)
+            except Exception as e:
+              print(json.dumps({'endpoint':host,'seconds':round(time.monotonic()-started,1),'error':str(e)}),flush=True)
+          with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
+            list(pool.map(check,['https://overpass-api.de/api/interpreter','https://overpass.private.coffee/api/interpreter']))
