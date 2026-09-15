@@ -1,3 +1,4 @@
+import 'event_deep_link_screen.dart';
 import '../theme/app_theme.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -143,6 +144,8 @@ class CampusHomeScreen extends StatelessWidget {
           body: ListView(
             padding: const EdgeInsets.fromLTRB(14, 8, 14, 32),
             children: [
+              _EventsSection(university: university),
+              const SizedBox(height: 18),
               Container(
                 margin: const EdgeInsets.only(bottom: 14),
                 padding: const EdgeInsets.symmetric(
@@ -197,7 +200,7 @@ class CampusHomeScreen extends StatelessWidget {
               const SizedBox(height: 22),
               _CommunitiesSection(university: university),
               const SizedBox(height: 22),
-              _EventsSection(university: university),
+
             ],
           ),
         );
@@ -479,9 +482,12 @@ class _EventsSection extends StatelessWidget {
       return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
         stream: FirebaseFirestore.instance
             .collection('social_events')
+            .where('visibility', isEqualTo: 'public')
             .limit(100)
             .snapshots(),
         builder: (context, eventSnap) {
+          if (communitySnap.hasError || eventSnap.hasError) return const _Empty('Kampüs etkinlikleri yüklenemedi. Tekrar dene.');
+          if (!communitySnap.hasData || !eventSnap.hasData) return const Center(child: CircularProgressIndicator());
           final now = DateTime.now();
           final events = (eventSnap.data?.docs ?? const []).where((doc) {
             final d = doc.data();
@@ -507,10 +513,12 @@ class _EventsSection extends StatelessWidget {
                   'Yaklaşan kampüs etkinliği yok. Çevrende sekmesinden yeni bir etkinlik oluşturabilirsin.',
                 )
               else
-                ...events.take(5).map((doc) {
+                ...events.map((doc) {
                   final d = doc.data();
                   final dt = (d['startsAt'] as Timestamp).toDate().toLocal();
-                  return Container(
+                  return InkWell(
+                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => EventDeepLinkScreen(eventId: doc.id))),
+                    child: Container(
                     margin: const EdgeInsets.only(bottom: 8),
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
@@ -551,7 +559,7 @@ class _EventsSection extends StatelessWidget {
                         ),
                       ],
                     ),
-                  );
+                  ));
                 }),
             ],
           );
@@ -588,3 +596,4 @@ class _Empty extends StatelessWidget {
     child: Text(text, style: const TextStyle(color: Colors.white60)),
   );
 }
+

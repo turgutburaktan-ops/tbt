@@ -78,7 +78,7 @@ class EventPhotoCreateScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('Plan Başlat')),
+      appBar: AppBar(title: const Text('Etkinlik Oluştur')),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 14, 16, 32),
         children: [
@@ -176,3 +176,4 @@ class _EventTemplate {
     this.startsAfter,
   );
 }
+

@@ -380,11 +380,22 @@ service cloud.firestore {
         allow delete: if false;
       }
       match /chat/{messageId} {
+        function validChat() {
+          let d = request.resource.data;
+          let type = d.get('type', 'text');
+          let path = 'event_chat/' + eventId + '/' + request.auth.uid + '/' + messageId + '/';
+          return d.keys().hasOnly(['senderId','senderName','text','createdAt','type','reply','storagePath','durationMs','latitude','longitude']) &&
+            d.senderId == request.auth.uid && d.senderName is string && d.senderName.size() <= 100 &&
+            d.text is string && d.text.size() > 0 && d.text.size() <= 1500 && d.createdAt == request.time &&
+            (!('reply' in d) || (d.reply is map && d.reply.keys().hasOnly(['id','name','text']) && d.reply.id is string && d.reply.id.size() <= 180 && d.reply.name is string && d.reply.name.size() <= 100 && d.reply.text is string && d.reply.text.size() <= 300 && exists(/databases/$(database)/documents/social_events/$(eventId)/chat/$(d.reply.id)))) &&
+            ((type == 'text' && !d.keys().hasAny(['storagePath','durationMs','latitude','longitude'])) ||
+             (type == 'location' && d.latitude is number && d.longitude is number && d.latitude >= -90 && d.latitude <= 90 && d.longitude >= -180 && d.longitude <= 180 && !d.keys().hasAny(['storagePath','durationMs'])) ||
+             (type == 'audio' && d.storagePath == path + 'audio.m4a' && d.durationMs is int && d.durationMs > 0 && d.durationMs <= 3600000 && !d.keys().hasAny(['latitude','longitude'])) ||
+             (type == 'image' && d.storagePath in [path+'media.jpg',path+'media.png',path+'media.webp',path+'media.heic',path+'media.heif'] && !d.keys().hasAny(['durationMs','latitude','longitude'])) ||
+             (type == 'video' && d.storagePath in [path+'media.mp4',path+'media.mov'] && !d.keys().hasAny(['durationMs','latitude','longitude'])));
+        }
         allow read: if eventChatMember(eventId);
-        allow create: if eventChatMember(eventId) && get(/databases/$(database)/documents/social_events/$(eventId)).data.status == 'open' &&
-          request.resource.data.keys().hasOnly(['senderId','senderName','text','createdAt']) &&
-          request.resource.data.senderId == request.auth.uid && request.resource.data.senderName is string && request.resource.data.senderName.size() <= 100 &&
-          request.resource.data.text is string && request.resource.data.text.size() > 0 && request.resource.data.text.size() <= 1500 && request.resource.data.createdAt == request.time;
+        allow create: if eventChatMember(eventId) && get(/databases/$(database)/documents/social_events/$(eventId)).data.status == 'open' && validChat();
         allow update: if false;
         allow delete: if eventChatMember(eventId) && (resource.data.senderId == request.auth.uid || get(/databases/$(database)/documents/social_events/$(eventId)).data.hostId == request.auth.uid);
       }
@@ -637,3 +648,4 @@ service cloud.firestore {
     match /{document=**} { allow read, write: if false; }
   }
 }
+

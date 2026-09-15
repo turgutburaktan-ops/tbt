@@ -1,6 +1,23 @@
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
+    match /event_chat/{eventId}/{uid}/{messageId}/{fileName} {
+      function eventChatParticipant() {
+        let e = firestore.get(/databases/(default)/documents/social_events/$(eventId)).data;
+        return request.auth != null && (e.hostId == request.auth.uid || e.participantIds.hasAny([request.auth.uid]));
+      }
+      function eventChatUpload() {
+        return request.resource != null && request.resource.size > 0 &&
+          ((fileName == 'audio.m4a' && request.resource.size <= 20*1024*1024 && request.resource.contentType == 'audio/mp4') ||
+           (fileName.matches('media\\.(jpg|png|webp|heic|heif)') && request.resource.size <= 15*1024*1024 && request.resource.contentType.matches('image/(jpeg|png|webp|heic|heif)')) ||
+           (fileName.matches('media\\.(mp4|mov)') && request.resource.size <= 100*1024*1024 && request.resource.contentType.matches('video/(mp4|quicktime)')));
+      }
+      allow read: if eventChatParticipant();
+      allow create: if resource == null && eventChatParticipant() && request.auth.uid == uid && firestore.get(/databases/(default)/documents/social_events/$(eventId)).data.status == 'open' && eventChatUpload();
+      allow update: if false;
+      allow delete: if eventChatParticipant() && request.auth.uid == uid;
+    }
+
     function signedIn() {
       return request.auth != null;
     }
@@ -75,3 +92,4 @@ service firebase.storage {
     }
   }
 }
+

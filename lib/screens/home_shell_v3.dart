@@ -607,56 +607,18 @@ class _NearbyUnifiedHubState extends State<_NearbyUnifiedHub> {
               padding: const EdgeInsets.fromLTRB(14, 10, 14, 7),
               child: Column(
                 children: [
-                  const Row(
+                  Row(
                     children: [
-                      _GradientIcon(icon: Icons.near_me_rounded, size: 23),
-                      SizedBox(width: 9),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Çevrende',
-                              style: TextStyle(
-                                fontSize: 23,
-                                fontWeight: FontWeight.w900,
-                              ),
-                            ),
-                            Text(
-                              'Yakındaki planlar ve etkinlikler tek akışta.',
-                              style: TextStyle(
-                                color: Colors.white54,
-                                fontSize: 11.5,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                      const _GradientIcon(icon: Icons.near_me_rounded, size: 23),
+                      const SizedBox(width: 9),
+                      const Expanded(child: Text('Çevrende', style: TextStyle(fontSize: 23, fontWeight: FontWeight.w900))),
+                      const SizedBox(width: 8),
+                      Flexible(child: FilledButton.icon(
+                        onPressed: _createEvent,
+                        icon: const Icon(Icons.add_circle_outline_rounded, size: 18),
+                        label: const Text('Etkinlik oluştur'),
+                      )),
                     ],
-                  ),
-                  const SizedBox(height: 12),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 46,
-                    child: FilledButton.icon(
-                      onPressed: _createEvent,
-                      style: FilledButton.styleFrom(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                      ),
-                      icon: const Icon(
-                        Icons.add_circle_outline_rounded,
-                        size: 20,
-                      ),
-                      label: const Text(
-                        'Etkinlik oluştur',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w900,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ),
                   ),
                 ],
               ),
@@ -768,3 +730,4 @@ class _GradientIcon extends StatelessWidget {
     child: Icon(icon, size: size),
   );
 }
+

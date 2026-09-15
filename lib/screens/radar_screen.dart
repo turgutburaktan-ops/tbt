@@ -1,3 +1,5 @@
+import '../widgets/event_list_card.dart';
+import '../utils/event_presentation.dart';
 import '../models/travel_plan.dart';
 import '../services/travel_plan_service.dart';
 import 'routes_hub_screen.dart';
@@ -30,6 +32,8 @@ class _RadarScreenState extends State<RadarScreen> {
 
   final _cityController = TextEditingController();
   String _period = 'now';
+  String _selectedCity = '';
+  int _eventLimit = 20;
   String _category = 'Tümü';
   String? _joiningEventId;
 
@@ -69,8 +73,9 @@ class _RadarScreenState extends State<RadarScreen> {
     try {
       final prefs = await SharedPreferences.getInstance();
       final savedCity = prefs.getString(_cityPrefKey)?.trim() ?? '';
-      if (!mounted) return;
-      setState(() => _cityController.text = savedCity);
+      if (!mounted || !turkeyCities.contains(savedCity)) return;
+      if (_cityController.text.isNotEmpty) return;
+      setState(() { _cityController.text = savedCity; _selectedCity = savedCity; });
     } catch (_) {}
   }
 
@@ -86,14 +91,15 @@ class _RadarScreenState extends State<RadarScreen> {
       .replaceAll('ç', 'c');
 
   bool _sameCity(String value) {
-    final city = _cityController.text.trim();
+    final city = _selectedCity;
     if (city.isEmpty) return true;
     return _normalize(value) == _normalize(city);
   }
 
   Future<void> _setCity(String value) async {
     final city = value.trim();
-    if (mounted) setState(() {});
+    if (city.isNotEmpty && !turkeyCities.contains(city)) return;
+    if (mounted) setState(() { _selectedCity = city; _eventLimit = 20; });
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_cityPrefKey, city);
   }
@@ -191,19 +197,7 @@ class _RadarScreenState extends State<RadarScreen> {
     _ => 'Bugün',
   };
 
-  String _timeUntil(DateTime value) {
-    final diff = value.toLocal().difference(DateTime.now());
-    if (diff.isNegative) return 'Başladı';
-    if (diff.inMinutes < 60) return '${diff.inMinutes} dk sonra';
-    if (diff.inHours < 24) {
-      final minute = diff.inMinutes.remainder(60);
-      return minute == 0
-          ? '${diff.inHours} sa sonra'
-          : '${diff.inHours} sa ${minute} dk sonra';
-    }
-    final d = value.toLocal();
-    return '${d.day.toString().padLeft(2, '0')}.${d.month.toString().padLeft(2, '0')} • ${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
-  }
+  String _timeUntil(DateTime value) => eventStartLabel(value);
 
   void _openActivity(String activity, {String? city}) {
     Navigator.push(
@@ -211,7 +205,7 @@ class _RadarScreenState extends State<RadarScreen> {
       MaterialPageRoute(
         builder: (_) => ActivityDemandScreen(
           initialActivity: activity,
-          initialCity: (city ?? _cityController.text).trim(),
+          initialCity: (city ?? _selectedCity).trim(),
         ),
       ),
     );
@@ -282,19 +276,6 @@ class _RadarScreenState extends State<RadarScreen> {
                         )
                         .toList()
                       ..sort((a, b) => a.startsAt.compareTo(b.startsAt));
-                final soon = events
-                    .where(
-                      (e) => e.startsAt.isBefore(
-                        DateTime.now().add(const Duration(hours: 3)),
-                      ),
-                    )
-                    .take(8)
-                    .toList();
-                final popular = [...events]
-                  ..sort(
-                    (a, b) => b.participantCount.compareTo(a.participantCount),
-                  );
-
                 return RefreshIndicator(
                   color: AppColors.cyan,
                   onRefresh: _load,
@@ -311,7 +292,20 @@ class _RadarScreenState extends State<RadarScreen> {
                       const SizedBox(height: 10),
                       _categoryStrip(),
                       const SizedBox(height: 12),
-                      _hero(events, demands),
+                      _sectionTitle('Etkinlikler', 'Seçtiğin şehir ve zamana uygun etkinlikler'),
+                      const SizedBox(height: 9),
+                      if (eventSnapshot.hasError)
+                        const Text('Etkinlikler yüklenemedi. Yenilemek için aşağı çek.')
+                      else if (!eventSnapshot.hasData)
+                        const Center(child: CircularProgressIndicator())
+                      else if (events.isEmpty)
+                        _emptyEvents()
+                      else ...[
+                        for (final event in events.take(_eventLimit))
+                          Padding(padding: const EdgeInsets.only(bottom: 10), child: _eventCard(event)),
+                        if (events.length > _eventLimit)
+                          TextButton(onPressed: () => setState(() => _eventLimit += 20), child: const Text('Daha fazla etkinlik göster')),
+                      ],
                       if (_category == 'Tümü' || _category == 'Gezi')
                         StreamBuilder<List<TravelPlan>>(
                           stream: TravelPlanService.instance.watchPublic(),
@@ -349,19 +343,7 @@ class _RadarScreenState extends State<RadarScreen> {
                           },
                         ),
                       const SizedBox(height: 18),
-                      _sectionTitle(
-                        '⚡ Şimdi Çık',
-                        'Önümüzdeki 3 saat içinde başlayacak planlar',
-                      ),
-                      const SizedBox(height: 9),
-                      _eventRail(soon),
-                      const SizedBox(height: 20),
-                      _sectionTitle(
-                        '🔥 Şehrin hareketli planları',
-                        'Katılımı en yüksek etkinlikler',
-                      ),
-                      const SizedBox(height: 9),
-                      _eventRail(popular.take(8).toList()),
+                      _hero(events, demands),
                       const SizedBox(height: 20),
                       _sectionTitle(
                         'Şu an ne yapmak istiyorlar?',
@@ -407,7 +389,8 @@ class _RadarScreenState extends State<RadarScreen> {
           labelText: 'Şehir',
           hintText: 'Şehir seç; boş bırakırsan Türkiye geneli gösterilir',
           prefixIcon: Icons.location_city_outlined,
-          onChanged: _setCity,
+          onChanged: (value) { if (value.trim().isEmpty) _setCity(''); },
+          onSelected: (value) { _setCity(value); FocusScope.of(context).unfocus(); },
           maxSuggestions: 7,
         ),
         const SizedBox(height: 8),
@@ -457,7 +440,7 @@ class _RadarScreenState extends State<RadarScreen> {
       participantIds.addAll(event.participantIds);
     }
     participantIds.addAll(demands.map((e) => e.userId));
-    final city = _cityController.text.trim();
+    final city = _selectedCity;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -544,8 +527,7 @@ class _RadarScreenState extends State<RadarScreen> {
     );
   }
 
-  Widget _eventRail(List<SocialEvent> events) {
-    if (events.isEmpty) {
+  Widget _emptyEvents() {
       return Container(
         padding: const EdgeInsets.all(15),
         decoration: BoxDecoration(
@@ -558,157 +540,15 @@ class _RadarScreenState extends State<RadarScreen> {
           style: TextStyle(color: Colors.white54, height: 1.35),
         ),
       );
-    }
-    return SizedBox(
-      height: 190,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: events.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 9),
-        itemBuilder: (context, index) => _eventCard(events[index]),
-      ),
-    );
+
   }
 
   Widget _eventCard(SocialEvent event) {
     final uid = FirebaseAuth.instance.currentUser?.uid;
-    final joined =
-        uid != null &&
-        (event.hostId == uid || event.participantIds.contains(uid));
-    final loading = _joiningEventId == event.id;
-    final remaining = event.remainingSlots.clamp(0, event.capacity);
-    return SizedBox(
-      width: 228,
-      child: Material(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(17),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(17),
-          onTap: () => _openEvent(event),
-          child: Container(
-            padding: const EdgeInsets.all(13),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(17),
-              border: Border.all(color: AppColors.border),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      width: 38,
-                      height: 38,
-                      decoration: BoxDecoration(
-                        color: AppColors.surfaceStrong,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(
-                        _eventIcon(event.type),
-                        size: 19,
-                        color: AppColors.cyan,
-                      ),
-                    ),
-                    const SizedBox(width: 9),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            _timeUntil(event.startsAt),
-                            style: const TextStyle(
-                              color: AppColors.cyan,
-                              fontSize: 10.5,
-                              fontWeight: FontWeight.w900,
-                            ),
-                          ),
-                          Text(
-                            event.city,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: Colors.white38,
-                              fontSize: 9.5,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  event.title,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w900,
-                    height: 1.15,
-                  ),
-                ),
-                const Spacer(),
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.groups_2_outlined,
-                      size: 14,
-                      color: Colors.white38,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${event.participantCount}/${event.capacity}',
-                      style: const TextStyle(
-                        color: Colors.white54,
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    if (remaining <= 2 && remaining > 0) ...[
-                      const SizedBox(width: 7),
-                      Text(
-                        'Son $remaining yer',
-                        style: const TextStyle(
-                          color: Colors.orangeAccent,
-                          fontSize: 9.5,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-                const SizedBox(height: 9),
-                SizedBox(
-                  width: double.infinity,
-                  height: 35,
-                  child: FilledButton(
-                    onPressed: loading || event.isFull
-                        ? null
-                        : () => _joinNow(event),
-                    child: loading
-                        ? const SizedBox(
-                            width: 15,
-                            height: 15,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : Text(
-                            joined
-                                ? 'Detayları Gör'
-                                : event.isFull
-                                ? 'Dolu'
-                                : 'Ben de Geliyorum',
-                            style: const TextStyle(
-                              fontSize: 10.5,
-                              fontWeight: FontWeight.w900,
-                            ),
-                          ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+    return EventListCard(event: event,
+      joined: uid != null && (event.hostId == uid || event.participantIds.contains(uid)),
+      busy: _joiningEventId == event.id,
+      onOpen: () => _openEvent(event), onJoin: () => _joinNow(event), icon: _eventIcon(event.type),
     );
   }
 
@@ -897,3 +737,4 @@ class _LiveDotState extends State<_LiveDot>
     );
   }
 }
+
