@@ -9,27 +9,21 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Compare GET and POST with the original bounding box
+      - name: Verify app POST for dining and cafes
         shell: python
         run: |
           import urllib.request, urllib.parse, json, time, concurrent.futures
-          province='[out:json][timeout:45];area["ISO3166-2"="TR-23"]["admin_level"="4"]->.province;.province out ids;(nwr(area.province)["amenity"~"^(cafe|ice_cream|juice_bar)$"]["name"];nwr(area.province)["shop"~"^(coffee|pastry|confectionery|tea|chocolate)$"]["name"];);out center tags;'
-          bbox='[out:json][timeout:20];nwr(38.1248,38.5725,39.2248,39.8725)["amenity"="cafe"]["name"];out center tags;'
-          def check(case):
-            label,host,query,method=case
+          def check(category):
+            filters = ['["amenity"~"^(cafe|ice_cream|juice_bar)$"]','["shop"~"^(coffee|pastry|confectionery|tea|chocolate)$"]'] if category=='cafe' else ['["amenity"~"^(restaurant|fast_food|food_court|bar|pub|biergarten|bbq)$"]','["shop"~"^(bakery|deli|butcher|seafood|cheese|pasta|convenience)$"]']
+            q='[out:json][timeout:45];area["ISO3166-2"="TR-23"]["admin_level"="4"]->.province;.province out ids;('+''.join('nwr(area.province)'+f+'["name"];' for f in filters)+');out center tags;'
             start=time.monotonic()
             try:
-              data=urllib.parse.urlencode({'data':query})
-              request=urllib.request.Request(host+('?' +data if method=='GET' else ''),data=data.encode() if method=='POST' else None,headers={'User-Agent':'TBT-mobile/0.1 (city places)','Accept':'application/json'})
-              with urllib.request.urlopen(request, timeout=55) as r: body=r.read().decode()
-              d=json.loads(body); elements=d.get('elements',[])
-              print(json.dumps({'case':label,'seconds':round(time.monotonic()-start,1),'remark':d.get('remark'),'types':sorted(set(e.get('type','') for e in elements)),'count':len(elements),'names':[e.get('tags',{}).get('name') for e in elements if e.get('tags',{}).get('name')]},ensure_ascii=False),flush=True)
+              request=urllib.request.Request('https://overpass.kumi.systems/api/interpreter',data=urllib.parse.urlencode({'data':q}).encode(),headers={'User-Agent':'TBT-mobile/0.1 (city places)','Accept':'application/json'})
+              with urllib.request.urlopen(request, timeout=60) as r: d=json.load(r)
+              e=d.get('elements',[])
+              print(json.dumps({'category':category,'seconds':round(time.monotonic()-start,1),'remark':d.get('remark'),'boundary':any(x.get('type')=='area' for x in e),'count':sum(bool(x.get('tags',{}).get('name')) for x in e)},ensure_ascii=False),flush=True)
+              assert not d.get('remark') and any(x.get('type')=='area' for x in e)
             except Exception as e:
-              print(json.dumps({'case':label,'seconds':round(time.monotonic()-start,1),'error':str(e)}),flush=True)
-          cases=[
-            ('de-get-province','https://overpass-api.de/api/interpreter',province,'GET'),
-            ('coffee-get-province','https://overpass.private.coffee/api/interpreter',province,'GET'),
-            ('de-post-bbox','https://overpass-api.de/api/interpreter',bbox,'POST'),
-            ('kumi-get-province','https://overpass.kumi.systems/api/interpreter',province,'GET'),
-          ]
-          with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool: list(pool.map(check,cases))
+              print(json.dumps({'category':category,'error':str(e)}),flush=True)
+              raise
+          for category in ['cafe','dining']: check(category)
