@@ -31,7 +31,7 @@ jobs:
             f.write(f'GOOGLE_APPLICATION_CREDENTIALS={target}\n')
           PY
       - name: Deploy evaluation and business actions
-        run: firebase deploy --only functions:venueQuality,functions:refreshVenueQualityReview,functions:refreshVenueQualityDaily,functions:refreshVenueQualityCoupon,functions:refreshVenueQualityReservation,functions:refreshVenueQualityStaff,functions:refreshVenueQualityOwner,functions:leaveTravelPlan,functions:createBusinessEvent --project en-iyi-cekim-noktasi --non-interactive
+        run: firebase deploy --only functions:venueQuality,functions:refreshVenueQualityReview,functions:refreshVenueQualityDaily,functions:refreshVenueQualityCoupon,functions:refreshVenueQualityReservation,functions:refreshVenueQualityStaff,functions:refreshVenueQualityOwner,functions:leaveTravelPlan,functions:createBusinessEvent --project en-iyi-cekim-noktasi --non-interactive --force
       - name: Confirm callable endpoints exist and require authentication
         run: |
           python3 - <<'PY'
