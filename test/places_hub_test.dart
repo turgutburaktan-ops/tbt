@@ -51,6 +51,7 @@ class Catalog extends PlacesDataSource {
     required double latitude,
     required double longitude,
     void Function(List<NearbyVenue>)? onUpdate,
+    bool forceRefresh = false,
   }) async => [];
 }
 
@@ -62,6 +63,7 @@ class FailingCatalog extends Catalog {
     required double latitude,
     required double longitude,
     void Function(List<NearbyVenue>)? onUpdate,
+    bool forceRefresh = false,
   }) async => throw Exception('unavailable');
 }
 

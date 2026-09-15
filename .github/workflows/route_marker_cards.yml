@@ -122,7 +122,7 @@ jobs:
           python3 tool/configure_route_album.py android
           python3 tool/patch_receive_sharing_intent.py
       - name: Build debug APK
-        run: flutter build apk --debug --no-pub --build-number=42
+        run: flutter build apk --debug --no-pub --build-number=43
       - name: Verify APK signing identity
         shell: bash
         run: |

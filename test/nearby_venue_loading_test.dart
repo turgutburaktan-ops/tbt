@@ -15,7 +15,7 @@ const venue = NearbyVenue(
   latitude: 38.67,
   longitude: 39.22,
 );
-const key = 'city_venues_v9_cafe_80000_387_392_nearby';
+const key = 'city_venues_v10_province_cafe_80000_387_392_nearby';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -228,5 +228,111 @@ void main() {
     firstResponse.complete(http.Response('{"elements":[]}', 200));
     await Future.wait([first, second]);
     expect(calls, 2);
+  });
+  test('province query keeps distant districts and street names, without a result cap', () async {
+    SharedPreferences.setMockInitialValues({});
+    String query = '';
+    final service = NearbyVenueService.forTesting(
+      clientFactory: () => MockClient((request) async {
+        query = request.bodyFields['data']!;
+        return http.Response(
+          jsonEncode({
+            'elements': [
+              {'type': 'area', 'id': 3600000023},
+              for (var i = 0; i < 650; i++)
+                {
+                  'type': 'node',
+                  'id': i,
+                  'lat': 38.9,
+                  'lon': 40.0,
+                  'tags': {
+                    'name': 'Kafe $i',
+                    'amenity': 'cafe',
+                    'addr:city': 'Karakoçan',
+                    'addr:street': 'Malatya Caddesi',
+                  },
+                },
+            ],
+          }),
+          200,
+        );
+      }),
+      businessLoader: (_, __, ___, ____) async => [],
+    );
+    service.selectCity(
+      name: 'Elazığ',
+      latitude: 38.6748,
+      longitude: 39.2225,
+      south: 38.1248,
+      west: 38.5725,
+      north: 39.2248,
+      east: 39.8725,
+    );
+    final items = await service.nearby(
+      category: NearbyVenueCategory.cafe,
+      latitude: 38.6748,
+      longitude: 39.2225,
+    );
+    expect(query, contains('"ISO3166-2"="TR-23"'));
+    expect(query, contains('nwr(area.province)'));
+    expect(query, isNot(contains('around:')));
+    expect(items.length, 650);
+  });
+
+  test('forced refresh bypasses a fresh ten-place cache', () async {
+    SharedPreferences.setMockInitialValues({
+      key: jsonEncode({
+        'savedAt': DateTime.now().millisecondsSinceEpoch,
+        'venues': [
+          for (var i = 0; i < 10; i++)
+            {...venue.toJson(), 'id': 'old-$i', 'name': 'Old $i'},
+        ],
+      }),
+    });
+    var calls = 0;
+    final service = NearbyVenueService.forTesting(
+      clientFactory: () => MockClient((_) async {
+        calls++;
+        return http.Response('{"elements":[]}', 200);
+      }),
+      businessLoader: (_, __, ___, ____) async => [],
+    );
+    expect(
+      (await service.nearby(
+        category: NearbyVenueCategory.cafe,
+        latitude: 38.67,
+        longitude: 39.22,
+      )).length,
+      10,
+    );
+    expect(calls, 0);
+    expect(
+      await service.nearby(
+        category: NearbyVenueCategory.cafe,
+        latitude: 38.67,
+        longitude: 39.22,
+        forceRefresh: true,
+      ),
+      isEmpty,
+    );
+    expect(calls, 1);
+  });
+
+  test('missing province boundary is an error, not an empty cache', () async {
+    SharedPreferences.setMockInitialValues({});
+    final service = NearbyVenueService.forTesting(
+      clientFactory: () =>
+          MockClient((_) async => http.Response('{"elements":[]}', 200)),
+      businessLoader: (_, __, ___, ____) async => [],
+    );
+    service.selectCity(name: 'Elazığ', latitude: 38.6748, longitude: 39.2225);
+    await expectLater(
+      service.nearby(
+        category: NearbyVenueCategory.cafe,
+        latitude: 38.6748,
+        longitude: 39.2225,
+      ),
+      throwsA(isA<VenueLoadException>()),
+    );
   });
 }

@@ -55,7 +55,99 @@ class NearbyVenueService {
   static final instance = NearbyVenueService._();
   static const _cacheLifetime = Duration(hours: 18);
   static const int cityScaleRadiusMeters = 80000;
-  static const int _selectedCityMaxDistanceMeters = 55000;
+  // Plate/ISO order, independent of the alphabetically sorted city picker.
+  static const _provinceNames = <String>[
+    'Adana',
+    'Adıyaman',
+    'Afyonkarahisar',
+    'Ağrı',
+    'Amasya',
+    'Ankara',
+    'Antalya',
+    'Artvin',
+    'Aydın',
+    'Balıkesir',
+    'Bilecik',
+    'Bingöl',
+    'Bitlis',
+    'Bolu',
+    'Burdur',
+    'Bursa',
+    'Çanakkale',
+    'Çankırı',
+    'Çorum',
+    'Denizli',
+    'Diyarbakır',
+    'Edirne',
+    'Elazığ',
+    'Erzincan',
+    'Erzurum',
+    'Eskişehir',
+    'Gaziantep',
+    'Giresun',
+    'Gümüşhane',
+    'Hakkâri',
+    'Hatay',
+    'Isparta',
+    'Mersin',
+    'İstanbul',
+    'İzmir',
+    'Kars',
+    'Kastamonu',
+    'Kayseri',
+    'Kırklareli',
+    'Kırşehir',
+    'Kocaeli',
+    'Konya',
+    'Kütahya',
+    'Malatya',
+    'Manisa',
+    'Kahramanmaraş',
+    'Mardin',
+    'Muğla',
+    'Muş',
+    'Nevşehir',
+    'Niğde',
+    'Ordu',
+    'Rize',
+    'Sakarya',
+    'Samsun',
+    'Siirt',
+    'Sinop',
+    'Sivas',
+    'Tekirdağ',
+    'Tokat',
+    'Trabzon',
+    'Tunceli',
+    'Şanlıurfa',
+    'Uşak',
+    'Van',
+    'Yozgat',
+    'Zonguldak',
+    'Aksaray',
+    'Bayburt',
+    'Karaman',
+    'Kırıkkale',
+    'Batman',
+    'Şırnak',
+    'Bartın',
+    'Ardahan',
+    'Iğdır',
+    'Yalova',
+    'Karabük',
+    'Kilis',
+    'Osmaniye',
+    'Düzce',
+  ];
+
+  String? _provinceCode(_VenueQueryState state) {
+    if (!state.selectedCity) return null;
+    final index = _provinceNames.indexWhere(
+      (name) => _fold(name) == _fold(state.cityName ?? ''),
+    );
+    return index < 0 ? null : 'TR-${(index + 1).toString().padLeft(2, '0')}';
+  }
+
   static const _endpoints = <String>[
     'https://overpass-api.de/api/interpreter',
     'https://overpass.private.coffee/api/interpreter',
@@ -90,9 +182,9 @@ class NearbyVenueService {
       <String, Future<List<NearbyVenue>>>{};
   final Map<String, Set<void Function(List<NearbyVenue>)>> _listeners = {};
   final Map<String, List<NearbyVenue>> _latestInFlight = {};
-  QuerySnapshot<Map<String, dynamic>>? _businessSnapshot;
+  List<QueryDocumentSnapshot<Map<String, dynamic>>>? _businessSnapshot;
   DateTime? _businessSnapshotAt;
-  Future<QuerySnapshot<Map<String, dynamic>>>? _businessRequest;
+  Future<List<QueryDocumentSnapshot<Map<String, dynamic>>>>? _businessRequest;
   SharedPreferences? _preferences;
   Future<void> _osmQueue = Future.value();
 
@@ -106,7 +198,7 @@ class NearbyVenueService {
     }
   }
 
-  Future<QuerySnapshot<Map<String, dynamic>>> _businessCatalog() {
+  Future<List<QueryDocumentSnapshot<Map<String, dynamic>>>> _businessCatalog() {
     if (_businessSnapshot != null &&
         _businessSnapshotAt != null &&
         DateTime.now().difference(_businessSnapshotAt!) <
@@ -114,12 +206,22 @@ class NearbyVenueService {
       return Future.value(_businessSnapshot!);
     }
     if (_businessRequest != null) return _businessRequest!;
-    final request = FirebaseFirestore.instance
-        .collection('business_venues')
-        .where('source', isEqualTo: 'user_submission')
-        .limit(500)
-        .get()
-        .timeout(const Duration(seconds: 5));
+    final request = () async {
+      final docs = <QueryDocumentSnapshot<Map<String, dynamic>>>[];
+      final query = FirebaseFirestore.instance
+          .collection('business_venues')
+          .where('source', isEqualTo: 'user_submission')
+          .orderBy(FieldPath.documentId)
+          .limit(500);
+      while (true) {
+        final page =
+            await (docs.isEmpty ? query : query.startAfterDocument(docs.last))
+                .get()
+                .timeout(const Duration(seconds: 5));
+        docs.addAll(page.docs);
+        if (page.docs.length < 500) return docs;
+      }
+    }();
     _businessRequest = request;
     return request
         .then((snapshot) {
@@ -145,6 +247,8 @@ class NearbyVenueService {
       .trim()
       .toLowerCase()
       .replaceAll('ı', 'i')
+      .replaceAll('â', 'a')
+      .replaceAll('i̇', 'i')
       .replaceAll('ğ', 'g')
       .replaceAll('ü', 'u')
       .replaceAll('ş', 's')
@@ -429,6 +533,11 @@ class NearbyVenueService {
             decoded['elements'] is! List ||
             decoded['remark'] != null)
           continue;
+        if (_provinceCode(state) != null &&
+            !(decoded['elements'] as List).any(
+              (e) => e is Map && e['type'] == 'area',
+            ))
+          continue;
         return _parse(r.body, category, state);
       } catch (_) {
         // Try the fallback without discarding already displayed results.
@@ -461,35 +570,14 @@ class NearbyVenueService {
     String address = '',
   }) {
     if (!state.selectedCity) return true;
-    if (state.hasBounds && !state.insideBounds(lat, lon)) return false;
-    if (_distanceMeters(state.latitude, state.longitude, lat, lon) >
-        _selectedCityMaxDistanceMeters) {
-      return false;
-    }
-
+    // An explicit province field takes precedence over center distance.
     final expected = _fold(state.cityName ?? '');
-    if (expected.isEmpty) return true;
     final tagged = _fold(cityTag);
-    if (tagged.isNotEmpty &&
-        !tagged.contains(expected) &&
-        !expected.contains(tagged)) {
-      return false;
-    }
-    final foldedAddress = _fold(address);
-    if (foldedAddress.isNotEmpty) {
-      const otherMajorCities = <String>[
-        'diyarbakir',
-        'malatya',
-        'bingol',
-        'tunceli',
-        'erzincan',
-        'adiyaman',
-      ];
-      for (final other in otherMajorCities) {
-        if (other != expected && foldedAddress.contains(other)) return false;
-      }
-    }
-    return true;
+    if (tagged == expected && expected.isNotEmpty) return true;
+    if (_provinceNames.any((name) => _fold(name) == tagged)) return false;
+    // Legacy entries without a province can only use the available bounds.
+    // Street names are never interpreted as province names.
+    return state.insideBounds(lat, lon);
   }
 
   Future<List<NearbyVenue>> _tbtBusinesses(
@@ -503,7 +591,7 @@ class NearbyVenueService {
       if (_businessLoader != null) return await _businessLoader(c, a, o, r);
       final snap = await _businessCatalog();
       final out = <NearbyVenue>[];
-      for (final doc in snap.docs) {
+      for (final doc in snap) {
         final d = doc.data();
         if (d['verified'] != true ||
             d['pendingListing'] == true ||
@@ -514,7 +602,7 @@ class NearbyVenueService {
             lon = (d['longitude'] as num?)?.toDouble();
         if (lat == null || lon == null) continue;
         final address = (d['address'] ?? '').toString();
-        final city = (d['city'] ?? d['province'] ?? '').toString();
+        final city = (d['province'] ?? d['city'] ?? '').toString();
         if (state.selectedCity) {
           if (!_belongsToSelectedCity(
             state,
@@ -586,7 +674,6 @@ class NearbyVenueService {
       final k =
           '${v.name.toLowerCase().trim()}_${v.latitude.toStringAsFixed(4)}_${v.longitude.toStringAsFixed(4)}';
       if (seen.add(k)) out.add(v);
-      if (out.length >= 600) break;
     }
     return out;
   }
@@ -613,7 +700,7 @@ class NearbyVenueService {
     final city = state.selectedCity
         ? '_${state.cityName?.toLowerCase().replaceAll(' ', '_') ?? 'city'}'
         : '_nearby';
-    return 'city_venues_v9_${c.name}_${r}_${(state.latitude * 10).round()}_${(state.longitude * 10).round()}$city';
+    return 'city_venues_v10_province_${c.name}_${r}_${(state.latitude * 10).round()}_${(state.longitude * 10).round()}$city';
   }
 
   _CachedVenues? _readCache(SharedPreferences p, String key) {
@@ -642,14 +729,17 @@ class NearbyVenueService {
     int r,
     _VenueQueryState state,
   ) {
-    final f = c.osmFilters
-        .map(
-          (x) => state.hasBounds
-              ? '  nwr(${state.south!},${state.west!},${state.north!},${state.east!})$x["name"];'
-              : '  nwr(around:$r,$a,$o)$x["name"];',
-        )
-        .join('\n');
-    return '[out:json][timeout:20];\n(\n$f\n);\nout center tags;';
+    final province = _provinceCode(state);
+    final scope = province != null
+        ? '(area.province)'
+        : state.hasBounds
+        ? '(${state.south!},${state.west!},${state.north!},${state.east!})'
+        : '(around:$r,$a,$o)';
+    final f = c.osmFilters.map((x) => 'nwr$scope$x["name"];').join('\n');
+    final area = province == null
+        ? ''
+        : 'area["ISO3166-2"="$province"]["admin_level"="4"]->.province;\n.province out ids;\n';
+    return '[out:json][timeout:20];\n$area(\n$f\n);\nout center tags;';
   }
 
   String _osmImageUrl(Map<String, dynamic> tags) {
@@ -708,13 +798,14 @@ class NearbyVenueService {
             district,
             city,
           ].where((x) => x.isNotEmpty).join(', ');
-      if (!_belongsToSelectedCity(
-        state,
-        a,
-        o,
-        cityTag: city,
-        address: address,
-      )) {
+      if (_provinceCode(state) == null &&
+          !_belongsToSelectedCity(
+            state,
+            a,
+            o,
+            cityTag: city,
+            address: address,
+          )) {
         continue;
       }
       final k =
@@ -737,7 +828,6 @@ class NearbyVenueService {
               .toString(),
         ),
       );
-      if (out.length >= 600) break;
     }
     return out;
   }

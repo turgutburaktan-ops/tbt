@@ -165,7 +165,7 @@ class _PlacesHubScreenState extends State<PlacesHubScreen> {
     await _reload();
   }
 
-  Future<void> _reload() async {
+  Future<void> _reload({bool forceRefresh = false}) async {
     if (_city == null && _position == null) return;
     final generation = ++_generation;
     setState(() {
@@ -188,11 +188,15 @@ class _PlacesHubScreenState extends State<PlacesHubScreen> {
         }
       }(),
       for (final index in _filters.where((i) => i > 0))
-        _loadVenues(index, generation),
+        _loadVenues(index, generation, forceRefresh: forceRefresh),
     ]);
   }
 
-  Future<void> _loadVenues(int index, int generation) async {
+  Future<void> _loadVenues(
+    int index,
+    int generation, {
+    bool forceRefresh = false,
+  }) async {
     setState(() {
       _loading.add(index);
       _errors.remove(index);
@@ -208,6 +212,7 @@ class _PlacesHubScreenState extends State<PlacesHubScreen> {
         latitude: _center.latitude,
         longitude: _center.longitude,
         onUpdate: update,
+        forceRefresh: forceRefresh,
       );
       update(venues);
       // Ratings arrive independently, never blocking places or the map.
@@ -518,7 +523,7 @@ class _PlacesHubScreenState extends State<PlacesHubScreen> {
                   ),
                 ),
                 TextButton(
-                  onPressed: _reload,
+                  onPressed: () => _reload(forceRefresh: true),
                   child: const Text('Tekrar dene'),
                 ),
               ],
@@ -527,7 +532,7 @@ class _PlacesHubScreenState extends State<PlacesHubScreen> {
             child: _map
                 ? _mapView(places)
                 : RefreshIndicator(
-                    onRefresh: _reload,
+                    onRefresh: () => _reload(forceRefresh: true),
                     child: places.isEmpty
                         ? ListView(
                             physics: const AlwaysScrollableScrollPhysics(),
@@ -882,12 +887,14 @@ class PlacesDataSource {
     required double latitude,
     required double longitude,
     void Function(List<NearbyVenue>)? onUpdate,
+    bool forceRefresh = false,
   }) => NearbyVenueService.instance.nearby(
     category: category,
     latitude: latitude,
     longitude: longitude,
     onUpdate: onUpdate,
     reportIncomplete: true,
+    forceRefresh: forceRefresh,
   );
   Future<VenueRatingSummary> rating(String category, String id) =>
       VenueRatingService.instance.summary(category, id);
