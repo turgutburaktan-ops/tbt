@@ -735,18 +735,29 @@ class _RouteCreateScreenState extends State<RouteCreateScreen> {
               if (_step == 1)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 8),
-                  child: Text(
-                    '${_stops.length}/12 durak · ${_routing
-                        ? 'Yol hesaplanıyor…'
-                        : _itinerary != null
-                        ? '${(_itinerary!.meters / 1000).toStringAsFixed(1)} km · ${(_itinerary!.seconds / 60).ceil()} dk yol'
-                        : _stops.length < 2
-                        ? 'Tahmin için iki durak ekle'
-                        : 'Yol bilgisi alınamadı'}',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: AppColors.textMuted,
+                  child: InkWell(
+                    onTap:
+                        _busy ||
+                            _routing ||
+                            _itinerary != null ||
+                            _stops.length < 2
+                        ? null
+                        : () => setState(() {
+                            _refreshRoute();
+                          }),
+                    child: Text(
+                      '${_stops.length}/12 durak · ${_routing
+                          ? 'Yol hesaplanıyor…'
+                          : _itinerary != null
+                          ? '${(_itinerary!.meters / 1000).toStringAsFixed(1)} km · ${(_itinerary!.seconds / 60).ceil()} dk yol'
+                          : _stops.length < 2
+                          ? 'Tahmin için iki durak ekle'
+                          : 'Yol bilgisi alınamadı · Tekrar dene'}',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: AppColors.textMuted,
+                      ),
                     ),
                   ),
                 ),

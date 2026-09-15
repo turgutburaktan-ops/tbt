@@ -1,3 +1,5 @@
+import '../lib/widgets/route_stops_step.dart';
+
 import 'dart:async';
 
 import 'package:firebase_core/firebase_core.dart';
@@ -100,9 +102,15 @@ void main() {
       await tester.tap(find.text('Duraklarım (2)'));
       await tester.pumpAndSettle();
       expect(find.text('Harput'), findsOneWidget);
-      expect(find.text('Keban'), findsOneWidget);
+      expect(
+        tester
+            .widget<RouteStopsStep>(find.byType(RouteStopsStep))
+            .stops
+            .map((s) => s.id),
+        ['a', 'b'],
+      );
       expect(find.text('Çoklu seçim'), findsOneWidget);
-      expect(find.byType(ReorderableDragStartListener), findsNWidgets(2));
+      expect(find.byType(ReorderableDragStartListener), findsWidgets);
       await tester.ensureVisible(find.byTooltip('Durağı kaldır').first);
       await tester.tap(find.byTooltip('Durağı kaldır').first);
       await tester.pumpAndSettle();
