@@ -120,10 +120,11 @@ void main() {
         scrollable: find.byType(Scrollable).first,
       );
       await tester.scrollUntilVisible(
-        find.text('Kimler katılabilir?'),
+        find.text('Kimler katılabilir?').hitTestable(),
         150,
         scrollable: find.byType(Scrollable).first,
       );
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Kimler katılabilir?'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Herkes'));
@@ -159,7 +160,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(DropdownButtonFormField<String>), findsOneWidget);
     await tester.scrollUntilVisible(
-      find.text('Buluşma noktası'),
+      find.text('Buluşma noktası').hitTestable(),
       180,
       scrollable: find.byType(Scrollable).first,
     );

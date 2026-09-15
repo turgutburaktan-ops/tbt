@@ -95,6 +95,12 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(RouteCreateScreen), findsOneWidget);
       expect(find.text('Şehir veya bölge ara'), findsNothing);
+      await tester.scrollUntilVisible(
+        find.text('Harput').hitTestable(),
+        180,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pumpAndSettle();
       expect(find.text('Harput'), findsOneWidget);
       expect(find.text('Keban'), findsOneWidget);
       expect(find.text('Yer ara'), findsOneWidget);

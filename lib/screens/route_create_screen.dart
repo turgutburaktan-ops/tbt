@@ -711,11 +711,12 @@ class _RouteCreateScreenState extends State<RouteCreateScreen> {
           style: TextStyle(fontSize: 19, fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: 12),
-        Container(
-          decoration: BoxDecoration(
-            color: AppColors.surface,
+        Material(
+          color: AppColors.surface,
+          clipBehavior: Clip.antiAlias,
+          shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.border),
+            side: const BorderSide(color: AppColors.border),
           ),
           child: Column(
             children: [
