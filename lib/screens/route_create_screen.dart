@@ -593,24 +593,48 @@ class _RouteCreateScreenState extends State<RouteCreateScreen> {
           ),
         ),
         const SizedBox(height: 12),
-        SegmentedButton<String>(
-          showSelectedIcon: false,
-          style: const ButtonStyle(visualDensity: VisualDensity.compact),
-          segments: [
-            for (final mode in ['Araç', 'Yürüyüş', 'Bisiklet'])
-              ButtonSegment(
-                value: mode,
-                label: Text(mode),
-                icon: Icon(routeTransportIcon(mode), size: 18),
-              ),
-          ],
-          selected: {_transport},
-          onSelectionChanged: _busy
-              ? null
-              : (value) => setState(() {
-                  _transport = value.first;
-                  _refreshRoute();
-                }),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            if (constraints.maxWidth < 340 ||
+                MediaQuery.textScalerOf(context).scale(14) > 18) {
+              return DropdownButtonFormField<String>(
+                initialValue: _transport,
+                decoration: const InputDecoration(labelText: 'Ulaşım'),
+                items: [
+                  for (final mode in ['Araç', 'Yürüyüş', 'Bisiklet'])
+                    DropdownMenuItem(value: mode, child: Text(mode)),
+                ],
+                onChanged: _busy
+                    ? null
+                    : (mode) {
+                        if (mode != null)
+                          setState(() {
+                            _transport = mode;
+                            _refreshRoute();
+                          });
+                      },
+              );
+            }
+            return SegmentedButton<String>(
+              showSelectedIcon: false,
+              style: const ButtonStyle(visualDensity: VisualDensity.compact),
+              segments: [
+                for (final mode in ['Araç', 'Yürüyüş', 'Bisiklet'])
+                  ButtonSegment(
+                    value: mode,
+                    label: Text(mode),
+                    icon: Icon(routeTransportIcon(mode), size: 18),
+                  ),
+              ],
+              selected: {_transport},
+              onSelectionChanged: _busy
+                  ? null
+                  : (value) => setState(() {
+                      _transport = value.first;
+                      _refreshRoute();
+                    }),
+            );
+          },
         ),
         const SizedBox(height: 14),
         Row(

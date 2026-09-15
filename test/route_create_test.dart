@@ -138,4 +138,35 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
+  testWidgets('small screen and enlarged text keep trip controls reachable', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(320, 740);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.dark,
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(context)
+              .copyWith(textScaler: const TextScaler.linear(1.5)),
+          child: child!,
+        ),
+        home: const RouteCreateScreen(),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byType(DropdownButtonFormField<String>), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('Buluşma noktası'),
+      180,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(find.text('Buluşma noktası'));
+    await tester.pumpAndSettle();
+    expect(find.text('Mekân ara'), findsOneWidget);
+    expect(find.text('Haritadan seç'), findsWidgets);
+    expect(tester.takeException(), isNull);
+  });
 }
