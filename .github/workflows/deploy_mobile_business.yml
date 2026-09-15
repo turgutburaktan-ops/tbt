@@ -1,0 +1,48 @@
+name: Deploy mobile business services
+on:
+  push:
+    branches: [codex/deploy-business-fixes-20260915]
+permissions:
+  contents: read
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm install --prefix functions
+      - run: node --test functions/test/business_mobile_flows.test.js functions/test/venue_quality.test.js
+      - run: npm install -g firebase-tools
+      - name: Authenticate
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          python3 - <<'PY'
+          import json,os
+          from pathlib import Path
+          account=json.loads(os.environ['FIREBASE_SERVICE_ACCOUNT'])
+          target=Path(os.environ['RUNNER_TEMP'])/'firebase-service-account.json'
+          target.write_text(json.dumps(account))
+          target.chmod(0o600)
+          with open(os.environ['GITHUB_ENV'],'a') as f:
+            f.write(f'GOOGLE_APPLICATION_CREDENTIALS={target}\n')
+          PY
+      - name: Deploy evaluation and business actions
+        run: firebase deploy --only functions:venueQuality,functions:refreshVenueQualityReview,functions:refreshVenueQualityDaily,functions:refreshVenueQualityCoupon,functions:refreshVenueQualityReservation,functions:refreshVenueQualityStaff,functions:refreshVenueQualityOwner,functions:leaveTravelPlan,functions:createBusinessEvent --project en-iyi-cekim-noktasi --non-interactive
+      - name: Confirm callable endpoints exist and require authentication
+        run: |
+          python3 - <<'PY'
+          import urllib.request,urllib.error,json
+          for name in ['venueQuality','leaveTravelPlan','createBusinessEvent']:
+            req=urllib.request.Request('https://europe-west1-en-iyi-cekim-noktasi.cloudfunctions.net/'+name,data=json.dumps({'data':{}}).encode(),headers={'Content-Type':'application/json'})
+            try:
+              urllib.request.urlopen(req,timeout=60)
+              raise RuntimeError(name+' unexpectedly accepted anonymous request')
+            except urllib.error.HTTPError as e:
+              body=json.loads(e.read())
+              print(name,e.code,body.get('error',{}).get('status'))
+              assert e.code==401 and body['error']['status']=='UNAUTHENTICATED'
+          PY
