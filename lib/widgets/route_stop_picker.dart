@@ -110,7 +110,7 @@ class _RouteStopPickerState extends State<RouteStopPicker> {
             spacing: 6,
             children: [
               for (final item in [
-                (0, 'Gezilecek Yerler'),
+                (0, 'Gezi'),
                 (1, 'Lezzet'),
                 (2, 'Kafeler'),
                 (3, 'Oteller'),

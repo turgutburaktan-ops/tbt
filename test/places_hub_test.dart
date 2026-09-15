@@ -59,13 +59,22 @@ void main() {
   setUpAll(() async {
     final root = Platform.environment['FLUTTER_ROOT'];
     if (root != null) {
-      final font = FontLoader('Ahem')
-        ..addFont(
-          File('$root/bin/cache/artifacts/material_fonts/Roboto-Regular.ttf')
-              .readAsBytes()
-              .then(ByteData.sublistView),
-        );
-      await font.load();
+      for (final family in ['Ahem', 'Roboto']) {
+        final font = FontLoader(family)
+          ..addFont(
+            File('$root/bin/cache/artifacts/material_fonts/Roboto-Regular.ttf')
+                .readAsBytes()
+                .then(ByteData.sublistView),
+          );
+        await font.load();
+      }
+      final icons = File(
+        '$root/bin/cache/artifacts/material_fonts/MaterialIcons-Regular.otf',
+      );
+      if (await icons.exists())
+        await (FontLoader(
+          'MaterialIcons',
+        )..addFont(icons.readAsBytes().then(ByteData.sublistView))).load();
     }
   });
   setUp(() => RouteSelectionService.instance.clear());
@@ -81,7 +90,9 @@ void main() {
       final boundary = GlobalKey();
       await tester.pumpWidget(
         MaterialApp(
-          theme: AppTheme.dark,
+          theme: AppTheme.dark.copyWith(
+            textTheme: AppTheme.dark.textTheme.apply(fontFamily: 'Roboto'),
+          ),
           home: Scaffold(
             body: RepaintBoundary(
               key: boundary,
@@ -137,7 +148,9 @@ void main() {
       addTearDown(tester.view.resetViewInsets);
       await tester.pumpWidget(
         MaterialApp(
-          theme: AppTheme.dark,
+          theme: AppTheme.dark.copyWith(
+            textTheme: AppTheme.dark.textTheme.apply(fontFamily: 'Roboto'),
+          ),
           home: const Scaffold(body: PlacesHubScreen(source: Catalog())),
         ),
       );
