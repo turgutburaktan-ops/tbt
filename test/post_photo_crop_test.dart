@@ -52,10 +52,11 @@ void main() {
           PostPhotoCropScreen(original: file, initialCrop: initial, resetCrop: initial)));
       }, child: const Text('Aç')),
     ))));
-    await tester.tap(find.text('Aç'));
-    await tester.pump();
     await tester.runAsync(() async {
-      for (var i = 0; i < 100 && find.text('Tamam').evaluate().isNotEmpty; i++) {
+      await tester.tap(find.text('Aç'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      for (var i = 0; i < 100; i++) {
         await Future<void>.delayed(const Duration(milliseconds: 20));
         await tester.pump();
         if (find.byType(Image).evaluate().isNotEmpty) break;

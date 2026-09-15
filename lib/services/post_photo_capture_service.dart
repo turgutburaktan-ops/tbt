@@ -43,8 +43,12 @@ img.Image cropPostPhoto(img.Image decoded, List<double> rect, int previewQuarter
   var oriented = img.bakeOrientation(decoded);
   final turns = previewQuarterTurns % 4;
   if (turns != 0) oriented = img.copyRotate(oriented, angle: turns * 90);
-  final units = math.min(oriented.width * rect[2] / 4,
-      oriented.height * rect[3] / 5).floor();
+  // Rect.width/height subtraction can turn an exact pixel boundary into
+  // 11.999999999999998. Ignore only that floating-point roundoff.
+  final units = math.min(
+      (math.min(oriented.width * rect[2] / 4,
+          oriented.height * rect[3] / 5) + 1e-8).floor(),
+      math.min(oriented.width ~/ 4, oriented.height ~/ 5));
   if (units < 1) throw const FormatException('Fotoğraf boyutu yetersiz.');
   final width = units * 4, height = units * 5;
   final x = ((rect[0] + rect[2] / 2) * oriented.width - width / 2)
