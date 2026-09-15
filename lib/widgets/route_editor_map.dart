@@ -15,6 +15,7 @@ class RouteEditorMap extends StatefulWidget {
     this.itinerary,
     this.interactive = false,
     this.center,
+    this.padding = EdgeInsets.zero,
     this.candidates = const [],
     this.onPlaceTap,
     this.onMapTap,
@@ -23,6 +24,7 @@ class RouteEditorMap extends StatefulWidget {
   final RouteItinerary? itinerary;
   final bool interactive;
   final LatLng? center;
+  final EdgeInsets padding;
   final List<PhotoSpot> candidates;
   final ValueChanged<PhotoSpot>? onPlaceTap;
   final ValueChanged<LatLng>? onMapTap;
@@ -152,6 +154,7 @@ class _RouteEditorMapState extends State<RouteEditorMap> {
       zoom: 13,
     ),
     style: '[{"elementType":"geometry","stylers":[{"color":"#171c24"}]},{"elementType":"labels.text.fill","stylers":[{"color":"#aab4c2"}]},{"elementType":"labels.text.stroke","stylers":[{"color":"#171c24"}]},{"featureType":"road","elementType":"geometry","stylers":[{"color":"#303b4a"}]},{"featureType":"water","elementType":"geometry","stylers":[{"color":"#0c1723"}]},{"featureType":"poi","elementType":"labels","stylers":[{"visibility":"off"}]}]',
+    padding: widget.padding,
     zoomControlsEnabled: false,
     myLocationButtonEnabled: false,
     mapToolbarEnabled: false,

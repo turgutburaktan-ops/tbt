@@ -173,6 +173,48 @@ class _RouteCreateScreenState extends State<RouteCreateScreen> {
     if (mounted) setState(() => _restoring = false);
   }
 
+  Future<void> _newDraft() async {
+    final discard = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Yeni rota başlatılsın mı?'),
+        content: const Text(
+          'Bu cihazdaki taslak temizlenir. Oluşturduğun rotalar korunur.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Vazgeç'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Yeni rota'),
+          ),
+        ],
+      ),
+    );
+    if (!mounted || discard != true) return;
+    _draftTimer?.cancel();
+    await _draftWrites;
+    if (_draftUser != null) await RouteDraftStore.clear(_draftUser!);
+    if (!mounted) return;
+    setState(() {
+      _title.clear();
+      _city.clear();
+      _meetingNote.clear();
+      _stops.clear();
+      _invitees.clear();
+      _meeting = null;
+      _startAt = null;
+      _step = 0;
+      _transport = 'Araç';
+      _visibility = 'private';
+      _createdPlanId = null;
+      _completed = false;
+      _refreshRoute();
+    });
+  }
+
   Future<void> _pickDate() async {
     FocusScope.of(context).unfocus();
     final now = DateTime.now();
@@ -626,6 +668,10 @@ class _RouteCreateScreenState extends State<RouteCreateScreen> {
   void _back() {
     if (_busy) return;
     FocusScope.of(context).unfocus();
+    if (_createdPlanId != null) {
+      Navigator.maybePop(context);
+      return;
+    }
     if (_step > 0) {
       setState(() => _step--);
     } else {
@@ -651,7 +697,7 @@ class _RouteCreateScreenState extends State<RouteCreateScreen> {
 
   @override
   Widget build(BuildContext context) => PopScope(
-    canPop: !_busy && _step == 0,
+    canPop: !_busy && (_step == 0 || _createdPlanId != null),
     onPopInvokedWithResult: (didPop, _) {
       if (!didPop && !_busy && _step > 0) _back();
     },
@@ -664,6 +710,11 @@ class _RouteCreateScreenState extends State<RouteCreateScreen> {
         ),
         title: Text(_stepTitles[_step]),
         actions: [
+          IconButton(
+            tooltip: 'Yeni taslak',
+            onPressed: _busy || _restoring ? null : _newDraft,
+            icon: const Icon(Icons.restart_alt),
+          ),
           Padding(
             padding: const EdgeInsets.only(right: 16),
             child: Center(
@@ -703,7 +754,7 @@ class _RouteCreateScreenState extends State<RouteCreateScreen> {
                 children: [
                   if (_step > 0) ...[
                     OutlinedButton(
-                      onPressed: _busy ? null : _back,
+                      onPressed: _busy || _createdPlanId != null ? null : _back,
                       child: const Text('Geri'),
                     ),
                     const SizedBox(width: 12),
@@ -732,7 +783,9 @@ class _RouteCreateScreenState extends State<RouteCreateScreen> {
                           _busy
                               ? 'Hazırlanıyor…'
                               : _step == 2
-                              ? 'Rotayı oluştur'
+                              ? (_createdPlanId == null
+                                    ? 'Rotayı oluştur'
+                                    : 'Sonucu aç')
                               : 'Devam',
                         ),
                       ),
@@ -755,240 +808,251 @@ class _RouteCreateScreenState extends State<RouteCreateScreen> {
                   backgroundColor: AppColors.surface,
                 ),
                 Expanded(
-                  child: _step == 0
-                      ? ListView(
-                          key: const ValueKey('basics'),
-                          padding: const EdgeInsets.all(16),
-                          children: [
-                            TextField(
-                              controller: _title,
-                              enabled: !_busy,
-                              maxLength: 80,
-                              style: const TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w700,
+                  child: AbsorbPointer(
+                    absorbing: _busy || _createdPlanId != null,
+                    child: _step == 0
+                        ? ListView(
+                            key: const ValueKey('basics'),
+                            padding: const EdgeInsets.all(16),
+                            children: [
+                              TextField(
+                                controller: _title,
+                                enabled: !_busy,
+                                maxLength: 80,
+                                style: const TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                                decoration: const InputDecoration(
+                                  hintText: 'Rotana bir isim ver',
+                                  counterText: '',
+                                  suffixIcon: Icon(
+                                    Icons.edit_outlined,
+                                    size: 20,
+                                  ),
+                                ),
                               ),
-                              decoration: const InputDecoration(
-                                hintText: 'Rotana bir isim ver',
-                                counterText: '',
-                                suffixIcon: Icon(Icons.edit_outlined, size: 20),
+                              const SizedBox(height: 10),
+                              SearchableSelectionField(
+                                controller: _city,
+                                options: turkeyCities,
+                                labelText: 'İl seç',
+                                hintText: 'Örn. Elazığ',
+                                prefixIcon: Icons.location_on_outlined,
+                                enabled: !_busy,
+                                onSelected: (_) {
+                                  FocusScope.of(context).unfocus();
+                                  setState(() {});
+                                },
                               ),
-                            ),
-                            const SizedBox(height: 10),
-                            SearchableSelectionField(
-                              controller: _city,
-                              options: turkeyCities,
-                              labelText: 'İl seç',
-                              hintText: 'Örn. Elazığ',
-                              prefixIcon: Icons.location_on_outlined,
-                              enabled: !_busy,
-                              onSelected: (_) {
-                                FocusScope.of(context).unfocus();
-                                setState(() {});
-                              },
-                            ),
-                            const SizedBox(height: 14),
+                              const SizedBox(height: 14),
 
-                            LayoutBuilder(
-                              builder: (context, constraints) {
-                                if (constraints.maxWidth < 340 ||
-                                    MediaQuery.textScalerOf(context).scale(14) >
-                                        18) {
-                                  return DropdownButtonFormField<String>(
-                                    initialValue: _transport,
-                                    decoration: const InputDecoration(
-                                      labelText: 'Ulaşım',
+                              LayoutBuilder(
+                                builder: (context, constraints) {
+                                  if (constraints.maxWidth < 340 ||
+                                      MediaQuery.textScalerOf(context)
+                                              .scale(14) >
+                                          18) {
+                                    return DropdownButtonFormField<String>(
+                                      initialValue: _transport,
+                                      decoration: const InputDecoration(
+                                        labelText: 'Ulaşım',
+                                      ),
+                                      items: [
+                                        for (final mode in [
+                                          'Araç',
+                                          'Yürüyüş',
+                                          'Bisiklet',
+                                        ])
+                                          DropdownMenuItem(
+                                            value: mode,
+                                            child: Text(mode),
+                                          ),
+                                      ],
+                                      onChanged: _busy
+                                          ? null
+                                          : (mode) {
+                                              if (mode != null)
+                                                setState(() {
+                                                  _transport = mode;
+                                                  _refreshRoute();
+                                                });
+                                            },
+                                    );
+                                  }
+                                  return SegmentedButton<String>(
+                                    showSelectedIcon: false,
+                                    style: const ButtonStyle(
+                                      visualDensity: VisualDensity.compact,
                                     ),
-                                    items: [
+                                    segments: [
                                       for (final mode in [
                                         'Araç',
                                         'Yürüyüş',
                                         'Bisiklet',
                                       ])
-                                        DropdownMenuItem(
+                                        ButtonSegment(
                                           value: mode,
-                                          child: Text(mode),
+                                          label: Text(mode),
+                                          icon: Icon(
+                                            routeTransportIcon(mode),
+                                            size: 18,
+                                          ),
                                         ),
                                     ],
-                                    onChanged: _busy
+                                    selected: {_transport},
+                                    onSelectionChanged: _busy
                                         ? null
-                                        : (mode) {
-                                            if (mode != null)
-                                              setState(() {
-                                                _transport = mode;
-                                                _refreshRoute();
-                                              });
-                                          },
+                                        : (value) => setState(() {
+                                            _transport = value.first;
+                                            _refreshRoute();
+                                          }),
                                   );
-                                }
-                                return SegmentedButton<String>(
-                                  showSelectedIcon: false,
-                                  style: const ButtonStyle(
-                                    visualDensity: VisualDensity.compact,
-                                  ),
-                                  segments: [
-                                    for (final mode in [
-                                      'Araç',
-                                      'Yürüyüş',
-                                      'Bisiklet',
-                                    ])
-                                      ButtonSegment(
-                                        value: mode,
-                                        label: Text(mode),
-                                        icon: Icon(
-                                          routeTransportIcon(mode),
-                                          size: 18,
-                                        ),
-                                      ),
-                                  ],
-                                  selected: {_transport},
-                                  onSelectionChanged: _busy
-                                      ? null
-                                      : (value) => setState(() {
-                                          _transport = value.first;
-                                          _refreshRoute();
-                                        }),
-                                );
-                              },
-                            ),
+                                },
+                              ),
 
-                            const SizedBox(height: 20),
-                            const Text(
-                              'Önce şehrini ve nasıl gideceğini seç. Duraklarını sonraki adımda ekle.',
-                              style: TextStyle(color: AppColors.textMuted),
-                            ),
-                          ],
-                        )
-                      : _step == 1
-                      ? RouteStopsStep(
-                          key: ValueKey(_city.text),
-                          city: _city.text.trim(),
-                          stops: _stops,
-                          itinerary: _itinerary,
-                          busy: _busy,
-                          loadItems: widget.loadCatalog,
-                          onAdd: _addSpot,
-                          onMapTap: _mapPoint,
-                          onSuggest: _suggest,
-                          onSort: _smartSort,
-                          onSearch: _add,
-                          stopBuilder: _stopRow,
-                          onReorder: (a, b) {
-                            if (_busy) return;
-                            setState(() {
-                              if (b > a) b--;
-                              _stops.insert(b, _stops.removeAt(a));
-                              _refreshRoute();
-                            });
-                          },
-                        )
-                      : ListView(
-                          key: const ValueKey('details'),
-                          padding: const EdgeInsets.all(16),
-                          children: [
-                            Text(
-                              _title.text,
-                              style: const TextStyle(
-                                fontSize: 22,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            Text(
-                              '${_city.text} · $_transport · ${_stops.length} durak',
-                              style: const TextStyle(
-                                color: AppColors.textMuted,
-                              ),
-                            ),
-                            const SizedBox(height: 24),
-                            const Text(
-                              'Gezi ayrıntıları',
-                              style: TextStyle(
-                                fontSize: 19,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            Material(
-                              color: AppColors.surface,
-                              clipBehavior: Clip.antiAlias,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                                side: const BorderSide(color: AppColors.border),
-                              ),
-                              child: Column(
-                                children: [
-                                  _detail(
-                                    Icons.calendar_today_outlined,
-                                    'Tarih ve saat',
-                                    _startAt == null
-                                        ? 'Daha sonra belirle'
-                                        : '${_startAt!.day}.${_startAt!.month}.${_startAt!.year} · ${TimeOfDay.fromDateTime(_startAt!).format(context)}',
-                                    _pickDate,
-                                  ),
-                                  const Divider(
-                                    height: 1,
-                                    indent: 14,
-                                    endIndent: 14,
-                                  ),
-                                  _detail(
-                                    Icons.location_on_outlined,
-                                    'Buluşma noktası',
-                                    _meeting?.label ?? 'Daha sonra belirle',
-                                    _meetingSheet,
-                                  ),
-                                  const Divider(
-                                    height: 1,
-                                    indent: 14,
-                                    endIndent: 14,
-                                  ),
-                                  _detail(
-                                    Icons.people_outline,
-                                    'Kimler katılabilir?',
-                                    _audience,
-                                    _visibilitySheet,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                            Text(
-                              _visibility == 'public'
-                                  ? (_startAt == null
-                                        ? 'Tarih eklediğinde Etkinlikler’de de görünür.'
-                                        : 'Etkinlikler’de de görünür.')
-                                  : _visibility == 'followers'
-                                  ? 'Takipçilerin katılım isteği gönderebilir.'
-                                  : 'Yalnızca davet ettiğin kişiler katılabilir.',
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: AppColors.textMuted,
-                              ),
-                            ),
-
-                            if (_startAt != null)
-                              TextButton(
-                                onPressed: () =>
-                                    setState(() => _startAt = null),
-                                child: const Text('Tarihi daha sonra belirle'),
-                              ),
-                            if (_visibility == 'private')
-                              _detail(
-                                Icons.person_add_alt,
-                                'Davetlileri seç',
-                                _invitees.isEmpty
-                                    ? 'Arkadaş seç · İsteğe bağlı'
-                                    : '${_invitees.length} kişi seçildi',
-                                _pickInvitees,
-                              ),
-                            const Padding(
-                              padding: EdgeInsets.only(top: 20),
-                              child: Text(
-                                'Oluşturduktan sonra Plan, Sohbet ve Albüm ekranına geçeceksin.',
+                              const SizedBox(height: 20),
+                              const Text(
+                                'Önce şehrini ve nasıl gideceğini seç. Duraklarını sonraki adımda ekle.',
                                 style: TextStyle(color: AppColors.textMuted),
                               ),
-                            ),
-                          ],
-                        ),
+                            ],
+                          )
+                        : _step == 1
+                        ? RouteStopsStep(
+                            key: ValueKey(_city.text),
+                            city: _city.text.trim(),
+                            stops: _stops,
+                            itinerary: _itinerary,
+                            busy: _busy,
+                            loadItems: widget.loadCatalog,
+                            onAdd: _addSpot,
+                            onMapTap: _mapPoint,
+                            onSuggest: _suggest,
+                            onSort: _smartSort,
+                            onSearch: _add,
+                            stopBuilder: _stopRow,
+                            onReorder: (a, b) {
+                              if (_busy) return;
+                              setState(() {
+                                if (b > a) b--;
+                                _stops.insert(b, _stops.removeAt(a));
+                                _refreshRoute();
+                              });
+                            },
+                          )
+                        : ListView(
+                            key: const ValueKey('details'),
+                            padding: const EdgeInsets.all(16),
+                            children: [
+                              Text(
+                                _title.text,
+                                style: const TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              Text(
+                                '${_city.text} · $_transport · ${_stops.length} durak',
+                                style: const TextStyle(
+                                  color: AppColors.textMuted,
+                                ),
+                              ),
+                              const SizedBox(height: 24),
+                              const Text(
+                                'Gezi ayrıntıları',
+                                style: TextStyle(
+                                  fontSize: 19,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              Material(
+                                color: AppColors.surface,
+                                clipBehavior: Clip.antiAlias,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  side: const BorderSide(
+                                    color: AppColors.border,
+                                  ),
+                                ),
+                                child: Column(
+                                  children: [
+                                    _detail(
+                                      Icons.calendar_today_outlined,
+                                      'Tarih ve saat',
+                                      _startAt == null
+                                          ? 'Daha sonra belirle'
+                                          : '${_startAt!.day}.${_startAt!.month}.${_startAt!.year} · ${TimeOfDay.fromDateTime(_startAt!).format(context)}',
+                                      _pickDate,
+                                    ),
+                                    const Divider(
+                                      height: 1,
+                                      indent: 14,
+                                      endIndent: 14,
+                                    ),
+                                    _detail(
+                                      Icons.location_on_outlined,
+                                      'Buluşma noktası',
+                                      _meeting?.label ?? 'Daha sonra belirle',
+                                      _meetingSheet,
+                                    ),
+                                    const Divider(
+                                      height: 1,
+                                      indent: 14,
+                                      endIndent: 14,
+                                    ),
+                                    _detail(
+                                      Icons.people_outline,
+                                      'Kimler katılabilir?',
+                                      _audience,
+                                      _visibilitySheet,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              Text(
+                                _visibility == 'public'
+                                    ? (_startAt == null
+                                          ? 'Tarih eklediğinde Etkinlikler’de de görünür.'
+                                          : 'Etkinlikler’de de görünür.')
+                                    : _visibility == 'followers'
+                                    ? 'Takipçilerin katılım isteği gönderebilir.'
+                                    : 'Yalnızca davet ettiğin kişiler katılabilir.',
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: AppColors.textMuted,
+                                ),
+                              ),
+
+                              if (_startAt != null)
+                                TextButton(
+                                  onPressed: () =>
+                                      setState(() => _startAt = null),
+                                  child: const Text(
+                                    'Tarihi daha sonra belirle',
+                                  ),
+                                ),
+                              if (_visibility == 'private')
+                                _detail(
+                                  Icons.person_add_alt,
+                                  'Davetlileri seç',
+                                  _invitees.isEmpty
+                                      ? 'Arkadaş seç · İsteğe bağlı'
+                                      : '${_invitees.length} kişi seçildi',
+                                  _pickInvitees,
+                                ),
+                              const Padding(
+                                padding: EdgeInsets.only(top: 20),
+                                child: Text(
+                                  'Oluşturduktan sonra Plan, Sohbet ve Albüm ekranına geçeceksin.',
+                                  style: TextStyle(color: AppColors.textMuted),
+                                ),
+                              ),
+                            ],
+                          ),
+                  ),
                 ),
               ],
             ),

@@ -43,6 +43,7 @@ class RouteStopsStep extends StatefulWidget {
 }
 
 class _RouteStopsStepState extends State<RouteStopsStep> {
+  final _sheet = DraggableScrollableController();
   final _categories = <int>{0};
   final _items = <int, List<PhotoSpot>>{};
   final _loading = <int>{};
@@ -55,6 +56,24 @@ class _RouteStopsStepState extends State<RouteStopsStep> {
     super.initState();
     _load(0);
     _locate();
+  }
+
+  @override
+  void dispose() {
+    _sheet.dispose();
+    super.dispose();
+  }
+
+  void _showSelected() {
+    setState(() => _showStops = true);
+    if (_sheet.isAttached)
+      unawaited(
+        _sheet.animateTo(
+          .7,
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeOut,
+        ),
+      );
   }
 
   Future<void> _locate() async {
@@ -193,6 +212,9 @@ class _RouteStopsStepState extends State<RouteStopsStep> {
                       stops: widget.stops,
                       itinerary: widget.itinerary,
                       center: _center,
+                      padding: EdgeInsets.only(
+                        bottom: constraints.maxHeight * .38,
+                      ),
                       interactive: true,
                       candidates: places,
                       onPlaceTap: widget.busy ? null : _selectPlace,
@@ -200,6 +222,7 @@ class _RouteStopsStepState extends State<RouteStopsStep> {
                     ),
                   ),
                   DraggableScrollableSheet(
+                    controller: _sheet,
                     initialChildSize: .38,
                     minChildSize: .22,
                     maxChildSize: .88,
@@ -259,7 +282,7 @@ class _RouteStopsStepState extends State<RouteStopsStep> {
                 ),
                 Expanded(
                   child: TextButton(
-                    onPressed: () => setState(() => _showStops = true),
+                    onPressed: _showSelected,
                     child: Text(
                       'Duraklarım (${widget.stops.length})',
                       style: TextStyle(

@@ -103,6 +103,7 @@ void main() {
       expect(find.text('Keban'), findsOneWidget);
       expect(find.text('Çoklu seçim'), findsOneWidget);
       expect(find.byType(ReorderableDragStartListener), findsNWidgets(2));
+      await tester.ensureVisible(find.byTooltip('Durağı kaldır').first);
       await tester.tap(find.byTooltip('Durağı kaldır').first);
       await tester.pumpAndSettle();
       expect(find.text('Harput'), findsNothing);
