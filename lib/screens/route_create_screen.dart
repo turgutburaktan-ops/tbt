@@ -1,3 +1,5 @@
+import '../services/route_stop_order.dart';
+
 import 'package:flutter/material.dart';
 
 import '../data/turkey_selection_data.dart';
@@ -138,18 +140,61 @@ class _RouteCreateScreenState extends State<RouteCreateScreen> {
   }
 
   Future<void> _add() async {
-    final spot = await showModalBottomSheet<PhotoSpot>(
+    final selected = await showModalBottomSheet<List<PhotoSpot>>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
-      builder: (_) => RouteStopPicker(city: _city.text.trim(), stops: _stops),
+      builder: (_) => RouteStopPicker(
+        city: _city.text.trim(),
+        stops: _stops,
+        multiple: true,
+      ),
     );
-    if (spot != null && mounted)
-      setState(() {
-        if (!_stops.any((s) => s.id == spot.id)) _stops.add(spot);
-        if (_city.text.trim().isEmpty) _city.text = spot.city;
-        _refreshRoute();
-      });
+    if (!mounted || selected == null || selected.isEmpty) return;
+    setState(() {
+      for (final spot in selected) {
+        if (_stops.length < 12 && !_stops.any((s) => s.id == spot.id))
+          _stops.add(spot);
+      }
+      if (_city.text.trim().isEmpty) _city.text = selected.first.city;
+    });
+    _refreshRoute();
+  }
+
+  void _smartSort() {
+    if (_stops.length < 3 || _busy) return;
+    final previous = List<PhotoSpot>.of(_stops);
+    final sorted = smartOrderStops(_stops);
+    setState(() {
+      _stops
+        ..clear()
+        ..addAll(sorted);
+    });
+    _refreshRoute();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text(
+          'Başlangıç korundu, duraklar yakınlığa göre sıralandı.',
+        ),
+        action: SnackBarAction(
+          label: 'Geri al',
+          onPressed: () {
+            if (!mounted ||
+                _stops.length != sorted.length ||
+                !_stops.asMap().entries.every(
+                  (e) => e.value.id == sorted[e.key].id,
+                ))
+              return;
+            setState(() {
+              _stops
+                ..clear()
+                ..addAll(previous);
+            });
+            _refreshRoute();
+          },
+        ),
+      ),
+    );
   }
 
   Future<void> _fromMap() async {
@@ -166,6 +211,7 @@ class _RouteCreateScreenState extends State<RouteCreateScreen> {
       ),
     );
     if (!mounted || point == null) return;
+    if (_stops.length >= 12) return;
     final id =
         'map:${point.latitude.toStringAsFixed(6)},${point.longitude.toStringAsFixed(6)}';
     if (_stops.any((s) => s.id == id)) return;
@@ -671,6 +717,18 @@ class _RouteCreateScreenState extends State<RouteCreateScreen> {
               style: TextStyle(color: AppColors.textMuted, fontSize: 13),
             ),
           ),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: TextButton.icon(
+            onPressed: _busy || _stops.length < 3 ? null : _smartSort,
+            icon: const Icon(Icons.auto_awesome, size: 18),
+            label: const Text('Akıllı sırala'),
+          ),
+        ),
+        Text(
+          _stops.length < 3 ? 'Akıllı sıralama için en az 3 durak ekle.' : 'Başlangıç sabit kalır. Diğer duraklar yakınlığa göre sıralanır.',
+          style: const TextStyle(fontSize: 12, color: AppColors.textMuted),
+        ),
         ReorderableListView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),

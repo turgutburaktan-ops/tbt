@@ -422,7 +422,10 @@ class TravelPlanService {
     return result['id'].toString();
   }
 
-  Future<void> addStop(String planId, PhotoSpot spot) async {
+  Future<void> addStop(String planId, PhotoSpot spot) =>
+      addStops(planId, [spot]);
+
+  Future<void> addStops(String planId, List<PhotoSpot> additions) async {
     _requireUser();
     final initial = await read(planId);
     final legacy = initial.stopSnapshots.isEmpty
@@ -454,24 +457,31 @@ class TravelPlanService {
           });
         }
       }
-      if (stops.any((s) => s['id'] == spot.id)) return;
-      if (stops.length >= 12)
-        throw Exception('Rotaya en fazla 12 durak eklenebilir.');
-      stops.add({
-        'id': spot.id,
-        'name': spot.name,
-        'city': spot.city,
-        'latitude': spot.latitude,
-        'longitude': spot.longitude,
-        'category': spot.category,
-        'description': spot.description,
-        'imageUrl': spot.imageUrl,
-        'bestTime': spot.bestTime,
-      });
+      for (final spot in additions) {
+        if (stops.any((s) => s['id'] == spot.id)) continue;
+        if (stops.length >= 12)
+          throw Exception('Rotaya en fazla 12 durak eklenebilir.');
+        stops.add({
+          'id': spot.id,
+          'name': spot.name,
+          'city': spot.city,
+          'latitude': spot.latitude,
+          'longitude': spot.longitude,
+          'category': spot.category,
+          'description': spot.description,
+          'imageUrl': spot.imageUrl,
+          'bestTime': spot.bestTime,
+        });
+      }
       tx.update(ref, {
         'spotIds': stops.map((s) => s['id']).toList(),
         'spotNames': stops.map((s) => s['name']).toList(),
         'stopSnapshots': stops,
+        if (data['dayPlan'] is Map)
+          'dayPlan': {
+            ...Map<String, dynamic>.from(data['dayPlan'] as Map),
+            'routeChanged': true,
+          },
         'updatedAt': FieldValue.serverTimestamp(),
       });
     });

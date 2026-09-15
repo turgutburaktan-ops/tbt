@@ -326,29 +326,32 @@ class _TravelPlanDetailScreenState extends State<TravelPlanDetailScreen> {
   }
 
   Future<void> _addStop() => _act(() async {
-    final spots = await TravelPlanService.instance.resolveRouteSpots(plan);
+    final spots = await TravelPlanService.instance.resolveSpots(plan);
     if (!mounted) return;
-    final spot = await showModalBottomSheet<PhotoSpot>(
+    final selected = await showModalBottomSheet<List<PhotoSpot>>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
-      builder: (_) => RouteStopPicker(city: plan.city, stops: spots),
+      builder: (_) =>
+          RouteStopPicker(city: plan.city, stops: spots, multiple: true),
     );
-    if (spot == null) return;
+    if (selected == null || selected.isEmpty) return;
     if (_owned || plan.allowMemberEdits) {
-      await TravelPlanService.instance.addStop(plan.id, spot);
+      await TravelPlanService.instance.addStops(plan.id, selected);
     } else {
-      await TravelPlanCollaborationService.instance.propose(
-        plan.id,
-        spot.name,
-        spotId: spot.id,
-        latitude: spot.latitude,
-        longitude: spot.longitude,
-        city: spot.city,
-      );
+      for (final spot in selected) {
+        await TravelPlanCollaborationService.instance.proposeStopIfAbsent(
+          plan.id,
+          spot.name,
+          spotId: spot.id,
+          latitude: spot.latitude,
+          longitude: spot.longitude,
+          city: spot.city,
+        );
+      }
       if (mounted)
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Durak önerin sohbete eklendi.')),
+          const SnackBar(content: Text('Durak önerilerin sohbete eklendi.')),
         );
     }
   });

@@ -7,14 +7,23 @@ import '../services/spot_repository.dart';
 import '../services/user_facing_error.dart';
 
 class RouteStopPicker extends StatefulWidget {
-  const RouteStopPicker({super.key, required this.city, required this.stops});
+  const RouteStopPicker({
+    super.key,
+    required this.city,
+    required this.stops,
+    this.multiple = false,
+    this.loadItems,
+  });
   final String city;
   final List<PhotoSpot> stops;
+  final bool multiple;
+  final Future<List<PhotoSpot>> Function(int category)? loadItems;
   @override
   State<RouteStopPicker> createState() => _RouteStopPickerState();
 }
 
 class _RouteStopPickerState extends State<RouteStopPicker> {
+  final _selected = <String, PhotoSpot>{};
   int _category = 0;
   String _query = '';
   late Future<List<PhotoSpot>> _items = _load();
@@ -29,6 +38,7 @@ class _RouteStopPickerState extends State<RouteStopPicker> {
       .replaceAll('ç', 'c');
 
   Future<List<PhotoSpot>> _load() async {
+    if (widget.loadItems != null) return widget.loadItems!(_category);
     if (_category == 0) {
       final spots = await SpotRepository.instance.loadSpots();
       return spots
@@ -148,20 +158,72 @@ class _RouteStopPickerState extends State<RouteStopPicker> {
                   itemCount: items.length,
                   itemBuilder: (context, index) {
                     final spot = items[index];
-                    final selected = widget.stops.any((s) => s.id == spot.id);
+                    final existing = widget.stops.any((s) => s.id == spot.id);
+                    final selected = existing || _selected.containsKey(spot.id);
                     return ListTile(
                       title: Text(spot.name),
-                      subtitle: Text(spot.category),
-                      trailing: Icon(selected ? Icons.check : Icons.add),
-                      onTap: selected
+                      subtitle: Text(
+                        existing ? 'Rotada zaten var' : spot.category,
+                      ),
+                      trailing: Icon(
+                        selected
+                            ? Icons.check_circle
+                            : widget.multiple
+                            ? Icons.radio_button_unchecked
+                            : Icons.add,
+                      ),
+                      selected: _selected.containsKey(spot.id),
+                      onTap: existing
                           ? null
-                          : () => Navigator.pop(context, spot),
+                          : () {
+                              if (!widget.multiple) {
+                                Navigator.pop(context, spot);
+                                return;
+                              }
+                              if (_selected.containsKey(spot.id)) {
+                                setState(() => _selected.remove(spot.id));
+                                return;
+                              }
+                              if (widget.stops.length + _selected.length >=
+                                  12) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'Rotaya en fazla 12 durak ekleyebilirsin.',
+                                    ),
+                                  ),
+                                );
+                                return;
+                              }
+                              setState(() => _selected[spot.id] = spot);
+                            },
                     );
                   },
                 );
               },
             ),
           ),
+          if (widget.multiple)
+            SafeArea(
+              top: false,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: _selected.isEmpty
+                        ? null
+                        : () =>
+                              Navigator.pop(context, _selected.values.toList()),
+                    child: Text(
+                      _selected.isEmpty
+                          ? 'Eklemek istediğin yerleri seç'
+                          : 'Seçilenleri ekle (${_selected.length})',
+                    ),
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     ),
