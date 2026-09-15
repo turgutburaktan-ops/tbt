@@ -14,10 +14,18 @@ class RouteEditorMap extends StatefulWidget {
     required this.stops,
     this.itinerary,
     this.interactive = false,
+    this.center,
+    this.candidates = const [],
+    this.onPlaceTap,
+    this.onMapTap,
   });
   final List<PhotoSpot> stops;
   final RouteItinerary? itinerary;
   final bool interactive;
+  final LatLng? center;
+  final List<PhotoSpot> candidates;
+  final ValueChanged<PhotoSpot>? onPlaceTap;
+  final ValueChanged<LatLng>? onMapTap;
   @override
   State<RouteEditorMap> createState() => _RouteEditorMapState();
 }
@@ -26,6 +34,9 @@ class _RouteEditorMapState extends State<RouteEditorMap> {
   GoogleMapController? _controller;
   final _icons = <int, BitmapDescriptor>{};
   int _iconGeneration = 0;
+  String _lastFit = '';
+  String get _fitKey =>
+      '${widget.center}:${_points.join(';')}:${widget.itinerary?.meters}';
   List<LatLng> get _points =>
       widget.stops.map((s) => LatLng(s.latitude, s.longitude)).toList();
 
@@ -41,7 +52,7 @@ class _RouteEditorMapState extends State<RouteEditorMap> {
     if (widget.stops.length > _icons.length) _makeIcons();
     // Parent lists are mutable; fit from current coordinates after every update.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _fit();
+      if (mounted && _fitKey != _lastFit) _fit();
     });
   }
 
@@ -96,7 +107,18 @@ class _RouteEditorMapState extends State<RouteEditorMap> {
 
   Future<void> _fit() async {
     final controller = _controller;
-    if (controller == null || _points.isEmpty) return;
+    if (controller == null) return;
+    _lastFit = _fitKey;
+    if (_points.isEmpty) {
+      if (widget.center != null) {
+        try {
+          await controller.moveCamera(
+            CameraUpdate.newLatLngZoom(widget.center!, 12),
+          );
+        } catch (_) {}
+      }
+      return;
+    }
     final points = [..._points, ...?widget.itinerary?.points];
     final lat = points.map((p) => p.latitude).toList()..sort();
     final lng = points.map((p) => p.longitude).toList()..sort();
@@ -124,7 +146,9 @@ class _RouteEditorMapState extends State<RouteEditorMap> {
   @override
   Widget build(BuildContext context) => GoogleMap(
     initialCameraPosition: CameraPosition(
-      target: _points.isEmpty ? const LatLng(38.6748, 39.2225) : _points.first,
+      target: _points.isEmpty
+          ? (widget.center ?? const LatLng(39, 35))
+          : _points.first,
       zoom: 13,
     ),
     style: '[{"elementType":"geometry","stylers":[{"color":"#171c24"}]},{"elementType":"labels.text.fill","stylers":[{"color":"#aab4c2"}]},{"elementType":"labels.text.stroke","stylers":[{"color":"#171c24"}]},{"featureType":"road","elementType":"geometry","stylers":[{"color":"#303b4a"}]},{"featureType":"water","elementType":"geometry","stylers":[{"color":"#0c1723"}]},{"featureType":"poi","elementType":"labels","stylers":[{"visibility":"off"}]}]',
@@ -135,11 +159,23 @@ class _RouteEditorMapState extends State<RouteEditorMap> {
     zoomGesturesEnabled: widget.interactive,
     rotateGesturesEnabled: widget.interactive,
     tiltGesturesEnabled: false,
+    onTap: widget.onMapTap,
     onMapCreated: (controller) {
       _controller = controller;
       _fit();
     },
     markers: {
+      for (final spot in widget.candidates.where(
+        (s) => !widget.stops.any((p) => p.id == s.id),
+      ))
+        Marker(
+          markerId: MarkerId('candidate:${spot.id}'),
+          position: LatLng(spot.latitude, spot.longitude),
+          icon: BitmapDescriptor.defaultMarkerWithHue(
+            BitmapDescriptor.hueViolet,
+          ),
+          onTap: () => widget.onPlaceTap?.call(spot),
+        ),
       for (var i = 0; i < widget.stops.length; i++)
         Marker(
           markerId: MarkerId(widget.stops[i].id),

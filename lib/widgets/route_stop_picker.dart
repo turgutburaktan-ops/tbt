@@ -1,9 +1,8 @@
+import '../services/route_stop_catalog.dart';
+
 import 'package:flutter/material.dart';
 
 import '../models/photo_spot.dart';
-import '../models/nearby_venue.dart';
-import '../services/nearby_venue_service.dart';
-import '../services/spot_repository.dart';
 import '../services/user_facing_error.dart';
 
 class RouteStopPicker extends StatefulWidget {
@@ -37,49 +36,9 @@ class _RouteStopPickerState extends State<RouteStopPicker> {
       .replaceAll('ö', 'o')
       .replaceAll('ç', 'c');
 
-  Future<List<PhotoSpot>> _load() async {
-    if (widget.loadItems != null) return widget.loadItems!(_category);
-    if (_category == 0) {
-      final spots = await SpotRepository.instance.loadSpots();
-      return spots
-          .where(
-            (spot) =>
-                widget.city.isEmpty || _fold(spot.city) == _fold(widget.city),
-          )
-          .toList();
-    }
-    final category = NearbyVenueCategory.values[_category - 1];
-    final anchor = widget.stops.isEmpty ? null : widget.stops.last;
-    final city = anchor == null
-        ? await NearbyVenueService.instance.findCity(widget.city)
-        : null;
-    if (anchor == null && city == null) {
-      throw Exception('Mekânları bulmak için önce bir gezilecek yer ekle.');
-    }
-    final venues = await NearbyVenueService.instance.nearby(
-      category: category,
-      latitude: anchor?.latitude ?? city!.latitude,
-      longitude: anchor?.longitude ?? city!.longitude,
-      useSelectedCity: false,
-    );
-    return venues
-        .map(
-          (v) => PhotoSpot(
-            id: 'venue:${v.category.name}:${v.id}',
-            name: v.name,
-            city: widget.city,
-            latitude: v.latitude,
-            longitude: v.longitude,
-            rating: 0,
-            bestTime: v.openingHours,
-            angle: '',
-            imageUrl: v.imageUrl,
-            category: v.category.label,
-            description: v.description,
-          ),
-        )
-        .toList();
-  }
+  Future<List<PhotoSpot>> _load() => widget.loadItems != null
+      ? widget.loadItems!(_category)
+      : loadRouteStopCatalog(widget.city, _category);
 
   @override
   Widget build(BuildContext context) => SizedBox(

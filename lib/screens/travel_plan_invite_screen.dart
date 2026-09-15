@@ -11,11 +11,15 @@ import '../services/user_facing_error.dart';
 class TravelPlanInviteScreen extends StatefulWidget {
   final String planId;
   final String planTitle;
+  final bool selectionOnly;
+  final Set<String> initialSelection;
 
   const TravelPlanInviteScreen({
     super.key,
     required this.planId,
     required this.planTitle,
+    this.selectionOnly = false,
+    this.initialSelection = const {},
   });
 
   @override
@@ -34,6 +38,7 @@ class _TravelPlanInviteScreenState extends State<TravelPlanInviteScreen> {
   @override
   void initState() {
     super.initState();
+    _selected.addAll(widget.initialSelection);
     _load();
   }
 
@@ -44,20 +49,17 @@ class _TravelPlanInviteScreenState extends State<TravelPlanInviteScreen> {
       return;
     }
     try {
-      final results = await Future.wait([
-        FirebaseFirestore.instance
-            .collection('users')
-            .doc(user.uid)
-            .collection('following')
-            .limit(60)
-            .get(),
-        FirebaseFirestore.instance
-            .collection('travel_plans')
-            .doc(widget.planId)
-            .get(),
-      ]);
-      final following = results[0] as QuerySnapshot<Map<String, dynamic>>;
-      final plan = results[1] as DocumentSnapshot<Map<String, dynamic>>;
+      final following = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .collection('following')
+          .get();
+      final plan = widget.selectionOnly
+          ? null
+          : await FirebaseFirestore.instance
+                .collection('travel_plans')
+                .doc(widget.planId)
+                .get();
       final ids = following.docs.map((doc) => doc.id).toList();
       final profiles = await Future.wait(
         ids.map(
@@ -78,7 +80,7 @@ class _TravelPlanInviteScreenState extends State<TravelPlanInviteScreen> {
               )
               .toList()
             ..sort((a, b) => a.name.compareTo(b.name));
-      final members = (plan.data()?['memberIds'] as List<dynamic>? ?? const [])
+      final members = (plan?.data()?['memberIds'] as List<dynamic>? ?? const [])
           .map((id) => id.toString())
           .toSet();
       if (!mounted) return;
@@ -97,6 +99,10 @@ class _TravelPlanInviteScreenState extends State<TravelPlanInviteScreen> {
   }
 
   Future<void> _invite() async {
+    if (widget.selectionOnly) {
+      Navigator.pop(context, _selected.toSet());
+      return;
+    }
     if (_selected.isEmpty || _sending) return;
     setState(() => _sending = true);
     try {
@@ -198,7 +204,7 @@ class _TravelPlanInviteScreenState extends State<TravelPlanInviteScreen> {
                         onChanged: invited
                             ? null
                             : (value) => setState(() {
-                                value == true
+                                value == true && _selected.length < 59
                                     ? _selected.add(user.id)
                                     : _selected.remove(user.id);
                               }),
@@ -242,7 +248,11 @@ class _TravelPlanInviteScreenState extends State<TravelPlanInviteScreen> {
                     width: double.infinity,
                     height: 50,
                     child: FilledButton.icon(
-                      onPressed: _selected.isEmpty || _sending ? null : _invite,
+                      onPressed:
+                          _sending ||
+                              (!widget.selectionOnly && _selected.isEmpty)
+                          ? null
+                          : _invite,
                       icon: _sending
                           ? const SizedBox(
                               width: 18,
@@ -251,7 +261,9 @@ class _TravelPlanInviteScreenState extends State<TravelPlanInviteScreen> {
                             )
                           : const Icon(Icons.send_rounded),
                       label: Text(
-                        _selected.isEmpty
+                        widget.selectionOnly
+                            ? 'Seçimi tamamla (${_selected.length})'
+                            : _selected.isEmpty
                             ? 'Arkadaş seç'
                             : '${_selected.length} kişiye davet gönder',
                       ),
