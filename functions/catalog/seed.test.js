@@ -1,0 +1,21 @@
+const test=require('node:test'),assert=require('node:assert/strict');
+const {initializeApp}=require('firebase-admin/app');
+const {getFirestore}=require('firebase-admin/firestore');
+const {seedRows}=require('./seed');
+initializeApp({projectId:'demo-tbt'});const db=getFirestore();
+test('80-item seed is atomic and idempotent; approved metadata and exclusions win',async()=>{
+  const rows=Array.from({length:80},(_,i)=>({category:'hotel',venueId:`node-${i}`,venueName:`Otel ${i}`,city:'İzmir',latitude:38.4,longitude:27.1,status:'published'}));
+  await db.doc('business_venues/hotel:node-0').set({verified:true,venueName:'Onaylanan ad',category:'hotel',ownerUid:'private'});
+  await db.doc('catalog_exclusions/venue:hotel:node-1').set({reason:'removed'});
+  await seedRows(db,rows);await seedRows(db,rows);
+  const meta=db.doc('place_catalog/izmir_hotel');
+  assert.equal((await meta.get()).data().count,79);
+  assert.equal((await meta.collection('items').get()).size,79);
+  const approved=(await meta.collection('items').doc('venue:hotel:node-0').get()).data();
+  assert.equal(approved.name,'Onaylanan ad');assert.equal(approved.ownerUid,undefined);
+  assert.equal((await meta.collection('items').doc('venue:hotel:node-1').get()).exists,false);
+  await db.doc('business_venues/hotel:node-0').update({city:'Ankara',latitude:39.9,longitude:32.8});
+  await seedRows(db,[rows[0]]);
+  assert.equal((await meta.get()).data().count,78);
+  assert.equal((await db.doc('place_catalog/ankara_hotel').get()).data().count,1);
+});
