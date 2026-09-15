@@ -72,7 +72,7 @@ jobs:
           node functions/scripts/backfill_place_catalog.js
           node functions/scripts/catalog_rules.js
       - name: Deploy only catalog functions and candidate lookup
-        run: firebase deploy --only functions:catalogSpotWritten,functions:catalogBusinessWritten,functions:catalogExternalWritten,functions:refreshPlaceCatalog,functions:catalogNearby,functions:createBusinessCandidate --project en-iyi-cekim-noktasi --non-interactive
+        run: firebase deploy --only functions:catalogSpotWritten,functions:catalogBusinessWritten,functions:catalogExternalWritten,functions:refreshPlaceCatalog,functions:catalogNearby,functions:createBusinessCandidate --project en-iyi-cekim-noktasi --non-interactive --force
       - name: Populate projection preserving source documents
         run: node functions/scripts/backfill_place_catalog.js --apply
       - name: Add catalog read rules to current live rules

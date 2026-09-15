@@ -31,7 +31,7 @@ function decode(body, city, kind) {
   }
   return rows;
 }
-async function refreshPartition(db, city, kind, fetcher = fetch) {
+async function refreshPartition(db, city, kind, fetcher = fetch, {projectInline = true} = {}) {
   const meta = db.doc(`place_catalog/${partition(city,kind)}`);
   await meta.set({sourceStatus:'updating',sourceAttemptAt:FieldValue.serverTimestamp()}, {merge:true});
   let rows, lastError;
@@ -50,10 +50,14 @@ async function refreshPartition(db, city, kind, fetcher = fetch) {
     await meta.set({sourceStatus:'unavailable',sourceError:String(lastError?.message || 'unavailable').slice(0,150)}, {merge:true});
     return {ok:false,city,kind,count:0};
   }
-  for (const row of rows) {
-    const key = `${kind}:${row.venueId}`;
-    await db.doc(`catalog_external_venues/${key}`).set({...row,seenAt:FieldValue.serverTimestamp()}, {merge:true});
-    await project(db,'venue',key);
+  for (let offset = 0; offset < rows.length; offset += 200) {
+    const chunk = rows.slice(offset, offset + 200), batch = db.batch();
+    for (const row of chunk) batch.set(db.doc(`catalog_external_venues/${kind}:${row.venueId}`),
+      {...row,seenAt:FieldValue.serverTimestamp()}, {merge:true});
+    await batch.commit();
+    // Scheduled refresh persists all rows quickly; retryable document triggers
+    // project them durably. The initial migration can await projection explicitly.
+    if (projectInline) for (const row of chunk) await project(db,'venue',`${kind}:${row.venueId}`);
   }
   await meta.set({sourceStatus:'ready',lastSourceSuccessAt:FieldValue.serverTimestamp(),lastSourceCount:rows.length,sourceError:FieldValue.delete()}, {merge:true});
   return {ok:true,city,kind,count:rows.length};

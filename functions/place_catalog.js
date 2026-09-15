@@ -5,7 +5,7 @@ const {getFirestore, FieldValue, Timestamp, FieldPath} = require('firebase-admin
 const {project} = require('./catalog/store');
 const {provinces, kinds, meters} = require('./catalog/schema');
 const {refreshPartition} = require('./catalog/importer');
-const opts = {region:'europe-west1', retry:true};
+const opts = {region:'europe-west1', retry:true, maxInstances:4, concurrency:1, timeoutSeconds:120};
 exports.catalogSpotWritten = onDocumentWritten({...opts,document:'photo_spots/{id}'}, e=>project(getFirestore(),'spot',e.params.id));
 exports.catalogBusinessWritten = onDocumentWritten({...opts,document:'business_venues/{id}'}, e=>project(getFirestore(),'venue',e.params.id,
   {removedApprovedBusiness: e.data?.before?.data()?.verified === true}));
@@ -21,7 +21,7 @@ exports.refreshPlaceCatalog = onSchedule({region:'europe-west1',schedule:'every 
     return index;
   });
   if(slot===null)return;
-  try { await refreshPartition(db,provinces[Math.floor(slot/3)],kinds[1+slot%3]); }
+  try { await refreshPartition(db,provinces[Math.floor(slot/3)],kinds[1+slot%3],fetch,{projectInline:false}); }
   finally { await state.set({leaseUntil:FieldValue.delete(),lastFinishedAt:FieldValue.serverTimestamp()},{merge:true}); }
 });
 

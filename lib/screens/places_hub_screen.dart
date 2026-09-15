@@ -531,6 +531,18 @@ class _PlacesHubScreenState extends State<PlacesHubScreen> {
           ),
           if (busy)
             const LinearProgressIndicator(minHeight: 2, color: AppColors.cyan),
+          if (!busy &&
+              places.isNotEmpty &&
+              _filters.any(
+                (i) => _sourceStatus[i] != null && _sourceStatus[i] != 'ready',
+              ))
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              child: Text(
+                'Kayıtlı yerler gösteriliyor. Katalog arka planda güncelleniyor.',
+                style: TextStyle(fontSize: 12, color: Colors.white60),
+              ),
+            ),
           if (_filters.any(_errors.contains))
             Row(
               children: [
