@@ -1,8 +1,8 @@
-name: TBT normal photo framing
+name: TBT photo positioning
 
 on:
   push:
-    branches: [codex/photo-framing-20260916]
+    branches: [codex/photo-positioning-20260916]
 
 permissions:
   contents: read
@@ -34,9 +34,9 @@ jobs:
       - name: Analyze event screens
         run: |
           dart format lib/screens/radar_screen.dart lib/screens/event_chat_screen.dart lib/services/event_chat_service.dart lib/screens/event_deep_link_screen.dart lib/widgets/event_hub_panel.dart
-          flutter analyze --no-fatal-infos --no-fatal-warnings lib/screens/main_camera_screen.dart lib/screens/create_post_screen.dart lib/services/post_photo_capture_service.dart lib/utils/post_photo_frame.dart lib/services/deep_link_service.dart lib/services/external_share_service.dart lib/services/incoming_tbt_link.dart lib/widgets/event_list_card.dart lib/screens/radar_screen.dart lib/screens/home_shell_v3.dart lib/screens/campus_home_screen.dart lib/screens/event_create_screen_v2.dart lib/screens/event_photo_create_screen.dart lib/screens/event_deep_link_screen.dart lib/screens/event_chat_screen.dart lib/services/event_chat_service.dart lib/widgets/event_hub_panel.dart lib/widgets/event_chat_attachment.dart lib/models/social_event.dart lib/utils/event_presentation.dart
+          flutter analyze --no-fatal-infos --no-fatal-warnings lib/screens/post_photo_crop_screen.dart lib/screens/main_camera_screen.dart lib/screens/create_post_screen.dart lib/services/post_photo_capture_service.dart lib/utils/post_photo_frame.dart lib/services/deep_link_service.dart lib/services/external_share_service.dart lib/services/incoming_tbt_link.dart lib/widgets/event_list_card.dart lib/screens/radar_screen.dart lib/screens/home_shell_v3.dart lib/screens/campus_home_screen.dart lib/screens/event_create_screen_v2.dart lib/screens/event_photo_create_screen.dart lib/screens/event_deep_link_screen.dart lib/screens/event_chat_screen.dart lib/services/event_chat_service.dart lib/widgets/event_hub_panel.dart lib/widgets/event_chat_attachment.dart lib/models/social_event.dart lib/utils/event_presentation.dart
       - name: Test event date and existing menu validation
-        run: flutter test test/post_photo_frame_test.dart test/post_photo_capture_test.dart test/camera_share_controls_test.dart test/incoming_tbt_link_test.dart test/event_list_card_test.dart test/event_presentation_test.dart test/business_mobile_flows_test.dart
+        run: flutter test test/post_photo_crop_test.dart test/post_photo_frame_test.dart test/post_photo_capture_test.dart test/camera_share_controls_test.dart test/incoming_tbt_link_test.dart test/event_list_card_test.dart test/event_presentation_test.dart test/business_mobile_flows_test.dart
       - name: Verify runtime secrets
         shell: bash
         env:
@@ -130,7 +130,7 @@ jobs:
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
         with:
-          name: tbt-photo-frame-build51-apk
+          name: tbt-photo-position-build52-apk
           path: build/app/outputs/flutter-apk/app-debug.apk
           if-no-files-found: error
           retention-days: 7
