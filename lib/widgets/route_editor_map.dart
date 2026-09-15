@@ -219,7 +219,7 @@ class _RouteEditorMapState extends State<RouteEditorMap> {
       for (var i = 0; i < widget.stops.length; i++)
         Marker(
           markerId: MarkerId(widget.stops[i].id),
-          zIndexInt: 10,
+          zIndex: 10,
           position: _points[i],
           icon:
               _icons[i] ??
