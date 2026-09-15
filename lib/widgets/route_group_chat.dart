@@ -379,6 +379,26 @@ class _RouteGroupChatState extends State<RouteGroupChat> {
                     ],
                   ),
                 ),
+                SizedBox(
+                  width: 48,
+                  height: 38,
+                  child: Stack(
+                    children: [
+                      for (
+                        var i = 0;
+                        i < widget.plan.memberIds.take(2).length;
+                        i++
+                      )
+                        Positioned(
+                          left: i * 17.0,
+                          top: i * 5.0,
+                          child: _RouteMemberAvatar(
+                            userId: widget.plan.memberIds[i],
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
                 const Icon(Icons.chevron_right, color: Colors.white54),
               ],
             ),
@@ -807,4 +827,51 @@ class _RouteGroupChatState extends State<RouteGroupChat> {
       ),
     );
   }
+}
+
+class _RouteMemberAvatar extends StatefulWidget {
+  const _RouteMemberAvatar({required this.userId});
+  final String userId;
+  @override
+  State<_RouteMemberAvatar> createState() => _RouteMemberAvatarState();
+}
+
+class _RouteMemberAvatarState extends State<_RouteMemberAvatar> {
+  late Future<DocumentSnapshot<Map<String, dynamic>>> _profile =
+      FirebaseFirestore.instance.collection('users').doc(widget.userId).get();
+  @override
+  void didUpdateWidget(covariant _RouteMemberAvatar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.userId != widget.userId)
+      _profile = FirebaseFirestore.instance
+          .collection('users')
+          .doc(widget.userId)
+          .get();
+  }
+
+  @override
+  Widget build(BuildContext context) =>
+      FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+        future: _profile,
+        builder: (_, s) {
+          final photo = s.data?.data()?['photoUrl']?.toString() ?? '';
+          return CircleAvatar(
+            radius: 14,
+            backgroundColor: const Color(0xFF282B35),
+            backgroundImage: photo.startsWith('https://')
+                ? NetworkImage(photo)
+                : null,
+            onBackgroundImageError: photo.startsWith('https://')
+                ? (_, __) {}
+                : null,
+            child: photo.startsWith('https://')
+                ? null
+                : const Icon(
+                    Icons.person_outline,
+                    size: 16,
+                    color: Colors.white60,
+                  ),
+          );
+        },
+      );
 }

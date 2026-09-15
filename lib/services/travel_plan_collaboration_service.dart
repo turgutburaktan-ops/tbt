@@ -1,3 +1,5 @@
+import 'spot_repository.dart';
+import '../models/photo_spot.dart';
 import 'route_chat_service.dart';
 
 import 'dart:convert';
@@ -121,6 +123,18 @@ class TravelPlanCollaborationService {
     final uid = _uid();
     final planRef = _firestore.collection('travel_plans').doc(planId);
     final proposalRef = planRef.collection('proposals').doc(proposalId);
+    final initial = (await planRef.get()).data();
+    if (initial == null || initial['ownerId'] != uid)
+      throw Exception('Plan sahibi gerekli.');
+    final initialIds = List<String>.from(initial['spotIds'] as List? ?? []);
+    final initialSnapshots = (initial['stopSnapshots'] as List? ?? [])
+        .whereType<Map>();
+    final needsLegacy = initialIds.any(
+      (id) => !initialSnapshots.any((s) => s['id'] == id),
+    );
+    final legacy = needsLegacy
+        ? await SpotRepository.instance.loadSpots()
+        : <PhotoSpot>[];
     await _firestore.runTransaction((tx) async {
       final plan = (await tx.get(planRef)).data();
       final proposal = (await tx.get(proposalRef)).data();
@@ -152,14 +166,31 @@ class TravelPlanCollaborationService {
       if (!ids.contains(stop['id'])) {
         if (ids.length >= 12)
           throw Exception('Rotada en fazla 12 durak olabilir.');
-        final completeSnapshots =
-            stops.length == ids.length &&
-            ids.every((id) => stops.any((s) => s['id'] == id));
+        for (final id in ids) {
+          if (stops.any((s) => s['id'] == id)) continue;
+          final old = legacy.where((s) => s.id == id).firstOrNull;
+          if (old == null)
+            throw Exception(
+              'Eski rota durağı bulunamadı. Rotayı yeniden açıp tekrar dene.',
+            );
+          stops.add({
+            'id': old.id,
+            'name': old.name,
+            'city': old.city,
+            'latitude': old.latitude,
+            'longitude': old.longitude,
+            'imageUrl': old.imageUrl,
+            'category': old.category,
+          });
+        }
         stops.add(stop);
         tx.update(planRef, {
           'spotIds': [...ids, stop['id']],
           'spotNames': [...names, stop['name']],
-          if (completeSnapshots) 'stopSnapshots': stops,
+          'stopSnapshots': [
+            ...ids.map((id) => stops.firstWhere((s) => s['id'] == id)),
+            stop,
+          ],
           if (plan['dayPlan'] is Map)
             'dayPlan': {
               ...Map<String, dynamic>.from(plan['dayPlan'] as Map),

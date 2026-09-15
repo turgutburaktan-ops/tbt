@@ -30,6 +30,12 @@ class _RouteChatAttachmentState extends State<RouteChatAttachment> {
   VideoPlayerController? _video;
   bool _loading = false;
   String? _error;
+  @override
+  void initState() {
+    super.initState();
+    if (widget.data['type'] == 'image') _open();
+  }
+
   Future<void> _open() async {
     if (_loading || _file != null) return;
     setState(() {

@@ -72,8 +72,15 @@ class RoutePolls extends StatelessWidget {
                   .map((t) => t.text.trim())
                   .where((t) => t.isNotEmpty)
                   .toSet();
-              if (question.text.trim().isNotEmpty && values.length >= 2)
+              if (question.text.trim().isNotEmpty && values.length >= 2) {
                 Navigator.pop(c, true);
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Bir soru ve en az iki farklı seçenek yaz.'),
+                  ),
+                );
+              }
             },
             child: const Text('Oluştur'),
           ),
@@ -166,6 +173,8 @@ class RoutePolls extends StatelessWidget {
                       StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
                         stream: doc.reference.collection('votes').snapshots(),
                         builder: (_, v) {
+                          if (v.hasError)
+                            return Text(userFacingError(v.error!));
                           final votes = v.data?.docs ?? [];
                           final mine = votes
                               .where((v) => v.id == uid)

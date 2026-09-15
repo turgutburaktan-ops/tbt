@@ -227,10 +227,6 @@ class _TravelPlanDetailScreenState extends State<TravelPlanDetailScreen> {
     );
   }
 
-  Future<void> _removeMeetingPoint() async {
-    await TravelPlanCollaborationService.instance.clearMeetingPoint(plan.id);
-  }
-
   Future<void> _openRoute() async {
     final latest = await FirebaseFirestore.instance
         .collection('travel_plans')
