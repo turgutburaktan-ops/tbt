@@ -74,7 +74,9 @@ void main() {
       expect(find.text('Seçilenleri ekle (1)'), findsOneWidget);
       await tester.enterText(find.byType(TextField), 'Kale');
       await tester.pump();
-      await tester.tap(find.text('Kale'));
+      await tester.tap(
+        find.descendant(of: find.byType(ListTile), matching: find.text('Kale')),
+      );
       await tester.pump();
       await tester.enterText(find.byType(TextField), '');
       await tester.tap(find.text('Kafeler'));
