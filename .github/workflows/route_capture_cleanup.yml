@@ -1,0 +1,22 @@
+name: Cancel unrelated capture catalog jobs
+on:
+  push:
+    branches: [codex/route-capture-cleanup]
+permissions:
+  actions: write
+  contents: read
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            for (const run_id of [34913439338, 34913439343, 34913439276]) {
+              const {data: run} = await github.rest.actions.getWorkflowRun({...context.repo, run_id});
+              if (run.head_branch !== 'codex/route-editor-capture' || run.head_sha !== '47357394d42528144bf59a618cbee7daf87aabce') throw new Error('Unexpected run identity');
+              if (!['completed'].includes(run.status)) {
+                await github.rest.actions.cancelWorkflowRun({...context.repo, run_id});
+                core.info('Cancelled unrelated capture catalog run ' + run_id);
+              }
+            }
