@@ -282,6 +282,7 @@ class _EventCreateScreenV2State extends State<EventCreateScreenV2> {
     setState(() {
       _selectedLocation = result;
       if (_location.text.trim().isEmpty) _location.text = result.label;
+      FocusScope.of(context).unfocus();
       _error = null;
     });
   }
@@ -486,7 +487,7 @@ class _EventCreateScreenV2State extends State<EventCreateScreenV2> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text(_fromTemplate ? 'Planı Tamamla' : 'Etkinlik Oluştur'),
+        title: Text(_fromTemplate ? 'Etkinliği Tamamla' : 'Etkinlik Oluştur'),
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(18, 12, 18, 40),
@@ -510,7 +511,7 @@ class _EventCreateScreenV2State extends State<EventCreateScreenV2> {
                   SizedBox(width: 9),
                   Expanded(
                     child: Text(
-                      'Şablon hazır. Konumu, zamanı ve kapağı tamamlayıp planı hemen yayınlayabilirsin.',
+                      'Şablon hazır. Konumu, zamanı ve kapağı tamamlayıp etkinliği yayınlayabilirsin.',
                       style: TextStyle(
                         color: Colors.white70,
                         fontSize: 12,
@@ -581,7 +582,7 @@ class _EventCreateScreenV2State extends State<EventCreateScreenV2> {
           TextField(
             controller: _title,
             decoration: const InputDecoration(
-              labelText: 'Plan başlığı',
+              labelText: 'Etkinlik başlığı',
               prefixIcon: Icon(Icons.title),
             ),
           ),
@@ -620,11 +621,12 @@ class _EventCreateScreenV2State extends State<EventCreateScreenV2> {
               ),
               label: Text(
                 _selectedLocation == null
-                    ? 'Haritadan konumu seç'
-                    : 'Konum seçildi • Değiştir',
+                    ? 'Haritadan buluşma noktasını seç'
+                    : 'Buluşma noktası seçildi • Değiştir',
               ),
             ),
           ),
+          if (_selectedLocation != null) Padding(padding: const EdgeInsets.symmetric(vertical: 8), child: Text('Buluşma noktası: ${_location.text.trim().isEmpty ? _selectedLocation!.label : _location.text.trim()}', style: const TextStyle(color: Colors.white70))),
           const SizedBox(height: 4),
           Container(
             decoration: BoxDecoration(
@@ -762,13 +764,6 @@ class _EventCreateScreenV2State extends State<EventCreateScreenV2> {
                   ),
                 ),
                 const SizedBox(height: 6),
-                const Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    'Ücretsiz etkinlik • ücretli etkinlikler şimdilik kapalı',
-                    style: TextStyle(color: Colors.white54, fontSize: 10.5),
-                  ),
-                ),
               ],
             ),
           ),
@@ -790,7 +785,7 @@ class _EventCreateScreenV2State extends State<EventCreateScreenV2> {
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : const Icon(Icons.event_available_outlined),
-              label: Text(_saving ? 'Oluşturuluyor…' : 'Planı Yayınla'),
+              label: Text(_saving ? 'Oluşturuluyor…' : 'Etkinliği Yayınla'),
             ),
           ),
         ],

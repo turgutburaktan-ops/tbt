@@ -1,3 +1,7 @@
+import 'package:url_launcher/url_launcher.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import '../widgets/tbt_dialog.dart';
+import '../utils/event_presentation.dart';
 import '../theme/app_theme.dart';
 import '../widgets/profile_name_link.dart';
 import '../widgets/event_hub_panel.dart';
@@ -72,6 +76,14 @@ class EventDeepLinkScreen extends StatelessWidget {
                 ),
               );
               return;
+            }
+            if (isHost) {
+              final confirmed = await showTbtDialog<bool>(context: context, builder: (c) => TbtDialog(
+                title: const Text('Etkinlik iptal edilsin mi?'),
+                content: const Text('Katılımcılara etkinliğin iptal edildiği bildirilecek.'),
+                actions: [TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Vazgeç')), FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('İptal et'))],
+              ));
+              if (confirmed != true || !context.mounted) return;
             }
             try {
               if (joined || isHost) {
@@ -189,9 +201,9 @@ class EventDeepLinkScreen extends StatelessWidget {
                           const SizedBox(height: 18),
                           _Info(
                             icon: Icons.schedule,
-                            text: _dateLabel(event.startsAt),
+                            text: eventStartLabel(event.startsAt),
                           ),
-                          if (event.city.isNotEmpty) ...[
+                          if (event.city.isNotEmpty && !event.locationLabel.toLowerCase().contains(event.city.toLowerCase())) ...[
                             const SizedBox(height: 9),
                             _Info(
                               icon: Icons.location_city_outlined,
@@ -221,7 +233,26 @@ class EventDeepLinkScreen extends StatelessWidget {
                               ),
                             ),
                           ],
-                          EventHubPanel(event: event),
+                          if (event.hasCoordinates && !event.approximateLocationOnly) ...[
+                            const SizedBox(height: 12),
+                            Wrap(spacing: 8, children: [
+                              OutlinedButton.icon(
+                                icon: const Icon(Icons.map_outlined), label: const Text('Buluşma noktası'),
+                                onPressed: () => showModalBottomSheet<void>(context: context, showDragHandle: true, builder: (_) => SizedBox(
+                                  height: 340, child: GoogleMap(
+                                    initialCameraPosition: CameraPosition(target: LatLng(event.latitude!, event.longitude!), zoom: 16),
+                                    markers: {Marker(markerId: const MarkerId('meeting'), position: LatLng(event.latitude!, event.longitude!), infoWindow: InfoWindow(title: event.title, snippet: event.locationLabel))},
+                                  ),
+                                )),
+                              ),
+                              OutlinedButton.icon(icon: const Icon(Icons.directions_outlined), label: const Text('Yol tarifi'), onPressed: () async {
+                                final uri = Uri.https('www.google.com', '/maps/dir/', {'api': '1', 'destination': '${event.latitude},${event.longitude}'});
+                                try { if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) throw Exception(); }
+                                catch (_) { if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Harita açılamadı. Tekrar dene.'))); }
+                              }),
+                            ]),
+                          ],
+                          EventHubPanel(event: event, onCancel: isHost && !started && event.status == 'open' ? toggle : null),
                           const SizedBox(height: 22),
                           if (started) ...[
                             StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
@@ -255,7 +286,7 @@ class EventDeepLinkScreen extends StatelessWidget {
                             ),
                             const SizedBox(height: 10),
                           ],
-                          if (!started)
+                          if (!started && !isHost && event.status == 'open')
                             SizedBox(
                               width: double.infinity,
                               height: 50,
@@ -276,7 +307,7 @@ class EventDeepLinkScreen extends StatelessWidget {
                                 ),
                               ),
                             )
-                          else
+                          else if (started || event.status == 'cancelled')
                             Container(
                               width: double.infinity,
                               padding: const EdgeInsets.all(12),
@@ -284,9 +315,9 @@ class EventDeepLinkScreen extends StatelessWidget {
                                 color: const Color(0xFF191C1F),
                                 borderRadius: BorderRadius.circular(14),
                               ),
-                              child: const Row(
+                              child: Row(
                                 children: [
-                                  Icon(
+                                  const Icon(
                                     Icons.auto_awesome_outlined,
                                     size: 18,
                                     color: Colors.white60,
@@ -294,7 +325,7 @@ class EventDeepLinkScreen extends StatelessWidget {
                                   SizedBox(width: 8),
                                   Expanded(
                                     child: Text(
-                                      'Etkinlik başladı. Fotoğraflar artık Etkinlik Anıları bölümünde birikebilir.',
+                                      event.status == 'cancelled' ? 'Bu etkinlik iptal edildi.' : 'Etkinlik başladı. Fotoğraflar artık Etkinlik Anıları bölümünde birikebilir.',
                                       style: TextStyle(color: Colors.white70),
                                     ),
                                   ),
@@ -331,3 +362,4 @@ class _Info extends StatelessWidget {
     ],
   );
 }
+

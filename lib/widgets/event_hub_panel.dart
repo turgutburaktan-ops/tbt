@@ -1,3 +1,4 @@
+import '../screens/event_chat_screen.dart';
 import 'profile_name_link.dart';
 import 'tbt_dialog.dart';
 import '../screens/user_profile_screen.dart';
@@ -11,7 +12,8 @@ import '../models/social_event.dart';
 /// Shared event programme, visible participants and participant-only conversation.
 class EventHubPanel extends StatelessWidget {
   final SocialEvent event;
-  const EventHubPanel({super.key, required this.event});
+  final Future<void> Function()? onCancel;
+  const EventHubPanel({super.key, required this.event, this.onCancel});
   static const fields = {
     'program': 'Program',
     'meetingPoint': 'Buluşma noktası',
@@ -112,12 +114,6 @@ class EventHubPanel extends StatelessWidget {
                       ),
                     ),
                 if (s.hasError) const Text('Etkinlik bilgileri yüklenemedi.'),
-                if (uid == event.hostId)
-                  OutlinedButton.icon(
-                    onPressed: () => _edit(context, data),
-                    icon: const Icon(Icons.edit_note),
-                    label: const Text('Program ve duyuruyu düzenle'),
-                  ),
               ],
             );
           },
@@ -133,12 +129,23 @@ class EventHubPanel extends StatelessWidget {
           onPressed: member
               ? () => Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => _EventChat(event: event)),
+                  MaterialPageRoute(builder: (_) => EventChatScreen(event: event)),
                 )
               : null,
           icon: const Icon(Icons.forum_outlined),
           label: const Text('Etkinlik sohbeti'),
         ),
+        if (uid == event.hostId)
+          Align(alignment: Alignment.centerRight, child: PopupMenuButton<String>(
+            tooltip: 'Etkinliği yönet',
+            child: const Padding(padding: EdgeInsets.all(12), child: Row(mainAxisSize: MainAxisSize.min, children: [Icon(Icons.more_horiz), SizedBox(width: 6), Text('Etkinliği yönet')])),
+            itemBuilder: (_) => [const PopupMenuItem(value: 'edit', child: Text('Program ve duyuruyu düzenle')), if (onCancel != null) const PopupMenuItem(value: 'cancel', child: Text('Etkinliği iptal et'))],
+            onSelected: (action) async {
+              if (action == 'cancel') { await onCancel?.call(); return; }
+              try { final snap = await ref.collection('info').doc('main').get(); if (context.mounted) await _edit(context, snap.data() ?? {}); }
+              catch (_) { if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Bilgiler yüklenemedi. Tekrar dene.'))); }
+            },
+          )),
         if (!member)
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 6),
@@ -203,138 +210,3 @@ class _EventPeopleState extends State<_EventPeople> {
   );
 }
 
-class _EventChat extends StatefulWidget {
-  final SocialEvent event;
-  const _EventChat({required this.event});
-  @override
-  State<_EventChat> createState() => _EventChatState();
-}
-
-class _EventChatState extends State<_EventChat> {
-  final input = TextEditingController();
-  bool busy = false;
-  CollectionReference<Map<String, dynamic>> get messages => FirebaseFirestore
-      .instance
-      .collection('social_events')
-      .doc(widget.event.id)
-      .collection('chat');
-  @override
-  void dispose() {
-    input.dispose();
-    super.dispose();
-  }
-
-  Future<void> send() async {
-    final u = FirebaseAuth.instance.currentUser, text = input.text.trim();
-    if (u == null || text.isEmpty || busy) return;
-    setState(() => busy = true);
-    try {
-      await messages.add({
-        'senderId': u.uid,
-        'senderName': (u.displayName ?? 'Katılımcı').substring(
-          0,
-          (u.displayName ?? 'Katılımcı').length.clamp(0, 100),
-        ),
-        'text': text,
-        'createdAt': FieldValue.serverTimestamp(),
-      });
-      input.clear();
-    } catch (_) {
-      if (mounted)
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Mesaj gönderilemedi. Katılımını ve bağlantını kontrol et.',
-            ),
-          ),
-        );
-    } finally {
-      if (mounted) setState(() => busy = false);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: Text(widget.event.title)),
-    body: SafeArea(
-      child: Column(
-        children: [
-          StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-            stream: messages.parent!.collection('info').doc('main').snapshots(),
-            builder: (c, s) {
-              final text = '${s.data?.data()?['announcement'] ?? ''}';
-              return text.isEmpty
-                  ? const SizedBox.shrink()
-                  : ListTile(
-                      leading: const Icon(Icons.push_pin_outlined),
-                      title: Text(text),
-                    );
-            },
-          ),
-          Expanded(
-            child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-              stream: messages
-                  .orderBy('createdAt', descending: true)
-                  .limit(100)
-                  .snapshots(),
-              builder: (c, s) {
-                if (s.hasError)
-                  return const Center(
-                    child: Text(
-                      'Sohbet yalnızca etkinlik katılımcılarına açık.',
-                    ),
-                  );
-                if (!s.hasData)
-                  return const Center(child: CircularProgressIndicator());
-                final docs = s.data!.docs;
-                if (docs.isEmpty)
-                  return const Center(child: Text('İlk mesajı sen yaz.'));
-                return ListView.builder(
-                  reverse: true,
-                  itemCount: docs.length,
-                  itemBuilder: (c, i) {
-                    final d = docs[i].data();
-                    return ListTile(
-                      title: ProfileNameLink(userId: (d['senderId'] ?? '').toString(), compact: true, child: Text(
-                        '${d['senderName'] ?? 'Katılımcı'}',
-                        style: const TextStyle(
-                          fontSize: 13,
-                          color: Colors.grey,
-                        ),
-                      )),
-                      subtitle: Text(
-                        '${d['text'] ?? ''}',
-                        style: const TextStyle(fontSize: 16),
-                      ),
-                    );
-                  },
-                );
-              },
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: input,
-                    maxLength: 1500,
-                    minLines: 1,
-                    maxLines: 4,
-                    decoration: const InputDecoration(labelText: 'Mesajın'),
-                  ),
-                ),
-                IconButton(
-                  onPressed: busy ? null : send,
-                  icon: const Icon(Icons.send),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    ),
-  );
-}

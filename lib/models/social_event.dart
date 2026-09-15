@@ -109,6 +109,7 @@ class SocialEvent {
       salesStatus,
       riskLevel,
       paymentReleaseStatus;
+  final String coverImageUrl;
   final SocialEventType type;
   final DateTime startsAt;
   final int capacity,
@@ -135,6 +136,7 @@ class SocialEvent {
 
   const SocialEvent({
     required this.id,
+    this.coverImageUrl = '',
     required this.title,
     required this.type,
     required this.customTypeLabel,
@@ -242,6 +244,7 @@ class SocialEvent {
       businessVenueKey: d['businessVenueKey']?.toString(),
       businessVenueName: d['businessVenueName']?.toString(),
       verifiedBusiness: d['verifiedBusiness'] == true,
+      coverImageUrl: (d['coverImageUrl'] ?? '').toString(),
       latitude:
           (d['latitude'] as num?)?.toDouble() ??
           (geo is GeoPoint ? geo.latitude : null),
@@ -287,3 +290,4 @@ class SocialEvent {
     );
   }
 }
+
