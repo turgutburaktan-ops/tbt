@@ -74,7 +74,8 @@ class _PlacesHubScreenState extends State<PlacesHubScreen> {
 
   Future<void> _initialize() async {
     final generation = _generation;
-    final saved = widget.source.selectedCity;
+    final saved = await widget.source.restoreSelectedCity();
+    if (!mounted || generation != _generation) return;
     if (saved != null) {
       await _selectCity(saved);
     } else {
@@ -429,7 +430,10 @@ class _PlacesHubScreenState extends State<PlacesHubScreen> {
                         alignment: Alignment.centerLeft,
                       ),
                       child: Text(
-                        _city ?? 'Şehir seç',
+                        _city ??
+                            (_position != null
+                                ? 'Yakınımdaki yerler'
+                                : 'Şehir seç'),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -881,6 +885,8 @@ class _CityPickerState extends State<_CityPicker> {
 class PlacesDataSource {
   const PlacesDataSource();
   String? get selectedCity => NearbyVenueService.instance.selectedCityName;
+  Future<String?> restoreSelectedCity() async =>
+      selectedCity ?? await NearbyVenueService.instance.restoreSelectedCity();
   Future<List<PhotoSpot>> spots() => SpotRepository.instance.discover();
   Future<List<NearbyVenue>> venues({
     required NearbyVenueCategory category,

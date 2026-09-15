@@ -151,7 +151,7 @@ void main() {
         ),
       ),
     );
-    expect(networkCalls, 2);
+    expect(networkCalls, 3);
   });
   test(
     'partial business list is reported as incomplete when OSM fails',
@@ -368,4 +368,63 @@ void main() {
       });
     },
   );
+  test(
+    'last selected city survives service restart and current-city clears it',
+    () async {
+      SharedPreferences.setMockInitialValues({});
+      NearbyVenueService fresh() => NearbyVenueService.forTesting(
+        clientFactory: () =>
+            MockClient((_) async => http.Response('{"elements":[]}', 200)),
+        businessLoader: (_, __, ___, ____) async => [],
+      );
+      final first = fresh();
+      first.selectCity(name: 'Elazığ', latitude: 38.6748, longitude: 39.2225);
+      first.selectCity(name: 'İstanbul', latitude: 41.0082, longitude: 28.9784);
+      await first.flushSelectedCity();
+      final second = fresh();
+      expect(await second.restoreSelectedCity(), 'İstanbul');
+      expect(second.hasSelectedCity, isTrue);
+      second.useCurrentCity();
+      await second.flushSelectedCity();
+      expect(await fresh().restoreSelectedCity(), isNull);
+    },
+  );
+  test('legacy cache is shown during migration but does not suppress a fresh request', () async {
+    SharedPreferences.setMockInitialValues({
+      key.replaceFirst(
+        'city_venues_v10_province_',
+        'city_venues_v9_',
+      ): jsonEncode({
+        'savedAt': DateTime.now().millisecondsSinceEpoch,
+        'venues': [venue.toJson()],
+      }),
+    });
+    var calls = 0;
+    final service = NearbyVenueService.forTesting(
+      clientFactory: () => MockClient((_) async {
+        calls++;
+        return http.Response('unavailable', 503);
+      }),
+      businessLoader: (_, __, ___, ____) async => [],
+    );
+    final shown = <NearbyVenue>[];
+    await expectLater(
+      service.nearby(
+        category: NearbyVenueCategory.cafe,
+        latitude: 38.67,
+        longitude: 39.22,
+        reportIncomplete: true,
+        onUpdate: (items) => shown.addAll(items),
+      ),
+      throwsA(
+        isA<VenueLoadException>().having(
+          (e) => e.venues.single.id,
+          'kept place',
+          venue.id,
+        ),
+      ),
+    );
+    expect(shown.first.id, venue.id);
+    expect(calls, 3);
+  });
 }

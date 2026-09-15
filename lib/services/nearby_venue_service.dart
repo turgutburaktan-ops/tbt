@@ -149,6 +149,7 @@ class NearbyVenueService {
   }
 
   static const _endpoints = <String>[
+    'https://overpass.kumi.systems/api/interpreter',
     'https://overpass-api.de/api/interpreter',
     'https://overpass.private.coffee/api/interpreter',
   ];
@@ -236,6 +237,69 @@ class NearbyVenueService {
 
   double? _cityLatitude, _cityLongitude, _south, _west, _north, _east;
   String? _cityName;
+  int _cityRevision = 0;
+  Future<void> _citySaveQueue = Future.value();
+  static const _cityPreferenceKey = 'venue_selected_city_v1';
+
+  Future<String?> restoreSelectedCity() async {
+    if (_cityName != null) return _cityName;
+    final revision = _cityRevision;
+    final prefs = await _prefs();
+    if (revision != _cityRevision) return _cityName;
+    try {
+      final raw = prefs.getString(_cityPreferenceKey);
+      if (raw == null) return null;
+      final d = jsonDecode(raw) as Map<String, dynamic>;
+      final name = d['name'] as String;
+      final lat = (d['latitude'] as num).toDouble();
+      final lon = (d['longitude'] as num).toDouble();
+      if (!_provinceNames.any((n) => _fold(n) == _fold(name)) ||
+          !lat.isFinite ||
+          !lon.isFinite ||
+          lat.abs() > 90 ||
+          lon.abs() > 180)
+        return null;
+      _cityName = name;
+      _cityLatitude = lat;
+      _cityLongitude = lon;
+      _south = (d['south'] as num?)?.toDouble();
+      _west = (d['west'] as num?)?.toDouble();
+      _north = (d['north'] as num?)?.toDouble();
+      _east = (d['east'] as num?)?.toDouble();
+      return name;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> flushSelectedCity() => _citySaveQueue;
+
+  void _persistCity() {
+    _cityRevision++;
+    final snapshot = _cityName == null
+        ? null
+        : jsonEncode({
+            'name': _cityName,
+            'latitude': _cityLatitude,
+            'longitude': _cityLongitude,
+            'south': _south,
+            'west': _west,
+            'north': _north,
+            'east': _east,
+          });
+    _citySaveQueue = _citySaveQueue
+        .then((_) async {
+          final prefs = await _prefs();
+          if (snapshot == null) {
+            await prefs.remove(_cityPreferenceKey);
+          } else {
+            await prefs.setString(_cityPreferenceKey, snapshot);
+          }
+        })
+        .catchError((Object _) {
+          /* Keep the current in-memory selection. */
+        });
+  }
 
   String? get selectedCityName => _cityName;
   bool get hasSelectedCity => _cityLatitude != null && _cityLongitude != null;
@@ -350,6 +414,7 @@ class NearbyVenueService {
     _west = west;
     _north = north;
     _east = east;
+    _persistCity();
   }
 
   void useCurrentCity() {
@@ -360,6 +425,7 @@ class NearbyVenueService {
     _west = null;
     _north = null;
     _east = null;
+    _persistCity();
   }
 
   Future<List<NearbyVenue>> nearby({
@@ -435,7 +501,15 @@ class NearbyVenueService {
     required String key,
   }) async {
     final p = await _prefs();
-    final cached = _readCache(p, key);
+    final currentCache = _readCache(p, key);
+    // Keep the last working narrow-area list during migration, but always
+    // request the province list before considering it fully refreshed.
+    final cached =
+        currentCache ??
+        _readCache(
+          p,
+          key.replaceFirst('city_venues_v10_province_', 'city_venues_v9_'),
+        );
     var osm = cached?.venues ?? <NearbyVenue>[];
     var business = <NearbyVenue>[];
     var osmFailed = false;
@@ -458,7 +532,8 @@ class NearbyVenueService {
               businessFailed = true;
             });
     final osmFuture = () async {
-      if (!forceRefresh && cached != null && !cached.isExpired) return;
+      if (!forceRefresh && currentCache != null && !currentCache.isExpired)
+        return;
       final fresh = await _fetchFreshOsm(
         category: category,
         state: state,
@@ -530,7 +605,7 @@ class NearbyVenueService {
                 ),
               },
             )
-            .timeout(const Duration(seconds: 25));
+            .timeout(const Duration(seconds: 60));
         if (r.statusCode != 200) continue;
         final decoded = jsonDecode(r.body);
         if (decoded is! Map ||
@@ -743,7 +818,7 @@ class NearbyVenueService {
     final area = province == null
         ? ''
         : 'area["ISO3166-2"="$province"]["admin_level"="4"]->.province;\n.province out ids;\n';
-    return '[out:json][timeout:20];\n$area(\n$f\n);\nout center tags;';
+    return '[out:json][timeout:45];\n$area(\n$f\n);\nout center tags;';
   }
 
   String _osmImageUrl(Map<String, dynamic> tags) {
