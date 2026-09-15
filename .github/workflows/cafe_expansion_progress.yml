@@ -1,0 +1,34 @@
+name: Read cafe expansion progress
+on:
+  push:
+    branches: [codex/cafe-expansion-progress-20260915]
+permissions:
+  contents: read
+jobs:
+  counts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm install --prefix functions
+      - name: Read public catalog counts
+        working-directory: functions
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          node <<'JS'
+          const {initializeApp,cert}=require('firebase-admin/app');
+          const {getFirestore}=require('firebase-admin/firestore');
+          initializeApp({credential:cert(JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT))});
+          (async()=>{
+            const db=getFirestore();
+            const s=await db.collection('place_catalog').where('kind','==','cafe').get();
+            const rows=s.docs.map(d=>({city:d.data().city,count:d.data().count||0,expanded:d.data().lastExpansionSource==='overture'}));
+            console.log(JSON.stringify({total:rows.reduce((a,r)=>a+r.count,0),expandedProvinces:rows.filter(r=>r.expanded).length,elazig:rows.find(r=>r.city==='Elazığ')}));
+            const actual=await db.collection('place_catalog/elazig_cafe/items').count().get();
+            console.log('Elazig actual item count',actual.data().count);
+          })().catch(e=>{console.error(e.message);process.exitCode=1;});
+          JS
