@@ -1,0 +1,20 @@
+name: Discover diversity checks
+on:
+  push:
+    branches: [codex/discover-diversity]
+permissions:
+  contents: read
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter analyze --no-fatal-infos --no-fatal-warnings lib/services/discover_ranker.dart lib/services/discover_preferences.dart lib/screens/home_discover_screen.dart lib/screens/reels_screen.dart lib/services/content_engagement_service.dart lib/services/creator_service.dart lib/widgets/creator_view_tracker.dart lib/widgets/discover_content_grid.dart
+      - run: flutter test test/discover_ranker_test.dart test/camera_share_controls_test.dart test/restored_flows_test.dart
+      - run: flutter build bundle --debug

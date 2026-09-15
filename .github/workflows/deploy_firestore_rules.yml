@@ -1,0 +1,97 @@
+name: Deploy Firebase Rules
+
+on:
+  push:
+    branches: [main, feature/video-v1, codex/release-1.0.18-build26]
+    paths:
+      - 'firestore.rules'
+      - 'firestore.indexes.json'
+      - 'tool/ensure_creator_indexes.cjs'
+      - 'storage.rules'
+      - 'firebase.json'
+      - '.github/workflows/deploy_firestore_rules.yml'
+  workflow_call:
+  workflow_dispatch:
+
+# Keep this workflow as the production gate for runtime Firestore rule changes.
+# Redeploy marker: 2026-08-27 chat access refresh
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Authenticate Firebase CLI
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          raw = os.environ.get('FIREBASE_SERVICE_ACCOUNT', '')
+          if not raw:
+              raise SystemExit('FIREBASE_SERVICE_ACCOUNT secret is missing.')
+          service_account = json.loads(raw)
+          target = Path(os.environ['RUNNER_TEMP']) / 'firebase-service-account.json'
+          target.write_text(json.dumps(service_account), encoding='utf-8')
+          target.chmod(0o600)
+          with open(os.environ['GITHUB_ENV'], 'a', encoding='utf-8') as env_file:
+              env_file.write(f'GOOGLE_APPLICATION_CREDENTIALS={target}\n')
+          PY
+
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools
+
+      - name: Setup Java for rule tests
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Install chat test dependencies
+        run: npm install --prefix functions
+
+      - name: Backend regression tests
+        run: node --test functions/test/*.test.js
+
+      - name: Check coupon access rules
+        run: firebase emulators:exec --only firestore --project demo-tbt "node tool/test_coupon_rules.cjs && node tool/test_event_hub_rules.cjs && node tool/test_chat_collaboration.cjs && node tool/test_route_participation.cjs" --non-interactive
+
+      - name: Install participant album rule test dependencies
+        run: npm install --prefix /tmp/route-tests @firebase/rules-unit-testing firebase
+
+      - name: Check participant albums, route visibility and voting privacy
+        run: NODE_PATH=/tmp/route-tests/node_modules firebase emulators:exec --only firestore,storage --project demo-tbt "node tool/test_social_routes.cjs" --non-interactive
+
+      - name: Prepare event discovery index
+        run: |
+          npm install --prefix functions
+          node tool/ensure_event_index.cjs
+          node tool/ensure_creator_indexes.cjs
+
+      - name: Deploy Firestore rules
+        run: |
+          # Target the bucket already configured in lib/firebase_options.dart.
+          # Deployment keeps its existing IAM checks; no discovery permission is needed.
+          node <<'NODE'
+          const fs = require('node:fs');
+          const config = JSON.parse(fs.readFileSync('firebase.json', 'utf8'));
+          const bucket = 'en-iyi-cekim-noktasi.firebasestorage.app';
+          const options = fs.readFileSync('lib/firebase_options.dart', 'utf8');
+          if (!options.includes("storageBucket: '" + bucket + "'")) {
+            throw new Error('Storage deployment target must match the app');
+          }
+          if (!config.storage || config.storage.rules !== 'storage.rules') {
+            throw new Error('Unexpected Storage rules configuration');
+          }
+          config.storage = [{bucket, rules: config.storage.rules}];
+          fs.writeFileSync('firebase.json', JSON.stringify(config, null, 2) + '\n');
+          NODE
+          firebase deploy --only firestore:rules,storage --project en-iyi-cekim-noktasi --non-interactive

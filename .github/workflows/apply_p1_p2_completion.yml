@@ -1,0 +1,54 @@
+name: Apply P1 P2 Completion
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: apply-p1-p2-completion-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  apply:
+    if: github.actor != 'tbt-fix-bot'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/video-v1
+          fetch-depth: 0
+      - name: Apply scoped P1 P2 fixes
+        run: python3 .github/scripts/apply_p1_p2_completion.py
+      - name: Format changed Dart files
+        shell: bash
+        run: |
+          if command -v dart >/dev/null 2>&1; then
+            dart format \
+              lib/models/nearby_venue.dart \
+              lib/services/nearby_venue_service.dart \
+              lib/widgets/nearby_places_view.dart \
+              lib/widgets/retention_now_overlay.dart \
+              lib/screens/home_shell_v3.dart \
+              lib/screens/profile_page_v2.dart
+          fi
+      - name: Commit changes
+        shell: bash
+        run: |
+          if git diff --quiet; then
+            echo 'No P1/P2 changes needed.'
+            exit 0
+          fi
+          git config user.name 'tbt-fix-bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add \
+            lib/models/nearby_venue.dart \
+            lib/services/nearby_venue_service.dart \
+            lib/widgets/nearby_places_view.dart \
+            lib/widgets/retention_now_overlay.dart \
+            lib/screens/home_shell_v3.dart \
+            lib/screens/profile_page_v2.dart
+          git commit -m 'feat: complete P1 P2 video experience fixes'
+          git push origin HEAD:feature/video-v1

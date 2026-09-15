@@ -1,0 +1,25 @@
+name: Shared story video check
+on:
+  push:
+    branches: [codex/shared-story-video]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --prefix functions --ignore-scripts --no-audit --no-fund
+      - run: node --test functions/test/social_publishing.test.js
+      - run: flutter pub get
+      - run: flutter analyze --no-fatal-infos --no-fatal-warnings lib/widgets/shared_story_video.dart lib/widgets/shared_post_card.dart lib/widgets/story_strip.dart lib/widgets/app_video_player.dart lib/screens/share_post_story_screen.dart test/video_playback_test.dart
+      - run: flutter test test/video_playback_test.dart test/profile_ios_interaction_test.dart

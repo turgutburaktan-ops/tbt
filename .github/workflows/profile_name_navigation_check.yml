@@ -1,0 +1,20 @@
+name: Profile name navigation check
+on:
+  push:
+    branches: [codex/profile-name-navigation]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter analyze --no-fatal-infos --no-fatal-warnings
+      - run: flutter test test/profile_name_navigation_test.dart test/profile_ios_interaction_test.dart test/video_playback_test.dart test/chat_access_test.dart

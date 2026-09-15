@@ -1,0 +1,192 @@
+import 'package:share_plus/share_plus.dart';
+
+class InviteLinkTarget {
+  final String type;
+  final String id;
+  final String role;
+
+  const InviteLinkTarget({
+    required this.type,
+    required this.id,
+    this.role = '',
+  });
+}
+
+class InviteLinkService {
+  InviteLinkService._();
+  static final InviteLinkService instance = InviteLinkService._();
+
+  static const String scheme = 'tbt';
+  static const String webHost = 'www.trtbt.com';
+  static const Set<String> _acceptedWebHosts = {
+    'www.trtbt.com',
+    'trtbt.com',
+    'tbttr.com',
+    'www.tbttr.com',
+    // Keep previously shared links working after the public-domain migration.
+    'en-iyi-cekim-noktasi.web.app',
+    'en-iyi-cekim-noktasi.firebaseapp.com',
+  };
+  static final RegExp _safeId = RegExp(r'^[A-Za-z0-9_-]{1,128}$');
+
+  Uri communityUri(String communityId) =>
+      Uri.https(webHost, '/community/${_safeOutgoingId(communityId)}');
+  Uri eventUri(String eventId) =>
+      Uri.https(webHost, '/event/${_safeOutgoingId(eventId)}');
+  Uri profileUri(String userId) =>
+      Uri.https(webHost, '/profile/${_safeOutgoingId(userId)}');
+  Uri creatorProfileUri(String userId) =>
+      Uri.https(webHost, '/creator-profile/${_safeOutgoingId(userId)}');
+  Uri postUri(String postId) =>
+      Uri.https(webHost, '/post/${_safeOutgoingId(postId)}');
+  Uri spotUri(String spotId) =>
+      Uri.https(webHost, '/spot/${_safeOutgoingId(spotId)}');
+
+  Uri communityAppUri(String communityId) => Uri(
+    scheme: scheme,
+    host: 'community',
+    pathSegments: [_safeOutgoingId(communityId)],
+  );
+  Uri eventAppUri(String eventId) => Uri(
+    scheme: scheme,
+    host: 'event',
+    pathSegments: [_safeOutgoingId(eventId)],
+  );
+
+  String _safeOutgoingId(String value) {
+    final id = value.trim();
+    if (!_safeId.hasMatch(id))
+      throw ArgumentError.value(value, 'id', 'Geçersiz paylaşım kimliği');
+    return id;
+  }
+
+  InviteLinkTarget? parse(Uri uri) {
+    final incomingScheme = uri.scheme.toLowerCase();
+    final incomingHost = uri.host.toLowerCase();
+    if (incomingScheme == scheme) {
+      if (incomingHost == 'davet' && uri.pathSegments.length == 2) {
+        final role = uri.pathSegments[0].trim().toLowerCase();
+        final id = uri.pathSegments[1].trim();
+        if (!_validRole(role) || !_safeId.hasMatch(id)) return null;
+        return InviteLinkTarget(type: 'role-invite', id: id, role: role);
+      }
+      if (uri.pathSegments.length != 1) return null;
+      final id = uri.pathSegments.first.trim();
+      final type = incomingHost.trim();
+      if (!_validTarget(type, id)) return null;
+      return InviteLinkTarget(type: type, id: id);
+    }
+    final isWebInvite =
+        incomingScheme == 'https' && _acceptedWebHosts.contains(incomingHost);
+    if (!isWebInvite) return null;
+    // Preserve old website/hash invitation entries without trusting another host.
+    if ((uri.path == '/' || uri.path.isEmpty || uri.path == '/invite.html') &&
+        uri.fragment.isNotEmpty) {
+      String path;
+      try {
+        path = Uri.decodeComponent(uri.fragment);
+      } catch (_) {
+        return null;
+      }
+      if (!path.startsWith('/') || path.startsWith('//') || path.contains('#'))
+        return null;
+      final nested = Uri.tryParse('https://$incomingHost$path');
+      if (nested == null || nested.host != incomingHost) return null;
+      return parse(nested);
+    }
+    if (uri.pathSegments.length == 3 &&
+        uri.pathSegments[0].toLowerCase() == 'davet') {
+      final role = uri.pathSegments[1].trim().toLowerCase();
+      final id = uri.pathSegments[2].trim();
+      if (!_validRole(role) || !_safeId.hasMatch(id)) return null;
+      return InviteLinkTarget(type: 'role-invite', id: id, role: role);
+    }
+    if (uri.pathSegments.length != 2) return null;
+    final type = uri.pathSegments[0].trim().toLowerCase();
+    final id = uri.pathSegments[1].trim();
+    if (!_validTarget(type, id)) return null;
+    return InviteLinkTarget(type: type, id: id);
+  }
+
+  bool _validTarget(String type, String id) {
+    if (type != 'group' &&
+        type != 'event' &&
+        type != 'community' &&
+        type != 'profile' &&
+        type != 'post' &&
+        type != 'creator' &&
+        type != 'creator-profile' &&
+        type != 'spot')
+      return false;
+    return _safeId.hasMatch(id);
+  }
+
+  bool _validRole(String role) =>
+      const {'creator', 'explorer', 'social', 'gourmet'}.contains(role);
+
+  Future<void> shareCommunity({
+    required String communityId,
+    required String communityName,
+    String university = '',
+  }) async {
+    final details = university.trim().isEmpty ? '' : '\n$university';
+    await Share.share(
+      '$communityName topluluğuna göz at.$details\n${communityUri(communityId)}',
+      subject: communityName,
+    );
+  }
+
+  Future<void> shareEvent({
+    required String eventId,
+    required String eventTitle,
+    String hostName = '',
+    String city = '',
+  }) async {
+    final meta = [
+      hostName.trim(),
+      city.trim(),
+    ].where((item) => item.isNotEmpty).join(' • ');
+    await Share.share(
+      '$eventTitle etkinliğine göz at.${meta.isEmpty ? '' : '\n$meta'}\n${eventUri(eventId)}',
+      subject: eventTitle,
+    );
+  }
+
+  Future<void> shareProfile({
+    required String userId,
+    required String displayName,
+  }) async {
+    final name = displayName.trim().isEmpty
+        ? 'TBT profili'
+        : displayName.trim();
+    await Share.share(
+      '$name profilini TBT’de gör.\n${profileUri(userId)}',
+      subject: name,
+    );
+  }
+
+  Future<void> sharePost({
+    required String postId,
+    required String title,
+  }) async {
+    final text = title.trim().isEmpty ? 'TBT paylaşımı' : title.trim();
+    await Share.share('$text\n${postUri(postId)}', subject: 'TBT paylaşımı');
+  }
+
+  Future<void> shareSpot({
+    required String spotId,
+    required String spotName,
+    String city = '',
+    double? latitude,
+    double? longitude,
+  }) async {
+    final meta = city.trim().isEmpty ? '' : '\n${city.trim()}';
+    final maps = latitude == null || longitude == null
+        ? ''
+        : '\n${Uri.https('www.google.com', '/maps/search/', {'api': '1', 'query': '$latitude,$longitude'})}';
+    await Share.share(
+      '$spotName çekim noktasına göz at.$meta\n${spotUri(spotId)}$maps',
+      subject: spotName,
+    );
+  }
+}

@@ -1,0 +1,79 @@
+name: iOS Build Check
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [codex/fix-ios-camera-mirroring]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-build-check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-ios:
+    name: Build iOS Simulator
+    runs-on: macos-15
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Show toolchain
+        run: |
+          flutter --version
+          dart --version
+          xcodebuild -version
+      - name: Use CocoaPods plugin integration
+        run: flutter config --no-enable-swift-package-manager
+      - name: Install dependencies
+        run: flutter pub get
+      - name: Prepare clean iOS host
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf ios
+          flutter create --platforms=ios --org com.tbt --project-name best_photo_spot .
+          sed -i '' 's/com\.tbt\.bestPhotoSpot/com.tbt.social/g' ios/Runner.xcodeproj/project.pbxproj
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          p = Path('ios/Podfile')
+          s = p.read_text()
+          if re.search(r"^\s*#?\s*platform :ios,\s*'[^']+'", s, flags=re.M):
+              s = re.sub(r"^\s*#?\s*platform :ios,\s*'[^']+'", "platform :ios, '15.0'", s, count=1, flags=re.M)
+          else:
+            s = "platform :ios, '15.0'\n" + s
+          p.write_text(s)
+          info = Path('ios/Runner/Info.plist')
+          plist = info.read_text()
+          if 'GADApplicationIdentifier' not in plist:
+              plist = plist.replace('</dict>', '  <key>GADApplicationIdentifier</key>\n  <string>ca-app-pub-3940256099942544~1458002511</string>\n</dict>')
+              info.write_text(plist)
+          PY
+          rm -rf ios/Pods ios/Podfile.lock
+
+      - name: Fix iOS rear camera mirroring
+        run: python3 tool/patch_ios_camera_mirroring.py
+
+      - name: Build iOS simulator
+        run: >-
+          flutter build ios --simulator --debug --no-pub
+          --dart-define=FIREBASE_IOS_API_KEY=ci-placeholder
+          --dart-define=FIREBASE_IOS_APP_ID=1:330568532415:ios:ci-placeholder
+          --dart-define=IOS_BUNDLE_ID=com.tbt.social
+      - name: Verify simulator app bundle
+        run: test -d build/ios/iphonesimulator/Runner.app
+      - name: Upload iOS simulator app
+        uses: actions/upload-artifact@v4
+        with:
+          name: best-photo-spot-ios-simulator-app
+          path: build/ios/iphonesimulator/Runner.app
+          if-no-files-found: error
+          retention-days: 7

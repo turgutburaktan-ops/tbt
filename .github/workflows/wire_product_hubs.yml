@@ -1,0 +1,45 @@
+name: Wire Product Hubs
+
+on:
+  push:
+    branches:
+      - feature/video-v1
+    paths:
+      - '.github/workflows/wire_product_hubs.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/video-v1
+      - name: Patch profile menu
+        shell: python
+        run: |
+          from pathlib import Path
+          p = Path('lib/screens/profile_page_v2.dart')
+          s = p.read_text()
+          anchor = """      case 'messages':\n        if (mounted) Navigator.pushNamed(context, '/messages');\n        return;"""
+          replacement = """      case 'messages':\n        if (mounted) Navigator.pushNamed(context, '/messages');\n        return;\n      case 'search':\n        if (mounted) Navigator.pushNamed(context, '/search');\n        return;\n      case 'safety':\n        if (mounted) Navigator.pushNamed(context, '/safety-privacy');\n        return;\n      case 'business':\n        if (mounted) Navigator.pushNamed(context, '/business');\n        return;"""
+          if "case 'safety':" not in s:
+              if anchor not in s: raise SystemExit('handler anchor missing')
+              s = s.replace(anchor, replacement, 1)
+
+          item_anchor = """                              const PopupMenuItem(\n                                value: 'messages',\n                                child: ListTile(\n                                  dense: true,\n                                  leading:\n                                      Icon(Icons.chat_bubble_outline_rounded),\n                                  title: Text('Mesajlar'),\n                                ),\n                              ),"""
+          items = item_anchor + """\n                              const PopupMenuItem(\n                                value: 'search',\n                                child: ListTile(\n                                  dense: true,\n                                  leading: Icon(Icons.search_rounded),\n                                  title: Text('TBT’de Ara'),\n                                ),\n                              ),\n                              const PopupMenuItem(\n                                value: 'safety',\n                                child: ListTile(\n                                  dense: true,\n                                  leading: Icon(Icons.shield_outlined),\n                                  title: Text('Güvenlik ve Gizlilik'),\n                                ),\n                              ),\n                              const PopupMenuItem(\n                                value: 'business',\n                                child: ListTile(\n                                  dense: true,\n                                  leading: Icon(Icons.storefront_outlined),\n                                  title: Text('İşletmem'),\n                                ),\n                              ),"""
+          if "value: 'safety'" not in s:
+              if item_anchor not in s: raise SystemExit('menu anchor missing')
+              s = s.replace(item_anchor, items, 1)
+          p.write_text(s)
+      - name: Commit
+        run: |
+          if git diff --quiet -- lib/screens/profile_page_v2.dart; then exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add lib/screens/profile_page_v2.dart
+          git commit -m "Expose search safety and business tools from profile"
+          git push origin HEAD:feature/video-v1

@@ -1,0 +1,338 @@
+import 'route_create_screen.dart';
+import '../widgets/tbt_dialog.dart';
+
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+import 'package:share_plus/share_plus.dart';
+
+import '../models/travel_plan.dart';
+import '../services/travel_plan_service.dart';
+import '../theme/app_theme.dart';
+import 'route_planner_screen.dart';
+import 'offline_travel_plans_screen.dart';
+import 'travel_plan_detail_screen.dart';
+import 'travel_plan_invite_screen.dart';
+
+class TravelPlansScreen extends StatelessWidget {
+  const TravelPlansScreen({super.key});
+
+  Future<void> _sharePlan(TravelPlan plan) async {
+    final stops = plan.spotNames
+        .asMap()
+        .entries
+        .map((entry) => '${entry.key + 1}. ${entry.value}')
+        .join('\n');
+    await Share.share(
+      '${plan.title}\n\n${plan.city} • ${plan.durationHours} saat • ${plan.transport} • ${plan.budget}\n\n$stops\n\nTBT ile hazırlandı.',
+      subject: plan.title,
+    );
+  }
+
+  Future<void> _openRoute(BuildContext context, TravelPlan plan) async {
+    final messenger = ScaffoldMessenger.of(context);
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(const SnackBar(content: Text('Rota hazırlanıyor…')));
+    try {
+      final spots = await TravelPlanService.instance.resolveRouteSpots(plan);
+      if (!context.mounted) return;
+      messenger.hideCurrentSnackBar();
+      if (spots.isEmpty) {
+        messenger.showSnackBar(
+          const SnackBar(content: Text('Bu planın durakları bulunamadı.')),
+        );
+        return;
+      }
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => RoutePlannerScreen(
+            routeId: plan.ownerId == FirebaseAuth.instance.currentUser?.uid
+                ? plan.id
+                : null,
+            initialTitle: plan.title,
+            city: plan.city,
+            durationHours: plan.durationHours,
+            budget: plan.budget,
+            interests: plan.interests,
+            initialSpots: spots,
+            initialUseCurrentLocation: false,
+            initialTransport: plan.transport,
+          ),
+        ),
+      );
+    } catch (_) {
+      messenger
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(content: Text('Rota açılamadı. Tekrar dene.')),
+        );
+    }
+  }
+
+  Future<void> _delete(BuildContext context, TravelPlan plan) async {
+    final approved = await showTbtDialog<bool>(
+      context: context,
+      builder: (_) => TbtDialog(
+        title: const Text('Rota silinsin mi?'),
+        content: Text('${plan.title} kalıcı olarak silinecek.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Vazgeç'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Sil'),
+          ),
+        ],
+      ),
+    );
+    if (approved != true) return;
+    try {
+      await TravelPlanService.instance.delete(plan.id);
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text('Rota silinemedi.')));
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        title: const Text('Rotalarım'),
+        actions: [
+          IconButton(
+            tooltip: 'Çevrimdışı rotalar',
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const OfflineTravelPlansScreen(),
+              ),
+            ),
+            icon: const Icon(Icons.offline_pin_outlined),
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const RouteCreateScreen()),
+        ),
+        icon: const Icon(Icons.add_rounded),
+        label: const Text('Yeni plan'),
+      ),
+      body: StreamBuilder<List<TravelPlan>>(
+        stream: TravelPlanService.instance.watchMine(),
+        builder: (_, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            return const _PlansMessage(
+              icon: Icons.cloud_off_rounded,
+              title: 'Rotalar yüklenemedi',
+              body: 'Bağlantını kontrol edip tekrar dene.',
+            );
+          }
+          final plans = snapshot.data ?? const <TravelPlan>[];
+          if (plans.isEmpty) {
+            return const _PlansMessage(
+              icon: Icons.route_outlined,
+              title: 'Henüz planın yok',
+              body: 'Akıllı plan oluşturduğunda veya bir plana davet edildiğinde burada görünecek.',
+            );
+          }
+          return ListView.separated(
+            padding: const EdgeInsets.fromLTRB(14, 10, 14, 100),
+            itemCount: plans.length,
+            separatorBuilder: (_, __) => const SizedBox(height: 10),
+            itemBuilder: (_, index) {
+              final plan = plans[index];
+              final owned = plan.ownerId == currentUser?.uid;
+              return Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          width: 42,
+                          height: 42,
+                          decoration: BoxDecoration(
+                            gradient: AppColors.subtleGradient,
+                            borderRadius: BorderRadius.circular(13),
+                          ),
+                          child: const Icon(Icons.route_rounded),
+                        ),
+                        const SizedBox(width: 11),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                plan.title,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
+                              Text(
+                                '${plan.city} • ${plan.durationHours} saat • ${plan.transport}',
+                                style: const TextStyle(
+                                  color: AppColors.textMuted,
+                                  fontSize: 11.5,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          tooltip: 'Rotayı paylaş',
+                          onPressed: () => _sharePlan(plan),
+                          icon: const Icon(Icons.share_outlined),
+                        ),
+                        if (owned)
+                          IconButton(
+                            tooltip: 'Rotayı sil',
+                            onPressed: () => _delete(context, plan),
+                            icon: const Icon(Icons.delete_outline_rounded),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      plan.spotNames.join('  →  '),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 12,
+                        height: 1.4,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Icon(
+                          owned ? Icons.person_rounded : Icons.mail_rounded,
+                          size: 16,
+                          color: AppColors.textMuted,
+                        ),
+                        const SizedBox(width: 5),
+                        Text(
+                          owned
+                              ? '${plan.memberIds.length - 1} davetli'
+                              : 'Katıldığın rota',
+                          style: const TextStyle(
+                            color: AppColors.textMuted,
+                            fontSize: 11.5,
+                          ),
+                        ),
+                        const Spacer(),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: Wrap(
+                        spacing: 5,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          if (owned)
+                            TextButton.icon(
+                              onPressed: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => TravelPlanInviteScreen(
+                                    planId: plan.id,
+                                    planTitle: plan.title,
+                                  ),
+                                ),
+                              ),
+                              icon: const Icon(
+                                Icons.group_add_rounded,
+                                size: 18,
+                              ),
+                              label: const Text('Davet'),
+                            ),
+                          const SizedBox(width: 5),
+                          IconButton(
+                            tooltip: 'Haritada aç',
+                            onPressed: () => _openRoute(context, plan),
+                            icon: const Icon(Icons.map_outlined),
+                          ),
+                          FilledButton(
+                            onPressed: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    TravelPlanDetailScreen(plan: plan),
+                              ),
+                            ),
+                            child: const Text('Rotayı aç'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _PlansMessage extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String body;
+
+  const _PlansMessage({
+    required this.icon,
+    required this.title,
+    required this.body,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(28),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 58, color: Colors.white30),
+            const SizedBox(height: 12),
+            Text(
+              title,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              body,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: AppColors.textMuted, height: 1.4),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

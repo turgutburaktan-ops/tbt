@@ -1,0 +1,1279 @@
+import '../services/user_facing_error.dart';
+import '../services/user_facing_error.dart';
+import '../widgets/profile_photo_card.dart';
+import '../widgets/description_field.dart';
+import '../widgets/profile_content_navigation.dart';
+import 'rewards_hub_screen.dart';
+import 'creator_center_screen.dart';
+import '../models/profile_identity.dart';
+import '../widgets/tbt_dialog.dart';
+import '../widgets/profile_sharing_section.dart';
+import '../services/social_event_service.dart';
+import '../widgets/profile_reservations.dart';
+
+import 'dart:io';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
+
+import '../models/travel_plan.dart';
+import '../services/auth_service.dart';
+import '../services/profile_service.dart';
+import '../services/social_service.dart';
+import '../services/travel_plan_service.dart';
+import '../theme/app_theme.dart';
+import '../widgets/firebase_media_image.dart';
+import '../widgets/profile_favorite_places_section.dart';
+import '../widgets/public_achievement_badges.dart';
+import '../widgets/profile_reward_surface.dart';
+import '../widgets/profile_business_coupons.dart';
+import 'create_post_screen.dart';
+import 'event_deep_link_screen.dart';
+import 'follow_list_screen.dart';
+import 'login_screen.dart';
+import 'main_camera_screen.dart';
+import 'post_detail_screen.dart';
+import 'fullscreen_video_post_screen.dart';
+import 'smart_plan_screen.dart';
+import 'travel_plan_detail_screen.dart';
+import 'user_statistics_screen.dart';
+
+class ProfilePage extends StatelessWidget {
+  const ProfilePage({super.key});
+
+  @override
+  Widget build(BuildContext context) => StreamBuilder<User?>(
+    stream: AuthService.instance.authStateChanges,
+    initialData: FirebaseAuth.instance.currentUser,
+    builder: (context, snapshot) {
+      if (snapshot.connectionState == ConnectionState.waiting &&
+          snapshot.data == null) {
+        return const SafeArea(
+          child: Center(child: CircularProgressIndicator()),
+        );
+      }
+      final user = snapshot.data;
+      if (user == null) {
+        return SafeArea(
+          child: Center(
+            child: FilledButton(
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const LoginScreen()),
+              ),
+              child: const Text('Giriş Yap / Kayıt Ol'),
+            ),
+          ),
+        );
+      }
+      return _ProfileBody(user: user);
+    },
+  );
+}
+
+class _ProfileBody extends StatefulWidget {
+  final User user;
+  const _ProfileBody({required this.user});
+  @override
+  State<_ProfileBody> createState() => _ProfileBodyState();
+}
+
+class _ProfileBodyState extends State<_ProfileBody> {
+  String _tab = 'all';
+
+  Future<void> _openRoutePost(Map<String, dynamic> data) async {
+    final planId = (data['travelPlanId'] ?? '').toString();
+    if (planId.isEmpty) return;
+    final snapshot = await FirebaseFirestore.instance
+        .collection('travel_plans')
+        .doc(planId)
+        .get();
+    if (!mounted) return;
+    if (!snapshot.exists) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Bu rota artık kullanılamıyor.')),
+      );
+      return;
+    }
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) =>
+            TravelPlanDetailScreen(plan: TravelPlan.fromDoc(snapshot)),
+      ),
+    );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    SocialService.instance.ensureUserProfile();
+  }
+
+  String _typeLabel(String type) => ProfileIdentity.labels[type] ?? 'Kişisel';
+
+  IconData _typeIcon(String type) => switch (type) {
+    'creator' => Icons.auto_awesome_outlined,
+    'explorer' => Icons.explore_outlined,
+    'social' => Icons.groups_outlined,
+    'gourmet' => Icons.restaurant_outlined,
+    _ => Icons.person_outline_rounded,
+  };
+
+  void _openFollowList(bool followers) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) =>
+            FollowListScreen(userId: widget.user.uid, followers: followers),
+      ),
+    );
+  }
+
+  void _openStatistics() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => UserStatisticsScreen(userId: widget.user.uid),
+      ),
+    );
+  }
+
+  Future<void> _shareProfile(String displayName, String username) async {
+    final handle = username.trim().isNotEmpty
+        ? username.trim()
+        : displayName.trim();
+    await Clipboard.setData(
+      ClipboardData(text: handle.startsWith('@') ? handle : '@$handle'),
+    );
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Profil kullanıcı adı kopyalandı.')),
+    );
+  }
+
+  Future<void> _menu(String value, Map<String, dynamic> profile) async {
+    switch (value) {
+      case 'settings':
+        if (mounted) Navigator.pushNamed(context, '/settings');
+        return;
+      case 'stats':
+        _openStatistics();
+        return;
+      case 'business':
+        if (mounted) Navigator.pushNamed(context, '/business');
+        return;
+      case 'safety':
+        if (mounted) Navigator.pushNamed(context, '/safety-privacy');
+        return;
+      case 'share':
+        await _shareProfile(
+          (profile['displayName'] ?? widget.user.displayName ?? '').toString(),
+          (profile['username'] ?? '').toString(),
+        );
+        return;
+      case 'logout':
+        await AuthService.instance.logout();
+        return;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      bottom: false,
+      child: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+        stream: SocialService.instance.userProfile(widget.user.uid),
+        builder: (context, profileSnapshot) {
+          final profile =
+              profileSnapshot.data?.data() ?? const <String, dynamic>{};
+          final name =
+              (profile['displayName'] ??
+                      widget.user.displayName ??
+                      'TBT Kullanıcısı')
+                  .toString();
+          final username = (profile['username'] ?? '').toString();
+          final bio = (profile['bio'] ?? '').toString();
+          final photo = (profile['photoUrl'] ?? widget.user.photoURL ?? '')
+              .toString();
+          // Self-selected legacy profile types are not earned titles.
+          final type = ProfileIdentity.type(profile);
+
+          return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+            stream: SocialService.instance.userPosts(widget.user.uid),
+            builder: (context, postSnapshot) {
+              final posts = [
+                ...(postSnapshot.data?.docs ??
+                    <QueryDocumentSnapshot<Map<String, dynamic>>>[]),
+              ];
+              posts.sort((a, b) {
+                final at = a.data()['createdAt'];
+                final bt = b.data()['createdAt'];
+                if (at is Timestamp && bt is Timestamp) return bt.compareTo(at);
+                return 0;
+              });
+              return CustomScrollView(
+                slivers: [
+                  SliverToBoxAdapter(child: _topBar(profile, type)),
+                  SliverToBoxAdapter(
+                    child: _identity(
+                      name,
+                      username,
+                      bio,
+                      photo,
+                      type,
+                      posts.length,
+                      profile,
+                    ),
+                  ),
+                  SliverToBoxAdapter(
+                    child: ProfileJourneyRow(
+                      points:
+                          (profile['reputationTotal'] as num?)?.toInt() ?? 0,
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const RewardsHubScreen(),
+                        ),
+                      ),
+                    ),
+                  ),
+                  SliverToBoxAdapter(child: _contentTabs()),
+                  if (_tab == 'all' && profile['isCreator'] == true)
+                    SliverToBoxAdapter(
+                      child: ProfileSharingSection(
+                        userId: widget.user.uid,
+                        creator: true,
+                        own: true,
+                        showReferences: false,
+                        showCreatorCenter: false,
+                      ),
+                    ),
+                  if (_tab == 'routes')
+                    const SliverToBoxAdapter(child: _ProfileRoutesSection())
+                  else if (_tab == 'favorites')
+                    SliverToBoxAdapter(
+                      child: ProfileFavoritePlacesSection(
+                        userId: widget.user.uid,
+                        editable: true,
+                        showProgress: false,
+                      ),
+                    )
+                  else if (postSnapshot.connectionState ==
+                      ConnectionState.waiting)
+                    const SliverFillRemaining(
+                      child: Center(child: CircularProgressIndicator()),
+                    )
+                  else if (posts.isEmpty)
+                    SliverFillRemaining(hasScrollBody: false, child: _empty())
+                  else
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(2, 2, 2, 92),
+                      sliver: SliverGrid(
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 3,
+                              crossAxisSpacing: 2,
+                              mainAxisSpacing: 2,
+                              childAspectRatio: 1,
+                            ),
+                        delegate: SliverChildBuilderDelegate((context, index) {
+                          final doc = posts[index];
+                          final data = doc.data();
+                          final imageUrl =
+                              (data['imageUrl'] ??
+                                      data['thumbnailUrl'] ??
+                                      data['coverUrl'] ??
+                                      '')
+                                  .toString();
+                          final storagePath = (data['storagePath'] ?? '')
+                              .toString();
+                          final isVideo =
+                              (data['mediaType'] ?? '').toString() == 'video' ||
+                              (data['videoUrl'] ?? '').toString().isNotEmpty;
+                          final isRoute =
+                              (data['mediaType'] ?? '').toString() == 'route';
+                          return _PostTile(
+                            imageUrl: imageUrl,
+                            storagePath: storagePath,
+                            fallbackStoragePaths: FirebaseMediaImage.postPaths(
+                              widget.user.uid,
+                              doc.id,
+                            ),
+                            isVideo: isVideo,
+                            isRoute: isRoute,
+                            onTap: () => isRoute
+                                ? _openRoutePost(data)
+                                : Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => isVideo
+                                          ? FullscreenVideoPostScreen(
+                                              post: {...data, 'id': doc.id},
+                                            )
+                                          : PostDetailScreen(
+                                              post: {...data, 'id': doc.id},
+                                            ),
+                                    ),
+                                  ),
+                          );
+                        }, childCount: posts.length),
+                      ),
+                    ),
+                ],
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _topBar(Map<String, dynamic> profile, String type) => Padding(
+    padding: const EdgeInsets.fromLTRB(14, 8, 8, 6),
+    child: Row(
+      children: [
+        Expanded(
+          child: Text(
+            'Profilim',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w900,
+              letterSpacing: -.35,
+            ),
+          ),
+        ),
+        IconButton(
+          tooltip: 'Ayarlar',
+          onPressed: () => Navigator.pushNamed(context, '/settings'),
+          icon: const Icon(Icons.settings_outlined, color: Colors.white70),
+        ),
+        PopupMenuButton<String>(
+          tooltip: 'Profil işlemleri',
+          icon: const Icon(Icons.more_horiz_rounded, color: Colors.white70),
+          color: AppColors.surfaceAlt,
+          onSelected: (v) => _menu(v, profile),
+          itemBuilder: (_) => [
+            const PopupMenuItem(
+              value: 'stats',
+              child: ListTile(
+                dense: true,
+                leading: Icon(Icons.query_stats_rounded),
+                title: Text('İstatistikler'),
+              ),
+            ),
+            const PopupMenuItem(
+              value: 'share',
+              child: ListTile(
+                dense: true,
+                leading: Icon(Icons.share_outlined),
+                title: Text('Profili paylaş'),
+              ),
+            ),
+            const PopupMenuItem(
+              value: 'safety',
+              child: ListTile(
+                dense: true,
+                leading: Icon(Icons.shield_outlined),
+                title: Text('Gizlilik ve Güvenlik'),
+              ),
+            ),
+            const PopupMenuDivider(),
+            const PopupMenuItem(
+              value: 'logout',
+              child: ListTile(
+                dense: true,
+                leading: Icon(Icons.logout_rounded),
+                title: Text('Çıkış yap'),
+              ),
+            ),
+          ],
+        ),
+      ],
+    ),
+  );
+
+  Widget _identity(
+    String name,
+    String username,
+    String bio,
+    String photo,
+    String type,
+    int postCount,
+    Map<String, dynamic> profile,
+  ) => ProfileRewardSurface(
+    profile: profile,
+    child: Padding(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () => showProfilePhotoCard(
+                      context,
+                      userId: widget.user.uid,
+                      photoUrl: photo,
+                      name: name,
+                      username: username,
+                    ),
+                    child: CircleAvatar(
+                      radius: 43,
+                      backgroundColor: AppColors.surface,
+                      child: ClipOval(
+                        child: SizedBox(
+                          width: 82,
+                          height: 82,
+                          child: FirebaseMediaImage(
+                            imageUrl: photo,
+                            fallbackStoragePaths:
+                                FirebaseMediaImage.avatarPaths(widget.user.uid),
+                            fit: BoxFit.cover,
+                            errorWidget: const ColoredBox(
+                              color: AppColors.surface,
+                              child: Center(
+                                child: Icon(
+                                  Icons.person,
+                                  size: 42,
+                                  color: Colors.white38,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    right: -2,
+                    bottom: 0,
+                    child: InkWell(
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const MainCameraScreen(
+                            initialMode: CameraShareMode.story,
+                          ),
+                        ),
+                      ),
+                      child: Container(
+                        width: 27,
+                        height: 27,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: AppColors.surfaceStrong,
+                          border: Border.all(color: AppColors.cyan),
+                        ),
+                        child: const Icon(
+                          Icons.add_rounded,
+                          size: 18,
+                          color: AppColors.cyan,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _Stat('$postCount', 'Gönderi', onTap: _openStatistics),
+                    StreamBuilder<int>(
+                      stream: SocialService.instance.followersCount(
+                        widget.user.uid,
+                      ),
+                      builder: (_, s) => _Stat(
+                        '${s.data ?? 0}',
+                        'Takipçi',
+                        onTap: () => _openFollowList(true),
+                      ),
+                    ),
+                    StreamBuilder<int>(
+                      stream: SocialService.instance.followingCount(
+                        widget.user.uid,
+                      ),
+                      builder: (_, s) => _Stat(
+                        '${s.data ?? 0}',
+                        'Takip',
+                        onTap: () => _openFollowList(false),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 13),
+          Row(
+            children: [
+              Flexible(
+                child: Text(
+                  name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w900,
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 7),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceStrong,
+                  borderRadius: BorderRadius.circular(99),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(_typeIcon(type), size: 12, color: AppColors.cyan),
+                    const SizedBox(width: 4),
+                    Text(
+                      _typeLabel(type),
+                      style: const TextStyle(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white70,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          if (username.trim().isNotEmpty) ...[
+            const SizedBox(height: 3),
+            Text(
+              username.startsWith('@') ? username : '@$username',
+              style: const TextStyle(color: Colors.white54, fontSize: 12),
+            ),
+          ],
+          const SizedBox(height: 6),
+          Text(
+            bio.trim().isEmpty ? 'Profiline bir açıklama ekle' : bio,
+            maxLines: 4,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: bio.trim().isEmpty ? Colors.white30 : Colors.white70,
+              fontSize: 12.5,
+              height: 1.35,
+            ),
+          ),
+          const SizedBox(height: 9),
+          PublicAchievementBadges(profile: profile),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () => _editProfile(name, bio),
+                  icon: const Icon(Icons.edit_outlined, size: 17),
+                  label: const Text('Profili Düzenle'),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () => _openActions(profile),
+                  icon: const Icon(Icons.dashboard_outlined, size: 17),
+                  label: const Text('İşlemlerim'),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    ),
+  );
+
+  void _openPanel(String title, Widget child) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => Scaffold(
+          backgroundColor: AppColors.background,
+          appBar: AppBar(title: Text(title)),
+          body: ListView(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            children: [child],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _openActions(Map<String, dynamic> profile) async {
+    final choice = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: AppColors.surfaceAlt,
+      useSafeArea: true,
+      isScrollControlled: true,
+      builder: (sheetContext) => SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Padding(
+              padding: EdgeInsets.all(16),
+              child: Text(
+                'İşlemlerim',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
+              ),
+            ),
+            for (final item in [
+              ('business', 'Mekanlarım', Icons.storefront_outlined),
+              ('reservations', 'Rezervasyonlarım', Icons.event_seat_outlined),
+              ('coupons', 'Kuponlarım', Icons.confirmation_number_outlined),
+              ('routes', 'Rotalarım', Icons.route_rounded),
+              ('events', 'Etkinliklerim', Icons.event_available_outlined),
+              ('favorites', 'Favori Mekanlarım', Icons.bookmark_outline),
+              if (profile['isCreator'] == true ||
+                  ProfileIdentity.type(profile) == 'creator')
+                ('creator', 'Creator Merkezi', Icons.auto_awesome_outlined),
+            ])
+              ListTile(
+                leading: Icon(item.$3),
+                title: Text(item.$2),
+                trailing: const Icon(Icons.chevron_right_rounded),
+                onTap: () => Navigator.pop(sheetContext, item.$1),
+              ),
+          ],
+        ),
+      ),
+    );
+    if (!mounted || choice == null) return;
+    switch (choice) {
+      case 'business':
+        Navigator.pushNamed(context, '/business');
+        break;
+      case 'reservations':
+        _openPanel(
+          'Rezervasyonlarım',
+          ProfileReservations(userId: widget.user.uid, initiallyExpanded: true),
+        );
+        break;
+      case 'coupons':
+        _openPanel(
+          'Kuponlarım',
+          ProfileBusinessCoupons(
+            userId: widget.user.uid,
+            initiallyExpanded: true,
+          ),
+        );
+        break;
+      case 'routes':
+        _openPanel('Rotalarım', const _ProfileRoutesSection());
+        break;
+      case 'events':
+        _openPanel(
+          'Etkinliklerim',
+          _ProfileEventsSection(userId: widget.user.uid),
+        );
+        break;
+      case 'favorites':
+        _openPanel(
+          'Favori Mekanlarım',
+          ProfileFavoritePlacesSection(
+            userId: widget.user.uid,
+            editable: true,
+            showProgress: false,
+          ),
+        );
+        break;
+      case 'creator':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const CreatorCenterScreen()),
+        );
+        break;
+    }
+  }
+
+  Widget _contentTabs() => ProfileContentNavigation(
+    selected: _tab,
+    onChanged: (tab) => setState(() => _tab = tab),
+  );
+
+  Widget _empty() => Center(
+    child: Padding(
+      padding: const EdgeInsets.all(28),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(
+            Icons.photo_library_outlined,
+            size: 38,
+            color: Colors.white24,
+          ),
+          const SizedBox(height: 10),
+          const Text(
+            'Henüz içerik yok',
+            style: TextStyle(fontWeight: FontWeight.w900),
+          ),
+          const SizedBox(height: 5),
+          const Text(
+            'Fotoğraf veya video paylaşarak profilini oluşturmaya başla.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.white54),
+          ),
+          const SizedBox(height: 14),
+          FilledButton.icon(
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const CreatePostScreen()),
+            ),
+            icon: const Icon(Icons.add_a_photo_outlined),
+            label: const Text('İçerik Paylaş'),
+          ),
+        ],
+      ),
+    ),
+  );
+
+  Future<void> _editProfile(String displayName, String bio) async {
+    final nameController = TextEditingController(text: displayName);
+    final bioController = TextEditingController(text: bio);
+    File? photo;
+    bool saving = false;
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: AppColors.background,
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (context, setSheet) {
+          Future<void> pick() async {
+            final image = await ImagePicker().pickImage(
+              source: ImageSource.gallery,
+              imageQuality: 88,
+              maxWidth: 1200,
+            );
+            if (image != null) setSheet(() => photo = File(image.path));
+          }
+
+          return Padding(
+            padding: EdgeInsets.fromLTRB(
+              18,
+              14,
+              18,
+              MediaQuery.viewInsetsOf(context).bottom + 20,
+            ),
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    children: [
+                      const Expanded(
+                        child: Text(
+                          'Profili Düzenle',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () => Navigator.pop(sheetContext),
+                        icon: const Icon(Icons.close_rounded),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Center(
+                    child: GestureDetector(
+                      onTap: pick,
+                      child: CircleAvatar(
+                        radius: 42,
+                        backgroundColor: AppColors.surface,
+                        backgroundImage: photo == null
+                            ? null
+                            : FileImage(photo!),
+                        child: photo == null
+                            ? const Icon(
+                                Icons.add_a_photo_outlined,
+                                color: AppColors.cyan,
+                              )
+                            : null,
+                      ),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: pick,
+                    child: const Text('Profil fotoğrafı seç'),
+                  ),
+                  TextField(
+                    controller: nameController,
+                    decoration: const InputDecoration(
+                      labelText: 'Ad / kullanıcı adı',
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  DescriptionField(
+                    controller: bioController,
+                    maxLength: 160,
+                    minLines: 3,
+                    maxLines: 5,
+                    decoration: const InputDecoration(labelText: 'Açıklama'),
+                  ),
+                  const SizedBox(height: 12),
+                  FilledButton(
+                    onPressed: saving
+                        ? null
+                        : () async {
+                            setSheet(() => saving = true);
+                            try {
+                              await ProfileService.instance.updateProfile(
+                                displayName: nameController.text,
+                                bio: bioController.text,
+                                photo: photo,
+                              );
+                              if (sheetContext.mounted)
+                                Navigator.pop(sheetContext);
+                            } catch (error) {
+                              if (!sheetContext.mounted) return;
+                              setSheet(() => saving = false);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text(userFacingError(error))),
+                              );
+                            }
+                          },
+                    child: Text(saving ? 'Kaydediliyor…' : 'Kaydet'),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+    nameController.dispose();
+    bioController.dispose();
+  }
+}
+
+class _ProfileEventsSection extends StatelessWidget {
+  final String userId;
+  final bool publicOnly;
+
+  const _ProfileEventsSection({required this.userId, this.publicOnly = false});
+
+  Future<void> _remove(
+    BuildContext context,
+    String eventId,
+    String title,
+  ) async {
+    final confirmed = await showTbtDialog<bool>(
+      context: context,
+      builder: (context) => TbtDialog(
+        title: const Text('Etkinliği sil?'),
+        content: Text(
+          '“$title” iptal edilecek ve profilinden kaldırılacak. Katılımcılara iptal bilgisi gönderilecek.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Vazgeç'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Etkinliği sil'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await SocialEventService.instance.leave(eventId);
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text('Etkinlik iptal edildi ve profilinden kaldırıldı.'),
+        ),
+      );
+    } catch (_) {
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text('Etkinlik silinemedi. Lütfen tekrar dene.'),
+        ),
+      );
+    }
+  }
+
+  DateTime _date(Object? value) => value is Timestamp
+      ? value.toDate()
+      : DateTime.tryParse(value?.toString() ?? '') ?? DateTime.now();
+
+  String _dateLabel(Object? value) {
+    final d = _date(value).toLocal();
+    return '${d.day.toString().padLeft(2, '0')}.${d.month.toString().padLeft(2, '0')}.${d.year} • ${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    Query<Map<String, dynamic>> query = FirebaseFirestore.instance
+        .collection('social_events')
+        .where('hostId', isEqualTo: userId);
+    if (publicOnly) query = query.where('visibility', isEqualTo: 'public');
+    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      stream: query.limit(40).snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Padding(
+            padding: EdgeInsets.all(36),
+            child: Center(child: CircularProgressIndicator()),
+          );
+        }
+        final events =
+            [...?snapshot.data?.docs]
+                .where((doc) => doc.data()['status'] != 'cancelled')
+                .toList()
+              ..sort(
+                (a, b) =>
+                    _date(b.data()['startsAt'])
+                        .compareTo(_date(a.data()['startsAt'])),
+              );
+        if (events.isEmpty) {
+          return const Padding(
+            padding: EdgeInsets.fromLTRB(24, 30, 24, 100),
+            child: Column(
+              children: [
+                Icon(
+                  Icons.event_busy_outlined,
+                  size: 42,
+                  color: Colors.white30,
+                ),
+                SizedBox(height: 10),
+                Text(
+                  'Henüz etkinlik yok',
+                  style: TextStyle(fontWeight: FontWeight.w900),
+                ),
+                SizedBox(height: 5),
+                Text(
+                  'Oluşturduğun etkinlikler burada profilinde görünür.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.white54),
+                ),
+              ],
+            ),
+          );
+        }
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(14, 2, 14, 100),
+          child: Column(
+            children: [
+              for (final doc in events) ...[
+                Builder(
+                  builder: (context) {
+                    final data = doc.data();
+                    final cover = (data['coverImageUrl'] ?? '').toString();
+                    final storage = (data['coverStoragePath'] ?? '').toString();
+                    final title = (data['title'] ?? 'Etkinlik').toString();
+                    final city = (data['city'] ?? '').toString();
+                    return Card(
+                      margin: EdgeInsets.zero,
+                      clipBehavior: Clip.antiAlias,
+                      child: ListTile(
+                        contentPadding: const EdgeInsets.fromLTRB(8, 7, 8, 7),
+                        leading: SizedBox(
+                          width: 58,
+                          height: 58,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: FirebaseMediaImage(
+                              imageUrl: cover,
+                              storagePath: storage,
+                              fit: BoxFit.cover,
+                              errorWidget: const ColoredBox(
+                                color: AppColors.surfaceStrong,
+                                child: Icon(Icons.event_outlined),
+                              ),
+                            ),
+                          ),
+                        ),
+                        title: Text(
+                          title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontWeight: FontWeight.w900),
+                        ),
+                        subtitle: Text(
+                          '${_dateLabel(data['startsAt'])}${city.isEmpty ? '' : ' • $city'}',
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        trailing:
+                            FirebaseAuth.instance.currentUser?.uid == userId
+                            ? IconButton(
+                                tooltip: 'Etkinliği sil',
+                                icon: const Icon(Icons.delete_outline),
+                                onPressed: () =>
+                                    _remove(context, doc.id, title),
+                              )
+                            : const Icon(Icons.chevron_right_rounded),
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                EventDeepLinkScreen(eventId: doc.id),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 9),
+              ],
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _ModuleCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+  const _ModuleCard({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+  @override
+  Widget build(BuildContext context) => Card(
+    child: ListTile(
+      contentPadding: const EdgeInsets.fromLTRB(14, 7, 8, 7),
+      leading: CircleAvatar(
+        backgroundColor: AppColors.surfaceStrong,
+        child: Icon(icon, color: AppColors.cyan),
+      ),
+      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w900)),
+      subtitle: Text(subtitle),
+      trailing: const Icon(Icons.chevron_right_rounded),
+      onTap: onTap,
+    ),
+  );
+}
+
+class _ProfileRoutesSection extends StatelessWidget {
+  const _ProfileRoutesSection();
+
+  Future<void> _publish(BuildContext context, TravelPlan plan) async {
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await TravelPlanService.instance.publishToFeed(plan);
+      if (!context.mounted) return;
+      messenger
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(
+            content: Text('Rota profilinde ve akışta paylaşıldı.'),
+          ),
+        );
+    } catch (error) {
+      if (!context.mounted) return;
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text('Rota paylaşılamadı: ${userFacingError(error)}'),
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => StreamBuilder<List<TravelPlan>>(
+    stream: TravelPlanService.instance.watchMine(),
+    builder: (context, snapshot) {
+      if (snapshot.connectionState == ConnectionState.waiting) {
+        return const Padding(
+          padding: EdgeInsets.all(36),
+          child: Center(child: CircularProgressIndicator()),
+        );
+      }
+      final plans = snapshot.data ?? const <TravelPlan>[];
+      if (plans.isEmpty) {
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(24, 30, 24, 100),
+          child: Column(
+            children: [
+              const Icon(Icons.route_outlined, size: 42, color: Colors.white30),
+              const SizedBox(height: 10),
+              const Text(
+                'Henüz rotan yok',
+                style: TextStyle(fontWeight: FontWeight.w900),
+              ),
+              const SizedBox(height: 5),
+              const Text(
+                'Planladığın geziler burada kolayca erişebileceğin rotalara dönüşür.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.white54),
+              ),
+              const SizedBox(height: 14),
+              FilledButton.icon(
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const SmartPlanScreen()),
+                ),
+                icon: const Icon(Icons.add_rounded),
+                label: const Text('Yeni Rota Oluştur'),
+              ),
+            ],
+          ),
+        );
+      }
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(14, 2, 14, 100),
+        child: Column(
+          children: [
+            for (final plan in plans) ...[
+              Card(
+                margin: EdgeInsets.zero,
+                child: ListTile(
+                  contentPadding: const EdgeInsets.fromLTRB(14, 7, 8, 7),
+                  leading: Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      gradient: AppColors.subtleGradient,
+                      borderRadius: BorderRadius.circular(13),
+                    ),
+                    child: const Icon(Icons.route_rounded),
+                  ),
+                  title: Text(
+                    plan.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontWeight: FontWeight.w900),
+                  ),
+                  subtitle: Text(
+                    '${plan.city} • ${plan.spotNames.length} durak • ${plan.durationHours} saat',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  trailing: IconButton(
+                    tooltip: 'Rotayı paylaş',
+                    onPressed: () => _publish(context, plan),
+                    icon: const Icon(Icons.ios_share_rounded),
+                  ),
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => TravelPlanDetailScreen(plan: plan),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 9),
+            ],
+          ],
+        ),
+      );
+    },
+  );
+}
+
+class _PostTile extends StatelessWidget {
+  final String imageUrl;
+  final String storagePath;
+  final List<String> fallbackStoragePaths;
+  final bool isVideo;
+  final bool isRoute;
+  final VoidCallback onTap;
+  const _PostTile({
+    required this.imageUrl,
+    required this.storagePath,
+    required this.fallbackStoragePaths,
+    required this.isVideo,
+    this.isRoute = false,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) => Material(
+    color: AppColors.surface,
+    clipBehavior: Clip.antiAlias,
+    child: InkWell(
+      onTap: onTap,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          if (isRoute)
+            const DecoratedBox(
+              decoration: BoxDecoration(gradient: AppColors.subtleGradient),
+              child: Center(
+                child: Icon(Icons.route_rounded, size: 36, color: Colors.white),
+              ),
+            )
+          else
+            FirebaseMediaImage(
+              imageUrl: imageUrl,
+              storagePath: storagePath,
+              fallbackStoragePaths: fallbackStoragePaths,
+              fit: BoxFit.cover,
+              errorWidget: const Center(
+                child: Icon(Icons.image_outlined, color: Colors.white30),
+              ),
+            ),
+          if (isVideo)
+            const Positioned(
+              right: 6,
+              top: 6,
+              child: Icon(
+                Icons.play_circle_fill_rounded,
+                color: Colors.white,
+                size: 19,
+              ),
+            ),
+        ],
+      ),
+    ),
+  );
+}
+
+class _Stat extends StatelessWidget {
+  final String value;
+  final String label;
+  final VoidCallback? onTap;
+  const _Stat(this.value, this.label, {this.onTap});
+  @override
+  Widget build(BuildContext context) {
+    final child = Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          value,
+          style: const TextStyle(fontSize: 16.5, fontWeight: FontWeight.w900),
+        ),
+        const SizedBox(height: 1),
+        Text(
+          label,
+          style: const TextStyle(color: Colors.white54, fontSize: 10.8),
+        ),
+      ],
+    );
+    return onTap == null
+        ? child
+        : InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(10),
+            child: Padding(padding: const EdgeInsets.all(5), child: child),
+          );
+  }
+}

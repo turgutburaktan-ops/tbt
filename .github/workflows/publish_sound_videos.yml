@@ -1,0 +1,24 @@
+name: Publish TBT Sound Videos
+on:
+  workflow_dispatch:
+  push:
+    branches: [codex/publish-sound-videos]
+permissions:
+  contents: read
+concurrency:
+  group: tbt-sound-videos
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: sudo apt-get update -qq && sudo apt-get install -y ffmpeg
+      - run: npm install --prefix functions --ignore-scripts --no-audit --no-fund
+      - run: node tool/publish_sound_videos.cjs --publish
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
