@@ -1,5 +1,5 @@
+import 'places_hub_screen.dart';
 import 'routes_hub_screen.dart';
-import '../widgets/app_page_chrome.dart';
 import '../services/video_audio_session.dart';
 import '../widgets/playback_indexed_stack.dart';
 
@@ -8,12 +8,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../models/nearby_venue.dart';
 import '../l10n/app_strings.dart';
 import '../services/app_notification_service.dart';
 import '../services/chat_service.dart';
 import '../theme/app_theme.dart';
-import '../widgets/nearby_places_view.dart';
 import '../widgets/story_strip.dart';
 import '../widgets/tbt_brand_mark.dart';
 import 'campus_home_screen.dart';
@@ -23,10 +21,8 @@ import 'feed_screen.dart';
 import 'home_discover_screen.dart';
 import 'login_screen.dart';
 import 'main_camera_screen.dart';
-import 'map_screen.dart';
 import 'profile_page_v2.dart';
 import 'radar_screen.dart';
-import 'spot_explore_screen_v2.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -44,7 +40,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (!_loadedTabs.contains(index)) return const SizedBox.shrink();
     return switch (index) {
       0 => _HomeFeedHub(key: _homeFeedKey),
-      1 => const _PlacesHub(),
+      1 => const PlacesHubScreen(),
       2 => const RoutesHubScreen(),
       3 => const _NearbyUnifiedHub(),
       4 => const _ProfileGate(),
@@ -544,107 +540,6 @@ class _HomeHeader extends StatelessWidget {
       ],
     ),
   );
-}
-
-class _PlacesHub extends StatefulWidget {
-  const _PlacesHub();
-  @override
-  State<_PlacesHub> createState() => _PlacesHubState();
-}
-
-class _PlacesHubState extends State<_PlacesHub> {
-  String _category = 'Gezilecek Yerler';
-  void _openMap() => Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (_) => Scaffold(
-        backgroundColor: AppColors.background,
-        appBar: AppBar(title: const Text('Gezilecek Yerler Haritası')),
-        body: const MapScreen(),
-      ),
-    ),
-  );
-
-  NearbyVenueCategory _nearbyCategory() {
-    if (_category == 'Kafeler') return NearbyVenueCategory.cafe;
-    if (_category == 'Oteller') return NearbyVenueCategory.hotel;
-    return NearbyVenueCategory.dining;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    const categories = <(IconData, String)>[
-      (Icons.landscape_outlined, 'Gezilecek Yerler'),
-      (Icons.restaurant_outlined, 'Lezzet'),
-      (Icons.local_cafe_outlined, 'Kafeler'),
-      (Icons.hotel_outlined, 'Oteller'),
-    ];
-
-    final Widget content;
-    if (_category == 'Gezilecek Yerler') {
-      content = const SpotExploreScreen(embedded: true);
-    } else {
-      content = NearbyPlacesView(
-        key: ValueKey(_category),
-        category: _nearbyCategory(),
-      );
-    }
-
-    return ColoredBox(
-      color: AppColors.background,
-      child: SafeArea(
-        bottom: false,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.page,
-                16,
-                AppSpacing.page,
-                2,
-              ),
-              child: AppPageHeading(
-                title: 'Mekânlar',
-                subtitle: 'Lezzet, kahve, konaklama ve gezilecek yerler.',
-                action: _category == 'Gezilecek Yerler'
-                    ? OutlinedButton.icon(
-                        onPressed: _openMap,
-                        icon: const Icon(Icons.map_outlined, size: 18),
-                        label: const Text('Harita'),
-                      )
-                    : null,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.gap),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.page,
-                0,
-                AppSpacing.page,
-                AppSpacing.small,
-              ),
-              child: Wrap(
-                spacing: 7,
-                runSpacing: 7,
-                children: categories
-                    .map(
-                      (item) => ChoiceChip(
-                        avatar: Icon(item.$1, size: 16),
-                        label: Text(item.$2),
-                        selected: _category == item.$2,
-                        onSelected: (_) => setState(() => _category = item.$2),
-                      ),
-                    )
-                    .toList(),
-              ),
-            ),
-            Expanded(child: content),
-          ],
-        ),
-      ),
-    );
-  }
 }
 
 class _NearbyUnifiedHub extends StatefulWidget {
