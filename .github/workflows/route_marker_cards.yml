@@ -15,8 +15,8 @@ jobs:
           channel: stable
           cache: true
       - run: flutter pub get
-      - run: flutter analyze --no-fatal-infos lib/widgets/place_marker_card.dart lib/widgets/route_stops_step.dart lib/widgets/route_editor_map.dart lib/services/route_draft_store.dart lib/services/route_stop_catalog.dart lib/screens/travel_plan_invite_screen.dart lib/screens/places_hub_screen.dart lib/widgets/route_stop_picker.dart lib/services/route_stop_order.dart lib/screens/route_create_screen.dart lib/screens/travel_plan_detail_screen.dart lib/services/travel_plan_service.dart lib/screens/home_shell_v3.dart
-      - run: flutter test test/places_hub_test.dart test/route_stop_selection_test.dart test/route_chat_test.dart test/route_create_test.dart test/route_itinerary_test.dart test/restored_flows_test.dart
+      - run: flutter analyze --no-fatal-infos lib/services/nearby_venue_service.dart lib/widgets/place_marker_card.dart lib/widgets/route_stops_step.dart lib/widgets/route_editor_map.dart lib/services/route_draft_store.dart lib/services/route_stop_catalog.dart lib/screens/travel_plan_invite_screen.dart lib/screens/places_hub_screen.dart lib/widgets/route_stop_picker.dart lib/services/route_stop_order.dart lib/screens/route_create_screen.dart lib/screens/travel_plan_detail_screen.dart lib/services/travel_plan_service.dart lib/screens/home_shell_v3.dart
+      - run: flutter test test/nearby_venue_loading_test.dart test/places_hub_test.dart test/route_stop_selection_test.dart test/route_chat_test.dart test/route_create_test.dart test/route_itinerary_test.dart test/restored_flows_test.dart
       - name: Upload interface check
         if: always()
         uses: actions/upload-artifact@v4
@@ -122,7 +122,7 @@ jobs:
           python3 tool/configure_route_album.py android
           python3 tool/patch_receive_sharing_intent.py
       - name: Build debug APK
-        run: flutter build apk --debug --no-pub --build-number=41
+        run: flutter build apk --debug --no-pub --build-number=42
       - name: Verify APK signing identity
         shell: bash
         run: |

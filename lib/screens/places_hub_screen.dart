@@ -169,7 +169,8 @@ class _PlacesHubScreenState extends State<PlacesHubScreen> {
     if (_city == null && _position == null) return;
     final generation = ++_generation;
     setState(() {
-      _loading.addAll([0, 1, 2, 3]);
+      _loading.clear();
+      _loading.add(0);
       _errors.clear();
     });
     await Future.wait([
@@ -186,11 +187,16 @@ class _PlacesHubScreenState extends State<PlacesHubScreen> {
             setState(() => _loading.remove(0));
         }
       }(),
-      for (var index = 1; index <= 3; index++) _loadVenues(index, generation),
+      for (final index in _filters.where((i) => i > 0))
+        _loadVenues(index, generation),
     ]);
   }
 
   Future<void> _loadVenues(int index, int generation) async {
+    setState(() {
+      _loading.add(index);
+      _errors.remove(index);
+    });
     void update(List<NearbyVenue> venues) {
       if (!mounted || generation != _generation) return;
       setState(() => _venues[index] = venues);
@@ -206,6 +212,11 @@ class _PlacesHubScreenState extends State<PlacesHubScreen> {
       update(venues);
       // Ratings arrive independently, never blocking places or the map.
       unawaited(_loadRatings(venues, generation));
+    } on VenueLoadException catch (error) {
+      if (error.venues.isNotEmpty) update(error.venues);
+      if (mounted && generation == _generation) {
+        setState(() => _errors.add(index));
+      }
     } catch (_) {
       if (mounted && generation == _generation)
         setState(() => _errors.add(index));
@@ -482,7 +493,11 @@ class _PlacesHubScreenState extends State<PlacesHubScreen> {
                 ),
                 const Spacer(),
                 Text(
-                  '${places.length} yer',
+                  busy && places.isEmpty
+                      ? 'Yükleniyor…'
+                      : _filters.any(_errors.contains) && places.isEmpty
+                      ? 'Yüklenemedi'
+                      : '${places.length} yer',
                   style: const TextStyle(color: Colors.white54),
                 ),
               ],
@@ -494,10 +509,12 @@ class _PlacesHubScreenState extends State<PlacesHubScreen> {
             Row(
               children: [
                 const SizedBox(width: 16),
-                const Expanded(
+                Expanded(
                   child: Text(
-                    'Bazı yerler yüklenemedi.',
-                    style: TextStyle(fontSize: 12),
+                    places.isEmpty
+                        ? 'Yerler yüklenemedi.'
+                        : 'Liste tamamen güncellenemedi.',
+                    style: const TextStyle(fontSize: 12),
                   ),
                 ),
                 TextButton(
@@ -520,6 +537,8 @@ class _PlacesHubScreenState extends State<PlacesHubScreen> {
                                 child: Text(
                                   busy
                                       ? 'Yerler yükleniyor…'
+                                      : _filters.any(_errors.contains)
+                                      ? 'Mekân bilgileri şu anda alınamıyor. Bağlantını kontrol edip tekrar dene.'
                                       : _city == null
                                       ? 'Gezi yerlerini görmek için şehir seç.'
                                       : 'Bu filtrelerde yer bulunamadı. Aramayı veya kategorileri değiştir.',
@@ -555,15 +574,23 @@ class _PlacesHubScreenState extends State<PlacesHubScreen> {
       selected: selected,
       child: InkWell(
         borderRadius: BorderRadius.circular(14),
-        onTap: () => setState(() {
-          if (_map) {
-            if (!_filters.remove(index)) _filters.add(index);
-          } else {
-            _filters.clear();
-            _filters.add(index);
+        onTap: () {
+          setState(() {
+            if (_map) {
+              if (!_filters.remove(index)) _filters.add(index);
+            } else {
+              _filters.clear();
+              _filters.add(index);
+            }
+            _selectedId = null;
+          });
+          if (_filters.contains(index) &&
+              index > 0 &&
+              !_venues.containsKey(index) &&
+              !_loading.contains(index)) {
+            unawaited(_loadVenues(index, _generation));
           }
-          _selectedId = null;
-        }),
+        },
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 11, horizontal: 2),
           decoration: BoxDecoration(
@@ -860,6 +887,7 @@ class PlacesDataSource {
     latitude: latitude,
     longitude: longitude,
     onUpdate: onUpdate,
+    reportIncomplete: true,
   );
   Future<VenueRatingSummary> rating(String category, String id) =>
       VenueRatingService.instance.summary(category, id);

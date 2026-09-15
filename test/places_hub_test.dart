@@ -54,6 +54,17 @@ class Catalog extends PlacesDataSource {
   }) async => [];
 }
 
+class FailingCatalog extends Catalog {
+  const FailingCatalog();
+  @override
+  Future<List<NearbyVenue>> venues({
+    required NearbyVenueCategory category,
+    required double latitude,
+    required double longitude,
+    void Function(List<NearbyVenue>)? onUpdate,
+  }) async => throw Exception('unavailable');
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   setUpAll(() async {
@@ -169,4 +180,22 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
+  testWidgets('failed category never claims there are no matching places', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.dark,
+        home: const Scaffold(body: PlacesHubScreen(source: FailingCatalog())),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Kafeler'));
+    await tester.pumpAndSettle();
+    expect(find.text('Yerler yüklenemedi.'), findsOneWidget);
+    expect(find.text('0 yer'), findsNothing);
+    expect(find.textContaining('Bu filtrelerde yer bulunamadı'), findsNothing);
+    expect(find.text('Tekrar dene'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
 }
