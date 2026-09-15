@@ -2,6 +2,7 @@ const {initializeApp}=require('firebase-admin/app');
 const {getFirestore,FieldPath,FieldValue}=require('firebase-admin/firestore');
 const {spotRow,venueRow,provinces,kinds,partition}=require('../catalog/schema');
 const {project}=require('../catalog/store');
+const {projectSpots}=require('../catalog/spot_batch');
 initializeApp();const db=getFirestore(),apply=process.argv.includes('--apply');
 async function parallel(items,fn,size=6){for(let i=0;i<items.length;i+=size)await Promise.all(items.slice(i,i+size).map(fn));}
 (async()=>{
@@ -25,7 +26,10 @@ async function parallel(items,fn,size=6){for(let i=0;i<items.length;i+=size)awai
           else pending.push(doc.id);
         }
       }
-      if(apply)await parallel(pending,id=>project(db,type,id));
+      if(apply){
+        if(type==='spot')for(let i=0;i<pending.length;i+=80)await projectSpots(db,pending.slice(i,i+80));
+        else await parallel(pending,id=>project(db,type,id));
+      }
       if(page.size<200)break;cursor=page.docs.at(-1).id;
     }
   }

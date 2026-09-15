@@ -14,7 +14,7 @@ function query(city, kind) {
 }
 function decode(body, city, kind) {
   if (!body || body.remark || !Array.isArray(body.elements) || !body.elements.some(e=>e.type==='area')) throw Error('Incomplete upstream response');
-  const rows = [];
+  const rows = [], names = new Map();
   for (const item of body.elements) {
     const t = item.tags || {};
     const name = String(t['name:tr'] || t.name || '').trim();
@@ -27,7 +27,10 @@ function decode(body, city, kind) {
       website: String(t['contact:website'] || t.website || ''), description: String(t['description:tr'] || t.description || ''),
       sourceUrl: `https://www.openstreetmap.org/${item.type}/${item.id}`, status: 'published', source: 'openstreetmap'};
     // Do not import unlicensed photographs. Preserve established OSM identifiers.
-    if (!rows.some(other=>fold(other.venueName)===fold(name) && meters(other,row)<18)) rows.push(row);
+    const nameKey = fold(name), sameName = names.get(nameKey) || [];
+    if (!sameName.some(other=>meters(other,row)<18)) {
+      rows.push(row);sameName.push(row);names.set(nameKey,sameName);
+    }
   }
   return rows;
 }
