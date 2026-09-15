@@ -1,0 +1,49 @@
+name: Verify public web catalog
+on:
+  push:
+    branches: [codex/verify-web-catalog-20260915]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Verify anonymous catalog reads
+        run: |
+          python3 - <<'PY'
+          import json, urllib.request, urllib.parse
+          root='https://firestore.googleapis.com/v1/projects/en-iyi-cekim-noktasi/databases/(default)/documents'
+          def read(path):
+              with urllib.request.urlopen(root+path,timeout=25) as r: return json.load(r)
+          def decode(v):
+              if 'mapValue' in v:return {k:decode(x) for k,x in v['mapValue'].get('fields',{}).items()}
+              if 'integerValue' in v:return int(v['integerValue'])
+              if 'doubleValue' in v:return float(v['doubleValue'])
+              if 'booleanValue' in v:return v['booleanValue']
+              if 'arrayValue' in v:return [decode(x) for x in v['arrayValue'].get('values',[])]
+              return v.get('stringValue')
+          def fields(d): return {k:decode(v) for k,v in d.get('fields',{}).items()}
+          metas=read('/place_catalog?pageSize=1000')
+          assert not metas.get('nextPageToken'), 'Unexpected metadata pagination'
+          rows=[fields(d) for d in metas['documents']]
+          for kind in ['gezi','dining','cafe','hotel']:
+              group=[m for m in rows if m.get('kind')==kind]
+              assert len(group)==81,(kind,len(group))
+              assert all(m.get('ready') is True for m in group),kind
+              print('CATALOG_META',kind,'cities',len(group),'count',sum(m.get('count',0) for m in group))
+          for kind in ['cafe','dining','hotel','gezi']:
+              token='';docs=[]
+              while True:
+                  page=read('/place_catalog/elazig_'+kind+'/items?pageSize=40'+('&pageToken='+urllib.parse.quote(token) if token else ''))
+                  docs.extend(page.get('documents',[])); token=page.get('nextPageToken','')
+                  if not token:break
+              for doc in docs:
+                  d=fields(doc)
+                  assert d['kind']==kind and d['city']=='Elazığ'
+                  assert d['canonicalId']==doc['name'].split('/')[-1]
+                  assert isinstance(d['latitude'],(int,float)) and isinstance(d['longitude'],(int,float))
+                  if kind=='gezi':assert d['status']=='published' and d['coordinateVerified'] and d['imageVerified']
+              if kind=='cafe': assert len(docs)>6
+              print('ANONYMOUS_READ',kind,'Elazığ',len(docs),'OK')
+          PY
