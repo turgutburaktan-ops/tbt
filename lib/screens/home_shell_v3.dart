@@ -12,7 +12,6 @@ import '../models/nearby_venue.dart';
 import '../l10n/app_strings.dart';
 import '../services/app_notification_service.dart';
 import '../services/chat_service.dart';
-import '../services/nearby_venue_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/nearby_places_view.dart';
 import '../widgets/story_strip.dart';
