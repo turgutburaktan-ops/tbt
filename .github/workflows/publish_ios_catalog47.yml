@@ -1,0 +1,28 @@
+name: Publish iOS catalog 1.0.19 (47)
+on:
+  push:
+    branches: [codex/ios-catalog-release47]
+permissions:
+  contents: read
+concurrency:
+  group: ios-catalog-publish47
+  cancel-in-progress: false
+jobs:
+  ios:
+    uses: ./.github/workflows/ios_testflight_release.yml
+    secrets: inherit
+  submit-ios:
+    needs: ios
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Submit valid catalog build to App Review
+        env:
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+        run: node tool/submit_ios_build47.cjs
