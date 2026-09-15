@@ -244,6 +244,9 @@ class _MainCameraScreenState extends State<MainCameraScreen> {
         photo,
         mode: capturedMode,
         isVideo: event.isVideo,
+        originalPhotoPath: capturedMode == CameraShareMode.photo && !event.isVideo ? path : null,
+        initialPhotoCrop: _pendingPhotoSource,
+        photoTurns: _pendingPreviewTurns,
       );
     } catch (error) {
       _message(userFacingError(error));
@@ -325,6 +328,9 @@ class _MainCameraScreenState extends State<MainCameraScreen> {
     File file, {
     required CameraShareMode mode,
     required bool isVideo,
+    String? originalPhotoPath,
+    Rect? initialPhotoCrop,
+    int photoTurns = 0,
   }) async {
     if (!await file.exists() || await file.length() <= 0) {
       throw Exception('Çekilen dosya okunamadı.');
@@ -374,7 +380,10 @@ class _MainCameraScreenState extends State<MainCameraScreen> {
     }
     await Navigator.of(context).pushReplacement(
       MaterialPageRoute(
-        builder: (_) => CreatePostScreen(initialImagePath: file.path),
+        builder: (_) => CreatePostScreen(initialImagePath: file.path,
+          initialOriginalPhotoPath: originalPhotoPath,
+          initialPhotoCrop: initialPhotoCrop,
+          initialPhotoTurns: photoTurns),
       ),
     );
   }

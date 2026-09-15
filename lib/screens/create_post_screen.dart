@@ -1,3 +1,5 @@
+import 'post_photo_crop_screen.dart';
+import '../services/post_photo_capture_service.dart';
 import '../utils/post_photo_frame.dart';
 import '../theme/app_theme.dart';
 import '../widgets/profile_name_link.dart';
@@ -19,6 +21,9 @@ import '../widgets/app_video_player.dart';
 
 class CreatePostScreen extends StatefulWidget {
   final String? initialImagePath;
+  final String? initialOriginalPhotoPath;
+  final Rect? initialPhotoCrop;
+  final int initialPhotoTurns;
   final List<String> initialImagePaths;
   final String? initialVideoPath;
   final String initialCaption;
@@ -28,6 +33,9 @@ class CreatePostScreen extends StatefulWidget {
   const CreatePostScreen({
     super.key,
     this.initialImagePath,
+    this.initialOriginalPhotoPath,
+    this.initialPhotoCrop,
+    this.initialPhotoTurns = 0,
     this.initialImagePaths = const [],
     this.initialVideoPath,
     this.initialCaption = '',
@@ -47,6 +55,9 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   final PageController _pageController = PageController();
 
   final List<File> _images = <File>[];
+  // Identity keys keep duplicate selections and removals independent.
+  final Map<File, _PhotoEdit> _photoEdits = Map.identity();
+  bool _editingPhoto = false;
   File? _video;
   int _page = 0;
   double? _latitude;
@@ -62,6 +73,11 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     super.initState();
     if (widget.initialImagePath != null)
       _images.add(File(widget.initialImagePath!));
+    if (_images.isNotEmpty && widget.initialOriginalPhotoPath != null) {
+      _photoEdits[_images.first] = _PhotoEdit(
+        File(widget.initialOriginalPhotoPath!), widget.initialPhotoTurns,
+        widget.initialPhotoCrop, widget.initialPhotoCrop);
+    }
     _images.addAll(
       widget.initialImagePaths.take(10 - _images.length).map(File.new),
     );
@@ -90,7 +106,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   }
 
   Future<void> _chooseSource() async {
-    if (_loading) return;
+    if (_loading || _editingPhoto) return;
     final choice = await showModalBottomSheet<String>(
       context: context,
       backgroundColor: AppColors.surface,
@@ -213,11 +229,41 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   }
 
   void _removePhoto(int index) {
+    if (_loading || _editingPhoto) return;
     if (index < 0 || index >= _images.length) return;
     setState(() {
-      _images.removeAt(index);
+      _photoEdits.remove(_images.removeAt(index));
       _page = _images.isEmpty ? 0 : _page.clamp(0, _images.length - 1);
     });
+  }
+
+  Future<void> _editPhoto() async {
+    if (_loading || _editingPhoto || _images.isEmpty) return;
+    final selected = _images[_page];
+    final edit = _photoEdits[selected] ?? _PhotoEdit(selected, 0, null, null);
+    setState(() => _editingPhoto = true);
+    try {
+      final crop = await Navigator.push<Rect>(context, MaterialPageRoute(
+        builder: (_) => PostPhotoCropScreen(original: edit.original,
+          turns: edit.turns, initialCrop: edit.crop, resetCrop: edit.reset),
+      ));
+      if (crop == null || !mounted) return;
+      // Always render from the original, never from the previous JPEG crop.
+      // The exact confirmed file is both previewed and uploaded.
+      final rendered = await PostPhotoCaptureService.prepare(edit.original, crop, edit.turns);
+      if (!mounted) return;
+      final index = _images.indexOf(selected);
+      if (index < 0) return;
+      setState(() {
+        _images[index] = rendered;
+        _photoEdits.remove(selected);
+        _photoEdits[rendered] = _PhotoEdit(edit.original, edit.turns, crop, edit.reset);
+      });
+    } catch (_) {
+      if (mounted) _message('Kadraj düzenlenemedi. Fotoğrafın korunuyor, tekrar deneyebilirsin.');
+    } finally {
+      if (mounted) setState(() => _editingPhoto = false);
+    }
   }
 
   Future<void> _pickVideo(ImageSource source) async {
@@ -366,6 +412,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   }
 
   Future<void> _share() async {
+    if (_loading || _editingPhoto) return;
     if (!_hasMedia) return _message('Önce bir fotoğraf veya video seç.');
     if (_captionController.text.length > 500)
       return _message('Açıklama en fazla 500 karakter olabilir.');
@@ -497,9 +544,19 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
           top: 8,
           left: 8,
           child: IconButton.filledTonal(
-            onPressed: () => _removePhoto(_page),
+            onPressed: _loading || _editingPhoto ? null : () => _removePhoto(_page),
             icon: const Icon(Icons.delete_outline),
           ),
+        ),
+        Positioned(
+          bottom: 12, left: 12, right: 12,
+          child: Center(child: FilledButton.tonalIcon(
+            onPressed: _loading || _editingPhoto ? null : _editPhoto,
+            icon: _editingPhoto
+                ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                : const Icon(Icons.crop),
+            label: Text(_editingPhoto ? 'Kadraj hazırlanıyor…' : 'Kadrajı düzenle'),
+          )),
         ),
       ],
     );
@@ -550,12 +607,12 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                   const Spacer(),
                   if (_images.length < 10)
                     TextButton.icon(
-                      onPressed: _loading ? null : _addMorePhotos,
+                      onPressed: _loading || _editingPhoto ? null : _addMorePhotos,
                       icon: const Icon(Icons.add_photo_alternate_outlined),
                       label: const Text('Fotoğraf ekle'),
                     ),
                   TextButton.icon(
-                    onPressed: _loading ? null : _chooseSource,
+                    onPressed: _loading || _editingPhoto ? null : _chooseSource,
                     icon: const Icon(Icons.edit),
                     label: const Text('Değiştir'),
                   ),
@@ -566,7 +623,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
             Align(
               alignment: Alignment.centerRight,
               child: TextButton.icon(
-                onPressed: _loading ? null : _chooseSource,
+                onPressed: _loading || _editingPhoto ? null : _chooseSource,
                 icon: const Icon(Icons.edit),
                 label: const Text('Videoyu değiştir'),
               ),
@@ -652,7 +709,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                   borderRadius: BorderRadius.circular(AppRadii.large),
                 ),
               ),
-              onPressed: _loading ? null : _share,
+              onPressed: _loading || _editingPhoto ? null : _share,
               child: _loading
                   ? const SizedBox(
                       width: 24,
@@ -674,4 +731,12 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       ),
     );
   }
+}
+
+class _PhotoEdit {
+  final File original;
+  final int turns;
+  final Rect? crop;
+  final Rect? reset;
+  const _PhotoEdit(this.original, this.turns, this.crop, this.reset);
 }
