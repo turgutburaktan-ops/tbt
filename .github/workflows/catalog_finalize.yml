@@ -1,0 +1,40 @@
+name: Finalize shared catalog migration
+on:
+  push:
+    branches: [codex/catalog-finalize]
+permissions:
+  contents: read
+  actions: write
+jobs:
+  finalize:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Stop superseded sequential migration after successful function deployment
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          curl --fail --silent --show-error -X POST -H "Authorization: Bearer $GH_TOKEN" -H 'Accept: application/vnd.github+json' https://api.github.com/repos/turgutburaktan-ops/tbt/actions/runs/34952853309/cancel
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm install --prefix functions
+      - name: Authenticate
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          python3 - <<'PYAUTH'
+          import json, os
+          from pathlib import Path
+          value=json.loads(os.environ['FIREBASE_SERVICE_ACCOUNT'])
+          target=Path(os.environ['RUNNER_TEMP'])/'catalog-service-account.json'
+          target.write_text(json.dumps(value)); target.chmod(0o600)
+          with open(os.environ['GITHUB_ENV'],'a') as f:
+              f.write(f'GOOGLE_APPLICATION_CREDENTIALS={target}\n')
+              f.write('GCLOUD_PROJECT=en-iyi-cekim-noktasi\n')
+          PYAUTH
+      - name: Reconcile originals and finalize all province partitions
+        run: node functions/scripts/backfill_place_catalog.js --apply
+      - name: Verify ready catalog
+        run: node functions/scripts/verify_place_catalog.js
