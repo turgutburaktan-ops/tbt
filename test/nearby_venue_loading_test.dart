@@ -379,10 +379,11 @@ void main() {
       );
       final first = fresh();
       first.selectCity(name: 'Elazığ', latitude: 38.6748, longitude: 39.2225);
-      first.selectCity(name: 'İstanbul', latitude: 41.0082, longitude: 28.9784);
+      first.selectCity(name: 'Tokat', latitude: 40.3167, longitude: 36.55);
       await first.flushSelectedCity();
       final second = fresh();
-      expect(await second.restoreSelectedCity(), 'İstanbul');
+      expect(await second.restoreSelectedCity(), 'Tokat');
+      expect((await second.findCity('Tokat'))?.latitude, 40.3167);
       expect(second.hasSelectedCity, isTrue);
       second.useCurrentCity();
       await second.flushSelectedCity();

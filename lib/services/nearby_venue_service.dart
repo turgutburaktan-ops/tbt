@@ -333,6 +333,18 @@ class NearbyVenueService {
     final q = value.trim();
     if (q.length < 2) return null;
     final f = _fold(q);
+    if (hasSelectedCity && _fold(_cityName ?? '') == f) {
+      final fallback = _area(_cityName!, _cityLatitude!, _cityLongitude!);
+      return CityVenueArea(
+        name: _cityName!,
+        latitude: _cityLatitude!,
+        longitude: _cityLongitude!,
+        south: _south ?? fallback.south,
+        west: _west ?? fallback.west,
+        north: _north ?? fallback.north,
+        east: _east ?? fallback.east,
+      );
+    }
     for (final e in _localCities.entries) {
       if (_fold(e.key).startsWith(f) || f.startsWith(_fold(e.key))) {
         final c = e.value;
