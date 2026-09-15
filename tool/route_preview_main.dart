@@ -16,7 +16,7 @@ void main() => runApp(
     home: const RouteCreateScreen(
       initialStops: [
         PhotoSpot(
-          id: 'preview-castle',
+          id: 'harput-kalesi',
           name: 'Harput Kalesi',
           city: 'Elazığ',
           latitude: 38.7036,
@@ -28,7 +28,7 @@ void main() => runApp(
           category: 'Tarihi yer',
         ),
         PhotoSpot(
-          id: 'preview-mosque',
+          id: 'elazig-harput-ulu-camii',
           name: 'Harput Ulu Camii',
           city: 'Elazığ',
           latitude: 38.7052,
@@ -40,8 +40,8 @@ void main() => runApp(
           category: 'Tarihi yer',
         ),
         PhotoSpot(
-          id: 'preview-museum',
-          name: 'Harput Müzesi',
+          id: 'elazig-alacali-camii',
+          name: 'Alacalı Camii',
           city: 'Elazığ',
           latitude: 38.7067,
           longitude: 39.2510,
@@ -49,7 +49,7 @@ void main() => runApp(
           bestTime: '',
           angle: '',
           imageUrl: '',
-          category: 'Müze',
+          category: 'Tarihi yer',
         ),
       ],
     ),

@@ -11,6 +11,7 @@ import '../services/user_facing_error.dart';
 import '../theme/app_theme.dart';
 import '../widgets/route_stop_picker.dart';
 import '../widgets/route_editor_map.dart';
+import '../widgets/spot_image.dart';
 import '../services/route_itinerary_service.dart';
 
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -41,7 +42,10 @@ class _RouteCreateScreenState extends State<RouteCreateScreen> {
   @override
   void initState() {
     super.initState();
-    if (_stops.isNotEmpty) _city.text = _stops.first.city;
+    if (_stops.isNotEmpty) {
+      _city.text = _stops.first.city;
+      _title.text = '${_stops.first.city} gezisi';
+    }
     _refreshRoute();
   }
 
@@ -464,7 +468,12 @@ class _RouteCreateScreenState extends State<RouteCreateScreen> {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         ),
                       ),
-                    Text(_busy ? 'Hazırlanıyor…' : 'Rotayı oluştur'),
+                    Flexible(
+                      child: Text(
+                        _busy ? 'Hazırlanıyor…' : 'Rotayı oluştur',
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
                     if (!_busy)
                       const Padding(
                         padding: EdgeInsets.only(left: 12),
@@ -645,9 +654,12 @@ class _RouteCreateScreenState extends State<RouteCreateScreen> {
                 style: TextStyle(fontSize: 19, fontWeight: FontWeight.w700),
               ),
             ),
-            TextButton(
-              onPressed: _busy || _stops.length >= 12 ? null : _suggest,
-              child: const Text('Bana rota öner'),
+            Flexible(
+              flex: 2,
+              child: TextButton(
+                onPressed: _busy || _stops.length >= 12 ? null : _suggest,
+                child: const Text('Bana rota öner', textAlign: TextAlign.end),
+              ),
             ),
           ],
         ),
@@ -842,13 +854,9 @@ class _RouteCreateScreenState extends State<RouteCreateScreen> {
                 child: SizedBox(
                   width: 48,
                   height: 48,
-                  child: stop.imageUrl.isEmpty
+                  child: stop.id.startsWith('map:')
                       ? _stopPlaceholder()
-                      : Image.network(
-                          stop.imageUrl,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, error, stack) => _stopPlaceholder(),
-                        ),
+                      : SpotImage(spot: stop, width: 48, height: 48),
                 ),
               ),
               const SizedBox(width: 10),
