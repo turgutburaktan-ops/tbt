@@ -25,8 +25,10 @@ jobs:
               return v.get('stringValue')
           def fields(d): return {k:decode(v) for k,v in d.get('fields',{}).items()}
           metas=read('/place_catalog?pageSize=1000')
-          assert not metas.get('nextPageToken'), 'Unexpected metadata pagination'
-          rows=[fields(d) for d in metas['documents']]
+          rows=[fields(d) for d in metas.get('documents',[])]
+          while metas.get('nextPageToken'):
+              metas=read('/place_catalog?pageSize=1000&pageToken='+urllib.parse.quote(metas['nextPageToken']))
+              rows.extend(fields(d) for d in metas.get('documents',[]))
           for kind in ['gezi','dining','cafe','hotel']:
               group=[m for m in rows if m.get('kind')==kind]
               assert len(group)==81,(kind,len(group))
