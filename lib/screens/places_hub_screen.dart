@@ -268,6 +268,7 @@ class _PlacesHubScreenState extends State<PlacesHubScreen> {
                 imageUrl: venue.imageUrl,
                 category: venue.category.label,
                 description: venue.description,
+                tags: const ['FirestoreDoğrulanmış'],
               ),
               venue: venue,
             ),
@@ -728,6 +729,7 @@ class _PlacesHubScreenState extends State<PlacesHubScreen> {
       children: [
         GoogleMap(
           key: ValueKey(_city),
+          style: '[{"elementType":"geometry","stylers":[{"color":"#141b29"}]},{"elementType":"labels.text.fill","stylers":[{"color":"#aab8cf"}]},{"elementType":"labels.text.stroke","stylers":[{"color":"#141b29"}]},{"featureType":"road","elementType":"geometry","stylers":[{"color":"#303a51"}]},{"featureType":"water","elementType":"geometry","stylers":[{"color":"#091326"}]}]',
           initialCameraPosition:
               _camera ??
               CameraPosition(target: _center, zoom: _city == null ? 6 : 12),
