@@ -1,5 +1,6 @@
 const {onCall, HttpsError} = require('firebase-functions/v2/https');
 const {getFirestore, FieldValue} = require('firebase-admin/firestore');
+const {partition,fold,cityName} = require('./catalog/schema');
 
 function clean(v,n=300){return String(v||'').trim().slice(0,n)}
 function auth(r){if(!r.auth?.uid)throw new HttpsError('unauthenticated','Giriş gerekli.');return r.auth.uid}
@@ -23,6 +24,17 @@ exports.createBusinessCandidate = onCall({region:'europe-west1'}, async request=
   }
 
   const db=getFirestore();
+  if(!cityName(city))throw new HttpsError('invalid-argument','İşletmenin ilini seçmelisin.');
+  const catalogMatches=await db.collection(`place_catalog/${partition(city,category)}/items`)
+      .where('nameKey','==',fold(venueName)).get();
+  const catalogMatch=catalogMatches.docs.find(doc=>{
+    const x=doc.data();return distanceMeters(latitude,longitude,x.latitude,x.longitude)<=30;
+  });
+  if(catalogMatch){
+    const x=catalogMatch.data();
+    return {venueId:x.legacyId,venueKey:`${category}:${x.legacyId}`,venueName:x.name,
+      category,latitude:x.latitude,longitude:x.longitude,existing:true};
+  }
   const recentMine=await db.collection('business_venue_submissions').where('createdBy','==',uid).limit(30).get();
   const active=recentMine.docs.filter(x=>['candidate','pending_review'].includes(String(x.data().status||'')));
   if(active.length>=5)throw new HttpsError('resource-exhausted','Aynı anda en fazla 5 yeni işletme önerisi oluşturabilirsin.');

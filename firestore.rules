@@ -428,6 +428,16 @@ service cloud.firestore {
       match /trust_reports/{reportId} { allow read, write: if false; }
       match /{sub}/{docId} { allow read, write: if false; }
     }
+    // Public, sanitized server projections. Approval/import sources stay private.
+    match /place_catalog/{partition} {
+      allow read: if true;
+      allow write: if false;
+      match /items/{id} { allow read: if true; allow write: if false; }
+    }
+    match /catalog_external_venues/{id} { allow read, write: if false; }
+    match /catalog_links/{id} { allow read, write: if false; }
+    match /catalog_jobs/{id} { allow read, write: if false; }
+    match /catalog_exclusions/{id} { allow read, write: if false; }
     match /spot_presence/{id} { allow read: if signedIn(); allow create: if signedIn() && request.resource.data.userId == request.auth.uid; allow update, delete: if signedIn() && resource.data.userId == request.auth.uid; }
     match /spot_meetups/{id} { allow read: if true; allow create: if signedIn() && request.resource.data.hostId == request.auth.uid && request.resource.data.participantIds.hasAny([request.auth.uid]); allow update: if signedIn() && (participantOnlyChange() || (resource.data.hostId == request.auth.uid && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','updatedAt']) && request.resource.data.status in ['open','cancelled'])); allow delete: if isAdmin(); }
     match /event_tickets/{id} {
@@ -627,4 +637,3 @@ service cloud.firestore {
     match /{document=**} { allow read, write: if false; }
   }
 }
-

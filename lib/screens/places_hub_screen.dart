@@ -15,6 +15,7 @@ import '../services/nearby_venue_service.dart';
 import '../services/route_selection_service.dart';
 import '../services/spot_browsing.dart';
 import '../services/spot_repository.dart';
+import '../services/place_catalog_service.dart';
 import '../services/venue_rating_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/chat_share_sheet.dart';
@@ -50,6 +51,10 @@ class _PlacesHubScreenState extends State<PlacesHubScreen> {
   final _ratings = <String, VenueRatingSummary>{};
   final _loading = <int>{};
   final _errors = <int>{};
+  final _loaded = <int>{};
+  final _cursors = <int, String?>{};
+  final _sourceStatus = <int, String>{};
+  bool get _hasMore => _filters.any((i) => _cursors[i] != null);
   List<PhotoSpot> _spots = [];
   String? _city;
   Position? _position;
@@ -132,104 +137,119 @@ class _PlacesHubScreenState extends State<PlacesHubScreen> {
   }
 
   Future<void> _selectCity(String city) async {
-    final generation = ++_generation;
+    ++_generation;
     setState(() {
-      _locating = true;
-      _loading.clear();
-    });
-    final area = await NearbyVenueService.instance.findCity(city);
-    if (!mounted || generation != _generation) return;
-    if (area == null) {
-      setState(() => _locating = false);
-      _notice(
-        'Şehir bilgisi alınamadı. İnternet bağlantını kontrol edip tekrar dene.',
-      );
-      return;
-    }
-    NearbyVenueService.instance.selectCity(
-      name: area.name,
-      latitude: area.latitude,
-      longitude: area.longitude,
-      south: area.south,
-      west: area.west,
-      north: area.north,
-      east: area.east,
-    );
-    setState(() {
-      _city = area.name;
-      _center = LatLng(area.latitude, area.longitude);
+      _city = city;
       _camera = null;
       _selectedId = null;
-      _venues.clear();
       _locating = false;
+      _venues.clear();
+      _spots = [];
+      _loaded.clear();
+      _cursors.clear();
+      _sourceStatus.clear();
+      _loading.clear();
+      _errors.clear();
     });
+    // Province catalog lookup needs the city name, not an external geocoder.
+    NearbyVenueService.instance.selectCity(
+      name: city,
+      latitude: _center.latitude,
+      longitude: _center.longitude,
+    );
     await _reload();
   }
 
   Future<void> _reload({bool forceRefresh = false}) async {
-    if (_city == null && _position == null) return;
+    if (_city == null) return;
     final generation = ++_generation;
     setState(() {
       _loading.clear();
-      _loading.add(0);
       _errors.clear();
+      _cursors.clear();
+      _loaded.clear();
     });
     await Future.wait([
-      () async {
-        try {
-          final spots = await widget.source.spots();
-          if (mounted && generation == _generation)
-            setState(() => _spots = spots);
-        } catch (_) {
-          if (mounted && generation == _generation)
-            setState(() => _errors.add(0));
-        } finally {
-          if (mounted && generation == _generation)
-            setState(() => _loading.remove(0));
-        }
-      }(),
-      for (final index in _filters.where((i) => i > 0))
-        _loadVenues(index, generation, forceRefresh: forceRefresh),
+      for (final index in _filters)
+        _loadCategory(index, generation, refresh: forceRefresh),
     ]);
   }
 
-  Future<void> _loadVenues(
+  Future<void> _loadCategory(
     int index,
     int generation, {
-    bool forceRefresh = false,
+    bool next = false,
+    bool refresh = false,
   }) async {
+    if (_city == null || _loading.contains(index)) return;
     setState(() {
       _loading.add(index);
       _errors.remove(index);
     });
-    void update(List<NearbyVenue> venues) {
-      if (!mounted || generation != _generation) return;
-      setState(() => _venues[index] = venues);
-    }
-
     try {
-      final venues = await widget.source.venues(
-        category: NearbyVenueCategory.values[index - 1],
-        latitude: _center.latitude,
-        longitude: _center.longitude,
-        onUpdate: update,
-        forceRefresh: forceRefresh,
+      final page = await widget.source.page(
+        _city!,
+        index,
+        cursor: next ? _cursors[index] : null,
+        refresh: refresh,
       );
-      update(venues);
-      // Ratings arrive independently, never blocking places or the map.
-      unawaited(_loadRatings(venues, generation));
-    } on VenueLoadException catch (error) {
-      if (error.venues.isNotEmpty) update(error.venues);
-      if (mounted && generation == _generation) {
-        setState(() => _errors.add(index));
-      }
+      if (!mounted || generation != _generation) return;
+      setState(() {
+        _loaded.add(index);
+        _cursors[index] = page.nextCursor;
+        _sourceStatus[index] = page.sourceStatus;
+        if (index == 0) {
+          _spots = [if (next) ..._spots, ...page.items.map((r) => r.spot)];
+        } else {
+          _venues[index] = [
+            if (next) ...?_venues[index],
+            ...page.items.map((r) => r.venue).whereType<NearbyVenue>(),
+          ];
+        }
+        if (!next && page.items.isNotEmpty) {
+          final first = page.items.first.spot;
+          _center = LatLng(first.latitude, first.longitude);
+          NearbyVenueService.instance.selectCity(
+            name: _city!,
+            latitude: first.latitude,
+            longitude: first.longitude,
+          );
+        }
+      });
+      if (index > 0)
+        unawaited(
+          _loadRatings(
+            page.items.map((r) => r.venue).whereType<NearbyVenue>().toList(),
+            generation,
+          ),
+        );
     } catch (_) {
       if (mounted && generation == _generation)
         setState(() => _errors.add(index));
     } finally {
-      if (mounted && generation == _generation)
+      if (mounted && generation == _generation) {
         setState(() => _loading.remove(index));
+        if (_search.text.trim().isNotEmpty && !_errors.contains(index))
+          unawaited(_loadMore());
+      }
     }
+  }
+
+  Future<void> _loadMore() async {
+    if (!mounted) return;
+    final generation = _generation;
+    await Future.wait([
+      for (final i in _filters.toList())
+        if (_cursors[i] != null &&
+            !_loading.contains(i) &&
+            !_errors.contains(i))
+          _loadCategory(i, generation, next: true),
+    ]);
+  }
+
+  void _searchChanged(String _) {
+    setState(() => _selectedId = null);
+    if (_search.text.trim().isNotEmpty) unawaited(_loadMore());
   }
 
   Future<void> _loadRatings(List<NearbyVenue> venues, int generation) async {
@@ -430,10 +450,7 @@ class _PlacesHubScreenState extends State<PlacesHubScreen> {
                         alignment: Alignment.centerLeft,
                       ),
                       child: Text(
-                        _city ??
-                            (_position != null
-                                ? 'Yakınımdaki yerler'
-                                : 'Şehir seç'),
+                        _city ?? 'Şehir seç',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -461,7 +478,7 @@ class _PlacesHubScreenState extends State<PlacesHubScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: TextField(
               controller: _search,
-              onChanged: (_) => setState(() => _selectedId = null),
+              onChanged: _searchChanged,
               decoration: InputDecoration(
                 hintText: 'Mekân veya yer ara',
                 prefixIcon: const Icon(Icons.search),
@@ -506,7 +523,7 @@ class _PlacesHubScreenState extends State<PlacesHubScreen> {
                       ? 'Yükleniyor…'
                       : _filters.any(_errors.contains) && places.isEmpty
                       ? 'Yüklenemedi'
-                      : '${places.length} yer',
+                      : '${places.length} yer${_hasMore ? ' · devamı var' : ''}',
                   style: const TextStyle(color: Colors.white54),
                 ),
               ],
@@ -549,27 +566,52 @@ class _PlacesHubScreenState extends State<PlacesHubScreen> {
                                       : _filters.any(_errors.contains)
                                       ? 'Mekân bilgileri şu anda alınamıyor. Bağlantını kontrol edip tekrar dene.'
                                       : _city == null
-                                      ? 'Gezi yerlerini görmek için şehir seç.'
+                                      ? 'Yerleri görmek için şehir seç.'
+                                      : _filters.any(
+                                          (i) => _sourceStatus[i] != 'ready',
+                                        )
+                                      ? 'Bu kategorideki yerler hazırlanıyor. Daha sonra tekrar kontrol edebilirsin.'
                                       : 'Bu filtrelerde yer bulunamadı. Aramayı veya kategorileri değiştir.',
                                   textAlign: TextAlign.center,
                                 ),
                               ),
                             ],
                           )
-                        : ListView.builder(
-                            key: const PageStorageKey('places-list'),
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            itemCount: places.length,
-                            itemBuilder: (context, index) => Column(
-                              children: [
-                                _card(places[index]),
-                                if ((index + 1) % 8 == 0)
-                                  const SponsoredNativeAd(),
-                              ],
+                        : NotificationListener<ScrollNotification>(
+                            onNotification: (notification) {
+                              if (notification.metrics.extentAfter < 400)
+                                unawaited(_loadMore());
+                              return false;
+                            },
+                            child: ListView.builder(
+                              key: const PageStorageKey('places-list'),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                              ),
+                              itemCount: places.length,
+                              itemBuilder: (context, index) => Column(
+                                children: [
+                                  _card(places[index]),
+                                  if ((index + 1) % 8 == 0)
+                                    const SponsoredNativeAd(),
+                                ],
+                              ),
                             ),
                           ),
                   ),
           ),
+          if (_hasMore)
+            TextButton(
+              onPressed: busy ? null : _loadMore,
+              child: Text(
+                busy ? 'Yerler yükleniyor…' : 'Daha fazla yer göster',
+              ),
+            ),
+          if (_filters.any((i) => i > 0) && !keyboardOpen)
+            const Text(
+              '© OpenStreetMap contributors · ODbL',
+              style: TextStyle(fontSize: 10, color: Colors.white54),
+            ),
           if (!keyboardOpen) const RouteSelectionButton(),
         ],
       ),
@@ -594,10 +636,9 @@ class _PlacesHubScreenState extends State<PlacesHubScreen> {
             _selectedId = null;
           });
           if (_filters.contains(index) &&
-              index > 0 &&
-              !_venues.containsKey(index) &&
+              !_loaded.contains(index) &&
               !_loading.contains(index)) {
-            unawaited(_loadVenues(index, _generation));
+            unawaited(_loadCategory(index, _generation));
           }
         },
         child: Container(
@@ -887,6 +928,17 @@ class PlacesDataSource {
   String? get selectedCity => NearbyVenueService.instance.selectedCityName;
   Future<String?> restoreSelectedCity() async =>
       selectedCity ?? await NearbyVenueService.instance.restoreSelectedCity();
+  Future<CatalogPage> page(
+    String city,
+    int index, {
+    String? cursor,
+    bool refresh = false,
+  }) => PlaceCatalogService.instance.page(
+    city,
+    catalogKinds[index],
+    cursor: cursor,
+    refresh: refresh,
+  );
   Future<List<PhotoSpot>> spots() => SpotRepository.instance.discover();
   Future<List<NearbyVenue>> venues({
     required NearbyVenueCategory category,

@@ -79,3 +79,4 @@ exports.creatorAdmin = require('./creator_admin').creatorAdmin;
 Object.assign(exports, require('./venue_quality'));
 
 Object.assign(exports, require("./admin_operations"));
+Object.assign(exports, require('./place_catalog'));

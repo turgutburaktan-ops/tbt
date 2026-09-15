@@ -10,12 +10,35 @@ import '../lib/models/nearby_venue.dart';
 import '../lib/models/photo_spot.dart';
 import '../lib/screens/places_hub_screen.dart';
 import '../lib/services/route_selection_service.dart';
+import '../lib/services/place_catalog_service.dart';
 import '../lib/theme/app_theme.dart';
 
 class Catalog extends PlacesDataSource {
   const Catalog();
   @override
   String get selectedCity => 'Elazığ';
+  @override
+  Future<CatalogPage> page(
+    String city,
+    int index, {
+    String? cursor,
+    bool refresh = false,
+  }) async {
+    if (index == 0)
+      return CatalogPage(
+        (await spots())
+            .where((s) => s.city == city)
+            .map((s) => CatalogItem(id: 'spot:${s.id}', spot: s))
+            .toList(),
+      );
+    await venues(
+      category: NearbyVenueCategory.values[index - 1],
+      latitude: 38.67,
+      longitude: 39.22,
+    );
+    return const CatalogPage([]);
+  }
+
   @override
   Future<List<PhotoSpot>> spots() async => const [
     PhotoSpot(
@@ -67,6 +90,25 @@ class FailingCatalog extends Catalog {
   }) async => throw Exception('unavailable');
 }
 
+class PagedCatalog extends Catalog {
+  const PagedCatalog();
+  @override
+  Future<CatalogPage> page(
+    String city,
+    int index, {
+    String? cursor,
+    bool refresh = false,
+  }) async {
+    final all = await spots();
+    return CatalogPage([
+      CatalogItem(
+        id: 'spot:${cursor == null ? all.first.id : all.last.id}',
+        spot: cursor == null ? all.first : all.last,
+      ),
+    ], nextCursor: cursor == null ? 'page-2' : null);
+  }
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   setUpAll(() async {
@@ -92,6 +134,24 @@ void main() {
   });
   setUp(() => RouteSelectionService.instance.clear());
   tearDown(() => RouteSelectionService.instance.clear());
+
+  testWidgets('search reaches a place beyond the first page', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.dark,
+        home: const Scaffold(body: PlacesHubScreen(source: PagedCatalog())),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Harput Kalesi'), findsOneWidget);
+    expect(find.text('İzzet Paşa Camii'), findsNothing);
+    await tester.enterText(find.byType(TextField), 'İzzet');
+    await tester.pumpAndSettle();
+    expect(find.text('İzzet Paşa Camii'), findsOneWidget);
+    expect(find.text('Harput Kalesi'), findsNothing);
+    expect(find.text('Daha fazla yer göster'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
 
   testWidgets(
     'four categories fit one row; category changes keep search and route basket',

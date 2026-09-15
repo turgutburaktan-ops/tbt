@@ -3,6 +3,10 @@ import 'dart:convert';
 import 'dart:math' as math;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
+
+import 'place_catalog_service.dart';
+
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -450,6 +454,17 @@ class NearbyVenueService {
     bool reportIncomplete = false,
     void Function(List<NearbyVenue>)? onUpdate,
   }) {
+    if (_businessLoader == null) {
+      return _fromCatalog(
+        category,
+        latitude,
+        longitude,
+        radiusMeters,
+        useSelectedCity: useSelectedCity,
+        refresh: forceRefresh,
+        onUpdate: onUpdate,
+      );
+    }
     final state = useSelectedCity
         ? _snapshotState(latitude, longitude)
         : _VenueQueryState(
@@ -491,6 +506,47 @@ class NearbyVenueService {
         _latestInFlight.remove(key);
       }
     });
+  }
+
+  Future<List<NearbyVenue>> _fromCatalog(
+    NearbyVenueCategory category,
+    double latitude,
+    double longitude,
+    int radius, {
+    required bool useSelectedCity,
+    required bool refresh,
+    void Function(List<NearbyVenue>)? onUpdate,
+  }) async {
+    if (useSelectedCity) await restoreSelectedCity();
+    if (useSelectedCity && selectedCityName != null) {
+      final result = await PlaceCatalogService.instance.city(
+        selectedCityName!,
+        category.name,
+        refresh: refresh,
+        onPage: (rows) => onUpdate?.call(
+          rows.map((r) => r.venue).whereType<NearbyVenue>().toList(),
+        ),
+      );
+      return result.map((r) => r.venue).whereType<NearbyVenue>().toList();
+    }
+    final response = await FirebaseFunctions.instanceFor(region: 'europe-west1')
+        .httpsCallable('catalogNearby')
+        .call({
+          'kind': category.name,
+          'latitude': latitude,
+          'longitude': longitude,
+          'radiusMeters': radius,
+        });
+    final data = Map<String, dynamic>.from(response.data as Map);
+    final rows = (data['items'] as List? ?? [])
+        .whereType<Map>()
+        .map((d) => CatalogItem.decode(Map<String, dynamic>.from(d)))
+        .whereType<CatalogItem>()
+        .map((r) => r.venue)
+        .whereType<NearbyVenue>()
+        .toList();
+    onUpdate?.call(rows);
+    return rows;
   }
 
   Future<List<NearbyVenue>> _resultForCaller(
