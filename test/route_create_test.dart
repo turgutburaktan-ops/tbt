@@ -88,8 +88,8 @@ void main() {
             .writeAsBytes(bytes!.buffer.asUint8List());
         image.dispose();
       });
-      expect(find.text('Nereye gidiyoruz?'), findsOneWidget);
-      await tester.enterText(find.byType(TextField).first, 'ela');
+      expect(find.text('Rotan burada şekillenecek'), findsOneWidget);
+      await tester.enterText(find.byType(TextField).last, 'ela');
       await tester.pumpAndSettle();
       expect(find.text('Elazığ'), findsOneWidget);
       await tester.tap(find.text('Elazığ'));
@@ -108,7 +108,9 @@ void main() {
       await tester.pumpAndSettle();
       expect(
         tester
-            .widget<SegmentedButton<String>>(find.byType(SegmentedButton<String>))
+            .widget<SegmentedButton<String>>(
+              find.byType(SegmentedButton<String>),
+            )
             .selected,
         {'Bisiklet'},
       );
@@ -117,7 +119,16 @@ void main() {
         200,
         scrollable: find.byType(Scrollable).first,
       );
-      expect(find.text('Kimler katılabilir?'), findsOneWidget);
+      await tester.scrollUntilVisible(
+        find.text('Kimler katılabilir?'),
+        150,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.tap(find.text('Kimler katılabilir?'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Herkes'));
+      await tester.pumpAndSettle();
+      expect(find.text('Herkes'), findsOneWidget);
       await tester.scrollUntilVisible(
         find.text('Buluşma noktası'),
         150,
