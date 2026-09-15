@@ -3,6 +3,14 @@ import 'dart:ui';
 
 const postPhotoAspectRatio = 4 / 5;
 
+/// CameraX mirrors the upright saved image, while the portrait preview mirrors
+/// around its own vertical axis. Quarter-turn front captures need the extra
+/// half-turn to keep those axes aligned.
+int postPhotoPreviewTurns(int deviceQuarterTurns, {bool frontMirrored = false}) {
+  final turns = deviceQuarterTurns % 4;
+  return (4 - turns + (frontMirrored && turns.isOdd ? 2 : 0)) % 4;
+}
+
 /// Shares the same contain projection as the normal-photo camera preview.
 /// The returned source rectangle is relative to the entire preview image.
 class PostPhotoFrame {

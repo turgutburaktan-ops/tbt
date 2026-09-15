@@ -55,11 +55,13 @@ class _MainCameraScreenState extends State<MainCameraScreen> {
 
   bool get _cameraBusy => _handlingCapture || _openingGallery || _captureInFlight || _switchingSensor;
 
-  int get _previewTurns => switch (_orientation) {
+  bool _frontSensor = false;
+
+  int get _deviceQuarterTurns => switch (_orientation) {
     CameraOrientations.portrait_up => 0,
-    CameraOrientations.landscape_left => 3,
+    CameraOrientations.landscape_left => 1,
     CameraOrientations.portrait_down => 2,
-    CameraOrientations.landscape_right => 1,
+    CameraOrientations.landscape_right => 3,
   };
 
   bool get _isVideoMode =>
@@ -191,7 +193,8 @@ class _MainCameraScreenState extends State<MainCameraScreen> {
       if (_captureInFlight || _handlingCapture) return;
       _pendingMode = _mode;
       _pendingPhotoSource = _mode == CameraShareMode.photo ? _photoFrame?.source : null;
-      _pendingPreviewTurns = _previewTurns;
+      _pendingPreviewTurns = postPhotoPreviewTurns(_deviceQuarterTurns,
+        frontMirrored: Platform.isAndroid && _frontSensor);
       if (!event.isVideo && mounted) setState(() => _captureInFlight = true);
       return;
     }
@@ -431,6 +434,7 @@ class _MainCameraScreenState extends State<MainCameraScreen> {
           _recordingState = cameraState is VideoRecordingCameraState
               ? cameraState
               : null;
+          _frontSensor = cameraState.sensorConfig.sensors.first.position == SensorPosition.front;
           final insets = MediaQuery.paddingOf(context);
           _photoFrame = _mode == CameraShareMode.photo
               ? PostPhotoFrame.calculate(canvas: constraints.biggest,

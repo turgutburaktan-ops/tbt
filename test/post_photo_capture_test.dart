@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:image/image.dart' as img;
 import 'package:best_photo_spot/services/post_photo_capture_service.dart';
+import 'package:best_photo_spot/utils/post_photo_frame.dart';
 
 img.Image scene() {
   final result=img.Image(width:120,height:200);
@@ -24,6 +25,19 @@ void main() {
       expect(output.width,96);expect(output.height,120);
       expect(output.getPixel(0,0).r,12);expect(output.getPixel(0,0).g,40);
       expect(output.getPixel(95,119).r,107);expect(output.getPixel(95,119).g,159);
+    }
+  });
+  test('front-camera rotation preserves the portrait preview mirror axis', () {
+    final expected = cropPostPhoto(img.flipHorizontal(scene()), [.1,.2,.8,.6], 0);
+    for(var deviceTurns=0;deviceTurns<4;deviceTurns++) {
+      final saved = img.flipHorizontal(img.copyRotate(scene(),angle:deviceTurns*90));
+      final result = cropPostPhoto(saved, [.1,.2,.8,.6],
+        postPhotoPreviewTurns(deviceTurns, frontMirrored:true));
+      expect(result.width,expected.width);expect(result.height,expected.height);
+      for(final point in [[0,0],[95,119],[95,0],[0,119]]) {
+        expect(result.getPixel(point[0],point[1]).r,expected.getPixel(point[0],point[1]).r);
+        expect(result.getPixel(point[0],point[1]).g,expected.getPixel(point[0],point[1]).g);
+      }
     }
   });
   test('EXIF rotation and front-camera reflection are baked exactly once', () {
