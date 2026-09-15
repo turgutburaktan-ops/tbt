@@ -7,6 +7,8 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../theme/app_theme.dart';
+import '../services/post_photo_capture_service.dart';
+import '../utils/post_photo_frame.dart';
 import '../services/user_facing_error.dart';
 import '../widgets/camera_share_controls.dart';
 import 'camera_video_post_screen.dart';
@@ -43,6 +45,21 @@ class _MainCameraScreenState extends State<MainCameraScreen> {
   bool _openingGallery = false;
   bool _showGrid = false;
   bool _storyVideo = false;
+  bool _captureInFlight = false;
+  PostPhotoFrame? _photoFrame;
+  Rect? _pendingPhotoSource;
+  int _pendingPreviewTurns = 0;
+  CameraOrientations _orientation = CameraOrientations.portrait_up;
+  StreamSubscription<CameraOrientations>? _orientationSubscription;
+
+  bool get _cameraBusy => _handlingCapture || _openingGallery || _captureInFlight;
+
+  int get _previewTurns => switch (_orientation) {
+    CameraOrientations.portrait_up => 0,
+    CameraOrientations.landscape_left => 3,
+    CameraOrientations.portrait_down => 2,
+    CameraOrientations.landscape_right => 1,
+  };
 
   bool get _isVideoMode =>
       _mode == CameraShareMode.reels ||
@@ -55,11 +72,15 @@ class _MainCameraScreenState extends State<MainCameraScreen> {
   void initState() {
     super.initState();
     _mode = widget.initialMode;
+    _orientationSubscription = CamerawesomePlugin.getNativeOrientation()?.listen(
+      (value) => _orientation = value,
+    );
   }
 
   @override
   void dispose() {
     _recordingTimer?.cancel();
+    _orientationSubscription?.cancel();
     super.dispose();
   }
 
@@ -72,8 +93,7 @@ class _MainCameraScreenState extends State<MainCameraScreen> {
 
   void _selectMode(CameraShareMode mode, CameraState cameraState) {
     if (_recordingState != null ||
-        _handlingCapture ||
-        _openingGallery ||
+        _cameraBusy ||
         mode == _mode)
       return;
     setState(() {
@@ -92,9 +112,8 @@ class _MainCameraScreenState extends State<MainCameraScreen> {
     if ((_mode != CameraShareMode.story &&
             _mode != CameraShareMode.photo &&
             _mode != CameraShareMode.video) ||
-        _openingGallery ||
+        _cameraBusy ||
         _recordingState != null ||
-        _handlingCapture ||
         (_mode == CameraShareMode.story
                 ? _storyVideo
                 : _mode == CameraShareMode.video) ==
@@ -113,7 +132,7 @@ class _MainCameraScreenState extends State<MainCameraScreen> {
   }
 
   Future<void> _capture(CameraState cameraState) async {
-    if (_handlingCapture || _openingGallery) return;
+    if (_cameraBusy) return;
     if (cameraState is PhotoCameraState) {
       _pendingMode = _mode;
       await cameraState.takePhoto();
@@ -152,9 +171,18 @@ class _MainCameraScreenState extends State<MainCameraScreen> {
   }
 
   Future<void> _onMediaCapture(MediaCapture event) async {
+    if (event.status == MediaCaptureStatus.capturing) {
+      if (_captureInFlight || _handlingCapture) return;
+      _pendingMode = _mode;
+      _pendingPhotoSource = _mode == CameraShareMode.photo ? _photoFrame?.source : null;
+      _pendingPreviewTurns = _previewTurns;
+      if (!event.isVideo && mounted) setState(() => _captureInFlight = true);
+      return;
+    }
     if (event.status == MediaCaptureStatus.failure) {
       _stopRecordingClock();
       _recordingState = null;
+      if (mounted) setState(() => _captureInFlight = false);
       _message(
         'Çekim tamamlanamadı. Kamera izinlerini kontrol edip tekrar dene.',
       );
@@ -177,27 +205,38 @@ class _MainCameraScreenState extends State<MainCameraScreen> {
       },
     );
     if (path == null || path!.isEmpty) {
+      if (mounted) setState(() => _captureInFlight = false);
       _message('Çekilen dosya bulunamadı.');
       return;
     }
 
     _stopRecordingClock();
     _recordingState = null;
-    _handlingCapture = true;
+    if (mounted) setState(() => _handlingCapture = true);
     final capturedMode = _pendingMode ?? _mode;
     try {
+      var photo = File(path!);
+      if (capturedMode == CameraShareMode.photo && !event.isVideo) {
+        final source = _pendingPhotoSource;
+        if (source == null) throw StateError('Kamera kadrajı hazırlanıyor. Tekrar dene.');
+        photo = await PostPhotoCaptureService.prepare(photo, source, _pendingPreviewTurns);
+      }
       await _routeCapturedFile(
-        File(path!),
+        photo,
         mode: capturedMode,
         isVideo: event.isVideo,
       );
+    } catch (error) {
+      _message(userFacingError(error));
     } finally {
-      _handlingCapture = false;
+      _pendingMode = null;
+      _pendingPhotoSource = null;
+      if (mounted) setState(() { _handlingCapture = false; _captureInFlight = false; });
     }
   }
 
   Future<void> _openGallery() async {
-    if (_openingGallery || _handlingCapture || _recordingState != null) return;
+    if (_cameraBusy || _recordingState != null) return;
     setState(() => _openingGallery = true);
     try {
       final selectedMode = _mode;
@@ -325,7 +364,8 @@ class _MainCameraScreenState extends State<MainCameraScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      body: CameraAwesomeBuilder.custom(
+      body: LayoutBuilder(builder: (context, constraints) {
+        return CameraAwesomeBuilder.custom(
         saveConfig: SaveConfig.photoAndVideo(
           initialCaptureMode:
               _mode == CameraShareMode.photo ||
@@ -341,7 +381,8 @@ class _MainCameraScreenState extends State<MainCameraScreen> {
           aspectRatio: CameraAspectRatios.ratio_16_9,
           zoom: 0,
         ),
-        previewFit: CameraPreviewFit.cover,
+        previewFit: _mode == CameraShareMode.photo
+            ? CameraPreviewFit.contain : CameraPreviewFit.cover,
         enablePhysicalButton: true,
         progressIndicator: const ColoredBox(
           color: Colors.black,
@@ -374,14 +415,21 @@ class _MainCameraScreenState extends State<MainCameraScreen> {
           _recordingState = cameraState is VideoRecordingCameraState
               ? cameraState
               : null;
+          final insets = MediaQuery.paddingOf(context);
+          _photoFrame = _mode == CameraShareMode.photo
+              ? PostPhotoFrame.calculate(canvas: constraints.biggest,
+                  preview: preview.nativePreviewSize,
+                  topInset: insets.top, bottomInset: insets.bottom)
+              : null;
           return _CameraOverlay(
+            photoFrame: _photoFrame?.viewport,
             state: cameraState,
             mode: _mode,
             storyVideo: _storyVideo,
             recording: recording,
             recordedSeconds: _recordedSeconds,
             showGrid: _showGrid,
-            busy: _handlingCapture || _openingGallery,
+            busy: _cameraBusy,
             onClose: () => Navigator.pop(context),
             onImport: () => Navigator.push(
               context,
@@ -395,12 +443,14 @@ class _MainCameraScreenState extends State<MainCameraScreen> {
             onModeSelected: (mode) => _selectMode(mode, cameraState),
           );
         },
-      ),
+      );
+      }),
     );
   }
 }
 
 class _CameraOverlay extends StatelessWidget {
+  final Rect? photoFrame;
   final CameraState state;
   final CameraShareMode mode;
   final bool storyVideo;
@@ -417,6 +467,7 @@ class _CameraOverlay extends StatelessWidget {
   final ValueChanged<CameraShareMode> onModeSelected;
 
   const _CameraOverlay({
+    this.photoFrame,
     required this.state,
     required this.mode,
     required this.storyVideo,
@@ -463,7 +514,9 @@ class _CameraOverlay extends StatelessWidget {
     return Stack(
       fit: StackFit.expand,
       children: [
-        const IgnorePointer(
+        if (photoFrame != null)
+          IgnorePointer(child: CustomPaint(painter: _PostFrameMask(photoFrame!))),
+        if (photoFrame == null) const IgnorePointer(
           child: DecoratedBox(
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -480,8 +533,9 @@ class _CameraOverlay extends StatelessWidget {
             ),
           ),
         ),
-        if (showGrid && mode == CameraShareMode.photo)
-          const IgnorePointer(child: _CameraGrid()),
+        if (showGrid && photoFrame != null)
+          Positioned.fromRect(rect: photoFrame!,
+            child: const IgnorePointer(child: _CameraGrid())),
         SafeArea(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(14, 10, 14, 16),
@@ -524,6 +578,10 @@ class _CameraOverlay extends StatelessWidget {
                       ),
                     ),
                     const Spacer(),
+                    if (photoFrame != null) _GlassButton(
+                      icon: showGrid ? Icons.grid_on_rounded : Icons.grid_off_rounded,
+                      onTap: onToggleGrid,
+                    ),
                     _GlassButton(
                       icon: Icons.flash_auto_rounded,
                       onTap: recording
@@ -532,6 +590,7 @@ class _CameraOverlay extends StatelessWidget {
                     ),
                   ],
                 ),
+                if (photoFrame == null) ...[
                 const SizedBox(height: 62),
                 Align(
                   alignment: Alignment.centerRight,
@@ -552,6 +611,7 @@ class _CameraOverlay extends StatelessWidget {
                     ],
                   ),
                 ),
+                ],
                 const Spacer(),
                 if (mode != CameraShareMode.reels) ...[
                   _StoryMediaSelector(
@@ -570,7 +630,7 @@ class _CameraOverlay extends StatelessWidget {
                     CameraShareMode.reels =>
                       'Dikey videonu Reels olarak paylaş',
                     CameraShareMode.photo =>
-                      'Fotoğraf çek veya galeriden en fazla 10 fotoğraf seç',
+                      'Bu kadraj gönderinde aynı şekilde görünecek',
                     CameraShareMode.video => 'Videonu çek ve ana akışta paylaş',
                   },
                   textAlign: TextAlign.center,
@@ -891,4 +951,19 @@ class _CameraGridPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class _PostFrameMask extends CustomPainter {
+  final Rect frame;
+  const _PostFrameMask(this.frame);
+  @override
+  void paint(Canvas canvas, Size size) {
+    final outside = Path()..fillType = PathFillType.evenOdd
+      ..addRect(Offset.zero & size)..addRect(frame);
+    canvas.drawPath(outside, Paint()..color = Colors.black);
+    canvas.drawRect(frame, Paint()..color = Colors.white38
+      ..style = PaintingStyle.stroke..strokeWidth = 1);
+  }
+  @override
+  bool shouldRepaint(covariant _PostFrameMask oldDelegate) => oldDelegate.frame != frame;
 }
