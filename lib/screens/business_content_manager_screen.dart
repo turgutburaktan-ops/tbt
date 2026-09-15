@@ -1,3 +1,5 @@
+import 'business_bulk_menu_screen.dart';
+import 'event_create_screen_v2.dart';
 import '../widgets/tbt_dialog.dart';
 
 import 'dart:io';
@@ -59,7 +61,7 @@ class BusinessContentManagerScreen extends StatelessWidget {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _edit(context),
         icon: const Icon(Icons.add_rounded),
-        label: const Text('Yeni Ekle'),
+        label: Text(type == 'menu' ? 'Toplu menü oluştur' : type == 'campaign' ? 'Yeni kampanya' : 'Etkinlik oluştur'),
       ),
       body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
         stream: stream,
@@ -385,8 +387,25 @@ class BusinessContentManagerScreen extends StatelessWidget {
     String? id,
     Map<String, dynamic>? data,
   }) async {
+    if (type == 'menu' && id == null) {
+      await Navigator.push(c,MaterialPageRoute(builder:(_)=>BusinessBulkMenuScreen(category:category,venueId:venueId)));
+      return;
+    }
     if (type == 'menu') return _editMenu(c, id: id, data: data);
     if (type == 'campaign') return _editCampaign(c, id: id, data: data);
+    if (id == null) {
+      try {
+        final snap=await FirebaseFirestore.instance.collection('business_venues').doc(_venueKey).get();
+        final v=snap.data() ?? <String,dynamic>{};
+        if(!c.mounted)return;
+        await Navigator.push(c,MaterialPageRoute(builder:(_)=>EventCreateScreenV2(
+          businessVenueKey:_venueKey,businessVenueName:(v['venueName']??v['name']??'İşletme').toString(),
+          initialCity:(v['city']??'').toString(),initialLocationLabel:(v['venueName']??v['name']??'').toString(),
+          initialLatitude:(v['latitude'] as num?)?.toDouble(),initialLongitude:(v['longitude'] as num?)?.toDouble(),
+        )));
+      }catch(e){if(c.mounted)_message(c,_error(e));}
+      return;
+    }
     return _editProgram(c, id: id, data: data);
   }
 
@@ -838,3 +857,4 @@ class _Badge extends StatelessWidget {
     ),
   );
 }
+

@@ -358,8 +358,14 @@ class TravelPlanService {
   }
 
   Future<void> delete(String planId) async {
-    _requireUser();
-    await _firestore.collection('travel_plans').doc(planId).delete();
+    final user = _requireUser();
+    final ref = _firestore.collection('travel_plans').doc(planId);
+    await _firestore.runTransaction((tx) async {
+      final snap = await tx.get(ref);
+      if (!snap.exists) return;
+      if (snap.data()?['ownerId'] != user.uid) throw Exception('Yalnız rota sahibi silebilir.');
+      tx.delete(ref);
+    });
   }
 
   Future<void> setPublic(String planId, bool value) async {
@@ -604,3 +610,4 @@ class TravelPlanService {
         .toList(growable: false);
   }
 }
+

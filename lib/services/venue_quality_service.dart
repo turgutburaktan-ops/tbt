@@ -16,6 +16,13 @@ class VenueQualityService {
         .httpsCallable('venueQuality').call({'action': action, ...data});
     return Map<String, dynamic>.from(result.data as Map);
   }
-  static String error(Object e) => e is FirebaseFunctionsException
-      ? e.message ?? 'İşlem tamamlanamadı.' : 'Bağlantı kurulamadı. Yeniden dene.';
+  static String error(Object e) {
+    if (e is FirebaseFunctionsException) {
+      if (e.code == 'not-found') return 'Değerlendirme servisine şu anda ulaşılamıyor. Tekrar dene.';
+      if (e.code == 'unauthenticated') return 'Değerlendirme için yeniden giriş yapmalısın.';
+      if (e.code == 'unavailable' || e.code == 'deadline-exceeded') return 'Bağlantı kurulamadı. Yeniden dene.';
+      return e.message ?? 'İşlem tamamlanamadı.';
+    }
+    return 'Bağlantı kurulamadı. Yeniden dene.';
+  }
 }

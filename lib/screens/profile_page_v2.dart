@@ -1,3 +1,4 @@
+import '../widgets/route_management_menu.dart';
 import '../services/user_facing_error.dart';
 import '../services/user_facing_error.dart';
 import '../widgets/profile_photo_card.dart';
@@ -1167,11 +1168,10 @@ class _ProfileRoutesSection extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  trailing: IconButton(
-                    tooltip: 'Rotayı paylaş',
-                    onPressed: () => _publish(context, plan),
-                    icon: const Icon(Icons.ios_share_rounded),
-                  ),
+                  trailing: Row(mainAxisSize: MainAxisSize.min,children:[
+                    IconButton(tooltip:'Rotayı paylaş',onPressed:()=>_publish(context,plan),icon:const Icon(Icons.ios_share_rounded)),
+                    RouteManagementMenu(plan:plan),
+                  ]),
                   onTap: () => Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -1277,3 +1277,4 @@ class _Stat extends StatelessWidget {
           );
   }
 }
+

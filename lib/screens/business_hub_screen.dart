@@ -1,6 +1,7 @@
 import '../widgets/tbt_dialog.dart';
 
 import 'dart:io';
+import '../data/turkey_selection_data.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
@@ -21,12 +22,16 @@ class BusinessHubScreen extends StatefulWidget {
   final String initialVenueId;
   final String initialVenueName;
   final bool previewMode;
+  final bool startNewBusiness;
+  final String initialCity;
   const BusinessHubScreen({
     super.key,
     this.initialCategory = '',
     this.initialVenueId = '',
     this.initialVenueName = '',
     this.previewMode = false,
+    this.startNewBusiness = false,
+    this.initialCity = '',
   });
   @override
   State<BusinessHubScreen> createState() => _BusinessHubScreenState();
@@ -41,13 +46,17 @@ class _BusinessHubScreenState extends State<BusinessHubScreen> {
       _legalName = TextEditingController(),
       _taxOffice = TextEditingController(),
       _taxLast4 = TextEditingController();
+  final _newAddress = TextEditingController(), _newCity = TextEditingController();
+  double? _newLatitude, _newLongitude;
+  bool _locatingBusiness = false;
   File? _evidence;
   bool _saving = false, _uploadingMedia = false;
   Map<String, dynamic>? _status;
   @override
   void initState() {
     super.initState();
-    _category.text = widget.initialCategory;
+    _newCity.text = widget.initialCity;
+    _category.text = widget.initialCategory.isEmpty && widget.startNewBusiness ? 'cafe' : widget.initialCategory;
     _venueId.text = widget.initialVenueId;
     _venueName.text = widget.initialVenueName;
     if (!widget.previewMode &&
@@ -59,6 +68,8 @@ class _BusinessHubScreenState extends State<BusinessHubScreen> {
   @override
   void dispose() {
     for (final c in [
+      _newAddress,
+      _newCity,
       _category,
       _venueId,
       _venueName,
@@ -305,6 +316,20 @@ class _BusinessHubScreenState extends State<BusinessHubScreen> {
     }
     setState(() => _saving = true);
     try {
+      if (_email.text.trim().isEmpty || _phone.text.trim().isEmpty || _legalName.text.trim().length < 3 || _taxOffice.text.trim().length < 2 || !RegExp(r'^\d{4}$').hasMatch(_taxLast4.text.trim())) {
+        throw Exception('İşletme e-postası, telefonu ve şirket bilgilerini tamamla.');
+      }
+      if (widget.startNewBusiness && _venueId.text.isEmpty) {
+        if (_newLatitude == null || _newLongitude == null) throw Exception('İşletmenin konumunu seçmelisin.');
+        final created = await BusinessService.instance.createBusinessCandidate(
+          category: _category.text, venueName: _venueName.text.trim(),
+          address: _newAddress.text.trim(), city: _newCity.text.trim(),
+          latitude: _newLatitude, longitude: _newLongitude,
+        );
+        // Retain the candidate identity if the subsequent claim upload fails.
+        _venueId.text = created['venueId'].toString();
+        _venueName.text = created['venueName'].toString();
+      }
       await BusinessService.instance.submitClaim(
         category: _category.text.trim(),
         venueId: _venueId.text.trim(),
@@ -389,7 +414,7 @@ class _BusinessHubScreenState extends State<BusinessHubScreen> {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: Text(
-          widget.previewMode ? 'İşletme Paneli Önizleme' : 'İşletmem',
+          widget.previewMode ? 'İşletme Paneli Önizleme' : widget.startNewBusiness ? 'Yeni işletme kaydet' : 'İşletmem',
         ),
       ),
       body: RefreshIndicator(
@@ -403,7 +428,10 @@ class _BusinessHubScreenState extends State<BusinessHubScreen> {
             ],
             _StatusCard(status: status, verified: verified),
             const SizedBox(height: 18),
-            if (!hasVenue)
+            if (widget.startNewBusiness && !verified) ...[
+              _newBusinessFields(),
+              _claimForm(status),
+            ] else if (!hasVenue)
               _ChooseVenueState(onCreate: _showNewBusinessDialog)
             else if (!verified)
               _claimForm(status)
@@ -415,12 +443,52 @@ class _BusinessHubScreenState extends State<BusinessHubScreen> {
     );
   }
 
+  Widget _newBusinessFields() => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      const Text('İşletme ve yetki bilgilerini doldur. Başvurun admin onayına gönderilecek.'),
+      const SizedBox(height: 16),
+      DropdownButtonFormField<String>(
+        value: _category.text,
+        decoration: const InputDecoration(labelText: 'Kategori'),
+        items: const [DropdownMenuItem(value:'cafe',child:Text('Kafe')),DropdownMenuItem(value:'dining',child:Text('Yeme-içme')),DropdownMenuItem(value:'hotel',child:Text('Otel'))],
+        onChanged: _saving || _venueId.text.isNotEmpty ? null : (value) => setState(() => _category.text=value!),
+      ),
+      const SizedBox(height: 12),
+      TextField(controller:_venueName,enabled:!_saving && _venueId.text.isEmpty,decoration:const InputDecoration(labelText:'İşletme adı')),
+      const SizedBox(height: 12),
+      DropdownButtonFormField<String>(
+        value: turkeyCities.contains(_newCity.text) ? _newCity.text : null,
+        isExpanded:true,
+        decoration:const InputDecoration(labelText:'İl'),
+        items:turkeyCities.map((c)=>DropdownMenuItem(value:c,child:Text(c))).toList(),
+        onChanged:_saving || _venueId.text.isNotEmpty ? null : (v)=>setState(()=>_newCity.text=v!),
+      ),
+      const SizedBox(height: 12),
+      TextField(controller:_newAddress,enabled:!_saving && _venueId.text.isEmpty,maxLines:2,decoration:const InputDecoration(labelText:'Açık adres')),
+      OutlinedButton.icon(
+        onPressed:_saving || _locatingBusiness || _venueId.text.isNotEmpty ? null : () async {
+          setState(()=>_locatingBusiness=true);
+          try {
+            final position=await LocationService.getCurrentPosition();
+            if(!mounted)return;
+            if(position==null)throw Exception('Konum alınamadı. İşletmedeyken konum iznini açıp tekrar dene.');
+            setState((){_newLatitude=position.latitude;_newLongitude=position.longitude;});
+          } catch(e){_message(_error(e));} finally {if(mounted)setState(()=>_locatingBusiness=false);}
+        },
+        icon:const Icon(Icons.my_location),
+        label:Text(_locatingBusiness?'Konum alınıyor…':_newLatitude==null?'İşletmedeki konumumu kullan':'İşletme konumu seçildi ✓'),
+      ),
+      const SizedBox(height:16),
+    ],
+  );
+
   Widget _claimForm(String status) {
     final rejection = (_status?['rejectionReason'] ?? '').toString();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Card(
+        if (!widget.startNewBusiness) Card(
           child: ListTile(
             leading: const Icon(
               Icons.storefront_rounded,
@@ -1005,3 +1073,4 @@ class _Tile extends StatelessWidget {
     ),
   );
 }
+

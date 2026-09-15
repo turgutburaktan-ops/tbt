@@ -24,6 +24,7 @@ import '../widgets/spot_image.dart';
 import '../widgets/sponsored_native_ad.dart';
 import '../widgets/venue_quality_badge.dart';
 import 'business_profile_screen.dart';
+import 'business_hub_screen.dart';
 import 'spot_detail_screen.dart';
 import 'spot_suggestion_screen.dart';
 
@@ -466,11 +467,17 @@ class _PlacesHubScreenState extends State<PlacesHubScreen> {
                     onPressed: () => Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => const SpotSuggestionScreen(),
+                        builder: (_) => _filters.length == 1 && _filters.contains(0)
+                            ? const SpotSuggestionScreen()
+                            : BusinessHubScreen(
+                                startNewBusiness: true,
+                                initialCity: _city ?? '',
+                                initialCategory: _filters.contains(2) ? 'cafe' : _filters.contains(3) ? 'hotel' : 'dining',
+                              ),
                       ),
                     ),
                     icon: const Icon(Icons.add_location_alt_outlined, size: 18),
-                    label: const Text('Yer öner'),
+                    label: Text(_filters.length == 1 && _filters.contains(0) ? 'Yer öner' : 'Yeni işletme kaydet'),
                   ),
                 ],
               ),
@@ -970,3 +977,4 @@ class PlacesDataSource {
   Future<VenueRatingSummary> rating(String category, String id) =>
       VenueRatingService.instance.summary(category, id);
 }
+
