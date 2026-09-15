@@ -21,7 +21,7 @@ async function main(){
   if(!apply){report.proposed=selected.length;for(const r of selected)report.byCity[r.city]=(report.byCity[r.city]||0)+1;}
   else {
     const cities=[...new Set(selected.map(r=>r.city))];
-    for(const city of cities){
+    async function worker(){while(cities.length){const city=cities.shift();
       const batch=selected.filter(r=>r.city===city),ref=db.doc(`place_catalog/${partition(city,'cafe')}`);
       const before=(await ref.collection('items').count().get()).data().count;
       for(let i=0;i<batch.length;i+=60)await seedRows(db,batch.slice(i,i+60));
@@ -31,7 +31,10 @@ async function main(){
       await ref.set({ready:true,lastExpansionSource:'overture',lastExpansionAt:FieldValue.serverTimestamp()},{merge:true});
       report.byCity[city]={before,after,added:after-before};report.added+=after-before;
       console.log(JSON.stringify({city,...report.byCity[city]}));
-    }
+    }}
+    // Each worker owns a different province partition; seedRows transactions
+    // remain bounded and idempotent, and no province count is shared by workers.
+    await Promise.all(Array.from({length:4},worker));
   }
   fs.mkdirSync('build/cafe-expansion',{recursive:true});
   fs.writeFileSync(`build/cafe-expansion/${apply?'applied':'preview'}.json`,JSON.stringify(report,null,2));

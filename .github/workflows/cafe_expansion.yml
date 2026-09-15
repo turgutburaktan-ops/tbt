@@ -1,11 +1,12 @@
-name: Expand province cafe catalog
+name: Complete cafe expansion with bounded workers
 on:
   push:
-    branches: [codex/cafe-expansion-20260915]
+    branches: [codex/cafe-expansion-parallel-20260915]
 permissions:
   contents: read
+  actions: write
 concurrency:
-  group: cafe-catalog-expansion
+  group: cafe-catalog-expansion-parallel
   cancel-in-progress: false
 jobs:
   expand:
@@ -29,15 +30,30 @@ jobs:
       - run: node --test functions/catalog/cafe_expansion.test.js functions/catalog/schema.test.js
       - run: python3 -m unittest discover -s functions/scripts -p test_overture_cafes.py
       - run: firebase emulators:exec --only firestore --project demo-tbt "node --test functions/catalog/seed.test.js functions/catalog/store.test.js" --non-interactive
-      - run: pip install overturemaps 'shapely>=2.1,<3'
-      - name: Download source records and province polygons
+      - name: Stop the superseded serial import and reuse its validated manifest
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
+          python3 - <<'PY'
+          import json, os, time, urllib.request, urllib.error
+          url='https://api.github.com/repos/turgutburaktan-ops/tbt/actions/runs/34972077344'
+          headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json'}
+          def status():
+              with urllib.request.urlopen(urllib.request.Request(url,headers=headers),timeout=30) as r:
+                  return json.load(r)['status']
+          if status() != 'completed':
+              try:
+                  urllib.request.urlopen(urllib.request.Request(url+'/cancel',headers=headers,method='POST'),timeout=30).close()
+              except urllib.error.HTTPError as e:
+                  if e.code != 409: raise
+          for attempt in range(60):
+              if status() == 'completed': break
+              time.sleep(2)
+          else: raise RuntimeError('Previous writer has not stopped; refusing concurrent import')
+          PY
           mkdir -p build/cafe-expansion
-          pip freeze > build/cafe-expansion/python-packages.txt
-          overturemaps download --bbox=25.4,35.4,45.1,42.3 -f geojsonseq --type=division_area -o build/cafe-expansion/boundaries.geojsonseq
-          overturemaps download --bbox=25.4,35.4,45.1,42.3 -f geojsonseq --type=place -o build/cafe-expansion/places.geojsonseq
-      - name: Validate cafe category, confidence and province membership
-        run: python3 functions/scripts/extract_overture_cafes.py build/cafe-expansion/boundaries.geojsonseq build/cafe-expansion/places.geojsonseq build/cafe-expansion/candidates.jsonl
+          gh run download 34972077344 --repo turgutburaktan-ops/tbt -n cafe-expansion-report -D build/cafe-expansion
+          test -s build/cafe-expansion/candidates.jsonl
       - name: Authenticate
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
@@ -54,8 +70,6 @@ jobs:
           PY
       - name: Preview additions against existing and removed businesses
         run: node functions/scripts/expand_cafe_catalog.js build/cafe-expansion/candidates.jsonl
-      - name: Preserve source attribution in existing catalog triggers
-        run: firebase deploy --only functions:catalogBusinessWritten,functions:catalogExternalWritten --project en-iyi-cekim-noktasi --non-interactive --force
       - name: Add missing cafes and verify per-province counts
         run: node functions/scripts/expand_cafe_catalog.js build/cafe-expansion/candidates.jsonl --apply
       - name: Verify complete shared catalog
