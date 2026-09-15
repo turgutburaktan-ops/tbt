@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Verify app POST for dining and cafes
+      - name: Verify GET for dining and cafes
         shell: python
         run: |
           import urllib.request, urllib.parse, json, time, concurrent.futures
@@ -18,7 +18,7 @@ jobs:
             q='[out:json][timeout:45];area["ISO3166-2"="TR-23"]["admin_level"="4"]->.province;.province out ids;('+''.join('nwr(area.province)'+f+'["name"];' for f in filters)+');out center tags;'
             start=time.monotonic()
             try:
-              request=urllib.request.Request('https://overpass.kumi.systems/api/interpreter',data=urllib.parse.urlencode({'data':q}).encode(),headers={'User-Agent':'TBT-mobile/0.1 (city places)','Accept':'application/json'})
+              request=urllib.request.Request('https://overpass.kumi.systems/api/interpreter?'+urllib.parse.urlencode({'data':q}),headers={'User-Agent':'TBT-mobile/0.1 (city places)','Accept':'application/json'})
               with urllib.request.urlopen(request, timeout=60) as r: d=json.load(r)
               e=d.get('elements',[])
               print(json.dumps({'category':category,'seconds':round(time.monotonic()-start,1),'remark':d.get('remark'),'boundary':any(x.get('type')=='area' for x in e),'count':sum(bool(x.get('tags',{}).get('name')) for x in e)},ensure_ascii=False),flush=True)
