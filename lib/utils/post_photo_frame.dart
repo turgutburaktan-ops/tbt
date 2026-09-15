@@ -30,10 +30,10 @@ class PostPhotoFrame {
     final width = math.min(area.width, area.height * postPhotoAspectRatio);
     final frame = Rect.fromCenter(center: area.center, width: width, height: width / postPhotoAspectRatio);
     return PostPhotoFrame(frame, Rect.fromLTWH(
-      (frame.left - projected.left) / projected.width,
-      (frame.top - projected.top) / projected.height,
-      frame.width / projected.width,
-      frame.height / projected.height,
+      ((frame.left - projected.left) / projected.width).clamp(0.0, 1.0).toDouble(),
+      ((frame.top - projected.top) / projected.height).clamp(0.0, 1.0).toDouble(),
+      (frame.width / projected.width).clamp(0.0, 1.0).toDouble(),
+      (frame.height / projected.height).clamp(0.0, 1.0).toDouble(),
     ));
   }
 }

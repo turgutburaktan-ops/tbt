@@ -46,13 +46,14 @@ class _MainCameraScreenState extends State<MainCameraScreen> {
   bool _showGrid = false;
   bool _storyVideo = false;
   bool _captureInFlight = false;
+  bool _switchingSensor = false;
   PostPhotoFrame? _photoFrame;
   Rect? _pendingPhotoSource;
   int _pendingPreviewTurns = 0;
   CameraOrientations _orientation = CameraOrientations.portrait_up;
   StreamSubscription<CameraOrientations>? _orientationSubscription;
 
-  bool get _cameraBusy => _handlingCapture || _openingGallery || _captureInFlight;
+  bool get _cameraBusy => _handlingCapture || _openingGallery || _captureInFlight || _switchingSensor;
 
   int get _previewTurns => switch (_orientation) {
     CameraOrientations.portrait_up => 0,
@@ -129,6 +130,21 @@ class _MainCameraScreenState extends State<MainCameraScreen> {
       _recordedSeconds = 0;
     });
     cameraState.setState(video ? CaptureMode.video : CaptureMode.photo);
+  }
+
+  Future<void> _switchSensor(CameraState state) async {
+    if (_cameraBusy || _recordingState != null) return;
+    setState(() => _switchingSensor = true);
+    try {
+      await state.switchCameraSensor(
+        aspectRatio: _mode == CameraShareMode.photo ? state.sensorConfig.aspectRatio : null,
+      );
+      await WidgetsBinding.instance.endOfFrame;
+    } catch (error) {
+      _message(userFacingError(error));
+    } finally {
+      if (mounted) setState(() => _switchingSensor = false);
+    }
   }
 
   Future<void> _capture(CameraState cameraState) async {
@@ -437,6 +453,7 @@ class _MainCameraScreenState extends State<MainCameraScreen> {
             ),
             onGallery: _openGallery,
             onCapture: () => _capture(cameraState),
+            onSwitchSensor: () => _switchSensor(cameraState),
             onStoryMediaSelected: (video) =>
                 _selectStoryMedia(video, cameraState),
             onToggleGrid: () => setState(() => _showGrid = !_showGrid),
@@ -462,6 +479,7 @@ class _CameraOverlay extends StatelessWidget {
   final VoidCallback onImport;
   final VoidCallback onGallery;
   final VoidCallback onCapture;
+  final VoidCallback onSwitchSensor;
   final ValueChanged<bool> onStoryMediaSelected;
   final VoidCallback onToggleGrid;
   final ValueChanged<CameraShareMode> onModeSelected;
@@ -479,6 +497,7 @@ class _CameraOverlay extends StatelessWidget {
     required this.onImport,
     required this.onGallery,
     required this.onCapture,
+    required this.onSwitchSensor,
     required this.onStoryMediaSelected,
     required this.onToggleGrid,
     required this.onModeSelected,
@@ -584,7 +603,7 @@ class _CameraOverlay extends StatelessWidget {
                     ),
                     _GlassButton(
                       icon: Icons.flash_auto_rounded,
-                      onTap: recording
+                      onTap: recording || busy
                           ? null
                           : () => state.sensorConfig.switchCameraFlash(),
                     ),
@@ -684,7 +703,7 @@ class _CameraOverlay extends StatelessWidget {
                           icon: Icons.cameraswitch_rounded,
                           onTap: recording || busy
                               ? null
-                              : () => state.switchCameraSensor(),
+                              : onSwitchSensor,
                         ),
                       ),
                     ),
