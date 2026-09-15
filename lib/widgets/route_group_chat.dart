@@ -1,3 +1,6 @@
+import '../models/nearby_venue.dart';
+import '../screens/business_profile_screen.dart';
+
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -407,6 +410,35 @@ class _RouteGroupChatState extends State<RouteGroupChat> {
       );
     },
   );
+  Future<void> _openProposal(Map<String, dynamic> data) async {
+    final snapshot = data['stopSnapshot'];
+    final venue = snapshot is Map ? snapshot['venue'] : null;
+    if (venue is Map) {
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => BusinessProfileScreen(
+            venue: NearbyVenue.fromJson(Map<String, dynamic>.from(venue)),
+          ),
+        ),
+      );
+      return;
+    }
+    final lat =
+        data['latitude'] ?? (snapshot is Map ? snapshot['latitude'] : null);
+    final lng =
+        data['longitude'] ?? (snapshot is Map ? snapshot['longitude'] : null);
+    if (lat is! num || lng is! num) throw Exception('Durak konumu bulunamadı.');
+    if (!await launchUrl(
+      Uri.https('www.google.com', '/maps/search/', {
+        'api': '1',
+        'query': '$lat,$lng',
+      }),
+      mode: LaunchMode.externalApplication,
+    ))
+      throw Exception('Harita açılamadı.');
+  }
+
   Widget _proposal(QueryDocumentSnapshot<Map<String, dynamic>> doc) {
     final d = doc.data();
     final voters = List<String>.from(d['voterIds'] as List? ?? []);
@@ -493,11 +525,24 @@ class _RouteGroupChatState extends State<RouteGroupChat> {
                 errorBuilder: (_, __, ___) => const SizedBox.shrink(),
               ),
             ),
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            child: Text(
-              '${d['text']}',
-              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 17),
+          InkWell(
+            onTap: () => _act('open-${doc.id}', () => _openProposal(d)),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      '${d['text']}',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 17,
+                      ),
+                    ),
+                  ),
+                  const Icon(Icons.chevron_right, size: 18),
+                ],
+              ),
             ),
           ),
           Text(

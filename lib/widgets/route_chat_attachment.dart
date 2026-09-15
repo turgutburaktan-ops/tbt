@@ -74,6 +74,7 @@ class _RouteChatAttachmentState extends State<RouteChatAttachment> {
         await directory.delete(recursive: true);
         return;
       }
+      _directory = directory;
       if (d['type'] == 'video') {
         final controller = VideoPlayerController.file(file);
         _video = controller;
