@@ -1,7 +1,7 @@
 name: best_photo_spot
 description: Smart photography assistant MVP.
 publish_to: "none"
-version: 1.0.18+35
+version: 1.0.19+47
 
 environment:
   sdk: ">=3.7.0 <4.0.0"
