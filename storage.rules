@@ -65,7 +65,7 @@ service firebase.storage {
         return signedIn() && firestore.get(/databases/(default)/documents/travel_plans/$(planId)).data.memberIds.hasAny([request.auth.uid]);
       }
       allow read: if participant();
-      allow create: if participant() && isOwner(uid) && safeAudioWrite() && request.resource.contentType == 'audio/mp4';
+      allow create: if resource == null && participant() && isOwner(uid) && safeAudioWrite() && request.resource.contentType == 'audio/mp4';
       allow update: if false;
       allow delete: if participant() && isOwner(uid);
     }
