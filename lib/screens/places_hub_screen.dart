@@ -198,6 +198,7 @@ class _PlacesHubScreenState extends State<PlacesHubScreen> {
         _loaded.add(index);
         _cursors[index] = page.nextCursor;
         _sourceStatus[index] = page.sourceStatus;
+        if (page.fromCache) _errors.add(index);
         if (index == 0) {
           _spots = [if (next) ..._spots, ...page.items.map((r) => r.spot)];
         } else {

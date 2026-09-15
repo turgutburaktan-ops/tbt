@@ -7,6 +7,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '../models/photo_spot.dart';
 import '../services/route_itinerary_service.dart';
+import '../services/route_map_candidates.dart';
 import '../theme/app_theme.dart';
 
 /// A real map: road geometry is drawn only when the routing service returns it.
@@ -41,9 +42,34 @@ class _RouteEditorMapState extends State<RouteEditorMap> {
   int _cardGeneration = 0;
   final _cardIcons = <String, BitmapDescriptor>{};
   String _cardSignature = '';
+  LatLngBounds? _visibleBounds;
+  LatLng? _cameraTarget;
+  List<PhotoSpot> get _visibleCandidates {
+    final center = _cameraTarget ?? widget.center ?? const LatLng(39, 35);
+    return routeMapCandidates(
+      widget.candidates,
+      latitude: center.latitude,
+      longitude: center.longitude,
+      south: _visibleBounds?.southwest.latitude,
+      north: _visibleBounds?.northeast.latitude,
+      west: _visibleBounds?.southwest.longitude,
+      east: _visibleBounds?.northeast.longitude,
+    );
+  }
+
+  Future<void> _refreshVisibleCards() async {
+    try {
+      final bounds = await _controller?.getVisibleRegion();
+      if (!mounted || bounds == null) return;
+      setState(() => _visibleBounds = bounds);
+      await _makeCards();
+    } catch (_) {
+      /* The map may detach during a camera update. */
+    }
+  }
 
   Future<void> _makeCards() async {
-    final candidates = List<PhotoSpot>.of(widget.candidates);
+    final candidates = _visibleCandidates;
     final keys = candidates.map(PlaceMarkerCard.cacheKey).toSet();
     final signature = keys.join('\u0001');
     if (signature == _cardSignature) return;
@@ -199,12 +225,14 @@ class _RouteEditorMapState extends State<RouteEditorMap> {
     rotateGesturesEnabled: widget.interactive,
     tiltGesturesEnabled: false,
     onTap: widget.onMapTap,
+    onCameraMove: (position) => _cameraTarget = position.target,
+    onCameraIdle: _refreshVisibleCards,
     onMapCreated: (controller) {
       _controller = controller;
       _fit();
     },
     markers: {
-      for (final spot in widget.candidates.where(
+      for (final spot in _visibleCandidates.where(
         (s) => !widget.stops.any((p) => p.id == s.id),
       ))
         Marker(
