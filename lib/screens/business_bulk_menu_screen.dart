@@ -10,7 +10,7 @@ int? menuPriceMinor(String input) {
   final value=input.trim().replaceAll(',', '.');
   if(!RegExp(r'^\d+(\.\d{1,2})?$').hasMatch(value))return null;
   final parts=value.split('.'),whole=int.tryParse(parts.first);
-  if(whole==null)return null;
+  if(whole==null||whole>1000000)return null;
   final minor=whole*100+(parts.length==2?int.parse(parts[1].padRight(2,'0')):0);
   return minor<=100000000?minor:null;
 }
