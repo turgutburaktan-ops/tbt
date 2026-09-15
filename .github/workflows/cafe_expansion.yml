@@ -1,0 +1,71 @@
+name: Expand province cafe catalog
+on:
+  push:
+    branches: [codex/cafe-expansion-20260915]
+permissions:
+  contents: read
+concurrency:
+  group: cafe-catalog-expansion
+  cancel-in-progress: false
+jobs:
+  expand:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - run: npm install --prefix functions
+      - run: npm install --prefix functions --no-save @firebase/rules-unit-testing firebase
+      - run: npm install -g firebase-tools
+      - run: node --test functions/catalog/cafe_expansion.test.js functions/catalog/schema.test.js
+      - run: python3 -m unittest discover -s functions/scripts -p test_overture_cafes.py
+      - run: firebase emulators:exec --only firestore --project demo-tbt "node --test functions/catalog/seed.test.js functions/catalog/store.test.js" --non-interactive
+      - run: pip install overturemaps 'shapely>=2.1,<3'
+      - name: Download source records and province polygons
+        run: |
+          mkdir -p build/cafe-expansion
+          pip freeze > build/cafe-expansion/python-packages.txt
+          overturemaps download --bbox=25.4,35.4,45.1,42.3 -f geojsonseq --type=division_area -o build/cafe-expansion/boundaries.geojsonseq
+          overturemaps download --bbox=25.4,35.4,45.1,42.3 -f geojsonseq --type=place -o build/cafe-expansion/places.geojsonseq
+      - name: Validate cafe category, confidence and province membership
+        run: python3 functions/scripts/extract_overture_cafes.py build/cafe-expansion/boundaries.geojsonseq build/cafe-expansion/places.geojsonseq build/cafe-expansion/candidates.jsonl
+      - name: Authenticate
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          value=json.loads(os.environ['FIREBASE_SERVICE_ACCOUNT'])
+          target=Path(os.environ['RUNNER_TEMP'])/'cafe-service-account.json'
+          target.write_text(json.dumps(value)); target.chmod(0o600)
+          with open(os.environ['GITHUB_ENV'],'a') as f:
+              f.write(f'GOOGLE_APPLICATION_CREDENTIALS={target}\n')
+              f.write('GCLOUD_PROJECT=en-iyi-cekim-noktasi\n')
+          PY
+      - name: Preview additions against existing and removed businesses
+        run: node functions/scripts/expand_cafe_catalog.js build/cafe-expansion/candidates.jsonl
+      - name: Preserve source attribution in existing catalog triggers
+        run: firebase deploy --only functions:catalogBusinessWritten,functions:catalogExternalWritten --project en-iyi-cekim-noktasi --non-interactive --force
+      - name: Add missing cafes and verify per-province counts
+        run: node functions/scripts/expand_cafe_catalog.js build/cafe-expansion/candidates.jsonl --apply
+      - name: Verify complete shared catalog
+        run: node functions/scripts/verify_place_catalog.js
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cafe-expansion-report
+          path: |
+            build/cafe-expansion/*.json
+            build/cafe-expansion/*.jsonl
+            build/cafe-expansion/python-packages.txt
+          retention-days: 30
