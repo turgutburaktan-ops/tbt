@@ -64,12 +64,16 @@ void main() {
     });
     await tester.pumpAndSettle();
     expect(find.byType(Image), findsOneWidget);
+    final beforeDrag = tester.getTopLeft(find.byType(Image)).dy;
     await tester.drag(find.byType(Image), const Offset(0, 80));
     await tester.pump();
+    expect(tester.getTopLeft(find.byType(Image)).dy, greaterThan(beforeDrag));
     await tester.tap(find.text('Sıfırla'));
     await tester.pump();
     await tester.tap(find.text('Tamam'));
     await tester.pumpAndSettle();
+    await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 20)));
+    expect(selected, isNotNull);
     expect(selected!.left, closeTo(initial.left, 1e-10));
     expect(selected!.top, closeTo(initial.top, 1e-10));
     expect(selected!.width, closeTo(initial.width, 1e-10));
