@@ -3,7 +3,9 @@ const {doc,setDoc,getDoc,updateDoc,serverTimestamp,writeBatch}=require('firebase
 const {ref,uploadBytes,getBytes}=require('firebase/storage');
 (async()=>{
  const env=await initializeTestEnvironment({projectId:'demo-tbt',firestore:{host:'127.0.0.1',port:8080},storage:{host:'127.0.0.1',port:9199}});
- const db=uid=>env.authenticatedContext(uid).firestore(), st=uid=>env.authenticatedContext(uid).storage();
+ const contexts=new Map();
+ const context=uid=>{if(!contexts.has(uid))contexts.set(uid,env.authenticatedContext(uid));return contexts.get(uid);};
+ const db=uid=>context(uid).firestore(), st=uid=>context(uid).storage();
  try {
   await env.withSecurityRulesDisabled(c=>setDoc(doc(c.firestore(),'travel_plans/chat'),{ownerId:'owner',memberIds:['owner','member'],isPublic:true}));
   const path='route_chat/chat/member/voice/audio.m4a';
