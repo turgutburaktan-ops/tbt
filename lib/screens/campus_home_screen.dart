@@ -486,6 +486,8 @@ class _EventsSection extends StatelessWidget {
             .limit(100)
             .snapshots(),
         builder: (context, eventSnap) {
+          if (communitySnap.hasError || eventSnap.hasError) return const _Empty('Kampüs etkinlikleri yüklenemedi. Tekrar dene.');
+          if (!communitySnap.hasData || !eventSnap.hasData) return const Center(child: CircularProgressIndicator());
           final now = DateTime.now();
           final events = (eventSnap.data?.docs ?? const []).where((doc) {
             final d = doc.data();
@@ -511,7 +513,7 @@ class _EventsSection extends StatelessWidget {
                   'Yaklaşan kampüs etkinliği yok. Çevrende sekmesinden yeni bir etkinlik oluşturabilirsin.',
                 )
               else
-                ...events.take(5).map((doc) {
+                ...events.map((doc) {
                   final d = doc.data();
                   final dt = (d['startsAt'] as Timestamp).toDate().toLocal();
                   return InkWell(

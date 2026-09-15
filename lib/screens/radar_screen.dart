@@ -1,3 +1,4 @@
+import '../widgets/event_list_card.dart';
 import '../utils/event_presentation.dart';
 import '../models/travel_plan.dart';
 import '../services/travel_plan_service.dart';
@@ -298,7 +299,7 @@ class _RadarScreenState extends State<RadarScreen> {
                       else if (!eventSnapshot.hasData)
                         const Center(child: CircularProgressIndicator())
                       else if (events.isEmpty)
-                        _eventRail(const [])
+                        _emptyEvents()
                       else ...[
                         for (final event in events.take(_eventLimit))
                           Padding(padding: const EdgeInsets.only(bottom: 10), child: _eventCard(event)),
@@ -526,8 +527,7 @@ class _RadarScreenState extends State<RadarScreen> {
     );
   }
 
-  Widget _eventRail(List<SocialEvent> events) {
-    if (events.isEmpty) {
+  Widget _emptyEvents() {
       return Container(
         padding: const EdgeInsets.all(15),
         decoration: BoxDecoration(
@@ -540,149 +540,15 @@ class _RadarScreenState extends State<RadarScreen> {
           style: TextStyle(color: Colors.white54, height: 1.35),
         ),
       );
-    }
-    return SizedBox(
-      height: 190,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: events.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 9),
-        itemBuilder: (context, index) => _eventCard(events[index]),
-      ),
-    );
+
   }
 
   Widget _eventCard(SocialEvent event) {
     final uid = FirebaseAuth.instance.currentUser?.uid;
-    final joined =
-        uid != null &&
-        (event.hostId == uid || event.participantIds.contains(uid));
-    final loading = _joiningEventId == event.id;
-    final remaining = event.remainingSlots.clamp(0, event.capacity);
-    return SizedBox(
-      width: double.infinity,
-      child: Material(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(17),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(17),
-          onTap: () => _openEvent(event),
-          child: Container(
-            padding: const EdgeInsets.all(13),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(17),
-              border: Border.all(color: AppColors.border),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    ClipRRect(borderRadius: BorderRadius.circular(12), child: SizedBox(width: 56, height: 56,
-                      child: event.coverImageUrl.isNotEmpty
-                        ? Image.network(event.coverImageUrl, fit: BoxFit.cover, errorBuilder: (_, __, ___) => Icon(_eventIcon(event.type), color: AppColors.cyan))
-                        : ColoredBox(color: AppColors.surfaceStrong, child: Icon(_eventIcon(event.type), color: AppColors.cyan)),
-                    )),
-                    const SizedBox(width: 9),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            _timeUntil(event.startsAt),
-                            style: const TextStyle(
-                              color: AppColors.cyan,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w900,
-                            ),
-                          ),
-                          Text(
-                            event.locationLabel.isEmpty ? event.city : event.locationLabel,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: Colors.white54,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  event.title,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w900,
-                    height: 1.15,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.groups_2_outlined,
-                      size: 14,
-                      color: Colors.white38,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${event.participantCount}/${event.capacity}',
-                      style: const TextStyle(
-                        color: Colors.white54,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    if (remaining <= 2 && remaining > 0) ...[
-                      const SizedBox(width: 7),
-                      Text(
-                        'Son $remaining yer',
-                        style: const TextStyle(
-                          color: Colors.orangeAccent,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-                const SizedBox(height: 9),
-                SizedBox(
-                  width: double.infinity,
-                  height: 35,
-                  child: FilledButton(
-                    onPressed: loading || (event.isFull && !joined)
-                        ? null
-                        : () => _joinNow(event),
-                    child: loading
-                        ? const SizedBox(
-                            width: 15,
-                            height: 15,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : Text(
-                            joined
-                                ? 'Detayları Gör'
-                                : event.isFull
-                                ? 'Dolu'
-                                : 'Ben de Geliyorum',
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w900,
-                            ),
-                          ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+    return EventListCard(event: event,
+      joined: uid != null && (event.hostId == uid || event.participantIds.contains(uid)),
+      busy: _joiningEventId == event.id,
+      onOpen: () => _openEvent(event), onJoin: () => _joinNow(event), icon: _eventIcon(event.type),
     );
   }
 

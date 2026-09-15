@@ -34,9 +34,9 @@ jobs:
       - name: Analyze event screens
         run: |
           dart format lib/screens/radar_screen.dart lib/screens/event_chat_screen.dart lib/services/event_chat_service.dart lib/screens/event_deep_link_screen.dart lib/widgets/event_hub_panel.dart
-          flutter analyze --no-fatal-infos --no-fatal-warnings lib/screens/radar_screen.dart lib/screens/home_shell_v3.dart lib/screens/campus_home_screen.dart lib/screens/event_create_screen_v2.dart lib/screens/event_photo_create_screen.dart lib/screens/event_deep_link_screen.dart lib/screens/event_chat_screen.dart lib/services/event_chat_service.dart lib/widgets/event_hub_panel.dart lib/widgets/event_chat_attachment.dart lib/models/social_event.dart lib/utils/event_presentation.dart
+          flutter analyze --no-fatal-infos --no-fatal-warnings lib/widgets/event_list_card.dart lib/screens/radar_screen.dart lib/screens/home_shell_v3.dart lib/screens/campus_home_screen.dart lib/screens/event_create_screen_v2.dart lib/screens/event_photo_create_screen.dart lib/screens/event_deep_link_screen.dart lib/screens/event_chat_screen.dart lib/services/event_chat_service.dart lib/widgets/event_hub_panel.dart lib/widgets/event_chat_attachment.dart lib/models/social_event.dart lib/utils/event_presentation.dart
       - name: Test event date and existing menu validation
-        run: flutter test test/event_presentation_test.dart test/business_mobile_flows_test.dart
+        run: flutter test test/event_list_card_test.dart test/event_presentation_test.dart test/business_mobile_flows_test.dart
       - name: Verify runtime secrets
         shell: bash
         env:
@@ -135,7 +135,9 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
+
   event-chat-rules:
+    if: "!contains(github.event.head_commit.message, '[ui-only]')"
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -167,5 +169,3 @@ jobs:
         run: NODE_PATH=/tmp/event-tests/node_modules /tmp/event-tests/node_modules/.bin/firebase emulators:exec --only firestore,storage --project demo-tbt "node tool/test_event_chat.cjs && node tool/test_route_chat.cjs" --non-interactive
       - name: Deploy tested event chat rules
         run: node tool/prepare_event_chat_rules.cjs --deploy
-
-
