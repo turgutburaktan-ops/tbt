@@ -22,3 +22,22 @@ if marker not in source:
 ''', 1)
     path.write_text(source)
 print('Share plugin Java/Kotlin targets aligned to 11')
+
+# App Links owns URL navigation. The share plugin otherwise emits ACTION_VIEW
+# links as import drafts and covers the destination with "TBT'ye aktar".
+plugin = root / 'android/src/main/kotlin/com/kasem/receive_sharing_intent/ReceiveSharingIntentPlugin.kt'
+source = plugin.read_text()
+marker = '// TBT: URL views belong to app_links'
+if marker not in source:
+    anchor = '    private fun handleIntent(intent: Intent, initial: Boolean) {'
+    if source.count(anchor) != 1:
+        raise RuntimeError('Share plugin intent handler changed')
+    source = source.replace(anchor, anchor + '''
+        // TBT: URL views belong to app_links
+        if (intent.action == Intent.ACTION_VIEW &&
+            intent.data?.scheme?.lowercase() in listOf("https", "http", "tbt")) {
+            return
+        }
+''', 1)
+    plugin.write_text(source)
+print('URL views excluded from media import; SEND and local media preserved')
