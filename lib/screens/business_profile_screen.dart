@@ -18,6 +18,7 @@ import '../widgets/venue_badge_strip.dart';
 import '../widgets/firebase_media_image.dart';
 import '../widgets/venue_reviews_section.dart';
 import 'create_post_screen.dart';
+import 'business_hub_screen.dart';
 import 'post_detail_screen.dart';
 
 class BusinessProfileScreen extends StatelessWidget {
@@ -249,6 +250,18 @@ class BusinessProfileScreen extends StatelessWidget {
                           ],
                         ),
                         const SizedBox(height: 12),
+                        if (!verified)
+                          OutlinedButton.icon(
+                            icon: const Icon(Icons.storefront_outlined),
+                            label: const Text('Bu işletme benim'),
+                            onPressed: () => Navigator.push(context, MaterialPageRoute(
+                              builder: (_) => BusinessHubScreen(
+                                initialCategory: venue.category.name,
+                                initialVenueId: venue.id,
+                                initialVenueName: venue.name,
+                              ),
+                            )),
+                          ),
                         BusinessPublicActions(
                           venueKey: _key,
                           reservationsEnabled: verified,
@@ -1226,3 +1239,4 @@ class _TabHeaderDelegate extends SliverPersistentHeaderDelegate {
   @override
   bool shouldRebuild(covariant _TabHeaderDelegate oldDelegate) => false;
 }
+

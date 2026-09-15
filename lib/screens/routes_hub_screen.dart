@@ -1,3 +1,4 @@
+import '../widgets/route_management_menu.dart';
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -326,15 +327,7 @@ class RoutePreviewCard extends StatelessWidget {
     final summary = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          plan.title,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(
-            fontSize: featured ? 19 : 15,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
+        Row(children:[Expanded(child:Text(plan.title,maxLines:2,overflow:TextOverflow.ellipsis,style:TextStyle(fontSize:featured?19:15,fontWeight:FontWeight.w800))),RouteManagementMenu(plan:plan)]),
         const SizedBox(height: 6),
         Text(
           routeDate(plan),
@@ -524,3 +517,4 @@ class _SavedRoutes extends StatelessWidget {
     );
   }
 }
+

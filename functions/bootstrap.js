@@ -80,3 +80,9 @@ Object.assign(exports, require('./venue_quality'));
 
 Object.assign(exports, require("./admin_operations"));
 Object.assign(exports, require('./place_catalog'));
+
+
+Object.assign(exports, require('./route_membership'));
+
+Object.assign(exports, require('./business_menu_bulk'));
+Object.assign(exports, require('./business_events'));

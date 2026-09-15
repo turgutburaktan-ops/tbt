@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../services/business_service.dart';
 import '../widgets/tbt_dialog.dart';
 
 import 'dart:io';
@@ -18,6 +20,8 @@ import '../widgets/searchable_selection_field.dart';
 import 'event_location_picker_screen.dart';
 
 class EventCreateScreenV2 extends StatefulWidget {
+  final String? businessVenueKey;
+  final String businessVenueName;
   final List<String> initialGroupMembers;
   final bool returnEventId;
   final String initialTitle;
@@ -32,6 +36,8 @@ class EventCreateScreenV2 extends StatefulWidget {
 
   const EventCreateScreenV2({
     super.key,
+    this.businessVenueKey,
+    this.businessVenueName = '',
     this.initialGroupMembers = const [],
     this.returnEventId = false,
     this.initialTitle = '',
@@ -64,6 +70,8 @@ class _EventCreateScreenV2State extends State<EventCreateScreenV2> {
   EventVisibility _visibility = EventVisibility.public;
   Map<String, String> _selectedPeople = {};
   EventLocationSelection? _selectedLocation;
+  final _eventRequestId = FirebaseFirestore.instance.collection('social_events').doc().id;
+  String? _createdEventId;
   bool _saving = false;
   bool _advancedOpen = false;
   String? _error;
@@ -416,7 +424,18 @@ class _EventCreateScreenV2State extends State<EventCreateScreenV2> {
         _visibility,
         selectedUserIds: _selectedPeople.keys.toList(),
       );
-      final eventId = await SocialEventService.instance.create(
+      if (_createdEventId == null) {
+        if (widget.businessVenueKey != null) {
+          final result=await BusinessService.instance.authenticatedCall('createBusinessEvent',{
+            'venueKey':widget.businessVenueKey,'requestId':_eventRequestId,
+            'title':_title.text,'type':_type.name,'customTypeLabel':_customType.text,
+            'startsAtMs':_startsAt.millisecondsSinceEpoch,'capacity':capacity,
+            'city':_city.text,'locationLabel':_location.text,'description':_description.text,
+            'latitude':_selectedLocation!.latitude,'longitude':_selectedLocation!.longitude,
+          });
+          _createdEventId=result['eventId'].toString();
+        } else {
+          _createdEventId = await SocialEventService.instance.create(
         title: _title.text,
         type: _type,
         startsAt: _startsAt,
@@ -432,6 +451,9 @@ class _EventCreateScreenV2State extends State<EventCreateScreenV2> {
         visibility: _visibility,
         allowedUserIds: allowed,
       );
+        }
+      }
+      final eventId=_createdEventId!;
       final ref = FirebaseStorage.instance.ref().child(
         'users/${user.uid}/events/$eventId/cover.jpg',
       );
@@ -469,6 +491,11 @@ class _EventCreateScreenV2State extends State<EventCreateScreenV2> {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(18, 12, 18, 40),
         children: [
+          if (widget.businessVenueKey != null) ...[
+            ListTile(leading:const Icon(Icons.storefront),title:Text(widget.businessVenueName),subtitle:const Text('İşletme adına herkese açık etkinlik')),
+            const SizedBox(height:12),
+          ],
+          if (_createdEventId != null) const Text('Etkinlik kaydedildi. Kapak fotoğrafının yüklenmesini tamamlamak için tekrar dene.'),
           if (_fromTemplate) ...[
             Container(
               padding: const EdgeInsets.all(13),
@@ -548,6 +575,9 @@ class _EventCreateScreenV2State extends State<EventCreateScreenV2> {
             ),
           ),
           const SizedBox(height: 12),
+          AbsorbPointer(
+            absorbing: _saving || _createdEventId != null,
+            child: Column(children: [
           TextField(
             controller: _title,
             decoration: const InputDecoration(
@@ -672,7 +702,7 @@ class _EventCreateScreenV2State extends State<EventCreateScreenV2> {
                   ),
                 ],
                 const SizedBox(height: 10),
-                DropdownButtonFormField<EventVisibility>(
+                if (widget.businessVenueKey == null) DropdownButtonFormField<EventVisibility>(
                   initialValue: _visibility,
                   isExpanded: true,
                   decoration: const InputDecoration(
@@ -742,6 +772,8 @@ class _EventCreateScreenV2State extends State<EventCreateScreenV2> {
               ],
             ),
           ),
+            ]),
+          ),
           if (_error != null) ...[
             const SizedBox(height: 10),
             Text(_error!, style: const TextStyle(color: Colors.redAccent)),
@@ -766,3 +798,4 @@ class _EventCreateScreenV2State extends State<EventCreateScreenV2> {
     );
   }
 }
+
