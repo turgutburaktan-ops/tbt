@@ -65,24 +65,27 @@ class DeepLinkService {
     _recent.clear();
   }
 
-  void _open(Uri uri) {
+  Future<void> openSharedLink(Uri uri) => _open(uri);
+
+  Future<void> _open(Uri uri) async {
     final navigatorKey = _navigatorKey;
     if (navigatorKey == null) return;
     final target = InviteLinkService.instance.parse(uri);
     if (target == null) return;
 
-    final key = uri.toString();
+    final key = '${target.type}/${target.role}/${target.id}';
     if (_recent.contains(key)) return;
     _recent.add(key);
     Future<void>.delayed(const Duration(seconds: 2), () => _recent.remove(key));
 
-    WidgetsBinding.instance.endOfFrame.then((_) {
+    await WidgetsBinding.instance.endOfFrame;
+    {
       final navigator = navigatorKey.currentState;
       if (navigator == null) return;
 
       switch (target.type) {
         case 'role-invite':
-          navigator.push(
+          await navigator.push(
             MaterialPageRoute(
               builder: (_) =>
                   RoleInviteScreen(role: target.role, code: target.id),
@@ -91,7 +94,7 @@ class DeepLinkService {
           break;
         case 'creator':
         case 'creator-profile':
-          navigator.push(
+          await navigator.push(
             MaterialPageRoute(
               builder: (_) => CreatorWelcomeScreen(
                 id: target.id,
@@ -104,41 +107,41 @@ class DeepLinkService {
           startGroupChat(navigator.context, join: true, initialCode: target.id);
           break;
         case 'community':
-          navigator.push(
+          await navigator.push(
             MaterialPageRoute(
               builder: (_) => CommunityProfileScreen(communityId: target.id),
             ),
           );
           break;
         case 'event':
-          navigator.push(
+          await navigator.push(
             MaterialPageRoute(
               builder: (_) => EventDeepLinkScreen(eventId: target.id),
             ),
           );
           break;
         case 'profile':
-          navigator.push(
+          await navigator.push(
             MaterialPageRoute(
               builder: (_) => UserProfileScreen(userId: target.id),
             ),
           );
           break;
         case 'post':
-          navigator.push(
+          await navigator.push(
             MaterialPageRoute(
               builder: (_) => PostDeepLinkScreen(postId: target.id),
             ),
           );
           break;
         case 'spot':
-          navigator.push(
+          await navigator.push(
             MaterialPageRoute(
               builder: (_) => SpotDeepLinkScreen(spotId: target.id),
             ),
           );
           break;
       }
-    });
+    }
   }
 }

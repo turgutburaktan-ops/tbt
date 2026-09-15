@@ -1,3 +1,5 @@
+import 'deep_link_service.dart';
+import 'incoming_tbt_link.dart';
 import 'external_source_url.dart';
 import 'dart:async';
 import 'dart:convert';
@@ -86,7 +88,15 @@ class ExternalShareService {
       if (nav == null) { _open = false; return; }
       final draft = _queue.first;
       try {
-        await nav.push(MaterialPageRoute(builder: (_) => ImportShareScreen(text: draft['text'] as String? ?? '', images: List<String>.from(draft['images'] as List? ?? []), videos: List<String>.from(draft['videos'] as List? ?? []))));
+        final text = draft['text'] as String? ?? '';
+        final images = List<String>.from(draft['images'] as List? ?? []);
+        final videos = List<String>.from(draft['videos'] as List? ?? []);
+        final link = incomingTbtLink(text, hasMedia: images.isNotEmpty || videos.isNotEmpty);
+        if (link != null) {
+          await DeepLinkService.instance.openSharedLink(link);
+        } else {
+          await nav.push(MaterialPageRoute(builder: (_) => ImportShareScreen(text: text, images: images, videos: videos)));
+        }
         _queue.remove(draft);
         await _persist();
         final root = (await getApplicationSupportDirectory()).path;
