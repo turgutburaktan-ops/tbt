@@ -31,3 +31,9 @@ test('imports reject incomplete results and preserve source IDs without importin
   assert.match(query('Elazığ','cafe'),/TR-23/);
   assert.match(query('Düzce','hotel'),/TR-81/);
 });
+test('country-sized imports preserve identities and nearby duplicates without quadratic name scans',{timeout:10000},()=>{
+  const elements=Array.from({length:10000},(_,i)=>({type:'node',id:i+1,lat:38.67,lon:39.22,tags:{name:`Mekân ${i}`}}));
+  const duplicates=elements.slice(0,1000).map(e=>({...e,id:e.id+10000}));
+  const rows=decode({elements:[{type:'area'},...elements,...duplicates]},'Elazığ','cafe');
+  assert.equal(rows.length,10000);assert.equal(rows[0].venueId,'node-1');assert.equal(rows.at(-1).venueId,'node-10000');
+});
