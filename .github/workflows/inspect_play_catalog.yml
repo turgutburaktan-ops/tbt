@@ -1,0 +1,19 @@
+name: Inspect Play catalog release target
+on:
+  push:
+    branches: [codex/inspect-play-catalog-20260915]
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Read existing Play tracks and bundles
+        env:
+          PLAY_CREDENTIAL: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: node tool/inspect_play_catalog.cjs
