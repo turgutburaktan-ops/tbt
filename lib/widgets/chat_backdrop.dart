@@ -19,17 +19,18 @@ class ChatTravelPatternPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final line = Paint()
-      ..color = const Color(0x249FC7FF)
+      ..color = const Color(0x127EAAA3)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.2
+      ..strokeWidth = 1.0
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round;
     canvas.save();
     canvas.clipRect(Offset.zero & size);
-    for (double y = -20; y < size.height; y += 164) {
-      for (double x = -30; x < size.width; x += 184) {
+    for (double y = -20; y < size.height; y += 180) {
+      for (double x = -30; x < size.width; x += 190) {
         canvas.save();
         canvas.translate(x, y);
+        canvas.scale(.72);
         // Mountain outline and snow cap.
         canvas.drawPath(
           Path()

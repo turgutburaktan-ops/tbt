@@ -1,3 +1,4 @@
+import '../widgets/story_editor_tools.dart';
 import '../widgets/profile_name_link.dart';
 import 'package:video_compress/video_compress.dart';
 
@@ -876,6 +877,25 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
     );
   }
 
+  void _openTools() => showStoryEditorTools(context, [
+    if (!widget.videoMode)
+      StoryEditorTool(Icons.auto_awesome_mosaic_outlined, 'Şablon', _openContextTemplates),
+    if (widget.videoMode) ...[
+      StoryEditorTool(Icons.content_cut, 'Videoyu kırp', _trimVideo),
+      StoryEditorTool(_videoMuted ? Icons.volume_off : Icons.volume_up,
+        _videoMuted ? 'Video sesini aç' : 'Video sesini kapat',
+        () => setState(() => _videoMuted = !_videoMuted)),
+    ],
+    StoryEditorTool(Icons.text_fields_rounded, 'Yazı', _openText),
+    if (_musicFeatureVisible) StoryEditorTool(Icons.music_note_rounded, 'Müzik', _openMusicPicker),
+    StoryEditorTool(Icons.emoji_emotions_outlined, 'Emoji', _openEmojiPicker),
+    StoryEditorTool(Icons.alternate_email_rounded, 'Bahset', _openMentionPicker),
+    if (!widget.videoMode) StoryEditorTool(Icons.grid_view_rounded, 'Yerleşim', _chooseLayout),
+    StoryEditorTool(Icons.add_photo_alternate_outlined, 'Fotoğraf ekle', _addPhotos),
+    StoryEditorTool(Icons.draw_outlined, 'Çiz', _toggleDraw),
+    if (!widget.videoMode) StoryEditorTool(Icons.crop_free_rounded, 'Kadraj', _toggleBackground, enabled: _layoutCount == 0),
+  ]);
+
   Widget _chrome() {
     return Positioned.fill(
       child: SafeArea(
@@ -893,70 +913,10 @@ class _StoryPhotoEditorScreenState extends State<StoryPhotoEditorScreen> {
               if (!_drawing && !_editingBackground)
                 Align(
                   alignment: Alignment.topRight,
-                  child: SingleChildScrollView(
-                    child: Column(
-                      children: <Widget>[
-                        if (!widget.videoMode)
-                          _Tool(
-                            Icons.auto_awesome_mosaic_outlined,
-                            'Şablon',
-                            _openContextTemplates,
-                          ),
-                        const SizedBox(height: 7),
-                        if (widget.videoMode) ...[
-                          _Tool(Icons.content_cut, 'Kırp', _trimVideo),
-                          _Tool(
-                            _videoMuted ? Icons.volume_off : Icons.volume_up,
-                            'Ses',
-                            () => setState(() => _videoMuted = !_videoMuted),
-                          ),
-                        ],
-                        _Tool(Icons.text_fields_rounded, 'Yazı', _openText),
-                        const SizedBox(height: 7),
-                        if (_musicFeatureVisible) ...[
-                          _Tool(
-                            Icons.music_note_rounded,
-                            'Müzik',
-                            _openMusicPicker,
-                          ),
-                          const SizedBox(height: 7),
-                        ],
-                        _Tool(
-                          Icons.emoji_emotions_outlined,
-                          'Emoji',
-                          _openEmojiPicker,
-                        ),
-                        const SizedBox(height: 7),
-                        _Tool(
-                          Icons.alternate_email_rounded,
-                          'Bahset',
-                          _openMentionPicker,
-                        ),
-                        const SizedBox(height: 7),
-                        if (!widget.videoMode)
-                          _Tool(
-                            Icons.grid_view_rounded,
-                            'Yerleşim',
-                            _chooseLayout,
-                          ),
-                        const SizedBox(height: 7),
-                        _Tool(
-                          Icons.add_photo_alternate_outlined,
-                          'Fotoğraf',
-                          _addPhotos,
-                        ),
-                        const SizedBox(height: 7),
-                        _Tool(Icons.draw_outlined, 'Çiz', _toggleDraw),
-                        const SizedBox(height: 7),
-                        if (!widget.videoMode)
-                          _Tool(
-                            Icons.crop_free_rounded,
-                            'Kadraj',
-                            _toggleBackground,
-                            disabled: _layoutCount > 0,
-                          ),
-                      ],
-                    ),
+                  child: FilledButton.tonalIcon(
+                    onPressed: _sharing ? null : _openTools,
+                    icon: const Icon(Icons.tune_rounded),
+                    label: const Text('Araçlar'),
                   ),
                 ),
               if (_drawing)
@@ -1821,47 +1781,6 @@ class _Painter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _Painter oldDelegate) => true;
-}
-
-class _Tool extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final VoidCallback tap;
-  final bool disabled;
-
-  const _Tool(this.icon, this.label, this.tap, {this.disabled = false});
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: const Color(0xB3121418),
-      borderRadius: BorderRadius.circular(18),
-      child: InkWell(
-        onTap: disabled ? null : tap,
-        borderRadius: BorderRadius.circular(18),
-        child: SizedBox(
-          width: 58,
-          height: 50,
-          child: Opacity(
-            opacity: disabled ? .35 : 1,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                Icon(icon, size: 21),
-                Text(
-                  label,
-                  style: const TextStyle(
-                    fontSize: 9,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 }
 
 class _Round extends StatelessWidget {

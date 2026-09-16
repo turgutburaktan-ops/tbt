@@ -336,10 +336,10 @@ class _TemplateList extends StatelessWidget {
           _TemplateSpec('event_invite', 'Etkinliğe davet', 1, 'Tarih • saat • konum'),
           _TemplateSpec('event_countdown', 'Geri sayım', 1, 'Başlangıca kalan süre'),
           _TemplateSpec('event_schedule', 'Program akışı', 2, 'Saat saat program'),
-          _TemplateSpec('event_last_seats', 'Son kontenjan', 1, 'Harekete geçirici duyuru'),
+          _TemplateSpec('event_last_seats', 'Son kontenjan', 1, 'Son yerleri duyur'),
           _TemplateSpec('event_4_moments', 'Etkinlikten 4 an', 4, 'Dinamik fotoğraf kolajı'),
           _TemplateSpec('event_stage_vibe', 'Sahne + ortam + ekip', 4, 'Atmosfer ve ekip'),
-          _TemplateSpec('event_night_recap', 'Gecenin özeti', 4, 'Editoryal gece özeti'),
+          _TemplateSpec('event_night_recap', 'Gecenin özeti', 4, 'Geceden kalan anlar'),
           _TemplateSpec('event_thank_you', 'Katılanlara teşekkür', 2, 'Etkinlik kapanışı'),
         ];
       case 'venue':
@@ -347,10 +347,10 @@ class _TemplateList extends StatelessWidget {
           _TemplateSpec('venue_daily_menu', 'Günün menüsü', 2, 'Ürün ve fiyat alanı'),
           _TemplateSpec('venue_campaign', 'Kampanya duyurusu', 1, 'İndirim ve son tarih'),
           _TemplateSpec('venue_new_product', 'Yeni ürün', 2, 'Ürün lansmanı'),
-          _TemplateSpec('venue_review', 'Müşteri yorumu', 1, 'Sosyal kanıt kartı'),
+          _TemplateSpec('venue_review', 'Müşteri yorumu', 1, 'Gelen yorumu paylaş'),
           _TemplateSpec('venue_what_i_ate', 'Ne yedim?', 4, 'Lezzet kolajı'),
           _TemplateSpec('venue_vibe_favorite', 'Ortam + favorim', 4, 'Mekan deneyimi'),
-          _TemplateSpec('venue_3_frames', '3 karede mekan', 3, 'Editoryal mekan özeti'),
+          _TemplateSpec('venue_3_frames', '3 karede mekan', 3, 'Mekânı üç fotoğrafla anlat'),
           _TemplateSpec('venue_reservation', 'Rezervasyon çağrısı', 1, 'Saat ve iletişim alanı'),
         ];
       case 'spot':
@@ -367,7 +367,7 @@ class _TemplateList extends StatelessWidget {
       default:
         return const [
           _TemplateSpec('free_minimal', 'Minimal an', 1, 'Temiz tipografi'),
-          _TemplateSpec('free_editorial', 'Editoryal hikâye', 2, 'Dergi görünümü'),
+          _TemplateSpec('free_editorial', 'Dergi tarzı', 2, 'Dergi görünümü'),
           _TemplateSpec('free_polaroid', 'Polaroid günlüğü', 3, 'Analog fotoğraf düzeni'),
           _TemplateSpec('free_day_4', '4 karede günüm', 4, 'Günlük kolaj'),
           _TemplateSpec('free_best_moment', 'Günün en iyi anı', 2, 'Büyük fotoğraf düzeni'),
@@ -384,7 +384,8 @@ class _TemplatePreview extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final slotCount = template.slotCount;
-    final rows = (slotCount / 2).ceil();
+    final columns = slotCount == 1 ? 1 : 2;
+    final rows = (slotCount / columns).ceil();
     final accent = _accent(template.id);
     return ClipRRect(
       borderRadius: BorderRadius.circular(14),
@@ -407,8 +408,8 @@ class _TemplatePreview extends StatelessWidget {
                 rows,
                 (row) => Expanded(
                   child: Row(
-                    children: List.generate(2, (col) {
-                      final index = row * 2 + col;
+                    children: List.generate(columns, (col) {
+                      final index = row * columns + col;
                       if (index >= slotCount) return const Expanded(child: SizedBox());
                       return Expanded(
                         child: Container(

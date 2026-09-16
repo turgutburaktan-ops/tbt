@@ -1,3 +1,4 @@
+import '../theme/map_theme.dart';
 import '../theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -121,6 +122,7 @@ class _EventLocationPickerScreenState extends State<EventLocationPickerScreen> {
       body: Stack(
         children: [
           GoogleMap(
+            style: tbtDarkMapStyle,
             initialCameraPosition: CameraPosition(
               target: _initialTarget,
               zoom: 6,

@@ -73,7 +73,8 @@ class _CategorizedSearchState extends State<CategorizedSearch> {
             },
             onTapOutside: (_) => FocusManager.instance.primaryFocus?.unfocus(),
             decoration: InputDecoration(
-              hintText: _category.hint,
+              hintText: widget.emptyBuilder != null && _controller.text.isEmpty
+                  ? 'Kişi, yer veya mekân ara…' : _category.hint,
               prefixIcon: const Icon(Icons.search_rounded),
               suffixIcon: _controller.text.isEmpty
                   ? null
@@ -102,6 +103,7 @@ class _CategorizedSearchState extends State<CategorizedSearch> {
             ),
           ),
         ),
+        if (widget.emptyBuilder == null || _controller.text.trim().isNotEmpty)
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 14),
           child: Row(

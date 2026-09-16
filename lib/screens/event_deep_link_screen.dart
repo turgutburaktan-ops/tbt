@@ -1,3 +1,4 @@
+import '../theme/map_theme.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../widgets/tbt_dialog.dart';
@@ -140,12 +141,6 @@ class EventDeepLinkScreen extends StatelessWidget {
                           Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const CircleAvatar(
-                                radius: 26,
-                                backgroundColor: AppColors.border,
-                                child: Icon(Icons.event_outlined),
-                              ),
-                              const SizedBox(width: 12),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -167,6 +162,10 @@ class EventDeepLinkScreen extends StatelessWidget {
                                   ],
                                 ),
                               ),
+
+                            ],
+                          ),
+                          Wrap(spacing: 4, children: [
                               IconButton(
                                 tooltip: 'QR',
                                 onPressed: () => Navigator.push(
@@ -195,9 +194,7 @@ class EventDeepLinkScreen extends StatelessWidget {
                                       city: event.city,
                                     ),
                                 icon: const Icon(Icons.ios_share_outlined),
-                              ),
-                            ],
-                          ),
+                              ),                          ]),
                           const SizedBox(height: 18),
                           _Info(
                             icon: Icons.schedule,
@@ -240,6 +237,7 @@ class EventDeepLinkScreen extends StatelessWidget {
                                 icon: const Icon(Icons.map_outlined), label: const Text('Buluşma noktası'),
                                 onPressed: () => showModalBottomSheet<void>(context: context, showDragHandle: true, builder: (_) => SizedBox(
                                   height: 340, child: GoogleMap(
+            style: tbtDarkMapStyle,
                                     initialCameraPosition: CameraPosition(target: LatLng(event.latitude!, event.longitude!), zoom: 16),
                                     markers: {Marker(markerId: const MarkerId('meeting'), position: LatLng(event.latitude!, event.longitude!), infoWindow: InfoWindow(title: event.title, snippet: event.locationLabel))},
                                   ),
