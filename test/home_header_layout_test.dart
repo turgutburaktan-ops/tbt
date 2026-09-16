@@ -27,13 +27,11 @@ void main() {
           child: HomeHeaderLayout(
             leading: const Text('TBT', style: TextStyle(fontSize:19, fontWeight:FontWeight.w900)),
             onCreate: () => taps[0]++,
-            actions: [for (var i = 0; i < 3; i++) IconButton(
-              key: ValueKey('action-$i'),
-              padding: const EdgeInsets.all(8),
-              constraints: const BoxConstraints(minWidth:38, minHeight:38),
-              onPressed: () => taps[i + 1]++,
-              icon: Badge(isLabelVisible:i > 0, label:const Text('99+'),
-                child: Icon([Icons.search_rounded, Icons.notifications_none_rounded, Icons.send_outlined][i], size:20)),
+            actions: [for (var i = 0; i < 3; i++) HomeHeaderAction(
+              tooltip: 'action-$i',
+              onTap: () => taps[i + 1]++,
+              count: i > 0 ? 199 : 0,
+              icon: [Icons.search_rounded, Icons.notifications_none_rounded, Icons.send_outlined][i],
             )],
           ),
         )))));
@@ -43,9 +41,13 @@ void main() {
       expect(tester.getCenter(camera).dx, closeTo(width / 2, .01));
       final cameraButton = find.ancestor(of:camera, matching:find.byType(InkWell));
       expect(tester.getSize(cameraButton), const Size(52,52));
-      expect(tester.getRect(cameraButton).right, lessThanOrEqualTo(tester.getRect(find.byKey(const ValueKey('action-0'))).left));
+      expect(tester.getRect(cameraButton).right, lessThanOrEqualTo(tester.getRect(find.byTooltip('action-0')).left));
+      for (final label in find.text('99+').evaluate()) {
+        final box = label.renderObject! as RenderBox;
+        expect(box.localToGlobal(Offset(box.size.width, 0)).dx, lessThanOrEqualTo(width));
+      }
       await tester.tap(camera);
-      for (var i = 0; i < 3; i++) await tester.tap(find.byKey(ValueKey('action-$i')));
+      for (var i = 0; i < 3; i++) await tester.tap(find.byTooltip('action-$i'));
       expect(taps, [1,1,1,1]);
       await tester.pumpAndSettle();
       await tester.runAsync(() async {

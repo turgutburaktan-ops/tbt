@@ -471,7 +471,7 @@ class _HomeHeader extends StatelessWidget {
         style: TextStyle(fontSize: 19, fontWeight: FontWeight.w900, letterSpacing: -.35))),
     ]) : const SizedBox.shrink(),
     actions: [
-        _HeaderAction(
+        HomeHeaderAction(
           tooltip: 'TBT’de Ara',
           icon: Icons.search_rounded,
           count: 0,
@@ -479,7 +479,7 @@ class _HomeHeader extends StatelessWidget {
         ),
         StreamBuilder<int>(
           stream: AppNotificationService.instance.unreadCount(),
-          builder: (_, s) => _HeaderAction(
+          builder: (_, s) => HomeHeaderAction(
             tooltip: 'Bildirimler',
             icon: Icons.notifications_none_rounded,
             count: s.data ?? 0,
@@ -488,7 +488,7 @@ class _HomeHeader extends StatelessWidget {
         ),
         StreamBuilder<int>(
           stream: ChatService.instance.unreadThreadCount(),
-          builder: (_, s) => _HeaderAction(
+          builder: (_, s) => HomeHeaderAction(
             tooltip: 'Mesajlar',
             icon: Icons.send_outlined,
             count: s.data ?? 0,
@@ -642,34 +642,6 @@ class _SegmentTabs extends StatelessWidget {
   @override
   Widget build(BuildContext context) =>
       AppSectionTabs(labels: labels, selected: selected, onChanged: onChanged);
-}
-
-class _HeaderAction extends StatelessWidget {
-  final String tooltip;
-  final IconData icon;
-  final VoidCallback onTap;
-  final int count;
-  const _HeaderAction({
-    required this.tooltip,
-    required this.icon,
-    required this.onTap,
-    this.count = 0,
-  });
-
-  @override
-  Widget build(BuildContext context) => IconButton(
-    tooltip: tooltip,
-    onPressed: onTap,
-    visualDensity: VisualDensity.compact,
-    constraints: const BoxConstraints(minWidth: 38, minHeight: 38),
-    padding: const EdgeInsets.all(8),
-    icon: Badge(
-      isLabelVisible: count > 0,
-      backgroundColor: AppColors.violet,
-      label: Text(count > 99 ? '99+' : '$count'),
-      child: Icon(icon, color: Colors.white70, size: 20),
-    ),
-  );
 }
 
 class _GradientIcon extends StatelessWidget {

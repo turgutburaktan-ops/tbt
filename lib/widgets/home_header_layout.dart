@@ -48,3 +48,32 @@ class HomeHeaderLayout extends StatelessWidget {
     ]),
   );
 }
+
+class HomeHeaderAction extends StatelessWidget {
+  final String tooltip;
+  final IconData icon;
+  final VoidCallback onTap;
+  final int count;
+  const HomeHeaderAction({
+    required this.tooltip,
+    required this.icon,
+    required this.onTap,
+    this.count = 0,
+  });
+
+  @override
+  Widget build(BuildContext context) => IconButton(
+    tooltip: tooltip,
+    onPressed: onTap,
+    visualDensity: VisualDensity.compact,
+    constraints: const BoxConstraints(minWidth: 38, minHeight: 38),
+    padding: const EdgeInsets.all(8),
+    icon: Badge(
+      isLabelVisible: count > 0,
+      backgroundColor: AppColors.violet,
+      label: Text(count > 99 ? '99+' : '$count', textScaler: TextScaler.noScaling, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700)),
+      child: Icon(icon, color: Colors.white70, size: 20),
+    ),
+  );
+}
+
