@@ -1,3 +1,4 @@
+import '../theme/app_theme.dart';
 import '../models/nearby_venue.dart';
 import '../screens/business_profile_screen.dart';
 
@@ -278,7 +279,7 @@ class _RouteGroupChatState extends State<RouteGroupChat> {
               (Icons.poll_outlined, 'Oylama oluştur', 'poll'),
             ])
               ListTile(
-                leading: Icon(item.$1, color: const Color(0xFF267CFF)),
+                leading: Icon(item.$1, color: AppColors.primary),
                 title: Text(item.$2),
                 onTap: () => Navigator.pop(c, item.$3),
               ),
@@ -332,7 +333,7 @@ class _RouteGroupChatState extends State<RouteGroupChat> {
       final label = meeting is Map ? meeting['label']?.toString() : null;
       final d = widget.plan.startAt.toLocal();
       return Material(
-        color: const Color(0xFF14161B),
+        color: AppColors.surface,
         child: InkWell(
           onTap: () => DefaultTabController.of(context).animateTo(0),
           child: Padding(
@@ -342,12 +343,12 @@ class _RouteGroupChatState extends State<RouteGroupChat> {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF232039),
+                    color: AppColors.selection,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Icon(
                     Icons.route_rounded,
-                    color: Color(0xFF9828FF),
+                    color: AppColors.primary,
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -451,9 +452,9 @@ class _RouteGroupChatState extends State<RouteGroupChat> {
       margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFF171923),
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFF3A2B54)),
+        border: Border.all(color: AppColors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -462,7 +463,7 @@ class _RouteGroupChatState extends State<RouteGroupChat> {
             children: [
               const Icon(
                 Icons.add_location_alt_outlined,
-                color: Color(0xFFB99AFF),
+                color: AppColors.primary,
                 size: 18,
               ),
               const SizedBox(width: 8),
@@ -680,7 +681,7 @@ class _RouteGroupChatState extends State<RouteGroupChat> {
       return c != 0 ? c : a.$2.id.compareTo(b.$2.id);
     });
     return ColoredBox(
-      color: const Color(0xFF08090B),
+      color: AppColors.background,
       child: Column(
         children: [
           _summary(),
@@ -705,7 +706,7 @@ class _RouteGroupChatState extends State<RouteGroupChat> {
                                 Icon(
                                   Icons.forum_outlined,
                                   size: 36,
-                                  color: Color(0xFF9828FF),
+                                  color: AppColors.primary,
                                 ),
                                 SizedBox(height: 14),
                                 Text(
@@ -756,8 +757,8 @@ class _RouteGroupChatState extends State<RouteGroupChat> {
           ),
           Container(
             decoration: const BoxDecoration(
-              color: Color(0xFF14161B),
-              border: Border(top: BorderSide(color: Color(0xFF262832))),
+              color: AppColors.surface,
+              border: Border(top: BorderSide(color: AppColors.border)),
             ),
             child: SafeArea(
               top: false,
@@ -772,7 +773,7 @@ class _RouteGroupChatState extends State<RouteGroupChat> {
                           const Icon(
                             Icons.reply,
                             size: 18,
-                            color: Color(0xFF9828FF),
+                            color: AppColors.primary,
                           ),
                           const SizedBox(width: 8),
                           Expanded(
@@ -798,7 +799,7 @@ class _RouteGroupChatState extends State<RouteGroupChat> {
                           onPressed: _busy ? null : _plus,
                           icon: const Icon(
                             Icons.add_circle_outline,
-                            color: Color(0xFF267CFF),
+                            color: AppColors.primary,
                           ),
                         ),
                         Expanded(
@@ -813,7 +814,7 @@ class _RouteGroupChatState extends State<RouteGroupChat> {
                               hintText: 'Gruba mesaj yaz',
                               counterText: '',
                               filled: true,
-                              fillColor: Color(0xFF20232C),
+                              fillColor: AppColors.surfaceAlt,
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.all(
                                   Radius.circular(24),
@@ -833,8 +834,8 @@ class _RouteGroupChatState extends State<RouteGroupChat> {
                             tooltip: 'Gönder',
                             onPressed: _busy ? null : _send,
                             style: IconButton.styleFrom(
-                              backgroundColor: const Color(0xFF267CFF),
-                              foregroundColor: Colors.white,
+                              backgroundColor: AppColors.primary,
+                              foregroundColor: AppColors.onPrimary,
                             ),
                             icon: const Icon(Icons.arrow_upward_rounded),
                           )
@@ -902,7 +903,7 @@ class _RouteMemberAvatarState extends State<_RouteMemberAvatar> {
           final photo = s.data?.data()?['photoUrl']?.toString() ?? '';
           return CircleAvatar(
             radius: 14,
-            backgroundColor: const Color(0xFF282B35),
+            backgroundColor: AppColors.surfaceStrong,
             backgroundImage: photo.startsWith('https://')
                 ? NetworkImage(photo)
                 : null,

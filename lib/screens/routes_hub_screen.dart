@@ -383,7 +383,7 @@ class RoutePreviewCard extends StatelessWidget {
                           FilledButton.icon(
                             onPressed: () => _open(context),
                             style: FilledButton.styleFrom(
-                              backgroundColor: AppColors.blue,
+                              backgroundColor: AppColors.selection,
                               foregroundColor: Colors.white,
                             ),
                             label: const Text('Rotayı aç'),

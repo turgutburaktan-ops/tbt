@@ -1,3 +1,4 @@
+import '../theme/app_theme.dart';
 import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
@@ -177,9 +178,9 @@ class _ChatVoiceRecordButtonState extends State<ChatVoiceRecordButton> {
         constraints: const BoxConstraints(minWidth: 154),
         padding: const EdgeInsets.symmetric(horizontal: 3),
         decoration: BoxDecoration(
-          color: const Color(0xFF171D24),
+          color: AppColors.surface,
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: const Color(0xFF3A4654)),
+          border: Border.all(color: AppColors.border),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -214,7 +215,7 @@ class _ChatVoiceRecordButtonState extends State<ChatVoiceRecordButton> {
                       height: 18,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Icon(Icons.send_rounded, color: Color(0xFF8CD9FF)),
+                  : const Icon(Icons.send_rounded, color: AppColors.primary),
             ),
           ],
         ),
@@ -237,8 +238,8 @@ class _ChatVoiceRecordButtonState extends State<ChatVoiceRecordButton> {
         child: IconButton.filled(
           tooltip: 'Sesli mesaj',
           style: IconButton.styleFrom(
-            backgroundColor: const Color(0xFF202731),
-            foregroundColor: const Color(0xFF8CD9FF),
+            backgroundColor: AppColors.surfaceStrong,
+            foregroundColor: AppColors.primary,
           ),
           onPressed: widget.disabled || _finishing
               ? null

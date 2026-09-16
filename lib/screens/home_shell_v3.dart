@@ -724,7 +724,7 @@ class _GradientIcon extends StatelessWidget {
     blendMode: BlendMode.srcIn,
     shaderCallback: (bounds) => LinearGradient(
       colors: active
-          ? const [AppColors.cyan, AppColors.blue, AppColors.violet]
+          ? const [AppColors.brandCyan, AppColors.brandBlue, AppColors.brandViolet]
           : const [Color(0x75FFFFFF), Color(0x75FFFFFF)],
     ).createShader(bounds),
     child: Icon(icon, size: size),

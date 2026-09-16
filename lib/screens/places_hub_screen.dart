@@ -676,14 +676,10 @@ class _PlacesHubScreenState extends State<PlacesHubScreen> {
           padding: const EdgeInsets.symmetric(vertical: 11, horizontal: 2),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
-            color: selected ? null : AppColors.surface,
-            gradient: selected
-                ? const LinearGradient(
-                    colors: [Color(0xFF173952), Color(0xFF342052)],
-                  )
-                : null,
+            color: selected ? AppColors.selection : AppColors.surface,
+            
             border: Border.all(
-              color: selected ? AppColors.violet : AppColors.border,
+              color: selected ? AppColors.borderAccent : AppColors.border,
             ),
           ),
           child: Column(
