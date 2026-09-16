@@ -1,3 +1,4 @@
+import '../theme/app_theme.dart';
 import 'package:flutter/material.dart';
 
 import 'swipe_to_reply.dart';
@@ -42,7 +43,7 @@ class RouteChatBubble extends StatelessWidget {
                     avatar ??
                     const CircleAvatar(
                       radius: 14,
-                      backgroundColor: Color(0xFF282B35),
+                      backgroundColor: AppColors.surfaceStrong,
                       child: Icon(
                         Icons.person_outline,
                         size: 17,
@@ -62,8 +63,8 @@ class RouteChatBubble extends StatelessWidget {
                   padding: const EdgeInsets.fromLTRB(13, 10, 13, 7),
                   decoration: BoxDecoration(
                     color: mine
-                        ? const Color(0xFF17376C)
-                        : const Color(0xFF1B1D24),
+                        ? AppColors.messageOutgoing
+                        : AppColors.surfaceAlt,
                     borderRadius: BorderRadius.only(
                       topLeft: const Radius.circular(18),
                       topRight: const Radius.circular(18),
@@ -85,7 +86,7 @@ class RouteChatBubble extends StatelessWidget {
                               style: const TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w700,
-                                color: Color(0xFFB99AFF),
+                                color: AppColors.primary,
                               ),
                             ),
                           ),
@@ -99,7 +100,7 @@ class RouteChatBubble extends StatelessWidget {
                             borderRadius: BorderRadius.circular(8),
                             border: const Border(
                               left: BorderSide(
-                                color: Color(0xFF9828FF),
+                                color: AppColors.primary,
                                 width: 3,
                               ),
                             ),

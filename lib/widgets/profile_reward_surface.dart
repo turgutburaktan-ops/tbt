@@ -1,3 +1,4 @@
+import '../theme/app_theme.dart';
 import 'package:flutter/material.dart';
 
 class ProfileRewardSurface extends StatelessWidget {
@@ -25,13 +26,9 @@ class ProfileRewardSurface extends StatelessWidget {
     if (colors.isEmpty) return child;
     return Container(
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: colors,
-        ),
+        color: AppColors.surface,
         borderRadius: borderRadius,
-        border: Border.all(color: colors.first.withValues(alpha: .7)),
+        border: Border.all(color: colors.first.withValues(alpha: .25)),
       ),
       child: child,
     );

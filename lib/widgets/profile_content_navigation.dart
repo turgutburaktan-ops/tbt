@@ -51,7 +51,7 @@ class ProfileJourneyRow extends StatelessWidget {
         dense: true,
         leading: const Icon(
           Icons.workspace_premium_rounded,
-          color: AppColors.violetBright,
+          color: AppColors.primary,
         ),
         title: const Text(
           'TBT Yolculuğu',

@@ -1,3 +1,4 @@
+import '../theme/app_theme.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -72,7 +73,7 @@ class _EventChatScreenState extends State<EventChatScreen> {
     );
   }
   @override Widget build(BuildContext context) => Scaffold(
-    backgroundColor: const Color(0xFF08090B), appBar: AppBar(title: Text(widget.event.title)),
+    backgroundColor: AppColors.background, appBar: AppBar(title: Text(widget.event.title)),
     body: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(stream: _event, builder: (context, eventSnap) {
       final e = eventSnap.data?.data(), uid = FirebaseAuth.instance.currentUser?.uid;
       final member = uid != null && e != null && (e['hostId'] == uid || (e['participantIds'] as List? ?? []).contains(uid));
@@ -88,16 +89,16 @@ class _EventChatScreenState extends State<EventChatScreen> {
           if (s.hasError) return const Center(child: Text('Mesajlar yüklenemedi. Bağlantını ve katılımını kontrol et.'));
           if (!s.hasData) return const Center(child: CircularProgressIndicator());
           final docs = s.data!.docs;
-          if (docs.isEmpty) return const Center(child: Padding(padding: EdgeInsets.all(28), child: Column(mainAxisSize: MainAxisSize.min, children: [Icon(Icons.forum_outlined, size:36, color:Color(0xFF9828FF)), SizedBox(height:14), Text('Etkinliğin sohbeti burada', style:TextStyle(fontSize:18,fontWeight:FontWeight.w700)), SizedBox(height:8), Text('Bir merhaba yaz veya buluşma için konum paylaş.', textAlign:TextAlign.center,style:TextStyle(color:Colors.white60))])));
+          if (docs.isEmpty) return const Center(child: Padding(padding: EdgeInsets.all(28), child: Column(mainAxisSize: MainAxisSize.min, children: [Icon(Icons.forum_outlined, size:36, color:AppColors.primary), SizedBox(height:14), Text('Etkinliğin sohbeti burada', style:TextStyle(fontSize:18,fontWeight:FontWeight.w700)), SizedBox(height:8), Text('Bir merhaba yaz veya buluşma için konum paylaş.', textAlign:TextAlign.center,style:TextStyle(color:Colors.white60))])));
           return ListView.builder(controller:_scroll, reverse:true, padding:const EdgeInsets.symmetric(vertical:14), itemCount:docs.length, itemBuilder:(_,i)=>_message(docs[i],canWrite));
         })),
         if (!canWrite) const SafeArea(top:false, child:Padding(padding:EdgeInsets.all(16),child:Text('Etkinlik iptal edildi. Yeni mesaj gönderilemez.')))
-        else Container(decoration:const BoxDecoration(color:Color(0xFF14161B),border:Border(top:BorderSide(color:Color(0xFF262832)))),child:SafeArea(top:false,child:Padding(padding:const EdgeInsets.all(8),child:Column(mainAxisSize:MainAxisSize.min,children:[
-          if(_reply!=null) Row(children:[const Icon(Icons.reply,size:18,color:Color(0xFF9828FF)),const SizedBox(width:8),Expanded(child:Text('${_reply!['name']}: ${_reply!['text']}',maxLines:2,overflow:TextOverflow.ellipsis)),IconButton(onPressed:()=>setState(()=>_reply=null),icon:const Icon(Icons.close))]),
+        else Container(decoration:const BoxDecoration(color:AppColors.surface,border:Border(top:BorderSide(color:AppColors.border))),child:SafeArea(top:false,child:Padding(padding:const EdgeInsets.all(8),child:Column(mainAxisSize:MainAxisSize.min,children:[
+          if(_reply!=null) Row(children:[const Icon(Icons.reply,size:18,color:AppColors.primary),const SizedBox(width:8),Expanded(child:Text('${_reply!['name']}: ${_reply!['text']}',maxLines:2,overflow:TextOverflow.ellipsis)),IconButton(onPressed:()=>setState(()=>_reply=null),icon:const Icon(Icons.close))]),
           Row(crossAxisAlignment:CrossAxisAlignment.end,children:[
-            IconButton(tooltip:'Fotoğraf, video veya konum ekle',onPressed:_busy?null:_plus,icon:const Icon(Icons.add_circle_outline,color:Color(0xFF267CFF))),
-            Expanded(child:TextField(controller:_text,minLines:1,maxLines:4,maxLength:1500,onChanged:(_)=>setState((){}),decoration:const InputDecoration(hintText:'Gruba mesaj yaz',counterText:'',filled:true,fillColor:Color(0xFF20232C),border:OutlineInputBorder(borderRadius:BorderRadius.all(Radius.circular(24)),borderSide:BorderSide.none),contentPadding:EdgeInsets.symmetric(horizontal:15,vertical:12)))),
-            if(_text.text.trim().isNotEmpty) IconButton.filled(tooltip:'Gönder',onPressed:_busy?null:(){final text=_text.text;_run((reply)=>EventChatService.instance.send(widget.event.id,text,reply:reply),text:text);},style:IconButton.styleFrom(backgroundColor:const Color(0xFF267CFF),foregroundColor:Colors.white),icon:const Icon(Icons.arrow_upward_rounded))
+            IconButton(tooltip:'Fotoğraf, video veya konum ekle',onPressed:_busy?null:_plus,icon:const Icon(Icons.add_circle_outline,color:AppColors.primary)),
+            Expanded(child:TextField(controller:_text,minLines:1,maxLines:4,maxLength:1500,onChanged:(_)=>setState((){}),decoration:const InputDecoration(hintText:'Gruba mesaj yaz',counterText:'',filled:true,fillColor:AppColors.surfaceAlt,border:OutlineInputBorder(borderRadius:BorderRadius.all(Radius.circular(24)),borderSide:BorderSide.none),contentPadding:EdgeInsets.symmetric(horizontal:15,vertical:12)))),
+            if(_text.text.trim().isNotEmpty) IconButton.filled(tooltip:'Gönder',onPressed:_busy?null:(){final text=_text.text;_run((reply)=>EventChatService.instance.send(widget.event.id,text,reply:reply),text:text);},style:IconButton.styleFrom(backgroundColor:AppColors.primary,foregroundColor:AppColors.onPrimary),icon:const Icon(Icons.arrow_upward_rounded))
             else ChatVoiceRecordButton(disabled:_busy,onError:_error,onRecorded:(bytes,duration)=>_run((reply)=>EventChatService.instance.audio(widget.event.id,bytes,duration,reply:reply))),
           ]),
         ])))),

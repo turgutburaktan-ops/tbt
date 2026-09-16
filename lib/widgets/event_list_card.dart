@@ -31,7 +31,7 @@ class EventListCard extends StatelessWidget {
         Wrap(spacing: 12, runSpacing: 4, crossAxisAlignment: WrapCrossAlignment.center, children: [
           Text('${event.participantCount}/${event.capacity} katılımcı', style: const TextStyle(color: Colors.white54, fontSize: 12)),
           if (remaining > 0 && remaining <= 2) Text('Son $remaining yer', style: const TextStyle(color: Colors.orangeAccent, fontSize: 12)),
-          FilledButton(onPressed: busy || (event.isFull && !joined) ? null : joined ? onOpen : onJoin,
+          FilledButton(style: joined ? FilledButton.styleFrom(backgroundColor: AppColors.surfaceStrong, foregroundColor: AppColors.textPrimary) : null, onPressed: busy || (event.isFull && !joined) ? null : joined ? onOpen : onJoin,
             child: busy ? const SizedBox(width:15,height:15,child:CircularProgressIndicator(strokeWidth:2)) : Text(joined ? 'Detayları Gör' : event.isFull ? 'Dolu' : 'Ben de Geliyorum'),
           ),
         ]),
