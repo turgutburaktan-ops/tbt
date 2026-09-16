@@ -1,3 +1,4 @@
+import '../widgets/home_header_layout.dart';
 import '../widgets/app_page_chrome.dart';
 import 'places_hub_screen.dart';
 import 'routes_hub_screen.dart';
@@ -461,27 +462,15 @@ class _HomeHeader extends StatelessWidget {
   const _HomeHeader({this.showBrand = true, this.onCreate});
 
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: EdgeInsets.fromLTRB(showBrand ? 12 : 6, 5, 4, 2),
-    child: Row(
-      children: [
-        if (showBrand) ...[
-          const TbtBrandMark(size: 32),
-          const SizedBox(width: 8),
-          const Expanded(
-            child: Text(
-              'TBT',
-              style: TextStyle(
-                fontSize: 19,
-                fontWeight: FontWeight.w900,
-                letterSpacing: -.35,
-              ),
-            ),
-          ),
-        ] else
-          const Spacer(),
-        if (onCreate != null)
-          _HeaderAction(tooltip: 'Paylaşım oluştur', icon: Icons.add_a_photo_outlined, count: 0, onTap: onCreate!),
+  Widget build(BuildContext context) => HomeHeaderLayout(
+    onCreate: onCreate,
+    leading: showBrand ? const Row(children: [
+      TbtBrandMark(size: 32),
+      SizedBox(width: 8),
+      Flexible(child: Text('TBT', maxLines: 1, overflow: TextOverflow.ellipsis,
+        style: TextStyle(fontSize: 19, fontWeight: FontWeight.w900, letterSpacing: -.35))),
+    ]) : const SizedBox.shrink(),
+    actions: [
         _HeaderAction(
           tooltip: 'TBT’de Ara',
           icon: Icons.search_rounded,
@@ -509,8 +498,7 @@ class _HomeHeader extends StatelessWidget {
             ),
           ),
         ),
-      ],
-    ),
+    ],
   );
 }
 
