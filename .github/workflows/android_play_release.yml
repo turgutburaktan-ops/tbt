@@ -172,3 +172,11 @@ jobs:
         env:
           PLAY_CREDENTIAL: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
         run: node tool/upload_play_build47.cjs
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Upload verified update to closed test
+        env:
+          PLAY_CREDENTIAL: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: node tool/upload_play_build56.cjs
