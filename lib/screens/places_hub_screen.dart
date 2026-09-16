@@ -471,7 +471,9 @@ class _PlacesHubScreenState extends State<PlacesHubScreen> {
                     tooltip: 'Şehri değiştir',
                     icon: const Icon(Icons.expand_more),
                   ),
-                  TextButton.icon(
+                  Flexible(
+                    flex: 2,
+                    child: TextButton.icon(
                     onPressed: () => Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -486,6 +488,7 @@ class _PlacesHubScreenState extends State<PlacesHubScreen> {
                     ),
                     icon: const Icon(Icons.add_location_alt_outlined, size: 18),
                     label: Text(_filters.length == 1 && _filters.contains(0) ? 'Yer öner' : 'Yeni işletme kaydet'),
+                    ),
                   ),
                 ],
               ),
