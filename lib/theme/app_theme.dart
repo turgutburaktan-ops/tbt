@@ -195,7 +195,7 @@ class AppTheme {
           height: 1.4,
         ),
         bodyMedium: TextStyle(
-          color: AppColors.textMuted,
+          color: AppColors.textPrimary,
           fontSize: 14,
           height: 1.4,
         ),

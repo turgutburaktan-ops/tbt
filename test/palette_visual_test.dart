@@ -36,7 +36,15 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
     final boundary = GlobalKey();
     var taps = 0;
-    await tester.pumpWidget(MaterialApp(theme: AppTheme.dark.copyWith(textTheme: AppTheme.dark.textTheme.apply(fontFamily:'Roboto')),
+    final base = AppTheme.dark;
+    final reviewTheme = base.copyWith(
+      textTheme: base.textTheme.apply(fontFamily: 'Roboto'),
+      appBarTheme: base.appBarTheme.copyWith(titleTextStyle: base.appBarTheme.titleTextStyle?.copyWith(fontFamily:'Roboto')),
+      filledButtonTheme: FilledButtonThemeData(style: base.filledButtonTheme.style?.copyWith(textStyle: const WidgetStatePropertyAll(TextStyle(fontFamily:'Roboto',fontSize:13,fontWeight:FontWeight.w600)))),
+      outlinedButtonTheme: OutlinedButtonThemeData(style: base.outlinedButtonTheme.style?.copyWith(textStyle: const WidgetStatePropertyAll(TextStyle(fontFamily:'Roboto',fontSize:13,fontWeight:FontWeight.w600)))),
+      chipTheme: base.chipTheme.copyWith(labelStyle:base.chipTheme.labelStyle?.copyWith(fontFamily:'Roboto'),secondaryLabelStyle:base.chipTheme.secondaryLabelStyle?.copyWith(fontFamily:'Roboto')),
+    );
+    await tester.pumpWidget(MaterialApp(theme: reviewTheme,
       home: RepaintBoundary(key: boundary, child: Scaffold(
         appBar: AppBar(title: const Text('TBT')),
         body: ListView(padding: const EdgeInsets.all(16), children: [
