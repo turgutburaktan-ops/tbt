@@ -1,3 +1,4 @@
+import '../widgets/home_header_layout.dart';
 import '../widgets/app_page_chrome.dart';
 import 'places_hub_screen.dart';
 import 'routes_hub_screen.dart';
@@ -461,28 +462,16 @@ class _HomeHeader extends StatelessWidget {
   const _HomeHeader({this.showBrand = true, this.onCreate});
 
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: EdgeInsets.fromLTRB(showBrand ? 12 : 6, 5, 4, 2),
-    child: Row(
-      children: [
-        if (showBrand) ...[
-          const TbtBrandMark(size: 32),
-          const SizedBox(width: 8),
-          const Expanded(
-            child: Text(
-              'TBT',
-              style: TextStyle(
-                fontSize: 19,
-                fontWeight: FontWeight.w900,
-                letterSpacing: -.35,
-              ),
-            ),
-          ),
-        ] else
-          const Spacer(),
-        if (onCreate != null)
-          _HeaderAction(tooltip: 'Paylaşım oluştur', icon: Icons.add_a_photo_outlined, count: 0, onTap: onCreate!),
-        _HeaderAction(
+  Widget build(BuildContext context) => HomeHeaderLayout(
+    onCreate: onCreate,
+    leading: showBrand ? const Row(children: [
+      TbtBrandMark(size: 32),
+      SizedBox(width: 8),
+      Flexible(child: Text('TBT', maxLines: 1, overflow: TextOverflow.ellipsis,
+        style: TextStyle(fontSize: 19, fontWeight: FontWeight.w900, letterSpacing: -.35))),
+    ]) : const SizedBox.shrink(),
+    actions: [
+        HomeHeaderAction(
           tooltip: 'TBT’de Ara',
           icon: Icons.search_rounded,
           count: 0,
@@ -490,7 +479,7 @@ class _HomeHeader extends StatelessWidget {
         ),
         StreamBuilder<int>(
           stream: AppNotificationService.instance.unreadCount(),
-          builder: (_, s) => _HeaderAction(
+          builder: (_, s) => HomeHeaderAction(
             tooltip: 'Bildirimler',
             icon: Icons.notifications_none_rounded,
             count: s.data ?? 0,
@@ -499,7 +488,7 @@ class _HomeHeader extends StatelessWidget {
         ),
         StreamBuilder<int>(
           stream: ChatService.instance.unreadThreadCount(),
-          builder: (_, s) => _HeaderAction(
+          builder: (_, s) => HomeHeaderAction(
             tooltip: 'Mesajlar',
             icon: Icons.send_outlined,
             count: s.data ?? 0,
@@ -509,8 +498,7 @@ class _HomeHeader extends StatelessWidget {
             ),
           ),
         ),
-      ],
-    ),
+    ],
   );
 }
 
@@ -654,34 +642,6 @@ class _SegmentTabs extends StatelessWidget {
   @override
   Widget build(BuildContext context) =>
       AppSectionTabs(labels: labels, selected: selected, onChanged: onChanged);
-}
-
-class _HeaderAction extends StatelessWidget {
-  final String tooltip;
-  final IconData icon;
-  final VoidCallback onTap;
-  final int count;
-  const _HeaderAction({
-    required this.tooltip,
-    required this.icon,
-    required this.onTap,
-    this.count = 0,
-  });
-
-  @override
-  Widget build(BuildContext context) => IconButton(
-    tooltip: tooltip,
-    onPressed: onTap,
-    visualDensity: VisualDensity.compact,
-    constraints: const BoxConstraints(minWidth: 38, minHeight: 38),
-    padding: const EdgeInsets.all(8),
-    icon: Badge(
-      isLabelVisible: count > 0,
-      backgroundColor: AppColors.violet,
-      label: Text(count > 99 ? '99+' : '$count'),
-      child: Icon(icon, color: Colors.white70, size: 20),
-    ),
-  );
 }
 
 class _GradientIcon extends StatelessWidget {
