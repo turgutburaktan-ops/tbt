@@ -373,7 +373,7 @@ class _HomeFeedHubState extends State<_HomeFeedHub> {
               bottom: false,
               child: Column(
                 children: [
-                  const _HomeHeader(showBrand: true),
+                  _HomeHeader(showBrand: true, onCreate: _openCamera),
                   Padding(
                     padding: const EdgeInsets.fromLTRB(
                       AppSpacing.page,
@@ -431,39 +431,7 @@ class _HomeFeedHubState extends State<_HomeFeedHub> {
                 ],
               ),
             ),
-            if (_section == 0)
-              Positioned(
-                left: 0,
-                top: 150,
-                child: Semantics(
-                  button: true,
-                  label: 'Paylaşım oluştur',
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTap: _openCamera,
-                    child: Container(
-                      width: 44,
-                      height: 72,
-                      alignment: Alignment.centerLeft,
-                      child: Container(
-                        width: 34,
-                        height: 68,
-                        decoration: const BoxDecoration(
-                          gradient: AppColors.accentGradient,
-                          borderRadius: BorderRadius.horizontal(
-                            right: Radius.circular(14),
-                          ),
-                        ),
-                        child: const Icon(
-                          Icons.camera_alt_outlined,
-                          size: 19,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
+
           ],
         ),
       ),
@@ -489,7 +457,8 @@ class _AuthAwareFeed extends StatelessWidget {
 
 class _HomeHeader extends StatelessWidget {
   final bool showBrand;
-  const _HomeHeader({this.showBrand = true});
+  final VoidCallback? onCreate;
+  const _HomeHeader({this.showBrand = true, this.onCreate});
 
   @override
   Widget build(BuildContext context) => Padding(
@@ -511,6 +480,8 @@ class _HomeHeader extends StatelessWidget {
           ),
         ] else
           const Spacer(),
+        if (onCreate != null)
+          _HeaderAction(tooltip: 'Paylaşım oluştur', icon: Icons.add_a_photo_outlined, count: 0, onTap: onCreate!),
         _HeaderAction(
           tooltip: 'TBT’de Ara',
           icon: Icons.search_rounded,

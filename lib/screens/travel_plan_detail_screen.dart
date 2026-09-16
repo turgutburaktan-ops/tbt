@@ -726,6 +726,7 @@ class _TravelPlanDetailScreenState extends State<TravelPlanDetailScreen> {
                                       style: const TextStyle(fontSize: 11),
                                     ),
                                   ),
+                                  if ((stops[i]['imageUrl'] ?? '').toString().isNotEmpty) ...[
                                   const SizedBox(width: 8),
                                   ClipRRect(
                                     borderRadius: BorderRadius.circular(8),
@@ -739,9 +740,10 @@ class _TravelPlanDetailScreenState extends State<TravelPlanDetailScreen> {
                                       ),
                                     ),
                                   ),
+                                  ],
                                 ],
                               ),
-                              title: Text('${stops[i]['name']}'),
+                              title: Text('${stops[i]['name']}', maxLines: 2, overflow: TextOverflow.ellipsis),
                               subtitle: Text(
                                 '${stops[i]['category'] ?? 'Durak'}',
                               ),

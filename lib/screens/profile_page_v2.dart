@@ -1146,7 +1146,8 @@ class _ProfileRoutesSection extends StatelessWidget {
             for (final plan in plans) ...[
               Card(
                 margin: EdgeInsets.zero,
-                child: ListTile(
+                child: Column(children: [
+                  ListTile(
                   contentPadding: const EdgeInsets.fromLTRB(14, 7, 8, 7),
                   leading: Container(
                     width: 44,
@@ -1159,19 +1160,15 @@ class _ProfileRoutesSection extends StatelessWidget {
                   ),
                   title: Text(
                     plan.title,
-                    maxLines: 1,
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(fontWeight: FontWeight.w900),
                   ),
                   subtitle: Text(
                     '${plan.city} • ${plan.spotNames.length} durak • ${plan.durationHours} saat',
-                    maxLines: 1,
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  trailing: Row(mainAxisSize: MainAxisSize.min,children:[
-                    IconButton(tooltip:'Rotayı paylaş',onPressed:()=>_publish(context,plan),icon:const Icon(Icons.ios_share_rounded)),
-                    RouteManagementMenu(plan:plan),
-                  ]),
                   onTap: () => Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -1179,6 +1176,11 @@ class _ProfileRoutesSection extends StatelessWidget {
                     ),
                   ),
                 ),
+                  Row(mainAxisAlignment: MainAxisAlignment.end,children:[
+                    IconButton(tooltip:'Rotayı paylaş',onPressed:()=>_publish(context,plan),icon:const Icon(Icons.ios_share_rounded)),
+                    RouteManagementMenu(plan:plan),
+                  ]),
+                ]),
               ),
               const SizedBox(height: 9),
             ],

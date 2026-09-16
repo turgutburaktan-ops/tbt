@@ -65,7 +65,7 @@ class InviteQrScreen extends StatelessWidget {
                   ),
                   child: QrImageView(
                     data: uri.toString(),
-                    size: 260,
+                    size: (MediaQuery.sizeOf(context).width - 88).clamp(120.0, 260.0).toDouble(),
                     version: QrVersions.auto,
                     backgroundColor: Colors.white,
                     eyeStyle: const QrEyeStyle(
@@ -85,10 +85,11 @@ class InviteQrScreen extends StatelessWidget {
                   style: TextStyle(color: Colors.white60, height: 1.4),
                 ),
                 const SizedBox(height: 12),
-                SelectableText(
-                  uri.toString(),
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(color: Colors.white38, fontSize: 12),
+                ExpansionTile(
+                  title: const Text('Davet bağlantısını göster', style: TextStyle(fontSize: 13)),
+                  childrenPadding: const EdgeInsets.all(12),
+                  children: [SelectableText(uri.toString(), textAlign: TextAlign.center,
+                    style: const TextStyle(color: AppColors.textMuted, fontSize: 12))],
                 ),
                 const SizedBox(height: 18),
                 SizedBox(

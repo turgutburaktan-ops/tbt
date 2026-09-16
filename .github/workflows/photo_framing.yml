@@ -1,8 +1,8 @@
-name: TBT graphite and turquoise palette
+name: TBT design refinement
 
 on:
   push:
-    branches: [codex/graphite-palette-20260916]
+    branches: [codex/design-refinement-20260916]
 
 permissions:
   contents: read
@@ -34,14 +34,15 @@ jobs:
       - name: Analyze event screens
         run: |
           dart format lib/screens/radar_screen.dart lib/screens/event_chat_screen.dart lib/services/event_chat_service.dart lib/screens/event_deep_link_screen.dart lib/widgets/event_hub_panel.dart
-          flutter analyze lib/screens/travel_plan_detail_screen.dart lib/theme/app_theme.dart lib/widgets/chat_voice_message.dart lib/widgets/profile_content_navigation.dart lib/widgets/profile_reward_surface.dart lib/widgets/route_chat_bubble.dart lib/widgets/route_group_chat.dart lib/widgets/profile_favorite_places_section.dart lib/screens/routes_hub_screen.dart lib/screens/places_hub_screen.dart lib/widgets/place_marker_card.dart --no-fatal-infos --no-fatal-warnings lib/screens/post_photo_crop_screen.dart lib/screens/main_camera_screen.dart lib/screens/create_post_screen.dart lib/services/post_photo_capture_service.dart lib/utils/post_photo_frame.dart lib/services/deep_link_service.dart lib/services/external_share_service.dart lib/services/incoming_tbt_link.dart lib/widgets/event_list_card.dart lib/screens/radar_screen.dart lib/screens/home_shell_v3.dart lib/screens/campus_home_screen.dart lib/screens/event_create_screen_v2.dart lib/screens/event_photo_create_screen.dart lib/screens/event_deep_link_screen.dart lib/screens/event_chat_screen.dart lib/services/event_chat_service.dart lib/widgets/event_hub_panel.dart lib/widgets/event_chat_attachment.dart lib/models/social_event.dart lib/utils/event_presentation.dart
+          flutter analyze lib/widgets/story_editor_tools.dart lib/widgets/categorized_search.dart lib/widgets/chat_backdrop.dart lib/screens/story_photo_editor_screen.dart lib/screens/story_context_template_picker.dart lib/screens/invite_qr_screen.dart lib/screens/profile_page_v2.dart lib/screens/event_location_picker_screen.dart lib/screens/travel_plan_detail_screen.dart lib/theme/app_theme.dart lib/widgets/chat_voice_message.dart lib/widgets/profile_content_navigation.dart lib/widgets/profile_reward_surface.dart lib/widgets/route_chat_bubble.dart lib/widgets/route_group_chat.dart lib/widgets/profile_favorite_places_section.dart lib/screens/routes_hub_screen.dart lib/screens/places_hub_screen.dart lib/widgets/place_marker_card.dart --no-fatal-infos --no-fatal-warnings lib/screens/post_photo_crop_screen.dart lib/screens/main_camera_screen.dart lib/screens/create_post_screen.dart lib/services/post_photo_capture_service.dart lib/utils/post_photo_frame.dart lib/services/deep_link_service.dart lib/services/external_share_service.dart lib/services/incoming_tbt_link.dart lib/widgets/event_list_card.dart lib/screens/radar_screen.dart lib/screens/home_shell_v3.dart lib/screens/campus_home_screen.dart lib/screens/event_create_screen_v2.dart lib/screens/event_photo_create_screen.dart lib/screens/event_deep_link_screen.dart lib/screens/event_chat_screen.dart lib/services/event_chat_service.dart lib/widgets/event_hub_panel.dart lib/widgets/event_chat_attachment.dart lib/models/social_event.dart lib/utils/event_presentation.dart
       - name: Test event date and existing menu validation
-        run: flutter test test/palette_visual_test.dart test/route_chat_test.dart test/places_hub_test.dart test/post_photo_crop_test.dart test/post_photo_frame_test.dart test/post_photo_capture_test.dart test/camera_share_controls_test.dart test/incoming_tbt_link_test.dart test/event_list_card_test.dart test/event_presentation_test.dart test/business_mobile_flows_test.dart
+        run: flutter test test/design_refinement_test.dart test/palette_visual_test.dart test/route_chat_test.dart test/places_hub_test.dart test/post_photo_crop_test.dart test/post_photo_frame_test.dart test/post_photo_capture_test.dart test/camera_share_controls_test.dart test/incoming_tbt_link_test.dart test/event_list_card_test.dart test/event_presentation_test.dart test/business_mobile_flows_test.dart
       - name: Upload palette review
         uses: actions/upload-artifact@v4
         with:
           name: tbt-palette-review
           path: |
+            build/design-review/*.png
             build/palette-review/*.png
             build/places-review/*.png
           retention-days: 7
@@ -138,7 +139,7 @@ jobs:
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
         with:
-          name: tbt-graphite-palette-build54-apk
+          name: tbt-design-refinement-build55-apk
           path: build/app/outputs/flutter-apk/app-debug.apk
           if-no-files-found: error
           retention-days: 7

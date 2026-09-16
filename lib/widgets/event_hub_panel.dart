@@ -121,8 +121,10 @@ class EventHubPanel extends StatelessWidget {
         if (uid != null)
           ExpansionTile(
             title: Text('Katılımcılar (${event.visibleParticipantCount})'),
-            subtitle: const Text('Gizli katılanların isimleri gösterilmez.'),
-            children: [_EventPeople(ids: event.participantIds)],
+            children: [
+              const Padding(padding: EdgeInsets.fromLTRB(16, 0, 16, 12), child: Text('Gizli katılanların isimleri gösterilmez.', style: TextStyle(fontSize: 12, color: Colors.grey))),
+              _EventPeople(ids: event.participantIds),
+            ],
           ),
         const SizedBox(height: 8),
         FilledButton.tonalIcon(

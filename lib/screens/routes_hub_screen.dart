@@ -372,7 +372,7 @@ class RoutePreviewCard extends StatelessWidget {
               ? Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    SizedBox(height: 155, child: thumbnail),
+                    if (image.isNotEmpty) SizedBox(height: 155, child: thumbnail),
                     Padding(
                       padding: const EdgeInsets.all(16),
                       child: Column(

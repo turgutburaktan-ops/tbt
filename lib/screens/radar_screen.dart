@@ -343,7 +343,14 @@ class _RadarScreenState extends State<RadarScreen> {
                           },
                         ),
                       const SizedBox(height: 18),
-                      _hero(events, demands),
+                      Card(
+                        margin: EdgeInsets.zero,
+                        child: ExpansionTile(
+                          title: const Text('Şehrin canlı durumu'),
+                          subtitle: Text('${events.length} etkinlik'),
+                          children: [_hero(events, demands)],
+                        ),
+                      ),
                       const SizedBox(height: 20),
                       _sectionTitle(
                         'Şu an ne yapmak istiyorlar?',

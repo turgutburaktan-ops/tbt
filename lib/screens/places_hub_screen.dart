@@ -1,3 +1,4 @@
+import '../theme/map_theme.dart';
 import 'dart:async';
 import 'dart:convert';
 
@@ -673,7 +674,7 @@ class _PlacesHubScreenState extends State<PlacesHubScreen> {
           }
         },
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 11, horizontal: 2),
+          padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 2),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
             color: selected ? AppColors.selection : AppColors.surface,
@@ -689,7 +690,7 @@ class _PlacesHubScreenState extends State<PlacesHubScreen> {
                 size: 20,
                 color: selected ? AppColors.cyan : Colors.white60,
               ),
-              const SizedBox(height: 5),
+              const SizedBox(height: 3),
               Text(
                 _labels[index],
                 maxLines: 1,
@@ -862,7 +863,7 @@ class _PlacesHubScreenState extends State<PlacesHubScreen> {
       children: [
         GoogleMap(
           key: ValueKey(_city),
-          style: '[{"elementType":"geometry","stylers":[{"color":"#141b29"}]},{"elementType":"labels.text.fill","stylers":[{"color":"#aab8cf"}]},{"elementType":"labels.text.stroke","stylers":[{"color":"#141b29"}]},{"featureType":"road","elementType":"geometry","stylers":[{"color":"#303a51"}]},{"featureType":"water","elementType":"geometry","stylers":[{"color":"#091326"}]}]',
+          style: tbtDarkMapStyle,
           initialCameraPosition:
               _camera ??
               CameraPosition(target: _center, zoom: _city == null ? 6 : 12),
