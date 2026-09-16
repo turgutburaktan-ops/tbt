@@ -19,6 +19,7 @@ import '../services/place_catalog_service.dart';
 import '../services/venue_rating_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/chat_share_sheet.dart';
+import '../widgets/place_marker_card.dart';
 import '../widgets/route_selection_button.dart';
 import '../widgets/spot_image.dart';
 import '../widgets/sponsored_native_ad.dart';
@@ -64,6 +65,9 @@ class _PlacesHubScreenState extends State<PlacesHubScreen> {
   int _generation = 0;
   String? _selectedId;
   CameraPosition? _camera;
+  final _markerCards = <String, BitmapDescriptor>{};
+  final _pendingMarkerCards = <String>{};
+  int _markerEpoch = 0;
 
   @override
   void initState() {
@@ -74,6 +78,7 @@ class _PlacesHubScreenState extends State<PlacesHubScreen> {
   @override
   void dispose() {
     _generation++;
+    _markerEpoch++;
     _search.dispose();
     super.dispose();
   }
@@ -141,6 +146,9 @@ class _PlacesHubScreenState extends State<PlacesHubScreen> {
     ++_generation;
     setState(() {
       _city = city;
+      _markerEpoch++;
+      _markerCards.clear();
+      _pendingMarkerCards.clear();
       _camera = null;
       _selectedId = null;
       _locating = false;
@@ -820,7 +828,36 @@ class _PlacesHubScreenState extends State<PlacesHubScreen> {
     ),
   );
 
+  Future<void> _prepareMarkerCards(List<_Place> places) async {
+    final epoch = _markerEpoch;
+    final queue = <_Place>[];
+    for (final place in places) {
+      final key = PlaceMarkerCard.cacheKey(place.spot);
+      if (!_markerCards.containsKey(key) && _pendingMarkerCards.add(key)) {
+        queue.add(place);
+      }
+    }
+    for (var i = 0; i < queue.length; i++) {
+      if (!mounted || epoch != _markerEpoch) return;
+      final place = queue[i];
+      final key = PlaceMarkerCard.cacheKey(place.spot);
+      BitmapDescriptor icon;
+      try {
+        icon = await PlaceMarkerCard.render(place.spot);
+      } catch (_) {
+        // Keep the location selectable if the device cannot render a bitmap.
+        icon = BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueCyan);
+      }
+      if (!mounted || epoch != _markerEpoch) return;
+      _markerCards[key] = icon;
+      _pendingMarkerCards.remove(key);
+      // Publish in small batches; rating updates reuse all unchanged labels.
+      if (i % 8 == 7 || i == queue.length - 1) setState(() {});
+    }
+  }
+
   Widget _mapView(List<_Place> places) {
+    unawaited(_prepareMarkerCards(places));
     final selected = places.where((p) => p.id == _selectedId).firstOrNull;
     return Stack(
       children: [
@@ -839,21 +876,27 @@ class _PlacesHubScreenState extends State<PlacesHubScreen> {
           onTap: (_) => setState(() => _selectedId = null),
           markers: {
             for (final place in places)
+              if (_markerCards.containsKey(PlaceMarkerCard.cacheKey(place.spot)))
               Marker(
                 markerId: MarkerId(place.id),
                 position: LatLng(place.spot.latitude, place.spot.longitude),
-                icon: BitmapDescriptor.defaultMarkerWithHue(
-                  [
-                    BitmapDescriptor.hueCyan,
-                    BitmapDescriptor.hueViolet,
-                    BitmapDescriptor.hueAzure,
-                    BitmapDescriptor.hueBlue,
-                  ][place.category],
-                ),
+                icon: _markerCards[PlaceMarkerCard.cacheKey(place.spot)]!,
+                zIndex: place.id == _selectedId ? 2 : 1,
                 onTap: () => setState(() => _selectedId = place.id),
               ),
           },
         ),
+        if (_pendingMarkerCards.isNotEmpty)
+          const Positioned(
+            top: 12,
+            left: 16,
+            child: Card(
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                child: Text('Yer adları hazırlanıyor…'),
+              ),
+            ),
+          ),
         if (_filters.isEmpty)
           const Positioned(
             top: 12,
