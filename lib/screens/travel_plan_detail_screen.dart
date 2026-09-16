@@ -719,8 +719,8 @@ class _TravelPlanDetailScreenState extends State<TravelPlanDetailScreen> {
                                 children: [
                                   CircleAvatar(
                                     radius: 12,
-                                    backgroundColor: AppColors.blue,
-                                    foregroundColor: Colors.white,
+                                    backgroundColor: AppColors.primary,
+                                    foregroundColor: AppColors.onPrimary,
                                     child: Text(
                                       '${i + 1}',
                                       style: const TextStyle(fontSize: 11),
@@ -797,8 +797,8 @@ class _TravelPlanDetailScreenState extends State<TravelPlanDetailScreen> {
                         if (_owned && plan.status != 'completed')
                           FilledButton.icon(
                             style: FilledButton.styleFrom(
-                              backgroundColor: AppColors.blue,
-                              foregroundColor: Colors.white,
+                              backgroundColor: AppColors.primary,
+                              foregroundColor: AppColors.onPrimary,
                             ),
                             onPressed: () => _act(
                               () => TravelPlanService.instance.setOptions(
