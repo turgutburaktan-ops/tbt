@@ -36,7 +36,7 @@ const base='https://androidpublisher.googleapis.com/androidpublisher/v3/applicat
      if(!existing.sha256||existing.sha256.toLowerCase()!==sha)throw Error('Existing versionCode 56 has a different bundle; refusing reuse');
      console.log('VersionCode 56 already uploaded; checksum verified');
    }
-   await req(url+'/tracks/alpha','PUT',{track:'alpha',releases:[{name:'56 (1.0.28)',versionCodes:['56'],status:'completed',releaseNotes:[{language:'tr-TR',text:'81 ilde kafe, lezzet, otel ve gezilecek yerler için ortak mekan kataloğu eklendi. Kafe kapsamı genişletildi; şehir bazında listeleme ve daha fazla sonuç yükleme iyileştirildi. Rota durakları ve harita seçimi geliştirildi.'}]}]});
+   await req(url+'/tracks/alpha','PUT',{track:'alpha',releases:[{name:'56 (1.0.28)',versionCodes:['56'],status:'completed',releaseNotes:[{language:'tr-TR',text:"Kamera düğmesi TBT renkleriyle yenilendi. Story araçları sadeleştirildi; etkinlik, rota ve profil ekranları düzenlendi. Fotoğraf kadrajı, paylaşım bağlantıları, arama, mekân haritası ve QR davet görünümü iyileştirildi."}]}]});
    await req(url+':validate','POST');
    let review='SUBMITTED';
    try {await req(url+':commit?changesInReviewBehavior=ERROR_IF_IN_REVIEW','POST');}

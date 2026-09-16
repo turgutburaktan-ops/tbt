@@ -357,6 +357,11 @@ jobs:
           PLIST
 
 
+      - name: Configure notification replies and route albums
+        run: |
+          python3 tool/configure_notifications.py ios
+          python3 tool/configure_route_album.py ios
+
       - name: Fix iOS rear camera mirroring
         run: python3 tool/patch_ios_camera_mirroring.py
 
@@ -370,8 +375,8 @@ jobs:
           FIREBASE_IOS_APP_ID=$(/usr/libexec/PlistBuddy -c 'Print :GOOGLE_APP_ID' ios/Runner/GoogleService-Info.plist)
           flutter build ipa \
             --release \
-            --build-name=1.0.19 \
-            --build-number=47 \
+            --build-name=1.0.28 \
+            --build-number=56 \
             --export-options-plist=ios/ExportOptions.plist \
             --dart-define="FIREBASE_IOS_API_KEY=$FIREBASE_IOS_API_KEY" \
             --dart-define="FIREBASE_IOS_APP_ID=$FIREBASE_IOS_APP_ID" \
@@ -381,7 +386,7 @@ jobs:
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
         with:
-          name: tbt-ios-ipa-1.0.19-build47
+          name: tbt-ios-ipa-1.0.28-build56
           path: build/ios/ipa/*.ipa
           if-no-files-found: error
           retention-days: 14
