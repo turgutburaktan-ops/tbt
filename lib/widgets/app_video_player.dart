@@ -34,6 +34,7 @@ class _PlaybackOwner {
   static void update() {
     _AppVideoPlayerState? winner;
     for (final p in players) {
+      p._syncResources();
       if (p._eligible && (winner == null || p._visible > winner._visible))
         winner = p;
     }
@@ -59,6 +60,7 @@ class AppVideoPlayer extends StatefulWidget {
   final bool resumePosition;
   final ValueChanged<Duration>? onReady;
   final VoidCallback? onError;
+  final ValueChanged<VideoPlayerValue>? onPlayback;
   const AppVideoPlayer.network({
     super.key,
     required String this.url,
@@ -80,6 +82,7 @@ class AppVideoPlayer extends StatefulWidget {
     this.resumePosition = true,
     this.onReady,
     this.onError,
+    this.onPlayback,
   }) : file = null;
   const AppVideoPlayer.file({
     super.key,
@@ -102,6 +105,7 @@ class AppVideoPlayer extends StatefulWidget {
     this.resumePosition = true,
     this.onReady,
     this.onError,
+    this.onPlayback,
   }) : url = null;
   @override
   State<AppVideoPlayer> createState() => _AppVideoPlayerState();
@@ -110,73 +114,145 @@ class AppVideoPlayer extends StatefulWidget {
 class _AppVideoPlayerState extends State<AppVideoPlayer>
     with WidgetsBindingObserver {
   VideoPlayerController? _controller;
+  Future<void> _disposals = Future<void>.value();
+  Future<void> _commands = Future<void>.value();
+  Timer? _releaseTimer;
+  Duration? _resumeAt;
   double _visible = 0;
-  bool _ready = false,
-      _failed = false,
-      _initializing = false,
-      _foreground = true;
-  bool _muted = true, _wantsPlay = false, _playing = false;
+  bool _ready = false, _failed = false, _initializing = false, _foreground = true;
+  bool _muted = true, _wantsPlay = false, _playing = false, _speeding = false;
+  bool _seeking = false;
   int _attempt = 0;
-  bool _speeding = false;
-  void _speed(bool value) {
-    if (_speeding == value) return;
-    _speeding = value;
-    _controller?.setPlaybackSpeed(value ? 2 : 1);
-    if (mounted) setState(() {});
-  }
-
   final _visibilityKey = UniqueKey();
   String get _source => widget.url ?? widget.file!.path;
-  bool get _eligible =>
-      mounted &&
-      _ready &&
-      widget.active &&
-      _wantsPlay &&
-      _foreground &&
-      _visible > .5 &&
-      TickerMode.of(context) &&
-      (ModalRoute.of(context)?.isCurrent ?? true);
+  bool get _onScreen => mounted && _foreground && _visible > 0 &&
+      TickerMode.of(context) && (ModalRoute.of(context)?.isCurrent ?? true);
+  bool get _eligible => _onScreen && _ready && widget.active && _wantsPlay && _visible > .5;
+  bool _owns(VideoPlayerController c, int attempt) => mounted &&
+      attempt == _attempt && identical(_controller, c);
+
   @override
   void initState() {
     super.initState();
-    VisibilityDetectorController.instance.updateInterval = const Duration(
-      milliseconds: 80,
-    );
+    VisibilityDetectorController.instance.updateInterval = const Duration(milliseconds: 80);
     _muted = widget.audioSession?.muted ?? widget.muted;
     widget.audioSession?.addListener(_audioChanged);
     _wantsPlay = widget.autoplay;
+    final lifecycle = WidgetsBinding.instance.lifecycleState;
+    _foreground = lifecycle == null || lifecycle == AppLifecycleState.resumed;
     WidgetsBinding.instance.addObserver(this);
     _PlaybackOwner.register(this);
+  }
+
+  // A paused story still keeps its position; only hidden surfaces release decoders.
+  void _syncResources() {
+    if (!mounted) return;
+    if (_onScreen) {
+      _releaseTimer?.cancel();
+      _releaseTimer = null;
+      if (widget.active && !_ready && !_initializing && !_failed) unawaited(_init());
+    } else if (_controller != null || _initializing) {
+      _releaseTimer ??= Timer(const Duration(seconds: 2), () {
+        assert(() { debugPrint('Video idle timer fired: onScreen=$_onScreen'); return true; }());
+        _releaseTimer = null;
+        if (mounted && !_onScreen) {
+          setState(() => _detach(remember: true));
+        }
+      });
+    }
+  }
+
+  void _detach({required bool remember}) {
+    ++_attempt;
+    final c = _controller;
+    assert(() { debugPrint('Video decoder release: initialized=${c?.value.isInitialized}'); return true; }());
+    if (remember && c != null && c.value.isInitialized) {
+      _resumeAt = c.value.position;
+      if (widget.resumePosition) _PlaybackOwner.positions[_source] = _resumeAt!;
+    }
+    _controller = null;
+    _ready = false;
+    _initializing = false;
+    _playing = false;
+    _speeding = false;
+    _seeking = false;
+    if (c != null) {
+      c.removeListener(_checkTrim);
+      final commands = _commands;
+      _commands = Future<void>.value();
+      _disposals = _disposals.then((_) async {
+        // A play command can create its polling timer after its native await.
+        // Finish queued operations before stopping and disposing that controller.
+        await commands;
+        assert(() { debugPrint('Video commands drained; stopping controller'); return true; }());
+        try {
+          if (c.value.isInitialized) await c.pause();
+        } catch (_) { /* Dispose even if the platform can no longer pause. */ }
+        try { await c.dispose(); assert(() { debugPrint('Video native dispose finished'); return true; }()); } catch (error) {
+          assert(() { debugPrint('Video decoder teardown failed: $error'); return true; }());
+        }
+      });
+    }
+  }
+
+  Future<void> _command(Future<void> Function(VideoPlayerController) action) {
+    final c = _controller;
+    final attempt = _attempt;
+    if (c == null || !_ready) return Future<void>.value();
+    final result = _commands.then((_) async {
+      if (!_owns(c, attempt) || !_ready) return;
+      try {
+        await action(c);
+      } catch (_) {
+        _fail(c, attempt);
+      }
+    });
+    _commands = result;
+    return result;
+  }
+
+  void _fail(VideoPlayerController c, int attempt) {
+    if (!_owns(c, attempt) || _failed) return;
+    // Invalidate identity before asynchronous disposal, so an old completion
+    // can never null out a replacement video or setState after navigation.
+    setState(() {
+      _detach(remember: true);
+      _failed = true;
+    });
+    widget.onError?.call();
+  }
+
+  void _speed(bool value) {
+    if (_speeding == value) return;
+    _speeding = value;
+    unawaited(_command((c) => c.setPlaybackSpeed(value ? 2 : 1)));
+    if (mounted) setState(() {});
   }
 
   @override
   void didUpdateWidget(covariant AppVideoPlayer old) {
     super.didUpdateWidget(old);
+    if (old.url != widget.url || old.file?.path != widget.file?.path) {
+      _detach(remember: false);
+      _resumeAt = null;
+      _failed = false;
+      _wantsPlay = widget.autoplay;
+    }
     if (old.audioSession != widget.audioSession) {
       old.audioSession?.removeListener(_audioChanged);
       widget.audioSession?.addListener(_audioChanged);
       _audioChanged();
     }
-    if (old.url != widget.url || old.file?.path != widget.file?.path) {
-      ++_attempt;
-      _speed(false);
-      _controller?.dispose();
-      _controller = null;
-      _ready = false;
-      _initializing = false;
-      _failed = false;
-      _playing = false;
-      _wantsPlay = widget.autoplay;
-      if (_visible > 0) _init();
-    }
     if (!widget.active || !widget.holdToSpeed) _speed(false);
     if (old.autoplay != widget.autoplay) _wantsPlay = widget.autoplay;
     if (old.muted != widget.muted || old.volume != widget.volume) {
       _muted = widget.audioSession?.muted ?? widget.muted;
-      _controller?.setVolume(_muted ? 0 : widget.volume.clamp(0, 1));
+      unawaited(_command((c) => c.setVolume(_muted ? 0 : widget.volume.clamp(0, 1))));
     }
-    if (old.start != widget.start || old.end != widget.end)
-      _controller?.seekTo(widget.start);
+    if (old.start != widget.start || old.end != widget.end) {
+      _resumeAt = null;
+      unawaited(_command((c) => c.seekTo(widget.start)));
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _PlaybackOwner.update();
     });
@@ -185,7 +261,7 @@ class _AppVideoPlayerState extends State<AppVideoPlayer>
   void _audioChanged() {
     if (!mounted) return;
     setState(() => _muted = widget.audioSession?.muted ?? widget.muted);
-    _controller?.setVolume(_muted ? 0 : widget.volume.clamp(0, 1));
+    unawaited(_command((c) => c.setVolume(_muted ? 0 : widget.volume.clamp(0, 1))));
   }
 
   @override
@@ -195,52 +271,68 @@ class _AppVideoPlayerState extends State<AppVideoPlayer>
     _PlaybackOwner.update();
   }
 
+  @override
+  void didHaveMemoryPressure() {
+    if (mounted && !_onScreen) setState(() => _detach(remember: true));
+  }
+
   Future<void> _init() async {
-    if (_initializing || _ready) return;
-    _initializing = true;
-    _failed = false;
+    if (!mounted || _initializing || _ready || !_onScreen) return;
+    setState(() { _initializing = true; _failed = false; });
     final attempt = ++_attempt;
-    final c = widget.file != null
-        ? VideoPlayerController.file(widget.file!)
-        : VideoPlayerController.networkUrl(Uri.parse(widget.url!));
-    _controller = c;
+    VideoPlayerController? c;
     try {
+      await _disposals;
+      if (!mounted || attempt != _attempt) return;
+      // This State owns lifecycle pause/resume. Disable the plugin's second
+      // lifecycle observer, which can otherwise issue play outside our queue.
+      final options = VideoPlayerOptions(allowBackgroundPlayback: true);
+      c = widget.file != null
+          ? VideoPlayerController.file(widget.file!, videoPlayerOptions: options)
+          : VideoPlayerController.networkUrl(Uri.parse(widget.url!), videoPlayerOptions: options);
+      _controller = c;
       await c.initialize().timeout(const Duration(seconds: 15));
-      if (!mounted || attempt != _attempt) return;
+      if (!_owns(c, attempt)) return;
       await c.setLooping(widget.loop);
+      if (!_owns(c, attempt)) return;
       await c.setVolume(_muted ? 0 : widget.volume.clamp(0, 1));
+      if (!_owns(c, attempt)) return;
+      final position = _resumeAt ?? (widget.start > Duration.zero ? widget.start :
+          (widget.resumePosition ? _PlaybackOwner.positions[_source] : null));
+      if (position != null && position >= widget.start && position < c.value.duration &&
+          (widget.end == null || position < widget.end!)) await c.seekTo(position);
+      if (!_owns(c, attempt)) return;
       c.addListener(_checkTrim);
-      final position = widget.start > Duration.zero
-          ? widget.start
-          : (widget.resumePosition ? _PlaybackOwner.positions[_source] : null);
-      if (position != null && position < c.value.duration)
-        await c.seekTo(position);
-      if (!mounted || attempt != _attempt) return;
-      setState(() {
-        _ready = true;
-        _initializing = false;
-      });
+      setState(() { _ready = true; _initializing = false; });
       widget.onReady?.call(c.value.duration);
       _PlaybackOwner.update();
     } catch (_) {
       if (!mounted || attempt != _attempt) return;
-      await c.dispose();
-      _controller = null;
-      setState(() {
-        _failed = true;
-        _initializing = false;
-      });
-      widget.onError?.call();
+      if (c != null) {
+        _fail(c, attempt);
+      } else {
+        setState(() { _initializing = false; _failed = true; });
+        widget.onError?.call();
+      }
     }
   }
 
-  bool _seeking = false;
   void _checkTrim() {
     final c = _controller;
-    if (c == null || !_ready || _seeking || widget.end == null) return;
+    if (c == null || !_ready) return;
+    if (c.value.hasError) {
+      final attempt = _attempt;
+      scheduleMicrotask(() => _fail(c, attempt));
+      return;
+    }
+    widget.onPlayback?.call(c.value);
+    if (_seeking || widget.end == null) return;
     if (c.value.position >= widget.end! || c.value.position < widget.start) {
       _seeking = true;
-      c.seekTo(widget.start).whenComplete(() => _seeking = false);
+      final attempt = _attempt;
+      unawaited(_command((c) => c.seekTo(widget.start)).whenComplete(() {
+        if (_owns(c, attempt)) _seeking = false;
+      }));
     }
   }
 
@@ -249,16 +341,11 @@ class _AppVideoPlayerState extends State<AppVideoPlayer>
     if (!_ready || play == _playing) return;
     _playing = play;
     if (play) {
-      final saved = widget.resumePosition ? _PlaybackOwner.positions[_source] : null;
-      if (saved != null &&
-          saved >= widget.start &&
-          (widget.end == null || saved < widget.end!) &&
-          saved < _controller!.value.duration)
-        _controller!.seekTo(saved);
-      _controller!.play();
+      unawaited(_command((c) => c.play()));
     } else {
-      if (widget.resumePosition) _PlaybackOwner.positions[_source] = _controller!.value.position;
-      _controller!.pause();
+      _resumeAt = _controller!.value.position;
+      if (widget.resumePosition) _PlaybackOwner.positions[_source] = _resumeAt!;
+      unawaited(_command((c) => c.pause()));
     }
     if (mounted) setState(() {});
   }
@@ -276,11 +363,10 @@ class _AppVideoPlayerState extends State<AppVideoPlayer>
   @override
   void dispose() {
     widget.audioSession?.removeListener(_audioChanged);
-    ++_attempt;
+    _releaseTimer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
+    _detach(remember: true);
     _PlaybackOwner.unregister(this);
-    if (_ready && widget.resumePosition) _PlaybackOwner.positions[_source] = _controller!.value.position;
-    _controller?.dispose();
     super.dispose();
   }
 
@@ -288,8 +374,8 @@ class _AppVideoPlayerState extends State<AppVideoPlayer>
   Widget build(BuildContext context) => VisibilityDetector(
     key: _visibilityKey,
     onVisibilityChanged: (info) {
+      if (!mounted) return;
       _visible = info.visibleFraction;
-      if (_visible > 0 && !_ready && !_failed) _init();
       _PlaybackOwner.update();
     },
     child: _content(),
@@ -319,7 +405,15 @@ class _AppVideoPlayerState extends State<AppVideoPlayer>
         child: VideoPlayer(_controller!),
       ),
     );
-    if (!widget.showControls) return video;
+    final surface = ValueListenableBuilder<VideoPlayerValue>(
+      valueListenable: _controller!,
+      builder: (_, value, child) => Stack(fit: StackFit.expand, children: [
+        child!,
+        if (value.isBuffering) const Center(child: CircularProgressIndicator()),
+      ]),
+      child: video,
+    );
+    if (!widget.showControls) return surface;
     return Stack(
       fit: StackFit.expand,
       children: [
@@ -343,7 +437,7 @@ class _AppVideoPlayerState extends State<AppVideoPlayer>
               onLongPressCancel: widget.holdToSpeed
                   ? () => _speed(false)
                   : null,
-              child: video,
+              child: surface,
             ),
           ),
         ),
@@ -378,7 +472,7 @@ class _AppVideoPlayerState extends State<AppVideoPlayer>
                   return;
                 }
                 setState(() => _muted = !_muted);
-                _controller!.setVolume(_muted ? 0 : widget.volume.clamp(0, 1));
+                unawaited(_command((c) => c.setVolume(_muted ? 0 : widget.volume.clamp(0, 1))));
               },
               icon: Icon(
                 _muted ? Icons.volume_off_rounded : Icons.volume_up_rounded,

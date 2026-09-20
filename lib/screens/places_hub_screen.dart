@@ -14,6 +14,7 @@ import '../models/route_place.dart';
 import '../services/location_service.dart';
 import '../services/nearby_venue_service.dart';
 import '../services/route_selection_service.dart';
+import '../services/route_map_candidates.dart';
 import '../services/spot_browsing.dart';
 import '../services/spot_repository.dart';
 import '../services/place_catalog_service.dart';
@@ -69,6 +70,39 @@ class _PlacesHubScreenState extends State<PlacesHubScreen> {
   final _markerCards = <String, BitmapDescriptor>{};
   final _pendingMarkerCards = <String>{};
   int _markerEpoch = 0;
+  String _markerSignature = '';
+  GoogleMapController? _mapController;
+  LatLngBounds? _visibleBounds;
+
+  void _clearMapResources() {
+    _markerEpoch++;
+    _markerSignature = '';
+    _markerCards.clear();
+    _pendingMarkerCards.clear();
+    // GoogleMap's own State disposes the native controller.
+    _mapController = null;
+    _visibleBounds = null;
+  }
+
+  Future<void> _refreshMapBounds() async {
+    final controller = _mapController;
+    if (controller == null) return;
+    try {
+      final bounds = await controller.getVisibleRegion();
+      if (!mounted || !_map || !identical(controller, _mapController)) return;
+      setState(() => _visibleBounds = bounds);
+    } catch (_) { /* The map can detach during navigation. */ }
+  }
+
+  List<_Place> _mapPlaces(List<_Place> places) {
+    final center = _camera?.target ?? _center;
+    final candidates = routeMapCandidates(places.map((p) => p.spot).toList(),
+      latitude: center.latitude, longitude: center.longitude,
+      south: _visibleBounds?.southwest.latitude, north: _visibleBounds?.northeast.latitude,
+      west: _visibleBounds?.southwest.longitude, east: _visibleBounds?.northeast.longitude,
+    ).toSet();
+    return places.where((p) => candidates.contains(p.spot) || p.id == _selectedId).toList();
+  }
 
   @override
   void initState() {
@@ -79,7 +113,7 @@ class _PlacesHubScreenState extends State<PlacesHubScreen> {
   @override
   void dispose() {
     _generation++;
-    _markerEpoch++;
+    _clearMapResources();
     _search.dispose();
     super.dispose();
   }
@@ -147,9 +181,7 @@ class _PlacesHubScreenState extends State<PlacesHubScreen> {
     ++_generation;
     setState(() {
       _city = city;
-      _markerEpoch++;
-      _markerCards.clear();
-      _pendingMarkerCards.clear();
+      _clearMapResources();
       _camera = null;
       _selectedId = null;
       _locating = false;
@@ -419,7 +451,10 @@ class _PlacesHubScreenState extends State<PlacesHubScreen> {
                   OutlinedButton.icon(
                     onPressed: () {
                       FocusScope.of(context).unfocus();
-                      setState(() => _map = !_map);
+                      setState(() {
+                        _map = !_map;
+                        if (!_map) _clearMapResources();
+                      });
                     },
                     icon: Icon(
                       _map ? Icons.view_list_outlined : Icons.map_outlined,
@@ -829,7 +864,13 @@ class _PlacesHubScreenState extends State<PlacesHubScreen> {
   );
 
   Future<void> _prepareMarkerCards(List<_Place> places) async {
-    final epoch = _markerEpoch;
+    final keys = places.map((p) => PlaceMarkerCard.cacheKey(p.spot)).toSet();
+    final signature = (keys.toList()..sort()).join('\u0001');
+    if (signature == _markerSignature) return;
+    _markerSignature = signature;
+    final epoch = ++_markerEpoch;
+    _pendingMarkerCards.clear();
+    _markerCards.removeWhere((key, _) => !keys.contains(key));
     final queue = <_Place>[];
     for (final place in places) {
       final key = PlaceMarkerCard.cacheKey(place.spot);
@@ -857,7 +898,8 @@ class _PlacesHubScreenState extends State<PlacesHubScreen> {
   }
 
   Widget _mapView(List<_Place> places) {
-    unawaited(_prepareMarkerCards(places));
+    final mapPlaces = _mapPlaces(places);
+    unawaited(_prepareMarkerCards(mapPlaces));
     final selected = places.where((p) => p.id == _selectedId).firstOrNull;
     return Stack(
       children: [
@@ -867,6 +909,11 @@ class _PlacesHubScreenState extends State<PlacesHubScreen> {
           initialCameraPosition:
               _camera ??
               CameraPosition(target: _center, zoom: _city == null ? 6 : 12),
+          onMapCreated: (controller) {
+            _mapController = controller;
+            unawaited(_refreshMapBounds());
+          },
+          onCameraIdle: () => unawaited(_refreshMapBounds()),
           onCameraMove: (camera) => _camera = camera,
           myLocationEnabled: _position != null,
           myLocationButtonEnabled: _position != null,
@@ -875,7 +922,7 @@ class _PlacesHubScreenState extends State<PlacesHubScreen> {
           padding: EdgeInsets.only(bottom: selected == null ? 0 : 210),
           onTap: (_) => setState(() => _selectedId = null),
           markers: {
-            for (final place in places)
+            for (final place in mapPlaces)
               if (_markerCards.containsKey(PlaceMarkerCard.cacheKey(place.spot)))
               Marker(
                 markerId: MarkerId(place.id),

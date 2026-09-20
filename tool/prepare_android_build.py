@@ -136,6 +136,8 @@ def patch_app_features() -> None:
 
 def main() -> None:
     configure_gradle()
+    from configure_android_crashlytics import configure
+    configure()
     configure_manifest()
     copy_firebase()
     patch_app_features()

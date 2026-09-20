@@ -362,6 +362,12 @@ jobs:
           python3 tool/configure_notifications.py ios
           python3 tool/configure_route_album.py ios
 
+      - name: Configure Maps and validate native bootstrap
+        env:
+          IOS_MAPS_API_KEY: ${{ secrets.IOS_MAPS_API_KEY }}
+          MAPS_API_KEY: ${{ secrets.MAPS_API_KEY }}
+        run: python3 tool/configure_ios_maps.py
+
       - name: Fix iOS rear camera mirroring
         run: python3 tool/patch_ios_camera_mirroring.py
 
@@ -382,6 +388,12 @@ jobs:
             --dart-define="FIREBASE_IOS_APP_ID=$FIREBASE_IOS_APP_ID" \
             --dart-define=IOS_BUNDLE_ID=com.tbt.social \
             --dart-define="ADMOB_NATIVE_IOS=$ADMOB_NATIVE_IOS"
+
+      - name: Upload Crashlytics symbols
+        run: |
+          set -euo pipefail
+          test -d build/ios/archive/Runner.xcarchive/dSYMs
+          ios/Pods/FirebaseCrashlytics/upload-symbols -gsp ios/Runner/GoogleService-Info.plist -p ios build/ios/archive/Runner.xcarchive/dSYMs
 
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v4

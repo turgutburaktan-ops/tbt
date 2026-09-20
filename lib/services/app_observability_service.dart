@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 
 class AppObservabilityService {
@@ -65,6 +66,7 @@ class AppObservabilityService {
     Object error,
     StackTrace stack, {
     String context = '',
+    bool fatal = false,
   }) async {
     final rawError = error.toString();
     final fingerprint = '$context|$rawError';
@@ -78,6 +80,15 @@ class AppObservabilityService {
     }
     _recentErrors[fingerprint] = now;
 
+    // Native crashes are collected by the SDK; forward caught Dart failures too.
+    // Keep diagnostic errors out of debug sessions and unsupported desktop/web hosts.
+    if (!kIsWeb && kReleaseMode &&
+        (defaultTargetPlatform == TargetPlatform.iOS || defaultTargetPlatform == TargetPlatform.android)) {
+      try {
+        await FirebaseCrashlytics.instance.recordError(error, stack, reason: context, fatal: fatal)
+            .timeout(_writeTimeout);
+      } catch (_) { /* Diagnostics must never break the original operation. */ }
+    }
     final uid = FirebaseAuth.instance.currentUser?.uid;
     final rawStack = stack.toString();
     final safeError = rawError.length > 1200
