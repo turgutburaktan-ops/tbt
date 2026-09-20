@@ -435,9 +435,11 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
 
   void _restartProgress() {
     _progress.stop();
-    _storyPaused = false;
-    _completedStoryId = null;
-    _playbackGeneration++;
+    setState(() {
+      _storyPaused = false;
+      _completedStoryId = null;
+      _playbackGeneration++;
+    });
     _progress.duration = _sharedDurations[_current.id] ?? _duration;
     _progress.value = 0;
     if (!_videoTimed && (_current.sharedPostId.isEmpty || _sharedDurations.containsKey(_current.id))) {

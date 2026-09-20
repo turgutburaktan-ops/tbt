@@ -654,15 +654,18 @@ service cloud.firestore {
     match /reports/{reportId} {
       allow read, update, delete: if isAdmin();
       allow create: if signedIn() &&
-        request.resource.data.keys().hasOnly(['reporterId', 'targetType', 'targetId', 'targetOwnerId', 'commentText', 'reason', 'status', 'createdAt']) &&
+        request.resource.data.keys().hasOnly(['reporterId', 'targetType', 'targetId', 'targetOwnerId', 'commentText', 'targetCollection', 'contentId', 'commentId', 'reason', 'status', 'createdAt']) &&
         request.resource.data.reporterId == request.auth.uid &&
         request.resource.data.targetType == 'comment' &&
         request.resource.data.targetId is string &&
-        request.resource.data.targetId.matches('(posts|social_events|event_memories)/[^/]+/comments/[^/]+') &&
-        exists(/databases/$(database)/documents/$(request.resource.data.targetId)) &&
-        request.resource.data.targetOwnerId == get(/databases/$(database)/documents/$(request.resource.data.targetId)).data.userId &&
+        request.resource.data.targetCollection in ['posts', 'social_events', 'event_memories'] &&
+        request.resource.data.contentId is string && request.resource.data.contentId.matches('[^/]+') &&
+        request.resource.data.commentId is string && request.resource.data.commentId.matches('[^/]+') &&
+        request.resource.data.targetId == request.resource.data.targetCollection + '/' + request.resource.data.contentId + '/comments/' + request.resource.data.commentId &&
+        exists(/databases/$(database)/documents/$(request.resource.data.targetCollection)/$(request.resource.data.contentId)/comments/$(request.resource.data.commentId)) &&
+        request.resource.data.targetOwnerId == get(/databases/$(database)/documents/$(request.resource.data.targetCollection)/$(request.resource.data.contentId)/comments/$(request.resource.data.commentId)).data.userId &&
         request.resource.data.targetOwnerId != request.auth.uid &&
-        request.resource.data.commentText == get(/databases/$(database)/documents/$(request.resource.data.targetId)).data.text &&
+        request.resource.data.commentText == get(/databases/$(database)/documents/$(request.resource.data.targetCollection)/$(request.resource.data.contentId)/comments/$(request.resource.data.commentId)).data.text &&
         request.resource.data.reason is string &&
         request.resource.data.reason.size() >= 3 && request.resource.data.reason.size() <= 120 &&
         request.resource.data.status == 'open' && request.resource.data.createdAt == request.time;

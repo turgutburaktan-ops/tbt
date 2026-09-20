@@ -24,7 +24,7 @@ async function req(path, uid, method='GET', data) {
   assert.equal((await req(path,'writer','DELETE')).status,200);
   await seed();
   async function report(uid,changes={}) {
-    const data={reporterId:uid,targetType:'comment',targetId:path,targetOwnerId:'writer',commentText:'hello',reason:'Spam',status:'open',...changes};
+    const data={reporterId:uid,targetType:'comment',targetCollection:'posts',contentId:'comment-test',commentId:'c1',targetId:path,targetOwnerId:'writer',commentText:'hello',reason:'Spam',status:'open',...changes};
     const document={name:`projects/${project}/databases/(default)/documents/reports/${uid}`, ...wrap(data)};
     return fetch(`${base}:commit`,{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${token(uid)}`},body:JSON.stringify({writes:[{update:document,updateTransforms:[{fieldPath:'createdAt',setToServerValue:'REQUEST_TIME'}]}]})});
   }

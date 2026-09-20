@@ -90,6 +90,9 @@ class ContentEngagementBar extends StatelessWidget {
         await FirebaseFirestore.instance.collection('reports').add({
           'reporterId': uid,
           'targetType': 'comment',
+          'targetCollection': collection,
+          'contentId': contentId,
+          'commentId': comment.id,
           'targetId': comment.reference.path,
           'targetOwnerId': data['userId'],
           'commentText': data['text'],
