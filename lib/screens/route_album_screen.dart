@@ -100,7 +100,7 @@ class _RouteAlbumScreenState extends State<RouteAlbumScreen> {
             : 'image/${extension == 'jpg' ? 'jpeg' : extension}';
         final base = 'route_albums/${widget.plan.id}/$uid/${doc.id}';
         final ref = FirebaseStorage.instance.ref('$base/media.$extension');
-        final thumb = FirebaseStorage.instance.ref('$base/thumb.${video ? 'jpg' : 'png'}');
+        final thumb = FirebaseStorage.instance.ref('$base/thumb.jpg');
         stage = 'Video hazırlanıyor';
         final prepared = video
             ? await VideoMediaService.instance.prepare(File(file.path), maxDuration: null)
@@ -123,7 +123,7 @@ class _RouteAlbumScreenState extends State<RouteAlbumScreen> {
             stage = 'Albüm önizlemesinin yüklenmesi';
             await thumb.putData(
               thumbnail,
-              SettableMetadata(contentType: video ? 'image/jpeg' : 'image/png'),
+              SettableMetadata(contentType: 'image/jpeg'),
             );
             thumbDone = true;
           }
@@ -419,7 +419,6 @@ class _AlbumViewerState extends State<_AlbumViewer> {
           final denied = s.hasError || (s.hasData && d == null);
           final owned = d?['ownerId'] == FirebaseAuth.instance.currentUser?.uid;
           final allowed = owned || d?['allowExport'] == true;
-          if (denied) _video?.pause();
           return Scaffold(
             backgroundColor: Colors.black,
             appBar: AppBar(

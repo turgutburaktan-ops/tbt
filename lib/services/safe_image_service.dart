@@ -1,5 +1,7 @@
 import 'dart:typed_data';
 import 'dart:ui' as ui;
+import 'package:flutter/foundation.dart';
+import 'package:image/image.dart' as img;
 
 /// Read dimensions from the encoded header, and decode only preview-sized pixels.
 /// Originals are left untouched; large images are never decoded by Dart on the UI isolate.
@@ -32,7 +34,9 @@ class SafeImageService {
       );
       image = (await codec.getNextFrame()).image;
       final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
-      return bytes?.buffer.asUint8List(bytes.offsetInBytes, bytes.lengthInBytes);
+      if (bytes == null) return null;
+      // Encode only the already downsampled preview off the UI isolate.
+      return await compute(_previewJpeg, bytes.buffer.asUint8List(bytes.offsetInBytes, bytes.lengthInBytes));
     } finally {
       image?.dispose();
       codec?.dispose();
@@ -40,4 +44,10 @@ class SafeImageService {
       buffer.dispose();
     }
   }
+}
+
+Uint8List _previewJpeg(Uint8List bytes) {
+  final image = img.decodePng(bytes);
+  if (image == null) throw const FormatException('Önizleme oluşturulamadı.');
+  return Uint8List.fromList(img.encodeJpg(image, quality: 75));
 }
