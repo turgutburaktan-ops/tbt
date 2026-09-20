@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:video_compress/video_compress.dart';
@@ -23,12 +24,30 @@ class VideoMediaService {
   // mid-range Android/iOS devices. The original local file is never deleted.
   static const int maxPreparedBytes = 100 * 1024 * 1024;
 
+  Future<void> _pending = Future<void>.value();
+
   Future<PreparedVideoMedia> prepare(
     File source, {
-    required Duration maxDuration,
+    required Duration? maxDuration,
     int? startSeconds,
     int? durationSeconds,
     bool includeAudio = true,
+  }) {
+    // video_compress owns one native compressor. Serialize uploads from different
+    // screens, including callers which stopped waiting after their UI timeout.
+    final result = _pending.then((_) => _prepare(source,
+      maxDuration: maxDuration, startSeconds: startSeconds,
+      durationSeconds: durationSeconds, includeAudio: includeAudio));
+    _pending = result.then<void>((_) {}, onError: (Object _, StackTrace __) {});
+    return result;
+  }
+
+  Future<PreparedVideoMedia> _prepare(
+    File source, {
+    required Duration? maxDuration,
+    int? startSeconds,
+    int? durationSeconds,
+    required bool includeAudio,
   }) async {
     if (!await source.exists()) {
       throw Exception('Video dosyası bulunamadı.');
@@ -50,7 +69,7 @@ class VideoMediaService {
     if (durationMs <= 0) {
       throw Exception('Video süresi okunamadı.');
     }
-    if (durationMs > maxDuration.inMilliseconds + 250) {
+    if (maxDuration != null && durationMs > maxDuration.inMilliseconds + 250) {
       throw Exception(
         'Video en fazla ${maxDuration.inSeconds} saniye olabilir.',
       );
@@ -82,7 +101,7 @@ class VideoMediaService {
     final thumbnail = await VideoCompress.getFileThumbnail(
       compressedPath,
       quality: 92,
-      position: 500,
+      position: durationMs < 500 ? 0 : 500,
     );
     if (!await thumbnail.exists() || await thumbnail.length() <= 0) {
       throw Exception('Video önizlemesi hazırlanamadı.');

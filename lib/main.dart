@@ -73,6 +73,7 @@ Future<void> main() async {
           error,
           stack,
           context: 'platform_error',
+          fatal: true,
         ),
       );
     }
@@ -121,6 +122,7 @@ Future<void> main() async {
             error,
             stack,
             context: 'zone_error',
+              fatal: true,
           ),
         );
       }

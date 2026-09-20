@@ -2,7 +2,7 @@ import '../theme/app_theme.dart';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:image/image.dart' as img;
+import '../services/safe_image_service.dart';
 
 import '../services/ai_service.dart';
 import 'create_post_screen.dart';
@@ -46,14 +46,9 @@ class _AiEditScreenState extends State<AiEditScreen> {
 
   void _loadImageSize(String path) async {
     try {
-      final decoded = img.decodeImage(await File(path).readAsBytes());
-      if (!mounted || decoded == null) return;
-      setState(() {
-        _imagePixelSize = Size(
-          decoded.width.toDouble(),
-          decoded.height.toDouble(),
-        );
-      });
+      final size = await SafeImageService.dimensions(path);
+      if (!mounted || path != _currentImagePath) return;
+      setState(() => _imagePixelSize = size);
     } catch (_) {}
   }
 

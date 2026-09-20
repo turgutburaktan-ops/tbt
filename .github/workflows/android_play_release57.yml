@@ -128,6 +128,7 @@ jobs:
       - name: Configure notification replies
         run: |
           python3 tool/configure_notifications.py android
+          python3 tool/configure_android_crashlytics.py
           python3 tool/configure_route_album.py android
       - name: Build Play app bundle
         env:

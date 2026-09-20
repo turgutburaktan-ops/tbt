@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'video_media_service.dart';
 import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -115,14 +116,17 @@ class RouteChatService {
     final data = envelope(video ? 'Video' : 'Fotoğraf', type, reply);
     final root = plan(id);
     final doc = root.collection('messages').doc();
-    final extension = ext == 'jpeg' ? 'jpg' : ext;
+    final prepared = video
+        ? await VideoMediaService.instance.prepare(File(file.path), maxDuration: null)
+        : null;
+    final extension = video ? 'mp4' : (ext == 'jpeg' ? 'jpg' : ext);
     final mime = video
-        ? (ext == 'mov' ? 'video/quicktime' : 'video/mp4')
+        ? 'video/mp4'
         : 'image/${ext == 'jpg' ? 'jpeg' : ext}';
     final ref = FirebaseStorage.instance.ref(
       'route_albums/$id/${data['senderId']}/${doc.id}/media.$extension',
     );
-    await ref.putFile(File(file.path), SettableMetadata(contentType: mime));
+    await ref.putFile(prepared?.video ?? File(file.path), SettableMetadata(contentType: mime));
     final batch = FirebaseFirestore.instance.batch();
     batch.set(doc, {
       ...data,

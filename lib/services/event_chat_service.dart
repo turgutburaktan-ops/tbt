@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'video_media_service.dart';
 import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -34,10 +35,13 @@ class EventChatService {
     final video = ['mp4','mov'].contains(ext), size = await file.length();
     if (size == 0 || size > (video ? 100 : 15) * 1024 * 1024) throw Exception(video ? 'Video en fazla 100 MB olabilir.' : 'Fotoğraf en fazla 15 MB olabilir.');
     final data = _data(video ? 'Video' : 'Fotoğraf', video ? 'video' : 'image', reply), doc = messages(id).doc();
-    final extension = ext == 'jpeg' ? 'jpg' : ext;
-    final mime = video ? (ext == 'mov' ? 'video/quicktime' : 'video/mp4') : 'image/${ext == 'jpg' ? 'jpeg' : ext}';
+    final prepared = video
+        ? await VideoMediaService.instance.prepare(File(file.path), maxDuration: null)
+        : null;
+    final extension = video ? 'mp4' : (ext == 'jpeg' ? 'jpg' : ext);
+    final mime = video ? 'video/mp4' : 'image/${ext == 'jpg' ? 'jpeg' : ext}';
     final ref = FirebaseStorage.instance.ref('event_chat/$id/${data['senderId']}/${doc.id}/media.$extension');
-    await ref.putFile(File(file.path), SettableMetadata(contentType: mime));
+    await ref.putFile(prepared?.video ?? File(file.path), SettableMetadata(contentType: mime));
     await doc.set({...data, 'storagePath': ref.fullPath});
   }
 }

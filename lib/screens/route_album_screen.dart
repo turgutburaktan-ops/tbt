@@ -6,12 +6,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:image/image.dart' as img;
+import '../services/safe_image_service.dart';
+import '../services/video_media_service.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:video_compress/video_compress.dart';
-import 'package:video_player/video_player.dart';
+import '../widgets/app_video_player.dart';
 
 import '../models/travel_plan.dart';
 import '../services/user_facing_error.dart';
@@ -44,7 +44,9 @@ class _RouteAlbumScreenState extends State<RouteAlbumScreen> {
       final picked = await ImagePicker().pickMultipleMedia();
       if (picked.isEmpty || !mounted) return;
       final prefs = await SharedPreferences.getInstance();
-      final uid = FirebaseAuth.instance.currentUser!.uid;
+      if (!mounted) return;
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid == null) throw Exception('Giriş yapmalısın.');
       final key = 'route_album_export_$uid';
       bool? allowed = prefs.getBool(key);
       if (allowed == null) {
@@ -70,6 +72,7 @@ class _RouteAlbumScreenState extends State<RouteAlbumScreen> {
         if (allowed == null || !mounted) return;
         await prefs.setBool(key, allowed);
       }
+      if (!mounted) return;
       setState(() => _uploading = true);
       for (var i = 0; i < picked.length; i++) {
         if (!mounted) break;
@@ -88,7 +91,7 @@ class _RouteAlbumScreenState extends State<RouteAlbumScreen> {
           );
         final doc = _album.doc();
         final extension = video
-            ? (ext == 'mov' ? 'mov' : 'mp4')
+            ? 'mp4'
             : ['png', 'webp', 'heic', 'heif'].contains(ext)
             ? ext
             : 'jpg';
@@ -97,35 +100,30 @@ class _RouteAlbumScreenState extends State<RouteAlbumScreen> {
             : 'image/${extension == 'jpg' ? 'jpeg' : extension}';
         final base = 'route_albums/${widget.plan.id}/$uid/${doc.id}';
         final ref = FirebaseStorage.instance.ref('$base/media.$extension');
-        final thumb = FirebaseStorage.instance.ref('$base/thumb.jpg');
+        final thumb = FirebaseStorage.instance.ref('$base/thumb.${video ? 'jpg' : 'png'}');
+        stage = 'Video hazırlanıyor';
+        final prepared = video
+            ? await VideoMediaService.instance.prepare(File(file.path), maxDuration: null)
+            : null;
         bool mediaDone = false, thumbDone = false;
         try {
           stage = 'Albüm dosyasının yüklenmesi';
           await ref.putFile(
-            File(file.path),
+            prepared?.video ?? File(file.path),
             SettableMetadata(contentType: mime),
           );
           mediaDone = true;
           Uint8List? thumbnail;
-          if (video) {
-            final f = await VideoCompress.getFileThumbnail(
-              file.path,
-              quality: 65,
-              position: -1,
-            );
-            thumbnail = await f.readAsBytes();
+          if (prepared != null) {
+            thumbnail = await prepared.thumbnail.readAsBytes();
           } else {
-            final decoded = img.decodeImage(await file.readAsBytes());
-            if (decoded != null)
-              thumbnail = Uint8List.fromList(
-                img.encodeJpg(img.copyResize(decoded, width: 400), quality: 75),
-              );
+            thumbnail = await SafeImageService.thumbnail(file.path);
           }
           if (thumbnail != null) {
             stage = 'Albüm önizlemesinin yüklenmesi';
             await thumb.putData(
               thumbnail,
-              SettableMetadata(contentType: 'image/jpeg'),
+              SettableMetadata(contentType: video ? 'image/jpeg' : 'image/png'),
             );
             thumbDone = true;
           }
@@ -297,7 +295,7 @@ class _AlbumViewer extends StatefulWidget {
 
 class _AlbumViewerState extends State<_AlbumViewer> {
   File? _file;
-  VideoPlayerController? _video;
+  bool _isVideo = false;
   String? _error;
   bool _busy = false;
   late final _stream = widget.reference.snapshots();
@@ -322,10 +320,7 @@ class _AlbumViewerState extends State<_AlbumViewer> {
         return;
       }
       _file = file;
-      if (d['kind'] == 'video') {
-        _video = VideoPlayerController.file(file);
-        await _video!.initialize();
-      }
+      _isVideo = d['kind'] == 'video';
       if (mounted) setState(() {});
     } catch (e) {
       if (mounted) setState(() => _error = userFacingError(e));
@@ -334,7 +329,6 @@ class _AlbumViewerState extends State<_AlbumViewer> {
 
   @override
   void dispose() {
-    _video?.dispose();
     final f = _file;
     if (f != null) f.delete().catchError((_) => f);
     super.dispose();
@@ -450,27 +444,8 @@ class _AlbumViewerState extends State<_AlbumViewer> {
                 : _file == null
                 ? const Center(child: CircularProgressIndicator())
                 : Center(
-                    child: _video != null
-                        ? GestureDetector(
-                            onTap: () {
-                              setState(
-                                () => _video!.value.isPlaying
-                                    ? _video!.pause()
-                                    : _video!.play(),
-                              );
-                            },
-                            child: Stack(
-                              alignment: Alignment.center,
-                              children: [
-                                AspectRatio(
-                                  aspectRatio: _video!.value.aspectRatio,
-                                  child: VideoPlayer(_video!),
-                                ),
-                                if (!_video!.value.isPlaying)
-                                  const Icon(Icons.play_circle_fill, size: 60),
-                              ],
-                            ),
-                          )
+                    child: _isVideo
+                        ? AppVideoPlayer.file(file: _file!, autoplay: false)
                         : InteractiveViewer(child: Image.file(_file!)),
                   ),
             bottomNavigationBar: denied

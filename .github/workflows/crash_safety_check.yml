@@ -1,0 +1,97 @@
+name: Crash safety verification
+on:
+  push:
+    branches: [codex/crash-safety-20260920]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  flutter:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: dart format lib/widgets/app_video_player.dart lib/services/safe_image_service.dart lib/services/video_media_service.dart lib/services/app_observability_service.dart lib/services/event_chat_service.dart lib/services/route_chat_service.dart lib/screens/ai_edit_screen.dart lib/screens/route_album_screen.dart lib/screens/places_hub_screen.dart test/video_playback_test.dart test/safe_image_service_test.dart
+      - run: flutter analyze --no-fatal-infos --no-fatal-warnings
+      - run: python3 -m unittest discover -s tool/tests -p 'test_crash_configuration.py'
+      - run: flutter test test/video_playback_test.dart test/safe_image_service_test.dart test/route_map_candidates_test.dart test/places_hub_test.dart test/route_create_test.dart test/profile_ios_interaction_test.dart test/post_photo_crop_test.dart test/post_photo_capture_test.dart test/chat_layout_test.dart
+      - name: Save resolved dependencies and formatted sources
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: crash-safety-verified-sources
+          path: |
+            pubspec.lock
+            lib/
+            test/video_playback_test.dart
+            test/safe_image_service_test.dart
+  build-ios:
+    name: Build iOS Simulator
+    runs-on: macos-26
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Show toolchain
+        run: |
+          flutter --version
+          dart --version
+          xcodebuild -version
+      - name: Use CocoaPods plugin integration
+        run: flutter config --no-enable-swift-package-manager
+      - name: Install dependencies
+        run: flutter pub get
+      - name: Prepare clean iOS host
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf ios
+          flutter create --platforms=ios --org com.tbt --project-name best_photo_spot .
+          sed -i '' 's/com\.tbt\.bestPhotoSpot/com.tbt.social/g' ios/Runner.xcodeproj/project.pbxproj
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          p = Path('ios/Podfile')
+          s = p.read_text()
+          if re.search(r"^\s*#?\s*platform :ios,\s*'[^']+'", s, flags=re.M):
+              s = re.sub(r"^\s*#?\s*platform :ios,\s*'[^']+'", "platform :ios, '15.0'", s, count=1, flags=re.M)
+          else:
+            s = "platform :ios, '15.0'\n" + s
+          p.write_text(s)
+          info = Path('ios/Runner/Info.plist')
+          plist = info.read_text()
+          if 'GADApplicationIdentifier' not in plist:
+              plist = plist.replace('</dict>', '  <key>GADApplicationIdentifier</key>\n  <string>ca-app-pub-3940256099942544~1458002511</string>\n</dict>')
+              info.write_text(plist)
+          PY
+          rm -rf ios/Pods ios/Podfile.lock
+
+      - name: Configure production native hooks
+        env:
+          IOS_MAPS_API_KEY: ${{ secrets.IOS_MAPS_API_KEY }}
+          MAPS_API_KEY: ${{ secrets.MAPS_API_KEY }}
+        run: |
+          python3 tool/configure_notifications.py ios
+          python3 tool/configure_route_album.py ios
+          python3 tool/configure_ios_maps.py
+
+      - name: Fix iOS rear camera mirroring
+        run: python3 tool/patch_ios_camera_mirroring.py
+
+      - name: Build iOS simulator
+        run: >-
+          flutter build ios --simulator --debug --no-pub
+          --dart-define=FIREBASE_IOS_API_KEY=ci-placeholder
+          --dart-define=FIREBASE_IOS_APP_ID=1:330568532415:ios:ci-placeholder
+          --dart-define=IOS_BUNDLE_ID=com.tbt.social
+      - name: Verify simulator app bundle
+        run: test -d build/ios/iphonesimulator/Runner.app

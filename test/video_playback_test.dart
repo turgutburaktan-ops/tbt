@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:best_photo_spot/widgets/shared_story_video.dart';
 import 'package:best_photo_spot/services/video_audio_session.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:best_photo_spot/widgets/expandable_caption.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:video_player_platform_interface/video_player_platform_interface.dart';
@@ -13,6 +14,7 @@ class _VideoPlatform extends VideoPlayerPlatform {
   final playing = <int, bool>{};
   final speeds = <int, double>{};
   final volumes = <int, double>{};
+  final seeks = <int, Duration>{};
   @override
   Future<void> init() async {}
   @override
@@ -57,7 +59,7 @@ class _VideoPlatform extends VideoPlayerPlatform {
   }
 
   @override
-  Future<void> seekTo(int id, Duration position) async {}
+  Future<void> seekTo(int id, Duration position) async { seeks[id] = position; }
   @override
   Future<Duration> getPosition(int id) async => Duration.zero;
   @override
@@ -73,7 +75,106 @@ class _BufferingVideoPlatform extends _VideoPlatform {
   Future<Duration> getPosition(int id) async => position;
 }
 
+class _DisposalVideoPlatform extends _BufferingVideoPlatform {
+  final disposal = Completer<void>();
+  @override
+  Future<void> dispose(int id) async {
+    await disposal.future;
+    await super.dispose(id);
+  }
+}
+
+Future<void> _tick(WidgetTester tester, [int count = 8]) async {
+  for (var i = 0; i < count; i++) { await tester.pump(const Duration(milliseconds: 100)); }
+}
+
 void main() {
+  testWidgets('hidden tab releases its decoder and resumes at its own position', (tester) async {
+    final platform = _BufferingVideoPlatform();
+    VideoPlayerPlatform.instance = platform;
+    var index = 0;
+    late StateSetter update;
+    await tester.pumpWidget(MaterialApp(home: StatefulBuilder(builder: (_, setState) {
+      update = setState;
+      return Scaffold(body: PlaybackIndexedStack(index: index, children: const [
+        AppVideoPlayer.network(url: 'https://example.com/resource-release.mp4', autoplay: true),
+        SizedBox(),
+      ]));
+    })));
+    await _tick(tester);
+    platform.events.add(VideoEvent(eventType: VideoEventType.initialized,
+      duration: const Duration(seconds: 20), size: const Size(1920, 1080)));
+    await _tick(tester);
+    platform.position = const Duration(seconds: 4);
+    await _tick(tester);
+    update(() => index = 1);
+    await _tick(tester, 35);
+    expect(platform.playing, isEmpty);
+    update(() => index = 0);
+    await _tick(tester);
+    platform.events.add(VideoEvent(eventType: VideoEventType.initialized,
+      duration: const Duration(seconds: 20), size: const Size(1920, 1080)));
+    await _tick(tester);
+    expect(platform.playing.length, 1);
+    expect(platform.seeks[platform.next], const Duration(seconds: 4));
+    await tester.pumpWidget(const SizedBox());
+    await _tick(tester);
+    await platform.events.close();
+  });
+
+  testWidgets('late decoder disposal cannot change a replacement or a closed screen', (tester) async {
+    final platform = _DisposalVideoPlatform();
+    VideoPlayerPlatform.instance = platform;
+    var source = 'old';
+    late StateSetter update;
+    await tester.pumpWidget(MaterialApp(home: StatefulBuilder(builder: (_, setState) {
+      update = setState;
+      return Scaffold(body: AppVideoPlayer.network(url: 'https://example.com/$source.mp4', autoplay: true));
+    })));
+    await _tick(tester);
+    platform.events.add(VideoEvent(eventType: VideoEventType.initialized,
+      duration: const Duration(seconds: 20), size: const Size(1920, 1080)));
+    await _tick(tester);
+    platform.events.addError(PlatformException(code: 'VideoError', message: 'decode failed'));
+    await _tick(tester);
+    expect(find.text('Video yüklenemedi · Tekrar dene'), findsOneWidget);
+    update(() => source = 'replacement');
+    await _tick(tester);
+    expect(platform.next, 1, reason: 'wait for native teardown before creating another decoder');
+    await tester.pumpWidget(const SizedBox());
+    platform.disposal.complete();
+    await _tick(tester);
+    expect(platform.playing, isEmpty);
+    expect(tester.takeException(), isNull);
+    await platform.events.close();
+  });
+
+  testWidgets('runtime video error offers retry and can initialize a new controller', (tester) async {
+    final platform = _BufferingVideoPlatform();
+    VideoPlayerPlatform.instance = platform;
+    var errors = 0;
+    await tester.pumpWidget(MaterialApp(home: Scaffold(body: AppVideoPlayer.network(
+      url: 'https://example.com/retry-runtime.mp4', autoplay: true, onError: () => errors++,
+    ))));
+    await _tick(tester);
+    platform.events.add(VideoEvent(eventType: VideoEventType.initialized,
+      duration: const Duration(seconds: 20), size: const Size(1920, 1080)));
+    await _tick(tester);
+    platform.events.addError(PlatformException(code: 'VideoError'));
+    await _tick(tester);
+    expect(errors, 1);
+    await tester.tap(find.text('Video yüklenemedi · Tekrar dene'));
+    await _tick(tester);
+    platform.events.add(VideoEvent(eventType: VideoEventType.initialized,
+      duration: const Duration(seconds: 20), size: const Size(1920, 1080)));
+    await _tick(tester);
+    expect(platform.playing.values.single, true);
+    expect(find.text('Video yüklenemedi · Tekrar dene'), findsNothing);
+    await tester.pumpWidget(const SizedBox());
+    await _tick(tester);
+    await platform.events.close();
+  });
+
   testWidgets('story waits for initialization and exposes buffering and completion', (tester) async {
     final platform = _BufferingVideoPlatform();
     VideoPlayerPlatform.instance = platform;
