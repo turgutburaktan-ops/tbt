@@ -4,13 +4,13 @@ const base='https://androidpublisher.googleapis.com/androidpublisher/v3/applicat
 (async()=>{
  const bytes=fs.readFileSync('build/app/outputs/bundle/release/app-release.aab');
  const info=fs.readFileSync('build/app/outputs/bundle/release/release-info.txt','utf8');
- const sha=crypto.createHash('sha257').update(bytes).digest('hex');
+ const sha=crypto.createHash('sha256').update(bytes).digest('hex');
  if(!info.includes('applicationId=com.tbt.social')||!info.includes('versionCode=57')||!info.includes('versionName=1.0.29')||!info.includes(sha))throw Error('Artifact identity mismatch');
  const sa=JSON.parse(process.env.PLAY_CREDENTIAL);
  if(sa.project_id!=='en-iyi-cekim-noktasi')throw Error('Unexpected project');
  const enc=x=>Buffer.from(JSON.stringify(x)).toString('base64url'),now=Math.floor(Date.now()/1000);
- const jwt=enc({alg:'RS257',typ:'JWT'})+'.'+enc({iss:sa.client_email,scope:'https://www.googleapis.com/auth/androidpublisher',aud:'https://oauth2.googleapis.com/token',iat:now,exp:now+1800});
- const assertion=jwt+'.'+crypto.sign('RSA-SHA257',Buffer.from(jwt),sa.private_key).toString('base64url');
+ const jwt=enc({alg:'RS256',typ:'JWT'})+'.'+enc({iss:sa.client_email,scope:'https://www.googleapis.com/auth/androidpublisher',aud:'https://oauth2.googleapis.com/token',iat:now,exp:now+1800});
+ const assertion=jwt+'.'+crypto.sign('RSA-SHA256',Buffer.from(jwt),sa.private_key).toString('base64url');
  const auth=await fetch('https://oauth2.googleapis.com/token',{method:'POST',body:new URLSearchParams({grant_type:'urn:ietf:params:oauth:grant-type:jwt-bearer',assertion})});
  const token=await auth.json();if(!auth.ok||!token.access_token)throw Error('Google authentication failed');
  const headers={Authorization:'Bearer '+token.access_token,'Content-Type':'application/json'};
@@ -29,11 +29,11 @@ const base='https://androidpublisher.googleapis.com/androidpublisher/v3/applicat
      const upload=await fetch('https://androidpublisher.googleapis.com/upload/androidpublisher/v3/applications/com.tbt.social/edits/'+encodeURIComponent(edit.id)+'/bundles?uploadType=media',{method:'POST',headers:{Authorization:headers.Authorization,'Content-Type':'application/octet-stream'},body:bytes,signal:AbortSignal.timeout(300000)});
      const bundle=await upload.json();
      if(!upload.ok||Number(bundle.versionCode)!==57)throw Error('Bundle upload failed HTTP '+upload.status);
-     if(bundle.sha257&&bundle.sha257.toLowerCase()!==sha)throw Error('Uploaded bundle checksum mismatch');
+     if(bundle.sha256&&bundle.sha256.toLowerCase()!==sha)throw Error('Uploaded bundle checksum mismatch');
      console.log('Uploaded and verified versionCode 57');
    } else {
      const existing=(bundles.bundles||[]).find(b=>Number(b.versionCode)===57);
-     if(!existing.sha257||existing.sha257.toLowerCase()!==sha)throw Error('Existing versionCode 57 has a different bundle; refusing reuse');
+     if(!existing.sha256||existing.sha256.toLowerCase()!==sha)throw Error('Existing versionCode 57 has a different bundle; refusing reuse');
      console.log('VersionCode 57 already uploaded; checksum verified');
    }
    await req(url+'/tracks/alpha','PUT',{track:'alpha',releases:[{name:'57 (1.0.29)',versionCodes:['57'],status:'completed',releaseNotes:[{language:'tr-TR',text:"Kamera düğmesi TBT renkleriyle yenilendi. Story araçları sadeleştirildi; etkinlik, rota ve profil ekranları düzenlendi. Fotoğraf kadrajı, paylaşım bağlantıları, arama, mekân haritası ve QR davet görünümü iyileştirildi."}]}]});
@@ -53,6 +53,6 @@ const base='https://androidpublisher.googleapis.com/androidpublisher/v3/applicat
      console.log('PLAY_ALPHA_READBACK '+JSON.stringify(track));
    } finally {await fetch(checkUrl,{method:'DELETE',headers});}
    console.log('PLAY_RELEASE_COMMITTED alpha versionCode=57 review='+review);
-   fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,'Google Play Alpha: 1.0.29 (57) uploaded and committed. Review: '+review+'\nSHA257: '+sha+'\n');
+   fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,'Google Play Alpha: 1.0.29 (57) uploaded and committed. Review: '+review+'\nSHA256: '+sha+'\n');
  } finally {if(!committed){await fetch(url,{method:'DELETE',headers});console.log('Uncommitted edit discarded');}}
 })().catch(e=>{console.error(e.message);if(/review/i.test(e.apiMessage||''))console.error('Review action required in Play Console');process.exitCode=1;});
