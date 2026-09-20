@@ -57,11 +57,11 @@ class VideoMediaService {
     }
 
     // HighestQuality could leave 4K/HEVC or an unusually high bitrate in the
-    // feed. HighQuality normalizes the upload to a broadly compatible MP4
-    // playback profile while keeping a visibly good 1080p-class result.
+    // feed. This 1080p profile normalizes the upload to a broadly compatible
+    // MP4 playback profile while keeping a visibly good result.
     final compressed = await VideoCompress.compressVideo(
       source.path,
-      quality: VideoQuality.HighQuality,
+      quality: VideoQuality.Res1920x1080Quality,
       deleteOrigin: false,
       includeAudio: includeAudio,
       startTime: startSeconds ?? 0,
