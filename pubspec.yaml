@@ -1,7 +1,7 @@
 name: best_photo_spot
 description: Smart photography assistant MVP.
 publish_to: "none"
-version: 1.0.28+56
+version: 1.0.29+57
 
 environment:
   sdk: ">=3.7.0 <4.0.0"
@@ -71,16 +71,3 @@ flutter:
 
 dependency_overrides:
   geolocator_android: 4.6.1
-
-# CI rebuild marker: 2026-08-27-oauth-secret
-# approved-brand-artwork: 2026-08-28
-# launcher-artwork-installed
-# launcher-source-ready
-# final-icon-source
-# approved-tbt-icon-active
-# binary-source-present
-# ready
-# icon-ready
-# done
-# complete
-# installed
