@@ -19,6 +19,9 @@ class VideoMediaService {
   static final instance = VideoMediaService._();
 
   static const int maxSourceBytes = 250 * 1024 * 1024;
+  // Playback files stay below the Storage limit and remain decodable on
+  // mid-range Android/iOS devices. The original local file is never deleted.
+  static const int maxPreparedBytes = 100 * 1024 * 1024;
 
   Future<PreparedVideoMedia> prepare(
     File source, {
@@ -53,11 +56,12 @@ class VideoMediaService {
       );
     }
 
-    // 720p'ye zorlamak görüntüyü fazla yumuşatıyordu. En yüksek kaliteyi
-    // kullanarak kaynak detayını mümkün olduğunca koruyoruz.
+    // HighestQuality could leave 4K/HEVC or an unusually high bitrate in the
+    // feed. Res1920x1080Quality normalizes the upload to a broadly compatible
+    // 1080p MP4 playback profile while keeping good visual quality.
     final compressed = await VideoCompress.compressVideo(
       source.path,
-      quality: VideoQuality.HighestQuality,
+      quality: VideoQuality.Res1920x1080Quality,
       deleteOrigin: false,
       includeAudio: includeAudio,
       startTime: startSeconds ?? 0,
@@ -70,6 +74,9 @@ class VideoMediaService {
     final compressedFile = File(compressedPath);
     if (!await compressedFile.exists() || await compressedFile.length() <= 0) {
       throw Exception('Sıkıştırılmış video hazırlanamadı.');
+    }
+    if (await compressedFile.length() > maxPreparedBytes) {
+      throw Exception('Video işlenemedi: dosya boyutu çok yüksek.');
     }
 
     final thumbnail = await VideoCompress.getFileThumbnail(
