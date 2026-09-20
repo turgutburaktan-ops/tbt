@@ -1,4 +1,5 @@
 import importlib.util
+import json
 import os
 from pathlib import Path
 import plistlib
@@ -55,6 +56,7 @@ import UIKit
             with self.subTest(suffix=suffix), tempfile.TemporaryDirectory() as tmp:
                 root = Path(tmp)
                 (root / 'app').mkdir()
+                (root / 'app/google-services.json').write_text(json.dumps({'client':[{'client_info':{'android_client_info':{'package_name':'com.tbt.social'}}}]}))
                 paths = [root / ('settings.gradle' + suffix), root / ('app/build.gradle' + suffix)]
                 for path in paths:
                     path.write_text('plugins {\n}\n// existing configuration\n')
@@ -63,6 +65,7 @@ import UIKit
                 setup.configure(root)
                 for path in paths:
                     self.assertEqual(path.read_text().count('com.google.firebase.crashlytics'), 1)
+                    self.assertEqual(path.read_text().count('com.google.gms.google-services'), 1)
                     self.assertIn('// existing configuration', path.read_text())
 
 

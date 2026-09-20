@@ -340,6 +340,7 @@ class _AlbumViewerState extends State<_AlbumViewer> {
     try {
       final d = (await widget.reference.get()).data();
       if (d == null) throw Exception('Bu içerik kaldırılmış.');
+      if (!mounted) return;
       final owned = d['ownerId'] == FirebaseAuth.instance.currentUser?.uid;
       if (action == 'delete' && owned) {
         final yes = await showDialog<bool>(
@@ -376,7 +377,6 @@ class _AlbumViewerState extends State<_AlbumViewer> {
       }
       if (!owned && d['allowExport'] != true)
         throw Exception('İçeriği yükleyen kişi paylaşmaya izin vermemiş.');
-      await _video?.pause();
       if (action == 'download') {
         await const MethodChannel('tbt/album_export').invokeMethod(
           'saveMedia',
@@ -445,7 +445,7 @@ class _AlbumViewerState extends State<_AlbumViewer> {
                 ? const Center(child: CircularProgressIndicator())
                 : Center(
                     child: _isVideo
-                        ? AppVideoPlayer.file(file: _file!, autoplay: false)
+                        ? AppVideoPlayer.file(file: _file!, autoplay: false, active: !_busy)
                         : InteractiveViewer(child: Image.file(_file!)),
                   ),
             bottomNavigationBar: denied
