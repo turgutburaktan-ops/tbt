@@ -138,6 +138,8 @@ class _AppVideoPlayerState extends State<AppVideoPlayer>
     _muted = widget.audioSession?.muted ?? widget.muted;
     widget.audioSession?.addListener(_audioChanged);
     _wantsPlay = widget.autoplay;
+    final lifecycle = WidgetsBinding.instance.lifecycleState;
+    _foreground = lifecycle == null || lifecycle == AppLifecycleState.resumed;
     WidgetsBinding.instance.addObserver(this);
     _PlaybackOwner.register(this);
   }
@@ -151,6 +153,7 @@ class _AppVideoPlayerState extends State<AppVideoPlayer>
       if (widget.active && !_ready && !_initializing && !_failed) unawaited(_init());
     } else if (_controller != null || _initializing) {
       _releaseTimer ??= Timer(const Duration(seconds: 2), () {
+        assert(() { debugPrint('Video idle timer fired: onScreen=$_onScreen'); return true; }());
         _releaseTimer = null;
         if (mounted && !_onScreen) {
           setState(() => _detach(remember: true));
@@ -181,10 +184,11 @@ class _AppVideoPlayerState extends State<AppVideoPlayer>
         // A play command can create its polling timer after its native await.
         // Finish queued operations before stopping and disposing that controller.
         await commands;
+        assert(() { debugPrint('Video commands drained; stopping controller'); return true; }());
         try {
           if (c.value.isInitialized) await c.pause();
         } catch (_) { /* Dispose even if the platform can no longer pause. */ }
-        try { await c.dispose(); } catch (error) {
+        try { await c.dispose(); assert(() { debugPrint('Video native dispose finished'); return true; }()); } catch (error) {
           assert(() { debugPrint('Video decoder teardown failed: $error'); return true; }());
         }
       });
@@ -280,9 +284,12 @@ class _AppVideoPlayerState extends State<AppVideoPlayer>
     try {
       await _disposals;
       if (!mounted || attempt != _attempt) return;
+      // This State owns lifecycle pause/resume. Disable the plugin's second
+      // lifecycle observer, which can otherwise issue play outside our queue.
+      final options = VideoPlayerOptions(allowBackgroundPlayback: true);
       c = widget.file != null
-          ? VideoPlayerController.file(widget.file!)
-          : VideoPlayerController.networkUrl(Uri.parse(widget.url!));
+          ? VideoPlayerController.file(widget.file!, videoPlayerOptions: options)
+          : VideoPlayerController.networkUrl(Uri.parse(widget.url!), videoPlayerOptions: options);
       _controller = c;
       await c.initialize().timeout(const Duration(seconds: 15));
       if (!_owns(c, attempt)) return;

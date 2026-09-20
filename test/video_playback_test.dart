@@ -3,6 +3,7 @@ import 'package:best_photo_spot/widgets/shared_story_video.dart';
 import 'package:best_photo_spot/services/video_audio_session.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:video_player/video_player.dart';
 import 'package:best_photo_spot/widgets/expandable_caption.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:video_player_platform_interface/video_player_platform_interface.dart';
@@ -109,6 +110,7 @@ void main() {
     await _tick(tester);
     update(() => index = 1);
     await _tick(tester, 35);
+    debugPrint('Remaining video widgets: ${find.byType(VideoPlayer).evaluate().length}; stream listeners: ${platform.events.hasListener}');
     expect(platform.playing, isEmpty);
     update(() => index = 0);
     await _tick(tester);
@@ -144,6 +146,7 @@ void main() {
     await tester.pumpWidget(const SizedBox());
     platform.disposal.complete();
     await _tick(tester);
+    debugPrint('Remaining video widgets: ${find.byType(VideoPlayer).evaluate().length}; stream listeners: ${platform.events.hasListener}');
     expect(platform.playing, isEmpty);
     expect(tester.takeException(), isNull);
     await platform.events.close();
