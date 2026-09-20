@@ -19,6 +19,8 @@ class _VideoPlatform extends VideoPlayerPlatform {
   @override
   Future<void> init() async {}
   @override
+  Future<void> setMixWithOthers(bool mixWithOthers) async {}
+  @override
   Future<int?> create(DataSource source) async {
     playing[++next] = false;
     return next;
@@ -90,6 +92,10 @@ Future<void> _tick(WidgetTester tester, [int count = 8]) async {
 }
 
 void main() {
+  setUp(() {
+    TestWidgetsFlutterBinding.ensureInitialized()
+        .handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+  });
   testWidgets('hidden tab releases its decoder and resumes at its own position', (tester) async {
     final platform = _BufferingVideoPlatform();
     VideoPlayerPlatform.instance = platform;
