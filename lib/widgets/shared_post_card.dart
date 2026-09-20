@@ -13,6 +13,7 @@ import 'package:flutter/material.dart';
 import '../services/creator_service.dart';
 import '../screens/post_deep_link_screen.dart';
 import '../screens/user_profile_screen.dart';
+import 'package:video_player/video_player.dart';
 import 'firebase_media_image.dart';
 
 /// Reference-only rendering: live source/account/block changes invalidate the card.
@@ -28,6 +29,7 @@ class SharedPostCard extends StatefulWidget {
     this.active = true,
     this.note = '',
     this.onStoryReady,
+    this.onStoryPlayback,
     this.onProfileOpening,
     this.onProfileReturned,
   });
@@ -38,6 +40,7 @@ class SharedPostCard extends StatefulWidget {
   final bool storyPresentation, active;
   final String note;
   final ValueChanged<Duration>? onStoryReady;
+  final ValueChanged<VideoPlayerValue>? onStoryPlayback;
   final VoidCallback? onProfileOpening, onProfileReturned;
   final Future<void> Function()? onOpen;
   @override
@@ -399,8 +402,7 @@ class _SharedPostCardState extends State<SharedPostCard> {
           onProfileReturned: widget.onProfileReturned,
           note: widget.note,
           active: widget.active,
-          onReady: _storyReady,
-          onError: () => _storyReady(),
+          onPlayback: widget.onStoryPlayback,
         ),
       );
     }

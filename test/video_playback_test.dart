@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:best_photo_spot/widgets/shared_story_video.dart';
 import 'package:best_photo_spot/services/video_audio_session.dart';
 import 'package:flutter/material.dart';
@@ -63,7 +64,55 @@ class _VideoPlatform extends VideoPlayerPlatform {
   Widget buildView(int id) => const SizedBox.expand();
 }
 
+class _BufferingVideoPlatform extends _VideoPlatform {
+  final events = StreamController<VideoEvent>.broadcast();
+  Duration position = Duration.zero;
+  @override
+  Stream<VideoEvent> videoEventsFor(int id) => events.stream;
+  @override
+  Future<Duration> getPosition(int id) async => position;
+}
+
 void main() {
+  testWidgets('story waits for initialization and exposes buffering and completion', (tester) async {
+    final platform = _BufferingVideoPlatform();
+    VideoPlayerPlatform.instance = platform;
+    final positions = <Duration>[];
+    var buffering = false;
+    var completed = false;
+    await tester.pumpWidget(MaterialApp(home: Scaffold(body: SharedStoryVideo(
+      url: 'https://example.com/buffering.mp4', author: 'Test', active: true,
+      onPlayback: (value) {
+        positions.add(value.position);
+        buffering = value.isBuffering;
+        completed = value.isCompleted;
+      },
+    ))));
+    for (var i = 0; i < 5; i++) { await tester.pump(const Duration(milliseconds: 100)); }
+    await tester.pump(const Duration(seconds: 8));
+    expect(positions, isEmpty, reason: 'unloaded video must not start the story clock');
+    platform.events.add(VideoEvent(eventType: VideoEventType.initialized,
+      duration: const Duration(seconds: 12), size: const Size(1920, 1080)));
+    for (var i = 0; i < 5; i++) { await tester.pump(const Duration(milliseconds: 100)); }
+    platform.position = const Duration(seconds: 2);
+    await tester.pump(const Duration(seconds: 1));
+    platform.events.add(VideoEvent(eventType: VideoEventType.bufferingStart));
+    await tester.pump();
+    expect(buffering, isTrue);
+    final stoppedAt = positions.last;
+    await tester.pump(const Duration(seconds: 8));
+    expect(positions.last, stoppedAt, reason: 'buffering cannot consume story time');
+    expect(completed, isFalse);
+    platform.events.add(VideoEvent(eventType: VideoEventType.bufferingEnd));
+    await tester.pump();
+    expect(buffering, isFalse);
+    platform.events.add(VideoEvent(eventType: VideoEventType.completed));
+    await tester.pump();
+    expect(completed, isTrue);
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(milliseconds: 300));
+    await platform.events.close();
+  });
   testWidgets('shared story fills the surface, plays sound and pauses with story controls', (tester) async {
     final platform = _VideoPlatform();
     VideoPlayerPlatform.instance = platform;

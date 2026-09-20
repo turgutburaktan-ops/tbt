@@ -59,6 +59,7 @@ class AppVideoPlayer extends StatefulWidget {
   final bool resumePosition;
   final ValueChanged<Duration>? onReady;
   final VoidCallback? onError;
+  final ValueChanged<VideoPlayerValue>? onPlayback;
   const AppVideoPlayer.network({
     super.key,
     required String this.url,
@@ -80,6 +81,7 @@ class AppVideoPlayer extends StatefulWidget {
     this.resumePosition = true,
     this.onReady,
     this.onError,
+    this.onPlayback,
   }) : file = null;
   const AppVideoPlayer.file({
     super.key,
@@ -102,6 +104,7 @@ class AppVideoPlayer extends StatefulWidget {
     this.resumePosition = true,
     this.onReady,
     this.onError,
+    this.onPlayback,
   }) : url = null;
   @override
   State<AppVideoPlayer> createState() => _AppVideoPlayerState();
@@ -237,7 +240,9 @@ class _AppVideoPlayerState extends State<AppVideoPlayer>
   bool _seeking = false;
   void _checkTrim() {
     final c = _controller;
-    if (c == null || !_ready || _seeking || widget.end == null) return;
+    if (c == null || !_ready) return;
+    widget.onPlayback?.call(c.value);
+    if (_seeking || widget.end == null) return;
     if (c.value.position >= widget.end! || c.value.position < widget.start) {
       _seeking = true;
       c.seekTo(widget.start).whenComplete(() => _seeking = false);
@@ -319,7 +324,17 @@ class _AppVideoPlayerState extends State<AppVideoPlayer>
         child: VideoPlayer(_controller!),
       ),
     );
-    if (!widget.showControls) return video;
+    if (!widget.showControls) {
+      return ValueListenableBuilder<VideoPlayerValue>(
+        valueListenable: _controller!,
+        builder: (_, value, child) => Stack(fit: StackFit.expand, children: [
+          child!,
+          if (value.isBuffering)
+            const Center(child: CircularProgressIndicator()),
+        ]),
+        child: video,
+      );
+    }
     return Stack(
       fit: StackFit.expand,
       children: [
