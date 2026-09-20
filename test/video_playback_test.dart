@@ -89,6 +89,10 @@ class _DisposalVideoPlatform extends _BufferingVideoPlatform {
 
 Future<void> _tick(WidgetTester tester, [int count = 8]) async {
   for (var i = 0; i < count; i++) { await tester.pump(const Duration(milliseconds: 100)); }
+  // Stream cancellation can complete outside the widget fake clock. Let native
+  // disposal futures settle as well before asserting that resources are gone.
+  await tester.runAsync(() => Future<void>.delayed(Duration.zero));
+  await tester.pump();
 }
 
 void main() {
@@ -112,6 +116,7 @@ void main() {
     platform.events.add(VideoEvent(eventType: VideoEventType.initialized,
       duration: const Duration(seconds: 20), size: const Size(1920, 1080)));
     await _tick(tester);
+    expect(platform.playing.values.single, true);
     platform.position = const Duration(seconds: 4);
     await _tick(tester);
     update(() => index = 1);
