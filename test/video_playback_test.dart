@@ -160,7 +160,7 @@ void main() {
     platform.events.add(VideoEvent(eventType: VideoEventType.initialized,
       duration: const Duration(seconds: 20), size: const Size(1920, 1080)));
     await _tick(tester);
-    platform.events.addError(PlatformException(code: 'VideoError'));
+    platform.events.addError(PlatformException(code: 'VideoError', message: 'Decoder failed'));
     await _tick(tester);
     expect(errors, 1);
     await tester.tap(find.text('Video yüklenemedi · Tekrar dene'));

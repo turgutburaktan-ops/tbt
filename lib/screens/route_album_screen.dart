@@ -444,7 +444,7 @@ class _AlbumViewerState extends State<_AlbumViewer> {
                 ? const Center(child: CircularProgressIndicator())
                 : Center(
                     child: _isVideo
-                        ? AppVideoPlayer.file(file: _file!, autoplay: false, active: !_busy)
+                        ? AppVideoPlayer.file(file: _file!, autoplay: false, active: !_busy, muted: false, showMuteControl: false)
                         : InteractiveViewer(child: Image.file(_file!)),
                   ),
             bottomNavigationBar: denied

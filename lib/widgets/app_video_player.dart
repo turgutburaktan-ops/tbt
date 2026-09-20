@@ -115,6 +115,7 @@ class _AppVideoPlayerState extends State<AppVideoPlayer>
     with WidgetsBindingObserver {
   VideoPlayerController? _controller;
   Future<void> _disposals = Future<void>.value();
+  Future<void> _commands = Future<void>.value();
   Timer? _releaseTimer;
   Duration? _resumeAt;
   double _visible = 0;
@@ -161,6 +162,7 @@ class _AppVideoPlayerState extends State<AppVideoPlayer>
   void _detach({required bool remember}) {
     ++_attempt;
     final c = _controller;
+    assert(() { debugPrint('Video decoder release: initialized=${c?.value.isInitialized}'); return true; }());
     if (remember && c != null && c.value.isInitialized) {
       _resumeAt = c.value.position;
       if (widget.resumePosition) _PlaybackOwner.positions[_source] = _resumeAt!;
@@ -173,21 +175,36 @@ class _AppVideoPlayerState extends State<AppVideoPlayer>
     _seeking = false;
     if (c != null) {
       c.removeListener(_checkTrim);
+      final commands = _commands;
+      _commands = Future<void>.value();
       _disposals = _disposals.then((_) async {
-        try { await c.dispose(); } catch (_) { /* Detached controller. */ }
+        // A play command can create its polling timer after its native await.
+        // Finish queued operations before stopping and disposing that controller.
+        await commands;
+        try {
+          if (c.value.isInitialized) await c.pause();
+        } catch (_) { /* Dispose even if the platform can no longer pause. */ }
+        try { await c.dispose(); } catch (error) {
+          assert(() { debugPrint('Video decoder teardown failed: $error'); return true; }());
+        }
       });
     }
   }
 
-  Future<void> _command(Future<void> Function(VideoPlayerController) action) async {
+  Future<void> _command(Future<void> Function(VideoPlayerController) action) {
     final c = _controller;
     final attempt = _attempt;
-    if (c == null || !_ready) return;
-    try {
-      await action(c);
-    } catch (_) {
-      _fail(c, attempt);
-    }
+    if (c == null || !_ready) return Future<void>.value();
+    final result = _commands.then((_) async {
+      if (!_owns(c, attempt) || !_ready) return;
+      try {
+        await action(c);
+      } catch (_) {
+        _fail(c, attempt);
+      }
+    });
+    _commands = result;
+    return result;
   }
 
   void _fail(VideoPlayerController c, int attempt) {

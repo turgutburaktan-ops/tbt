@@ -122,7 +122,7 @@ Future<void> main() async {
             error,
             stack,
             context: 'zone_error',
-              fatal: true,
+            fatal: true,
           ),
         );
       }

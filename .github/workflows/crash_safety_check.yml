@@ -18,6 +18,12 @@ jobs:
           channel: stable
           cache: true
       - run: flutter pub get
+      - name: Record resolved dependency lock
+        run: |
+          echo TBT_LOCK_BEGIN
+          base64 -w0 pubspec.lock
+          echo
+          echo TBT_LOCK_END
       - run: dart format lib/widgets/app_video_player.dart lib/services/safe_image_service.dart lib/services/video_media_service.dart lib/services/app_observability_service.dart lib/services/event_chat_service.dart lib/services/route_chat_service.dart lib/screens/ai_edit_screen.dart lib/screens/route_album_screen.dart lib/screens/places_hub_screen.dart test/video_playback_test.dart test/safe_image_service_test.dart
       - run: flutter analyze --no-fatal-infos --no-fatal-warnings
       - run: python3 -m unittest discover -s tool/tests -p 'test_crash_configuration.py'
