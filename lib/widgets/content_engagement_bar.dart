@@ -53,6 +53,60 @@ class ContentEngagementBar extends StatelessWidget {
       ..showSnackBar(SnackBar(content: Text(text)));
   }
 
+  Future<void> _commentAction(BuildContext context,
+      QueryDocumentSnapshot<Map<String, dynamic>> comment, String action) async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+    final data = comment.data();
+    String? reason;
+    if (action == 'delete') {
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (c) => AlertDialog(
+          title: const Text('Yorum silinsin mi?'),
+          content: const Text('Bu işlem geri alınamaz.'),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Vazgeç')),
+            FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Sil')),
+          ],
+        ),
+      );
+      if (confirmed != true) return;
+    } else {
+      reason = await showModalBottomSheet<String>(
+        context: context,
+        builder: (c) => SafeArea(child: Column(mainAxisSize: MainAxisSize.min, children: [
+          const ListTile(title: Text('Yorumu şikâyet et')),
+          for (final reason in ['Spam', 'Uygunsuz içerik', 'Taciz veya zorbalık', 'Diğer'])
+            ListTile(title: Text(reason), onTap: () => Navigator.pop(c, reason)),
+        ])),
+      );
+      if (reason == null) return;
+    }
+    try {
+      if (action == 'delete') {
+        await comment.reference.delete();
+      } else {
+        await FirebaseFirestore.instance.collection('reports').add({
+          'reporterId': uid,
+          'targetType': 'comment',
+          'targetCollection': collection,
+          'contentId': contentId,
+          'commentId': comment.id,
+          'targetId': comment.reference.path,
+          'targetOwnerId': data['userId'],
+          'commentText': data['text'],
+          'reason': reason,
+          'status': 'open',
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+      }
+      if (context.mounted) _message(context, action == 'delete' ? 'Yorum silindi.' : 'Şikâyetin alındı.');
+    } catch (_) {
+      if (context.mounted) _message(context, 'İşlem tamamlanamadı. Lütfen tekrar dene.');
+    }
+  }
+
   Future<void> _comments(BuildContext context) async {
     if (contentId.trim().isEmpty) {
       _message(context, 'Bu paylaşımın kimliği bulunamadı.');
@@ -170,8 +224,19 @@ class ContentEngagementBar extends StatelessWidget {
                               const Divider(color: Colors.white10),
                           itemBuilder: (_, index) {
                             final data = docs[index].data();
+                            final uid = FirebaseAuth.instance.currentUser?.uid;
+                            final canDelete = uid != null &&
+                                (data['userId'] == uid || (collection == 'posts' && ownerId == uid));
                             return ListTile(
                               contentPadding: EdgeInsets.zero,
+                              trailing: uid == null ? null : PopupMenuButton<String>(
+                                tooltip: 'Yorum seçenekleri',
+                                onSelected: (action) => _commentAction(context, docs[index], action),
+                                itemBuilder: (_) => [
+                                  if (canDelete) const PopupMenuItem(value: 'delete', child: Text('Yorumu sil')),
+                                  if (data['userId'] != uid) const PopupMenuItem(value: 'report', child: Text('Şikâyet et')),
+                                ],
+                              ),
                               leading: const CircleAvatar(
                                 backgroundColor: AppColors.surface,
                                 child: Icon(Icons.person_outline),

@@ -1,3 +1,4 @@
+import 'package:video_player/video_player.dart';
 import '../theme/app_theme.dart';
 import 'story_navigation_surface.dart';
 import 'profile_name_link.dart';
@@ -372,6 +373,10 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
   bool _sending = false;
   bool _storyPaused = false;
   final Map<String, Duration> _sharedDurations = {};
+  final Set<String> _videoStories = {};
+  int _playbackGeneration = 0;
+  String? _completedStoryId;
+  bool get _videoTimed => _current.isVideo || _videoStories.contains(_current.id);
   bool _musicReady = false;
   int _musicGeneration = 0;
 
@@ -430,10 +435,14 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
 
   void _restartProgress() {
     _progress.stop();
-    _storyPaused = false;
+    setState(() {
+      _storyPaused = false;
+      _completedStoryId = null;
+      _playbackGeneration++;
+    });
     _progress.duration = _sharedDurations[_current.id] ?? _duration;
     _progress.value = 0;
-    if (_current.sharedPostId.isEmpty || _sharedDurations.containsKey(_current.id)) {
+    if (!_videoTimed && (_current.sharedPostId.isEmpty || _sharedDurations.containsKey(_current.id))) {
       _progress.forward();
     }
     unawaited(_startCurrentMusic());
@@ -516,15 +525,41 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
 
   void _resume() {
     if (mounted) setState(() => _storyPaused = false);
-    if (!_progress.isCompleted &&
+    if (!_videoTimed && !_progress.isCompleted &&
         (_current.sharedPostId.isEmpty || _sharedDurations.containsKey(_current.id))) _progress.forward();
     if (_musicReady && !_musicPlayer.playing) {
       unawaited(_musicPlayer.play());
     }
   }
 
+  void _videoPlayback(AppStory story, VideoPlayerValue value) {
+    if (!mounted || story.id != _current.id) return;
+    _videoStories.add(story.id);
+    _progress.stop();
+    if (!value.isInitialized || value.hasError || _storyPaused) return;
+    if (value.isBuffering) {
+      unawaited(_musicPlayer.pause());
+      return;
+    }
+    final durationMs = value.duration.inMilliseconds;
+    if (durationMs <= 0) return;
+    final limit = durationMs.clamp(1, 15000);
+    if (_musicReady && value.isPlaying && !_musicPlayer.playing) {
+      unawaited(_musicPlayer.play());
+    }
+    // Never advance from wall time: only decoded playback position counts.
+    // Keep animation completion separate to avoid navigating during build.
+    _progress.value = (value.position.inMilliseconds / limit).clamp(0.0, 0.999999);
+    if (value.position.inMilliseconds >= limit || value.isCompleted) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && story.id == _current.id && !_storyPaused) _next();
+      });
+    }
+  }
+
   void _next() {
-    if (!mounted) return;
+    if (!mounted || _completedStoryId == _current.id) return;
+    _completedStoryId = _current.id;
     if (_index + 1 >= _stories.length) {
       Navigator.pop(context);
       return;
@@ -867,16 +902,17 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
   Widget _media(AppStory s, double width, double height) {
     if (s.sharedPostId.isNotEmpty) {
       return SharedPostCard(
-        key: ValueKey('shared-${s.id}'), postId: s.sharedPostId,
+        key: ValueKey('shared-${s.id}-${s.id == _current.id ? _playbackGeneration : 0}'), postId: s.sharedPostId,
         storyId: s.id, compact: true, storyPresentation: true,
         active: s.id == _current.id && !_storyPaused,
         note: s.caption, onOpen: _openSharedPost,
         onProfileOpening: _pause, onProfileReturned: _resume,
+        onStoryPlayback: (value) => _videoPlayback(s, value),
         onStoryReady: (duration) {
           _sharedDurations[s.id] = duration;
           if (!mounted || s.id != _current.id) return;
           _progress.duration = duration;
-          if (!_storyPaused && !_progress.isAnimating && !_progress.isCompleted) {
+          if (!_videoTimed && !_storyPaused && !_progress.isAnimating && !_progress.isCompleted) {
             _progress.forward();
           }
         },
@@ -890,8 +926,10 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
           fit: StackFit.expand,
           children: [
             IgnorePointer(child: AppVideoPlayer.network(
-              key: ValueKey(s.id),
+              key: ValueKey('${s.id}-${s.id == _current.id ? _playbackGeneration : 0}'),
               url: s.videoUrl,
+              resumePosition: false,
+              onPlayback: (value) => _videoPlayback(s, value),
               active: s.id == _current.id && !_storyPaused,
               autoplay: true,
               muted: s.hasMusic && s.originalAudioVolume <= 0,

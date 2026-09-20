@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:video_player/video_player.dart';
 import 'app_video_player.dart';
 import 'profile_name_link.dart';
 
 /// Presentation only; the parent resolves access to the original post first.
 class SharedStoryVideo extends StatelessWidget {
   const SharedStoryVideo({super.key, required this.url, required this.author,
-    required this.active, this.note = '', this.onReady, this.onError, this.authorId = '', this.onProfileOpening, this.onProfileReturned});
+    required this.active, this.note = '', this.onPlayback, this.onReady, this.onError, this.authorId = '', this.onProfileOpening, this.onProfileReturned});
   final String url, author, note, authorId;
   final VoidCallback? onProfileOpening, onProfileReturned;
   final bool active;
   final ValueChanged<Duration>? onReady;
   final VoidCallback? onError;
+  final ValueChanged<VideoPlayerValue>? onPlayback;
 
   static Duration storyDuration(Duration duration) => Duration(
     milliseconds: duration.inMilliseconds.clamp(1000, 15000).toInt());
@@ -23,6 +25,7 @@ class SharedStoryVideo extends StatelessWidget {
       resumePosition: false,
       onReady: (duration) => onReady?.call(storyDuration(duration)),
       onError: onError,
+      onPlayback: onPlayback,
     )),
     Positioned(top: 110, left: 16, right: 16, child: ProfileNameLink(userId: authorId,
       onOpening: onProfileOpening, onReturned: onProfileReturned,
