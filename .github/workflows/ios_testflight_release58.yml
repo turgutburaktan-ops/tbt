@@ -1,0 +1,426 @@
+name: iOS TestFlight Release 1.0.30
+
+on:
+  workflow_call:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-testflight-release
+  cancel-in-progress: false
+
+jobs:
+  preflight:
+    uses: ./.github/workflows/store_release_preflight.yml
+    with:
+      platform: ios
+    secrets: inherit
+
+  auth-check:
+    needs: preflight
+    uses: ./.github/workflows/store_auth_smoke.yml
+    secrets: inherit
+
+  build-and-upload:
+    needs: [preflight, auth-check]
+    name: Build and upload to TestFlight
+    runs-on: macos-26
+    timeout-minutes: 60
+    env:
+      BUNDLE_ID: com.tbt.social
+      DEVELOPMENT_TEAM: 58UGDRSLU3
+      PROFILE_NAME: TBT App Store 2026
+
+    steps:
+      - name: Verify Xcode 26 toolchain
+        shell: bash
+        run: |
+          set -euo pipefail
+          xcodebuild -version
+          SDK_VERSION=$(xcrun --sdk iphoneos --show-sdk-version)
+          case "$SDK_VERSION" in
+            26.*) ;;
+            *) echo "Expected iOS 26 SDK, found $SDK_VERSION"; exit 1 ;;
+          esac
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Verify chat and route regressions
+        run: flutter test test/business_campaign_editor_test.dart test/chat_layout_test.dart test/chat_appearance_test.dart test/route_itinerary_test.dart test/profile_identity_test.dart test/profile_content_navigation_test.dart test/restored_flows_test.dart test/categorized_search_test.dart test/place_catalog_test.dart test/nearby_venue_loading_test.dart test/places_hub_test.dart test/route_map_candidates_test.dart
+
+      - name: Generate clean iOS host
+        shell: bash
+        run: |
+          set -euo pipefail
+          flutter config --no-enable-swift-package-manager
+          rm -rf ios
+          flutter create --platforms=ios --org com.tbt --project-name best_photo_spot .
+          dart run flutter_launcher_icons
+          ICON_PATH='ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-1024x1024@1x.png'
+          test -s "$ICON_PATH"
+          test "$(sips -g pixelWidth "$ICON_PATH" | awk '/pixelWidth/{print $2}')" = '1024'
+          test "$(sips -g pixelHeight "$ICON_PATH" | awk '/pixelHeight/{print $2}')" = '1024'
+
+      - name: Configure iOS application
+        shell: bash
+        env:
+          FIREBASE_IOS_GOOGLE_SERVICE_INFO_PLIST_BASE64: ${{ secrets.FIREBASE_IOS_GOOGLE_SERVICE_INFO_PLIST_BASE64 }}
+          ADMOB_IOS_APP_ID: ca-app-pub-3462343788063276~3452529921
+        run: |
+          set -euo pipefail
+          test -n "$FIREBASE_IOS_GOOGLE_SERVICE_INFO_PLIST_BASE64"
+          python3 - <<'PY'
+          import os
+          import plistlib
+          from pathlib import Path
+
+          info_path = Path('ios/Runner/Info.plist')
+          with info_path.open('rb') as f:
+              info = plistlib.load(f)
+
+          info['NSCameraUsageDescription'] = 'TBT, gönderi ve hikayelerinde paylaşacağın fotoğraf ve videoları çekmek için kameranı kullanır. Örneğin gezdiğin bir mekanın videosunu çekip TBT profilinde paylaşabilirsin.'
+          info['NSMicrophoneUsageDescription'] = 'TBT, çektiğin videolara ses eklemek ve sohbetlerde sesli mesaj kaydetmek için mikrofonunu kullanır. Örneğin bir mekan videosunu anlatımlı kaydedebilirsin.'
+          info['NSLocationWhenInUseUsageDescription'] = 'Yakındaki mekanları, etkinlikleri ve rota mesafelerini göstermek için konum kullanılır.'
+          info['NSLocationAlwaysAndWhenInUseUsageDescription'] = 'Rota ve çevrendeki içerikleri doğru şekilde göstermek için konum erişimi gerekir.'
+          info['NSLocationAlwaysUsageDescription'] = 'Rota ve çevrendeki içerikleri doğru şekilde göstermek için konum erişimi gerekir.'
+          info['NSPhotoLibraryUsageDescription'] = 'Story ve paylaşım için galerinden fotoğraf veya video seçebilmek için erişim gerekir.'
+          info['NSPhotoLibraryAddUsageDescription'] = 'Düzenlediğin içerikleri fotoğraf arşivine kaydedebilmek için izin gerekir.'
+          info['NSUserTrackingUsageDescription'] = 'İzninle, sana daha alakalı reklamlar göstermek ve reklam performansını ölçmek için cihaz tanımlayıcısı kullanılır.'
+          info['ITSAppUsesNonExemptEncryption'] = False
+          info['CFBundleDisplayName'] = 'TBT'
+          info['CFBundleName'] = 'TBT'
+          info['UIBackgroundModes'] = ['fetch', 'remote-notification']
+          info['GADApplicationIdentifier'] = os.environ['ADMOB_IOS_APP_ID']
+
+          schemes = info.get('CFBundleURLTypes', [])
+          for name, scheme in (
+              ('com.tbt.social', 'tbt'),
+              ('Google Sign-In', 'com.googleusercontent.apps.330578532415-vq9ighb74m02f36pfdf6mq369t6utjj0'),
+          ):
+              if not any(scheme in item.get('CFBundleURLSchemes', []) for item in schemes):
+                  schemes.append({
+                      'CFBundleTypeRole': 'Editor',
+                      'CFBundleURLName': name,
+                      'CFBundleURLSchemes': [scheme],
+                  })
+          info['CFBundleURLTypes'] = schemes
+
+          with info_path.open('wb') as f:
+              plistlib.dump(info, f, sort_keys=False)
+
+          entitlements = {
+              'aps-environment': 'production',
+              'com.apple.developer.applesignin': ['Default'],
+              'com.apple.developer.associated-domains': [
+                  'applinks:trtbt.com',
+                  'applinks:www.trtbt.com',
+              ],
+          }
+          with Path('ios/Runner/Runner.entitlements').open('wb') as f:
+              plistlib.dump(entitlements, f, sort_keys=False)
+          PY
+
+          printf '%s' "$FIREBASE_IOS_GOOGLE_SERVICE_INFO_PLIST_BASE64" \
+            | base64 --decode > ios/Runner/GoogleService-Info.plist
+
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          podfile = Path('ios/Podfile')
+          text = podfile.read_text()
+          if re.search(r"^\s*#?\s*platform :ios,\s*'[^']+'", text, flags=re.M):
+              text = re.sub(
+                  r"^\s*#?\s*platform :ios,\s*'[^']+'",
+                  "platform :ios, '15.0'",
+                  text,
+                  count=1,
+                  flags=re.M,
+              )
+          else:
+              text = "platform :ios, '15.0'\n" + text
+          podfile.write_text(text)
+          PY
+
+          sudo gem install xcodeproj -N
+          ruby <<'RUBY'
+          require 'xcodeproj'
+          project = Xcodeproj::Project.open('ios/Runner.xcodeproj')
+          target = project.targets.find { |item| item.name == 'Runner' }
+          abort('Runner target missing') unless target
+
+          runner_group = project.main_group.find_subpath('Runner', false)
+          abort('Runner group missing') unless runner_group
+          config_file = runner_group.files.find do |file|
+            file.path == 'GoogleService-Info.plist'
+          end
+          config_file ||= runner_group.new_file('GoogleService-Info.plist')
+          unless target.resources_build_phase.files_references.include?(config_file)
+            target.resources_build_phase.add_file_reference(config_file)
+          end
+
+          target.build_configurations.each do |config|
+            config.build_settings['CODE_SIGN_ENTITLEMENTS'] = 'Runner/Runner.entitlements'
+            config.build_settings['CODE_SIGN_IDENTITY'] = 'Apple Distribution'
+            config.build_settings['CODE_SIGN_IDENTITY[sdk=iphoneos*]'] = 'Apple Distribution'
+            config.build_settings['CODE_SIGN_STYLE'] = 'Manual'
+            config.build_settings['DEVELOPMENT_TEAM'] = ENV.fetch('DEVELOPMENT_TEAM')
+            config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.0'
+            config.build_settings['PRODUCT_BUNDLE_IDENTIFIER'] = ENV.fetch('BUNDLE_ID')
+            config.build_settings['PROVISIONING_PROFILE_SPECIFIER'] = ENV.fetch('PROFILE_NAME')
+          end
+          project.save
+          RUBY
+
+      - name: Configure iOS share extension
+        run: python3 tool/configure_ios_share.py
+
+      - name: Install signing certificate and provisioning profiles
+        shell: bash
+        env:
+          IOS_DISTRIBUTION_P12_BASE64: ${{ secrets.IOS_DISTRIBUTION_P12_BASE64 }}
+          IOS_DISTRIBUTION_P12_PASSWORD: ${{ secrets.IOS_DISTRIBUTION_P12_PASSWORD }}
+          ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+          ASC_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+          KEYCHAIN_PASSWORD: ${{ github.run_id }}-${{ github.run_attempt }}
+          FASTLANE_SKIP_UPDATE_CHECK: "1"
+        run: |
+          set -euo pipefail
+          CERTIFICATE_PATH="$RUNNER_TEMP/tbt-distribution.p12"
+          MAIN_PROFILE_PATH="$RUNNER_TEMP/tbt-app-store.mobileprovision"
+          SHARE_PROFILE_PATH="$RUNNER_TEMP/tbt-share.mobileprovision"
+          KEYCHAIN_PATH="$RUNNER_TEMP/tbt-signing.keychain-db"
+          API_KEY_PATH="$RUNNER_TEMP/AuthKey_${ASC_KEY_ID}.p8"
+          API_KEY_JSON="$RUNNER_TEMP/app-store-connect-api-key.json"
+          SHARE_PROFILE_REQUESTED_NAME="TBT Share App Store 2026"
+
+          test -n "$IOS_DISTRIBUTION_P12_BASE64"
+          test -n "$IOS_DISTRIBUTION_P12_PASSWORD"
+          test -n "$ASC_KEY_ID"
+          test -n "$ASC_ISSUER_ID"
+          test -n "$ASC_PRIVATE_KEY"
+
+          printf '%s' "$IOS_DISTRIBUTION_P12_BASE64" | base64 --decode > "$CERTIFICATE_PATH"
+          printf '%s' "$ASC_PRIVATE_KEY" > "$API_KEY_PATH"
+          chmod 600 "$API_KEY_PATH"
+
+          python3 - <<'PYKEY'
+          import json
+          import os
+          from pathlib import Path
+
+          payload = {
+              "key_id": os.environ["ASC_KEY_ID"],
+              "issuer_id": os.environ["ASC_ISSUER_ID"],
+              "key": os.environ["ASC_PRIVATE_KEY"],
+              "in_house": False,
+          }
+          Path(os.environ["RUNNER_TEMP"], "app-store-connect-api-key.json").write_text(
+              json.dumps(payload)
+          )
+          PYKEY
+          chmod 600 "$API_KEY_JSON"
+
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security import "$CERTIFICATE_PATH" \
+            -P "$IOS_DISTRIBUTION_P12_PASSWORD" \
+            -A \
+            -t cert \
+            -f pkcs12 \
+            -k "$KEYCHAIN_PATH"
+          security list-keychain -d user -s "$KEYCHAIN_PATH"
+          security set-key-partition-list \
+            -S apple-tool:,apple: \
+            -k "$KEYCHAIN_PASSWORD" \
+            "$KEYCHAIN_PATH"
+
+          sudo gem install fastlane -N
+          fastlane run sigh \
+            api_key_path:"$API_KEY_JSON" \
+            app_identifier:"$BUNDLE_ID" \
+            team_id:"$DEVELOPMENT_TEAM" \
+            provisioning_name:"$PROFILE_NAME" \
+            output_path:"$RUNNER_TEMP" \
+            filename:"$(basename "$MAIN_PROFILE_PATH")" \
+            force:true \
+            skip_install:true
+          fastlane run sigh \
+            api_key_path:"$API_KEY_JSON" \
+            app_identifier:"com.tbt.social.TBTShare" \
+            team_id:"$DEVELOPMENT_TEAM" \
+            provisioning_name:"$SHARE_PROFILE_REQUESTED_NAME" \
+            output_path:"$RUNNER_TEMP" \
+            filename:"$(basename "$SHARE_PROFILE_PATH")" \
+            force:true \
+            skip_install:true
+
+          mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
+          security cms -D -i "$MAIN_PROFILE_PATH" > "$RUNNER_TEMP/profile.plist"
+          security cms -D -i "$SHARE_PROFILE_PATH" > "$RUNNER_TEMP/share-profile.plist"
+
+          python3 - <<'PYPROFILE'
+          import os
+          import plistlib
+          from pathlib import Path
+
+          group = "group.com.tbt.social.share"
+          expected = [
+              ("profile.plist", "com.tbt.social"),
+              ("share-profile.plist", "com.tbt.social.TBTShare"),
+          ]
+          for filename, suffix in expected:
+              data = plistlib.loads((Path(os.environ["RUNNER_TEMP"]) / filename).read_bytes())
+              rights = data.get("Entitlements", {})
+              assert rights.get("application-identifier", "").endswith(
+                  "." + suffix
+              ), "Profile bundle identifier mismatch"
+              assert group in rights.get(
+                  "com.apple.security.application-groups", []
+              ), "App Group missing from signing profile"
+          PYPROFILE
+
+          PROFILE_UUID=$(/usr/libexec/PlistBuddy -c 'Print :UUID' "$RUNNER_TEMP/profile.plist")
+          PROFILE_DISPLAY_NAME=$(/usr/libexec/PlistBuddy -c 'Print :Name' "$RUNNER_TEMP/profile.plist")
+          test "$PROFILE_DISPLAY_NAME" = "$PROFILE_NAME"
+          cp "$MAIN_PROFILE_PATH" "$HOME/Library/MobileDevice/Provisioning Profiles/$PROFILE_UUID.mobileprovision"
+
+          SHARE_UUID=$(/usr/libexec/PlistBuddy -c 'Print :UUID' "$RUNNER_TEMP/share-profile.plist")
+          SHARE_PROFILE_NAME=$(/usr/libexec/PlistBuddy -c 'Print :Name' "$RUNNER_TEMP/share-profile.plist")
+          cp "$SHARE_PROFILE_PATH" "$HOME/Library/MobileDevice/Provisioning Profiles/$SHARE_UUID.mobileprovision"
+          echo "SHARE_PROFILE_NAME=$SHARE_PROFILE_NAME" >> "$GITHUB_ENV"
+          export SHARE_PROFILE_NAME
+
+          ruby <<'RUBYSHARE'
+          require 'xcodeproj'
+          project = Xcodeproj::Project.open('ios/Runner.xcodeproj')
+          share = project.targets.find { |item| item.name == 'TBTShare' }
+          abort('TBTShare target missing') unless share
+          share.build_configurations.each do |config|
+            config.build_settings.merge!({
+              'CODE_SIGN_STYLE' => 'Manual',
+              'DEVELOPMENT_TEAM' => ENV.fetch('DEVELOPMENT_TEAM'),
+              'CODE_SIGN_IDENTITY' => 'Apple Distribution',
+              'PROVISIONING_PROFILE_SPECIFIER' => ENV.fetch('SHARE_PROFILE_NAME'),
+            })
+          end
+          project.save
+          RUBYSHARE
+
+      - name: Create export configuration
+        shell: bash
+        run: |
+          cat > ios/ExportOptions.plist <<PLIST
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>destination</key>
+            <string>export</string>
+            <key>manageAppVersionAndBuildNumber</key>
+            <false/>
+            <key>method</key>
+            <string>app-store-connect</string>
+            <key>provisioningProfiles</key>
+            <dict>
+              <key>${BUNDLE_ID}</key>
+              <string>${PROFILE_NAME}</string>
+              <key>com.tbt.social.TBTShare</key>
+              <string>${SHARE_PROFILE_NAME}</string>
+            </dict>
+            <key>signingCertificate</key>
+            <string>Apple Distribution</string>
+            <key>signingStyle</key>
+            <string>manual</string>
+            <key>stripSwiftSymbols</key>
+            <true/>
+            <key>teamID</key>
+            <string>${DEVELOPMENT_TEAM}</string>
+            <key>uploadSymbols</key>
+            <true/>
+          </dict>
+          </plist>
+          PLIST
+
+
+      - name: Configure notification replies and route albums
+        run: |
+          python3 tool/configure_notifications.py ios
+          python3 tool/configure_route_album.py ios
+
+      - name: Configure Maps and validate native bootstrap
+        env:
+          IOS_MAPS_API_KEY: ${{ secrets.IOS_MAPS_API_KEY }}
+          MAPS_API_KEY: ${{ secrets.MAPS_API_KEY }}
+        run: python3 tool/configure_ios_maps.py
+
+      - name: Fix iOS rear camera mirroring
+        run: python3 tool/patch_ios_camera_mirroring.py
+
+      - name: Build signed IPA
+        shell: bash
+        env:
+          ADMOB_NATIVE_IOS: ca-app-pub-3462343788063276/9247782088
+        run: |
+          set -euo pipefail
+          FIREBASE_IOS_API_KEY=$(/usr/libexec/PlistBuddy -c 'Print :API_KEY' ios/Runner/GoogleService-Info.plist)
+          FIREBASE_IOS_APP_ID=$(/usr/libexec/PlistBuddy -c 'Print :GOOGLE_APP_ID' ios/Runner/GoogleService-Info.plist)
+          flutter build ipa \
+            --release \
+            --build-name=1.0.30 \
+            --build-number=58 \
+            --export-options-plist=ios/ExportOptions.plist \
+            --dart-define="FIREBASE_IOS_API_KEY=$FIREBASE_IOS_API_KEY" \
+            --dart-define="FIREBASE_IOS_APP_ID=$FIREBASE_IOS_APP_ID" \
+            --dart-define=IOS_BUNDLE_ID=com.tbt.social \
+            --dart-define="ADMOB_NATIVE_IOS=$ADMOB_NATIVE_IOS"
+
+      - name: Upload Crashlytics symbols
+        run: |
+          set -euo pipefail
+          test -d build/ios/archive/Runner.xcarchive/dSYMs
+          ios/Pods/FirebaseCrashlytics/upload-symbols -gsp ios/Runner/GoogleService-Info.plist -p ios build/ios/archive/Runner.xcarchive/dSYMs
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tbt-ios-ipa-1.0.30-build58
+          path: build/ios/ipa/*.ipa
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload to TestFlight
+        shell: bash
+        env:
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+        run: |
+          set -euo pipefail
+          API_KEYS_DIR="$HOME/.appstoreconnect/private_keys"
+          mkdir -p "$API_KEYS_DIR"
+          printf '%s' "$APP_STORE_CONNECT_API_KEY" > "$API_KEYS_DIR/AuthKey_${APP_STORE_CONNECT_API_KEY_ID}.p8"
+          chmod 600 "$API_KEYS_DIR/AuthKey_${APP_STORE_CONNECT_API_KEY_ID}.p8"
+
+          IPA_PATH=$(find build/ios/ipa -maxdepth 1 -name '*.ipa' -print -quit)
+          test -n "$IPA_PATH"
+          xcrun altool --upload-app \
+            --type ios \
+            --file "$IPA_PATH" \
+            --apiKey "$APP_STORE_CONNECT_API_KEY_ID" \
+            --apiIssuer "$APP_STORE_CONNECT_API_ISSUER_ID"
+

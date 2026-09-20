@@ -62,7 +62,7 @@ jobs:
         run: node --test functions/test/*.test.js
 
       - name: Check coupon access rules
-        run: firebase emulators:exec --only firestore --project demo-tbt "node tool/test_coupon_rules.cjs && node tool/test_event_hub_rules.cjs && node tool/test_chat_collaboration.cjs && node tool/test_route_participation.cjs" --non-interactive
+        run: firebase emulators:exec --only firestore --project demo-tbt "node tool/test_coupon_rules.cjs && node tool/test_event_hub_rules.cjs && node tool/test_chat_collaboration.cjs && node tool/test_route_participation.cjs && node tool/test_comment_permissions.cjs" --non-interactive
 
       - name: Install participant album rule test dependencies
         run: npm install --prefix /tmp/route-tests @firebase/rules-unit-testing firebase
