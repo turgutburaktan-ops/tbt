@@ -16,7 +16,7 @@ import '../widgets/post_sharing_actions.dart';
 
 import '../services/content_engagement_service.dart';
 import '../services/social_service.dart';
-import '../widgets/sponsored_native_ad.dart';
+import '../widgets/reels_ad_pager.dart';
 import 'post_detail_screen.dart';
 import 'user_profile_screen.dart';
 
@@ -37,7 +37,6 @@ class ReelsScreen extends StatefulWidget {
 }
 
 class _ReelsScreenState extends State<ReelsScreen> {
-  int _activeIndex = 0;
   int _section = 0;
 
   Stream<QuerySnapshot<Map<String, dynamic>>> get _stream => FirebaseFirestore
@@ -146,42 +145,15 @@ class _ReelsScreenState extends State<ReelsScreen> {
                 ),
               );
             }
-            final adCount = docs.length <= 6
-                ? 0
-                : 1 + ((docs.length - 7) ~/ 10);
-            final displayCount = docs.length + adCount;
-            final safeIndex = _activeIndex.clamp(0, displayCount - 1).toInt();
-            if (safeIndex != _activeIndex) {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (mounted) setState(() => _activeIndex = safeIndex);
-              });
-            }
             return Stack(
               fit: StackFit.expand,
               children: [
-                PageView.builder(
+                ReelsAdPager(
                   key: ValueKey(_section),
-                  scrollDirection: Axis.vertical,
-                  itemCount: displayCount,
-                  onPageChanged: (index) =>
-                      setState(() => _activeIndex = index),
-                  itemBuilder: (_, index) {
-                    final isAd = index >= 6 && (index - 6) % 11 == 0;
-                    if (isAd) {
-                      return const ColoredBox(
-                        color: Colors.black,
-                        child: SafeArea(
-                          child: Center(
-                            child: Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 14),
-                              child: SponsoredNativeAd(),
-                            ),
-                          ),
-                        ),
-                      );
-                    }
-                    final adsBefore = index < 6 ? 0 : 1 + ((index - 6) ~/ 11);
-                    final doc = docs[index - adsBefore];
+                  videoIds: docs.map((doc) => doc['id'].toString()).toList(),
+                  topInset: widget.embedded ? 108 : 64,
+                  videoBuilder: (context, index, active) {
+                    final doc = docs[index];
                     return CreatorViewTracker(
                       key: ValueKey('reel-view-${doc['id']}'),
                       postId: doc['id'].toString(),
@@ -189,7 +161,7 @@ class _ReelsScreenState extends State<ReelsScreen> {
                         key: ValueKey(doc['id']),
                         postId: doc['id'].toString(),
                         data: doc,
-                        active: index == _activeIndex,
+                        active: active,
                       ),
                     );
                   },
@@ -204,7 +176,6 @@ class _ReelsScreenState extends State<ReelsScreen> {
                       onChanged: (value) {
                         setState(() {
                           _section = value;
-                          _activeIndex = 0;
                         });
                       },
                     ),

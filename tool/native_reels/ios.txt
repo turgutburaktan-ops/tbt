@@ -1,0 +1,71 @@
+// TBT Reels native ad factory. Keep assets and interaction under the Google SDK.
+final class TBTReelsAdFactory: NSObject, FLTNativeAdFactory {
+  func createNativeAd(_ ad: NativeAd, customOptions: [AnyHashable: Any]? = nil) -> NativeAdView? {
+    let view = NativeAdView()
+    view.backgroundColor = .black
+    let column = UIStackView()
+    column.axis = .vertical
+    column.spacing = 8
+    column.translatesAutoresizingMaskIntoConstraints = false
+    view.addSubview(column)
+    NSLayoutConstraint.activate([
+      column.topAnchor.constraint(equalTo: view.topAnchor),
+      column.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+      column.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+      column.trailingAnchor.constraint(equalTo: view.trailingAnchor)
+    ])
+    func label(_ value: String?, _ size: CGFloat, bold: Bool = false) -> UILabel {
+      let label = UILabel()
+      label.text = value
+      label.textColor = .white
+      label.font = bold ? .boldSystemFont(ofSize: size) : .systemFont(ofSize: size)
+      label.numberOfLines = 2
+      label.setContentCompressionResistancePriority(.required, for: .vertical)
+      return label
+    }
+    let badge = label("Reklam", 12, bold: true)
+    badge.heightAnchor.constraint(equalToConstant: 32).isActive = true
+    column.addArrangedSubview(badge)
+    let media = MediaView()
+    media.contentMode = .scaleAspectFit
+    media.mediaContent = ad.mediaContent
+    media.setContentHuggingPriority(.defaultLow, for: .vertical)
+    media.setContentCompressionResistancePriority(.defaultLow, for: .vertical)
+    column.addArrangedSubview(media)
+    view.mediaView = media
+    let identity = UIStackView()
+    identity.axis = .horizontal
+    identity.spacing = 10
+    identity.alignment = .center
+    let icon = UIImageView(image: ad.icon?.image)
+    icon.contentMode = .scaleAspectFit
+    icon.widthAnchor.constraint(equalToConstant: 44).isActive = true
+    icon.heightAnchor.constraint(equalToConstant: 44).isActive = true
+    if ad.icon != nil { identity.addArrangedSubview(icon) }
+    view.iconView = icon
+    let headline = label(ad.headline, 18, bold: true)
+    identity.addArrangedSubview(headline)
+    view.headlineView = headline
+    column.addArrangedSubview(identity)
+    let advertiser = label(ad.advertiser, 12)
+    advertiser.textColor = .lightGray
+    if let value = ad.advertiser, !value.isEmpty { column.addArrangedSubview(advertiser) }
+    view.advertiserView = advertiser
+    let body = label(ad.body, 14)
+    body.textColor = .lightGray
+    if let value = ad.body, !value.isEmpty { column.addArrangedSubview(body) }
+    view.bodyView = body
+    let action = UIButton(type: .system)
+    action.setTitle(ad.callToAction, for: .normal)
+    action.setTitleColor(.black, for: .normal)
+    action.backgroundColor = UIColor(red: 85/255, green: 224/255, blue: 210/255, alpha: 1)
+    action.layer.cornerRadius = 12
+    action.heightAnchor.constraint(equalToConstant: 52).isActive = true
+    action.isUserInteractionEnabled = false
+    if let value = ad.callToAction, !value.isEmpty { column.addArrangedSubview(action) }
+    view.callToActionView = action
+    // SDK supplies AdChoices and media controls. Do not overlay Flutter actions.
+    view.nativeAd = ad
+    return view
+  }
+}

@@ -141,6 +141,7 @@ def main() -> None:
     configure_manifest()
     copy_firebase()
     patch_app_features()
+    subprocess.run(["python3", "tool/configure_reels_ads.py", "android"], check=True)
     print("Android build preparation complete")
 
 
