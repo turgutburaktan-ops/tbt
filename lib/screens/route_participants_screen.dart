@@ -1,3 +1,5 @@
+import 'package:flutter/services.dart';
+import '../services/invite_link_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -22,6 +24,7 @@ class RouteParticipantsScreen extends StatelessWidget {
       return ListView(padding:const EdgeInsets.all(16),children:[
         Text(plan.title,style:const TextStyle(color:AppColors.textMuted)),const SizedBox(height:16),
         if(owner)RouteAction(label:'Kişi davet et',outlined:true,icon:Icons.person_add_alt,onPressed:()=>Navigator.push(c,MaterialPageRoute(builder:(_)=>TravelPlanInviteScreen(planId:plan.id,planTitle:plan.title)))),
+        if(owner)TextButton.icon(icon:const Icon(Icons.link),label:const Text('Rota bağlantısını kopyala'),onPressed:()async{await Clipboard.setData(ClipboardData(text:InviteLinkService.instance.routeUri(plan.id).toString()));if(c.mounted)ScaffoldMessenger.of(c).showSnackBar(const SnackBar(content:Text('Bağlantı kopyalandı. Özel rotaya erişim için ayrıca kişi davet et.')));}),
         if(owner)...[const SizedBox(height:20),const Text('Katılma istekleri',style:TextStyle(fontSize:20,fontWeight:FontWeight.w700)),RouteParticipation(routeId:plan.id,data:data,showSettings:false)],
         const SizedBox(height:20),Text('Katılımcılar · ${ids.length}',style:const TextStyle(fontSize:20,fontWeight:FontWeight.w700)),const SizedBox(height:12),
         RoutePanel(padding:EdgeInsets.zero,child:Column(children:[for(final id in ids)StreamBuilder<DocumentSnapshot<Map<String,dynamic>>>(stream:FirebaseFirestore.instance.collection('users').doc(id).snapshots(),builder:(c,p){

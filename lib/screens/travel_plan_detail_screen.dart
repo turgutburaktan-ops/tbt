@@ -1,3 +1,4 @@
+import '../services/invite_link_service.dart';
 import 'route_create_screen.dart';
 import 'route_participants_screen.dart';
 import 'route_path_editor_screen.dart';
@@ -263,7 +264,7 @@ class _TravelPlanDetailScreenState extends State<TravelPlanDetailScreen> {
         .map((entry) => '${entry.key + 1}. ${entry.value}')
         .join('\n');
     await Share.share(
-      '${plan.title}\n\n${plan.city} • ${plan.durationHours} saat • ${plan.transport}\n\n$stops\n\nTBT ile hazırlandı.',
+      '${plan.title}\n\n${plan.city} • ${plan.durationHours} saat • ${plan.transport}\n\n$stops\n\n${InviteLinkService.instance.routeUri(plan.id)}',
       subject: plan.title,
     );
   }

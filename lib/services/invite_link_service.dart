@@ -31,6 +31,7 @@ class InviteLinkService {
 
   Uri communityUri(String communityId) =>
       Uri.https(webHost, '/community/${_safeOutgoingId(communityId)}');
+  Uri routeUri(String routeId) => Uri.https(webHost, '/route/${_safeOutgoingId(routeId)}');
   Uri eventUri(String eventId) =>
       Uri.https(webHost, '/event/${_safeOutgoingId(eventId)}');
   Uri profileUri(String userId) =>
@@ -109,7 +110,7 @@ class InviteLinkService {
   }
 
   bool _validTarget(String type, String id) {
-    if (type != 'group' &&
+    if (type != 'route' && type != 'group' &&
         type != 'event' &&
         type != 'community' &&
         type != 'profile' &&

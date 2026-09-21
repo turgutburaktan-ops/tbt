@@ -205,15 +205,7 @@ class _RouteStopsStepState extends State<RouteStopsStep> {
                   style: const TextStyle(fontSize: 12, color: AppColors.textMuted),
                 ),
               ),
-              TextButton.icon(
-                onPressed: () {
-                  FocusScope.of(context).unfocus();
-                  setState(() => _showMap = !_showMap);
-                  if (_showMap && _center == null) unawaited(_locate());
-                },
-                icon: Icon(_showMap ? Icons.list : Icons.map_outlined, size: 18),
-                label: Text(_showMap ? 'Liste' : 'Harita'),
-              ),
+
             ],
           ),
         ),
