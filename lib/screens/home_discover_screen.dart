@@ -10,7 +10,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../services/content_engagement_service.dart';
 import '../widgets/firebase_media_image.dart';
 import '../widgets/discover_content_grid.dart';
-import 'post_detail_screen.dart';
+import '../widgets/feed_post_card.dart';
+import '../widgets/creator_view_tracker.dart';
 import '../widgets/discover_post_feed.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -404,10 +405,13 @@ class _HomeDiscoverScreenState extends State<HomeDiscoverScreen> {
         builder: (_) => DiscoverPostFeed(
           itemCount: posts.length,
           initialIndex: selectedIndex,
-          itemBuilder: (_, index) => PostDetailScreen(
+          itemBuilder: (_, index) => CreatorViewTracker(
             key: ValueKey(posts[index]['id']),
-            post: posts[index],
-            embedded: true,
+            postId: posts[index]['id'].toString(),
+            child: FeedPostCard.fromPost(
+              postId: posts[index]['id'].toString(),
+              data: posts[index],
+            ),
           ),
         ),
       ),
