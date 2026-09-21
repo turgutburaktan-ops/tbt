@@ -26,7 +26,7 @@ class _ReelsAdPagerState extends State<ReelsAdPager> with WidgetsBindingObserver
   int? _adIndex;
   int _page = 0, _nextBoundary = 5, _attemptedBoundary = -1, _generation = 0;
   bool _loading = false, _scrolling = false, _seenAd = false, _expired = false;
-  bool _visible = false, _foreground = true, _enabled = false;
+  bool _visible = false, _foreground = true, _enabled = false, _fitsAd = false;
 
   int _videoIndex(int page) => page - (_adIndex != null && page > _adIndex! ? 1 : 0);
   @override
@@ -105,7 +105,7 @@ class _ReelsAdPagerState extends State<ReelsAdPager> with WidgetsBindingObserver
       if (_page == _adIndex) { _seenAd = true; return; }
       if (_seenAd || _page > _adIndex! || _page < _adIndex! - 1) _removeAd();
     }
-    if (!_enabled) return;
+    if (!_enabled || !_fitsAd) return;
     final watched = _videoIndex(_page) + 1;
     while (_nextBoundary < watched) { _nextBoundary += 8; }
     if (_adIndex == null && _ad != null && watched == _nextBoundary && watched < widget.videoIds.length) {
@@ -127,7 +127,7 @@ class _ReelsAdPagerState extends State<ReelsAdPager> with WidgetsBindingObserver
     ReelsAdHandle? ad;
     try { ad = await widget.adLoader(); } catch (_) { /* No-fill must not block the feed. */ }
     _loading = false;
-    if (!mounted || generation != _generation || !_enabled) {
+    if (!mounted || generation != _generation || !_enabled || !_fitsAd) {
       ad?.dispose();
       return;
     }
@@ -154,7 +154,19 @@ class _ReelsAdPagerState extends State<ReelsAdPager> with WidgetsBindingObserver
   @override
   Widget build(BuildContext context) {
     if (widget.videoIds.isEmpty) return const SizedBox.shrink();
-    return VisibilityDetector(
+    return LayoutBuilder(builder: (context, constraints) {
+      // Keep the SDK media and CTA usable even in split-screen/landscape.
+      final fitsAd = constraints.maxWidth >= 240 &&
+          constraints.maxHeight - widget.topInset - MediaQuery.paddingOf(context).vertical - 40 >= 460;
+      if (_fitsAd != fitsAd) {
+        _fitsAd = fitsAd;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          if (!_fitsAd) { _generation++; _removeAd(); }
+          else { _settle(); }
+        });
+      }
+      return VisibilityDetector(
       key: _visibilityKey,
       onVisibilityChanged: (info) { _visible = info.visibleFraction > .5; _syncEnabled(); },
       child: NotificationListener<ScrollNotification>(
@@ -196,5 +208,6 @@ class _ReelsAdPagerState extends State<ReelsAdPager> with WidgetsBindingObserver
         ),
       ),
     );
+    });
   }
 }

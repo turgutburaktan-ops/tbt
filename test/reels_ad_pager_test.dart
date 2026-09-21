@@ -118,4 +118,19 @@ void main() {
     expect(tester.takeException(), isNull);
     await close(tester);
   });
+  testWidgets('small viewports continue videos without a cramped ad', (tester) async {
+    tester.view.physicalSize = const Size(800, 350);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    var requests = 0;
+    await showFeed(tester, () async { requests++; return FakeAd(); });
+    for (var i = 2; i <= 6; i++) {
+      await tester.drag(find.byType(PageView), const Offset(0, -260));
+      await tester.pumpAndSettle();
+      expect(find.text('video $i playing'), findsOneWidget);
+    }
+    expect(requests, 0);
+    await close(tester);
+  });
 }
