@@ -122,10 +122,10 @@ class _RoutesHubScreenState extends State<RoutesHubScreen> {
     if(point==null||point['latitude'] is! num||point['longitude'] is! num)return false;
     return Geolocator.distanceBetween(_nearby!.latitude,_nearby!.longitude,(point['latitude'] as num).toDouble(),(point['longitude'] as num).toDouble())<=50000;
   }
-  void _create() => Navigator.push(
-    context,
-    MaterialPageRoute(builder: (_) => const RouteCreateScreen()),
-  );
+  Future<void> _create() async {
+    await Navigator.push(context, MaterialPageRoute(builder: (_) => const RouteCreateScreen()));
+    if (mounted) setState(() {});
+  }
   @override
   Widget build(BuildContext context) => ColoredBox(
     color: AppColors.background,

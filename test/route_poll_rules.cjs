@@ -38,3 +38,9 @@ test('poll creation enforces membership, authorship and future closing date',asy
   await assertFails(setDoc(doc(db('outsider'),'travel_plans/r/polls/outsider'),{...payload,authorId:'outsider'}));
   await assertFails(setDoc(doc(db('member'),'travel_plans/r/polls/past'),{...payload,closesAt:Timestamp.fromMillis(1000)}));
 });
+
+test('malformed options cannot become unreadable polls',async()=>{
+  for(const options of [[1,2],['A','A'],['','B'],['A','B','x'.repeat(81)]]) {
+    await assertFails(setDoc(doc(db('member'),'travel_plans/r/polls/bad'),{authorId:'member',question:'Soru',options,closed:false,createdAt:serverTimestamp()}));
+  }
+});

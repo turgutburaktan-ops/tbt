@@ -557,6 +557,11 @@ service cloud.firestore {
           request.resource.data.keys().hasOnly(['authorId','question','options','closed','createdAt','allowMultiple','closesAt']) &&
           request.resource.data.question is string && request.resource.data.question.size() > 0 && request.resource.data.question.size() <= 180 &&
           request.resource.data.options is list && request.resource.data.options.size() >= 2 && request.resource.data.options.size() <= 4 &&
+          request.resource.data.options.toSet().size() == request.resource.data.options.size() &&
+          request.resource.data.options[0] is string && request.resource.data.options[0].size() > 0 && request.resource.data.options[0].size() <= 80 &&
+          request.resource.data.options[1] is string && request.resource.data.options[1].size() > 0 && request.resource.data.options[1].size() <= 80 &&
+          (request.resource.data.options.size() < 3 || (request.resource.data.options[2] is string && request.resource.data.options[2].size() > 0 && request.resource.data.options[2].size() <= 80)) &&
+          (request.resource.data.options.size() < 4 || (request.resource.data.options[3] is string && request.resource.data.options[3].size() > 0 && request.resource.data.options[3].size() <= 80)) &&
           request.resource.data.get('allowMultiple',false) is bool &&
           (!('closesAt' in request.resource.data) || (request.resource.data.closesAt is timestamp && request.resource.data.closesAt > request.time)) &&
           request.resource.data.closed == false && request.resource.data.createdAt == request.time;

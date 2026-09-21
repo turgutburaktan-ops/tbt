@@ -198,8 +198,8 @@ class _RouteCreateScreenState extends State<RouteCreateScreen> {
             longitude: (meeting['longitude'] as num).toDouble(),
           );
         _step = ((draft['step'] as num?)?.toInt() ?? 0).clamp(0, 3);
-        if (!turkeyCities.contains(_city.text)) _step = 0;
-        if (_step == 2 && _stops.isEmpty) _step = 1;
+        if (!turkeyCities.contains(_city.text) && _origin == null && _stops.isEmpty) _step = 0;
+        if (_step >= 2 && _stops.isEmpty) _step = 1;
         _refreshRoute();
       }
     } catch (_) {
@@ -507,6 +507,7 @@ class _RouteCreateScreenState extends State<RouteCreateScreen> {
         'hasSchedule':_startAt!=null,'startAt':Timestamp.fromDate(_startAt??old.startAt),
         if(_meeting!=null)'meetingPoint':{'label':_meeting!.label,'latitude':_meeting!.latitude,'longitude':_meeting!.longitude,'note':_meetingNote.text.trim()},
       });
+      if (_invitees.isNotEmpty) await TravelPlanService.instance.invite(planId:old.id,planTitle:_title.text,userIds:_invitees);
       _completed=true;if(mounted)Navigator.pop(context);return;
     }
     final id =
@@ -776,17 +777,17 @@ class _RouteCreateScreenState extends State<RouteCreateScreen> {
     final result=await Navigator.push<RoutePathResult>(context,MaterialPageRoute(builder:(_)=>RoutePathEditorScreen(stops:_stops,city:_city.text.trim(),mode:_transport,origin:_origin,manual:_manual,roundTrip:_roundTrip)));
     if(mounted&&result!=null)setState((){_stops..clear()..addAll(result.stops);_manual=result.manual;_roundTrip=result.roundTrip;_refreshRoute();});
   }
-  void _removeSpot(PhotoSpot spot) {
+  void _removeSpot(PhotoSpot spot, {VoidCallback? onUndo}) {
     if(_busy)return;
     final index=_stops.indexWhere((s)=>s.id==spot.id);if(index<0)return;
     setState((){_stops.removeAt(index);_refreshRoute();});
-    ScaffoldMessenger.of(context)..hideCurrentSnackBar()..showSnackBar(SnackBar(content:Text('${spot.name} kaldırıldı'),action:SnackBarAction(label:'Geri al',onPressed:(){if(!mounted||_stops.length>=12||_stops.any((s)=>s.id==spot.id))return;setState((){_stops.insert(index.clamp(0,_stops.length),spot);_refreshRoute();});})));
+    ScaffoldMessenger.of(context)..hideCurrentSnackBar()..showSnackBar(SnackBar(content:Text('${spot.name} kaldırıldı'),action:SnackBarAction(label:'Geri al',onPressed:(){if(!mounted||_stops.length>=12||_stops.any((s)=>s.id==spot.id))return;setState((){_stops.insert(index.clamp(0,_stops.length),spot);_refreshRoute();});onUndo?.call();})));
   }
   Future<void> _places() async {
     await Navigator.push<void>(context,MaterialPageRoute(builder:(c)=>StatefulBuilder(builder:(c,refresh)=>Scaffold(
       backgroundColor:AppColors.background, appBar:AppBar(title:const Text('Durak ekle')),
       body:RouteStopsStep(city:_city.text.trim(),stops:_stops,itinerary:_itinerary,busy:_busy,loadItems:widget.loadCatalog,
-        onAdd:(spot){_addSpot(spot);refresh((){});},onRemove:(spot){_removeSpot(spot);refresh((){});},
+        onAdd:(spot){_addSpot(spot);refresh((){});},onRemove:(spot){_removeSpot(spot,onUndo:(){if(c.mounted)refresh((){});});refresh((){});},
         onMapTap:(point)async{await _mapPoint(point);refresh((){});},onSuggest:()async{await _suggest();refresh((){});},
         onSort:(){_smartSort();refresh((){});},onSearch:()async{await _add();refresh((){});},stopBuilder:_stopRow,
         onReorder:(a,b){setState((){if(b>a)b--;_stops.insert(b,_stops.removeAt(a));_refreshRoute();});refresh((){});}),
@@ -874,7 +875,7 @@ class _RouteCreateScreenState extends State<RouteCreateScreen> {
                 ),
                 const SizedBox(width: 12),
                 Text(
-                  leg.label,
+                  _manual ? '${(leg.meters/1000).toStringAsFixed(1)} km · Elle çizilmiş' : leg.label,
                   style: const TextStyle(
                     fontSize: 11,
                     color: AppColors.textMuted,
