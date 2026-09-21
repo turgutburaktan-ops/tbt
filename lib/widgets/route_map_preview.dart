@@ -1,3 +1,5 @@
+import '../services/route_geometry.dart';
+import '../services/route_draft_store.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -12,9 +14,12 @@ class RouteMapPreview extends StatefulWidget {
     required this.stops,
     required this.transport,
     required this.onOpen,
+    this.dayPlan = const {},
+    this.origin = const {},
   });
   final List<Map<String, dynamic>> stops;
   final String transport;
+  final Map<String,dynamic> dayPlan, origin;
   final VoidCallback onOpen;
   @override
   State<RouteMapPreview> createState() => _RouteMapPreviewState();
@@ -40,10 +45,12 @@ class _RouteMapPreviewState extends State<RouteMapPreview> {
       )
       .toList();
   void _load() {
-    _route = RouteItineraryService.instance.calculate(
-      _points,
-      widget.transport,
-    );
+    final origin = widget.origin['latitude'] is num && widget.origin['longitude'] is num ? LatLng((widget.origin['latitude'] as num).toDouble(),(widget.origin['longitude'] as num).toDouble()) : null;
+    final spots=widget.stops.map((p)=>RouteDraftStore.decodeSpot({...p,'id':(p['id']??'').toString(),'name':(p['name']??'Durak').toString(),'city':(p['city']??'').toString()})).toList();
+    final points=RouteGeometry.waypoints(spots,origin:origin,roundTrip:widget.dayPlan['roundTrip']==true);
+    final valid=widget.dayPlan['signature']==RouteGeometry.signature(spots,widget.transport,origin:origin,roundTrip:widget.dayPlan['roundTrip']==true);
+    final saved=valid?RouteGeometry.decode(widget.dayPlan):null;
+    _route=saved!=null?Future.value(saved):widget.dayPlan['manual']==true?Future.value(RouteGeometry.manual(points)):RouteItineraryService.instance.calculate(points,widget.transport);
   }
 
   @override
@@ -59,7 +66,7 @@ class _RouteMapPreviewState extends State<RouteMapPreview> {
   void didUpdateWidget(RouteMapPreview old) {
     super.didUpdateWidget(old);
     if (old.transport != widget.transport ||
-        old.stops.toString() != widget.stops.toString())
+        old.stops.toString() != widget.stops.toString() || old.dayPlan.toString()!=widget.dayPlan.toString() || old.origin.toString()!=widget.origin.toString())
       _load();
   }
 
@@ -147,7 +154,7 @@ class _RouteMapPreviewState extends State<RouteMapPreview> {
                     ? 'Güzergâh hesaplanıyor…'
                     : s.data == null
                     ? 'Yol bilgisi alınamadı · Haritayı aç'
-                    : '${(s.data!.meters / 1000).toStringAsFixed(1)} km · ${(s.data!.seconds / 60).ceil()} dk yol',
+                    : '${(s.data!.meters / 1000).toStringAsFixed(1)} km · ${widget.dayPlan['manual']==true?'Elle çizilmiş · Doğrulanmamış':'${(s.data!.seconds / 60).ceil()} dk yol'}',
                 textAlign: TextAlign.center,
                 style: const TextStyle(fontSize: 12),
               ),

@@ -32,7 +32,7 @@ class RouteItineraryService {
 
   Future<RouteItinerary?> calculate(List<LatLng> stops, String mode) {
     if (stops.length < 2 ||
-        stops.length > 13 ||
+        stops.length > 14 ||
         !['Araç', 'Yürüyüş', 'Bisiklet'].contains(mode))
       return Future.value(null);
     final coordinates = stops

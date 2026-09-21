@@ -1,0 +1,35 @@
+name: Route design verification
+on:
+  push:
+    branches: [codex/route-design-20260921]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: route-design-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  flutter-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: dart format lib/screens/route* lib/screens/travel_plan_detail_screen.dart lib/services/route* lib/services/travel_plan_service.dart lib/widgets/route* test/route* test/restored_flows_test.dart
+      - run: flutter analyze --no-fatal-infos --no-fatal-warnings
+      - run: flutter test test/route_itinerary_test.dart test/route_stop_selection_test.dart test/route_map_candidates_test.dart test/route_chat_test.dart
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: route-formatted-source
+          path: |
+            lib/screens/route*.dart
+            lib/screens/travel_plan_detail_screen.dart
+            lib/services/route*.dart
+            lib/services/travel_plan_service.dart
+            lib/widgets/route*
+            test/route*.dart
+            test/restored_flows_test.dart

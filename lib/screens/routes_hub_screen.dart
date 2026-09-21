@@ -1,3 +1,5 @@
+import 'route_filters_screen.dart';
+import '../widgets/route_design/route_design.dart';
 import '../widgets/route_management_menu.dart';
 import 'dart:async';
 
@@ -36,6 +38,7 @@ class _RoutesHubScreenState extends State<RoutesHubScreen> {
   int _tab = 0, _filter = 0;
   String _search = '';
   String _city = '';
+  RouteFilters _parkurFilters = const RouteFilters();
   late final _mine = TravelPlanService.instance.watchMine();
   late final _public = TravelPlanService.instance.watchPublic();
   final _followersPlans = <String, List<TravelPlan>>{};
@@ -131,15 +134,15 @@ class _RoutesHubScreenState extends State<RoutesHubScreen> {
             padding: const EdgeInsets.fromLTRB(16, 18, 16, 28),
             children: [
               AppPageHeading(
-                title: 'Rotalar',
-                action: FilledButton.icon(
-                  onPressed: _create,
-                  icon: const Icon(Icons.add, size: 19),
-                  label: const Text('Rota oluştur'),
-                ),
+                title: 'Rota',
+
               ),
-              const SizedBox(height: 22),
-              if (upcoming.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              const Text('Bugün hangi yoldan gidelim?',style:TextStyle(color:AppColors.textMuted)),
+              const SizedBox(height: 16),
+              RouteAction(label:'Rota oluştur',icon:Icons.add,onPressed:_create),
+              const SizedBox(height: 18),
+              if (_tab == 1 && upcoming.isNotEmpty) ...[
                 Text(
                   upcoming.first.status == 'active'
                       ? 'DEVAM EDEN GEZİN'
@@ -155,19 +158,19 @@ class _RoutesHubScreenState extends State<RoutesHubScreen> {
                 const SizedBox(height: 20),
               ],
               AppSectionTabs(
-                labels: const ['Rotalarım', 'Keşfet'],
+                labels: const ['Keşfet', 'Rotalarım'],
                 selected: _tab,
                 onChanged: (i) => setState(() => _tab = i),
               ),
               const SizedBox(height: 14),
-              if (_tab == 0) ...[
+              if (_tab == 1) ...[
                 Wrap(
                   spacing: 8,
                   children: [
                     for (var i = 0; i < 3; i++)
                       ChoiceChip(
                         label: Text(
-                          ['Yaklaşan', 'Tamamlanan', 'Kaydedilen'][i],
+                          ['Planlanan', 'Tamamlanan', 'Kaydedilen'][i],
                         ),
                         selected: _filter == i,
                         onSelected: (_) => setState(() => _filter = i),
@@ -194,7 +197,7 @@ class _RoutesHubScreenState extends State<RoutesHubScreen> {
               ] else ...[
                 TextField(
                   decoration: const InputDecoration(
-                    hintText: 'Rota veya yer ara',
+                    hintText: 'Şehir veya parkur ara',
                     prefixIcon: Icon(Icons.search),
                   ),
                   onChanged: (v) => setState(() => _search = v),
@@ -224,6 +227,7 @@ class _RoutesHubScreenState extends State<RoutesHubScreen> {
                     final filtered = all
                         .where(
                           (p) =>
+                              _parkurFilters.matches(p, _subscriptions.keys.toSet()) &&
                               (selectedCity.isEmpty ||
                                   p.city == selectedCity) &&
                               '${p.title} ${p.city} ${p.spotNames.join(' ')}'
@@ -234,23 +238,12 @@ class _RoutesHubScreenState extends State<RoutesHubScreen> {
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        DropdownButtonFormField<String>(
-                          initialValue: selectedCity,
-                          decoration: const InputDecoration(
-                            prefixIcon: Icon(Icons.location_city_outlined),
-                            labelText: 'Şehir',
-                          ),
-                          items: [
-                            const DropdownMenuItem(
-                              value: '',
-                              child: Text('Tüm şehirler'),
-                            ),
-                            ...cities.map(
-                              (c) => DropdownMenuItem(value: c, child: Text(c)),
-                            ),
-                          ],
-                          onChanged: (v) => setState(() => _city = v ?? ''),
-                        ),
+                        Row(children:[
+                          Expanded(child:SingleChildScrollView(scrollDirection:Axis.horizontal,child:Row(children:[
+                            for(final mode in ['Yürüyüş','Bisiklet','Araç'])Padding(padding:const EdgeInsets.only(right:8),child:FilterChip(label:Text(mode),selected:_parkurFilters.mode==mode,onSelected:(v)=>setState(()=>_parkurFilters=RouteFilters(mode:v?mode:'',city:_parkurFilters.city,maxKm:_parkurFilters.maxKm,duration:_parkurFilters.duration,roundTrip:_parkurFilters.roundTrip,following:_parkurFilters.following,difficulties:_parkurFilters.difficulties)))),
+                          ]))),
+                          IconButton(tooltip:'Parkur filtreleri',icon:const Icon(Icons.tune),onPressed:()async{final value=await Navigator.push<RouteFilters>(context,MaterialPageRoute(builder:(_)=>RouteFiltersScreen(value:_parkurFilters,cities:cities)));if(mounted&&value!=null)setState(()=>_parkurFilters=value);}),
+                        ]),
                         const SizedBox(height: 12),
                         ..._list(filtered),
                       ],
@@ -275,7 +268,7 @@ class _RoutesHubScreenState extends State<RoutesHubScreen> {
   List<Widget> _list(List<TravelPlan> plans) => plans.isEmpty
       ? [
           _message(
-            _tab == 1
+            _tab == 0
                 ? 'Bu aramada rota bulunamadı.'
                 : _filter == 1
                 ? 'Tamamladığın geziler ve albümleri burada olacak.'
@@ -286,7 +279,7 @@ class _RoutesHubScreenState extends State<RoutesHubScreen> {
             .map(
               (p) => Padding(
                 padding: const EdgeInsets.only(bottom: 10),
-                child: RoutePreviewCard(plan: p),
+                child: RoutePreviewCard(plan: p, featured: true),
               ),
             )
             .toList();
@@ -344,7 +337,7 @@ class RoutePreviewCard extends StatelessWidget {
             const SizedBox(width: 6),
             Expanded(
               child: Text(
-                '${plan.transport} · ${plan.spotIds.length} durak',
+                '${plan.distanceKm>0?'${plan.distanceKm.toStringAsFixed(1)} km · ':''}${plan.travelMinutes>0?'${plan.travelMinutes} dk · ':''}${plan.spotIds.length} durak',
                 style: const TextStyle(
                   color: AppColors.textMuted,
                   fontSize: 12,
@@ -372,7 +365,7 @@ class RoutePreviewCard extends StatelessWidget {
               ? Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    if (image.isNotEmpty) SizedBox(height: 155, child: thumbnail),
+                    SizedBox(height: 175, child: thumbnail),
                     Padding(
                       padding: const EdgeInsets.all(16),
                       child: Column(

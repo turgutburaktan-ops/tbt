@@ -54,6 +54,7 @@ class TravelPlanService {
     String weatherSummary = '',
     bool isPublic = false,
     String? visibility,
+    bool? allowJoinRequests,
     Map<String, dynamic> meetingPoint = const {},
     Map<String, dynamic> dayPlan = const {},
     Map<String, dynamic> routeOrigin = const {},
@@ -104,7 +105,7 @@ class TravelPlanService {
           .toList(growable: false),
       'memberIds': [user.uid],
       if (meetingPoint.isNotEmpty) 'meetingPoint': meetingPoint,
-      'joinEnabled': audience != 'private' && startAt != null,
+      'joinEnabled': audience != 'private' && startAt != null && (allowJoinRequests ?? true),
       'startAt': Timestamp.fromDate(startAt ?? DateTime.now()),
       'hasSchedule': startAt != null,
       'status': 'planned',
@@ -194,7 +195,23 @@ class TravelPlanService {
       interests: plan.interests,
       spots: spots,
       stopDetails: plan.stopSnapshots,
+      dayPlan: plan.dayPlan,
+      routeOrigin: plan.routeOrigin,
+      distanceKm: plan.distanceKm,
+      travelMinutes: plan.travelMinutes,
     );
+  }
+
+  Future<void> updateDesignedRoute(String id, Map<String,dynamic> changes) async {
+    final uid = _requireUser().uid;
+    final ref = _firestore.collection('travel_plans').doc(id);
+    await _firestore.runTransaction((tx) async {
+      final old = (await tx.get(ref)).data();
+      if(old == null || old['ownerId'] != uid) throw Exception('Bu rotayı yalnızca sahibi düzenleyebilir.');
+      const allowed = {'title','city','transport','spotIds','spotNames','stopSnapshots','dayPlan','routeOrigin','distanceKm','travelMinutes','visibility','isPublic','joinEnabled','hasSchedule','startAt','meetingPoint'};
+      if(changes.keys.any((k)=>!allowed.contains(k))) throw ArgumentError('Invalid route fields');
+      tx.update(ref,{...changes,'updatedAt':FieldValue.serverTimestamp()});
+    });
   }
 
   Future<void> bookmark(String id, bool saved) async {
